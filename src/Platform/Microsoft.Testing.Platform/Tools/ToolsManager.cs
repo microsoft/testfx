@@ -11,7 +11,7 @@ internal sealed class ToolsManager : IToolsManager
 
     public void AddTool(Func<IServiceProvider, ITool> toolFactory)
     {
-        Guard.NotNull(toolFactory);
+        Ensure.NotNull(toolFactory);
         _toolsFactories.Add(toolFactory);
     }
 
@@ -21,12 +21,12 @@ internal sealed class ToolsManager : IToolsManager
         foreach (Func<IServiceProvider, ITool> toolFactory in _toolsFactories)
         {
             ITool tool = toolFactory(serviceProvider);
-            if (!await tool.IsEnabledAsync())
+            if (!await tool.IsEnabledAsync().ConfigureAwait(false))
             {
                 continue;
             }
 
-            await tool.TryInitializeAsync();
+            await tool.TryInitializeAsync().ConfigureAwait(false);
 
             tools.Add(tool);
         }

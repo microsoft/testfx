@@ -5,13 +5,12 @@ using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
+using Microsoft.Testing.Platform.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Hosts;
@@ -30,13 +29,11 @@ internal interface ITestHostBuilder
 
     ITestHostControllersManager TestHostControllers { get; }
 
-    ITestHostOrchestratorManager TestHostOrchestratorManager { get; }
+    ITestHostOrchestratorManager TestHostOrchestrator { get; }
 
     ITelemetryManager Telemetry { get; }
 
-    IServerModeManager ServerMode { get; }
-
     IToolsManager Tools { get; }
 
-    Task<ITestHost> BuildAsync(ApplicationLoggingState loggingState, TestApplicationOptions testApplicationOptions, IUnhandledExceptionsHandler unhandledExceptionsHandler, DateTimeOffset createBuilderStart);
+    Task<IHost> BuildAsync(ApplicationLoggingState loggingState, TestApplicationOptions testApplicationOptions, IUnhandledExceptionsHandler unhandledExceptionsHandler, DateTimeOffset createBuilderStart);
 }

@@ -1,1 +1,5 @@
 #nullable enable
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestDefinitionName
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestDefinitionName.TestDefinitionName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestDefinitionName.TrxTestDefinitionName(string! testDefinitionName) -> void
+override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestDefinitionName.ToString() -> string!

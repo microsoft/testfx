@@ -9,5 +9,5 @@ internal interface ITool : IExtension
 {
     string Name { get; }
 
-    Task<int> RunAsync();
+    Task<int> RunAsync(CancellationToken cancellationToken);
 }

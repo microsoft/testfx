@@ -117,10 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="FixSignatureCodeFix" xml:space="preserve">
-    <value>Fix signature</value>
+  <data name="RemoveClassCleanupBehaviorArgumentFix" xml:space="preserve">
+    <value>Remove 'ClassCleanupBehavior' argument</value>
   </data>
-  <data name="AssemblyInitializeShouldBeValidCodeFix" xml:space="preserve">
+  <data name="FixSignatureCodeFix" xml:space="preserve">
     <value>Fix signature</value>
   </data>
   <data name="FixAssertionArgsOrder" xml:space="preserve">
@@ -128,6 +128,9 @@
   </data>
   <data name="AddTestClassFix" xml:space="preserve">
     <value>Add '[TestClass]'</value>
+  </data>
+  <data name="ChangeStructToClassAndAddTestClassFix" xml:space="preserve">
+    <value>Change to 'class' and add '[TestClass]'</value>
   </data>
   <data name="TestMethodShouldBeValidFix" xml:space="preserve">
     <value>Fix test method signature</value>
@@ -162,13 +165,7 @@
   <data name="ReplaceWithTestInitializeFix" xml:space="preserve">
     <value>Replace constructor with TestInitialize method</value>
   </data>
-  <data name="UseAssertThrowsExceptionOnLastStatementFix" xml:space="preserve">
-    <value>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</value>
-  </data>
   <data name="UseProperAssertMethodsFix" xml:space="preserve">
-    <value>Use '{0}'</value>
-  </data>
-  <data name="UseNewerAssertThrows" xml:space="preserve">
     <value>Use '{0}'</value>
   </data>
   <data name="AssertionArgsShouldAvoidConditionalAccessFix" xml:space="preserve">
@@ -176,5 +173,44 @@
   </data>
   <data name="AvoidAssertAreSameWithValueTypesFix" xml:space="preserve">
     <value>Use '{0}'</value>
+  </data>
+  <data name="ReplaceDataTestMethodWithTestMethodTitle" xml:space="preserve">
+    <value>Replace 'DataTestMethod' with 'TestMethod'</value>
+  </data>
+  <data name="UseCooperativeCancellationForTimeoutFix" xml:space="preserve">
+    <value>Use 'CooperativeCancellation = true'</value>
+  </data>
+  <data name="StringAssertToAssertTitle" xml:space="preserve">
+    <value>Use 'Assert.{0}' instead of 'StringAssert'</value>
+  </data>
+  <data name="PassCancellationTokenFix" xml:space="preserve">
+    <value>Pass 'TestContext.CancellationToken' argument to method call</value>
+  </data>
+  <data name="RemoveDynamicDataSourceTypeFix" xml:space="preserve">
+    <value>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</value>
+  </data>
+  <data name="UseDisplayNamePropertyInsteadOfStringArgumentFix" xml:space="preserve">
+    <value>Use 'DisplayName' property instead of string argument</value>
+  </data>
+  <data name="AddCallerInfoParametersFix" xml:space="preserve">
+    <value>Add '[CallerFilePath]' and '[CallerLineNumber]' parameters</value>
+  </data>
+  <data name="AvoidOutParameterOnAssertIsInstanceOfTypeFix" xml:space="preserve">
+    <value>Use assignment instead of 'out' parameter</value>
+  </data>
+  <data name="UseContainsKeyInsteadOfContainsFix" xml:space="preserve">
+    <value>Use 'ContainsKey' instead of 'Contains'</value>
+  </data>
+  <data name="TransformExecuteToExecuteAsyncFix" xml:space="preserve">
+    <value>Transform 'Execute' override to 'ExecuteAsync'</value>
+  </data>
+  <data name="UseCancellationTokenPropertyFix" xml:space="preserve">
+    <value>Use 'TestContext.CancellationToken' instead</value>
+  </data>
+  <data name="UseOSConditionAttributeInsteadOfRuntimeCheckFix" xml:space="preserve">
+    <value>Use '[OSCondition]' attribute</value>
+  </data>
+  <data name="AvoidOutRefTestMethodParametersFix" xml:space="preserve">
+    <value>Remove 'out' and 'ref' modifiers</value>
   </data>
 </root>

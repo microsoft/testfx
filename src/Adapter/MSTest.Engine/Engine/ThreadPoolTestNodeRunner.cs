@@ -16,7 +16,7 @@ namespace Microsoft.Testing.Framework;
 internal sealed class ThreadPoolTestNodeRunner : IDisposable
 {
     private readonly SemaphoreSlim? _maxParallelTests;
-    private readonly ConcurrentBag<Task<Result>> _runningTests = new();
+    private readonly ConcurrentBag<Task<Result>> _runningTests = [];
     private readonly ConcurrentDictionary<TestNodeUid, int> _runningTestNodeUids = new();
     private readonly CountdownEvent _ensureTaskQueuedCountdownEvent = new(1);
     private readonly Func<IData, Task> _publishDataAsync;
@@ -63,12 +63,12 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
                         {
                             // We don't have a timeout here because we can have really slow fixture and it's on user
                             // the decision on how much to wait for it.
-                            await _waitForStart.Task;
+                            await _waitForStart.Task.ConfigureAwait(false);
 
                             // Handle the global parallelism.
                             if (_maxParallelTests is not null)
                             {
-                                await _maxParallelTests.WaitAsync();
+                                await _maxParallelTests.WaitAsync().ConfigureAwait(false);
                             }
 
                             try
@@ -77,9 +77,9 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
 
                                 PlatformTestNode progressNode = frameworkTestNode.ToPlatformTestNode();
                                 progressNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
-                                await _publishDataAsync(new TestNodeUpdateMessage(_sessionUid, progressNode, parentTestNodeUid?.ToPlatformTestNodeUid()));
+                                await _publishDataAsync(new TestNodeUpdateMessage(_sessionUid, progressNode, parentTestNodeUid?.ToPlatformTestNodeUid())).ConfigureAwait(false);
 
-                                Result result = await CreateTestRunTaskAsync(frameworkTestNode, parentTestNodeUid);
+                                Result result = await CreateTestRunTaskAsync(frameworkTestNode, parentTestNodeUid).ConfigureAwait(false);
 
                                 _runningTestNodeUids.TryRemove(frameworkTestNode.StableUid, out int count);
 
@@ -118,7 +118,7 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
     {
         try
         {
-            await _testFixtureManager.SetupUsedFixturesAsync(testNode);
+            await _testFixtureManager.SetupUsedFixturesAsync(testNode).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -135,7 +135,7 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
                 switch (testNode)
                 {
                     case IAsyncActionTestNode actionTestNode:
-                        await actionTestNode.InvokeAsync(testExecutionContext);
+                        await actionTestNode.InvokeAsync(testExecutionContext).ConfigureAwait(false);
                         break;
 
                     case IActionTestNode actionTestNode:
@@ -145,7 +145,7 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
                     case IParameterizedAsyncActionTestNode actionTestNode:
                         await actionTestNode.InvokeAsync(
                             testExecutionContext,
-                            action => InvokeTestNodeAndPublishResultAsync(testNode, parentTestNodeUid, (_, _) => action(), skipPublishResult: false));
+                            action => InvokeTestNodeAndPublishResultAsync(testNode, parentTestNodeUid, (_, _) => action(), skipPublishResult: false)).ConfigureAwait(false);
                         break;
 
                     default:
@@ -154,12 +154,12 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
             },
             // Because parameterized tests report multiple results (one per parameter set), we don't want to publish the result
             // of the overall test node execution, but only the results of the individual parameterized tests.
-            skipPublishResult: testNode is IParameterizedAsyncActionTestNode);
+            skipPublishResult: testNode is IParameterizedAsyncActionTestNode).ConfigureAwait(false);
 
         // Try to cleanup the fixture is not more used.
         try
         {
-            await _testFixtureManager.CleanUnusedFixturesAsync(testNode);
+            await _testFixtureManager.CleanUnusedFixturesAsync(testNode).ConfigureAwait(false);
             return result;
         }
         catch (Exception ex)
@@ -177,8 +177,8 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
         try
         {
             _ensureTaskQueuedCountdownEvent.Signal();
-            await _ensureTaskQueuedCountdownEvent.WaitAsync(cancellationToken);
-            Result[] results = await Task.WhenAll(_runningTests);
+            await _ensureTaskQueuedCountdownEvent.WaitAsync(cancellationToken).ConfigureAwait(false);
+            Result[] results = await Task.WhenAll(_runningTests).ConfigureAwait(false);
             return Result.Combine(results);
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
@@ -216,7 +216,7 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
             // If we're already enqueued we cancel the test before the start
             // The test could not use the cancellation and we should wait the end of the test self to cancel.
             _cancellationToken.ThrowIfCancellationRequested();
-            await testNodeInvokeAction(testNode, testExecutionContext);
+            await testNodeInvokeAction(testNode, testExecutionContext).ConfigureAwait(false);
 
             if (!platformTestNode.Properties.Any<TestNodeStateProperty>())
             {
@@ -245,7 +245,7 @@ internal sealed class ThreadPoolTestNodeRunner : IDisposable
 
         if (!skipPublishResult)
         {
-            await _publishDataAsync(new TestNodeUpdateMessage(_sessionUid, platformTestNode, parentTestNodeUid?.ToPlatformTestNodeUid()));
+            await _publishDataAsync(new TestNodeUpdateMessage(_sessionUid, platformTestNode, parentTestNodeUid?.ToPlatformTestNodeUid())).ConfigureAwait(false);
         }
 
         return Result.Ok();

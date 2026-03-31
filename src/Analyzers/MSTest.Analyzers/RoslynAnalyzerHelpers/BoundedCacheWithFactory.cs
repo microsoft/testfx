@@ -4,7 +4,7 @@ namespace Analyzer.Utilities;
 
 /// <summary>
 /// Provides bounded cache for analyzers.
-/// Acts as a good alternative to <see cref="System.Runtime.CompilerServices.ConditionalWeakTable{TKey, TValue}"/>
+/// Acts as a good alternative to <see cref="ConditionalWeakTable{TKey, TValue}"/>
 /// when the cached value has a cyclic reference to the key preventing early garbage collection of entries.
 /// </summary>
 internal sealed class BoundedCacheWithFactory<TKey, TValue>

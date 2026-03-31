@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.OutputDevice;
 
 namespace TestingPlatformExplorer.InProcess;
@@ -41,7 +41,7 @@ internal sealed class DisplayDataConsumer : IDataConsumer, IOutputDeviceDataProd
                     await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayDataConsumer]TestNode '{testNodeId}' with display name '{testNodeDisplayName}' is in progress")
                     {
                         ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Green }
-                    });
+                    }, cancellationToken);
                     break;
                 }
             case PassedTestNodeStateProperty _:
@@ -49,7 +49,7 @@ internal sealed class DisplayDataConsumer : IDataConsumer, IOutputDeviceDataProd
                     await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayDataConsumer]TestNode '{testNodeId}' with display name '{testNodeDisplayName}' is completed")
                     {
                         ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Green }
-                    });
+                    }, cancellationToken);
                     break;
                 }
             case FailedTestNodeStateProperty failedTestNodeStateProperty:
@@ -57,7 +57,7 @@ internal sealed class DisplayDataConsumer : IDataConsumer, IOutputDeviceDataProd
                     await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayDataConsumer]TestNode '{testNodeId}' with display name '{testNodeDisplayName}' is failed with '{failedTestNodeStateProperty?.Exception?.Message}'")
                     {
                         ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Red }
-                    });
+                    }, cancellationToken);
                     break;
                 }
             case SkippedTestNodeStateProperty _:
@@ -65,7 +65,7 @@ internal sealed class DisplayDataConsumer : IDataConsumer, IOutputDeviceDataProd
                     await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayDataConsumer]TestNode '{testNodeId}' with display name '{testNodeDisplayName}' is skipped")
                     {
                         ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.White }
-                    });
+                    }, cancellationToken);
                     break;
                 }
             default:

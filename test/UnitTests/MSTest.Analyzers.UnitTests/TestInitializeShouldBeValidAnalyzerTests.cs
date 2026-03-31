@@ -290,6 +290,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests
             fixedCode);
     }
 
+#if NET
     [TestMethod]
     public async Task WhenTestInitializeReturnTypeIsNotValid_Diagnostic()
     {
@@ -397,6 +398,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+#endif
 
     [TestMethod]
     public async Task WhenTestInitializeIsAsyncVoid_Diagnostic()
@@ -473,6 +475,51 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(
             code,
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestInitialize"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestInitializeHasComments_CommentsArePreserved()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public void {|#0:TestSetup|}(TestContext tc)
+                {
+                    SomeCode();
+
+                    // Some comments;
+                }
+
+                private void SomeCode() { }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public void TestSetup()
+                {
+                    SomeCode();
+
+                    // Some comments;
+                }
+
+                private void SomeCode() { }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestSetup"),
             fixedCode);
     }
 

@@ -5,6 +5,8 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
+
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
 
 namespace Playground;
@@ -13,17 +15,9 @@ namespace Playground;
 public class TestClass
 {
     [TestMethod]
-    [DynamicData(nameof(Data))]
-    public void Test3(int a, int b)
+    public void Test1()
     {
-    }
-
-    public static IEnumerable<(int A, int B)> Data
-    {
-        get
-        {
-            yield return (1, 2);
-            yield return (3, 4);
-        }
+        Thread.Sleep(5000);
+        Assert.IsPositive(1);
     }
 }

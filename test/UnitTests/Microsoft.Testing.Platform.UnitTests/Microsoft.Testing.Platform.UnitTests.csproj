@@ -1,10 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>$(SupportedNetFrameworks)</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462</TargetFrameworks>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
+    <DefineConstants>$(DefineConstants);IS_MTP_UNIT_TESTS</DefineConstants>
   </PropertyGroup>
 
   <!-- start netstandard2.0 polyfill -->
@@ -14,7 +15,26 @@
   <!-- end netstandard2.0 polyfill -->
 
   <ItemGroup>
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\*.cs" Link="IPC\%(RecursiveDir)%(Filename)%(Extension)" />
+    <AdditionalFiles Include="BannedSymbols.txt" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\BaseSerializer.cs" Link="IPC\Serializers\BaseSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\VoidResponseSerializer.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Models\VoidResponse.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\PlatformResources.cs" Link="Resources\PlatformResources.cs" />
+
+    <!-- Embedded helpers from Microsoft.Testing.Platform -->
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ApplicationStateGuard.cs" Link="Helpers\ApplicationStateGuard.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\EnvironmentVariableConstants.cs" Link="Helpers\EnvironmentVariableConstants.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ExitCodes.cs" Link="Helpers\ExitCodes.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeoutHelper.cs" Link="Helpers\TimeoutHelper.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeSpanParser.cs" Link="Helpers\TimeSpanParser.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\TargetFrameworkParser.cs" Link="Helpers\TargetFrameworkParser.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Moq" />
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +43,12 @@
 
   <ItemGroup>
     <Using Include="Polyfills" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- NOTE: SDK already adds Linux, macOS, and Windows. -->
+    <!-- See https://github.com/dotnet/sdk/blob/cb459ebc2d9374b2bc5ce944cc633a6e79ed8275/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.SupportedPlatforms.props -->
+    <SupportedPlatform Include="browser" />
   </ItemGroup>
 
 </Project>

@@ -70,13 +70,22 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         switch (mode)
         {
             case UseProperAssertMethodsAnalyzer.CodeFixModeSimple:
-                createChangedDocument = ct => FixAssertMethodForSimpleModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], root, simpleNameSyntax, properAssertMethodName, ct);
+                createChangedDocument = ct => FixAssertMethodForSimpleModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
             case UseProperAssertMethodsAnalyzer.CodeFixModeAddArgument:
                 createChangedDocument = ct => FixAssertMethodForAddArgumentModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], diagnostic.AdditionalLocations[2], root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
+            case UseProperAssertMethodsAnalyzer.CodeFixModeAddTwoArguments:
+                createChangedDocument = ct => FixAssertMethodForAddTwoArgumentsModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], diagnostic.AdditionalLocations[2], diagnostic.AdditionalLocations[3], root, simpleNameSyntax, properAssertMethodName, ct);
+                break;
             case UseProperAssertMethodsAnalyzer.CodeFixModeRemoveArgument:
                 createChangedDocument = ct => FixAssertMethodForRemoveArgumentModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, diagnostic.Properties.ContainsKey(UseProperAssertMethodsAnalyzer.NeedsNullableBooleanCastKey), ct);
+                break;
+            case UseProperAssertMethodsAnalyzer.CodeFixModeRemoveArgumentAndReplaceArgument:
+                createChangedDocument = ct => FixAssertMethodForRemoveArgumentAndReplaceArgumentModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, ct);
+                break;
+            case UseProperAssertMethodsAnalyzer.CodeFixModeRemoveArgumentReplaceArgumentAndAddArgument:
+                createChangedDocument = ct => FixAssertMethodForRemoveArgumentReplaceArgumentAndAddArgumentModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
             default:
                 break;
@@ -93,25 +102,34 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         }
     }
 
-    private static async Task<Document> FixAssertMethodForSimpleModeAsync(Document document, Location conditionLocationToBeReplaced, Location replacementExpressionLocation, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
+    private static async Task<Document> FixAssertMethodForSimpleModeAsync(Document document, IReadOnlyList<Location> additionalLocations, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
     {
-        // This doesn't properly handle cases like Assert.IsTrue(message: "My message", condition: x == null)
-        // The proper handling of this may be Assert.IsNull(message: "My message", value: x)
-        // Or: Assert.IsNull(x, "My message")
-        // For now this is not handled.
-        if (root.FindNode(conditionLocationToBeReplaced.SourceSpan) is not ArgumentSyntax conditionNodeToBeReplaced)
-        {
-            return document;
-        }
-
-        if (root.FindNode(replacementExpressionLocation.SourceSpan) is not ExpressionSyntax replacementExpressionNode)
-        {
-            return document;
-        }
-
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
-        editor.ReplaceNode(conditionNodeToBeReplaced, SyntaxFactory.Argument(replacementExpressionNode).WithAdditionalAnnotations(Formatter.Annotation));
+
+        for (int i = 0; i < additionalLocations.Count; i += 2)
+        {
+            // This doesn't properly handle cases like Assert.IsTrue(message: "My message", condition: x == null)
+            // The proper handling of this may be Assert.IsNull(message: "My message", value: x)
+            // Or: Assert.IsNull(x, "My message")
+            // For now this is not handled.
+            if (root.FindNode(additionalLocations[i].SourceSpan) is not ArgumentSyntax conditionNodeToBeReplaced)
+            {
+                return document;
+            }
+
+            if (root.FindNode(additionalLocations[i + 1].SourceSpan, getInnermostNodeForTie: true) is not ExpressionSyntax replacementExpressionNode)
+            {
+                return document;
+            }
+
+            // Preserve the leading trivia from the original argument, remove any trailing trivia from the replacement
+            ArgumentSyntax newArgument = SyntaxFactory.Argument(
+                replacementExpressionNode
+                    .WithLeadingTrivia(conditionNodeToBeReplaced.GetLeadingTrivia())
+                    .WithoutTrailingTrivia());
+            editor.ReplaceNode(conditionNodeToBeReplaced, newArgument);
+        }
 
         return editor.GetChangedDocument();
     }
@@ -132,7 +150,8 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             return document;
         }
 
-        if (root.FindNode(expectedLocation.SourceSpan) is not ExpressionSyntax expectedNode)
+        if (root.FindNode(expectedLocation.SourceSpan) is not { } expectedNode
+            || expectedNode is not ArgumentSyntax and not ExpressionSyntax)
         {
             return document;
         }
@@ -146,13 +165,149 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
 
         ArgumentListSyntax newArgumentList = argumentList;
-        newArgumentList = newArgumentList.ReplaceNode(conditionNode, SyntaxFactory.Argument(expectedNode).WithAdditionalAnnotations(Formatter.Annotation));
-        int insertionIndex = argumentList.Arguments.IndexOf(conditionNode) + 1;
-        newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.Insert(insertionIndex, SyntaxFactory.Argument(actualNode).WithAdditionalAnnotations(Formatter.Annotation)));
+        ExpressionSyntax expectedExpression = expectedNode switch
+        {
+            ArgumentSyntax argument => argument.Expression,
+            ExpressionSyntax expression => expression,
+            _ => throw new InvalidOperationException($"Unexpected node type for expected argument: {expectedNode.GetType()}"),
+        };
+
+        // Preserve the leading trivia from the original condition argument, remove trailing trivia
+        ArgumentSyntax newExpectedArgument = SyntaxFactory.Argument(
+            expectedExpression
+                .WithLeadingTrivia(conditionNode.GetLeadingTrivia())
+                .WithoutTrailingTrivia());
+
+        int conditionIndex = argumentList.Arguments.IndexOf(conditionNode);
+
+        // Build the new arguments list explicitly to preserve trivia correctly
+        var newArguments = new List<ArgumentSyntax>();
+        var newSeparators = new List<SyntaxToken>();
+
+        // Add the new expected argument (replacing condition)
+        newArguments.Add(newExpectedArgument);
+
+        // Add separator after expected argument with just a standard comma
+        newSeparators.Add(SyntaxFactory.Token(SyntaxKind.CommaToken));
+
+        // Add the new actual argument with a space as leading trivia (standard formatting after comma)
+        ArgumentSyntax newActualArgument = SyntaxFactory.Argument(
+            actualNode
+                .WithoutLeadingTrivia()
+                .WithoutTrailingTrivia()
+                .WithLeadingTrivia(SyntaxFactory.Space));
+        newArguments.Add(newActualArgument);
+
+        // Add remaining arguments (e.g., message) with their original separators and trivia
+        var originalSeparators = argumentList.Arguments.GetSeparators().ToList();
+        for (int i = conditionIndex + 1; i < argumentList.Arguments.Count; i++)
+        {
+            // Get the separator that was before this argument (at index i-1 in the separators list)
+            if (i - 1 < originalSeparators.Count)
+            {
+                newSeparators.Add(originalSeparators[i - 1]);
+            }
+
+            newArguments.Add(argumentList.Arguments[i]);
+        }
+
+        newArgumentList = argumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments, newSeparators));
 
         editor.ReplaceNode(argumentList, newArgumentList);
 
         return editor.GetChangedDocument();
+    }
+
+    private static async Task<Document> FixAssertMethodForAddTwoArgumentsModeAsync(Document document, Location conditionLocation, Location firstArgLocation, Location secondArgLocation, Location thirdArgLocation, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
+    {
+        // Handle Contains with comparer: Assert.IsTrue(enumerable.Contains(item, comparer)) -> Assert.Contains(item, enumerable, comparer)
+        if (root.FindNode(conditionLocation.SourceSpan) is not ArgumentSyntax conditionNode)
+        {
+            return document;
+        }
+
+        if (conditionNode.Parent is not ArgumentListSyntax argumentList)
+        {
+            return document;
+        }
+
+        // FindNode may return ArgumentSyntax (outermost for tied spans) when the expression
+        // is a direct child of an ArgumentSyntax in the inner invocation. Extract the expression.
+        if (!TryGetExpressionFromNode(root, firstArgLocation, out ExpressionSyntax? firstArgNode))
+        {
+            return document;
+        }
+
+        if (!TryGetExpressionFromNode(root, secondArgLocation, out ExpressionSyntax? secondArgNode))
+        {
+            return document;
+        }
+
+        if (!TryGetExpressionFromNode(root, thirdArgLocation, out ExpressionSyntax? thirdArgNode))
+        {
+            return document;
+        }
+
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
+
+        int conditionIndex = argumentList.Arguments.IndexOf(conditionNode);
+
+        // Build the new arguments list: (firstArg, secondArg, thirdArg, ...remaining)
+        var newArguments = new List<ArgumentSyntax>();
+        var newSeparators = new List<SyntaxToken>();
+
+        newArguments.Add(SyntaxFactory.Argument(
+            firstArgNode
+                .WithLeadingTrivia(conditionNode.GetLeadingTrivia())
+                .WithoutTrailingTrivia()));
+
+        newSeparators.Add(SyntaxFactory.Token(SyntaxKind.CommaToken));
+        newArguments.Add(SyntaxFactory.Argument(
+            secondArgNode
+                .WithoutLeadingTrivia()
+                .WithoutTrailingTrivia()
+                .WithLeadingTrivia(SyntaxFactory.Space)));
+
+        newSeparators.Add(SyntaxFactory.Token(SyntaxKind.CommaToken));
+        newArguments.Add(SyntaxFactory.Argument(
+            thirdArgNode
+                .WithoutLeadingTrivia()
+                .WithoutTrailingTrivia()
+                .WithLeadingTrivia(SyntaxFactory.Space)));
+
+        // Add remaining arguments (e.g., message) with their original separators and trivia
+        var originalSeparators = argumentList.Arguments.GetSeparators().ToList();
+        for (int i = conditionIndex + 1; i < argumentList.Arguments.Count; i++)
+        {
+            if (i - 1 < originalSeparators.Count)
+            {
+                newSeparators.Add(originalSeparators[i - 1]);
+            }
+
+            newArguments.Add(argumentList.Arguments[i]);
+        }
+
+        ArgumentListSyntax newArgumentList = argumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments, newSeparators));
+        editor.ReplaceNode(argumentList, newArgumentList);
+
+        return editor.GetChangedDocument();
+    }
+
+    // FindNode may return an ArgumentSyntax when the location span coincides with
+    // the span of an argument in the inner invocation (e.g. Contains(item, comparer)).
+    // We handle this by extracting the expression from the ArgumentSyntax.
+    private static bool TryGetExpressionFromNode(SyntaxNode root, Location location, [NotNullWhen(true)] out ExpressionSyntax? expression)
+    {
+        SyntaxNode? node = root.FindNode(location.SourceSpan);
+        expression = node switch
+        {
+            ArgumentSyntax argument => argument.Expression,
+            ExpressionSyntax expr => expr,
+            _ => null,
+        };
+
+        return expression is not null;
     }
 
     private static async Task<Document> FixAssertMethodForRemoveArgumentModeAsync(
@@ -197,6 +352,104 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         {
             newArgumentList = argumentList.WithArguments(argumentList.Arguments.RemoveAt(argumentIndexToRemove));
         }
+
+        editor.ReplaceNode(argumentList, newArgumentList);
+
+        return editor.GetChangedDocument();
+    }
+
+    private static async Task<Document> FixAssertMethodForRemoveArgumentAndReplaceArgumentModeAsync(
+        Document document,
+        IReadOnlyList<Location> additionalLocations,
+        SyntaxNode root,
+        SimpleNameSyntax simpleNameSyntax,
+        string properAssertMethodName,
+        CancellationToken cancellationToken)
+    {
+        // Handle collection count transformations:
+        // Assert.AreEqual(0, list.Count) -> Assert.IsEmpty(list)
+        // Assert.AreEqual(list.Count, 0) -> Assert.IsEmpty(list)
+        if (root.FindNode(additionalLocations[0].SourceSpan) is not ArgumentSyntax expectedArgumentToRemove)
+        {
+            return document;
+        }
+
+        if (root.FindNode(additionalLocations[1].SourceSpan) is not ArgumentSyntax argumentToBeReplaced ||
+            root.FindNode(additionalLocations[2].SourceSpan) is not ExpressionSyntax replacement)
+        {
+            return document;
+        }
+
+        if (expectedArgumentToRemove.Parent is not ArgumentListSyntax argumentList)
+        {
+            return document;
+        }
+
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
+
+        int argumentIndexToRemove = argumentList.Arguments.IndexOf(expectedArgumentToRemove);
+        ArgumentListSyntax newArgumentList = argumentList.ReplaceNode(argumentToBeReplaced, argumentToBeReplaced.WithExpression(replacement));
+        newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.RemoveAt(argumentIndexToRemove));
+        editor.ReplaceNode(argumentList, newArgumentList);
+
+        return editor.GetChangedDocument();
+    }
+
+    private static async Task<Document> FixAssertMethodForRemoveArgumentReplaceArgumentAndAddArgumentModeAsync(
+        Document document,
+        IReadOnlyList<Location> additionalLocations,
+        SyntaxNode root,
+        SimpleNameSyntax simpleNameSyntax,
+        string properAssertMethodName,
+        CancellationToken cancellationToken)
+    {
+        // Handle LINQ Count predicate transformations:
+        // Assert.AreEqual(1, collection.Count(x => x == 1)) -> Assert.ContainsSingle(x => x == 1, collection)
+        if (root.FindNode(additionalLocations[0].SourceSpan) is not ArgumentSyntax expectedArgumentToRemove)
+        {
+            return document;
+        }
+
+        if (root.FindNode(additionalLocations[1].SourceSpan, getInnermostNodeForTie: false) is not ArgumentSyntax argumentToBeReplaced ||
+            root.FindNode(additionalLocations[2].SourceSpan, getInnermostNodeForTie: true) is not ExpressionSyntax replacement ||
+            root.FindNode(additionalLocations[3].SourceSpan, getInnermostNodeForTie: true) is not ExpressionSyntax additionalArgument)
+        {
+            return document;
+        }
+
+        if (expectedArgumentToRemove.Parent is not ArgumentListSyntax argumentList)
+        {
+            return document;
+        }
+
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
+
+        // Calculate indices before any modifications
+        int argumentIndexToRemove = argumentList.Arguments.IndexOf(expectedArgumentToRemove);
+        int argumentIndexToReplace = argumentList.Arguments.IndexOf(argumentToBeReplaced);
+        // Validate that both arguments were found
+        if (argumentIndexToRemove == -1 || argumentIndexToReplace == -1)
+        {
+            return document;
+        }
+
+        // For ContainsSingle, we expect argumentIndexToRemove=0 (the constant 1) and argumentIndexToReplace=1 (the Count expression)
+        // The general logic below handles any ordering, matching the pattern in FixAssertMethodForRemoveArgumentAndReplaceArgumentModeAsync
+
+        // Replace the second argument with the predicate
+        ArgumentSyntax newArgument = argumentToBeReplaced.WithExpression(replacement);
+        ArgumentListSyntax newArgumentList = argumentList.ReplaceNode(argumentToBeReplaced, newArgument);
+
+        // Remove the first argument - the index is still valid because ReplaceNode preserves structure
+        newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.RemoveAt(argumentIndexToRemove));
+
+        // Calculate where to insert the collection argument
+        // After removing the first argument, if the replaced argument was after it, its index decreases by 1
+        // We want to insert after the predicate (which is now at the adjusted index)
+        int adjustedInsertionIndex = argumentIndexToReplace > argumentIndexToRemove ? argumentIndexToReplace - 1 : argumentIndexToReplace;
+        newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.Insert(adjustedInsertionIndex + 1, SyntaxFactory.Argument(additionalArgument).WithAdditionalAnnotations(Formatter.Annotation)));
 
         editor.ReplaceNode(argumentList, newArgumentList);
 

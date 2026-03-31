@@ -9,8 +9,11 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestClass]
 public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
 {
+    // Source code for a project that validates MSTest supporting Native AOT.
+    // Because MSTest is built on top of Microsoft.Testing.Platform, this also exercises
+    // additional MTP code paths beyond what the MTP-only NativeAOT test covers.
     private const string SourceCode = """
-#file NativeAotTests.csproj
+#file MSTestNativeAotTests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>$TargetFramework$</TargetFramework>
@@ -20,6 +23,8 @@ public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
         <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
         <PublishAot>true</PublishAot>
+        <!-- Show individual trim/AOT warnings instead of a single IL2104 per assembly -->
+        <TrimmerSingleWarn>false</TrimmerSingleWarn>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
@@ -41,7 +46,7 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 
-using NativeAotTests;
+using MSTestNativeAotTests;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.AddTestFramework(new SourceGeneratedTestNodesBuilder());
@@ -82,45 +87,33 @@ public class UnitTest1
 """;
 
     [TestMethod]
-    public async Task NativeAotTests_WillRunWithExitCodeZero()
+    // The hosted AzDO agents for Mac OS don't have the required tooling for us to test Native AOT.
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task NativeAotTests_WillRunWithExitCodeZero(string tfm)
     {
-        // The hosted AzDO agents for Mac OS don't have the required tooling for us to test Native AOT.
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            return;
-        }
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"MSTestNativeAotTests_{tfm}",
+            SourceCode
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MSTestEngineVersion$", MSTestEngineVersion),
+            addPublicFeeds: true);
 
-        // The native AOT publication is pretty flaky and is often failing on CI with "fatal error LNK1136: invalid or corrupt file",
-        // or sometimes doesn't fail but the native code generation is not done.
-        // Retrying the restore/publish on fresh asset seems to be more effective than retrying on the same asset.
-        await RetryHelper.RetryAsync(
-            async () =>
-            {
-                using TestAsset generator = await TestAsset.GenerateAssetAsync(
-                    "NativeAotTests",
-                    SourceCode
-                    .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                    .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
-                    .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                    .PatchCodeWithReplace("$MSTestEngineVersion$", MSTestEngineVersion),
-                    addPublicFeeds: true);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            retryCount: 0,
+            cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertOutputContains("Generating native code");
 
-                await DotnetCli.RunAsync(
-                    $"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
-                    AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-                    retryCount: 0);
-                DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-                    $"publish -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
-                    AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-                    timeoutInSeconds: 90,
-                    retryCount: 0);
-                compilationResult.AssertOutputContains("Generating native code");
+        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
 
-                var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent, RID, Verb.publish);
-
-                TestHostResult result = await testHost.ExecuteAsync();
-                result.AssertOutputContains($"MSTest.Engine v{MSTestEngineVersion}");
-                result.AssertExitCodeIs(0);
-            }, times: 15, every: TimeSpan.FromSeconds(5));
+        TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        result.AssertOutputContains($"MSTest.Engine v{MSTestEngineVersion}");
+        result.AssertExitCodeIs(0);
     }
+
+    public TestContext TestContext { get; set; }
 }

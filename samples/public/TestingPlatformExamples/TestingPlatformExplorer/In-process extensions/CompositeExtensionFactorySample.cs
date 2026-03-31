@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.OutputDevice;
-using Microsoft.Testing.Platform.TestHost;
+using Microsoft.Testing.Platform.Services;
 
 namespace TestingPlatformExplorer.InProcess;
 
@@ -47,7 +48,7 @@ internal sealed class DisplayCompositeExtensionFactorySample : ITestSessionLifet
                     await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayCompositeExtensionFactorySample]TestNode '{testNodeId}' with display name '{testNodeDisplayName}' is in progress")
                     {
                         ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Green }
-                    });
+                    }, cancellationToken);
                     break;
                 }
             case PassedTestNodeStateProperty _:
@@ -55,7 +56,7 @@ internal sealed class DisplayCompositeExtensionFactorySample : ITestSessionLifet
                     await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayCompositeExtensionFactorySample]TestNode '{testNodeId}' with display name '{testNodeDisplayName}' is completed")
                     {
                         ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Green }
-                    });
+                    }, cancellationToken);
                     break;
                 }
             case FailedTestNodeStateProperty failedTestNodeStateProperty:
@@ -63,7 +64,7 @@ internal sealed class DisplayCompositeExtensionFactorySample : ITestSessionLifet
                     await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayCompositeExtensionFactorySample]TestNode '{testNodeId}' with display name '{testNodeDisplayName}' is failed with '{failedTestNodeStateProperty?.Exception?.Message}'")
                     {
                         ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Red }
-                    });
+                    }, cancellationToken);
                     break;
                 }
             case SkippedTestNodeStateProperty _:
@@ -71,7 +72,7 @@ internal sealed class DisplayCompositeExtensionFactorySample : ITestSessionLifet
                     await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayCompositeExtensionFactorySample]TestNode '{testNodeId}' with display name '{testNodeDisplayName}' is skipped")
                     {
                         ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.White }
-                    });
+                    }, cancellationToken);
                     break;
                 }
             default:
@@ -79,15 +80,15 @@ internal sealed class DisplayCompositeExtensionFactorySample : ITestSessionLifet
         }
     }
 
-    public async Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
         => await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("[DisplayCompositeExtensionFactorySample]Hello from OnTestSessionStartingAsync")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.DarkGreen }
-        });
+        }, testSessionContext.CancellationToken);
 
-    public async Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
         => await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayCompositeExtensionFactorySample]Total received 'TestNodeUpdateMessage': {_testNodeUpdateMessageCount}")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Green }
-        });
+        }, testSessionContext.CancellationToken);
 }

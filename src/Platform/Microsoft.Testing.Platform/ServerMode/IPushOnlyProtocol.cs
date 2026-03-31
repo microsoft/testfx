@@ -3,11 +3,7 @@
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal interface IPushOnlyProtocol :
-#if NETCOREAPP
-    IAsyncDisposable,
-#endif
-    IDisposable
+internal interface IPushOnlyProtocol : IDisposable
 {
     bool IsServerMode { get; }
 

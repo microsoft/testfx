@@ -8,22 +8,19 @@ namespace SuiteLifeCycleTestProject;
 [TestClass]
 public class LifeCycleAssemblyInitializeAndCleanup
 {
-    private static TestContext s_testContext = null!;
-
     [AssemblyInitialize]
     public static void AssemblyInit(TestContext testContext)
     {
-        s_testContext = testContext;
-        s_testContext.WriteLine("AssemblyInit was called");
+        testContext.WriteLine("AssemblyInit was called");
         Console.WriteLine("Console: AssemblyInit was called");
         Trace.WriteLine("Trace: AssemblyInit was called");
         Debug.WriteLine("Debug: AssemblyInit was called");
     }
 
     [AssemblyCleanup]
-    public static void AssemblyCleanup()
+    public static void AssemblyCleanup(TestContext testContext)
     {
-        s_testContext.WriteLine("AssemblyCleanup was called");
+        testContext.WriteLine("AssemblyCleanup was called");
         Console.WriteLine("Console: AssemblyCleanup was called");
         Trace.WriteLine("Trace: AssemblyCleanup was called");
         Debug.WriteLine("Debug: AssemblyCleanup was called");

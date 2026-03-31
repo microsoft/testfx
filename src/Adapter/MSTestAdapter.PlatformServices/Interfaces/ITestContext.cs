@@ -8,7 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 /// <summary>
 /// Operations on the TestContext object that is implemented differently for each platform.
 /// </summary>
-public interface ITestContext
+internal interface ITestContext
 {
     /// <summary>
     /// Gets the inner test context object.

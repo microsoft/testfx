@@ -4,6 +4,431 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="2.1.0" />[2.1.0] - 2026-02-03
+
+See full log [of v4.0.2...v4.1.0](https://github.com/microsoft/testfx/compare/v4.0.2...v4.1.0)
+
+### Added
+
+* Add AI support to the `Microsoft.Testing.Platform` by @MarcoRossignoli in [#6777](https://github.com/microsoft/testfx/pull/6777)
+  * this is currently a prototype only.
+* Avoid BlockingCollection in AsyncConsumerDataProcessor by @Youssef1313 in [#6887](https://github.com/microsoft/testfx/pull/6887)
+* \[MTP] Add initial support for OTel by @Evangelink in [#6511](https://github.com/microsoft/testfx/pull/6511)
+* Remove experimental attr from NopFilter by @mariam-abdulla in [#7169](https://github.com/microsoft/testfx/pull/7169)
+* Obsolete AddTestSessionLifetimeHandle in favor of AddTestSessionLifetimeHandler by @Youssef1313 in [#7200](https://github.com/microsoft/testfx/pull/7200)
+* Allow none for --hangdump-type by @Youssef1313 in [#7213](https://github.com/microsoft/testfx/pull/7213)
+
+### Fixed
+
+* VSTestBridge: Don't add TRX properties when TRX not enabled by @Youssef1313 in [#6872](https://github.com/microsoft/testfx/pull/6872)
+* Obsolete CancelledTestNodeStateProperty by @Copilot in [#6828](https://github.com/microsoft/testfx/pull/6828)
+* Fix hangdump not working under dotnet test with .NET 10 SDK by @Copilot in [#6968](https://github.com/microsoft/testfx/pull/6968)
+* Remove incorrect DefaultHangTimeSpanTimeout in HangDumpActivityIndicator by @Youssef1313 in [#7006](https://github.com/microsoft/testfx/pull/7006)
+* Fix hangdump on macOS by @Youssef1313 in [#7005](https://github.com/microsoft/testfx/pull/7005)
+* Include test display name in AzDO error reports by @Copilot in [#7026](https://github.com/microsoft/testfx/pull/7026)
+* Fix race in HangDumpProcessLifetimeHandler for pipe server field read/write by @Youssef1313 in [#7048](https://github.com/microsoft/testfx/pull/7048)
+* Fix MTP command-line parsing by @Youssef1313 in [#7044](https://github.com/microsoft/testfx/pull/7044)
+* Fix TRX not produced under `dotnet test` when using `--crashdump` and crash happens by @Copilot in [#7040](https://github.com/microsoft/testfx/pull/7040)
+* Fix: runsettings environment variables ignored during test discovery by @Copilot in [#7078](https://github.com/microsoft/testfx/pull/7078)
+* Fix Jsonite implementation to handle surrogates correctly by @Youssef1313 in [#7201](https://github.com/microsoft/testfx/pull/7201)
+* Fix MTP Trx handling of the final outcome by @Youssef1313 in [#7234](https://github.com/microsoft/testfx/pull/7234)
+* Avoid duplicating exception message when running with dotnet test by @Youssef1313 in [#7250](https://github.com/microsoft/testfx/pull/7250)
+* Disable progress on non-capable terminals by @Youssef1313 in [#7248](https://github.com/microsoft/testfx/pull/7248)
+* Report discovered telemetry events correctly for MTP by @Youssef1313 in [#7219](https://github.com/microsoft/testfx/pull/7219)
+
+### Housekeeping
+
+* Cleanup TestApplication by @Youssef1313 in [#6728](https://github.com/microsoft/testfx/pull/6728)
+* Cleanup Dispose implementations by @Youssef1313 in [#6730](https://github.com/microsoft/testfx/pull/6730)
+* Clarify --retry-failed-tests requires a numeric argument by @Copilot in [#6830](https://github.com/microsoft/testfx/pull/6830)
+* Cleanup vstest.TestCase.StandardError/vstest.TestCase.StandardOutput by @Youssef1313 in [#6870](https://github.com/microsoft/testfx/pull/6870)
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Platform/2.1.0)
+* Microsoft.Testing.Platform.MSBuild: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/2.1.0)
+* Microsoft.Testing.Extensions.CrashDump: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/2.1.0)
+* Microsoft.Testing.Extensions.HangDump: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/2.1.0)
+* Microsoft.Testing.Extensions.HotReload: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/2.1.0)
+* Microsoft.Testing.Extensions.Retry: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/2.1.0)
+* Microsoft.Testing.Extensions.Telemetry: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/2.1.0)
+* Microsoft.Testing.Extensions.TrxReport: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/2.1.0)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/2.1.0)
+* Microsoft.Testing.Extensions.VSTestBridge: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/2.1.0)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/2.1.0)
+* Microsoft.Testing.Platform.AI: [1.0.0-alpha.26103.11](https://www.nuget.org/packages/Microsoft.Testing.Platform.AI/1.0.0-alpha.26103.11)
+* Microsoft.Testing.Extensions.AzureFoundry: [1.0.0-alpha.26103.11](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureFoundry/1.0.0-alpha.26103.11)
+* Microsoft.Testing.Extensions.OpenTelemetry: [1.0.0-alpha.26103.11](https://www.nuget.org/packages/Microsoft.Testing.Extensions.OpenTelemetry/1.0.0-alpha.26103.11)
+
+## <a name="2.0.2" />[2.0.2] - 2025-11-11
+
+See full log [of v4.0.1...v4.0.2](https://github.com/microsoft/testfx/compare/v4.0.1...v4.0.2)
+
+* No change, released to keep version aligned with MSTest.
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [2.0.2](https://www.nuget.org/packages/Microsoft.Testing.Platform/2.0.2)
+* Microsoft.Testing.Platform.MSBuild: [2.0.2](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/2.0.2)
+* Microsoft.Testing.Extensions.CrashDump: [2.0.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/2.0.2)
+* Microsoft.Testing.Extensions.HangDump: [2.0.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/2.0.2)
+* Microsoft.Testing.Extensions.HotReload: [2.0.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/2.0.2)
+* Microsoft.Testing.Extensions.Retry: [2.0.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/2.0.2)
+* Microsoft.Testing.Extensions.Telemetry: [2.0.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/2.0.2)
+* Microsoft.Testing.Extensions.TrxReport: [2.0.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/2.0.2)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [2.0.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/2.0.2)
+* Microsoft.Testing.Extensions.VSTestBridge: [2.0.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/2.0.2)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [2.0.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/2.0.2)
+
+## <a name="2.0.1" />[2.0.1] - 2025-10-14
+
+See full log [of v4.0.0...v4.0.1](https://github.com/microsoft/testfx/compare/v4.0.0...v4.0.1)
+
+### Fixed
+
+* Fix _MTPTestTarget condition by @Youssef1313 in [#6672](https://github.com/microsoft/testfx/pull/6672)
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [2.0.1](https://www.nuget.org/packages/Microsoft.Testing.Platform/2.0.1)
+* Microsoft.Testing.Platform.MSBuild: [2.0.1](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/2.0.1)
+* Microsoft.Testing.Extensions.CrashDump: [2.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/2.0.1)
+* Microsoft.Testing.Extensions.HangDump: [2.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/2.0.1)
+* Microsoft.Testing.Extensions.HotReload: [2.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/2.0.1)
+* Microsoft.Testing.Extensions.Retry: [2.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/2.0.1)
+* Microsoft.Testing.Extensions.Telemetry: [2.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/2.0.1)
+* Microsoft.Testing.Extensions.TrxReport: [2.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/2.0.1)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [2.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/2.0.1)
+* Microsoft.Testing.Extensions.VSTestBridge: [2.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/2.0.1)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [2.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/2.0.1)
+
+## <a name="2.0.0" />[2.0.0] - 2025-10-07
+
+See full log [of v3.11.0...v4.0.0](https://github.com/microsoft/testfx/compare/v3.11.0...v4.0.0)
+
+### Changed
+
+* Breaking changes: see <https://github.com/microsoft/testfx/issues/5762> for information.
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Platform/2.0.0)
+* Microsoft.Testing.Platform.MSBuild: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/2.0.0)
+* Microsoft.Testing.Extensions.CrashDump: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/2.0.0)
+* Microsoft.Testing.Extensions.HangDump: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/2.0.0)
+* Microsoft.Testing.Extensions.HotReload: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/2.0.0)
+* Microsoft.Testing.Extensions.Retry: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/2.0.0)
+* Microsoft.Testing.Extensions.Telemetry: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/2.0.0)
+* Microsoft.Testing.Extensions.TrxReport: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/2.0.0)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/2.0.0)
+* Microsoft.Testing.Extensions.VSTestBridge: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/2.0.0)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/2.0.0)
+
+## <a name="1.9.1" />[1.9.1] - 2025-11-11
+
+See full log [of v4.0.1...v4.0.2](https://github.com/microsoft/testfx/compare/v4.0.1...v4.0.2)
+
+* No change, released to keep version aligned with MSTest.
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [1.9.1](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.9.1)
+* Microsoft.Testing.Platform.MSBuild: [1.9.1](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.9.1)
+* Microsoft.Testing.Extensions.CrashDump: [1.9.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.9.1)
+* Microsoft.Testing.Extensions.HangDump: [1.9.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.9.1)
+* Microsoft.Testing.Extensions.HotReload: [1.9.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.9.1)
+* Microsoft.Testing.Extensions.Retry: [1.9.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.9.1)
+* Microsoft.Testing.Extensions.Telemetry: [1.9.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.9.1)
+* Microsoft.Testing.Extensions.TrxReport: [1.9.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.9.1)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.9.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.9.1)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.9.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.9.1)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.9.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.9.1)
+
+## <a name="1.9.0" />[1.9.0] - 2025-10-01
+
+See full log [of v3.10.5...v3.11.0](https://github.com/microsoft/testfx/compare/v3.10.5...v3.11.0)
+
+### Added
+
+* Make azdo extension stable by @Evangelink in [#6252](https://github.com/microsoft/testfx/pull/6252)
+* Cleanup TerminalTestReporter by @Evangelink in [#6281](https://github.com/microsoft/testfx/pull/6281)
+* Add missing pipe protocol features by @Youssef1313 in [#6342](https://github.com/microsoft/testfx/pull/6342) and [#6564](https://github.com/microsoft/testfx/pull/6564)
+* Add `--debug` option to MTP by @Evangelink in [#6499](https://github.com/microsoft/testfx/pull/6499) and [#6516](https://github.com/microsoft/testfx/pull/6516)
+* Dump child process on hang by @nohwnd in [#6574](https://github.com/microsoft/testfx/pull/6574)
+* \[MTP] Support Trx Description by @Youssef1313 in [#6464](https://github.com/microsoft/testfx/pull/6464)
+* \[MTP] Warn when VSTest arguments are passed via dotnet test when they will be ignored by @Copilot in #5698 (backport to rel/3.11) by @youssef-backport-bot in [#6634](https://github.com/microsoft/testfx/pull/6634)
+
+### Fixed
+
+* Fix terminal reporter when architecture is null by @Evangelink in [#6284](https://github.com/microsoft/testfx/pull/6284)
+* Fix escape character handling in test display names with multi-target framework optimization by @Copilot in [#6174](https://github.com/microsoft/testfx/pull/6174)
+* Fix handshake serialization if properties dictionary is null or empty by @Youssef1313 in [#6532](https://github.com/microsoft/testfx/pull/6532)
+* Implement discovery indicator fixes - show neutral progress colors and error for zero tests by @Copilot in [#6579](https://github.com/microsoft/testfx/pull/6579)
+* Add localized resource strings for TerminalTestReporter summary output by @Copilot in [#6602](https://github.com/microsoft/testfx/pull/6602)
+* Add DiagnosticSource 6.0.0 to MTP telemetry by @Youssef1313 in [#6638](https://github.com/microsoft/testfx/pull/6638)
+* Avoid unnecessary `List<string>` allocations in ObjectModelConverters by @Youssef1313 in [#6396](https://github.com/microsoft/testfx/pull/6396)
+
+### Housekeeping
+
+* Remove unused JsonRpc protocol properties by @Youssef1313 in [#6395](https://github.com/microsoft/testfx/pull/6395)
+* Rename ReadShort and WriteShort to ReadUShort and WriteUShort by @Youssef1313 in [#6530](https://github.com/microsoft/testfx/pull/6530)
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [1.9.0](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.9.0)
+* Microsoft.Testing.Platform.MSBuild: [1.9.0](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.9.0)
+* Microsoft.Testing.Extensions.CrashDump: [1.9.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.9.0)
+* Microsoft.Testing.Extensions.HangDump: [1.9.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.9.0)
+* Microsoft.Testing.Extensions.HotReload: [1.9.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.9.0)
+* Microsoft.Testing.Extensions.Retry: [1.9.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.9.0)
+* Microsoft.Testing.Extensions.Telemetry: [1.9.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.9.0)
+* Microsoft.Testing.Extensions.TrxReport: [1.9.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.9.0)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.9.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.9.0)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.9.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.9.0)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.9.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.9.0)
+
+## <a name="1.8.5" />[1.8.5] - 2025-09-30
+
+See full log [of v3.10.4...v3.10.5](https://github.com/microsoft/testfx/compare/v3.10.4...v3.10.5)
+
+### Fixed
+
+* Avoid long path issues for pipes by @Youssef1313 in [#6536](https://github.com/microsoft/testfx/pull/6536)
+* Clean TestProgressState on TestExecutionCompleted to fix HotReload by @Youssef1313 in [#6505](https://github.com/microsoft/testfx/pull/6551)
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.8.5)
+* Microsoft.Testing.Platform.MSBuild: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.8.5)
+* Microsoft.Testing.Extensions.CrashDump: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.8.5)
+* Microsoft.Testing.Extensions.HangDump: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.8.5)
+* Microsoft.Testing.Extensions.HotReload: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.8.5)
+* Microsoft.Testing.Extensions.Retry: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.8.5)
+* Microsoft.Testing.Extensions.Telemetry: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.8.5)
+* Microsoft.Testing.Extensions.TrxReport: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.8.5)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.8.5)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.8.5)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25480.6](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25480.6)
+
+## <a name="1.8.4" />[1.8.4] - 2025-09-02
+
+See full log [of v3.10.3...v3.10.4](https://github.com/microsoft/testfx/compare/v3.10.3...v3.10.4)
+
+### Fixed
+
+* Fix command-line arguments escaping when retry and test host controllers start child processes by @Youssef1313 in [#6462](https://github.com/microsoft/testfx/pull/6462)
+* Don't keep MTP process alive if pipe disconnects by @Youssef1313 in [#6477](https://github.com/microsoft/testfx/pull/6477)
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [1.8.4](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.8.4)
+* Microsoft.Testing.Platform.MSBuild: [1.8.4](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.8.4)
+* Microsoft.Testing.Extensions.CrashDump: [1.8.4](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.8.4)
+* Microsoft.Testing.Extensions.HangDump: [1.8.4](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.8.4)
+* Microsoft.Testing.Extensions.HotReload: [1.8.4](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.8.4)
+* Microsoft.Testing.Extensions.Retry: [1.8.4](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.8.4)
+* Microsoft.Testing.Extensions.Telemetry: [1.8.4](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.8.4)
+* Microsoft.Testing.Extensions.TrxReport: [1.8.4](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.8.4)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.8.4](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.8.4)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.8.4](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.8.4)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25452.8](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25452.8)
+
+## <a name="1.8.3" />[1.8.3] - 2025-08-26
+
+See full log [of v3.10.2...v3.10.3](https://github.com/microsoft/testfx/compare/v3.10.2...v3.10.3)
+
+### Fixed
+
+* Unify reading runsettings by @Youssef1313 in [#6434](https://github.com/microsoft/testfx/pull/6434)
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [1.8.3](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.8.3)
+* Microsoft.Testing.Platform.MSBuild: [1.8.3](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.8.3)
+* Microsoft.Testing.Extensions.CrashDump: [1.8.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.8.3)
+* Microsoft.Testing.Extensions.HangDump: [1.8.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.8.3)
+* Microsoft.Testing.Extensions.HotReload: [1.8.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.8.3)
+* Microsoft.Testing.Extensions.Retry: [1.8.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.8.3)
+* Microsoft.Testing.Extensions.Telemetry: [1.8.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.8.3)
+* Microsoft.Testing.Extensions.TrxReport: [1.8.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.8.3)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.8.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.8.3)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.8.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.8.3)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25425.9](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25425.9)
+
+## <a name="1.8.2" />[1.8.2] - 2025-08-12
+
+See full log [of v3.10.1...v3.10.2](https://github.com/microsoft/testfx/compare/v3.10.1...v3.10.2)
+
+* No change, released to keep version aligned with MSTest.
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [1.8.2](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.8.2)
+* Microsoft.Testing.Platform.MSBuild: [1.8.2](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.8.2)
+* Microsoft.Testing.Extensions.CrashDump: [1.8.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.8.2)
+* Microsoft.Testing.Extensions.HangDump: [1.8.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.8.2)
+* Microsoft.Testing.Extensions.HotReload: [1.8.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.8.2)
+* Microsoft.Testing.Extensions.Retry: [1.8.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.8.2)
+* Microsoft.Testing.Extensions.Telemetry: [1.8.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.8.2)
+* Microsoft.Testing.Extensions.TrxReport: [1.8.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.8.2)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.8.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.8.2)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.8.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.8.2)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25411.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25411.2)
+
+## <a name="1.8.1" />[1.8.1] - 2025-08-05
+
+See full log [of v3.10.0...v3.10.1](https://github.com/microsoft/testfx/compare/v3.10.0...v3.10.1)
+
+* No change, released to keep version aligned with MSTest.
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [1.8.1](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.8.1)
+* Microsoft.Testing.Platform.MSBuild: [1.8.1](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.8.1)
+* Microsoft.Testing.Extensions.CrashDump: [1.8.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.8.1)
+* Microsoft.Testing.Extensions.HangDump: [1.8.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.8.1)
+* Microsoft.Testing.Extensions.HotReload: [1.8.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.8.1)
+* Microsoft.Testing.Extensions.Retry: [1.8.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.8.1)
+* Microsoft.Testing.Extensions.Telemetry: [1.8.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.8.1)
+* Microsoft.Testing.Extensions.TrxReport: [1.8.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.8.1)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.8.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.8.1)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.8.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.8.1)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25405.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25405.1)
+
+## <a name="1.8.0" />[1.8.0] - 2025-07-29
+
+See full log [of v3.9.3...v3.10.0](https://github.com/microsoft/testfx/compare/v3.9.3...v3.10.0)
+
+### Added
+
+* Enable filtering with `TestMetadataProperty` in the treenode filter by @thomhurst in [#5679](https://github.com/microsoft/testfx/pull/5679)
+* Show colors in AzDo and GH actions by @nohwnd in [#5535](https://github.com/microsoft/testfx/pull/5535)
+* Handle metadata properties in TrxReport by @Youssef1313 in [#5891](https://github.com/microsoft/testfx/pull/5891)
+* Obsolete `ITestApplicationLifecycleCallbacks` and add `ITestHostApplicationLifetime` by @Youssef1313 in [#5889](https://github.com/microsoft/testfx/pull/5889)
+* Fix TrxReport not including test ignore reason by @Youssef1313 in [#5896](https://github.com/microsoft/testfx/pull/5896)
+* Support `--filter-uid` on console by @Youssef1313 in [#6002](https://github.com/microsoft/testfx/pull/6002)
+* Support unary not operator in TreeNodeFilter by @Youssef1313 in [#6127](https://github.com/microsoft/testfx/pull/6127)
+
+### Fixed
+
+* Fix MTP timeout parsing to use invariant culture instead of current culture by @Copilot in [#5705](https://github.com/microsoft/testfx/pull/5705)
+* Add lifecycle callbacks to test host orchestrator by @Youssef1313 in [#5717](https://github.com/microsoft/testfx/pull/5717)
+* Avoid potential clash with default TRX file name by @Youssef1313 in [#5939](https://github.com/microsoft/testfx/pull/5939)
+* Ensure TestRun id for retries is the same in TRX by @Youssef1313 in [#5945](https://github.com/microsoft/testfx/pull/5945)
+* Do not create TestResults dir for help and info options by @Evangelink in [#6020](https://github.com/microsoft/testfx/pull/6020)
+
+### Housekeeping
+
+* remove redundant Empty constructor and mark as warning by @SimonCropp in [#5378](https://github.com/microsoft/testfx/pull/5378)
+* use char based APIs in TryUnescape by @SimonCropp in [#5608](https://github.com/microsoft/testfx/pull/5608)
+* attribute param nullability in TryUnescape by @SimonCropp in [#5609](https://github.com/microsoft/testfx/pull/5609)
+* Cleanup TestApplicationResult by @Youssef1313 in [#5615](https://github.com/microsoft/testfx/pull/5615)
+* remove redundant fields by @SimonCropp in [#5610](https://github.com/microsoft/testfx/pull/5610)
+* Rename RegisterTestFramework adapterFactory parameter to frameworkFactory by @Copilot in [#5691](https://github.com/microsoft/testfx/pull/5691)
+* prefer specific scoped variables by @SimonCropp in [#5611](https://github.com/microsoft/testfx/pull/5611)
+* \[VSTestBridge] Avoid creating Uri instance for every test case. by @Youssef1313 in [#5743](https://github.com/microsoft/testfx/pull/5743)
+* avoid redundant string builder instance in ValidateTestHostEnvironmentVariablesAsync by @SimonCropp in [#5905](https://github.com/microsoft/testfx/pull/5905)
+* remove redundant assignment in TryGetOptionArgumentList by @SimonCropp in [#5908](https://github.com/microsoft/testfx/pull/5908)
+* remove redundant environment instance in TestHostBuilder by @SimonCropp in [#5914](https://github.com/microsoft/testfx/pull/5914)
+* Avoid keeping instance of process in DotnetMuxerLocator by @SimonCropp in [#5911](https://github.com/microsoft/testfx/pull/5911)
+* Add ProcessId to IEnvironment by @SimonCropp in [#5913](https://github.com/microsoft/testfx/pull/5913)
+* CrashDumpEnvironmentVariableProvider prefixes can be static by @SimonCropp in [#5909](https://github.com/microsoft/testfx/pull/5909)
+* remove unused SystemProcessHandler parameter by @SimonCropp in [#5918](https://github.com/microsoft/testfx/pull/5918)
+* missing using in AttachDebuggerIfNeeded by @SimonCropp in [#5919](https://github.com/microsoft/testfx/pull/5919)
+* redundant null checks in TrxProcessLifetimeHandler by @SimonCropp in [#5960](https://github.com/microsoft/testfx/pull/5960)
+* remove redundant BuildConsumerProducersAsync by @SimonCropp in [#5962](https://github.com/microsoft/testfx/pull/5962)
+* remove non generic ActionResult by @SimonCropp in [#5959](https://github.com/microsoft/testfx/pull/5959)
+* fix nullablity in FromFailedTest by @SimonCropp in [#5971](https://github.com/microsoft/testfx/pull/5971)
+* make dicts in NamedPipeBase strong typed by @SimonCropp in [#5973](https://github.com/microsoft/testfx/pull/5973)
+* simplify reading installLocation content by @SimonCropp in [#5968](https://github.com/microsoft/testfx/pull/5968)
+* update Polyfill and use Process.Kill by @SimonCropp in [#5943](https://github.com/microsoft/testfx/pull/5943)
+* Simplify IProcess.MainModule by @SimonCropp in [#5955](https://github.com/microsoft/testfx/pull/5955)
+* use ReadExactly from Polyfill by @SimonCropp in [#5972](https://github.com/microsoft/testfx/pull/5972)
+* suppress TPEXP warning for solution by @SimonCropp in [#5984](https://github.com/microsoft/testfx/pull/5984)
+* use ReadAllTextAsync from polyfill by @SimonCropp in [#5953](https://github.com/microsoft/testfx/pull/5953)
+* use TryAdd instead of TryGetValue and Add in Async MessageBus by @SimonCropp in [#5963](https://github.com/microsoft/testfx/pull/5963)
+* use XElement.LoadAsync in TrxCompareTool by @SimonCropp in [#5975](https://github.com/microsoft/testfx/pull/5975)
+* fix RunSettingsEnvironmentVariableProvider file name by @SimonCropp in [#6007](https://github.com/microsoft/testfx/pull/6007)
+* fix nullability of TestProgressState.DiscoveredTests by @SimonCropp in [#6011](https://github.com/microsoft/testfx/pull/6011)
+* remove Uid from DiscoveredTests by @SimonCropp in [#6019](https://github.com/microsoft/testfx/pull/6019)
+* remove predicate from RetryHelper by @SimonCropp in [#6027](https://github.com/microsoft/testfx/pull/6027)
+* update Polyfill and simplify SHA256 usage by @SimonCropp in [#6029](https://github.com/microsoft/testfx/pull/6029)
+* simplify TrxCompareTool using an inner type instead of tuples by @SimonCropp in [#6024](https://github.com/microsoft/testfx/pull/6024)
+* reduce some linq alloc in AppendTestDiscoverySummary by @SimonCropp in [#6025](https://github.com/microsoft/testfx/pull/6025)
+* fix Syncronous typo by @SimonCropp in [#6048](https://github.com/microsoft/testfx/pull/6048)
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.8.0)
+* Microsoft.Testing.Platform.MSBuild: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.8.0)
+* Microsoft.Testing.Extensions.CrashDump: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.8.0)
+* Microsoft.Testing.Extensions.HangDump: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.8.0)
+* Microsoft.Testing.Extensions.HotReload: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.8.0)
+* Microsoft.Testing.Extensions.Retry: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.8.0)
+* Microsoft.Testing.Extensions.Telemetry: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.8.0)
+* Microsoft.Testing.Extensions.TrxReport: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.8.0)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.8.0)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.8.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.8.0)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25379.8](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25379.8)
+
+## <a name="1.7.3" />[1.7.3] - 2025-06-17
+
+See full log [of v3.9.2...v3.9.3](https://github.com/microsoft/testfx/compare/v3.9.2...v3.9.3)
+
+### Fixed
+
+* Simpler fix for dotnet test when using retry by @Youssef1313 in [#5731](https://github.com/microsoft/testfx/pull/5684)
+
+### Artifacts
+
+* Microsoft.Testing.Extensions.CrashDump: [1.7.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.7.3)
+* Microsoft.Testing.Extensions.HangDump: [1.7.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.7.3)
+* Microsoft.Testing.Extensions.HotReload: [1.7.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.7.3)
+* Microsoft.Testing.Extensions.Retry: [1.7.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.7.3)
+* Microsoft.Testing.Extensions.TrxReport: [1.7.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.7.3)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25317.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25317.1)
+
+## <a name="1.7.2" />[1.7.2] - 2025-06-10
+
+See full log [of v3.9.1...v3.9.2](https://github.com/microsoft/testfx/compare/v3.9.1...v3.9.2)
+
+### Fixed
+
+* Allow framework authors to use TestCase.FullyQualifiedName as the TestNodeUid by @Youssef1313 in [#5658](https://github.com/microsoft/testfx/pull/5658)
+
+### Artifacts
+
+* Microsoft.Testing.Extensions.CrashDump: [1.7.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.7.2)
+* Microsoft.Testing.Extensions.HangDump: [1.7.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.7.2)
+* Microsoft.Testing.Extensions.HotReload: [1.7.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.7.2)
+* Microsoft.Testing.Extensions.Retry: [1.7.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.7.2)
+* Microsoft.Testing.Extensions.TrxReport: [1.7.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.7.2)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25310.6](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25310.6)
+
+## <a name="1.7.1" />[1.7.1] - 2025-05-27
+
+See full log [of v3.9.0...v3.9.1](https://github.com/microsoft/testfx/compare/v3.9.0...v3.9.1)
+
+### Fixed
+
+* VSTestBridge: Handle TestPropertyAttributes.Trait instead of special casing specific properties by @Youssef1313 in [#5644](https://github.com/microsoft/testfx/pull/5644)
+
+### Artifacts
+
+* MSTest: [3.9.1](https://www.nuget.org/packages/MSTest/3.9.1)
+* MSTest.TestFramework: [3.9.1](https://www.nuget.org/packages/MSTest.TestFramework/3.9.1)
+* MSTest.TestAdapter: [3.9.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.9.1)
+* MSTest.Analyzers: [3.9.1](https://www.nuget.org/packages/MSTest.Analyzers/3.9.1)
+* MSTest.Sdk: [3.9.1](https://www.nuget.org/packages/MSTest.Sdk/3.9.1)
+* Microsoft.Testing.Extensions.CrashDump: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.7.1)
+* Microsoft.Testing.Extensions.HangDump: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.7.1)
+* Microsoft.Testing.Extensions.HotReload: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.7.1)
+* Microsoft.Testing.Extensions.Retry: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.7.1)
+* Microsoft.Testing.Extensions.TrxReport: [1.7.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.7.1)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25277.3](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25277.3)
+* MSTest.SourceGeneration: [1.0.0-alpha.25277.3](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25277.3)
+* MSTest.Engine: [1.0.0-alpha.25277.3](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25277.3)
+
 ## <a name="1.7.0" />[1.7.0] - 2025-05-20
 
 See full log [of v3.8.3...v3.9.0](https://github.com/microsoft/testfx/compare/v3.8.3...v3.9.0)
@@ -140,7 +565,7 @@ See full log [of v3.8.1...v3.8.2](https://github.com/microsoft/testfx/compare/v3
 
 ## <a name="1.6.1" />[1.6.1] - 2025-02-18
 
-See full log [of 3.8.0...v3.8.1](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
+See full log [of v3.8.0...v3.8.1](https://github.com/microsoft/testfx/compare/v3.8.0...v3.8.1)
 
 ### Fixed
 

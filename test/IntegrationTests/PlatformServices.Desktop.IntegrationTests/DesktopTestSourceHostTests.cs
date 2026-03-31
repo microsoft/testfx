@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
+using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -39,8 +39,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
         _testSourceHost = new TestSourceHost(
             GetTestAssemblyPath("DesktopTestProjectx86Debug"),
-            GetMockedIRunSettings(runSettingsXml).Object,
-            null);
+            GetMockedIRunSettings(runSettingsXml).Object);
         _testSourceHost.SetupHost();
 
         // Loading SampleProjectForAssemblyResolution.dll should not throw.
@@ -70,8 +69,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
         _testSourceHost = new TestSourceHost(
             GetTestAssemblyPath("DesktopTestProjectx86Debug"),
-            GetMockedIRunSettings(runSettingsXml).Object,
-            null);
+            GetMockedIRunSettings(runSettingsXml).Object);
         _testSourceHost.SetupHost();
 
         var asm = Assembly.LoadFrom(sampleProjectPath);
@@ -84,8 +82,8 @@ public class DesktopTestSourceHostTests : TestContainer
 
     public void DisposeShouldUnloadChildAppDomain()
     {
-        string testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug");
-        _testSourceHost = new TestSourceHost(testSource, null, null);
+        string testSourceHandler = GetTestAssemblyPath("DesktopTestProjectx86Debug");
+        _testSourceHost = new TestSourceHost(testSourceHandler, null);
         _testSourceHost.SetupHost();
 
         // Check that child appdomain was indeed created

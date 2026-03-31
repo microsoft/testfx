@@ -13,7 +13,7 @@ internal sealed class FastFilter
 {
     internal FastFilter(ImmutableDictionary<string, ISet<string>> filterProperties, Operation filterOperation, Operator filterOperator)
     {
-        Guard.NotNullOrEmpty(filterProperties);
+        Ensure.NotNullOrEmpty(filterProperties);
 
         FilterProperties = filterProperties;
 
@@ -21,7 +21,7 @@ internal sealed class FastFilter
             (filterOperation != Operation.Equal || (filterOperator != Operator.Or && filterOperator != Operator.None))
             && (filterOperation == Operation.NotEqual && (filterOperator == Operator.And || filterOperator == Operator.None)
                 ? true
-                : throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "An error occurred while creating Fast filter.")));
+                : throw new ArgumentException("An error occurred while creating Fast filter."));
     }
 
     internal ImmutableDictionary<string, ISet<string>> FilterProperties { get; }
@@ -37,11 +37,11 @@ internal sealed class FastFilter
             ? null
             : FilterProperties.Keys.All(name => properties.Contains(name))
                 ? null
-                : FilterProperties.Keys.Where(name => !properties.Contains(name)).ToArray();
+                : [.. FilterProperties.Keys.Where(name => !properties.Contains(name))];
 
     internal bool Evaluate(Func<string, object?> propertyValueProvider)
     {
-        Guard.NotNull(propertyValueProvider);
+        Ensure.NotNull(propertyValueProvider);
 
         bool matched = false;
         foreach (string name in FilterProperties.Keys)
@@ -83,7 +83,7 @@ internal sealed class FastFilter
         string? result = null;
         if (PropertyValueRegexReplacement == null)
         {
-            Match match = PropertyValueRegex!.Match(value);
+            Match match = PropertyValueRegex.Match(value);
             if (match.Success)
             {
                 result = match.Value;
@@ -91,7 +91,7 @@ internal sealed class FastFilter
         }
         else
         {
-            result = PropertyValueRegex!.Replace(value, PropertyValueRegexReplacement);
+            result = PropertyValueRegex.Replace(value, PropertyValueRegexReplacement);
         }
 
         return result;

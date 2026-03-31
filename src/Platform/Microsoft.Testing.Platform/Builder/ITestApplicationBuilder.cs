@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
+using Microsoft.Testing.Platform.TestHostOrchestrator;
 
 namespace Microsoft.Testing.Platform.Builder;
 
@@ -25,6 +26,12 @@ public interface ITestApplicationBuilder
     /// Gets the test host controllers manager.
     /// </summary>
     ITestHostControllersManager TestHostControllers { get; }
+
+    /// <summary>
+    /// Gets the test host orchestrator manager.
+    /// </summary>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    ITestHostOrchestratorManager TestHostOrchestrator { get; }
 
     /// <summary>
     /// Gets the command line manager.
@@ -47,11 +54,11 @@ public interface ITestApplicationBuilder
     /// Registers a test framework with the application builder.
     /// </summary>
     /// <param name="capabilitiesFactory">The factory method for creating test framework capabilities.</param>
-    /// <param name="adapterFactory">The factory method for creating a test framework adapter.</param>
+    /// <param name="frameworkFactory">The factory method for creating a test framework adapter.</param>
     /// <returns>The updated test application builder.</returns>
     ITestApplicationBuilder RegisterTestFramework(
         Func<IServiceProvider, ITestFrameworkCapabilities> capabilitiesFactory,
-        Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> adapterFactory);
+        Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> frameworkFactory);
 
     /// <summary>
     /// Builds the test application asynchronously.

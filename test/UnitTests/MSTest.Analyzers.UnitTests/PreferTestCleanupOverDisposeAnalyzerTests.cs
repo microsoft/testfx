@@ -68,6 +68,7 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
+#if NET
     [TestMethod]
     public async Task WhenTestClassHasDisposeAsync_Diagnostic()
     {
@@ -142,5 +143,50 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+#endif
+
+    [TestMethod]
+    public async Task WhenTestClassHasDisposeWithMultiLineBody_PreservesIndentation()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass : IDisposable
+            {
+                public void [|Dispose|]()
+                {
+                    Cleanup(
+                        1,
+                        2,
+                        3);
+                }
+
+                private void Cleanup(int a, int b, int c) { }
+            }
+            """;
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestCleanup]
+                public void TestCleanup()
+                {
+                    Cleanup(
+                        1,
+                        2,
+                        3);
+                }
+
+                private void Cleanup(int a, int b, int c) { }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 }

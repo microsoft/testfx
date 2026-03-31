@@ -23,7 +23,5 @@ internal static class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
     public static DiagnosticResult Diagnostic(DiagnosticDescriptor descriptor)
         => CSharpCodeFixVerifier<TAnalyzer, TCodeFix, TestingFrameworkVerifier>.Diagnostic(descriptor);
 
-    public sealed class Test : CSharpCodeFixTest<TAnalyzer, TCodeFix, TestingFrameworkVerifier>
-    {
-    }
+    public sealed class Test : CSharpCodeFixTest<TAnalyzer, TCodeFix, TestingFrameworkVerifier>;
 }

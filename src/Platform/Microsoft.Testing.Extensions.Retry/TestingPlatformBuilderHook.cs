@@ -15,6 +15,7 @@ public static class TestingPlatformBuilderHook
     /// </summary>
     /// <param name="testApplicationBuilder">The test application builder.</param>
     /// <param name="_">The command line arguments.</param>
+    [UnsupportedOSPlatform("browser")]
     public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] _)
         => testApplicationBuilder.AddRetryProvider();
 }

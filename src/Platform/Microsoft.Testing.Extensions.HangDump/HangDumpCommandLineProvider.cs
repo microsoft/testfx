@@ -17,9 +17,9 @@ internal sealed class HangDumpCommandLineProvider : ICommandLineOptionsProvider
     public const string HangDumpTypeOptionName = "hangdump-type";
 
 #if NETCOREAPP
-    private static readonly string[] HangDumpTypeOptions = ["Mini", "Heap", "Full", "Triage"];
+    private static readonly string[] HangDumpTypeOptions = ["Mini", "Heap", "Full", "Triage", "None"];
 #else
-    private static readonly string[] HangDumpTypeOptions = ["Mini", "Heap", "Full"];
+    private static readonly string[] HangDumpTypeOptions = ["Mini", "Heap", "Full", "None"];
 #endif
 
     private static readonly IReadOnlyCollection<CommandLineOption> CachedCommandLineOptions =

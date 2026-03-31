@@ -251,4 +251,202 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenTestClassHasStaticCtorAndTestInitialize_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private object _instanceVariable;
+
+                static MyTestClass()
+                {
+                }
+
+                [TestInitialize]
+                public void [|MyTestInit|]()
+                {
+                    _instanceVariable = new object();
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private object _instanceVariable;
+
+                static MyTestClass()
+                {
+                }
+
+                public MyTestClass()
+                {
+                    _instanceVariable = new object();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasFieldsAndMethods_ConstructorPlacedAfterFields()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class Test1
+            {
+                private object _instanceVariable;
+
+                [TestInitialize]
+                public void [|Initialize|]()
+                {
+                    _instanceVariable = new object();
+                }
+
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+
+                private void SomePrivateMethod()
+                {
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class Test1
+            {
+                private object _instanceVariable;
+
+                public Test1()
+                {
+                    _instanceVariable = new object();
+                }
+
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+
+                private void SomePrivateMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasFieldsAndTestMethodBeforeTestInitialize_ConstructorPlacedAfterFields()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class Test1
+            {
+                private object _instanceVariable;
+
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+
+                [TestInitialize]
+                public void [|Initialize|]()
+                {
+                    _instanceVariable = new object();
+                }
+
+                private void SomePrivateMethod()
+                {
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class Test1
+            {
+                private object _instanceVariable;
+
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+
+                public Test1()
+                {
+                    _instanceVariable = new object();
+                }
+
+                private void SomePrivateMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasTestInitializeWithMultiLineBody_PreservesIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private int _x;
+
+                [TestInitialize]
+                public void [|MyTestInit|]()
+                {
+                    _x = SomeMethod(
+                        1,
+                        2,
+                        3);
+                }
+
+                private int SomeMethod(int a, int b, int c) => a + b + c;
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private int _x;
+
+                public MyTestClass()
+                {
+                    _x = SomeMethod(
+                        1,
+                        2,
+                        3);
+                }
+
+                private int SomeMethod(int a, int b, int c) => a + b + c;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

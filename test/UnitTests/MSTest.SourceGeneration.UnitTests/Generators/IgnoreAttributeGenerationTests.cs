@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
+using AwesomeAssertions;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -13,6 +13,8 @@ namespace Microsoft.Testing.Framework.SourceGeneration.UnitTests.Generators;
 [TestClass]
 public sealed class IgnoreAttributeGenerationTests : TestBase
 {
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     public async Task IgnoreAttribute_OnMethodExcludesTheMethodFromCompilation()
     {
@@ -62,7 +64,7 @@ public sealed class IgnoreAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync();
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationToken);
 
         testClass.Should().ContainSourceCode("""StableUid = "TestAssembly.MyNamespace.TestClass.TestMethod1()",""");
 

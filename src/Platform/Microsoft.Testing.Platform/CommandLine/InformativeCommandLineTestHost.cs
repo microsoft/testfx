@@ -7,12 +7,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class InformativeCommandLineTestHost(int returnValue, IServiceProvider serviceProvider) : ITestHost, IDisposable
-#if NETCOREAPP
-#pragma warning disable SA1001 // Commas should be spaced correctly
-    , IAsyncDisposable
-#pragma warning restore SA1001 // Commas should be spaced correctly
-#endif
+internal sealed class InformativeCommandLineHost(int returnValue, IServiceProvider serviceProvider) : IHost, IDisposable
 {
     private readonly int _returnValue = returnValue;
 
@@ -21,14 +16,4 @@ internal sealed class InformativeCommandLineTestHost(int returnValue, IServicePr
     public Task<int> RunAsync() => Task.FromResult(_returnValue);
 
     public void Dispose() => PushOnlyProtocol?.Dispose();
-
-#if NETCOREAPP
-    public async ValueTask DisposeAsync()
-    {
-        if (PushOnlyProtocol is not null)
-        {
-            await PushOnlyProtocol.DisposeAsync();
-        }
-    }
-#endif
 }

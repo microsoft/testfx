@@ -14,7 +14,7 @@ public sealed class ValueTaskTests : AcceptanceTestBase<ValueTaskTests.TestAsset
     public async Task CanUseValueTaskForAllKnownLocations(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(2);
@@ -27,13 +27,10 @@ public sealed class ValueTaskTests : AcceptanceTestBase<ValueTaskTests.TestAsset
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (ProjectName, ProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file TestValueTask.csproj
@@ -107,4 +104,6 @@ public class UnitTest1
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

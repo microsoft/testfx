@@ -1,13 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 using static Microsoft.Testing.Platform.Hosts.ServerTestHost;
 
@@ -85,51 +85,41 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
     private async Task ProcessTestNodeUpdateAsync(TestNodeUpdateMessage update, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
+        await _nodeAggregatorSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            await _nodeAggregatorSemaphore.WaitAsync(cancellationToken);
-            try
+            // Note: If there's no changes to aggregate kick off a background task,
+            //       that will send the updates on idle.
+            // Note: It's ok to do this before we aggregate the change, since the
+            //       SendTestNodeUpdatesIfNecessaryAsync will have to grab the semaphore
+            //       to complete and that will only happen if this method releases the semaphore.
+            if (!_nodeUpdatesAggregator.HasChanges)
             {
-                // Note: If there's no changes to aggregate kick off a background task,
-                //       that will send the updates on idle.
-                // Note: It's ok to do this before we aggregate the change, since the
-                //       SendTestNodeUpdatesIfNecessaryAsync will have to grab the semaphore
-                //       to complete and that will only happen if this method releases the semaphore.
-                if (!_nodeUpdatesAggregator.HasChanges)
+                // If idle task is not null observe it to throw in case of failed task.
+                if (_idleUpdateTask is not null)
                 {
-                    // If idle task is not null observe it to throw in case of failed task.
-                    if (_idleUpdateTask is not null)
+                    // Observe possible exceptions
+                    try
                     {
-                        // Observe possible exceptions
-                        try
-                        {
-                            await _idleUpdateTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            // We cannot check the token because it's possible that we're canceled during the
-                            // send of the information and that the current cancellation token is a combined one.
-                        }
+                        await _idleUpdateTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
                     }
-
-                    _idleUpdateTask = SendTestNodeUpdatesOnIdleAsync(_nodeUpdatesAggregator.RunId);
+                    catch (OperationCanceledException)
+                    {
+                        // We cannot check the token because it's possible that we're canceled during the
+                        // send of the information and that the current cancellation token is a combined one.
+                    }
                 }
 
-                _nodeUpdatesAggregator.OnStateChange(update);
+                _idleUpdateTask = SendTestNodeUpdatesOnIdleAsync(_nodeUpdatesAggregator.RunId);
             }
-            finally
-            {
-                _nodeAggregatorSemaphore.Release();
-            }
+
+            _nodeUpdatesAggregator.OnStateChange(update);
         }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
+        finally
         {
-            // We do nothing we've been canceled.
+            _nodeAggregatorSemaphore.Release();
         }
     }
 
@@ -137,26 +127,16 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
     {
         // We get the PerRequestTestApplicationCooperativeLifetime that in server mode is linked to the per-request+global cancellation token.
         CancellationToken cancellationToken = _testSessionContext.CancellationToken;
-        try
-        {
-            // We subscribe to the per request application lifetime
-            using CancellationTokenRegistration registration = cancellationToken.Register(_testSessionEnd.SetCanceled);
+        // We subscribe to the per request application lifetime
+        using CancellationTokenRegistration registration = cancellationToken.Register(_testSessionEnd.SetCanceled);
 
-            // When batch timer expire or we're at the end of the session we can unblock the message drain
-            Guard.NotNull(_task);
-            await Task.WhenAny(_task.Delay(TimeSpan.FromMilliseconds(TestNodeUpdateDelayInMs), cancellationToken), _testSessionEnd.Task);
+        // When batch timer expire or we're at the end of the session we can unblock the message drain
+        Ensure.NotNull(_task);
+        await Task.WhenAny(_task.Delay(TimeSpan.FromMilliseconds(TestNodeUpdateDelayInMs), cancellationToken), _testSessionEnd.Task).ConfigureAwait(false);
 
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return;
-            }
+        cancellationToken.ThrowIfCancellationRequested();
 
-            await SendTestNodeUpdatesIfNecessaryAsync(runId, cancellationToken);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // We do nothing we've been canceled.
-        }
+        await SendTestNodeUpdatesIfNecessaryAsync(runId, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task SendTestNodeUpdatesIfNecessaryAsync(Guid runId, CancellationToken cancellationToken)
@@ -165,11 +145,11 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         //       and the Task completes, all of the pending updates have been sent.
         //       We synchronize the aggregator access with a separate lock, so that sending
         //       the update message will not block the producers.
-        await _nodeUpdateSemaphore.WaitAsync(cancellationToken);
+        await _nodeUpdateSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             TestNodeStateChangedEventArgs? change = null;
-            await _nodeAggregatorSemaphore.WaitAsync(cancellationToken);
+            await _nodeAggregatorSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 if (_nodeUpdatesAggregator.HasChanges)
@@ -185,7 +165,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
             if (change is not null)
             {
-                await _serverTestHost.SendTestUpdateAsync(change);
+                await _serverTestHost.SendTestUpdateAsync(change, cancellationToken).ConfigureAwait(false);
             }
         }
         finally
@@ -194,31 +174,23 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         }
     }
 
-    public async Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
-        try
-        {
-            // We signal the test session end so we can complete the flush.
-            _testSessionEnd.SetResult(true);
-            await GetIdleUpdateTaskAsync().TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // We do nothing we've been canceled.
-        }
+        CancellationToken cancellationToken = testSessionContext.CancellationToken;
+        cancellationToken.ThrowIfCancellationRequested();
+        // We signal the test session end so we can complete the flush.
+        _testSessionEnd.SetResult(true);
+        await GetIdleUpdateTaskAsync().TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         switch (value)
         {
             case TestNodeUpdateMessage update:
-                await ProcessTestNodeUpdateAsync(update, cancellationToken);
+                await ProcessTestNodeUpdateAsync(update, cancellationToken).ConfigureAwait(false);
                 PopulateTestNodeStatistics(update);
                 break;
 
@@ -255,7 +227,9 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
             case FailedTestNodeStateProperty:
             case ErrorTestNodeStateProperty:
+#pragma warning disable CS0618 // Type or member is obsolete
             case CancelledTestNodeStateProperty:
+#pragma warning restore CS0618 // Type or member is obsolete
             case TimeoutTestNodeStateProperty:
                 AddOrUpdateTestNodeStateStatistics(testNodeUid, hasPassed: false);
                 break;
@@ -293,5 +267,5 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         }
     }
 
-    public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext) => Task.CompletedTask;
 }

@@ -30,7 +30,7 @@
       <trans-unit id="SeverityOptionDescription">
         <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
         <target state="translated">Уровень серьезности, используемый для события из отчета. Параметры: error (по умолчанию) и warning.</target>
-        <note>Do not translated 'error' or 'warning' those are literal values.</note>
+        <note>{Locked="error"}{Locked="warning"}</note>
       </trans-unit>
     </body>
   </file>

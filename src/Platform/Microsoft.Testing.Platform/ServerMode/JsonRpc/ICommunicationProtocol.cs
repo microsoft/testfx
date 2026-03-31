@@ -5,9 +5,9 @@ namespace Microsoft.Testing.Platform.ServerMode;
 
 internal interface ICommunicationProtocol
 {
-    public string Name { get; }
+    string Name { get; }
 
-    public string Version { get; }
+    string Version { get; }
 
-    public string Description { get; }
+    string Description { get; }
 }

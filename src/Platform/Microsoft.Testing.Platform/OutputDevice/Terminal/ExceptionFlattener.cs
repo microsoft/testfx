@@ -9,7 +9,7 @@ internal sealed class ExceptionFlattener
     {
         if (errorMessage is null && exception is null)
         {
-            return Array.Empty<FlatException>();
+            return [];
         }
 
         string? message = !RoslynString.IsNullOrWhiteSpace(errorMessage) ? errorMessage : exception?.Message;
@@ -17,10 +17,7 @@ internal sealed class ExceptionFlattener
         string? stackTrace = exception?.StackTrace;
         var flatException = new FlatException(message, type, stackTrace);
 
-        List<FlatException> flatExceptions = new()
-        {
-           flatException,
-        };
+        List<FlatException> flatExceptions = [flatException];
 
         // Add all inner exceptions. This will flatten top level AggregateExceptions,
         // and all AggregateExceptions that are directly in AggregateExceptions, but won't expand
@@ -37,15 +34,15 @@ internal sealed class ExceptionFlattener
             while (currentException is not null)
             {
                 flatExceptions.Add(new FlatException(
-                    aggregate?.Message,
-                    aggregate?.GetType().FullName,
-                    aggregate?.StackTrace));
+                    currentException.Message,
+                    currentException.GetType().FullName,
+                    currentException.StackTrace));
 
                 currentException = currentException.InnerException;
             }
         }
 
-        return flatExceptions.ToArray();
+        return [.. flatExceptions];
     }
 }
 

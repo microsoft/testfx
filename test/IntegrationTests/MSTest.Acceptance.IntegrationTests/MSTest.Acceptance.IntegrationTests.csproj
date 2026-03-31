@@ -5,19 +5,32 @@
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
     <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
-    <UseAppHost>true</UseAppHost>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Embedded helpers from Microsoft.Testing.Platform -->
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ApplicationStateGuard.cs" Link="Helpers\ApplicationStateGuard.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ExitCodes.cs" Link="Helpers\ExitCodes.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\PlatformResources.cs" Link="Resources\PlatformResources.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceAssert.cs" Link="Helpers\AcceptanceAssert.cs" />
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceFixture.cs" Link="Helpers\AcceptanceFixture.cs" />
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceTestBase.cs" Link="Helpers\AcceptanceTestBase.cs" />
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\ServerMode\**\*.cs" Link="ServerMode\%(RecursiveDir)%(FileName)%(Extension)" />
+    <Compile Include="$(RepoRoot)test\Utilities\Automation.CLI\VSTestConsoleLocator.cs" Link="Helpers\VSTestConsoleLocator.cs" />
+    <Compile Include="$(RepoRoot)\test\Utilities\Microsoft.Testing.TestInfrastructure\RootFinder.cs" Link="Helpers\RootFinder.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MSBuild.StructuredLogger" />
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
     <PackageReference Include="StreamJsonRpc" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
   </ItemGroup>
 
   <!-- Packages needed for the test assets but that we don't want to reference -->

@@ -28,14 +28,15 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--retry-failed-tests 3 --results-directory {resultDirectory}",
+            $"--retry-failed-tests 3 --results-directory {resultDirectory} --report-trx",
             new()
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
                 { "METHOD1", "1" },
                 { "FAIL", failOnly ? "1" : "0" },
                 { "RESULTDIR", resultDirectory },
-            });
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         if (!failOnly)
         {
@@ -43,6 +44,15 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
             testHostResult.AssertOutputContains("Failed! -");
             testHostResult.AssertOutputContains("Passed! -");
+
+            string[] trxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.AllDirectories);
+            Assert.HasCount(2, trxFiles);
+            string trxContents1 = File.ReadAllText(trxFiles[0]);
+            string trxContents2 = File.ReadAllText(trxFiles[1]);
+            Assert.AreNotEqual(trxContents1, trxContents2);
+            string id1 = Regex.Match(trxContents1, "<TestRun id=\"(.+?)\"").Groups[1].Value;
+            string id2 = Regex.Match(trxContents2, "<TestRun id=\"(.+?)\"").Groups[1].Value;
+            Assert.AreEqual(id1, id2);
         }
         else
         {
@@ -71,12 +81,13 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                 { "RESULTDIR", resultDirectory },
                 { "METHOD1", "1" },
                 { fail ? "METHOD2" : "UNUSED", "1" },
-            });
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         string retriesPath = Path.Combine(resultDirectory, "Retries");
         Assert.IsTrue(Directory.Exists(retriesPath));
         string[] retriesDirectories = Directory.GetDirectories(retriesPath);
-        Assert.AreEqual(1, retriesDirectories.Length);
+        Assert.HasCount(1, retriesDirectories);
         string createdDirName = Path.GetFileName(retriesDirectories[0]);
 
         // Asserts that we are not using long names, to reduce long path issues.
@@ -113,7 +124,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                 { "RESULTDIR", resultDirectory },
                 { "METHOD1", "1" },
                 { fail ? "METHOD2" : "UNUSED", "1" },
-            });
+            }, cancellationToken: TestContext.CancellationToken);
 
         if (fail)
         {
@@ -136,61 +147,72 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     public async Task RetryFailedTests_MoveFiles_Succeeds(string tfm)
     {
-        // TODO: Crash dump is not working properly on macos, so we skip the test for now
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            return;
-        }
-
-        await RetryHelper.RetryAsync(
-            async () =>
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-trx --crashdump --retry-failed-tests 1 --results-directory {resultDirectory}",
+            new()
             {
-                var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-                string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
-                TestHostResult testHostResult = await testHost.ExecuteAsync(
-                    $"--report-trx --crashdump --retry-failed-tests 1 --results-directory {resultDirectory}",
-                    new()
-                    {
                         { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
                         { "RESULTDIR", resultDirectory },
                         { "CRASH", "1" },
-                    });
+            },
+            cancellationToken: TestContext.CancellationToken);
 
-                testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
 
-                string[] entries = Directory.GetFiles(resultDirectory, "*.*", SearchOption.AllDirectories)
-                    .Where(x => !x.Contains("Retries", StringComparison.OrdinalIgnoreCase))
-                    .ToArray();
+        string[] entries = [.. Directory.GetFiles(resultDirectory, "*.*", SearchOption.AllDirectories).Where(x => !x.Contains("Retries", StringComparison.OrdinalIgnoreCase))];
 
-                // 1 trx file
-                Assert.AreEqual(1, entries.Count(x => x.EndsWith("trx", StringComparison.OrdinalIgnoreCase)));
+        // 1 trx file
+        Assert.ContainsSingle(x => x.EndsWith("trx", StringComparison.OrdinalIgnoreCase), entries);
 
-                // Number of dmp files seems to differ locally and in CI
-                int dumpFilesCount = entries.Count(x => x.EndsWith("dmp", StringComparison.OrdinalIgnoreCase));
+        // Number of dmp files seems to differ locally and in CI
+        int dumpFilesCount = entries.Count(x => x.EndsWith("dmp", StringComparison.OrdinalIgnoreCase));
 
-                if (dumpFilesCount == 2)
-                {
-                    // Dump file inside the trx structure
-                    Assert.AreEqual(1, entries.Count(x => x.Contains($"{Path.DirectorySeparatorChar}In{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase) && x.EndsWith("dmp", StringComparison.OrdinalIgnoreCase)));
-                }
-                else if (dumpFilesCount is 0 or > 2)
-                {
-                    Assert.Fail($"Expected 1 or 2 dump files, but found {dumpFilesCount}");
-                }
-            }, 3, TimeSpan.FromSeconds(5));
+        if (dumpFilesCount == 2)
+        {
+            // Dump file inside the trx structure
+            Assert.ContainsSingle(x => x.Contains($"{Path.DirectorySeparatorChar}In{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase) && x.EndsWith("dmp", StringComparison.OrdinalIgnoreCase), entries);
+        }
+        else if (dumpFilesCount is 0 or > 2)
+        {
+            Assert.Fail($"Expected 1 or 2 dump files, but found {dumpFilesCount}");
+        }
+    }
+
+    [TestMethod]
+    public async Task RetryFailedTests_PassingFromFirstTime_UsingTestTarget_MoveFiles_Succeeds()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{AssetFixture.TargetAssetPath}\" -c Release -t:DispatchToInnerBuildsWithMTPTestTarget -p:TestingPlatformCommandLineArguments=\"--retry-failed-tests 1 --results-directory %22{resultDirectory}%22\"",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: AssetFixture.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCodes.Success);
+
+        // File names are on the form: RetryFailedTests_tfm_architecture.log
+        string[] logFilesFromInvokeTestingPlatformTask = Directory.GetFiles(resultDirectory, "RetryFailedTests_*_*.log");
+        Assert.HasCount(TargetFrameworks.All.Length, logFilesFromInvokeTestingPlatformTask);
+        foreach (string logFile in logFilesFromInvokeTestingPlatformTask)
+        {
+            string logFileContents = File.ReadAllText(logFile);
+            Assert.Contains("Test run summary: Passed!", logFileContents);
+            Assert.Contains("total: 3", logFileContents);
+            Assert.Contains("succeeded: 3", logFileContents);
+            Assert.Contains("Tests suite completed successfully in 1 attempts", logFileContents);
+        }
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 TestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
 
         private const string TestCode = """
 #file RetryFailedTests.csproj
@@ -200,15 +222,24 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
-        <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
+        <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+        <TestingPlatformCaptureOutput>false</TestingPlatformCaptureOutput>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>
 </Project>
+
+#file global.json
+{
+  "test": {
+    "runner": "VSTest"
+  }
+}
 
 #file Program.cs
 using Microsoft.Testing.Extensions;
@@ -217,6 +248,7 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.MSBuild;
 using Microsoft.Testing.Platform.Services;
 
 public class Program
@@ -230,6 +262,7 @@ public class Program
         builder.AddCrashDumpProvider();
         builder.AddTrxReportProvider();
         builder.AddRetryProvider();
+        builder.AddMSBuild();
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
@@ -267,46 +300,50 @@ public class DummyTestFramework : ITestFramework, IDataProducer
     {
         bool fail = Environment.GetEnvironmentVariable("FAIL") == "1";
         // Tests are using this env variable so it won't be null.
-        string resultDir = Environment.GetEnvironmentVariable("RESULTDIR")!; 
+        string resultDir = Environment.GetEnvironmentVariable("RESULTDIR")!;
         bool crash = Environment.GetEnvironmentVariable("CRASH") == "1";
 
-        if (await TestMethod1(fail, resultDir, crash))
+        var testMethod1Identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "TestMethod1", 0, Array.Empty<string>(), string.Empty);
+        var testMethod2Identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "TestMethod2", 0, Array.Empty<string>(), string.Empty);
+        var testMethod3Identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "TestMethod3", 0, Array.Empty<string>(), string.Empty);
+
+        if (TestMethod1(fail, resultDir, crash))
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+                new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(PassedTestNodeStateProperty.CachedInstance, testMethod1Identifier) }));
         }
         else
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(new FailedTestNodeStateProperty()) }));
+                new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(new FailedTestNodeStateProperty(), testMethod1Identifier) }));
         }
 
-        if (await TestMethod2(fail, resultDir))
+        if (TestMethod2(fail, resultDir))
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "2", DisplayName = "TestMethod2", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+                new TestNode() { Uid = "2", DisplayName = "TestMethod2", Properties = new(PassedTestNodeStateProperty.CachedInstance, testMethod2Identifier) }));
         }
         else
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "2", DisplayName = "TestMethod2", Properties = new(new FailedTestNodeStateProperty()) }));
+                new TestNode() { Uid = "2", DisplayName = "TestMethod2", Properties = new(new FailedTestNodeStateProperty(), testMethod2Identifier) }));
         }
 
-        if (await TestMethod3(fail, resultDir))
+        if (TestMethod3(fail, resultDir))
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+                new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(PassedTestNodeStateProperty.CachedInstance, testMethod3Identifier) }));
         }
         else
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(new FailedTestNodeStateProperty()) }));
+                new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(new FailedTestNodeStateProperty(), testMethod3Identifier) }));
         }
-        
+
         context.Complete();
     }
 
-    private async Task<bool> TestMethod1(bool fail, string resultDir, bool crash)
+    private bool TestMethod1(bool fail, string resultDir, bool crash)
     {
         if (crash)
         {
@@ -327,10 +364,10 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             if (!assert) File.WriteAllText(succeededFile,"");
         }
 
-        return assert;        
+        return assert;
     }
 
-    private async Task<bool> TestMethod2(bool fail, string resultDir)
+    private bool TestMethod2(bool fail, string resultDir)
     {
         bool envVar = Environment.GetEnvironmentVariable("METHOD2") is null;
         System.Console.WriteLine("envVar " + envVar);
@@ -350,7 +387,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         return assert;
     }
 
-    private async Task<bool> TestMethod3(bool fail, string resultDir)
+    private bool TestMethod3(bool fail, string resultDir)
     {
         bool envVar = Environment.GetEnvironmentVariable("METHOD3") is null;
 
@@ -371,4 +408,6 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

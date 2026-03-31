@@ -17,7 +17,7 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggi
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "ServerLoggingTests", tfm);
         using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(testHost);
-        LogsCollector logs = new();
+        LogsCollector logs = [];
         jsonClient.RegisterLogListener(logs);
 
         InitializeResponse initializeResponseArgs = await jsonClient.Initialize();
@@ -29,7 +29,7 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggi
         ResponseListener runListener = await jsonClient.RunTests(Guid.NewGuid(), runCollector.CollectNodeUpdates);
 
         await Task.WhenAll(discoveryListener.WaitCompletion(), runListener.WaitCompletion());
-        Assert.IsFalse(logs.Count == 0, "Logs are empty");
+        Assert.IsNotEmpty(logs, "Logs are empty");
         string logsString = string.Join(Environment.NewLine, logs.Select(l => l.ToString()));
         string logPath = LogFilePathRegex().Match(logsString).Groups[1].Value;
         string port = PortRegex().Match(logsString).Groups[1].Value;
@@ -54,19 +54,40 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggi
             """, logsString);
     }
 
+    [TestMethod]
+    public async Task RunningInServerMode_BannerIsSkipped()
+    {
+        string tfm = TargetFrameworks.NetCurrent;
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "ServerLoggingTests", tfm);
+        using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(testHost);
+        LogsCollector logs = [];
+        jsonClient.RegisterLogListener(logs);
+
+        InitializeResponse initializeResponseArgs = await jsonClient.Initialize();
+
+        TestNodeUpdateCollector discoveryCollector = new();
+        ResponseListener discoveryListener = await jsonClient.DiscoverTests(Guid.NewGuid(), discoveryCollector.CollectNodeUpdates);
+
+        await discoveryListener.WaitCompletion();
+
+        string logsString = string.Join(Environment.NewLine, logs.Select(l => l.ToString()));
+
+        // Verify that the banner message pattern does not appear in the logs
+        Assert.IsFalse(Regex.IsMatch(logsString, @"Microsoft\.Testing\.Platform v.+ \[.+\]"), "Banner should be skipped in server mode");
+
+        await jsonClient.Exit();
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string AssetName = "AssetFixture";
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
 
         private const string Sources = """
 #file ServerLoggingTests.csproj
@@ -136,26 +157,26 @@ public class DummyTestFramework : ITestFramework, IDataProducer, IOutputDeviceDa
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        await _outputDevice.DisplayAsync(this, new ExceptionOutputDeviceData(new Exception("This is an exception output")));
+        await _outputDevice.DisplayAsync(this, new ExceptionOutputDeviceData(new Exception("This is an exception output")), context.CancellationToken);
         await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("This is a red output with padding set to 3")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Red },
             Padding = 3,
-        });
+        }, context.CancellationToken);
 
         await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("This is a yellow output with padding set to 2")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Yellow },
             Padding = 2,
-        });
+        }, context.CancellationToken);
 
         await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("This is a blue output with padding set to 1")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Blue },
             Padding = 1,
-        });
+        }, context.CancellationToken);
 
-        await _outputDevice.DisplayAsync(this, new TextOutputDeviceData("This is normal text output."));
+        await _outputDevice.DisplayAsync(this, new TextOutputDeviceData("This is normal text output."), context.CancellationToken);
         context.Complete();
     }
 }

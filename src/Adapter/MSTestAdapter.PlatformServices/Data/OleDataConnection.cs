@@ -68,7 +68,7 @@ internal sealed class OleDataConnection : TestDataConnectionSql
 
     private static string FixConnectionString(string connectionString, List<string> dataFolders)
     {
-        OleDbConnectionStringBuilder oleDbBuilder = new(connectionString);
+        OleDbConnectionStringBuilder oleDbBuilder = [with(connectionString)];
 
         string fileName = oleDbBuilder.DataSource;
 

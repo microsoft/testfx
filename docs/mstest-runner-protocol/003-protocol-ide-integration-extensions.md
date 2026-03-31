@@ -77,9 +77,6 @@ interface ManagedTypeLocationTestNode : TestNode {
 // Note: location.file/location.line properties are by default specified on TestNodes.
 ```
 
-> [!NOTE]
-> `location.type` and `location.method` refer to the managed test properties as defined in [vstest documentation](https://github.com/microsoft/vstest/blob/main/docs/RFCs/0017-Managed-TestCase-Properties.md).
-
 ## Vstest provider properties
 
 If `capabilities.testing.vstestProvider` is true, then the server should include the following properties in the TestNode.

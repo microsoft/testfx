@@ -11,6 +11,9 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class FileLoggerTests : IDisposable
 {
+    // https://github.com/microsoft/testfx/issues/6136
+    public TestContext TestContext { get; set; } = null!;
+
     private const string LogFolder = "aaa";
     private const string LogPrefix = "bbb";
     private const string FileName = "ccc";
@@ -45,16 +48,35 @@ public sealed class FileLoggerTests : IDisposable
     [TestMethod]
     public void Write_IfMalformedUTF8_ShouldNotCrash()
     {
-        using TempDirectory tempDirectory = new(nameof(Write_IfMalformedUTF8_ShouldNotCrash));
+        var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
+        var fileStreamFactory = new Mock<IFileStreamFactory>(MockBehavior.Strict);
+        var fileStream = new Mock<IFileStream>(MockBehavior.Strict);
+        var memoryStream = new MemoryStream();
+        fileStream.Setup(f => f.Stream).Returns(memoryStream);
+        fileStream.Setup(f => f.Dispose()).Callback(() => { });
+
+        fileStreamFactory
+            .Setup(f => f.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+            .Returns(fileStream.Object)
+            .Callback((string fileName, FileMode _1, FileAccess _2, FileShare _3) => fileStream.Setup(f => f.Name).Returns(fileName));
+
         using FileLogger fileLogger = new(
-            new FileLoggerOptions(tempDirectory.Path, "Test", fileName: null),
+            new FileLoggerOptions(nameof(Write_IfMalformedUTF8_ShouldNotCrash), "Test", fileName: null),
             LogLevel.Trace,
             new SystemClock(),
             new SystemTask(),
             new SystemConsole(),
-            new SystemFileSystem(),
-            new SystemFileStreamFactory());
+            fileSystem.Object,
+            fileStreamFactory.Object);
+
         fileLogger.Log(LogLevel.Trace, "\uD886", null, LoggingExtensions.Formatter, "Category");
+
+        memoryStream.Seek(0, SeekOrigin.Begin);
+        string logWritten = new StreamReader(memoryStream).ReadToEnd();
+
+        // logWritten looks like this: "[15:01:57.130 Category - Trace] �\r\n"
+        Assert.StartsWith("[", logWritten);
+        Assert.EndsWith($" Category - Trace] \uFFFD{Environment.NewLine}", logWritten);
     }
 
     [TestMethod]
@@ -110,7 +132,7 @@ public sealed class FileLoggerTests : IDisposable
             .Throws<IOException>()
             .Returns(_mockStream.Object);
 
-        Assert.ThrowsException<InvalidOperationException>(() => _ = new FileLogger(
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = new FileLogger(
             new(LogFolder, LogPrefix, fileName: null, syncFlush: true),
             LogLevel.Trace,
             _mockClock.Object,
@@ -128,7 +150,7 @@ public sealed class FileLoggerTests : IDisposable
     public void FileLogger_ValidFileName_FileStreamCreatedSuccessfully(bool syncFlush, bool fileExists)
     {
         string expectedPath = Path.Combine(LogFolder, FileName);
-        _mockFileSystem.Setup(x => x.Exists(expectedPath)).Returns(fileExists);
+        _mockFileSystem.Setup(x => x.ExistFile(expectedPath)).Returns(fileExists);
         _mockFileStreamFactory
             .Setup(x => x.Create(It.IsAny<string>(), fileExists ? FileMode.Append : FileMode.CreateNew, FileAccess.Write, FileShare.Read))
             .Returns(_mockStream.Object);
@@ -156,7 +178,7 @@ public sealed class FileLoggerTests : IDisposable
     [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
     public async Task Log_WhenSyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(LogLevel defaultLogLevel, LogLevel currentLogLevel)
     {
-        _mockFileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(false);
+        _mockFileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
         _mockFileStreamFactory
             .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
             .Returns(_mockStream.Object);
@@ -173,15 +195,15 @@ public sealed class FileLoggerTests : IDisposable
 
         if (LogTestHelpers.IsLogEnabled(defaultLogLevel, currentLogLevel))
         {
-            await _memoryStream.FlushAsync();
+            await _memoryStream.FlushAsync(TestContext.CancellationToken);
             int iteration = 0;
             while (_memoryStream.Length == 0 && iteration < 10)
             {
                 iteration++;
-                await Task.Delay(200);
+                await Task.Delay(200, TestContext.CancellationToken);
             }
 
-            await _memoryStream.FlushAsync();
+            await _memoryStream.FlushAsync(TestContext.CancellationToken);
 
             _mockConsole.Verify(x => x.WriteLine(It.IsAny<string>()), Times.Never);
             Assert.AreEqual($"[00:00:00.000 Test - {currentLogLevel}] Message{Environment.NewLine}", Encoding.Default.GetString(_memoryStream.ToArray()));
@@ -196,7 +218,7 @@ public sealed class FileLoggerTests : IDisposable
     [DynamicData(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
     public void Log_WhenAsyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(LogLevel defaultLogLevel, LogLevel currentLogLevel)
     {
-        _mockFileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(false);
+        _mockFileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
         _mockFileStreamFactory
             .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
             .Returns(_mockStream.Object);

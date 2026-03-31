@@ -16,7 +16,7 @@ internal static class TaskExtensions
                 {
                     try
                     {
-                        await task;
+                        await task.ConfigureAwait(false);
                     }
                     catch (Exception)
                     {
@@ -55,7 +55,7 @@ internal static class TaskExtensions
                 {
                     try
                     {
-                        await task;
+                        await task.ConfigureAwait(false);
                     }
                     catch (Exception)
                     {
@@ -86,7 +86,7 @@ internal static class TaskExtensions
             {
                 try
                 {
-                    await task;
+                    await task.ConfigureAwait(false);
                 }
                 catch (Exception)
                 {
@@ -124,7 +124,7 @@ internal static class TaskExtensions
                 {
                     try
                     {
-                        await task;
+                        await task.ConfigureAwait(false);
                     }
                     catch (Exception)
                     {

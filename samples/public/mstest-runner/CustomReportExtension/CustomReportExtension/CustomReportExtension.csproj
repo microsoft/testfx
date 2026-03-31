@@ -6,12 +6,11 @@
     <Nullable>enable</Nullable>
 
     <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
 
     <!-- For simplicity, we will create the program.cs manually -->
-    <GenerateProgramFile>false</GenerateProgramFile>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
   </PropertyGroup>
 
   <ItemGroup>

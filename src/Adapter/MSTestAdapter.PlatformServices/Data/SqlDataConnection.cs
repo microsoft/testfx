@@ -42,7 +42,7 @@ internal sealed class SqlDataConnection : TestDataConnectionSql
 
     private static string FixConnectionString(string connectionString, List<string> dataFolders)
     {
-        SqlConnectionStringBuilder sqlBuilder = new(connectionString);
+        SqlConnectionStringBuilder sqlBuilder = [with(connectionString)];
 
         string attachedFile = sqlBuilder.AttachDBFilename;
 

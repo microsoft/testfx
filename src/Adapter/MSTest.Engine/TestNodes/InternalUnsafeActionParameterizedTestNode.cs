@@ -26,7 +26,7 @@ public sealed class InternalUnsafeActionParameterizedTestNode<TData>
             {
                 Body(testExecutionContext, item);
                 return Task.CompletedTask;
-            });
+            }).ConfigureAwait(false);
         }
     }
 

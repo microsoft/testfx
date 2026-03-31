@@ -18,11 +18,43 @@ public sealed class JsoniteTests
     }
 
     [TestMethod]
+    public void SerializeJsoniteInvalidStringHighSurrogateAtTheEnd()
+    {
+        const string Input = "Hello\uD800";
+        string actual = Jsonite.Json.Serialize(Input);
+        Assert.AreEqual("\"Hello\\uFFFD\"", actual);
+    }
+
+    [TestMethod]
+    public void SerializeJsoniteInvalidStringHighSurrogateNotFollowedByLowSurrogate()
+    {
+        const string Input = "Hello\uD800A";
+        string actual = Jsonite.Json.Serialize(Input);
+        Assert.AreEqual("\"Hello\\uFFFDA\"", actual);
+    }
+
+    [TestMethod]
+    public void SerializeJsoniteInvalidStringLowSurrogateWithoutPreviousHighSurrogate()
+    {
+        const string Input = "Hello\uDC00A";
+        string actual = Jsonite.Json.Serialize(Input);
+        Assert.AreEqual("\"Hello\\uFFFDA\"", actual);
+    }
+
+    [TestMethod]
+    public void SerializeJsoniteValidSurrogatePair()
+    {
+        const string Input = "Hello\uD800\uDC00A";
+        string actual = Jsonite.Json.Serialize(Input);
+        Assert.AreEqual("\"Hello\\uD800\\uDC00A\"", actual);
+    }
+
+    [TestMethod]
     public void Serialize_SpecialCharacters()
     {
         // This test is testing if we can serialize the range 0x0000 - 0x001FF correctly, this range contains special characters like NUL.
         // This is a fix for Jsonite, which throws when such characters are found in a string (but does not fail when we provide them as character).
-        List<Exception> errors = new();
+        List<Exception> errors = [];
 
         // This could be converted to Data source, but this way we have more control about where in the result message the
         // special characters will be (hopefully nowhere) so in case of failure, we can still serialize the message to IDE

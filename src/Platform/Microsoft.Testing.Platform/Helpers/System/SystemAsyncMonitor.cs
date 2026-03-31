@@ -10,14 +10,14 @@ internal sealed class SystemAsyncMonitor : IAsyncMonitor, IDisposable
     public async Task<IDisposable> LockAsync(TimeSpan timeout)
     {
         AsyncDisposableMonitor asyncDisposableMonitor = new(_semaphoreSlim);
-        await asyncDisposableMonitor.WaitAsync(timeout);
+        await asyncDisposableMonitor.WaitAsync(timeout).ConfigureAwait(false);
         return asyncDisposableMonitor;
     }
 
     public async Task<IDisposable> LockAsync(CancellationToken cancellationToken)
     {
         AsyncDisposableMonitor asyncDisposableMonitor = new(_semaphoreSlim);
-        await asyncDisposableMonitor.WaitAsync(cancellationToken);
+        await asyncDisposableMonitor.WaitAsync(cancellationToken).ConfigureAwait(false);
         return asyncDisposableMonitor;
     }
 
@@ -30,13 +30,13 @@ internal sealed class SystemAsyncMonitor : IAsyncMonitor, IDisposable
 
         public async Task WaitAsync(TimeSpan timeout)
         {
-            if (!await _semaphoreSlim.WaitAsync(timeout))
+            if (!await _semaphoreSlim.WaitAsync(timeout).ConfigureAwait(false))
             {
                 throw new InvalidOperationException($"Timeout of '{timeout}' while waiting for the semaphore");
             }
         }
 
-        public async Task WaitAsync(CancellationToken cancellationToken) => await _semaphoreSlim.WaitAsync(cancellationToken);
+        public async Task WaitAsync(CancellationToken cancellationToken) => await _semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
 
         public void Dispose()
             => _semaphoreSlim.Release();

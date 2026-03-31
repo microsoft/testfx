@@ -14,7 +14,7 @@ public sealed class RetryTests : AcceptanceTestBase<RetryTests.TestAssetFixture>
     public async Task BasicRetryScenarioTest()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("""
@@ -36,13 +36,10 @@ public sealed class RetryTests : AcceptanceTestBase<RetryTests.TestAssetFixture>
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (ProjectName, ProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file RetryTests.csproj
@@ -145,4 +142,6 @@ public class UnitTest1
 </RunSettings>
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

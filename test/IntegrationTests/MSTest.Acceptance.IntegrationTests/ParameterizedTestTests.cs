@@ -11,7 +11,6 @@ namespace MSTest.Acceptance.IntegrationTests;
 public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.TestAssetFixture>
 {
     private const string DynamicDataAssetName = "DynamicData";
-    private const string DataSourceAssetName = "DataSource";
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -20,18 +19,8 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusive_Passes(string currentTfm)
-        => await RunTestsAsync(currentTfm, DataSourceAssetName, true);
-
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task SendingEmptyDataToDynamicDataTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
         => await RunTestsAsync(currentTfm, DynamicDataAssetName, false);
-
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
-    => await RunTestsAsync(currentTfm, DataSourceAssetName, false);
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -40,16 +29,11 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToDataSourceTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
-        => await RunTestsAsync(currentTfm, DataSourceAssetName, null);
-
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task UsingTestDataRowVariousCases(string currentTfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.GetAssetPath(DynamicDataAssetName), DynamicDataAssetName, currentTfm);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings AppDomainEnabled.runsettings --filter ClassName=TestDataRowTests --list-tests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings AppDomainEnabled.runsettings --filter ClassName=TestDataRowTests --list-tests", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputMatchesRegexLines("""
             MSTest *
               TestDataRowSingleParameterFolded
@@ -72,7 +56,7 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
             """);
 
         // progress causes flakiness. See https://github.com/microsoft/testfx/pull/4930#issuecomment-2648506466
-        testHostResult = await testHost.ExecuteAsync("--filter ClassName=TestDataRowTests --no-progress");
+        testHostResult = await testHost.ExecuteAsync("--filter ClassName=TestDataRowTests --no-progress", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 9, skipped: 15);
@@ -153,17 +137,10 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (DynamicDataAssetName, DynamicDataAssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (DynamicDataAssetName, DynamicDataAssetName,
                 SourceCodeDynamicData
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-            yield return (DataSourceAssetName, DataSourceAssetName,
-                SourceCodeDataSource
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCodeDynamicData = """
 #file DynamicData.csproj
@@ -181,7 +158,7 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
   </ItemGroup>
 
-    <ItemGroup>
+  <ItemGroup>
     <None Update="AppDomainEnabled.runsettings">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -192,11 +169,11 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
 #file AppDomainEnabled.runsettings
 <?xml version="1.0" encoding="utf-8" ?>
 <RunSettings>
-    <MSTest>
+    <RunConfiguration>
         <!-- Currently, the default is already false, but we want to ensure the
              test runs with AppDomain enabled even if we changed the default -->
         <DisableAppDomain>false</DisableAppDomain>
-    </MSTest>
+    </RunConfiguration>
 </RunSettings>
 
 #file UnitTest1.cs
@@ -229,38 +206,38 @@ public class TestClass
 [TestClass]
 public class TestDataRowTests
 {
-    [TestMethod]
-    [DynamicData(nameof(TestDataRowSingleParameterFoldedData), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DynamicData(nameof(TestDataRowSingleParameterFoldedData))]
     public void TestDataRowSingleParameterFolded(string _)
     {
     }
 
-    [TestMethod]
-    [DynamicData(nameof(TestDataRowSingleParameterUnfoldedData), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [DynamicData(nameof(TestDataRowSingleParameterUnfoldedData))]
     public void TestDataRowSingleParameterUnfolded(string _)
     {
     }
 
-    [TestMethod]
-    [DynamicData(nameof(TestDataRowTwoParametersFoldedData), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DynamicData(nameof(TestDataRowTwoParametersFoldedData))]
     public void TestDataRowTwoParametersFolded(string _1, string _2)
     {
     }
 
-    [TestMethod]
-    [DynamicData(nameof(TestDataRowTwoParametersUnfoldedData), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [DynamicData(nameof(TestDataRowTwoParametersUnfoldedData))]
     public void TestDataRowTwoParametersUnfolded(string _1, string _2)
     {
     }
 
-    [TestMethod]
-    [DynamicData(nameof(TestDataRowParameterIsTupleFoldedData), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DynamicData(nameof(TestDataRowParameterIsTupleFoldedData))]
     public void TestDataRowParameterIsTupleFolded((string, string) tuple)
     {
     }
 
-    [TestMethod]
-    [DynamicData(nameof(TestDataRowParameterIsTupleUnfoldedData), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [DynamicData(nameof(TestDataRowParameterIsTupleUnfoldedData))]
     public void TestDataRowParameterIsTupleUnfolded((string, string) tuple)
     {
     }
@@ -294,59 +271,7 @@ public class TestDataRowTests
     }
 }
 """;
-
-        private const string SourceCodeDataSource = """
-#file DataSource.csproj
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
-    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
-    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
-  </ItemGroup>
-
-</Project>
-
-#file UnitTest1.cs
-
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Globalization;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-[TestClass]
-public class TestClass
-{
-    [TestMethod]
-    [CustomTestDataSource]
-    [CustomEmptyTestDataSource]
-    public void Test(int a, int b, int c)
-    {
     }
-}
 
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public class CustomTestDataSourceAttribute : Attribute, ITestDataSource
-{
-    public IEnumerable<object[]> GetData(MethodInfo methodInfo) => [[1, 2, 3], [4, 5, 6]];
-
-    public string GetDisplayName(MethodInfo methodInfo, object[] data) => data != null ? string.Format(CultureInfo.CurrentCulture, "{0} ({1})", methodInfo.Name, string.Join(",", data)) : null;
-}
-
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public class CustomEmptyTestDataSourceAttribute : Attribute, ITestDataSource
-{
-    public IEnumerable<object[]> GetData(MethodInfo methodInfo) => [];
-
-    public string GetDisplayName(MethodInfo methodInfo, object[] data) => data != null ? string.Format(CultureInfo.CurrentCulture, "{0} ({1})", methodInfo.Name, string.Join(",", data)) : null;
-}
-""";
-    }
+    public TestContext TestContext { get; set; }
 }

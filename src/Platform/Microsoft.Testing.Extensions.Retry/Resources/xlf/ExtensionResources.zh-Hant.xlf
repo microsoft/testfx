@@ -40,6 +40,11 @@ Moving last attempt asset files to the default result directory
         <target state="translated">正在將檔案 '{0}' 移至 '{1}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
+        <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
+        <target state="translated">瀏覽器平台不支援重試擴充功能。由於平台限制，無法重試瀏覽器型測試。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
         <target state="translated">無法啟動處理程序 '{0}'</target>
@@ -53,11 +58,6 @@ Moving last attempt asset files to the default result directory
       <trans-unit id="RetryFailedTestsExtensionDisplayName">
         <source>Retry failed tests</source>
         <target state="translated">重試失敗的測試</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
-        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">重試失敗的測試僅適用於類型為 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 的建立器</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
@@ -81,8 +81,8 @@ Moving last attempt asset files to the default result directory
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Enable retry failed tests</source>
-        <target state="translated">啟用重試失敗的測試</target>
+        <source>Retry failed tests the given number of times</source>
+        <target state="translated">重試失敗測試給定次數</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
@@ -98,6 +98,11 @@ Moving last attempt asset files to the default result directory
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
         <source>Options '{0}' and '{1}' cannot be used together</source>
         <target state="translated">選項 '{0}' 和 '{1}' 不能同時使用</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryProviderRequiresDefaultTestHostManagerErrorMessage">
+        <source>The retry provider requires the default TestHostManager implementation.</source>
+        <target state="translated">重試提供者需要預設的 TestHostManager 實作。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">

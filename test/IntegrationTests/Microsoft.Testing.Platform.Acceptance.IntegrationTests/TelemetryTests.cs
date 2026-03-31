@@ -18,7 +18,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
         string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
@@ -46,7 +46,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
             },
-            disableTelemetry: false);
+            disableTelemetry: false, TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
@@ -74,7 +74,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
             {
                 { EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "1" },
             },
-            disableTelemetry: false);
+            disableTelemetry: false, TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
@@ -83,28 +83,6 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG TestApplicationOptions.EnableTelemetry: True
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG TESTINGPLATFORM_TELEMETRY_OPTOUT environment variable: ''
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG DOTNET_CLI_TELEMETRY_OPTOUT environment variable: '1'
-.+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG Telemetry is 'DISABLED'
-""";
-        await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
-    }
-
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    [TestMethod]
-    public async Task Telemetry_WhenEnableTelemetryIsFalse_WithTestApplicationOptions_TelemetryIsDisabled(string tfm)
-    {
-        string diagPath = Path.Combine(AssetFixture.TargetAssetPathWithDisableTelemetry, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
-        string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
-
-        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPathWithDisableTelemetry, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false);
-
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
-
-        string diagContentsPattern =
-"""
-.+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG TestApplicationOptions.EnableTelemetry: False
-.+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG TESTINGPLATFORM_TELEMETRY_OPTOUT environment variable: ''
-.+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG DOTNET_CLI_TELEMETRY_OPTOUT environment variable: ''
 .+ Microsoft.Testing.Platform.Telemetry.TelemetryManager DEBUG Telemetry is 'DISABLED'
 """;
         await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
@@ -136,7 +114,6 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string WithTelemetry = nameof(WithTelemetry);
-        private const string WithoutTelemetry = nameof(WithoutTelemetry);
 
         private const string TestCode = """
 #file TelemetryTest.csproj
@@ -195,21 +172,12 @@ public class DummyTestFramework : ITestFramework
 
         public string TargetAssetPath => GetAssetPath(WithTelemetry);
 
-        public string TargetAssetPathWithDisableTelemetry => GetAssetPath(WithoutTelemetry);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (WithTelemetry, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (WithTelemetry, AssetName,
                 TestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$TelemetryArg$", string.Empty));
-
-            yield return (WithoutTelemetry, AssetName,
-                TestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$TelemetryArg$", ", new TestApplicationOptions() { EnableTelemetry = false }"));
-        }
     }
+
+    public TestContext TestContext { get; set; }
 }

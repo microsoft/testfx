@@ -32,7 +32,7 @@ internal partial class ArrayBuilder<T>
         {
         }
 
-        readonly object? System.Collections.IEnumerator.Current => Current;
+        readonly object? IEnumerator.Current => Current;
 
         public void Reset() => _index = -1;
     }

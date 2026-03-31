@@ -1,21 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.25229.4">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="11.0.0-beta.26180.3">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e46d1266547513110e67a3e4709fe8ecdfb20849</Sha>
+      <Sha>b02e7ea7be8bf285419a0b16fed5cd6a966447d2</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="10.0.0-beta.25229.4">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="11.0.0-beta.26180.3">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e46d1266547513110e67a3e4709fe8ecdfb20849</Sha>
+      <Sha>b02e7ea7be8bf285419a0b16fed5cd6a966447d2</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="10.0.0-beta.25229.4">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="11.0.0-beta.26180.3">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e46d1266547513110e67a3e4709fe8ecdfb20849</Sha>
+      <Sha>b02e7ea7be8bf285419a0b16fed5cd6a966447d2</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.15.0-preview.25229.5">
+    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="18.7.0-preview.26180.5">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
-      <Sha>22fe23c5579dfe54e9ab651eb4d3b002d9d18d73</Sha>
+      <Sha>0b3d3ecc07f69b4b14961fb4faca8898481331e6</Sha>
+    </Dependency>
+    <Dependency Name="MSTest" Version="4.2.1-preview.26180.5">
+      <Uri>https://github.com/microsoft/testfx</Uri>
+      <Sha>f8dc21bde0c93918c9847361eb3bf41a9ed3d5f2</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.Testing.Platform" Version="2.2.1-preview.26180.5">
+      <Uri>https://github.com/microsoft/testfx</Uri>
+      <Sha>f8dc21bde0c93918c9847361eb3bf41a9ed3d5f2</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

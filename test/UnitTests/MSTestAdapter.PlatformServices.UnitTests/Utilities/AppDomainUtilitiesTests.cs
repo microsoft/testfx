@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET462
+#if NETFRAMEWORK
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using TestFramework.ForTestingMSTest;
@@ -40,7 +42,7 @@ public class AppDomainUtilitiesTests : TestContainer
         AppDomainUtilities.SetConfigurationFile(setup, configFile);
 
         // Assert Config file being set.
-        Verify(configFile == setup.ConfigurationFile);
+        setup.ConfigurationFile.Should().Be(configFile);
 
         // Assert Config Bytes.
         string expectedRedir =
@@ -53,7 +55,7 @@ public class AppDomainUtilitiesTests : TestContainer
         byte[] observedConfigBytes = setup.GetConfigurationBytes();
         string observedXml = Encoding.UTF8.GetString(observedConfigBytes);
 
-        Verify(SanitizeString(observedXml).Contains(SanitizeString(expectedRedir)), "Config must have OM redirection");
+        SanitizeString(observedXml).Should().Contain(SanitizeString(expectedRedir), "Config must have OM redirection");
 
         // Local functions
         static string SanitizeString(string str)
@@ -67,9 +69,9 @@ public class AppDomainUtilitiesTests : TestContainer
         AppDomainUtilities.SetConfigurationFile(setup, null);
 
         // Assert Config file being set.
-        Verify(AppDomain.CurrentDomain.SetupInformation.ConfigurationFile == setup.ConfigurationFile);
+        AppDomain.CurrentDomain.SetupInformation.ConfigurationFile.Should().Be(setup.ConfigurationFile);
 
-        Verify(setup.GetConfigurationBytes() is null);
+        setup.GetConfigurationBytes().Should().BeNull();
     }
 
     public void GetTargetFrameworkVersionFromVersionStringShouldReturnDefaultVersionIfVersionIsPortable()
@@ -78,8 +80,8 @@ public class AppDomainUtilitiesTests : TestContainer
 
         Version version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETPortable,Version=v4.5,Profile=Profile259");
 
-        Verify(expected.Major == version.Major);
-        Verify(expected.Minor == version.Minor);
+        version.Major.Should().Be(expected.Major);
+        version.Minor.Should().Be(expected.Minor);
     }
 
     public void GetTargetFrameworkVersionFromVersionStringShouldReturnCorrectVersion()
@@ -88,8 +90,8 @@ public class AppDomainUtilitiesTests : TestContainer
 
         Version version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETFramework,Version=v4.5");
 
-        Verify(expected.Major == version.Major);
-        Verify(expected.Minor == version.Minor);
+        version.Major.Should().Be(expected.Major);
+        version.Minor.Should().Be(expected.Minor);
     }
 
     #region Testable Implementations

@@ -28,7 +28,7 @@ internal sealed class Logger(ILogger[] loggers, LogLevel logLevel) : ILogger
         {
             if (logger.IsEnabled(logLevel))
             {
-                await logger.LogAsync(logLevel, state, exception, formatter);
+                await logger.LogAsync(logLevel, state, exception, formatter).ConfigureAwait(false);
             }
         }
     }

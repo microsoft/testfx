@@ -86,7 +86,7 @@ public sealed class CommandLineTests
         yield return (15, ["--option1:a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a"]) }.ToArray(), []));
         yield return (16, ["--option1=a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a"]) }.ToArray(), []));
         yield return (17, ["--option1=a", "--option1=b"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a"]), new("option1", ["b"]) }.ToArray(), []));
-        yield return (18, ["--option1=a", "--option1 b"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a"]), new("option1", ["b"]) }.ToArray(), []));
+        yield return (18, ["--option1=a", "--option1", "b"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a"]), new("option1", ["b"]) }.ToArray(), []));
         yield return (19, ["--option1=a=a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a=a"]) }.ToArray(), []));
         yield return (20, ["--option1=a:a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a:a"]) }.ToArray(), []));
         yield return (21, ["--option1:a=a"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["a=a"]) }.ToArray(), []));

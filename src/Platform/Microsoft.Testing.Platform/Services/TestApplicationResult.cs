@@ -8,15 +8,17 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
+using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, IOutputDeviceDataProducer
+internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, IOutputDeviceDataProducer, IDisposable
 {
     private readonly IOutputDevice _outputService;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
     private readonly IStopPoliciesService _policiesService;
+    private readonly OpenTelemetryResultHandler? _openTelemetryResultHandler;
     private readonly bool _isDiscovery;
     private int _failedTestsCount;
     private int _totalRanTests;
@@ -26,20 +28,26 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         IOutputDevice outputService,
         ICommandLineOptions commandLineOptions,
         IEnvironment environment,
-        IStopPoliciesService policiesService)
+        IStopPoliciesService policiesService,
+        IPlatformOpenTelemetryService? otelService)
     {
         _outputService = outputService;
         _commandLineOptions = commandLineOptions;
         _environment = environment;
         _policiesService = policiesService;
+        if (otelService is not null)
+        {
+            _openTelemetryResultHandler = new OpenTelemetryResultHandler(otelService, environment);
+        }
+
         _isDiscovery = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
     }
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(TestApplicationResult);
+    public string Uid => nameof(TestApplicationResult);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = PlatformResources.TestApplicationResultDisplayName;
@@ -68,17 +76,50 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
             return Task.CompletedTask;
         }
 
-        if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, executionState.GetType()) != -1)
+        switch (executionState)
+        {
+            case DiscoveredTestNodeStateProperty:
+                _openTelemetryResultHandler?.NotifyDiscovered();
+                break;
+
+            case PassedTestNodeStateProperty passed:
+                _openTelemetryResultHandler?.NotifyPassed(message.TestNode, passed);
+                break;
+
+            case FailedTestNodeStateProperty:
+            case ErrorTestNodeStateProperty:
+            case TimeoutTestNodeStateProperty:
+#pragma warning disable CS0618 // Type or member is obsolete
+            case CancelledTestNodeStateProperty:
+#pragma warning restore CS0618 // Type or member is obsolete
+                _openTelemetryResultHandler?.NotifyFailed(message.TestNode, executionState);
+                break;
+
+            case SkippedTestNodeStateProperty skipped:
+                _openTelemetryResultHandler?.NotifySkipped(message.TestNode, skipped);
+                break;
+
+            case InProgressTestNodeStateProperty:
+                _openTelemetryResultHandler?.NotifyInProgress(message.TestNode, message.ParentTestNodeUid);
+                break;
+
+            default:
+                _openTelemetryResultHandler?.NotifyUnknown();
+                break;
+        }
+
+        Type outcomeType = executionState.GetType();
+        if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, outcomeType) != -1)
         {
             _failedTestsCount++;
         }
 
         if (_isDiscovery
-            && Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeDiscoveredProperties, executionState.GetType()) != -1)
+            && Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeDiscoveredProperties, outcomeType) != -1)
         {
             _totalRanTests++;
         }
-        else if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeProperties, executionState.GetType()) != -1)
+        else if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeProperties, outcomeType) != -1)
         {
             _totalRanTests++;
         }
@@ -121,13 +162,16 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         return exitCode;
     }
 
-    public async Task SetTestAdapterTestSessionFailureAsync(string errorMessage)
+    public async Task SetTestAdapterTestSessionFailureAsync(string errorMessage, CancellationToken cancellationToken)
     {
         TestAdapterTestSessionFailureErrorMessage = errorMessage;
         _testAdapterTestSessionFailure = true;
-        await _outputService.DisplayAsync(this, new ErrorMessageOutputDeviceData(errorMessage));
+        await _outputService.DisplayAsync(this, new ErrorMessageOutputDeviceData(errorMessage), cancellationToken).ConfigureAwait(false);
     }
 
     public Statistics GetStatistics()
         => new() { TotalRanTests = _totalRanTests, TotalFailedTests = _failedTestsCount };
+
+    public void Dispose()
+        => _openTelemetryResultHandler?.Dispose();
 }

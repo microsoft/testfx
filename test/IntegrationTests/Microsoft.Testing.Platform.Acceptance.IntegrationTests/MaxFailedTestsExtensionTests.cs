@@ -12,7 +12,7 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase<MaxFailedTestsExt
     public async Task TestMaxFailedTestsShouldCallStopTestExecutionAsync()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 2");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 2", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.TestExecutionStoppedForMaxFailedTests);
 
@@ -24,10 +24,13 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase<MaxFailedTestsExt
     public async Task WhenCapabilityIsMissingShouldFail()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 2", environmentVariables: new()
-        {
-            ["DO_NOT_ADD_CAPABILITY"] = "1",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--maximum-failed-tests 2",
+            environmentVariables: new()
+            {
+                ["DO_NOT_ADD_CAPABILITY"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.");
@@ -173,12 +176,11 @@ internal sealed class GracefulStop : IGracefulStopTestExecutionCapability
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
     }
+
+    public TestContext TestContext { get; set; }
 }

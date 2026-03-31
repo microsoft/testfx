@@ -69,87 +69,59 @@ internal sealed class Condition
     /// </summary>
     internal Operation Operation { get; }
 
+    private bool EvaluateEqualOperation(string[]? multiValue)
+    {
+        // if any value in multi-valued property matches 'this.Value', for Equal to evaluate true.
+        if (multiValue != null)
+        {
+            foreach (string propertyValue in multiValue)
+            {
+                if (string.Equals(propertyValue, Value, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private bool EvaluateContainsOperation(string[]? multiValue)
+    {
+        if (multiValue != null)
+        {
+            foreach (string propertyValue in multiValue)
+            {
+                RoslynDebug.Assert(propertyValue != null, "PropertyValue can not be null.");
+                if (propertyValue.Contains(Value, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     /// <summary>
     /// Evaluate this condition for testObject.
     /// </summary>
     internal bool Evaluate(Func<string, object?> propertyValueProvider)
     {
-        Guard.NotNull(propertyValueProvider);
-        bool result = false;
+        ValidateArg.NotNull(propertyValueProvider, nameof(propertyValueProvider));
         string[]? multiValue = GetPropertyValue(propertyValueProvider);
-        switch (Operation)
+        bool result = Operation switch
         {
-            case Operation.Equal:
-                // if any value in multi-valued property matches 'this.Value', for Equal to evaluate true.
-                if (multiValue != null)
-                {
-                    foreach (string propertyValue in multiValue)
-                    {
-                        result = result || string.Equals(propertyValue, Value, StringComparison.OrdinalIgnoreCase);
-                        if (result)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                break;
-
-            case Operation.NotEqual:
-                // all values in multi-valued property should not match 'this.Value' for NotEqual to evaluate true.
-                result = true;
-
-                // if value is null.
-                if (multiValue != null)
-                {
-                    foreach (string propertyValue in multiValue)
-                    {
-                        result = result && !string.Equals(propertyValue, Value, StringComparison.OrdinalIgnoreCase);
-                        if (!result)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                break;
-
-            case Operation.Contains:
-                // if any value in multi-valued property contains 'this.Value' for 'Contains' to be true.
-                if (multiValue != null)
-                {
-                    foreach (string propertyValue in multiValue)
-                    {
-                        RoslynDebug.Assert(propertyValue != null, "PropertyValue can not be null.");
-                        result = result || propertyValue.Contains(Value, StringComparison.OrdinalIgnoreCase);
-                        if (result)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                break;
-
-            case Operation.NotContains:
-                // all values in multi-valued property should not contain 'this.Value' for NotContains to evaluate true.
-                result = true;
-
-                if (multiValue != null)
-                {
-                    foreach (string propertyValue in multiValue)
-                    {
-                        RoslynDebug.Assert(propertyValue != null, "PropertyValue can not be null.");
-                        result = result && !propertyValue.Contains(Value, StringComparison.OrdinalIgnoreCase);
-                        if (!result)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                break;
-        }
+            // if any value in multi-valued property matches 'this.Value', for Equal to evaluate true.
+            Operation.Equal => EvaluateEqualOperation(multiValue),
+            // all values in multi-valued property should not match 'this.Value' for NotEqual to evaluate true.
+            Operation.NotEqual => !EvaluateEqualOperation(multiValue),
+            // if any value in multi-valued property contains 'this.Value' for 'Contains' to be true.
+            Operation.Contains => EvaluateContainsOperation(multiValue),
+            // all values in multi-valued property should not contain 'this.Value' for NotContains to evaluate true.
+            Operation.NotContains => !EvaluateContainsOperation(multiValue),
+            _ => false,
+        };
 
         return result;
     }
@@ -164,7 +136,7 @@ internal sealed class Condition
             ThrownFormatExceptionForInvalidCondition(conditionString);
         }
 
-        string[] parts = TokenizeFilterConditionString(conditionString).ToArray();
+        string[] parts = [.. TokenizeFilterConditionString(conditionString)];
         if (parts.Length == 1)
         {
             // If only parameter values is passed, create condition with default property name,
@@ -193,9 +165,9 @@ internal sealed class Condition
     }
 
     [DoesNotReturn]
-    private static void ThrownFormatExceptionForInvalidCondition(string? conditionString) => throw new FormatException(
-            string.Format(CultureInfo.CurrentCulture, "Incorrect format for TestCaseFilter {0}. Specify the correct format and try again. Note that the incorrect format can lead to no test getting executed..",
-            string.Format(CultureInfo.CurrentCulture, "Error: Invalid Condition '{0}'", conditionString)));
+    private static void ThrownFormatExceptionForInvalidCondition(string? conditionString) =>
+        throw new FormatException(
+            $"Incorrect format for TestCaseFilter Error: Invalid Condition '{conditionString}'. Specify the correct format and try again. Note that the incorrect format can lead to no test getting executed..");
 
     /// <summary>
     /// Check if condition validates any property in properties.
@@ -247,8 +219,7 @@ internal sealed class Condition
         "~" => Operation.Contains,
         "!~" => Operation.NotContains,
         _ => throw new FormatException(
-            string.Format(CultureInfo.CurrentCulture, "Incorrect format for TestCaseFilter {0}. Specify the correct format and try again. Note that the incorrect format can lead to no test getting executed..",
-                string.Format(CultureInfo.CurrentCulture, "Error: Invalid operator '{0}'", operationString))),
+            $"Incorrect format for TestCaseFilter Error: Invalid operator '{operationString}'. Specify the correct format and try again. Note that the incorrect format can lead to no test getting executed.."),
     };
 
     /// <summary>
@@ -257,7 +228,7 @@ internal sealed class Condition
     private string[]? GetPropertyValue(Func<string, object?> propertyValueProvider)
     {
         object? propertyValue = propertyValueProvider(Name);
-        if (propertyValue != null)
+        if (propertyValue is not null)
         {
             if (propertyValue is not string[] multiValue)
             {
@@ -273,7 +244,7 @@ internal sealed class Condition
 
     internal static IEnumerable<string> TokenizeFilterConditionString(string str)
     {
-        return TokenizeFilterConditionStringWorker(Guard.NotNull(str));
+        return TokenizeFilterConditionStringWorker(Ensure.NotNull(str));
 
         static IEnumerable<string> TokenizeFilterConditionStringWorker(string s)
         {

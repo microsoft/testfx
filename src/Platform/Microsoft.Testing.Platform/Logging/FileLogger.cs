@@ -47,7 +47,14 @@ internal sealed class FileLogger : IDisposable
         _logLevel = logLevel;
         _console = console;
 
-        if (!_options.SyncFlush)
+        if (_options.SyncFlush)
+        {
+            if (OperatingSystem.IsBrowser())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.SyncFlushNotSupportedInBrowserErrorMessage);
+            }
+        }
+        else
         {
 #if NETCOREAPP
             _channel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions
@@ -71,7 +78,7 @@ internal sealed class FileLogger : IDisposable
         if (_options.FileName is not null)
         {
             string fileNameFullPath = Path.Combine(_options.LogFolder, _options.FileName);
-            _fileStream = fileSystem.Exists(fileNameFullPath)
+            _fileStream = fileSystem.ExistFile(fileNameFullPath)
                 ? OpenFileStreamForAppend(fileStreamFactory, fileNameFullPath)
                 : CreateFileStream(fileStreamFactory, fileNameFullPath);
         }
@@ -129,6 +136,11 @@ internal sealed class FileLogger : IDisposable
     {
         if (_options.SyncFlush)
         {
+            if (OperatingSystem.IsBrowser())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.SyncFlushNotSupportedInBrowserErrorMessage);
+            }
+
             InternalSyncLog(logLevel, state, exception, formatter, category);
         }
         else
@@ -137,6 +149,7 @@ internal sealed class FileLogger : IDisposable
         }
     }
 
+    [UnsupportedOSPlatform("browser")]
     private void InternalSyncLog<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter, string category)
     {
         if (!IsEnabled(logLevel))
@@ -144,9 +157,7 @@ internal sealed class FileLogger : IDisposable
             return;
         }
 
-#pragma warning disable CA1416 // Validate platform compatibility
         if (!_semaphore.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
-#pragma warning restore CA1416
         {
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutAcquiringSemaphoreErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
         }
@@ -165,7 +176,7 @@ internal sealed class FileLogger : IDisposable
     {
         if (_options.SyncFlush)
         {
-            await InternalAsyncLogAsync(logLevel, state, exception, formatter, category);
+            await InternalAsyncLogAsync(logLevel, state, exception, formatter, category).ConfigureAwait(false);
         }
         else
         {
@@ -180,14 +191,14 @@ internal sealed class FileLogger : IDisposable
             return;
         }
 
-        if (!await _semaphore.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
+        if (!await _semaphore.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutAcquiringSemaphoreErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
         }
 
         try
         {
-            await _writer.WriteLineAsync(BuildLogEntry(logLevel, state, exception, formatter, category));
+            await _writer.WriteLineAsync(BuildLogEntry(logLevel, state, exception, formatter, category)).ConfigureAwait(false);
         }
         finally
         {
@@ -232,16 +243,16 @@ internal sealed class FileLogger : IDisposable
         {
 #if NETCOREAPP
             // We don't need cancellation token because the task will be stopped when the Channel is completed thanks to the call to Complete() inside the Dispose method.
-            while (await _channel.Reader.WaitToReadAsync())
+            while (await _channel.Reader.WaitToReadAsync().ConfigureAwait(false))
             {
-                await _writer.WriteLineAsync(await _channel.Reader.ReadAsync());
+                await _writer.WriteLineAsync(await _channel.Reader.ReadAsync().ConfigureAwait(false)).ConfigureAwait(false);
             }
 #else
             // We don't need cancellation token because the task will be stopped when the BlockingCollection is completed thanks to the call to CompleteAdding()
             // inside the Dispose method.
             foreach (string message in _asyncLogs.GetConsumingEnumerable())
             {
-                await _writer.WriteLineAsync(message);
+                await _writer.WriteLineAsync(message).ConfigureAwait(false);
             }
 #endif
         }
@@ -312,13 +323,13 @@ internal sealed class FileLogger : IDisposable
 
             // Wait for all logs to be written
             _channel.Writer.TryComplete();
-            await _logLoop.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            await _logLoop.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
         }
 
         _semaphore.Dispose();
-        await _writer.FlushAsync();
-        await _writer.DisposeAsync();
-        await _fileStream.DisposeAsync();
+        await _writer.FlushAsync().ConfigureAwait(false);
+        await _writer.DisposeAsync().ConfigureAwait(false);
+        await _fileStream.DisposeAsync().ConfigureAwait(false);
         _disposed = true;
     }
 #endif

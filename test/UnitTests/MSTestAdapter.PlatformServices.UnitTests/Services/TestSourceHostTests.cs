@@ -1,26 +1,28 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NET462
+#if !NETFRAMEWORK
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
-namespace MSTestAdapter.PlatformServices.Tests.Services;
+namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
 public class TestSourceHostTests : TestContainer
 {
     private readonly TestSourceHost _testSourceHost;
 
-    public TestSourceHostTests() => _testSourceHost = new TestSourceHost(null!, null, null);
+    public TestSourceHostTests() => _testSourceHost = new TestSourceHost(null!, null);
 
     public void CreateInstanceForTypeCreatesAnInstanceOfAGivenTypeThroughDefaultConstructor()
     {
         var type = _testSourceHost.CreateInstanceForType(typeof(DummyType), null) as DummyType;
 
-        Verify(type is not null);
-        Verify(type.IsDefaultConstructorCalled);
+        type.Should().NotBeNull();
+        type.IsDefaultConstructorCalled.Should().BeTrue();
     }
 }
 

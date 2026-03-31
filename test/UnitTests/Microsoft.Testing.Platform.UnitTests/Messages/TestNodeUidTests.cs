@@ -27,13 +27,13 @@ public sealed class TestNodeUidTests
         // Assert.Throw<ArgumentNullException>(() => { TestNodeUid testNode = null!; });
 
         // Implicit conversion from a null, empty or whitespace string should throw.
-        Assert.ThrowsException<ArgumentNullException>(() => { TestNodeUid testNode = (string)null!; });
-        Assert.ThrowsException<ArgumentException>(() => { TestNodeUid testNode = string.Empty; });
-        Assert.ThrowsException<ArgumentException>(() => { TestNodeUid testNode = " "; });
+        Assert.ThrowsExactly<ArgumentNullException>(() => { TestNodeUid testNode = (string)null!; });
+        Assert.ThrowsExactly<ArgumentException>(() => { TestNodeUid testNode = string.Empty; });
+        Assert.ThrowsExactly<ArgumentException>(() => { TestNodeUid testNode = " "; });
 
         // Providing null, empty, or whitespace id should throw.
-        Assert.ThrowsException<ArgumentNullException>(() => { TestNodeUid testNode = new(null!); });
-        Assert.ThrowsException<ArgumentException>(() => { TestNodeUid testNode = new(string.Empty); });
-        Assert.ThrowsException<ArgumentException>(() => { TestNodeUid testNode = new(" "); });
+        Assert.ThrowsExactly<ArgumentNullException>(() => { TestNodeUid testNode = new(null!); });
+        Assert.ThrowsExactly<ArgumentException>(() => { TestNodeUid testNode = new(string.Empty); });
+        Assert.ThrowsExactly<ArgumentException>(() => { TestNodeUid testNode = new(" "); });
     }
 }

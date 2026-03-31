@@ -3,15 +3,17 @@
 
 using System.Collections.ObjectModel;
 
+using AwesomeAssertions;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions;
 
 public class CollectionAssertTests : TestContainer
 {
-    public void ThatShouldReturnAnInstanceOfCollectionAssert() => Verify(CollectionAssert.That is not null);
+    public void InstanceShouldReturnAnInstanceOfCollectionAssert() => (CollectionAssert.That is not null).Should().BeTrue();
 
-    public void ThatShouldCacheCollectionAssertInstance() => Verify(CollectionAssert.That == CollectionAssert.That);
+    public void InstanceShouldCacheCollectionAssertInstance() => (CollectionAssert.That == CollectionAssert.That).Should().BeTrue();
 
     public void CollectionAssertContainsNullabilityPostConditions()
     {
@@ -26,14 +28,6 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection = GetCollection();
         object? element = GetMatchingElement();
         CollectionAssert.Contains(collection, element, "message");
-        _ = collection.Count; // no warning
-    }
-
-    public void CollectionAssertContainsMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection = GetCollection();
-        object? element = GetMatchingElement();
-        CollectionAssert.Contains(collection, element, "message format {0} {1}", 1, 2);
         _ = collection.Count; // no warning
     }
 
@@ -53,14 +47,6 @@ public class CollectionAssertTests : TestContainer
         _ = collection.Count; // no warning
     }
 
-    public void CollectionAssertDoesNotContainMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection = GetCollection();
-        object? element = GetNotMatchingElement();
-        CollectionAssert.DoesNotContain(collection, element, "message format {0} {1}", 1, 2);
-        _ = collection.Count; // no warning
-    }
-
     public void CollectionAssertAllItemsAreNotNullNullabilityPostConditions()
     {
         ICollection? collection = GetCollection();
@@ -72,13 +58,6 @@ public class CollectionAssertTests : TestContainer
     {
         ICollection? collection = GetCollection();
         CollectionAssert.AllItemsAreNotNull(collection, "message");
-        _ = collection.Count; // no warning
-    }
-
-    public void CollectionAssertAllItemsAreNotNullMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection = GetCollection();
-        CollectionAssert.AllItemsAreNotNull(collection, "message format {0} {1}", 1, 2);
         _ = collection.Count; // no warning
     }
 
@@ -96,17 +75,10 @@ public class CollectionAssertTests : TestContainer
         _ = collection.Count; // no warning
     }
 
-    public void CollectionAssertAllItemsAreUniqueMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection = GetCollection();
-        CollectionAssert.AllItemsAreUnique(collection, "message format {0} {1}", 1, 2);
-        _ = collection.Count; // no warning
-    }
-
     public void CollectionAssertIsSubsetOfNullabilityPostConditions()
     {
         ICollection? collection = GetCollection();
-        ICollection? superset = GetMatchingSuperSet();
+        ICollection? superset = GetMatchingSuperset();
         CollectionAssert.IsSubsetOf(collection, superset);
         _ = collection.Count; // no warning
         _ = superset.Count; // no warning
@@ -115,25 +87,42 @@ public class CollectionAssertTests : TestContainer
     public void CollectionAssertIsSubsetOfMessageNullabilityPostConditions()
     {
         ICollection? collection = GetCollection();
-        ICollection? superset = GetMatchingSuperSet();
+        ICollection? superset = GetMatchingSuperset();
         CollectionAssert.IsSubsetOf(collection, superset, "message");
         _ = collection.Count; // no warning
         _ = superset.Count; // no warning
     }
 
-    public void CollectionAssertIsSubsetOfMessageParametersNullabilityPostConditions()
+    public void CollectionAssertIsSubsetOf_ReturnedSubsetValueMessage_ThrowExceptionMessage()
     {
-        ICollection? collection = GetCollection();
-        ICollection? superset = GetMatchingSuperSet();
-        CollectionAssert.IsSubsetOf(collection, superset, "message format {0} {1}", 1, 2);
-        _ = collection.Count; // no warning
-        _ = superset.Count; // no warning
+        // Arrange
+        ICollection? collection = GetSubsetCollection();
+        ICollection? superset = GetSupersetCollection();
+
+        // Act
+        Action action = () => CollectionAssert.IsSubsetOf(collection, superset);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <iem, a, b> is/are not present in the collection.");
+    }
+
+    public void CollectionAssertIsSubsetOf_WithMessage_ReturnedSubsetValueMessage_ThrowExceptionMessage()
+    {
+        // Arrange
+        ICollection? collection = GetSubsetCollection();
+        ICollection? superset = GetSupersetCollection();
+
+        // Act
+        Action action = () => CollectionAssert.IsSubsetOf(collection, superset, "message");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <iem, a, b> is/are not present in the collection. message");
     }
 
     public void CollectionAssertIsNotSubsetOfNullabilityPostConditions()
     {
         ICollection? collection = GetCollection();
-        ICollection? superset = GetNotMatchingSuperSet();
+        ICollection? superset = GetNotMatchingSuperset();
         CollectionAssert.IsNotSubsetOf(collection, superset);
         _ = collection.Count; // no warning
         _ = superset.Count; // no warning
@@ -142,17 +131,8 @@ public class CollectionAssertTests : TestContainer
     public void CollectionAssertIsNotSubsetOfMessageNullabilityPostConditions()
     {
         ICollection? collection = GetCollection();
-        ICollection? superset = GetNotMatchingSuperSet();
+        ICollection? superset = GetNotMatchingSuperset();
         CollectionAssert.IsNotSubsetOf(collection, superset, "message");
-        _ = collection.Count; // no warning
-        _ = superset.Count; // no warning
-    }
-
-    public void CollectionAssertIsNotSubsetOfMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection = GetCollection();
-        ICollection? superset = GetNotMatchingSuperSet();
-        CollectionAssert.IsNotSubsetOf(collection, superset, "message format {0} {1}", 1, 2);
         _ = collection.Count; // no warning
         _ = superset.Count; // no warning
     }
@@ -171,15 +151,6 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection = GetCollection();
         Type? type = GetStringType();
         CollectionAssert.AllItemsAreInstancesOfType(collection, type, "message");
-        _ = collection.Count; // no warning
-        type.ToString(); // no warning
-    }
-
-    public void CollectionAssertAllItemsAreInstancesOfTypeMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection = GetCollection();
-        Type? type = GetStringType();
-        CollectionAssert.AllItemsAreInstancesOfType(collection, type, "message format {0} {1}", 1, 2);
         _ = collection.Count; // no warning
         type.ToString(); // no warning
     }
@@ -204,14 +175,16 @@ public class CollectionAssertTests : TestContainer
     {
         int[][] expected = [[1, 2], [3, 4], [5, 6], [7, 8], [9]];
         int[][] actual = [[1, 2], [999, 999, 999, 999, 999], [5, 6], [], [9]];
-        VerifyThrows(() => CollectionAssert.AreEqual(expected, actual));
+        Action action = () => CollectionAssert.AreEqual(expected, actual);
+        action.Should().Throw<Exception>();
     }
 
     public void CollectionAssertAreEqual_WithCaseSensetiveComparer_Fails()
     {
         List<string> expected = ["one", "two"];
         List<string> actual = ["ONE", "tWo"];
-        VerifyThrows(() => CollectionAssert.AreEqual(expected, actual, StringComparer.Ordinal));
+        Action action = () => CollectionAssert.AreEqual(expected, actual, StringComparer.Ordinal);
+        action.Should().Throw<Exception>();
     }
 
     public void CollectionAssertAreEqualComparerMessageNullabilityPostConditions()
@@ -220,15 +193,6 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection2 = GetCollection();
         IComparer? comparer = GetComparer();
         CollectionAssert.AreEqual(collection1, collection2, comparer, "message");
-        comparer.ToString(); // no warning
-    }
-
-    public void CollectionAssertAreEqualComparerMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetCollection();
-        IComparer? comparer = GetComparer();
-        CollectionAssert.AreEqual(collection1, collection2, comparer, "message format {0} {1}", 1, 2);
         comparer.ToString(); // no warning
     }
 
@@ -253,7 +217,8 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetNestedLists();
         ICollection? collection2 = GetNotMatchingNestedLists();
 
-        VerifyThrows(() => CollectionAssert.AreEqual(collection1, collection2));
+        Action action = () => CollectionAssert.AreEqual(collection1, collection2);
+        action.Should().Throw<Exception>();
     }
 
     public void CollectionAssertAreEqual_EqualNonICollectionInnerCollection_Passes()
@@ -269,7 +234,8 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetNonICollectionInnerCollection();
         ICollection? collection2 = GetNotMatchingGetNonICollectionInnerCollection();
 
-        VerifyThrows(() => CollectionAssert.AreEqual(collection1, collection2));
+        Action action = () => CollectionAssert.AreEqual(collection1, collection2);
+        action.Should().Throw<Exception>();
     }
 
     public void CollectionAssertAreNotEqual_NotEqualNestedLists_Passes()
@@ -284,7 +250,8 @@ public class CollectionAssertTests : TestContainer
     {
         List<string> expected = ["one", "two"];
         List<string> actual = ["ONE", "tWo"];
-        VerifyThrows(() => CollectionAssert.AreNotEqual(expected, actual, StringComparer.OrdinalIgnoreCase));
+        Action action = () => CollectionAssert.AreNotEqual(expected, actual, StringComparer.OrdinalIgnoreCase);
+        action.Should().Throw<Exception>();
     }
 
     public void CollectionAssertAreNotEqual_WithCaseSensitiveComparer_Passes()
@@ -299,7 +266,8 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetNestedLists();
         ICollection? collection2 = GetNestedLists();
 
-        VerifyThrows(() => CollectionAssert.AreNotEqual(collection1, collection2));
+        Action action = () => CollectionAssert.AreNotEqual(collection1, collection2);
+        action.Should().Throw<Exception>();
     }
 
     public void CollectionAssertAreNotEqual_EqualNonICollectionInnerCollection_Fails()
@@ -307,7 +275,8 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection1 = GetNonICollectionInnerCollection();
         ICollection? collection2 = GetNonICollectionInnerCollection();
 
-        VerifyThrows(() => CollectionAssert.AreNotEqual(collection1, collection2));
+        Action action = () => CollectionAssert.AreNotEqual(collection1, collection2);
+        action.Should().Throw<Exception>();
     }
 
     public void CollectionAssertAreNotEqual_NotEqualNonICollectionInnerCollection_Passes()
@@ -329,7 +298,7 @@ public class CollectionAssertTests : TestContainer
     public void CollectionAssertAreNotEqualComparerNullabilityPostConditions()
     {
         ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetMatchingSuperSet();
+        ICollection? collection2 = GetMatchingSuperset();
         IComparer? comparer = GetComparer();
         CollectionAssert.AreNotEqual(collection1, collection2, comparer);
         comparer.ToString(); // no warning
@@ -338,25 +307,16 @@ public class CollectionAssertTests : TestContainer
     public void CollectionAssertAreNotEqualComparerMessageNullabilityPostConditions()
     {
         ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetMatchingSuperSet();
+        ICollection? collection2 = GetMatchingSuperset();
         IComparer? comparer = GetComparer();
         CollectionAssert.AreNotEqual(collection1, collection2, comparer, "message");
         comparer.ToString(); // no warning
     }
 
-    public void CollectionAssertAreNotEqualComparerMessageParametersNullabilityPostConditions()
-    {
-        ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetMatchingSuperSet();
-        IComparer? comparer = GetComparer();
-        CollectionAssert.AreNotEqual(collection1, collection2, comparer, "message format {0} {1}", 1, 2);
-        comparer.ToString(); // no warning
-    }
-
     public void CollectionAssertAreEquivalent_SameItemsWithDifferentOrder_DoesNotThrow()
     {
-        ICollection? collection1 = GetMatchingSuperSet();
-        ICollection? collection2 = GetReversedMatchingSuperSet();
+        ICollection? collection1 = GetMatchingSuperset();
+        ICollection? collection2 = GetReversedMatchingSuperset();
         CollectionAssert.AreEquivalent(collection1, collection2);
     }
 
@@ -372,114 +332,88 @@ public class CollectionAssertTests : TestContainer
     public void CollectionAssertAreEquivalent_FailWhenNotEquivalent_WithMessage()
     {
         ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetMatchingSuperSet();
-        Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1, collection2, "message"));
-        Verify(ex.Message.Contains("message"));
-    }
-
-    public void CollectionAssertAreEquivalent_FailWhenNotEquivalent_WithMessageAndParams()
-    {
-        ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetMatchingSuperSet();
-        Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1, collection2, "message format {0} {1}", 1, 2));
-        Verify(ex.Message.Contains("message"));
+        ICollection? collection2 = GetMatchingSuperset();
+        Action action = () => CollectionAssert.AreEquivalent(collection1, collection2, "message");
+        action.Should().Throw<Exception>()
+            .WithMessage("*message*");
     }
 
     public void CollectionAssertAreEquivalent_WithInsensitiveCaseComparer_DoesNotThrow()
     {
-        ICollection? collection1 = GetMatchingSuperSet();
-        ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
+        ICollection? collection1 = GetMatchingSuperset();
+        ICollection? collection2 = GetLettersCaseMismatchingSuperset();
         CollectionAssert.AreEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveEqualityComparer());
     }
 
     public void CollectionAssertAreEquivalent_FailsWithInsensitiveCaseComparer_WithMessage()
     {
         ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
-        Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveEqualityComparer(), "message"));
-        Verify(ex.Message.Contains("message"));
-    }
-
-    public void CollectionAssertAreEquivalent_FailsWithInsensitiveCaseComparer_WithMessageAndParams()
-    {
-        ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
-        Exception ex = VerifyThrows(() => CollectionAssert.AreEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveEqualityComparer(), "message format {0} {1}", 1, 2));
-        Verify(ex.Message.Contains("message"));
+        ICollection? collection2 = GetLettersCaseMismatchingSuperset();
+        Action action = () => CollectionAssert.AreEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveEqualityComparer(), "message");
+        action.Should().Throw<Exception>()
+            .WithMessage("*message*");
     }
 
     public void CollectionAssertAreNotEquivalent_SameItemsWithDifferentOrder_DoesNotThrow()
     {
         ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetMatchingSuperSet();
+        ICollection? collection2 = GetMatchingSuperset();
         CollectionAssert.AreNotEquivalent(collection1, collection2);
     }
 
     public void CollectionAssertAreNotEquivalent_FailWhenNotEquivalent_WithMessage()
     {
-        ICollection? collection1 = GetReversedMatchingSuperSet();
-        ICollection? collection2 = GetMatchingSuperSet();
-        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1, collection2, "message"));
-        Verify(ex.Message.Contains("message"));
-    }
-
-    public void CollectionAssertAreNotEquivalent_FailWhenNotEquivalent_WithMessageAndParams()
-    {
-        ICollection? collection1 = GetReversedMatchingSuperSet();
-        ICollection? collection2 = GetMatchingSuperSet();
-        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1, collection2, "message format {0} {1}", 1, 2));
-        Verify(ex.Message.Contains("message"));
+        ICollection? collection1 = GetReversedMatchingSuperset();
+        ICollection? collection2 = GetMatchingSuperset();
+        Action action = () => CollectionAssert.AreNotEquivalent(collection1, collection2, "message");
+        action.Should().Throw<Exception>()
+            .WithMessage("*message*");
     }
 
     public void CollectionAssertAreNotEquivalent_WithInsensitiveCaseComparer_DoesNotThrow()
     {
         ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetMatchingSuperSet();
+        ICollection? collection2 = GetMatchingSuperset();
         CollectionAssert.AreNotEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), EqualityComparer<object>.Default);
     }
 
     public void CollectionAssertAreNotEquivalent_FailsWithInsensitiveCaseComparer_WithMessage()
     {
-        ICollection? collection1 = GetMatchingSuperSet();
-        ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
-        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveNotEqualityComparer(), "message"));
-        Verify(ex.Message.Contains("message"));
-    }
-
-    public void CollectionAssertAreNotEquivalent_FailsWithInsensitiveCaseComparer_WithMessageAndParams()
-    {
-        ICollection? collection1 = GetMatchingSuperSet();
-        ICollection? collection2 = GetLettersCaseMismatchingSuperSet();
-        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveNotEqualityComparer(), "message format {0} {1}", 1, 2));
-        Verify(ex.Message.Contains("message"));
+        ICollection? collection1 = GetMatchingSuperset();
+        ICollection? collection2 = GetLettersCaseMismatchingSuperset();
+        Action action = () => CollectionAssert.AreNotEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveNotEqualityComparer(), "message");
+        action.Should().Throw<Exception>()
+            .WithMessage("*message*");
     }
 
     public void CollectionAssertAreNotEquivalent_FailsWithTwoNullsAndComparer_WithMessageAndParams()
     {
-        Exception ex = VerifyThrows(() => CollectionAssert.AreNotEquivalent(null, null, new CaseInsensitiveNotEqualityComparer(), "message format {0} {1}", 1, 2));
-        Verify(ex.Message.Contains("message"));
+        Action action = () => CollectionAssert.AreNotEquivalent(null, null, new CaseInsensitiveNotEqualityComparer(), "message format");
+        action.Should().Throw<Exception>()
+            .WithMessage("*message*");
     }
 
     public void CollectionAssertAreEqualWithoutUserMessage_FailsWithGoodMessage()
     {
-        Exception ex = VerifyThrows(() => CollectionAssert.AreEqual(new[] { 1, 2, 3 }, new[] { 1, 5, 3 }));
-        Assert.AreEqual(
-            """
+        Action action = () => CollectionAssert.AreEqual(new[] { 1, 2, 3 }, new[] { 1, 5, 3 });
+        action.Should().Throw<Exception>()
+            .WithMessage("""
             CollectionAssert.AreEqual failed. Element at index 1 do not match.
             Expected: 2
             Actual: 5
-            """, ex.Message);
+            """);
     }
 
     public void CollectionAssertAreEqualWithUserMessage_FailsWithGoodMessage()
     {
-        Exception ex = VerifyThrows(() => CollectionAssert.AreEqual(new[] { 1, 2, 3 }, new[] { 1, 5, 3 }, "User-provided message"));
-        Assert.AreEqual(
+        Action action = () => CollectionAssert.AreEqual(new[] { 1, 2, 3 }, new[] { 1, 5, 3 }, "User-provided message");
+        action.Should().Throw<Exception>()
+            .WithMessage(
             """
             CollectionAssert.AreEqual failed. User-provided message. Element at index 1 do not match.
             Expected: 2
             Actual: 5
-            """, ex.Message);
+            """);
     }
 
 #pragma warning disable CA1859 // Use concrete types when possible for improved performance
@@ -488,7 +422,7 @@ public class CollectionAssertTests : TestContainer
     {
         if (depth == 0)
         {
-            return new List<object> { new ReadOnlyCollection<int>(Enumerable.Range(1, 10).ToList()) };
+            return [new ReadOnlyCollection<int>([.. Enumerable.Range(1, 10)])];
         }
 
         var nestedCollection = new List<object>();
@@ -502,17 +436,21 @@ public class CollectionAssertTests : TestContainer
 
     private ICollection? GetCollection() => new[] { "item" };
 
+    private ICollection? GetSubsetCollection() => new[] { "iem", "a", "b" };
+
     private object? GetMatchingElement() => "item";
 
     private object? GetNotMatchingElement() => "not found";
 
-    private ICollection? GetMatchingSuperSet() => new[] { "item", "item2" };
+    private ICollection? GetMatchingSuperset() => new[] { "item", "item2" };
 
-    private ICollection? GetLettersCaseMismatchingSuperSet() => new[] { "Item", "iTem2" };
+    private ICollection? GetSupersetCollection() => new[] { "item", "item2", "c", "d" };
 
-    private ICollection? GetReversedMatchingSuperSet() => new[] { "item2", "item" };
+    private ICollection? GetLettersCaseMismatchingSuperset() => new[] { "Item", "iTem2" };
 
-    private ICollection? GetNotMatchingSuperSet() => new[] { "item3" };
+    private ICollection? GetReversedMatchingSuperset() => new[] { "item2", "item" };
+
+    private ICollection? GetNotMatchingSuperset() => new[] { "item3" };
 
     private ICollection? GetNestedLists() => new List<List<int>>
         {
@@ -528,14 +466,14 @@ public class CollectionAssertTests : TestContainer
 
     private ICollection? GetNonICollectionInnerCollection() => new List<ReadOnlyCollection<int>>
         {
-            new(new List<int> { 1, 2 }),
-            new(new List<int> { 3, 4 }),
+            new([1, 2]),
+            new([3, 4]),
         };
 
     private ICollection? GetNotMatchingGetNonICollectionInnerCollection() => new List<ReadOnlyCollection<int>>
         {
-            new(new List<int> { 6, 5 }),
-            new(new List<int> { 3, 4 }),
+            new([6, 5]),
+            new([3, 4]),
         };
 
     private Type? GetStringType() => typeof(string);
@@ -561,4 +499,27 @@ public class CollectionAssertTests : TestContainer
 
         public int GetHashCode(string obj) => obj.ToUpperInvariant().GetHashCode();
     }
+
+    #region Obsolete methods tests
+#if DEBUG
+    public void ObsoleteEqualsMethodThrowsAssertFailedException()
+    {
+#pragma warning disable CS0618 // Type or member is obsolete
+        Action action = () => CollectionAssert.Equals("test", "test");
+#pragma warning restore CS0618 // Type or member is obsolete
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("*CollectionAssert.Equals should not be used for Assertions*");
+    }
+
+    public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
+    {
+        object obj = new();
+#pragma warning disable CS0618 // Type or member is obsolete
+        Action action = () => CollectionAssert.ReferenceEquals(obj, obj);
+#pragma warning restore CS0618 // Type or member is obsolete
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("*CollectionAssert.ReferenceEquals should not be used for Assertions*");
+    }
+#endif
+    #endregion
 }

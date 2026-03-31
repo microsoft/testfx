@@ -30,44 +30,62 @@ internal sealed class AnsiTerminalTestProgressFrame
 
         int nonReservedWidth = Width - (durationString.Length + 2);
 
+        int discovered = progress.DiscoveredTests;
         int passed = progress.PassedTests;
         int failed = progress.FailedTests;
         int skipped = progress.SkippedTests;
         int charsTaken = 0;
 
-        terminal.Append('[');
-        charsTaken++;
-        terminal.SetColor(TerminalColor.Green);
-        terminal.Append('✓');
-        charsTaken++;
-        string passedText = passed.ToString(CultureInfo.CurrentCulture);
-        terminal.Append(passedText);
-        charsTaken += passedText.Length;
-        terminal.ResetColor();
+        if (!progress.IsDiscovery)
+        {
+            terminal.Append('[');
+            charsTaken++;
+            terminal.SetColor(TerminalColor.DarkGreen);
+            terminal.Append('✓');
+            charsTaken++;
+            string passedText = passed.ToString(CultureInfo.CurrentCulture);
+            terminal.Append(passedText);
+            charsTaken += passedText.Length;
+            terminal.ResetColor();
 
-        terminal.Append('/');
-        charsTaken++;
+            terminal.Append('/');
+            charsTaken++;
 
-        terminal.SetColor(TerminalColor.Red);
-        terminal.Append('x');
-        charsTaken++;
-        string failedText = failed.ToString(CultureInfo.CurrentCulture);
-        terminal.Append(failedText);
-        charsTaken += failedText.Length;
-        terminal.ResetColor();
+            terminal.SetColor(TerminalColor.DarkRed);
+            terminal.Append('x');
+            charsTaken++;
+            string failedText = failed.ToString(CultureInfo.CurrentCulture);
+            terminal.Append(failedText);
+            charsTaken += failedText.Length;
+            terminal.ResetColor();
 
-        terminal.Append('/');
-        charsTaken++;
+            terminal.Append('/');
+            charsTaken++;
 
-        terminal.SetColor(TerminalColor.Yellow);
-        terminal.Append('↓');
-        charsTaken++;
-        string skippedText = skipped.ToString(CultureInfo.CurrentCulture);
-        terminal.Append(skippedText);
-        charsTaken += skippedText.Length;
-        terminal.ResetColor();
-        terminal.Append(']');
-        charsTaken++;
+            terminal.SetColor(TerminalColor.DarkYellow);
+            terminal.Append('↓');
+            charsTaken++;
+            string skippedText = skipped.ToString(CultureInfo.CurrentCulture);
+            terminal.Append(skippedText);
+            charsTaken += skippedText.Length;
+            terminal.ResetColor();
+            terminal.Append(']');
+            charsTaken++;
+        }
+        else
+        {
+            string discoveredText = discovered.ToString(CultureInfo.CurrentCulture);
+            terminal.Append('[');
+            charsTaken++;
+            terminal.SetColor(TerminalColor.DarkMagenta);
+            terminal.Append('+');
+            charsTaken++;
+            terminal.Append(discoveredText);
+            charsTaken += discoveredText.Length;
+            terminal.ResetColor();
+            terminal.Append(']');
+            charsTaken++;
+        }
 
         terminal.Append(' ');
         charsTaken++;
@@ -193,7 +211,7 @@ internal sealed class AnsiTerminalTestProgressFrame
         }
 
         int i = 0;
-        RenderedLines = new List<RenderedProgressItem>(progress.Length * 2);
+        RenderedLines = [with(progress.Length * 2)];
         List<object> progresses = GenerateLinesToRender(progress);
 
         foreach (object item in progresses)
@@ -308,7 +326,7 @@ internal sealed class AnsiTerminalTestProgressFrame
         // Note: We want to render the list of active tests, but this can easily fill up the full screen.
         // As such, we should balance the number of active tests shown per project.
         // We do this by distributing the remaining lines for each projects.
-        TestProgressState[] progressItems = progress.OfType<TestProgressState>().ToArray();
+        TestProgressState[] progressItems = [.. progress.OfType<TestProgressState>()];
         int linesToDistribute = (int)(Height * 0.7) - 1 - progressItems.Length;
         var detailItems = new IEnumerable<TestDetailState>[progressItems.Length];
         IEnumerable<int> sortedItemsIndices = Enumerable.Range(0, progressItems.Length).OrderBy(i => progressItems[i].TestNodeResultsState?.Count ?? 0);
@@ -317,7 +335,7 @@ internal sealed class AnsiTerminalTestProgressFrame
         {
             detailItems[sortedItemIndex] = progressItems[sortedItemIndex].TestNodeResultsState?.GetRunningTasks(
                 linesToDistribute / progressItems.Length)
-                ?? Array.Empty<TestDetailState>();
+                ?? [];
         }
 
         for (int progressI = 0; progressI < progressItems.Length; progressI++)

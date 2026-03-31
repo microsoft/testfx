@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <RuntimeIdentifier>wasi-wasm</RuntimeIdentifier>
+    <PublishTrimmed>true</PublishTrimmed>
+
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.CrashDump\Microsoft.Testing.Extensions.CrashDump.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.HangDump\Microsoft.Testing.Extensions.HangDump.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.AzureDevOpsReport\Microsoft.Testing.Extensions.AzureDevOpsReport.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectCapability Include="DiagnoseCapabilities" />
+    <ProjectCapability Include="TestingPlatformServer" />
+    <ProjectCapability Include="TestContainer" />
+  </ItemGroup>
+
+</Project>

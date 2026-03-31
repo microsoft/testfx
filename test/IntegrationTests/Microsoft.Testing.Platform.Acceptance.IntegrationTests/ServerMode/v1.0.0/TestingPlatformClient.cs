@@ -50,9 +50,9 @@ public sealed class TestingPlatformClient : IDisposable
 
     public int ExitCode => _processHandler.ExitCode;
 
-    public async Task<int> WaitServerProcessExit()
+    public async Task<int> WaitServerProcessExit(CancellationToken cancellationToken)
     {
-        await _processHandler.WaitForExitAsync();
+        await _processHandler.WaitForExitAsync(cancellationToken);
         return _processHandler.ExitCode;
     }
 
@@ -64,14 +64,9 @@ public sealed class TestingPlatformClient : IDisposable
         {
             await func();
         }
-        catch (Exception ex)
+        catch (Exception ex) when (_disconnectionReason.Length > 0)
         {
-            if (_disconnectionReason.Length > 0)
-            {
-                throw new InvalidOperationException($"{ex.Message}\n{_disconnectionReason}", ex);
-            }
-
-            throw;
+            throw new InvalidOperationException($"{ex.Message}\n{_disconnectionReason}", ex);
         }
     }
 
@@ -157,14 +152,11 @@ public sealed class TestingPlatformClient : IDisposable
 
     private sealed class TargetHandler
     {
-        private readonly ConcurrentDictionary<Guid, ResponseListener> _listeners
-            = new();
+        private readonly ConcurrentDictionary<Guid, ResponseListener> _listeners = new();
 
-        private readonly ConcurrentBag<LogsCollector> _logListeners
-            = new();
+        private readonly ConcurrentBag<LogsCollector> _logListeners = [];
 
-        private readonly ConcurrentBag<TelemetryCollector> _telemetryPayloads
-            = new();
+        private readonly ConcurrentBag<TelemetryCollector> _telemetryPayloads = [];
 
         public void RegisterTelemetryListener(TelemetryCollector listener)
             => _telemetryPayloads.Add(listener);

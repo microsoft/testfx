@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 
@@ -15,14 +16,8 @@ namespace Microsoft.Testing.Platform.Builder;
 /// Represents a test application.
 /// </summary>
 public sealed class TestApplication : ITestApplication
-#if NETCOREAPP
-#pragma warning disable SA1001 // Commas should be spaced correctly
-    , IAsyncDisposable
-#pragma warning restore SA1001 // Commas should be spaced correctly
-#endif
 {
-    private readonly ITestHost _testHost;
-    private static int s_numberOfBuilders;
+    private readonly IHost _host;
     private static UnhandledExceptionHandler? s_unhandledExceptionHandler;
 
     static TestApplication() =>
@@ -30,11 +25,11 @@ public sealed class TestApplication : ITestApplication
         // This is important for the console display system to work properly.
         _ = new SystemConsole();
 
-    internal TestApplication(ITestHost testHost) => _testHost = testHost;
+    internal TestApplication(IHost host) => _host = host;
 
-    internal IServiceProvider ServiceProvider => ((CommonTestHost)_testHost).ServiceProvider;
-
-    internal static int MaxNumberOfBuilders { get; set; } = int.MaxValue;
+    // This cast looks like incorrect assumption.
+    // This property is currently accessed in unit tests only.
+    internal IServiceProvider ServiceProvider => ((CommonHost)_host).ServiceProvider;
 
     /// <summary>
     /// Creates a server mode builder asynchronously.
@@ -42,15 +37,16 @@ public sealed class TestApplication : ITestApplication
     /// <param name="args">The command line arguments.</param>
     /// <param name="testApplicationOptions">The test application options.</param>
     /// <returns>The task representing the asynchronous operation.</returns>
+    [Obsolete("This method is obsolete. Use CreateBuilderAsync instead.")]
     public static Task<ITestApplicationBuilder> CreateServerModeBuilderAsync(string[] args, TestApplicationOptions? testApplicationOptions = null)
     {
         if (args.Contains($"--{PlatformCommandLineProvider.ServerOptionKey}") || args.Contains($"-{PlatformCommandLineProvider.ServerOptionKey}"))
         {
             // Remove the --server option from the args so that the builder can be created.
-            args = args.Where(arg => arg.Trim('-') != PlatformCommandLineProvider.ServerOptionKey).ToArray();
+            args = [.. args.Where(arg => arg.Trim('-') != PlatformCommandLineProvider.ServerOptionKey)];
         }
 
-        return CreateBuilderAsync(args.Append($"--{PlatformCommandLineProvider.ServerOptionKey}").ToArray(), testApplicationOptions);
+        return CreateBuilderAsync([.. args, $"--{PlatformCommandLineProvider.ServerOptionKey}"], testApplicationOptions);
     }
 
     /// <summary>
@@ -79,6 +75,18 @@ public sealed class TestApplication : ITestApplication
         // First step is to parse the command line from where we get the second input layer.
         // The first one should be the env vars handled autonomously by extensions and part of the test platform.
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, systemEnvironment);
+        if (parseResult.IsOptionSet(PlatformCommandLineProvider.DebugAttachOptionKey))
+        {
+            if (OperatingSystem.IsBrowser())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.WaitDebuggerAttachNotSupportedInBrowserErrorMessage);
+            }
+            else
+            {
+                WaitForDebuggerToAttach(systemEnvironment, systemConsole, systemProcess);
+            }
+        }
+
         TestHostControllerInfo testHostControllerInfo = new(parseResult);
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(systemEnvironment, systemProcess);
 
@@ -93,7 +101,7 @@ public sealed class TestApplication : ITestApplication
         {
             ILogger logger = loggingState.FileLoggerProvider.CreateLogger(typeof(TestApplication).ToString());
             s_unhandledExceptionHandler.SetLogger(logger);
-            await LogInformationAsync(logger, testApplicationModuleInfo, testHostControllerInfo, systemProcess, systemEnvironment, createBuilderEntryTime, loggingState.IsSynchronousWrite, loggingState.LogLevel, args);
+            await LogInformationAsync(logger, testApplicationModuleInfo, testHostControllerInfo, systemEnvironment, createBuilderEntryTime, loggingState.IsSynchronousWrite, loggingState.LogLevel, args).ConfigureAwait(false);
         }
 
         // All checks are fine, create the TestApplication.
@@ -104,7 +112,6 @@ public sealed class TestApplication : ITestApplication
         ILogger logger,
         CurrentTestApplicationModuleInfo testApplicationModuleInfo,
         TestHostControllerInfo testHostControllerInfo,
-        SystemProcessHandler processHandler,
         SystemEnvironment environment,
         string createBuilderEntryTime,
         bool syncWrite,
@@ -115,25 +122,24 @@ public sealed class TestApplication : ITestApplication
         AssemblyInformationalVersionAttribute? version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         if (version is not null)
         {
-            await logger.LogInformationAsync($"Version: {version.InformationalVersion}");
+            await logger.LogInformationAsync($"Version: {version.InformationalVersion}").ConfigureAwait(false);
         }
         else
         {
-            await logger.LogInformationAsync("Version attribute not found");
+            await logger.LogInformationAsync("Version attribute not found").ConfigureAwait(false);
         }
 
-        await logger.LogInformationAsync("Logging mode: " + (syncWrite ? "synchronous" : "asynchronous"));
-        await logger.LogInformationAsync($"Logging level: {loggerLevel}");
-        await logger.LogInformationAsync($"CreateBuilderAsync entry time: {createBuilderEntryTime}");
-        using IProcess currentProcess = processHandler.GetCurrentProcess();
-        await logger.LogInformationAsync($"PID: {currentProcess.Id}");
+        await logger.LogInformationAsync("Logging mode: " + (syncWrite ? "synchronous" : "asynchronous")).ConfigureAwait(false);
+        await logger.LogInformationAsync($"Logging level: {loggerLevel}").ConfigureAwait(false);
+        await logger.LogInformationAsync($"CreateBuilderAsync entry time: {createBuilderEntryTime}").ConfigureAwait(false);
+        await logger.LogInformationAsync($"PID: {environment.ProcessId}").ConfigureAwait(false);
 
 #if NETCOREAPP
         string runtimeInformation = $"{RuntimeInformation.RuntimeIdentifier} - {RuntimeInformation.FrameworkDescription}";
 #else
         string runtimeInformation = $"{RuntimeInformation.ProcessArchitecture} - {RuntimeInformation.FrameworkDescription}";
 #endif
-        await logger.LogInformationAsync($"Runtime information: {runtimeInformation}");
+        await logger.LogInformationAsync($"Runtime information: {runtimeInformation}").ConfigureAwait(false);
 
 #if NETCOREAPP
         if (RuntimeFeature.IsDynamicCodeSupported)
@@ -143,11 +149,11 @@ public sealed class TestApplication : ITestApplication
 #pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
             if (runtimeLocation is not null)
             {
-                await logger.LogInformationAsync($"Runtime location: {runtimeLocation}");
+                await logger.LogInformationAsync($"Runtime location: {runtimeLocation}").ConfigureAwait(false);
             }
             else
             {
-                await logger.LogInformationAsync("Runtime location not found.");
+                await logger.LogInformationAsync("Runtime location not found.").ConfigureAwait(false);
             }
         }
 #else
@@ -156,11 +162,11 @@ public sealed class TestApplication : ITestApplication
 #pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
         if (runtimeLocation is not null)
         {
-            await logger.LogInformationAsync($"Runtime location: {runtimeLocation}");
+            await logger.LogInformationAsync($"Runtime location: {runtimeLocation}").ConfigureAwait(false);
         }
         else
         {
-            await logger.LogInformationAsync($"Runtime location not found.");
+            await logger.LogInformationAsync($"Runtime location not found.").ConfigureAwait(false);
         }
 #endif
 
@@ -168,11 +174,11 @@ public sealed class TestApplication : ITestApplication
 #if NETCOREAPP
         isDynamicCodeSupported = RuntimeFeature.IsDynamicCodeSupported;
 #endif
-        await logger.LogInformationAsync($"IsDynamicCodeSupported: {isDynamicCodeSupported}");
+        await logger.LogInformationAsync($"IsDynamicCodeSupported: {isDynamicCodeSupported}").ConfigureAwait(false);
 
         string moduleName = testApplicationModuleInfo.GetDisplayName();
-        await logger.LogInformationAsync($"Test module: {moduleName}");
-        await logger.LogInformationAsync($"Command line arguments: '{(args.Length == 0 ? string.Empty : args.Aggregate((a, b) => $"{a} {b}"))}'");
+        await logger.LogInformationAsync($"Test module: {moduleName}").ConfigureAwait(false);
+        await logger.LogInformationAsync($"Command line arguments: '{(args.Length == 0 ? string.Empty : args.Aggregate((a, b) => $"{a} {b}"))}'").ConfigureAwait(false);
 
         StringBuilder machineInfo = new();
 #pragma warning disable RS0030 // Do not use banned APIs
@@ -184,15 +190,15 @@ public sealed class TestApplication : ITestApplication
 #if NETCOREAPP
         machineInfo.AppendLine(CultureInfo.InvariantCulture, $"TotalAvailableMemoryBytes(GB): {GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1_000_000_000}");
 #endif
-        await logger.LogDebugAsync($"Machine info:\n{machineInfo}");
+        await logger.LogDebugAsync($"Machine info:\n{machineInfo}").ConfigureAwait(false);
 
         if (testHostControllerInfo.HasTestHostController)
         {
             int? testHostControllerPID = testHostControllerInfo.GetTestHostControllerPID();
 
-            await LogVariableAsync(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID);
-            await LogVariableAsync(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID);
-            await LogVariableAsync(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME);
+            await LogVariableAsync(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID).ConfigureAwait(false);
+            await LogVariableAsync(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID).ConfigureAwait(false);
+            await LogVariableAsync(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME).ConfigureAwait(false);
 
             async Task LogVariableAsync(string key)
             {
@@ -200,32 +206,21 @@ public sealed class TestApplication : ITestApplication
                 key = $"{key}_{testHostControllerPID}";
                 if ((value = environment.GetEnvironmentVariable(key)) is not null)
                 {
-                    await logger.LogDebugAsync($"{key} '{value}'");
+                    await logger.LogDebugAsync($"{key} '{value}'").ConfigureAwait(false);
                 }
             }
         }
 
-        await logger.LogInformationAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT}: '{environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT)}'");
+        await logger.LogInformationAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT}: '{environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT)}'").ConfigureAwait(false);
     }
-
-    internal static void ReleaseBuilder()
-        => Interlocked.Decrement(ref s_numberOfBuilders);
 
     /// <inheritdoc />
     public void Dispose()
-        => (_testHost as IDisposable)?.Dispose();
-
-#if NETCOREAPP
-    /// <inheritdoc />
-    public ValueTask DisposeAsync()
-        => _testHost is IAsyncDisposable asyncDisposable
-            ? asyncDisposable.DisposeAsync()
-            : ValueTask.CompletedTask;
-#endif
+        => (_host as IDisposable)?.Dispose();
 
     /// <inheritdoc />
     public async Task<int> RunAsync()
-        => await _testHost.RunAsync();
+        => await _host.RunAsync().ConfigureAwait(false);
 
     private static void AttachDebuggerIfNeeded(SystemEnvironment environment, SystemConsole console, SystemProcessHandler systemProcess)
     {
@@ -236,16 +231,29 @@ public sealed class TestApplication : ITestApplication
 
         if (environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER) == "1")
         {
-            IProcess currentProcess = systemProcess.GetCurrentProcess();
-            console.WriteLine($"Waiting for debugger to attach... Process Id: {currentProcess.Id}, Name: {currentProcess.Name}");
-
-            while (!Debugger.IsAttached)
+            if (OperatingSystem.IsBrowser())
             {
-                Thread.Sleep(1000);
+                throw new PlatformNotSupportedException(PlatformResources.WaitDebuggerAttachNotSupportedInBrowserErrorMessage);
             }
-
-            Debugger.Break();
+            else
+            {
+                WaitForDebuggerToAttach(environment, console, systemProcess);
+            }
         }
+    }
+
+    [UnsupportedOSPlatform("browser")]
+    private static void WaitForDebuggerToAttach(SystemEnvironment environment, SystemConsole console, SystemProcessHandler systemProcess)
+    {
+        using IProcess currentProcess = systemProcess.GetCurrentProcess();
+        console.WriteLine($"Waiting for debugger to attach... Process Id: {environment.ProcessId}, Name: {currentProcess.Name}");
+
+        while (!Debugger.IsAttached)
+        {
+            Thread.Sleep(1000);
+        }
+
+        Debugger.Break();
     }
 
     /*
@@ -286,18 +294,13 @@ public sealed class TestApplication : ITestApplication
 
         if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.DiagnosticVerbosityOptionKey, out string[]? verbosity))
         {
-            logLevel = EnumPolyfill.Parse<LogLevel>(verbosity[0], true);
+            logLevel = Enum.Parse<LogLevel>(verbosity[0], true);
         }
 
         // Override the log level if the environment variable is set
         string? environmentLogLevel = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY);
-        if (!RoslynString.IsNullOrEmpty(environmentLogLevel))
+        if (TryParseDiagnosticVerbosity(environmentLogLevel, out LogLevel parsedLogLevel))
         {
-            if (!Enum.TryParse(environmentLogLevel, out LogLevel parsedLogLevel))
-            {
-                throw new NotSupportedException($"Invalid environment value '{nameof(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY)}', was expecting 'Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical' but got '{environmentLogLevel}'.");
-            }
-
             logLevel = parsedLogLevel;
         }
 
@@ -368,4 +371,16 @@ public sealed class TestApplication : ITestApplication
                 new SystemFileStreamFactory()),
             synchronousWrite);
     }
+
+    internal /* for testing purposes */ static bool TryParseDiagnosticVerbosity(string? environmentLogLevel, out LogLevel parsedLogLevel)
+    {
+        parsedLogLevel = LogLevel.None;
+
+        return !RoslynString.IsNullOrEmpty(environmentLogLevel)
+            && (Enum.TryParse(environmentLogLevel, ignoreCase: true, out parsedLogLevel)
+                || ThrowInvalidDiagnosticVerbosity(environmentLogLevel));
+    }
+
+    private static bool ThrowInvalidDiagnosticVerbosity(string environmentLogLevel)
+        => throw new NotSupportedException($"Invalid environment value '{nameof(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY)}', was expecting 'Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical' but got '{environmentLogLevel}'.");
 }

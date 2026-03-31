@@ -18,13 +18,14 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
     public async Task DiscoverTests_ShowsWarningsForTestsThatFailedToDiscover(string currentTfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+        bool isNetFx = currentTfm.StartsWith("net4", StringComparison.OrdinalIgnoreCase);
 
-        if (currentTfm.StartsWith("net4", StringComparison.OrdinalIgnoreCase))
+        if (isNetFx)
         {
             // .NET Framework will isolate the run into appdomain, there we did not write the warnings out
             // so before running the discovery, we want to ensure that the tests do run in appdomain.
             // We check for appdomain directly in the test, so if tests fail we did not run in appdomain.
-            TestHostResult testHostSuccessResult = await testHost.ExecuteAsync();
+            TestHostResult testHostSuccessResult = await testHost.ExecuteAsync("--settings AppDomainEnabled.runsettings", cancellationToken: TestContext.CancellationToken);
 
             testHostSuccessResult.AssertExitCodeIs(ExitCodes.Success);
         }
@@ -33,27 +34,26 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
         // because the type won't be loaded on runtime, and mstest will write warning.
         File.Delete(Path.Combine(testHost.DirectoryName, $"{BaseClassAssetName}.dll"));
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
-        testHostResult.AssertOutputContains("System.IO.FileNotFoundException: Could not load file or assembly 'TestDiscoveryWarningsBaseClass");
+        if (isNetFx)
+        {
+            testHostResult.AssertStandardErrorContains("Could not load file or assembly 'TestDiscoveryWarningsBaseClass, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null' or one of its dependencies. The system cannot find the file specified.");
+        }
+        else
+        {
+            testHostResult.AssertStandardErrorContains("Could not load file or assembly 'TestDiscoveryWarningsBaseClass, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'. The system cannot find the file specified.");
+        }
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public string BaseTargetAssetPath => GetAssetPath(BaseClassAssetName);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (BaseClassAssetName, BaseClassAssetName,
-            BaseClassSourceCode.PatchTargetFrameworks(TargetFrameworks.All));
-
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
             SourceCode.PatchTargetFrameworks(TargetFrameworks.All)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file TestDiscoveryWarnings.csproj
@@ -67,14 +67,30 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../TestDiscoveryWarningsBaseClass/TestDiscoveryWarningsBaseClass.csproj" />
+    <ProjectReference Include="TestDiscoveryWarningsBaseClass/TestDiscoveryWarningsBaseClass.csproj" />
+    <Compile Remove="TestDiscoveryWarningsBaseClass/**" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="AppDomainEnabled.runsettings">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
+
+#file AppDomainEnabled.runsettings
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+    <RunConfiguration>
+        <DisableAppDomain>false</DisableAppDomain>
+    </RunConfiguration>
+</RunSettings>
+
 
 #file UnitTest1.cs
 
@@ -106,10 +122,8 @@ public class TestClass2
     [TestMethod]
     public void Test2_1() {}
 }
-""";
 
-        private const string BaseClassSourceCode = """
-#file TestDiscoveryWarningsBaseClass.csproj
+#file TestDiscoveryWarningsBaseClass/TestDiscoveryWarningsBaseClass.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -120,8 +134,7 @@ public class TestClass2
 
 </Project>
 
-
-#file UnitTest1.cs
+#file TestDiscoveryWarningsBaseClass/UnitTest1.cs
 namespace Base;
 
 public class BaseClass
@@ -129,4 +142,6 @@ public class BaseClass
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

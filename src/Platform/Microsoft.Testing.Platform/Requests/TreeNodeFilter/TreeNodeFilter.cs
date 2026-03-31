@@ -11,7 +11,6 @@ namespace Microsoft.Testing.Platform.Requests;
 /// A tree based filter for test execution.
 /// </summary>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-[SuppressMessage("ApiDesign", "RS0016:Add public types and members to the declared API", Justification = "Experimental API")]
 public sealed class TreeNodeFilter : ITestExecutionFilter
 {
     /// <summary>
@@ -25,7 +24,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
 
     internal TreeNodeFilter(string filter)
     {
-        Filter = Guard.NotNull(filter);
+        Filter = Ensure.NotNull(filter);
         _filters = ParseFilter(filter);
     }
 
@@ -77,7 +76,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         //       of an expression operators are not allowed.
         bool isOperatorAllowed = false;
         bool isPropAllowed = false;
-
+        bool lastWasOpenParen = false;
         OperatorKind topStackOperator;
 
         foreach (string token in TokenizeFilter(filter))
@@ -225,6 +224,10 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                     isPropAllowed = false;
                     break;
 
+                case "!" when lastWasOpenParen:
+                    operatorStack.Push(OperatorKind.UnaryNot);
+                    break;
+
                 default:
                     expressionStack.Push(new ValueExpression(token));
 
@@ -232,6 +235,8 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                     isPropAllowed = true;
                     break;
             }
+
+            lastWasOpenParen = token == "(";
         }
 
         // Note: What we should end with (as long as the expression is a valid filter)
@@ -262,11 +267,9 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
             Stack<OperatorKind> operatorStack,
             OperatorKind currentOp)
         {
-            OperatorKind topStackOperator;
-
             while (operatorStack.Count != 0 && operatorStack.Peek() > currentOp)
             {
-                topStackOperator = operatorStack.Pop();
+                OperatorKind topStackOperator = operatorStack.Pop();
                 ProcessStackOperator(topStackOperator, expressionStack, operatorStack);
                 break;
             }
@@ -350,6 +353,11 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                 }
 
                 expr.Push(filterExpression);
+                break;
+
+            case OperatorKind.UnaryNot:
+                FilterExpression notOperator = expr.Pop();
+                expr.Push(new OperatorExpression(FilterOperator.Not, [notOperator]));
                 break;
 
             default:
@@ -440,6 +448,12 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                         yield return "!=";
                         i++;
                     }
+                    else if (i - 1 >= 0 && filter[i - 1] == '(')
+                    {
+                        // Note: If we have a ! at the start of an expression, we should
+                        //       treat it as a NOT operator.
+                        yield return "!";
+                    }
                     else
                     {
                         goto default;
@@ -468,7 +482,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     /// <param name="filterableProperties">The URL encoded node properties.</param>
     public bool MatchesFilter(string testNodeFullPath, PropertyBag filterableProperties)
     {
-        Guard.NotNullOrEmpty(testNodeFullPath);
+        Ensure.NotNullOrEmpty(testNodeFullPath);
         ArgumentGuard.Ensure(testNodeFullPath[0] == PathSeparator, nameof(testNodeFullPath),
             string.Format(CultureInfo.InvariantCulture, PlatformResources.TreeNodeFilterPathShouldStartWithSlashErrorMessage, PathSeparator));
 
@@ -550,7 +564,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         => propertyExpr switch
         {
             PropertyExpression { PropertyName: var propExpr, Value: var valueExpr }
-                => properties.AsEnumerable().Any(prop => prop is KeyValuePairStringProperty kvpProperty && propExpr.Regex.IsMatch(kvpProperty.Key) && valueExpr.Regex.IsMatch(kvpProperty.Value)),
+                => properties.AsEnumerable().Any(prop => IsMatchingProperty(prop, propExpr, valueExpr)),
             OperatorExpression { Op: FilterOperator.Or, SubExpressions: var subExprs }
                 => subExprs.Any(expr => MatchProperties(expr, properties)),
             OperatorExpression { Op: FilterOperator.And, SubExpressions: var subExprs }
@@ -559,4 +573,9 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                 => !MatchProperties(subExprs.Single(), properties),
             _ => throw ApplicationStateGuard.Unreachable(),
         };
+
+    private static bool IsMatchingProperty(IProperty prop, ValueExpression propExpr, ValueExpression valueExpr)
+        => prop is TestMetadataProperty testMetadataProperty &&
+            propExpr.Regex.IsMatch(testMetadataProperty.Key) &&
+            valueExpr.Regex.IsMatch(testMetadataProperty.Value);
 }

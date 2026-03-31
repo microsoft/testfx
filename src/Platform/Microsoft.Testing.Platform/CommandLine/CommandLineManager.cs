@@ -17,13 +17,13 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, ITestAp
 
     public void AddProvider(Func<ICommandLineOptionsProvider> commandLineProviderFactory)
     {
-        Guard.NotNull(commandLineProviderFactory);
+        Ensure.NotNull(commandLineProviderFactory);
         _commandLineProviderFactory.Add(_ => commandLineProviderFactory());
     }
 
     public void AddProvider(Func<IServiceProvider, ICommandLineOptionsProvider> commandLineProviderFactory)
     {
-        Guard.NotNull(commandLineProviderFactory);
+        Ensure.NotNull(commandLineProviderFactory);
         _commandLineProviderFactory.Add(commandLineProviderFactory);
     }
 
@@ -33,12 +33,12 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, ITestAp
         foreach (Func<IServiceProvider, ICommandLineOptionsProvider> commandLineProviderFactory in _commandLineProviderFactory)
         {
             ICommandLineOptionsProvider commandLineOptionsProvider = commandLineProviderFactory(serviceProvider);
-            if (!await commandLineOptionsProvider.IsEnabledAsync())
+            if (!await commandLineOptionsProvider.IsEnabledAsync().ConfigureAwait(false))
             {
                 continue;
             }
 
-            await commandLineOptionsProvider.TryInitializeAsync();
+            await commandLineOptionsProvider.TryInitializeAsync().ConfigureAwait(false);
 
             commandLineOptionsProviders.Add(
                 commandLineOptionsProvider is IToolCommandLineOptionsProvider toolCommandLineOptionsProvider

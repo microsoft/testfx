@@ -40,6 +40,11 @@ Moving last attempt asset files to the default result directory
         <target state="translated">파일 {0}을(를) {1}(으)로 이동</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
+        <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
+        <target state="translated">브라우저 플랫폼에서는 재시도 확장이 지원되지 않습니다. 플랫폼 제한으로 인해 브라우저 기반 테스트를 다시 시도 할 수 없습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
         <target state="translated">프로세스 '{0}'을(를) 시작하지 못했습니다.</target>
@@ -53,11 +58,6 @@ Moving last attempt asset files to the default result directory
       <trans-unit id="RetryFailedTestsExtensionDisplayName">
         <source>Retry failed tests</source>
         <target state="translated">실패한 테스트 다시 시도</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
-        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">실패한 테스트 다시 시도는 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 유형의 작성기에서만 작동합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
@@ -81,8 +81,8 @@ Moving last attempt asset files to the default result directory
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Enable retry failed tests</source>
-        <target state="translated">실패한 테스트 다시 시도 사용</target>
+        <source>Retry failed tests the given number of times</source>
+        <target state="translated">지정된 횟수만큼 테스트 다시 시도 실패</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
@@ -98,6 +98,11 @@ Moving last attempt asset files to the default result directory
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
         <source>Options '{0}' and '{1}' cannot be used together</source>
         <target state="translated">'{0}' 및 '{1}' 옵션은 함께 사용할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryProviderRequiresDefaultTestHostManagerErrorMessage">
+        <source>The retry provider requires the default TestHostManager implementation.</source>
+        <target state="translated">다시 시도 공급자에는 기본 TestHostManager 구현이 필요합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">

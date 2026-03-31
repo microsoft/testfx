@@ -31,7 +31,7 @@ internal static class DiagnosticDescriptorHelper
 
     public static DiagnosticDescriptor WithMessage(this DiagnosticDescriptor diagnosticDescriptor, LocalizableResourceString messageFormat)
         => new(diagnosticDescriptor.Id, diagnosticDescriptor.Title, messageFormat, diagnosticDescriptor.Category, diagnosticDescriptor.DefaultSeverity,
-            diagnosticDescriptor.IsEnabledByDefault, diagnosticDescriptor.Description, diagnosticDescriptor.HelpLinkUri, diagnosticDescriptor.CustomTags.ToArray());
+            diagnosticDescriptor.IsEnabledByDefault, diagnosticDescriptor.Description, diagnosticDescriptor.HelpLinkUri, [.. diagnosticDescriptor.CustomTags]);
 
     private static string[] CreateCustomTags(bool isReportedAtCompilationEnd, bool escalateToErrorInRecommended, bool disableInAllMode, string[] customTags)
     {

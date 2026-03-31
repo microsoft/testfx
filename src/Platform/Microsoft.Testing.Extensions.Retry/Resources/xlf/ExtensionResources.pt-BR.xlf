@@ -40,6 +40,11 @@ Movendo arquivos de ativo da última tentativa para o diretório de resultados p
         <target state="translated">Movendo o arquivo ''{0}'' para ''{1}''</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
+        <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
+        <target state="translated">Não há suporte para a extensão de repetição na plataforma do navegador. Os testes baseados em navegador não podem ser repetidos devido a limitações da plataforma.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
         <target state="translated">Falha ao iniciar o processo '{0}'</target>
@@ -53,11 +58,6 @@ Movendo arquivos de ativo da última tentativa para o diretório de resultados p
       <trans-unit id="RetryFailedTestsExtensionDisplayName">
         <source>Retry failed tests</source>
         <target state="translated">Repetir testes com falha</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
-        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">A repetição de testes com falha funciona somente com construtores do tipo ''Microsoft.Testing.Platform.Builder.TestApplicationBuilder''</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
@@ -81,8 +81,8 @@ Movendo arquivos de ativo da última tentativa para o diretório de resultados p
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Enable retry failed tests</source>
-        <target state="translated">Habilitar repetição de testes com falha</target>
+        <source>Retry failed tests the given number of times</source>
+        <target state="translated">Repetir os testes que apresentaram falha no número especificado de vezes</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
@@ -98,6 +98,11 @@ Movendo arquivos de ativo da última tentativa para o diretório de resultados p
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
         <source>Options '{0}' and '{1}' cannot be used together</source>
         <target state="translated">As opções ''{0}'' e ''{1}'' não podem ser usadas juntas</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryProviderRequiresDefaultTestHostManagerErrorMessage">
+        <source>The retry provider requires the default TestHostManager implementation.</source>
+        <target state="translated">O provedor de repetição requer a implementação padrão de TestHostManager.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">

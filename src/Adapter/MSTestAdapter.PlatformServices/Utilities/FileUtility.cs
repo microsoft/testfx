@@ -3,8 +3,8 @@
 
 #if !WINDOWS_UWP
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -148,7 +148,11 @@ internal class FileUtility
         }
         catch (ArgumentException ex)
         {
-            EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "Error while trying to locate pdb for deployed assembly '{0}': {1}", destinationFile, ex);
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning("Error while trying to locate pdb for deployed assembly '{0}': {1}", destinationFile, ex);
+            }
+
             return null;
         }
 
@@ -167,11 +171,13 @@ internal class FileUtility
         }
         else if (!string.Equals(pdbSource, value, StringComparison.OrdinalIgnoreCase))
         {
-            EqtTrace.WarningIf(
-                EqtTrace.IsWarningEnabled,
-                "Conflict during copying PDBs for line number info: '{0}' and '{1}' are from different origins although they might be the same.",
-                pdbSource,
-                value);
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                    "Conflict during copying PDBs for line number info: '{0}' and '{1}' are from different origins although they might be the same.",
+                    pdbSource,
+                    value);
+            }
         }
 
         return null;
@@ -224,7 +230,7 @@ internal class FileUtility
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public virtual void DeleteDirectories(string filePath)
     {
-        Guard.NotNullOrWhiteSpace(filePath);
+        Ensure.NotNullOrWhiteSpace(filePath);
         try
         {
             var root = new DirectoryInfo(filePath);
@@ -232,13 +238,16 @@ internal class FileUtility
         }
         catch (Exception ex)
         {
-            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, "DeploymentManager.DeleteDirectories failed for the directory '{0}': {1}", filePath, ex);
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error("DeploymentManager.DeleteDirectories failed for the directory '{0}': {1}", filePath, ex);
+            }
         }
     }
 
     public virtual bool DoesDirectoryExist(string deploymentDirectory) => Directory.Exists(deploymentDirectory);
 
-    public virtual bool DoesFileExist(string testSource) => File.Exists(testSource);
+    public virtual bool DoesFileExist(string testSourceHandler) => File.Exists(testSourceHandler);
 
     public virtual void SetAttributes(string path, FileAttributes fileAttributes) => File.SetAttributes(path, fileAttributes);
 
@@ -257,9 +266,9 @@ internal class FileUtility
     {
         if (StringEx.IsNullOrEmpty(path) || path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
         {
-            if (EqtTrace.IsWarningEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
             {
-                EqtTrace.Warning("Path is either null or invalid. Path = '{0}'", path);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning("Path is either null or invalid. Path = '{0}'", path);
             }
 
             return null;
@@ -268,9 +277,9 @@ internal class FileUtility
         string pdbFile = Path.ChangeExtension(path, ".pdb");
         if (File.Exists(pdbFile))
         {
-            if (EqtTrace.IsInfoEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
             {
-                EqtTrace.Info("Pdb file found for path '{0}'", path);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Pdb file found for path '{0}'", path);
             }
 
             return pdbFile;

@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
@@ -18,8 +18,8 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
     private readonly IEnvironment _environment;
     private readonly ILogger<AsynchronousMessageBus> _logger;
     private readonly bool _isTraceLoggingEnabled;
-    private readonly Dictionary<IDataConsumer, AsyncConsumerDataProcessor> _consumerProcessor = [];
-    private readonly Dictionary<Type, List<AsyncConsumerDataProcessor>> _dataTypeConsumers = [];
+    private readonly Dictionary<IDataConsumer, IAsyncConsumerDataProcessor> _consumerProcessor = [];
+    private readonly Dictionary<Type, List<IAsyncConsumerDataProcessor>> _dataTypeConsumers = [];
     private readonly IDataConsumer[] _dataConsumers;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private bool _disabled;
@@ -42,20 +42,18 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
     public override IDataConsumer[] DataConsumerServices
         => _dataConsumers;
 
-    public override async Task InitAsync() => await BuildConsumerProducersAsync();
-
-    private async Task BuildConsumerProducersAsync()
+    public override async Task InitAsync()
     {
         foreach (IDataConsumer consumer in _dataConsumers)
         {
-            if (!await consumer.IsEnabledAsync())
+            if (!await consumer.IsEnabledAsync().ConfigureAwait(false))
             {
                 throw new InvalidOperationException($"Unexpected disabled IDataConsumer '{consumer}'");
             }
 
             foreach (Type dataType in consumer.DataTypesConsumed)
             {
-                if (!_dataTypeConsumers.TryGetValue(dataType, out List<AsyncConsumerDataProcessor>? asyncMultiProducerMultiConsumerDataProcessors))
+                if (!_dataTypeConsumers.TryGetValue(dataType, out List<IAsyncConsumerDataProcessor>? asyncMultiProducerMultiConsumerDataProcessors))
                 {
                     asyncMultiProducerMultiConsumerDataProcessors = [];
                     _dataTypeConsumers.Add(dataType, asyncMultiProducerMultiConsumerDataProcessors);
@@ -66,7 +64,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
                     throw new InvalidOperationException($"Consumer registered two time for data type '{dataType}', consumer '{consumer}'");
                 }
 
-                if (!_consumerProcessor.TryGetValue(consumer, out AsyncConsumerDataProcessor? asyncMultiProducerMultiConsumerDataProcessor))
+                if (!_consumerProcessor.TryGetValue(consumer, out IAsyncConsumerDataProcessor? asyncMultiProducerMultiConsumerDataProcessor))
                 {
                     asyncMultiProducerMultiConsumerDataProcessor = new AsyncConsumerDataProcessor(consumer, _task, _testApplicationCancellationTokenSource.CancellationToken);
                     _consumerProcessor.Add(consumer, asyncMultiProducerMultiConsumerDataProcessor);
@@ -96,7 +94,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
         if (_isTraceLoggingEnabled)
         {
-            await LogDataAsync(dataProducer, data);
+            await LogDataAsync(dataProducer, data).ConfigureAwait(false);
         }
 
         Type dataType = data.GetType();
@@ -105,14 +103,14 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
             throw new InvalidOperationException($"Unexpected data type '{dataType}' produced by '{dataProducer.Uid}'");
         }
 
-        if (!_dataTypeConsumers.TryGetValue(dataType, out List<AsyncConsumerDataProcessor>? values))
+        if (!_dataTypeConsumers.TryGetValue(dataType, out List<IAsyncConsumerDataProcessor>? values))
         {
             return;
         }
 
         for (int i = 0; i < values.Count; i++)
         {
-            await values[i].PublishAsync(dataProducer, data);
+            await values[i].PublishAsync(dataProducer, data).ConfigureAwait(false);
         }
     }
 
@@ -124,12 +122,12 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
             $"The producer '{dataProducer.DisplayName}' (ID: {dataProducer.Uid}) pushed data:");
         messageBuilder.AppendLine(data.ToString());
 
-        await _logger.LogTraceAsync(messageBuilder.ToString());
+        await _logger.LogTraceAsync(messageBuilder.ToString()).ConfigureAwait(false);
     }
 
     public override async Task DrainDataAsync()
     {
-        Dictionary<AsyncConsumerDataProcessor, long> consumerToDrain = [];
+        Dictionary<IAsyncConsumerDataProcessor, long> consumerToDrain = [];
         bool anotherRound = true;
         string? customAttempts = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS);
         if (!int.TryParse(customAttempts, out int totalNumberOfDrainAttempt))
@@ -151,7 +149,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
                 StringBuilder builder = new();
                 builder.Append(CultureInfo.InvariantCulture, $"Publisher/Consumer loop detected during the drain after {stopwatch.Elapsed}.\n{builder}");
 
-                foreach ((AsyncConsumerDataProcessor key, long value) in consumerToDrain)
+                foreach ((IAsyncConsumerDataProcessor key, long value) in consumerToDrain)
                 {
                     builder.AppendLine(CultureInfo.InvariantCulture, $"Consumer '{key.DataConsumer}' payload received {value}.");
                 }
@@ -161,16 +159,13 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
             totalNumberOfDrainAttempt--;
             anotherRound = false;
-            foreach (List<AsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
+            foreach (List<IAsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
             {
-                foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
+                foreach (IAsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
                 {
-                    if (!consumerToDrain.TryGetValue(asyncMultiProducerMultiConsumerDataProcessor, out long _))
-                    {
-                        consumerToDrain.Add(asyncMultiProducerMultiConsumerDataProcessor, 0);
-                    }
+                    consumerToDrain.TryAdd(asyncMultiProducerMultiConsumerDataProcessor, 0);
 
-                    long totalPayloadReceived = await asyncMultiProducerMultiConsumerDataProcessor.DrainDataAsync();
+                    long totalPayloadReceived = await asyncMultiProducerMultiConsumerDataProcessor.DrainDataAsync().ConfigureAwait(false);
                     if (consumerToDrain[asyncMultiProducerMultiConsumerDataProcessor] != totalPayloadReceived)
                     {
                         consumerToDrain[asyncMultiProducerMultiConsumerDataProcessor] = totalPayloadReceived;
@@ -190,20 +185,20 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
         _disabled = true;
 
-        foreach (List<AsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
+        foreach (List<IAsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
         {
-            foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
+            foreach (IAsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
             {
-                await asyncMultiProducerMultiConsumerDataProcessor.CompleteAddingAsync();
+                await asyncMultiProducerMultiConsumerDataProcessor.CompleteAddingAsync().ConfigureAwait(false);
             }
         }
     }
 
     public override void Dispose()
     {
-        foreach (List<AsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
+        foreach (List<IAsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
         {
-            foreach (AsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
+            foreach (IAsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
             {
                 asyncMultiProducerMultiConsumerDataProcessor.Dispose();
             }

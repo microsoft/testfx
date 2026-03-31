@@ -1,0 +1,156 @@
+// Configuration for markdownlint-cli2
+// See https://github.com/DavidAnson/markdownlint-cli2 for details
+{
+  "config": {
+    // Use default rules as baseline
+    "default": true,
+
+    // MD009: Trailing spaces
+    "MD009": {
+      "br_spaces": 0
+    },
+
+    // MD013: Line length - disabled for flexibility
+    "MD013": false,
+
+    // MD024: Multiple headings with the same content
+    // Only check sibling headings (same level)
+    "MD024": {
+      "siblings_only": true
+    },
+
+    // MD033: Inline HTML - allow anchor tags
+    "MD033": {
+      "allowed_elements": ["a"]
+    },
+
+    // MD046: Code block style - prefer fenced code blocks
+    "MD046": {
+      "style": "fenced"
+    },
+
+    // MD022: Headings should be surrounded by blank lines
+    "MD022": {
+      "lines_above": 1,
+      "lines_below": 1
+    },
+
+    // MD025: Multiple top-level headings in the same document
+    "MD025": {
+      "level": 1,
+      "front_matter_title": ""
+    },
+
+    // MD030: Spaces after list markers
+    "MD030": {
+      "ul_single": 1,
+      "ol_single": 1,
+      "ul_multi": 1,
+      "ol_multi": 1
+    },
+
+    // MD040: Fenced code blocks should have a language specified
+    "MD040": {
+      "allowed_languages": [],
+      "language_only": false
+    },
+
+    // MD041: First line in a file should be a top-level heading
+    "MD041": {
+      "level": 1,
+      "front_matter_title": "^\\s*title\\s*[:=]"
+    },
+
+    // MD048: Code fence style - enforce backticks
+    "MD048": {
+      "style": "backtick"
+    },
+
+    // MD003: Heading style - enforce ATX style (##)
+    "MD003": {
+      "style": "atx"
+    },
+
+    // MD012: Multiple consecutive blank lines
+    "MD012": {
+      "maximum": 1
+    },
+
+    // MD018: No space after hash on atx style heading
+    "MD018": true,
+
+    // MD019: Multiple spaces after hash on atx style heading
+    "MD019": true,
+
+    // MD023: Headings must start at the beginning of the line
+    "MD023": true,
+
+    // MD026: Trailing punctuation in heading - allow ? and !
+    "MD026": {
+      "punctuation": ".,;:"
+    },
+
+    // MD029: Ordered list item prefix - sequential numbering
+    "MD029": {
+      "style": "ordered"
+    },
+
+    // MD031: Fenced code blocks should be surrounded by blank lines
+    "MD031": true,
+
+    // MD032: Lists should be surrounded by blank lines
+    "MD032": true,
+
+    // MD034: Bare URL used - require angle brackets or link syntax
+    "MD034": true,
+
+    // MD037: Spaces inside emphasis markers
+    "MD037": true,
+
+    // MD038: Spaces inside code span elements
+    "MD038": true,
+
+    // MD039: Spaces inside link text
+    "MD039": true,
+
+    // MD042: No empty links
+    "MD042": true,
+
+    // MD047: Files should end with a single newline character
+    "MD047": true,
+
+    // MD049: Emphasis style - enforce asterisks
+    "MD049": {
+      "style": "asterisk"
+    },
+
+    // MD050: Strong style - enforce asterisks
+    "MD050": {
+      "style": "asterisk"
+    },
+
+    // MD051: Link fragments should be valid
+    "MD051": true,
+
+    // proper-names: Enforce proper capitalization of names
+    "proper-names": {
+      "code_blocks": false,
+      "names": [
+        "ASP.NET",
+        "PowerShell",
+        "C#"
+      ]
+    }
+  },
+
+  // Ignore patterns - files we are not in control of or auto-generated
+  "ignores": [
+    "SECURITY.md",
+    "artifacts/tmp/**/*.md",
+    "eng/**/*.md",
+    "tools/**/*.md",
+    ".dotnet/**/*.md",
+    ".github/ISSUE_TEMPLATE/**/*.md",
+    "**/AnalyzerReleases.*.md"
+  ]
+}

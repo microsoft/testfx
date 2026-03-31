@@ -12,6 +12,8 @@ internal sealed class SystemEnvironment : IEnvironment
 
     public string NewLine => Environment.NewLine;
 
+    public int ProcessId => Environment.ProcessId;
+
     public string OsVersion => Environment.OSVersion.ToString();
 
 #if NETCOREAPP

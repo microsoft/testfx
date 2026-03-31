@@ -7,14 +7,9 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class CrashPlusHangDumpTests : AcceptanceTestBase<CrashPlusHangDumpTests.TestAssetFixture>
 {
     [TestMethod]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task CrashPlusHangDump_InCaseOfCrash_CreateCrashDump()
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // TODO: Investigate failures on macos
-            return;
-        }
-
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -24,25 +19,21 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase<CrashPlusHangDum
                         { "SLEEPTIMEMS1", "4000" },
                         { "SLEEPTIMEMS2", "600000" },
                         { "SHOULDCRASH", "true" },
-            });
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         testHostResult.AssertOutputMatchesRegex(@"Test host process with PID \'.+\' crashed, a dump file was generated");
         testHostResult.AssertOutputDoesNotContain(@"Hang dump timeout '00:00:08' expired");
 
-        Assert.IsTrue(Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_crash.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
-        Assert.IsFalse(Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_hang.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
+        Assert.IsGreaterThan(0, Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_crash.dmp", SearchOption.AllDirectories).Length, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
+        Assert.IsLessThanOrEqualTo(0, Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_hang.dmp", SearchOption.AllDirectories).Length, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
     }
 
     [TestMethod]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task CrashPlusHangDump_InCaseOfHang_CreateHangDump()
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // TODO: Investigate failures on macos
-            return;
-        }
-
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -52,14 +43,15 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase<CrashPlusHangDum
                         { "SLEEPTIMEMS1", "4000" },
                         { "SLEEPTIMEMS2", "600000" },
                         { "SHOULDCRASH", "false" },
-            });
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         testHostResult.AssertOutputDoesNotMatchRegex(@"Test host process with PID '.+' crashed, a dump file was generated");
         testHostResult.AssertOutputContains(@"Hang dump timeout of '00:00:08' expired");
 
-        Assert.IsFalse(Directory.GetFiles(resultDirectory, "CrashPlusHangDump.dll*_crash.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
-        Assert.IsTrue(Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_hang.dmp", SearchOption.AllDirectories).Length > 0, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
+        Assert.IsLessThanOrEqualTo(0, Directory.GetFiles(resultDirectory, "CrashPlusHangDump.dll*_crash.dmp", SearchOption.AllDirectories).Length, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
+        Assert.IsGreaterThan(0, Directory.GetFiles(resultDirectory, "CrashPlusHangDump*_hang.dmp", SearchOption.AllDirectories).Length, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
@@ -68,13 +60,10 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase<CrashPlusHangDum
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
 
         private const string Sources = """
 #file CrashPlusHangDump.csproj
@@ -171,4 +160,6 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

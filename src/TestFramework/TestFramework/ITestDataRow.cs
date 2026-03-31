@@ -10,4 +10,6 @@ internal interface ITestDataRow
     string? IgnoreMessage { get; }
 
     string? DisplayName { get; }
+
+    IList<string>? TestCategories { get; }
 }

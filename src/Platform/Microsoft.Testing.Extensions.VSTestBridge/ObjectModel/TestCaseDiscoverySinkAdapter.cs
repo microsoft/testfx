@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-
 using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
@@ -35,7 +33,6 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
     private readonly VSTestBridgedTestFrameworkBase _adapterExtension;
     private readonly TestSessionContext _session;
     private readonly CancellationToken _cancellationToken;
-    private readonly string? _testAssemblyPath;
 
     public TestCaseDiscoverySinkAdapter(
         VSTestBridgedTestFrameworkBase adapterExtension,
@@ -57,16 +54,12 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
         }
         else if (testAssemblyPaths.Length > 1)
         {
-            _testAssemblyPath = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+            string testAssemblyPath = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
 
-            if (!testAssemblyPaths.Contains(_testAssemblyPath))
+            if (!testAssemblyPaths.Contains(testAssemblyPath))
             {
                 throw new ArgumentException("None of the test assemblies are the test application.");
             }
-        }
-        else
-        {
-            _testAssemblyPath = testAssemblyPaths[0];
         }
 
         _testCaseDiscoverySink = testCaseDiscoverySink;
@@ -88,13 +81,13 @@ internal sealed class TestCaseDiscoverySinkAdapter : ITestCaseDiscoverySink
 
         _cancellationToken.ThrowIfCancellationRequested();
 
-        discoveredTest.FixUpTestCase(_testAssemblyPath);
+        discoveredTest.FixUpTestCase();
 
         // Forward call to VSTest
         _testCaseDiscoverySink?.SendTestCase(discoveredTest);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = discoveredTest.ToTestNode(_isTrxEnabled, _namedFeatureCapability, _commandLineOptions, _clientInfo);
+        var testNode = discoveredTest.ToTestNode(_isTrxEnabled, _adapterExtension.UseFullyQualifiedNameAsTestNodeUid, _adapterExtension.AddAdditionalProperties, _namedFeatureCapability, _commandLineOptions, _clientInfo);
         testNode.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
 

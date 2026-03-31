@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis;
 internal sealed class GlobalConfigBuilder
 {
     private readonly StringBuilder _builder = new();
-    private readonly Dictionary<string, DiagnosticSeverity?> _severityDictionary = new();
+    private readonly Dictionary<string, DiagnosticSeverity?> _severityDictionary = [];
 
     public GlobalConfigBuilder(MSTestAnalysisMode mode)
     {

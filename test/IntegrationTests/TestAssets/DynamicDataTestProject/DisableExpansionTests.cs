@@ -8,41 +8,27 @@ namespace DynamicDataTestProject;
 [TestClass]
 public sealed class DisableExpansionTests
 {
-    [TestMethod]
-    [DynamicData(nameof(PropertySource), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DynamicData(nameof(PropertySource))]
     public void TestPropertySourceOnCurrentType(int a, string s)
     {
     }
 
-    [TestMethod]
-    [DynamicData(nameof(MethodSource), DynamicDataSourceType.Method, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DynamicData(nameof(MethodSource), DynamicDataSourceType.Method)]
     public void TestMethodSourceOnCurrentType(int a, string s)
     {
     }
 
-    [TestMethod]
-    [DynamicData(nameof(PropertySource), typeof(DataSourceHelper), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DynamicData(nameof(PropertySource), typeof(DataSourceHelper))]
     public void TestPropertySourceOnDifferentType(int a, string s)
     {
     }
 
-    [TestMethod]
-    [DynamicData(nameof(MethodSource), typeof(DataSourceHelper), DynamicDataSourceType.Method, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DynamicData(nameof(MethodSource), typeof(DataSourceHelper), DynamicDataSourceType.Method)]
     public void TestMethodSourceOnDifferentType(int a, string s)
-    {
-    }
-
-    [TestMethod]
-    [DynamicData(nameof(PropertySource), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
-    [DynamicData(nameof(PropertySource), typeof(DataSourceHelper))]
-    public void TestPropertyWithTwoSourcesAndFirstDisablesExpansion(int a, string s)
-    {
-    }
-
-    [TestMethod]
-    [DynamicData(nameof(PropertySource))]
-    [DynamicData(nameof(PropertySource), typeof(DataSourceHelper), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
-    public void TestPropertyWithTwoSourcesAndSecondDisablesExpansion(int a, string s)
     {
     }
 
@@ -50,8 +36,8 @@ public sealed class DisableExpansionTests
 
     private static IEnumerable<object[]> MethodSource()
     {
-        yield return new object[] { 1, "a" };
-        yield return new object[] { 2, "b" };
+        yield return [1, "a"];
+        yield return [2, "b"];
     }
 }
 
@@ -61,7 +47,7 @@ public class DataSourceHelper
 
     public static IEnumerable<object[]> MethodSource()
     {
-        yield return new object[] { 3, "c" };
-        yield return new object[] { 4, "d" };
+        yield return [3, "c"];
+        yield return [4, "d"];
     }
 }

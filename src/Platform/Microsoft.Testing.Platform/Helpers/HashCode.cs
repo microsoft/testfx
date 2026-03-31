@@ -11,7 +11,7 @@ internal struct HashCode
 
     public HashCode() => _hash = 17;
 
-    public void Add(string value)
+    public void Add(string? value)
     {
         // Overflow is fine, just wrap
         unchecked

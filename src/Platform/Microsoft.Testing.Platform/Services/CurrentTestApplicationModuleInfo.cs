@@ -84,20 +84,30 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
     public string GetProcessPath()
         => GetProcessPath(_environment, _process, throwOnNull: true)!;
 
+    [UnconditionalSuppressMessage("SingleFile", "IL3000:Avoid accessing Assembly file path when publishing as a single file", Justification = "<Pending>")]
     private static string? GetProcessPath(IEnvironment environment, IProcessHandler process, bool throwOnNull = false)
-#if NETCOREAPP
     {
+#if NETCOREAPP
         string? processPath = environment.ProcessPath;
-        ApplicationStateGuard.Ensure(processPath is not null || !throwOnNull);
+#else
+        using IProcess currentProcess = process.GetCurrentProcess();
+        string? processPath = currentProcess.MainModule?.FileName;
+#endif
 
+        if (processPath is null)
+        {
+            // Fallback for environments where ProcessPath is null (e.g., browser OS)
+            string[] commandLineArgs = environment.GetCommandLineArgs();
+            processPath = commandLineArgs.Length > 0
+                ? commandLineArgs[0]
+                : Assembly.GetEntryAssembly()?.Location is { } entryAssemblyLocation && !RoslynString.IsNullOrEmpty(entryAssemblyLocation)
+                    ? entryAssemblyLocation
+                    : AppContext.BaseDirectory;
+        }
+
+        ApplicationStateGuard.Ensure(processPath is not null || !throwOnNull);
         return processPath;
     }
-#else
-    {
-        using IProcess currentProcess = process.GetCurrentProcess();
-        return currentProcess.MainModule.FileName;
-    }
-#endif
 
     public ExecutableInfo GetCurrentExecutableInfo()
     {

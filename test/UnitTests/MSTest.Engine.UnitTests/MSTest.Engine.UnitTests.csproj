@@ -1,13 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);net462</TargetFrameworks>
+    <TargetFrameworks>$(SupportedNetFrameworks);net462</TargetFrameworks>
     <RootNamespace>Microsoft.Testing.Framework.UnitTests</RootNamespace>
     <NoMoq>true</NoMoq>
     <NoFluentAssertions>true</NoFluentAssertions>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Update="*.json">

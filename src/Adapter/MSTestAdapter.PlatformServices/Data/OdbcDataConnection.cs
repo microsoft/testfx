@@ -75,7 +75,7 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
     // Need to fix up excel connections
     private static string FixConnectionString(string connectionString, List<string> dataFolders)
     {
-        OdbcConnectionStringBuilder builder = new(connectionString);
+        OdbcConnectionStringBuilder builder = [with(connectionString)];
 
         // only fix this for excel
         if (!string.Equals(builder.Dsn, "Excel Files", StringComparison.Ordinal))

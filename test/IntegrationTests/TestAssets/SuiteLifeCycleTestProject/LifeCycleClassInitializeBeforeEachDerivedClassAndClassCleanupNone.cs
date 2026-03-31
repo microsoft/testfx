@@ -14,13 +14,11 @@ public class LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone
     : IDisposable
 #endif
 {
-    private static TestContext s_testContext = null!;
-
     public TestContext TestContext { get; set; } = null!;
 
-    public LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone()
+    public LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone(TestContext testContext)
     {
-        s_testContext.WriteLine("LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called");
+        testContext.WriteLine("LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called");
         Console.WriteLine("Console: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called");
         Trace.WriteLine("Trace: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called");
         Debug.WriteLine("Debug: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called");
@@ -29,8 +27,7 @@ public class LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone
     [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void ClassInitialize(TestContext testContext)
     {
-        s_testContext = testContext;
-        s_testContext.WriteLine("LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassInitialize was called");
+        testContext.WriteLine("LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassInitialize was called");
         Console.WriteLine("Console: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassInitialize was called");
         Trace.WriteLine("Trace: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassInitialize was called");
         Debug.WriteLine("Debug: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassInitialize was called");
@@ -83,9 +80,9 @@ public class LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone
 #endif
 
     [ClassCleanup(InheritanceBehavior.None)]
-    public static void ClassCleanup()
+    public static void ClassCleanup(TestContext testContext)
     {
-        s_testContext.WriteLine("LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassCleanup was called");
+        testContext.WriteLine("LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassCleanup was called");
         Console.WriteLine("Console: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassCleanup was called");
         Trace.WriteLine("Trace: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassCleanup was called");
         Debug.WriteLine("Debug: LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassCleanup was called");

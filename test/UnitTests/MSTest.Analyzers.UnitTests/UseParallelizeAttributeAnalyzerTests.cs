@@ -1,9 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseParallelizeAttributeAnalyzer,
@@ -23,8 +21,13 @@ public class UseParallelizeAttributeAnalyzerTests
 
         if (includeTestAdapter)
         {
-            // NOTE: Test constructor already adds TestFramework refs.
-            test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(MSTestExecutor).Assembly.Location));
+            test.TestState.AnalyzerConfigFiles.Add((
+                "/.globalconfig",
+                """
+                is_global = true
+
+                build_property.IsMSTestTestAdapterReferenced = true
+                """));
         }
 
         test.ExpectedDiagnostics.AddRange(expected);
@@ -63,5 +66,75 @@ public class UseParallelizeAttributeAnalyzerTests
 
         await VerifyAsync(code, includeTestAdapter: true);
         await VerifyAsync(code, includeTestAdapter: false);
+    }
+
+    [TestMethod]
+    public async Task WhenBothAttributesSet_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: {|#0:Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)|}]
+            [assembly: {|#1:DoNotParallelize|}]
+            """;
+
+        await VerifyAsync(
+            code,
+            includeTestAdapter: true,
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(0),
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(1));
+        await VerifyAsync(
+            code,
+            includeTestAdapter: false,
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(0),
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(1));
+    }
+
+    [TestMethod]
+    public async Task WhenBothAttributesSetInDifferentOrder_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: {|#0:DoNotParallelize|}]
+            [assembly: {|#1:Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)|}]
+            """;
+
+        await VerifyAsync(
+            code,
+            includeTestAdapter: true,
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(1),
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(0));
+        await VerifyAsync(
+            code,
+            includeTestAdapter: false,
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(1),
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(0));
+    }
+
+    [TestMethod]
+    public async Task WhenBothAttributesSetWithMultipleAttributesInList_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [assembly: {|#0:Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)|}, MyAsm]
+            [assembly: {|#1:DoNotParallelize|}, MyAsm]
+
+            [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+            public class MyAsmAttribute : Attribute { }
+            """;
+
+        await VerifyAsync(
+            code,
+            includeTestAdapter: true,
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(0),
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(1));
+        await VerifyAsync(
+            code,
+            includeTestAdapter: false,
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(0),
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(1));
     }
 }

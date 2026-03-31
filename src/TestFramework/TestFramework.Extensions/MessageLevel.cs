@@ -4,7 +4,7 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// Specifies the severity level of messages displayed using the <see cref="TestContext.DisplayMessage(Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel, string)"/> API.
+/// Specifies the severity level of messages displayed using the <see cref="TestContext.DisplayMessage(MessageLevel, string)"/> API.
 /// </summary>
 public enum MessageLevel
 {

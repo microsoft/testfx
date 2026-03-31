@@ -9,8 +9,8 @@ public sealed class TrxReportPropertiesTests
     [TestMethod]
     public void TrxMessagesProperty_ToStringIsCorrect()
         => Assert.AreEqual(
-            "TrxMessagesProperty { Messages = [TrxMessage { Message = some message }] }",
-            new TrxMessagesProperty([new("some message")]).ToString());
+            "TrxMessagesProperty { Messages = [StandardOutputTrxMessage { Message = some message }] }",
+            new TrxMessagesProperty([new StandardOutputTrxMessage("some message")]).ToString());
 
     [TestMethod]
     public void TrxCategoriesProperty_ToStringIsCorrect()

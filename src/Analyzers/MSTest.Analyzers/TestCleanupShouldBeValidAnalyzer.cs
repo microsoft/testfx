@@ -18,7 +18,8 @@ namespace MSTest.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class TestCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
 {
-    internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
+    /// <inheritdoc cref="Resources.TestCleanupShouldBeValidTitle" />
+    public static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TestCleanupShouldBeValidRuleId,
         new LocalizableResourceString(nameof(Resources.TestCleanupShouldBeValidTitle), Resources.ResourceManager, typeof(Resources)),
         new LocalizableResourceString(nameof(Resources.TestCleanupShouldBeValidMessageFormat), Resources.ResourceManager, typeof(Resources)),

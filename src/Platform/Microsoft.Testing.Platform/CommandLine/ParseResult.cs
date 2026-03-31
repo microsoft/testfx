@@ -129,7 +129,7 @@ public sealed class CommandLineParseResult(string? toolName, IReadOnlyList<Comma
         IEnumerable<CommandLineParseOption> result = Options.Where(x => x.Name == optionName);
         if (result.Any())
         {
-            arguments = result.SelectMany(x => x.Arguments).ToArray();
+            arguments = [.. result.SelectMany(x => x.Arguments)];
             return true;
         }
 

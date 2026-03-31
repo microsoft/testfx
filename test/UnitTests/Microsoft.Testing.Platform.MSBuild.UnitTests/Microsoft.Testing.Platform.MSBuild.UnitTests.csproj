@@ -11,6 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" PrivateAssets="All" />
     <PackageReference Include="Moq" />

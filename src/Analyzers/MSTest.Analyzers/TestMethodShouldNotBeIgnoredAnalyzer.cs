@@ -22,7 +22,8 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString Description = new(nameof(Resources.TestMethodShouldNotBeIgnoredAnalyzerDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TestMethodShouldNotBeIgnoredAnalyzerFormat), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor TestMethodShouldNotBeIgnoredRule = DiagnosticDescriptorHelper.Create(
+    /// <inheritdoc cref="Resources.TestMethodShouldNotBeIgnoredAnalyzerTitle" />
+    public static readonly DiagnosticDescriptor TestMethodShouldNotBeIgnoredRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TestMethodShouldNotBeIgnoredRuleId,
         Title,
         MessageFormat,

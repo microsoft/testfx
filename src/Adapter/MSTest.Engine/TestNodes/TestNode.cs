@@ -17,7 +17,7 @@ public class TestNode
     /// </summary>
     public string? OverriddenEdgeName { get; init; }
 
-    public IProperty[] Properties { get; init; } = Array.Empty<IProperty>();
+    public IProperty[] Properties { get; init; } = [];
 
-    public TestNode[] Tests { get; init; } = Array.Empty<TestNode>();
+    public TestNode[] Tests { get; init; } = [];
 }

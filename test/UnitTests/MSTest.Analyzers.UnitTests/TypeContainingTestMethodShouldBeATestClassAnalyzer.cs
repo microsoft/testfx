@@ -290,4 +290,176 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenStructWithTestMethod_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public struct [|TestStruct|]
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestStruct
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenStructWithoutTestMethod_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public struct TestStruct
+            {
+                public void RegularMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenRecordStructWithTestMethod_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public record struct [|TestRecordStruct|]
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public record TestRecordStruct
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenRecordClassWithTestMethod_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public record class [|TestRecordClass|]
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public record class TestRecordClass
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenRecordWithTestMethod_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public record [|TestRecord|]
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public record TestRecord
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenReadonlyRecordStructWithTestMethod_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public readonly record struct [|TestRecordStruct|]
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public record TestRecordStruct
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

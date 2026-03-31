@@ -4,7 +4,6 @@
 using Microsoft.Testing.Extensions;
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
-[assembly: ClassCleanupExecution(ClassCleanupBehavior.EndOfClass)]
 
 // DebuggerUtility.AttachVSToCurrentProcess();
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
@@ -17,10 +16,5 @@ builder.AddCrashDumpProvider(ignoreIfNotSupported: true);
 builder.AddTrxReportProvider();
 builder.AddAzureDevOpsProvider();
 
-// Custom suite tools
-CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory
-    = new(_ => new SlowestTestsConsumer());
-builder.TestHost.AddDataConsumer(slowestTestCompositeServiceFactory);
-builder.TestHost.AddTestSessionLifetimeHandle(slowestTestCompositeServiceFactory);
 ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();

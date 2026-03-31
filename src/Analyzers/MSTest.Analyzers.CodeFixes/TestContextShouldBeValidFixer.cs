@@ -62,9 +62,6 @@ public sealed class TestContextShouldBeValidFixer : CodeFixProvider
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        // Get the SemanticModel and Compilation
-        SemanticModel semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
         // Remove the static and readonly modifiers if it exists
@@ -103,7 +100,7 @@ public sealed class TestContextShouldBeValidFixer : CodeFixProvider
             AccessorDeclarationSyntax setAccessor = accessors.FirstOrDefault(a => a.Kind() == SyntaxKind.SetAccessorDeclaration)
                 ?? SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
 
-            newMemberDeclaration = propertyDeclaration.WithAccessorList(SyntaxFactory.AccessorList(SyntaxFactory.List(new[] { getAccessor, setAccessor })));
+            newMemberDeclaration = propertyDeclaration.WithAccessorList(SyntaxFactory.AccessorList(SyntaxFactory.List([getAccessor, setAccessor])));
         }
 
         // Create a new member declaration with the updated modifiers.
@@ -121,13 +118,13 @@ public sealed class TestContextShouldBeValidFixer : CodeFixProvider
         PropertyDeclarationSyntax propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, TestContextShouldBeValidAnalyzer.TestContextPropertyName)
             .WithModifiers(SyntaxFactory.TokenList(fieldDeclaration.Modifiers))
             .WithAccessorList(SyntaxFactory.AccessorList(
-                SyntaxFactory.List(new[]
-                {
+                SyntaxFactory.List(
+                [
                     SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
                         .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
                     SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-                        .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                })));
+                        .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
+                ])));
 
         return propertyDeclaration;
     }

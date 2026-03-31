@@ -57,7 +57,7 @@ internal sealed class AggregatedConfiguration(
     }
 
     public /* for testing */ void SetCurrentWorkingDirectory(string workingDirectory) =>
-        _currentWorkingDirectory = Guard.NotNull(workingDirectory);
+        _currentWorkingDirectory = Ensure.NotNull(workingDirectory);
 
     public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(IFileLoggerProvider? fileLoggerProvider)
     {
@@ -68,7 +68,7 @@ internal sealed class AggregatedConfiguration(
         // This behavior is non documented and we reserve the right to change it in the future.
         if (fileLoggerProvider is not null)
         {
-            await fileLoggerProvider.CheckLogFolderAndMoveToTheNewIfNeededAsync(_resultsDirectory);
+            await fileLoggerProvider.CheckLogFolderAndMoveToTheNewIfNeededAsync(_resultsDirectory).ConfigureAwait(false);
         }
     }
 

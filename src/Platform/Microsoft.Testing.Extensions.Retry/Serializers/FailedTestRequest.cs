@@ -23,7 +23,7 @@ internal sealed class FailedTestRequestSerializer : BaseSerializer, INamedPipeSe
 
     public void Serialize(object obj, Stream stream)
     {
-        var testHostProcessExitRequest = (FailedTestRequest)obj;
-        WriteString(stream, testHostProcessExitRequest.Uid);
+        var failedTestRequest = (FailedTestRequest)obj;
+        WriteString(stream, failedTestRequest.Uid);
     }
 }

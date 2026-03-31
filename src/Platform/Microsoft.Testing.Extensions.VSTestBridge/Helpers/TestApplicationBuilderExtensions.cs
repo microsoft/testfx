@@ -54,5 +54,5 @@ public static class TestApplicationBuilderExtensions
     /// <param name="extension">The extension that will be used as the source of registration for this helper service.</param>
     public static void AddRunSettingsEnvironmentVariableProvider(this ITestApplicationBuilder builder, IExtension extension)
         => builder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider
-            => new RunSettingsEnvironmentVariableProvider(extension, serviceProvider.GetCommandLineOptions(), serviceProvider.GetFileSystem()));
+            => new RunSettingsEnvironmentVariableProvider(extension, serviceProvider.GetCommandLineOptions(), serviceProvider.GetFileSystem(), serviceProvider.GetEnvironment()));
 }

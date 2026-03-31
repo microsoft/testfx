@@ -142,11 +142,11 @@ public sealed partial class PropertyBag
 
         public PropertyDebugView(Property property)
         {
-            Guard.NotNull(property);
+            Ensure.NotNull(property);
             _property = property;
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-        public IProperty[] Items => _property.AsEnumerable().ToArray();
+        public IProperty[] Items => [.. _property.AsEnumerable()];
     }
 }

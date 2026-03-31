@@ -11,6 +11,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class RetryFailedTestsPipeServer : IDisposable
 {
     private readonly NamedPipeServer _singleConnectionNamedPipeServer;
@@ -19,7 +20,7 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
 
     public RetryFailedTestsPipeServer(IServiceProvider serviceProvider, string[] failedTests, ILogger logger)
     {
-        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), serviceProvider.GetEnvironment());
         logger.LogTrace($"Retry server pipe name: '{_pipeNameDescription.Name}'");
         _singleConnectionNamedPipeServer = new NamedPipeServer(_pipeNameDescription, CallbackAsync,
             serviceProvider.GetEnvironment(),
@@ -45,16 +46,13 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
         => _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken);
 
     public void Dispose()
-    {
-        _singleConnectionNamedPipeServer.Dispose();
-        _pipeNameDescription.Dispose();
-    }
+        => _singleConnectionNamedPipeServer.Dispose();
 
     private Task<IResponse> CallbackAsync(IRequest request)
     {
         if (request is FailedTestRequest failed)
         {
-            FailedUID ??= new();
+            FailedUID ??= [];
             FailedUID.Add(failed.Uid);
             return Task.FromResult((IResponse)VoidResponse.CachedInstance);
         }

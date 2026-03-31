@@ -108,9 +108,6 @@ override Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetHashCode(
 static Microsoft.VisualStudio.TestTools.UnitTesting.TestConfiguration.ConfigurationSection.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection!
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectory.get -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectory.get -> string?
-virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDeploymentDir.get -> string?
-virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDir.get -> string?
-virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestLogsDir.get -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestResultsDirectory.get -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory.get -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectory.get -> string?

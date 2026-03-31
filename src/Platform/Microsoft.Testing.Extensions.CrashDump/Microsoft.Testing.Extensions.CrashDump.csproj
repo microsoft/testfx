@@ -1,9 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
     <RootNamespace>Microsoft.Testing.Extensions.Diagnostics</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Embedded helpers from Microsoft.Testing.Platform -->
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ApplicationStateGuard.cs" Link="Helpers\ApplicationStateGuard.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\PlatformResources.cs" Link="Resources\PlatformResources.cs" />
+  </ItemGroup>
 
   <!-- NuGet properties -->
   <PropertyGroup>
@@ -41,13 +47,23 @@ This package extends Microsoft Testing Platform to provide a crash dump function
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.HangDump" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Resources\CrashDumpResources.resx" GenerateSource="true" />
+    <!-- NOTE: SDK already adds Linux, macOS, and Windows. -->
+    <!-- See https://github.com/dotnet/sdk/blob/cb459ebc2d9374b2bc5ce944cc633a6e79ed8275/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.SupportedPlatforms.props -->
+    <SupportedPlatform Include="android" />
+    <SupportedPlatform Include="ios" />
+    <SupportedPlatform Include="browser" />
+    <SupportedPlatform Include="tvos" />
+    <SupportedPlatform Include="wasi" />
   </ItemGroup>
 
 </Project>

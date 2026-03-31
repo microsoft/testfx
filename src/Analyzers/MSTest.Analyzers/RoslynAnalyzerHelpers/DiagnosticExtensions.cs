@@ -169,7 +169,7 @@ internal static class DiagnosticExtensions
         {
 #pragma warning disable RS0030 // The symbol 'DiagnosticDescriptor.DiagnosticDescriptor.#ctor' is banned in this project: Use 'DiagnosticDescriptorHelper.Create' instead
             rule = new DiagnosticDescriptor(rule.Id, rule.Title, rule.MessageFormat, rule.Category,
-                effectiveSeverity.Value, rule.IsEnabledByDefault, rule.Description, rule.HelpLinkUri, rule.CustomTags.ToArray());
+                effectiveSeverity.Value, rule.IsEnabledByDefault, rule.Description, rule.HelpLinkUri, [.. rule.CustomTags]);
 #pragma warning restore RS0030
         }
 
@@ -214,7 +214,7 @@ internal static class DiagnosticExtensions
                 else
                 {
                     RoslynDebug.Assert(s_syntaxTreeDiagnosticOptionsProperty != null);
-                    var options = (ImmutableDictionary<string, ReportDiagnostic>)s_syntaxTreeDiagnosticOptionsProperty.GetValue(tree)!;
+                    var options = (ImmutableDictionary<string, ReportDiagnostic>)s_syntaxTreeDiagnosticOptionsProperty.GetValue(tree);
                     if (options.TryGetValue(rule.Id, out ReportDiagnostic value))
                     {
                         configuredValue = value;

@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
-
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
@@ -30,26 +27,14 @@ public static class VerifyE2E
     public static void AtLeastTestsDiscovered(IEnumerable<TestCase> actualTests, params string[] expectedTests)
         => ContainsTestsDiscovered(actualTests, expectedTests, false);
 
-    public static void TestsPassed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings? settings = null)
-        => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests, true);
-
     public static void TestsPassed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests, true);
-
-    public static void TestsFailed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings? settings = null)
-      => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests, true);
 
     public static void TestsFailed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests, true);
 
-    public static void ContainsTestsPassed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings? settings = null)
-        => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests);
-
     public static void ContainsTestsPassed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests);
-
-    public static void ContainsTestsFailed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings? settings = null)
-        => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests);
 
     public static void ContainsTestsFailed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests);
@@ -58,34 +43,17 @@ public static class VerifyE2E
     {
         if (matchCount)
         {
-            discoveredTests.Should().HaveSameCount(expectedTests);
+            Assert.AreEqual(expectedTests.Count(), discoveredTests.Count());
         }
 
         foreach (string test in expectedTests)
         {
             // Test Discovery run was expecting to discover \"{test}\", but it has not discovered.
-            discoveredTests.Should().Contain(
+            Assert.Contains(
                 p => test.Equals(p.FullyQualifiedName, StringComparison.Ordinal)
                      || test.Equals(p.DisplayName, StringComparison.Ordinal)
-                     || test.Equals(p.DisplayName, StringComparison.Ordinal));
-        }
-    }
-
-    private static void ContainsExpectedTestsWithOutcome(IEnumerable<TestResult> tests, TestOutcome expectedOutcome,
-        IEnumerable<string> expectedTests, bool matchCount = false)
-    {
-        if (matchCount)
-        {
-            int expectedCount = expectedTests.Count();
-            AssertOutcomeCount(tests, expectedOutcome, expectedCount);
-        }
-
-        foreach (string test in expectedTests)
-        {
-            tests.Should().Contain(
-                p => test.Equals(p.TestCase.FullyQualifiedName, StringComparison.Ordinal)
-                     || test.Equals(p.DisplayName, StringComparison.Ordinal)
-                     || test.Equals(p.TestCase.DisplayName, StringComparison.Ordinal));
+                     || test.Equals(p.DisplayName, StringComparison.Ordinal),
+                discoveredTests);
         }
     }
 
@@ -100,9 +68,10 @@ public static class VerifyE2E
 
         foreach (string test in expectedTests)
         {
-            tests.Should().Contain(p => p.DisplayName == test);
+            Assert.Contains(p => p.DisplayName == test, tests);
         }
     }
 
-    private static void AssertOutcomeCount(IEnumerable<TestResult> actual, TestOutcome expectedOutcome, int expectedCount) => actual.Where(i => i.Outcome == expectedOutcome).Should().HaveCount(expectedCount);
+    private static void AssertOutcomeCount(IEnumerable<TestResult> actual, TestOutcome expectedOutcome, int expectedCount)
+        => Assert.HasCount(expectedCount, actual.Where(i => i.Outcome == expectedOutcome));
 }
