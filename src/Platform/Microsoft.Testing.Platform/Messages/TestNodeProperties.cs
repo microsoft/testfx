@@ -1098,8 +1098,7 @@ public sealed class TestMetadataProperty : IProperty, IEquatable<TestMetadataPro
 /// <summary>
 /// Property that represents standard output to associate with a test node.
 /// </summary>
-[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public class StandardOutputProperty : IProperty, IEquatable<StandardOutputProperty>
+public sealed class StandardOutputProperty : IProperty, IEquatable<StandardOutputProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="StandardOutputProperty"/> class.
@@ -1141,8 +1140,7 @@ public class StandardOutputProperty : IProperty, IEquatable<StandardOutputProper
 /// <summary>
 /// Property that represents standard error to associate with a test node.
 /// </summary>
-[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public class StandardErrorProperty : IProperty, IEquatable<StandardErrorProperty>
+public sealed class StandardErrorProperty : IProperty, IEquatable<StandardErrorProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="StandardErrorProperty"/> class.
