@@ -33,8 +33,8 @@ When making change to resource files, you MUST:
 
 ## Public API guidelines
 
-- Public API for MSTest and Microsoft.Testing.Platform should **never** use `init` accessors.
-  - Exception: Existing APIs in Microsoft.Testing.Platform, because changing them right now is a breaking change. But we shouldn't introduce **new** APIs using init accessors.
+- Public API for MSTest and Microsoft.Testing.Platform MUST NOT use `init` accessors.
+  - Exception: Existing APIs in Microsoft.Testing.Platform, because changing them right now would be a breaking change. However, we MUST NOT introduce **new** APIs using `init` accessors.
   - IMPORTANT: Make sure to apply this rule strictly both during PR review and when working on code changes.
 
 ## Testing Guidelines
