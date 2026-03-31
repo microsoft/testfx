@@ -23,7 +23,6 @@ public sealed class OutputTests : AcceptanceTestBase<OutputTests.TestAssetFixtur
                 Console message
                 TestContext Messages:
                 TestContext message
-              Error output
             """);
     }
 
