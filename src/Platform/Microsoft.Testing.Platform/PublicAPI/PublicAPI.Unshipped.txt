@@ -2,6 +2,10 @@
 *REMOVED*Microsoft.Testing.Platform.Extensions.TestHost.ITestHostApplicationLifetime.AfterRunAsync(int exitCode, System.Threading.CancellationToken cancellation) -> System.Threading.Tasks.Task!
 *REMOVED*Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation! testHostProcessInformation, System.Threading.CancellationToken cancellation) -> System.Threading.Tasks.Task!
 *REMOVED*Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessLifetimeHandler.OnTestHostProcessStartedAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation! testHostProcessInformation, System.Threading.CancellationToken cancellation) -> System.Threading.Tasks.Task!
+*REMOVED*[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty
+*REMOVED*[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty? other) -> bool
+*REMOVED*[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.get -> string!
+*REMOVED*[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutputProperty(string! standardOutput) -> void
 Microsoft.Testing.Platform.Extensions.TestHost.ITestHostApplicationLifetime.AfterRunAsync(int exitCode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation! testHostProcessInformation, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessLifetimeHandler.OnTestHostProcessStartedAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation! testHostProcessInformation, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
@@ -15,3 +19,7 @@ Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.TestHostOrchestrator.
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorApplicationLifetime.AfterRunAsync(int exitCode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorApplicationLifetime.BeforeRunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorExtension
+Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty
+Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty? other) -> bool
+Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.get -> string!
+Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutputProperty(string! standardOutput) -> void
