@@ -574,20 +574,31 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private static void FormatStandardAndErrorOutput(ITerminal terminal, string? standardOutput, string? standardError)
     {
-        if (RoslynString.IsNullOrWhiteSpace(standardOutput) && RoslynString.IsNullOrWhiteSpace(standardError))
+        var hasStdOut = !RoslynString.IsNullOrWhiteSpace(standardOutput);
+        var hasStdErr = !RoslynString.IsNullOrWhiteSpace(standardError);
+        if (!hasStdOut && !hasStdErr)
         {
             return;
         }
 
         terminal.SetColor(TerminalColor.DarkGray);
-        terminal.Append(SingleIndentation);
-        terminal.AppendLine(PlatformResources.StandardOutput);
-        string? standardOutputWithoutSpecialChars = MakeControlCharactersVisible(standardOutput, normalizeWhitespaceCharacters: false);
-        AppendIndentedLine(terminal, standardOutputWithoutSpecialChars, DoubleIndentation);
-        terminal.Append(SingleIndentation);
-        terminal.AppendLine(PlatformResources.StandardError);
-        string? standardErrorWithoutSpecialChars = MakeControlCharactersVisible(standardError, normalizeWhitespaceCharacters: false);
-        AppendIndentedLine(terminal, standardErrorWithoutSpecialChars, DoubleIndentation);
+
+        if (hasStdOut)
+        {
+            terminal.Append(SingleIndentation);
+            terminal.AppendLine(PlatformResources.StandardOutput);
+            string? standardOutputWithoutSpecialChars = MakeControlCharactersVisible(standardOutput, normalizeWhitespaceCharacters: false);
+            AppendIndentedLine(terminal, standardOutputWithoutSpecialChars, DoubleIndentation);
+        }
+
+        if (hasStdErr)
+        {
+            terminal.Append(SingleIndentation);
+            terminal.AppendLine(PlatformResources.StandardError);
+            string? standardErrorWithoutSpecialChars = MakeControlCharactersVisible(standardError, normalizeWhitespaceCharacters: false);
+            AppendIndentedLine(terminal, standardErrorWithoutSpecialChars, DoubleIndentation);
+        }
+
         terminal.ResetColor();
     }
 
