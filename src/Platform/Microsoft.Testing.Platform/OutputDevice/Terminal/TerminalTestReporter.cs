@@ -574,8 +574,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private static void FormatStandardAndErrorOutput(ITerminal terminal, string? standardOutput, string? standardError)
     {
-        var hasStdOut = !RoslynString.IsNullOrWhiteSpace(standardOutput);
-        var hasStdErr = !RoslynString.IsNullOrWhiteSpace(standardError);
+        bool hasStdOut = !RoslynString.IsNullOrWhiteSpace(standardOutput);
+        bool hasStdErr = !RoslynString.IsNullOrWhiteSpace(standardError);
         if (!hasStdOut && !hasStdErr)
         {
             return;
