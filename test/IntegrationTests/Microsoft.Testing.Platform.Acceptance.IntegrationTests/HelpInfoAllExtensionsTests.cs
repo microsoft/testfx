@@ -98,6 +98,12 @@ Extension options:
     --output
         Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+    --show-stderr
+        Determines when to show captured error output of a test.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+    --show-stdout
+        Determines when to show captured standard output of a test.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
     --report-trx
         Enable generating TRX report
     --report-trx-filename
@@ -350,6 +356,16 @@ Registered command line providers:
         Hidden: False
         Description: Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+      --show-stderr
+        Arity: 1
+        Hidden: False
+        Description: Determines when to show captured error output of a test.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+      --show-stdout
+        Arity: 1
+        Hidden: False
+        Description: Determines when to show captured standard output of a test.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
   TrxReportGeneratorCommandLine
     Name: TRX report generator
     Version: *
