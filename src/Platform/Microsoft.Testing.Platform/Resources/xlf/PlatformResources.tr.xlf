@@ -820,6 +820,25 @@ Geçerli değerler: ‘Normal’, ‘Ayrıntılı’. Varsayılan değer: ‘Nor
         <target state="translated">--çıkışta ‘Normal’ veya ‘Ayrıntılı’ değerine sahip tek bir parametre beklenir.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="new">--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="new">Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="new">Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
         <target state="translated">Test sonuçlarını terminale yazar.</target>

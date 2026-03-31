@@ -468,7 +468,23 @@ internal sealed partial class TerminalTestReporter : IDisposable
         FormatExpectedAndActual(terminal, expected, actual);
         FormatStackTrace(terminal, flatExceptions, 0);
         FormatInnerExceptions(terminal, flatExceptions);
-        FormatStandardAndErrorOutput(terminal, standardOutput, errorOutput);
+
+        bool isFailed = outcome is TestOutcome.Fail or TestOutcome.Error or TestOutcome.Timeout or TestOutcome.Canceled;
+        string? stdoutToShow = _options.ShowStdout switch
+        {
+            OutputShowMode.All => standardOutput,
+            OutputShowMode.Failed => isFailed ? standardOutput : null,
+            OutputShowMode.None => null,
+            _ => standardOutput,
+        };
+        string? stderrToShow = _options.ShowStderr switch
+        {
+            OutputShowMode.All => errorOutput,
+            OutputShowMode.Failed => isFailed ? errorOutput : null,
+            OutputShowMode.None => null,
+            _ => errorOutput,
+        };
+        FormatStandardAndErrorOutput(terminal, stdoutToShow, stderrToShow);
     }
 
     private static void FormatInnerExceptions(ITerminal terminal, FlatException[] exceptions)

@@ -820,6 +820,25 @@ I valori validi sono 'Normal', 'Detailed'. L'impostazione predefinita è 'Normal
         <target state="translated">--l’output prevede un singolo parametro con un valore 'Normal' o 'Detailed'.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="new">--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="new">Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="new">Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
         <target state="translated">Scrive i risultati del test nel terminale.</target>

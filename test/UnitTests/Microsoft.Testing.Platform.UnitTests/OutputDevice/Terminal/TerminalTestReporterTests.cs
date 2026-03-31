@@ -512,6 +512,85 @@ public sealed class TerminalTestReporterTests
         Assert.IsGreaterThan(renderIndex, stopUpdateIndex, "StopUpdate should be called after rendering progress.");
     }
 
+    [TestMethod]
+    public void NonAnsiTerminal_ShowOutputNone_DoesNotShowOutput()
+    {
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowStdout = OutputShowMode.None,
+            ShowStderr = OutputShowMode.None,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+        terminalReporter.AssemblyRunStarted();
+
+        terminalReporter.TestCompleted(testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: "Hello!", errorOutput: "Oh no!");
+        terminalReporter.TestCompleted(testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: "Tests failed", exception: null, expected: null, actual: null, standardOutput: "Hello!", errorOutput: "Oh no!");
+
+        terminalReporter.AssemblyRunCompleted();
+        terminalReporter.TestExecutionCompleted(endTime);
+
+        string output = stringBuilderConsole.Output;
+
+        Assert.DoesNotContain("Standard output", output);
+        Assert.DoesNotContain("Error output", output);
+        Assert.DoesNotContain("Hello!", output);
+        Assert.DoesNotContain("Oh no!", output);
+    }
+
+    [TestMethod]
+    public void NonAnsiTerminal_ShowOutputFailed_ShowsOutputOnlyForFailedTests()
+    {
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowStdout = OutputShowMode.Failed,
+            ShowStderr = OutputShowMode.Failed,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+        terminalReporter.AssemblyRunStarted();
+
+        terminalReporter.TestCompleted(testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: "passed-stdout", errorOutput: "passed-stderr");
+        terminalReporter.TestCompleted(testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: "Tests failed", exception: null, expected: null, actual: null, standardOutput: "failed-stdout", errorOutput: "failed-stderr");
+
+        terminalReporter.AssemblyRunCompleted();
+        terminalReporter.TestExecutionCompleted(endTime);
+
+        string output = stringBuilderConsole.Output;
+
+        // stdout/stderr for passed tests should NOT appear
+        Assert.DoesNotContain("passed-stdout", output);
+        Assert.DoesNotContain("passed-stderr", output);
+
+        // stdout/stderr for failed tests SHOULD appear
+        Assert.Contains("failed-stdout", output);
+        Assert.Contains("failed-stderr", output);
+    }
+
     private static string? ShowEscape(string? text)
     {
         string visibleEsc = "\x241b";

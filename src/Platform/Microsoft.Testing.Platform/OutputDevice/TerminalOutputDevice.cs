@@ -150,6 +150,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             showPassed = () => true;
         }
 
+        OutputShowMode showStdout = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption);
+        OutputShowMode showStderr = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption);
+
         Func<bool?> shouldShowProgress = noProgress || ansiMode is AnsiMode.NoAnsi or AnsiMode.SimpleAnsi
             // User preference is to not show progress.
             // Or, we are in terminal that's not capable of changing cursor and we can't update progress in-place.
@@ -174,8 +177,20 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             AnsiMode = ansiMode,
             ShowActiveTests = true,
             ShowProgress = shouldShowProgress,
+            ShowStdout = showStdout,
+            ShowStderr = showStderr,
         });
     }
+
+    private static OutputShowMode GetShowOutputMode(ICommandLineOptions commandLineOptions, string optionName)
+        => commandLineOptions.TryGetOptionArgumentList(optionName, out string[]? arguments) && arguments is { Length: > 0 }
+            ? arguments[0] switch
+            {
+                string s when TerminalTestReporterCommandLineOptionsProvider.ShowOutputFailedArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => OutputShowMode.Failed,
+                string s when TerminalTestReporterCommandLineOptionsProvider.ShowOutputNoneArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => OutputShowMode.None,
+                _ => OutputShowMode.All,
+            }
+            : OutputShowMode.All;
 
     private static string GetShortArchitecture(string runtimeIdentifier)
         => runtimeIdentifier.Contains(Dash)
