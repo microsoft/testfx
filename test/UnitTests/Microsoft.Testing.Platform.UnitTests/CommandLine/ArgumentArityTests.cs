@@ -24,6 +24,28 @@ public sealed class ArgumentArityTests
     ];
 
     [TestMethod]
+    public async Task ParseAndValidate_EmptyArgument_ShouldNotThrowException()
+    {
+        // Arrange
+        string[] args = [string.Empty];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+
+        // Act
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+
+        // Assert
+        Assert.IsFalse(result.IsValid);
+#pragma warning disable SA1027 // Use tabs correctly
+        Assert.AreEqual(
+            """
+            Invalid command line arguments:
+            	- Unexpected argument 
+            """, result.ErrorMessage, StringComparer.Ordinal);
+#pragma warning restore SA1027 // Use tabs correctly
+    }
+
+    [TestMethod]
     public async Task ParseAndValidate_WhenOptionWithArityZeroIsCalledWithOneArgument_ReturnsFalse()
     {
         // Arrange
