@@ -128,7 +128,7 @@ internal static class CommandLineOptionsValidator
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> systemOptionsByProvider)
     {
         // Create a HashSet of all system option names for faster lookup
-        HashSet<string> systemOptionNames = new();
+        var systemOptionNames = new HashSet<string>();
         foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in systemOptionsByProvider)
         {
             foreach (CommandLineOption option in provider.Value)
@@ -200,7 +200,7 @@ internal static class CommandLineOptionsValidator
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> systemOptionsByProvider)
     {
         // Create a HashSet of all valid option names for faster lookup
-        HashSet<string> validOptionNames = new();
+        var validOptionNames = new HashSet<string>();
         foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in extensionOptionsByProvider)
         {
             foreach (CommandLineOption option in provider.Value)
