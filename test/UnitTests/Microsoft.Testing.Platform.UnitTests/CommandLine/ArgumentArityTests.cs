@@ -24,7 +24,7 @@ public sealed class ArgumentArityTests
     ];
 
     [TestMethod]
-    public async Task ParseAndValidate_EmptyOption_ShouldNotThrowException()
+    public async Task ParseAndValidate_EmptyArgument_ShouldNotThrowException()
     {
         // Arrange
         string[] args = [string.Empty];
