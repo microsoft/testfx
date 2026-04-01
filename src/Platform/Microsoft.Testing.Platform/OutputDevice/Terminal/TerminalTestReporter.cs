@@ -334,7 +334,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
        string? expected,
        string? actual,
        string? standardOutput,
-       string? errorOutput)
+       string? standardError)
     {
         FlatException[] flatExceptions = ExceptionFlattener.Flatten(errorMessage, exception);
         TestCompleted(
@@ -347,7 +347,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             expected,
             actual,
             standardOutput,
-            errorOutput);
+            standardError);
     }
 
     private void TestCompleted(
@@ -360,7 +360,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? expected,
         string? actual,
         string? standardOutput,
-        string? errorOutput)
+        string? standardError)
     {
         if (_testProgressState is null)
         {
@@ -406,7 +406,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 expected,
                 actual,
                 standardOutput,
-                errorOutput));
+                standardError));
         }
     }
 
@@ -426,7 +426,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? expected,
         string? actual,
         string? standardOutput,
-        string? errorOutput)
+        string? standardError)
     {
         if (outcome == TestOutcome.Passed && !GetShowPassedTests())
         {
@@ -475,14 +475,14 @@ internal sealed partial class TerminalTestReporter : IDisposable
             OutputShowMode.All => standardOutput,
             OutputShowMode.Failed => isFailed ? standardOutput : null,
             OutputShowMode.None => null,
-            _ => standardOutput,
+            _ => throw ApplicationStateGuard.Unreachable(),
         };
         string? stderrToShow = _options.ShowStderr switch
         {
-            OutputShowMode.All => errorOutput,
-            OutputShowMode.Failed => isFailed ? errorOutput : null,
+            OutputShowMode.All => standardError,
+            OutputShowMode.Failed => isFailed ? standardError : null,
             OutputShowMode.None => null,
-            _ => errorOutput,
+            _ => throw ApplicationStateGuard.Unreachable(),
         };
         FormatStandardAndErrorOutput(terminal, stdoutToShow, stderrToShow);
     }

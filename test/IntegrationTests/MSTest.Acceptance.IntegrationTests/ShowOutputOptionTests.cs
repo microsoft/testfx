@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
@@ -38,6 +39,45 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task ShowStdout_All_ShowsStandardOutputForAllTests(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--show-stdout all --output detailed --no-progress --no-ansi",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertOutputContains("stdout from failing test");
+        testHostResult.AssertOutputContains("stdout from passing test");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task ShowStdout_Default_ShowsStandardOutputForAllTests(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--output detailed --no-progress --no-ansi",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertOutputContains("stdout from failing test");
+        testHostResult.AssertOutputContains("stdout from passing test");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task ShowStdout_InvalidArgument_ReturnsError(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--show-stdout invalid",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
+        testHostResult.AssertOutputContains("--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task ShowStderr_None_NeverShowsErrorOutput(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
@@ -61,6 +101,45 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
 
         testHostResult.AssertOutputContains("stderr from failing test");
         testHostResult.AssertOutputDoesNotContain("stderr from passing test");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task ShowStderr_All_ShowsErrorOutputForAllTests(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--show-stderr all --output detailed --no-progress --no-ansi",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertOutputContains("stderr from failing test");
+        testHostResult.AssertOutputContains("stderr from passing test");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task ShowStderr_Default_ShowsErrorOutputForAllTests(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--output detailed --no-progress --no-ansi",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertOutputContains("stderr from failing test");
+        testHostResult.AssertOutputContains("stderr from passing test");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task ShowStderr_InvalidArgument_ReturnsError(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--show-stderr invalid",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
+        testHostResult.AssertOutputContains("--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
