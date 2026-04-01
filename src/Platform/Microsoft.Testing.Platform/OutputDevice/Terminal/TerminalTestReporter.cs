@@ -334,7 +334,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
        string? expected,
        string? actual,
        string? standardOutput,
-       string? standardError)
+       string? errorOutput)
     {
         FlatException[] flatExceptions = ExceptionFlattener.Flatten(errorMessage, exception);
         TestCompleted(
@@ -347,7 +347,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             expected,
             actual,
             standardOutput,
-            standardError);
+            errorOutput);
     }
 
     private void TestCompleted(
@@ -360,7 +360,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? expected,
         string? actual,
         string? standardOutput,
-        string? standardError)
+        string? errorOutput)
     {
         if (_testProgressState is null)
         {
@@ -406,7 +406,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 expected,
                 actual,
                 standardOutput,
-                standardError));
+                errorOutput));
         }
     }
 
@@ -426,7 +426,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? expected,
         string? actual,
         string? standardOutput,
-        string? standardError)
+        string? errorOutput)
     {
         if (outcome == TestOutcome.Passed && !GetShowPassedTests())
         {
@@ -479,8 +479,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         };
         string? stderrToShow = _options.ShowStderr switch
         {
-            OutputShowMode.All => standardError,
-            OutputShowMode.Failed => isFailed ? standardError : null,
+            OutputShowMode.All => errorOutput,
+            OutputShowMode.Failed => isFailed ? errorOutput : null,
             OutputShowMode.None => null,
             _ => throw ApplicationStateGuard.Unreachable(),
         };
@@ -572,10 +572,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.ResetColor();
     }
 
-    private static void FormatStandardAndErrorOutput(ITerminal terminal, string? standardOutput, string? standardError)
+    private static void FormatStandardAndErrorOutput(ITerminal terminal, string? standardOutput, string? errorOutput)
     {
         bool hasStdOut = !RoslynString.IsNullOrWhiteSpace(standardOutput);
-        bool hasStdErr = !RoslynString.IsNullOrWhiteSpace(standardError);
+        bool hasStdErr = !RoslynString.IsNullOrWhiteSpace(errorOutput);
         if (!hasStdOut && !hasStdErr)
         {
             return;
@@ -595,7 +595,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         {
             terminal.Append(SingleIndentation);
             terminal.AppendLine(PlatformResources.StandardError);
-            string? standardErrorWithoutSpecialChars = MakeControlCharactersVisible(standardError, normalizeWhitespaceCharacters: false);
+            string? standardErrorWithoutSpecialChars = MakeControlCharactersVisible(errorOutput, normalizeWhitespaceCharacters: false);
             AppendIndentedLine(terminal, standardErrorWithoutSpecialChars, DoubleIndentation);
         }
 
