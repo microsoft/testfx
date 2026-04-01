@@ -147,11 +147,23 @@ internal static class ObjectModelConverters
 
             testNode.Properties.Add(new TrxTestDefinitionName(testResult.TestCase.DisplayName ?? testResult.TestCase.FullyQualifiedName));
 
-            // TODO: Consider retrieving TestMethodIdentifierProperty first (which could have been added through addAdditionalProperties.
-            // VSTest's TestCase.FQN is very non-standard.
-            // We should avoid using it if we can.
-            if (TryParseFullyQualifiedType(testResult.TestCase.FullyQualifiedName, out string? fullyQualifiedType))
+            TestMethodIdentifierProperty? testMethodIdentifierProperty = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+            if (testMethodIdentifierProperty is not null)
             {
+                // TODO: Should TRX className have arity for generic classes?
+                if (RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace))
+                {
+                    testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(testMethodIdentifierProperty.TypeName));
+                }
+                else
+                {
+                    testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty($"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}"));
+                }
+            }
+            else if (TryParseFullyQualifiedType(testResult.TestCase.FullyQualifiedName, out string? fullyQualifiedType))
+            {
+                // VSTest's TestCase.FQN is very non-standard.
+                // We should avoid using it if we can, and so we prefer TestMethodIdentifierProperty first.
                 testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(fullyQualifiedType));
             }
             else
