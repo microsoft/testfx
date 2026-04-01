@@ -126,7 +126,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
         AnsiMode ansiMode = AnsiMode.AnsiIfPossible;
         // In LLM environments, prefer simple text output so that LLM can parse it easily.
-        // Note that NoAnsi also implies also no progress.
+        // Note that NoAnsi also implies no progress.
         if (noAnsi || LLMEnvironmentDetector.IsLLMEnvironment())
         {
             // User explicitly specified --no-ansi.
@@ -152,7 +152,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             showPassed = () => true;
         }
 
-        Func<bool?> shouldShowProgress = noProgress || ansiMode is AnsiMode.NoAnsi or AnsiMode.SimpleAnsi || LLMEnvironmentDetector.IsLLMEnvironment()
+        Func<bool?> shouldShowProgress = noProgress || ansiMode is AnsiMode.NoAnsi or AnsiMode.SimpleAnsi
             // User preference is to not show progress.
             // Or, we are in terminal that's not capable of changing cursor and we can't update progress in-place.
             // In that case, we force disable progress as well.
