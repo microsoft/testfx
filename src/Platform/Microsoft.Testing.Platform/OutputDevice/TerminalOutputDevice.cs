@@ -125,7 +125,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         bool inCI = string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase) || string.Equals(_environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase);
 
         AnsiMode ansiMode = AnsiMode.AnsiIfPossible;
-        if (noAnsi)
+        // In LLM environments, prefer simple text output so that LLM can parse it easily.
+        // Note that NoAnsi also implies no progress.
+        if (noAnsi || LLMEnvironmentDetector.IsLLMEnvironment())
         {
             // User explicitly specified --no-ansi.
             // We should respect that.
