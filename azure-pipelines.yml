@@ -53,11 +53,13 @@ stages:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
-      enablePublishBuildArtifacts: true
       enablePublishTestResults: true
       testResultsFormat: 'vstest'
-      enablePublishBuildAssets: true
       enablePublishUsingPipelines: true
+      artifacts:
+        publish:
+          logs: true
+          manifests: true
       enableTelemetry: true
       jobs:
       - job: Windows
