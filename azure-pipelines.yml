@@ -188,13 +188,6 @@ stages:
             /p:FastAcceptanceTest=true
           displayName: Build
 
-        - task: PublishBuildArtifacts@1
-          displayName: 'Publish NuGet packages'
-          inputs:
-            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping'
-            ArtifactName: '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)'
-          condition: always()
-
         - ${{ if eq(parameters.SkipTests, False) }}:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
@@ -251,13 +244,6 @@ stages:
             /p:NonWindowsBuild=true
             /p:FastAcceptanceTest=true
           displayName: Build
-
-        - task: PublishBuildArtifacts@1
-          displayName: 'Publish NuGet packages'
-          inputs:
-            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping'
-            ArtifactName: '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)'
-          condition: always()
 
         - ${{ if eq(parameters.SkipTests, False) }}:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
