@@ -103,11 +103,13 @@ extends:
       - template: /eng/common/templates-official/jobs/jobs.yml@self
         parameters:
           enableMicrobuild: true
-          enablePublishBuildArtifacts: true
           enablePublishTestResults: true
           testResultsFormat: 'vstest'
-          enablePublishBuildAssets: true
           enablePublishUsingPipelines: true
+          artifacts:
+            publish:
+              logs: true
+              manifests: true
           enableTelemetry: true
           jobs:
           - job: Windows
