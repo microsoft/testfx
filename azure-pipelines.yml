@@ -58,6 +58,7 @@ stages:
       enablePublishUsingPipelines: true
       artifacts:
         publish:
+          artifacts: true
           logs: true
           manifests: true
       enableTelemetry: true
@@ -114,13 +115,6 @@ stages:
             /p:FastAcceptanceTest=true
           name: Build
           displayName: Build
-
-        - task: PublishBuildArtifacts@1
-          displayName: 'Publish NuGet packages'
-          inputs:
-            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping'
-            ArtifactName: '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)'
-          condition: always()
 
         - ${{ if eq(parameters.SkipTests, False) }}:
 
