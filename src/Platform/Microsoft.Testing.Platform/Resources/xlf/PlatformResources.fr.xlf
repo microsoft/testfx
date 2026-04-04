@@ -822,21 +822,21 @@ Les valeurs valides sont « Normal » et « Détaillé ». La valeur par dé
       </trans-unit>
       <trans-unit id="TerminalShowOutputOptionInvalidArgument">
         <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
-        <target state="new">--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</target>
+        <target state="translated">--show-stdout et --show-stderr attendent un seul paramètre avec la valeur « All », « Failed » ou « None ».</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
-        <target state="new">Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</target>
+        <target state="translated">Permet de déterminer quand afficher la sortie d’erreur capturée d’un test.
+Les valeurs valides sont « All », « Failed » et « None ». La valeur par défaut est « All ».</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
-        <target state="new">Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</target>
+        <target state="translated">Permet de déterminer quand afficher la sortie standard capturée d’un test.
+Les valeurs valides sont « All », « Failed » et « None ». La valeur par défaut est « All ».</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
