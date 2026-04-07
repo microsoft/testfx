@@ -67,8 +67,6 @@ variables:
     - name: Codeql.Cadence 
       value: 0
 
-  - group: DotNet-Symbol-Server-Pats
-
 resources:
   repositories:
   - repository: 1ESPipelineTemplates
