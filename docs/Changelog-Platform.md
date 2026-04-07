@@ -4,6 +4,53 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="2.2.1" />[2.2.1] - 2026-04-07
+
+See full log [of v4.1.0...v4.2.1](https://github.com/microsoft/testfx/compare/v4.1.0...v4.2.1)
+
+### Added
+
+* Open up orchestrator experimentally by @Evangelink in [#7409](https://github.com/microsoft/testfx/pull/7409)
+* Display TFM and test name in Azure DevOps report by @Evangelink in [#7412](https://github.com/microsoft/testfx/pull/7412)
+* Print out-of-process artifacts by @Youssef1313 in [#7534](https://github.com/microsoft/testfx/pull/7534)
+* Add `--show-stdout` and `--show-stderr` command-line options by @Youssef1313 in [#7637](https://github.com/microsoft/testfx/pull/7637)
+* Avoid ANSI and progress output when running in LLM environment by @Youssef1313 in [#7649](https://github.com/microsoft/testfx/pull/7649)
+
+### Fixed
+
+* Fix cursor positioning when Console.BufferWidth exceeds Console.WindowWidth by @Copilot in [#7305](https://github.com/microsoft/testfx/pull/7305)
+* HangDump should trigger even after test session finish by @Youssef1313 in [#7392](https://github.com/microsoft/testfx/pull/7392)
+* Make tracing environment variable case insensitive by @Evangelink in [#7407](https://github.com/microsoft/testfx/pull/7407)
+* Ensure post-session display runs after cancellation by @Evangelink in [#7410](https://github.com/microsoft/testfx/pull/7410)
+* Fix TestMethod/name value in generated TRX by @Youssef1313 in [#7491](https://github.com/microsoft/testfx/pull/7491)
+* Fix ArgumentException in `TestApplicationResult.ConsumeAsync` by @Youssef1313 in [#7496](https://github.com/microsoft/testfx/pull/7496)
+* Fix MTP TRX handling of result files by @Youssef1313 in [#7516](https://github.com/microsoft/testfx/pull/7516)
+* Guard MTP test targets with `IsTestingPlatformApplication` to prevent interference with VSTest projects by @Copilot in [#7539](https://github.com/microsoft/testfx/pull/7539)
+* Fix test definition names in TRX to correspond to test case display names by @Youssef1313 in [#7595](https://github.com/microsoft/testfx/pull/7595)
+* Stabilize StdOut/StdErr MTP properties by @Youssef1313 in [#7640](https://github.com/microsoft/testfx/pull/7640)
+* Avoid IndexOutOfRangeException in command-line parsing by @Youssef1313 in [#7648](https://github.com/microsoft/testfx/pull/7648)
+* Fix TRX fully qualified type name to use TestMethodIdentifierProperty by @Youssef1313 in [#7650](https://github.com/microsoft/testfx/pull/7650)
+
+### Changed
+
+* Use the actual process exit code instead of IPC TestHostProcessExitRequest by @Youssef1313 in [#7430](https://github.com/microsoft/testfx/pull/7430)
+* Improve ordering of `ITestSessionLifetimeHandler.OnTestSessionFinishingAsync` by @Youssef1313 in [#7520](https://github.com/microsoft/testfx/pull/7520)
+* Make MSBuild extension more strict by @Youssef1313 in [#7525](https://github.com/microsoft/testfx/pull/7525)
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Platform/2.2.1)
+* Microsoft.Testing.Platform.MSBuild: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/2.2.1)
+* Microsoft.Testing.Extensions.CrashDump: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/2.2.1)
+* Microsoft.Testing.Extensions.HangDump: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/2.2.1)
+* Microsoft.Testing.Extensions.HotReload: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/2.2.1)
+* Microsoft.Testing.Extensions.Retry: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/2.2.1)
+* Microsoft.Testing.Extensions.Telemetry: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/2.2.1)
+* Microsoft.Testing.Extensions.TrxReport: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/2.2.1)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/2.2.1)
+* Microsoft.Testing.Extensions.VSTestBridge: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/2.2.1)
+* Microsoft.Testing.Extensions.AzureDevOpsReport: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/2.2.1)
+
 ## <a name="2.1.0" />[2.1.0] - 2026-02-03
 
 See full log [of v4.0.2...v4.1.0](https://github.com/microsoft/testfx/compare/v4.0.2...v4.1.0)
