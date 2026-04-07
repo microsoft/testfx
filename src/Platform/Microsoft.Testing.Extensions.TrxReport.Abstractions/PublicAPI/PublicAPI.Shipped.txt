@@ -24,6 +24,9 @@ Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.TrxMessage(string
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty.Messages.get -> Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage![]!
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty.TrxMessagesProperty(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage![]! messages) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestDefinitionName
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestDefinitionName.TestDefinitionName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestDefinitionName.TrxTestDefinitionName(string! testDefinitionName) -> void
 override Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage.ToString() -> string!
 override Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage.ToString() -> string!
 override Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage.ToString() -> string!
@@ -31,3 +34,4 @@ override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProper
 override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty.ToString() -> string!
 override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty.ToString() -> string!
 override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty.ToString() -> string!
+override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestDefinitionName.ToString() -> string!
