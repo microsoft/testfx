@@ -27,6 +27,7 @@ pr:
       - README.md
       - SECURITY.md
       - azure-pipelines-official.yml
+      - azure-pipelines-codeql.yml
 
 parameters:
 # This option should be used with caution. This is useful for unblocking circular deps issue with testanywhere
