@@ -14,6 +14,7 @@ See full log [of v4.1.0...v4.2.1](https://github.com/microsoft/testfx/compare/v4
 * Display TFM and test name in Azure DevOps report by @Evangelink in [#7412](https://github.com/microsoft/testfx/pull/7412)
 * Print out-of-process artifacts by @Youssef1313 in [#7534](https://github.com/microsoft/testfx/pull/7534)
 * Add `--show-stdout` and `--show-stderr` command-line options by @Youssef1313 in [#7637](https://github.com/microsoft/testfx/pull/7637)
+* Stabilize StdOut/StdErr MTP properties by @Youssef1313 in [#7640](https://github.com/microsoft/testfx/pull/7640)
 * Avoid ANSI and progress output when running in LLM environment by @Youssef1313 in [#7649](https://github.com/microsoft/testfx/pull/7649)
 
 ### Fixed
@@ -27,7 +28,6 @@ See full log [of v4.1.0...v4.2.1](https://github.com/microsoft/testfx/compare/v4
 * Fix MTP TRX handling of result files by @Youssef1313 in [#7516](https://github.com/microsoft/testfx/pull/7516)
 * Guard MTP test targets with `IsTestingPlatformApplication` to prevent interference with VSTest projects by @Copilot in [#7539](https://github.com/microsoft/testfx/pull/7539)
 * Fix test definition names in TRX to correspond to test case display names by @Youssef1313 in [#7595](https://github.com/microsoft/testfx/pull/7595)
-* Stabilize StdOut/StdErr MTP properties by @Youssef1313 in [#7640](https://github.com/microsoft/testfx/pull/7640)
 * Avoid IndexOutOfRangeException in command-line parsing by @Youssef1313 in [#7648](https://github.com/microsoft/testfx/pull/7648)
 * Fix TRX fully qualified type name to use TestMethodIdentifierProperty by @Youssef1313 in [#7650](https://github.com/microsoft/testfx/pull/7650)
 
