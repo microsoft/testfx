@@ -10,9 +10,10 @@ See full log [of v4.1.0...v4.2.1](https://github.com/microsoft/testfx/compare/v4
 
 ### Added
 
-* [Experimental] Add TestContext.Current by @Evangelink in [#7315](https://github.com/microsoft/testfx/pull/7315)
+* \[Experimental] Add TestContext.Current by @Evangelink in [#7315](https://github.com/microsoft/testfx/pull/7315)
 * Add settings to launch debugger on test failure by @Evangelink in [#7318](https://github.com/microsoft/testfx/pull/7318)
 * Include categories in test context properties by @Youssef1313 in [#7349](https://github.com/microsoft/testfx/pull/7349)
+* Produce separate result for class/assembly cleanup failures and report on last unignored test by @Youssef1313 in [#7390](https://github.com/microsoft/testfx/pull/7390)
 * Extend MSTEST0037 to cover array.Length, enumerable.Count(), Any(), and Contains with comparer by @Copilot in [#7540](https://github.com/microsoft/testfx/pull/7540)
 
 ### Fixed
@@ -26,10 +27,6 @@ See full log [of v4.1.0...v4.2.1](https://github.com/microsoft/testfx/compare/v4
 * Fix MSTEST0037 false positive for non-int count argument by @Copilot in [#7624](https://github.com/microsoft/testfx/pull/7624)
 * Fix MSTEST0017 false positive with user-defined conversion operators by @Copilot in [#7626](https://github.com/microsoft/testfx/pull/7626)
 
-### Changed
-
-* Produce separate result for class/assembly cleanup failures and report on last unignored test by @Youssef1313 in [#7390](https://github.com/microsoft/testfx/pull/7390)
-
 ### Removed
 
 * Remove unneeded setting `EnableBaseClassTestMethodsFromOtherAssemblies` by @Youssef1313 in [#7404](https://github.com/microsoft/testfx/pull/7404)
@@ -41,6 +38,8 @@ See full log [of v4.1.0...v4.2.1](https://github.com/microsoft/testfx/compare/v4
 * MSTest.TestAdapter: [4.2.1](https://www.nuget.org/packages/MSTest.TestAdapter/4.2.1)
 * MSTest.Analyzers: [4.2.1](https://www.nuget.org/packages/MSTest.Analyzers/4.2.1)
 * MSTest.Sdk: [4.2.1](https://www.nuget.org/packages/MSTest.Sdk/4.2.1)
+* MSTest.SourceGeneration: [2.0.0-alpha.26202.7](https://www.nuget.org/packages/MSTest.SourceGeneration/2.0.0-alpha.26202.7)
+* MSTest.Engine: [2.0.0-alpha.26202.7](https://www.nuget.org/packages/MSTest.Engine/2.0.0-alpha.26202.7)
 
 ## <a name="4.1.0" />[4.1.0] - 2026-02-03
 
