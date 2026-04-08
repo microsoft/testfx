@@ -289,6 +289,10 @@ stages:
       enableTelemetry: true
       jobs:
       - job: WindowsSamples
+        artifacts:
+        publish:
+          logs:
+            name: 'Logs_Build_$(Agent.JobName)_$(_BuildConfig)
         timeoutInMinutes: 30
         pool:
           name: NetCore-Public
