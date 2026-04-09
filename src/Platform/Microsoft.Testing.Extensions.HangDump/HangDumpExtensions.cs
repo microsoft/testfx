@@ -4,7 +4,6 @@
 using Microsoft.Testing.Extensions.Diagnostics;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Services;
 
