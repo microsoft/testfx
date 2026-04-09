@@ -32,21 +32,8 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
         }
     }
 
-    public bool IsCurrentTestApplicationModuleExecutable
-    {
-        get
-        {
-            string? processPath = GetProcessPath(_environment, _process, true);
-            // TODO: Looks like this will always be true.
-            // Investigate if we have a bug here.
-            return processPath != ".dll";
-        }
-    }
-
     public bool IsAppHostOrSingleFileOrNativeAot
-        => IsCurrentTestApplicationModuleExecutable
-        && !IsCurrentTestApplicationHostDotnetMuxer
-        && !IsCurrentTestApplicationHostMonoMuxer;
+        => !IsCurrentTestApplicationHostDotnetMuxer && !IsCurrentTestApplicationHostMonoMuxer;
 
     public string GetCurrentTestApplicationFullPath()
     {
