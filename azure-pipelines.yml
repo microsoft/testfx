@@ -56,7 +56,6 @@ stages:
       enableMicrobuild: true
       enablePublishTestResults: true
       testResultsFormat: 'vstest'
-      enablePublishUsingPipelines: true
       artifacts:
         publish:
           artifacts: true
@@ -284,10 +283,10 @@ stages:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
-      enablePublishUsingPipelines: true
       artifacts:
         publish:
-          logs: true
+          logs:
+            name: 'Logs_Build_$(Agent.JobName)_$(_BuildConfig)'
           manifests: true
       enableTelemetry: true
       jobs:
