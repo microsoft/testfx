@@ -34,10 +34,7 @@ public static class HangDumpExtensions
             throw new PlatformNotSupportedException("Hang dump extension is not available on ios nor tvos");
         }
 
-        var environment = new SystemEnvironment();
-        string namedPipeSuffix = Guid.NewGuid().ToString("N");
-        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), environment);
-        var hangDumpConfiguration = new HangDumpConfiguration(pipeNameDescription, namedPipeSuffix);
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
 
         builder.TestHostControllers.AddProcessLifetimeHandler(serviceProvider
             => new HangDumpProcessLifetimeHandler(
@@ -53,7 +50,7 @@ public static class HangDumpExtensions
                 serviceProvider.GetClock()));
 
         builder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider
-            => new HangDumpEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), hangDumpConfiguration));
+            => new HangDumpEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), pipeNameDescription.Name));
 
         builder.CommandLine.AddProvider(()
             => new HangDumpCommandLineProvider());
@@ -63,7 +60,6 @@ public static class HangDumpExtensions
                 serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetEnvironment(),
                 serviceProvider.GetTask(),
-                serviceProvider.GetTestApplicationModuleInfo(),
                 serviceProvider.GetLoggerFactory(),
                 serviceProvider.GetClock()));
 
