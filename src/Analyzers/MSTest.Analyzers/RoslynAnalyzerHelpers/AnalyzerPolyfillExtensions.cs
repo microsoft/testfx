@@ -4,6 +4,7 @@
 // Polyfill extension methods specific to the Analyzers project (which targets netstandard2.0
 // only and does not reference Microsoft.Testing.Platform).
 
+[global::Microsoft.CodeAnalysis.EmbeddedAttribute]
 internal static class AnalyzerPolyfillExtensions
 {
     public static bool IsAssignableTo(this System.Type type, System.Type? targetType)

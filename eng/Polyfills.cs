@@ -29,12 +29,15 @@
 
 namespace System.Runtime.CompilerServices
 {
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal static class IsExternalInit;
 
-    [global::System.AttributeUsage(global::System.AttributeTargets.Module | global::System.AttributeTargets.Class | global::System.AttributeTargets.Struct | global::System.AttributeTargets.Constructor | global::System.AttributeTargets.Method | global::System.AttributeTargets.Property | global::System.AttributeTargets.Event | global::System.AttributeTargets.Interface, Inherited = false)]
+    [global::System.AttributeUsage(global::System.AttributeTargets.Class | global::System.AttributeTargets.Struct | global::System.AttributeTargets.Field | global::System.AttributeTargets.Property, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class RequiredMemberAttribute : Attribute { }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.All, AllowMultiple = true, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class CompilerFeatureRequiredAttribute : Attribute
     {
         public CompilerFeatureRequiredAttribute(string featureName) => FeatureName = featureName;
@@ -42,15 +45,21 @@ namespace System.Runtime.CompilerServices
         public string FeatureName { get; }
 
         public bool IsOptional { get; init; }
+
+        public const string RefStructs = nameof(RefStructs);
+
+        public const string RequiredMembers = nameof(RequiredMembers);
     }
 }
 
 namespace System.Diagnostics.CodeAnalysis
 {
     [global::System.AttributeUsage(global::System.AttributeTargets.Method, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class DoesNotReturnAttribute : Attribute { }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Parameter, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class DoesNotReturnIfAttribute : Attribute
     {
         public DoesNotReturnIfAttribute(bool parameterValue) => ParameterValue = parameterValue;
@@ -59,6 +68,7 @@ namespace System.Diagnostics.CodeAnalysis
     }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Method | global::System.AttributeTargets.Property, AllowMultiple = true, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class MemberNotNullAttribute : Attribute
     {
         public MemberNotNullAttribute(string member) => Members = [member];
@@ -69,6 +79,7 @@ namespace System.Diagnostics.CodeAnalysis
     }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Method | global::System.AttributeTargets.Property, AllowMultiple = true, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class MemberNotNullWhenAttribute : Attribute
     {
         public MemberNotNullWhenAttribute(bool returnValue, string member)
@@ -89,6 +100,7 @@ namespace System.Diagnostics.CodeAnalysis
     }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Property | global::System.AttributeTargets.Parameter | global::System.AttributeTargets.ReturnValue, AllowMultiple = true, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class NotNullIfNotNullAttribute : Attribute
     {
         public NotNullIfNotNullAttribute(string parameterName) => ParameterName = parameterName;
@@ -97,6 +109,7 @@ namespace System.Diagnostics.CodeAnalysis
     }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Parameter, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class NotNullWhenAttribute : Attribute
     {
         public NotNullWhenAttribute(bool returnValue) => ReturnValue = returnValue;
@@ -105,23 +118,46 @@ namespace System.Diagnostics.CodeAnalysis
     }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Property | global::System.AttributeTargets.Field | global::System.AttributeTargets.Parameter | global::System.AttributeTargets.ReturnValue, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class NotNullAttribute : Attribute { }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Property | global::System.AttributeTargets.Field | global::System.AttributeTargets.Parameter, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class AllowNullAttribute : Attribute { }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Property | global::System.AttributeTargets.Field | global::System.AttributeTargets.Parameter, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class DisallowNullAttribute : Attribute { }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Property | global::System.AttributeTargets.Field | global::System.AttributeTargets.Parameter | global::System.AttributeTargets.ReturnValue, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class MaybeNullAttribute : Attribute { }
 
-    [global::System.AttributeUsage(global::System.AttributeTargets.Parameter | global::System.AttributeTargets.Property | global::System.AttributeTargets.ReturnValue, AllowMultiple = true, Inherited = false)]
+    [global::System.AttributeUsage(global::System.AttributeTargets.Parameter | global::System.AttributeTargets.Field | global::System.AttributeTargets.Property, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class StringSyntaxAttribute : Attribute
     {
+        public const string CompositeFormat = nameof(CompositeFormat);
+        public const string CSharp = "C#";
+        public const string DateOnlyFormat = nameof(DateOnlyFormat);
+        public const string DateTimeFormat = nameof(DateTimeFormat);
+        public const string EnumFormat = nameof(EnumFormat);
+        public const string FSharp = "F#";
+        public const string GuidFormat = nameof(GuidFormat);
+        public const string Json = nameof(Json);
+        public const string NumericFormat = nameof(NumericFormat);
         public const string Regex = nameof(Regex);
+        public const string TimeOnlyFormat = nameof(TimeOnlyFormat);
+        public const string TimeSpanFormat = nameof(TimeSpanFormat);
         public const string Uri = nameof(Uri);
+        public const string VisualBasic = "Visual Basic";
         public const string Xml = nameof(Xml);
+
+        public StringSyntaxAttribute(string syntax)
+        {
+            Syntax = syntax;
+            Arguments = [];
+        }
 
         public StringSyntaxAttribute(string syntax, params object?[] arguments)
         {
@@ -135,6 +171,7 @@ namespace System.Diagnostics.CodeAnalysis
     }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Field | global::System.AttributeTargets.ReturnValue | global::System.AttributeTargets.GenericParameter | global::System.AttributeTargets.Parameter | global::System.AttributeTargets.Property | global::System.AttributeTargets.Method | global::System.AttributeTargets.Class | global::System.AttributeTargets.Interface | global::System.AttributeTargets.Struct, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class DynamicallyAccessedMembersAttribute : Attribute
     {
         public DynamicallyAccessedMembersAttribute(DynamicallyAccessedMemberTypes memberTypes) => MemberTypes = memberTypes;
@@ -143,11 +180,12 @@ namespace System.Diagnostics.CodeAnalysis
     }
 
     [global::System.Flags]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal enum DynamicallyAccessedMemberTypes
     {
         None = 0,
         PublicParameterlessConstructor = 0x0001,
-        PublicConstructors = 0x0003,
+        PublicConstructors = 0x0002 | PublicParameterlessConstructor,
         NonPublicConstructors = 0x0004,
         PublicMethods = 0x0008,
         NonPublicMethods = 0x0010,
@@ -163,7 +201,8 @@ namespace System.Diagnostics.CodeAnalysis
         All = ~None,
     }
 
-    [global::System.AttributeUsage(global::System.AttributeTargets.Method | global::System.AttributeTargets.Constructor | global::System.AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
+    [global::System.AttributeUsage(global::System.AttributeTargets.All, Inherited = false, AllowMultiple = true)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class UnconditionalSuppressMessageAttribute : Attribute
     {
         public UnconditionalSuppressMessageAttribute(string category, string checkId)
@@ -189,6 +228,7 @@ namespace System.Diagnostics.CodeAnalysis
 namespace System.Runtime.Versioning
 {
     [global::System.AttributeUsage(global::System.AttributeTargets.Assembly | global::System.AttributeTargets.Module | global::System.AttributeTargets.Class | global::System.AttributeTargets.Struct | global::System.AttributeTargets.Enum | global::System.AttributeTargets.Constructor | global::System.AttributeTargets.Method | global::System.AttributeTargets.Property | global::System.AttributeTargets.Field | global::System.AttributeTargets.Event | global::System.AttributeTargets.Interface, AllowMultiple = true, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class SupportedOSPlatformAttribute : Attribute
     {
         public SupportedOSPlatformAttribute(string platformName) => PlatformName = platformName;
@@ -197,6 +237,7 @@ namespace System.Runtime.Versioning
     }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Method | global::System.AttributeTargets.Property | global::System.AttributeTargets.Field, AllowMultiple = true, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class SupportedOSPlatformGuardAttribute : Attribute
     {
         public SupportedOSPlatformGuardAttribute(string platformName) => PlatformName = platformName;
@@ -205,6 +246,7 @@ namespace System.Runtime.Versioning
     }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Assembly | global::System.AttributeTargets.Module | global::System.AttributeTargets.Class | global::System.AttributeTargets.Struct | global::System.AttributeTargets.Enum | global::System.AttributeTargets.Constructor | global::System.AttributeTargets.Method | global::System.AttributeTargets.Property | global::System.AttributeTargets.Field | global::System.AttributeTargets.Event | global::System.AttributeTargets.Interface, AllowMultiple = true, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class UnsupportedOSPlatformAttribute : Attribute
     {
         public UnsupportedOSPlatformAttribute(string platformName) => PlatformName = platformName;
@@ -213,6 +255,7 @@ namespace System.Runtime.Versioning
     }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Method | global::System.AttributeTargets.Property | global::System.AttributeTargets.Field, AllowMultiple = true, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class UnsupportedOSPlatformGuardAttribute : Attribute
     {
         public UnsupportedOSPlatformGuardAttribute(string platformName) => PlatformName = platformName;
@@ -228,6 +271,7 @@ namespace System.Runtime.Versioning
 namespace System.Runtime.CompilerServices
 {
     [global::System.AttributeUsage(global::System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class CallerArgumentExpressionAttribute : Attribute
     {
         public CallerArgumentExpressionAttribute(string parameterName) => ParameterName = parameterName;
@@ -236,9 +280,11 @@ namespace System.Runtime.CompilerServices
     }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Class | global::System.AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class InterpolatedStringHandlerAttribute : Attribute { }
 
     [global::System.AttributeUsage(global::System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class InterpolatedStringHandlerArgumentAttribute : Attribute
     {
         public InterpolatedStringHandlerArgumentAttribute(string argument) => Arguments = [argument];
@@ -252,11 +298,13 @@ namespace System.Runtime.CompilerServices
 namespace System.Diagnostics
 {
     [global::System.AttributeUsage(global::System.AttributeTargets.Class | global::System.AttributeTargets.Method | global::System.AttributeTargets.Constructor | global::System.AttributeTargets.Struct, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class StackTraceHiddenAttribute : Attribute { }
 }
 namespace System.Runtime.CompilerServices
 {
     [global::System.AttributeUsage(global::System.AttributeTargets.Method, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class ModuleInitializerAttribute : Attribute { }
 }
 #endif
@@ -266,6 +314,7 @@ namespace System.Runtime.CompilerServices
 namespace System.Diagnostics.CodeAnalysis
 {
     [global::System.AttributeUsage(global::System.AttributeTargets.Assembly | global::System.AttributeTargets.Module | global::System.AttributeTargets.Class | global::System.AttributeTargets.Struct | global::System.AttributeTargets.Enum | global::System.AttributeTargets.Constructor | global::System.AttributeTargets.Method | global::System.AttributeTargets.Property | global::System.AttributeTargets.Field | global::System.AttributeTargets.Event | global::System.AttributeTargets.Interface | global::System.AttributeTargets.Delegate, Inherited = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class ExperimentalAttribute : Attribute
     {
         public ExperimentalAttribute(string diagnosticId) => DiagnosticId = diagnosticId;
@@ -283,6 +332,7 @@ namespace System.Diagnostics.CodeAnalysis
 namespace System.Runtime.CompilerServices
 {
     [global::System.AttributeUsage(global::System.AttributeTargets.Parameter, Inherited = false, AllowMultiple = false)]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class ParamCollectionAttribute : Attribute { }
 }
 
@@ -293,33 +343,30 @@ namespace System.Runtime.CompilerServices
 namespace System.Threading
 {
 #pragma warning disable CS9216 // A value of type 'Lock' converted to a different type will use likely unintended monitor-based locking
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class Lock
     {
+        public bool IsHeldByCurrentThread => Monitor.IsEntered(this);
+
         public void Enter() => Monitor.Enter(this);
+
+        public bool TryEnter() => Monitor.TryEnter(this);
+
+        public bool TryEnter(TimeSpan timeout) => Monitor.TryEnter(this, timeout);
+
+        public bool TryEnter(int millisecondsTimeout) => TryEnter(TimeSpan.FromMilliseconds(millisecondsTimeout));
 
         public void Exit() => Monitor.Exit(this);
 
         public Scope EnterScope()
         {
-            Monitor.Enter(this);
+            Enter();
             return new Scope(this);
         }
 
-        public ref struct Scope
+        public readonly ref struct Scope(Lock owner)
         {
-            private Lock? _lock;
-
-            internal Scope(Lock @lock) => _lock = @lock;
-
-            public void Dispose()
-            {
-                Lock? lockObj = _lock;
-                if (lockObj is not null)
-                {
-                    _lock = null;
-                    lockObj.Exit();
-                }
-            }
+            public void Dispose() => owner.Exit();
         }
     }
 }
@@ -330,6 +377,7 @@ namespace System.Threading
 
 namespace System
 {
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal readonly struct Index : IEquatable<Index>
     {
         private readonly int _value;
@@ -338,7 +386,7 @@ namespace System
         {
             if (value < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(value), "Index must not be negative.");
+                throw new ArgumentOutOfRangeException(nameof(value));
             }
 
             _value = fromEnd ? ~value : value;
@@ -354,9 +402,9 @@ namespace System
 
         public bool IsFromEnd => _value < 0;
 
-        public static Index FromStart(int value) => value >= 0 ? new Index(value) : throw new ArgumentOutOfRangeException(nameof(value), "Index must not be negative.");
+        public static Index FromStart(int value) => value >= 0 ? new Index(value) : throw new IndexOutOfRangeException(nameof(value));
 
-        public static Index FromEnd(int value) => value >= 0 ? new Index(~value) : throw new ArgumentOutOfRangeException(nameof(value), "Index must not be negative.");
+        public static Index FromEnd(int value) => value >= 0 ? new Index(~value) : throw new IndexOutOfRangeException(nameof(value));
 
         public static implicit operator Index(int value) => FromStart(value);
 
@@ -380,6 +428,7 @@ namespace System
         public override string ToString() => IsFromEnd ? $"^{(uint)Value}" : ((uint)Value).ToString();
     }
 
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal readonly struct Range : IEquatable<Range>
     {
         public Index Start { get; }
@@ -423,6 +472,7 @@ namespace System
 
 namespace System.Runtime.CompilerServices
 {
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal static class RuntimeHelpers
     {
         /// <summary>Slices the specified array using the specified range.</summary>
@@ -448,6 +498,7 @@ namespace Microsoft.CodeAnalysis
 #pragma warning disable CS8603 // Possible null reference return
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting
 #pragma warning disable RS0030 // Banned API - Ensure is the guard implementation itself
+[global::Microsoft.CodeAnalysis.EmbeddedAttribute]
 internal static class Ensure
 {
     [return: global::System.Diagnostics.CodeAnalysis.NotNull]
@@ -525,6 +576,7 @@ namespace Polyfills
 {
     [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [global::System.Diagnostics.DebuggerNonUserCode]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal static class Guard
     {
         [return: global::System.Diagnostics.CodeAnalysis.NotNull]
@@ -569,6 +621,7 @@ namespace Polyfills
 
     [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [global::System.Diagnostics.DebuggerNonUserCode]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal static class Ensure
     {
         [return: global::System.Diagnostics.CodeAnalysis.NotNull]
@@ -661,6 +714,7 @@ namespace Polyfills
     // this type from the platform assembly. We need to provide it for backward compatibility.
     [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     [global::System.Diagnostics.DebuggerNonUserCode]
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal static class Polyfill
     {
 #if NETCOREAPP
@@ -689,12 +743,23 @@ namespace Polyfills
 
 #if !NET8_0_OR_GREATER
 
+[global::Microsoft.CodeAnalysis.EmbeddedAttribute]
 internal static class CancellationTokenSourceExtensions
 {
     public static global::System.Threading.Tasks.Task CancelAsync(this global::System.Threading.CancellationTokenSource cancellationTokenSource)
     {
-        cancellationTokenSource.Cancel();
-        return global::System.Threading.Tasks.Task.CompletedTask;
+        if (cancellationTokenSource.IsCancellationRequested)
+        {
+            return global::System.Threading.Tasks.Task.CompletedTask;
+        }
+
+        global::System.Threading.Tasks.Task task = global::System.Threading.Tasks.Task.Run(cancellationTokenSource.Cancel);
+
+        while (!cancellationTokenSource.IsCancellationRequested)
+        {
+        }
+
+        return task;
     }
 }
 
@@ -702,6 +767,7 @@ internal static class CancellationTokenSourceExtensions
 
 #if !NET5_0_OR_GREATER
 
+[global::Microsoft.CodeAnalysis.EmbeddedAttribute]
 internal static class PolyfillStringExtensions
 {
     public static bool Contains(this string s, char c) => s.IndexOf(c) >= 0;
@@ -745,20 +811,25 @@ internal static class PolyfillStringExtensions
     public static int GetHashCode(this string s, global::System.StringComparison comparisonType) =>
         comparisonType switch
         {
+            global::System.StringComparison.CurrentCulture => global::System.StringComparer.CurrentCulture.GetHashCode(s),
+            global::System.StringComparison.CurrentCultureIgnoreCase => global::System.StringComparer.CurrentCultureIgnoreCase.GetHashCode(s),
+            global::System.StringComparison.InvariantCulture => global::System.StringComparer.InvariantCulture.GetHashCode(s),
+            global::System.StringComparison.InvariantCultureIgnoreCase => global::System.StringComparer.InvariantCultureIgnoreCase.GetHashCode(s),
             global::System.StringComparison.Ordinal => global::System.StringComparer.Ordinal.GetHashCode(s),
             global::System.StringComparison.OrdinalIgnoreCase => global::System.StringComparer.OrdinalIgnoreCase.GetHashCode(s),
-            _ => global::System.StringComparer.OrdinalIgnoreCase.GetHashCode(s),
+            _ => throw new global::System.ArgumentOutOfRangeException(nameof(comparisonType), comparisonType, null),
         };
 }
 
+[global::Microsoft.CodeAnalysis.EmbeddedAttribute]
 internal static class PolyfillEnumExtensions
 {
     public static TEnum Parse<TEnum>(string value)
-        where TEnum : struct =>
+        where TEnum : struct, global::System.Enum =>
         (TEnum)global::System.Enum.Parse(typeof(TEnum), value);
 
     public static TEnum Parse<TEnum>(string value, bool ignoreCase)
-        where TEnum : struct =>
+        where TEnum : struct, global::System.Enum =>
         (TEnum)global::System.Enum.Parse(typeof(TEnum), value, ignoreCase);
 }
 
@@ -766,6 +837,7 @@ internal static class PolyfillEnumExtensions
 // ambiguity errors when projects reference each other with InternalsVisibleTo and both
 // compile this file. It is provided in Microsoft.Testing.Platform project's own source.
 
+[global::Microsoft.CodeAnalysis.EmbeddedAttribute]
 internal static class PolyfillDictionaryExtensions
 {
     public static bool TryAdd<TKey, TValue>(this global::System.Collections.Generic.Dictionary<TKey, TValue> dictionary, TKey key, TValue value)
@@ -781,6 +853,7 @@ internal static class PolyfillDictionaryExtensions
     }
 }
 
+[global::Microsoft.CodeAnalysis.EmbeddedAttribute]
 internal static class PolyfillStringBuilderExtensions
 {
     public static global::System.Text.StringBuilder AppendJoin(this global::System.Text.StringBuilder sb, string separator, global::System.Collections.Generic.IEnumerable<string> values)
@@ -821,6 +894,7 @@ internal static class PolyfillStringBuilderExtensions
         sb.AppendJoin(separator.ToString(), values);
 }
 
+[global::Microsoft.CodeAnalysis.EmbeddedAttribute]
 internal static class PolyfillTaskExtensions
 {
     public static async global::System.Threading.Tasks.Task WaitAsync(this global::System.Threading.Tasks.Task task, global::System.Threading.CancellationToken cancellationToken)
@@ -866,43 +940,44 @@ internal static class PolyfillTaskExtensions
     }
 }
 
+[global::Microsoft.CodeAnalysis.EmbeddedAttribute]
 internal static class PolyfillProcessExtensions
 {
-    public static global::System.Threading.Tasks.Task WaitForExitAsync(this global::System.Diagnostics.Process process, global::System.Threading.CancellationToken cancellationToken = default)
+    public static async global::System.Threading.Tasks.Task WaitForExitAsync(this global::System.Diagnostics.Process process, global::System.Threading.CancellationToken cancellationToken = default)
     {
-        if (process.HasExited)
+        if (!process.HasExited)
         {
-            return global::System.Threading.Tasks.Task.CompletedTask;
-        }
+            cancellationToken.ThrowIfCancellationRequested();
 
-        var tcs = new global::System.Threading.Tasks.TaskCompletionSource<bool>(global::System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
-        process.EnableRaisingEvents = true;
+            try
+            {
+                process.EnableRaisingEvents = true;
+            }
+            catch (global::System.InvalidOperationException) when (process.HasExited)
+            {
+                return;
+            }
 
-        global::System.EventHandler handler = (_, _) => tcs.TrySetResult(true);
-        process.Exited += handler;
+            var tcs = new global::System.Threading.Tasks.TaskCompletionSource<object?>(global::System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
 
-        global::System.Threading.CancellationTokenRegistration cancellationRegistration = default;
-        if (cancellationToken.CanBeCanceled)
-        {
-            cancellationRegistration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken));
-        }
+            global::System.EventHandler handler = (_, _) => tcs.TrySetResult(null);
+            process.Exited += handler;
 
-        if (process.HasExited)
-        {
-            process.Exited -= handler;
-            cancellationRegistration.Dispose();
-            return global::System.Threading.Tasks.Task.CompletedTask;
-        }
-
-        return tcs.Task.ContinueWith(
-            _ =>
+            try
+            {
+                if (!process.HasExited)
+                {
+                    using (cancellationToken.Register(state => ((global::System.Threading.Tasks.TaskCompletionSource<object?>)state!).TrySetCanceled(cancellationToken), tcs))
+                    {
+                        await tcs.Task.ConfigureAwait(false);
+                    }
+                }
+            }
+            finally
             {
                 process.Exited -= handler;
-                cancellationRegistration.Dispose();
-            },
-            global::System.Threading.CancellationToken.None,
-            global::System.Threading.Tasks.TaskContinuationOptions.ExecuteSynchronously,
-            global::System.Threading.Tasks.TaskScheduler.Default);
+            }
+        }
     }
 
     public static void Kill(this global::System.Diagnostics.Process process, bool entireProcessTree) =>
@@ -916,6 +991,7 @@ internal static class PolyfillProcessExtensions
 
 #if !NET5_0_OR_GREATER
 
+[global::Microsoft.CodeAnalysis.EmbeddedAttribute]
 internal static class OperatingSystem
 {
     public static bool IsBrowser() => false;
@@ -949,6 +1025,7 @@ internal static class OperatingSystem
 
 namespace System.Diagnostics
 {
+    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class UnreachableException : Exception
     {
         public UnreachableException()

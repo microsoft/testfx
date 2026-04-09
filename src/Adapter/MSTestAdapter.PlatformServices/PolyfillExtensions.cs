@@ -5,6 +5,7 @@
 // net462 and need APIs not available on .NET Framework.
 #if !NET5_0_OR_GREATER
 
+[global::Microsoft.CodeAnalysis.EmbeddedAttribute]
 internal static class AdapterPolyfillExtensions
 {
     public static bool Contains(this string s, char c) => s.IndexOf(c) >= 0;
@@ -12,6 +13,12 @@ internal static class AdapterPolyfillExtensions
     public static bool StartsWith(this string s, char c) => s.Length > 0 && s[0] == c;
 
     public static bool EndsWith(this string s, char c) => s.Length > 0 && s[s.Length - 1] == c;
+
+    public static void Deconstruct<TKey, TValue>(this System.Collections.Generic.KeyValuePair<TKey, TValue> pair, out TKey key, out TValue value)
+    {
+        key = pair.Key;
+        value = pair.Value;
+    }
 
     public static bool IsAssignableTo(this System.Type type, System.Type? targetType)
         => targetType?.IsAssignableFrom(type) ?? false;
@@ -60,12 +67,23 @@ internal static class AdapterPolyfillExtensions
 
 #if !NET8_0_OR_GREATER
 
+[global::Microsoft.CodeAnalysis.EmbeddedAttribute]
 internal static class AdapterCancellationTokenSourcePolyfill
 {
     public static System.Threading.Tasks.Task CancelAsync(this System.Threading.CancellationTokenSource cts)
     {
-        cts.Cancel();
-        return System.Threading.Tasks.Task.CompletedTask;
+        if (cts.IsCancellationRequested)
+        {
+            return System.Threading.Tasks.Task.CompletedTask;
+        }
+
+        var task = System.Threading.Tasks.Task.Run(cts.Cancel);
+
+        while (!cts.IsCancellationRequested)
+        {
+        }
+
+        return task;
     }
 }
 

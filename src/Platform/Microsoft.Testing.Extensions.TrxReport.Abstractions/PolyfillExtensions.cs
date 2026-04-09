@@ -3,6 +3,7 @@
 
 #if !NET5_0_OR_GREATER
 
+[global::Microsoft.CodeAnalysis.EmbeddedAttribute]
 internal static class TrxReportAbstractionsPolyfillExtensions
 {
     public static global::System.Text.StringBuilder AppendJoin(this global::System.Text.StringBuilder sb, string separator, global::System.Collections.Generic.IEnumerable<string> values)

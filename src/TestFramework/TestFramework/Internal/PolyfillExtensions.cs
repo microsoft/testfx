@@ -5,6 +5,7 @@
 // netstandard2.0, net462, and does not have IVT from Microsoft.Testing.Platform.
 #if !NET5_0_OR_GREATER
 
+[global::Microsoft.CodeAnalysis.EmbeddedAttribute]
 internal static class TestFrameworkPolyfillExtensions
 {
     public static bool Contains(this string s, char c) => s.IndexOf(c) >= 0;
