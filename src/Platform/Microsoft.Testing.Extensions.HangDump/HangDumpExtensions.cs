@@ -35,10 +35,9 @@ public static class HangDumpExtensions
         }
 
         var environment = new SystemEnvironment();
-        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(environment, new SystemProcessHandler());
         string namedPipeSuffix = Guid.NewGuid().ToString("N");
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), environment);
-        HangDumpConfiguration hangDumpConfiguration = new(testApplicationModuleInfo, pipeNameDescription, namedPipeSuffix);
+        var hangDumpConfiguration = new HangDumpConfiguration(pipeNameDescription, namedPipeSuffix);
 
         builder.TestHostControllers.AddProcessLifetimeHandler(serviceProvider
             => new HangDumpProcessLifetimeHandler(

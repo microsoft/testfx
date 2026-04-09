@@ -1,9 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
 
@@ -16,10 +14,10 @@ internal sealed class HangDumpConfiguration
     public const string PipeNameEnvironmentVariableNamePrefix = "TESTINGPLATFORM_HANGDUMP_PIPENAME";
     public const string NamedPipeNameSuffixEnvironmentVariable = "TESTINGPLATFORM_HANGDUMP_NAMEDPIPE_NAME_SUFFIX";
 
-    public HangDumpConfiguration(ITestApplicationModuleInfo testApplicationModuleInfo, PipeNameDescription pipeNameDescription, string namedPipeSuffix)
+    public HangDumpConfiguration(PipeNameDescription pipeNameDescription, string namedPipeSuffix)
     {
         PipeNameValue = pipeNameDescription.Name;
-        PipeNameKey = $"{PipeNameEnvironmentVariableNamePrefix}_{FNV_1aHashHelper.ComputeStringHash(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_{namedPipeSuffix}";
+        PipeNameKey = $"{PipeNameEnvironmentVariableNamePrefix}_{namedPipeSuffix}";
         NamedPipeSuffix = namedPipeSuffix;
     }
 
