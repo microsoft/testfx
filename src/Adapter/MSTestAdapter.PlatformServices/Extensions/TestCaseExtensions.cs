@@ -104,7 +104,7 @@ internal static class TestCaseExtensions
             testMethod.TestDataSourceIgnoreMessage = testCase.GetPropertyValue(EngineConstants.TestDataSourceIgnoreMessageProperty) as string;
         }
 
-        UnitTestElement testElement = new(testMethod)
+        var testElement = new UnitTestElement(testMethod)
         {
             TestCategory = testCase.GetPropertyValue(EngineConstants.TestCategoryProperty) as string[],
             Priority = testCase.GetPropertyValue(EngineConstants.PriorityProperty) as int?,

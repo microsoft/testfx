@@ -17,13 +17,21 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, ITestAp
 
     public void AddProvider(Func<ICommandLineOptionsProvider> commandLineProviderFactory)
     {
-        Ensure.NotNull(commandLineProviderFactory);
+        if (commandLineProviderFactory is null)
+        {
+            throw new ArgumentNullException(nameof(commandLineProviderFactory));
+        }
+
         _commandLineProviderFactory.Add(_ => commandLineProviderFactory());
     }
 
     public void AddProvider(Func<IServiceProvider, ICommandLineOptionsProvider> commandLineProviderFactory)
     {
-        Ensure.NotNull(commandLineProviderFactory);
+        if (commandLineProviderFactory is null)
+        {
+            throw new ArgumentNullException(nameof(commandLineProviderFactory));
+        }
+
         _commandLineProviderFactory.Add(commandLineProviderFactory);
     }
 

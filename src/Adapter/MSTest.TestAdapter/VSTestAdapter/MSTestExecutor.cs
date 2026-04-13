@@ -102,7 +102,11 @@ internal sealed class MSTestExecutor : ITestExecutor
             PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor.RunTests: Running tests from testcases.");
         }
 
-        Ensure.NotNull(frameworkHandle);
+        if (frameworkHandle is null)
+        {
+            throw new ArgumentNullException(nameof(frameworkHandle));
+        }
+
         Ensure.NotNullOrEmpty(tests);
 
         if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
@@ -120,7 +124,11 @@ internal sealed class MSTestExecutor : ITestExecutor
             PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor.RunTests: Running tests from sources.");
         }
 
-        Ensure.NotNull(frameworkHandle);
+        if (frameworkHandle is null)
+        {
+            throw new ArgumentNullException(nameof(frameworkHandle));
+        }
+
         Ensure.NotNullOrEmpty(sources);
 
         TestSourceHandler testSourceHandler = new();
