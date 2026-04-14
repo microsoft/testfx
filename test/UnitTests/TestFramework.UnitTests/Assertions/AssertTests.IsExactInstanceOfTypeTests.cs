@@ -59,6 +59,27 @@ public partial class AssertTests
             .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'null'. User-provided message. 'value' was NULL.");
     }
 
+    public void ExactInstanceOfType_WithExclamationMessage_ShouldFailWhenValueIsNull()
+    {
+        Action action = () => Assert.IsExactInstanceOfType(null, typeof(AssertTests), "User message!");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'null'. User message! 'value' was NULL.");
+    }
+
+    public void ExactInstanceOfType_WithQuestionMessage_ShouldFailWhenValueIsNull()
+    {
+        Action action = () => Assert.IsExactInstanceOfType(null, typeof(AssertTests), "Is this right?");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'null'. Is this right? 'value' was NULL.");
+    }
+
+    public void ExactInstanceOfType_WithTrailingWhitespaceMessage_ShouldFailWhenValueIsNull()
+    {
+        Action action = () => Assert.IsExactInstanceOfType(null, typeof(AssertTests), "User message   ");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'null'. User message. 'value' was NULL.");
+    }
+
     public void ExactInstanceOfType_WithStringMessage_ShouldFailWhenTypeIsNull()
     {
         Action action = () => Assert.IsExactInstanceOfType(5, null, "User-provided message");

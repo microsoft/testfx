@@ -344,18 +344,16 @@ public sealed partial class Assert
         else if (value is null)
         {
             // Ensure proper punctuation before adding the NULL message
-            string trimmedMessage = userMessage.TrimEnd();
-            if (trimmedMessage.Length > 0 && (trimmedMessage[^1] == '.' || trimmedMessage[^1] == '!' || trimmedMessage[^1] == '?'))
+            string trimmedMessage = (userMessage ?? string.Empty).TrimEnd();
+            if (trimmedMessage.Length == 0)
             {
-                finalMessage = $"{trimmedMessage} 'value' was NULL.";
-            }
-            else if (trimmedMessage.Length > 0)
-            {
-                finalMessage = $"{trimmedMessage}. 'value' was NULL.";
+                finalMessage = "'value' was NULL.";
             }
             else
             {
-                finalMessage = "'value' was NULL.";
+                char lastChar = trimmedMessage[trimmedMessage.Length - 1];
+                bool needsSeparator = lastChar is not '.' and not '!' and not '?';
+                finalMessage = $"{trimmedMessage}{(needsSeparator ? "." : string.Empty)} 'value' was NULL.";
             }
         }
 
