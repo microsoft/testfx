@@ -12,30 +12,6 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
 {
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task TestConfigJson_AndRunSettingsHasMstest_Throws(string tfm)
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPathWithMSTestRunSettings, TestAssetFixture.ProjectNameWithMSTestRunSettings, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
-
-        // Assert
-        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
-        testHostResult.AssertStandardErrorContains("Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.");
-    }
-
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task TestConfigJson_AndRunSettingsHasMstestv2_Throws(string tfm)
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPathWithMSTestV2RunSettings, TestAssetFixture.ProjectNameWithMSTestV2RunSettings, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
-
-        // Assert
-        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
-        testHostResult.AssertStandardErrorContains("Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.");
-    }
-
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TestConfigJson_AndRunSettingsWithoutMstest_OverrideRunConfigration(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
@@ -107,48 +83,15 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "ConfigurationSettings";
-        public const string ProjectNameWithMSTestRunSettings = "ConfigurationMSTestSettings";
-        public const string ProjectNameWithMSTestV2RunSettings = "ConfigurationMSTestV2Settings";
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
-        public string ProjectPathWithMSTestRunSettings => GetAssetPath(ProjectNameWithMSTestRunSettings);
-
-        public string ProjectPathWithMSTestV2RunSettings => GetAssetPath(ProjectNameWithMSTestV2RunSettings);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (ProjectName, ProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", ProjectName)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$AppendSettings$", string.Empty));
-
-            yield return (ProjectNameWithMSTestRunSettings, ProjectNameWithMSTestRunSettings,
-                SourceCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$ProjectName$", ProjectNameWithMSTestRunSettings)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                .PatchCodeWithReplace("$AppendSettings$", MSTestSettings));
-
-            yield return (ProjectNameWithMSTestV2RunSettings, ProjectNameWithMSTestV2RunSettings,
-                SourceCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$ProjectName$", ProjectNameWithMSTestV2RunSettings)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                .PatchCodeWithReplace("$AppendSettings$", MSTestV2Settings));
-        }
-
-        private const string MSTestSettings = """
-<mstest>
-</mstest>
-""";
-
-        private const string MSTestV2Settings = """
-<mstestv2>
-</mstestv2>
-""";
 
         private const string SourceCode = """
 #file $ProjectName$.csproj

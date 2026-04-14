@@ -5,6 +5,11 @@
     <NoWarn>$(NoWarn);NU1510</NoWarn>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Embedded helpers from Microsoft.Testing.Platform -->
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />
+  </ItemGroup>
+
   <!-- NuGet properties -->
   <PropertyGroup>
     <PackageDescription>

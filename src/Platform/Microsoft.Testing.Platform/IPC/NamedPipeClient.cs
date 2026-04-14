@@ -10,10 +10,6 @@ using System.IO.Pipes;
 using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 
-#if NET
-using Microsoft.Testing.Platform.Resources;
-#endif
-
 namespace Microsoft.Testing.Platform.IPC;
 
 [Embedded]
@@ -84,7 +80,13 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
             byte[] bytes = ArrayPool<byte>.Shared.Rent(sizeof(int));
             try
             {
-                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+                if (!BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage))
+                {
+                    // TryWriteBytes only fails if destination is small.
+                    // Here, we are writing an int, and we are sure that the destination (bytes) given by array pool is at least sizeof(int).
+                    throw ApplicationStateGuard.Unreachable();
+                }
+
                 await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
             }
             finally
@@ -100,7 +102,13 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
             bytes = ArrayPool<byte>.Shared.Rent(sizeof(int));
             try
             {
-                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, requestNamedPipeSerializer.Id), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+                if (!BitConverter.TryWriteBytes(bytes, requestNamedPipeSerializer.Id))
+                {
+                    // TryWriteBytes only fails if destination is small.
+                    // Here, we are writing an int, and we are sure that the destination (bytes) given by array pool is at least sizeof(int).
+                    throw ApplicationStateGuard.Unreachable();
+                }
+
                 await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
             }
             finally

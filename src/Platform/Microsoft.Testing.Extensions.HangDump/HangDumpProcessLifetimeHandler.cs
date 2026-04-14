@@ -113,7 +113,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
         _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        _singleConnectionNamedPipeServer.RegisterSerializer(new SessionEndSerializerRequestSerializer(), typeof(SessionEndSerializerRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new ActivitySignalRequestSerializer(), typeof(ActivitySignalRequest));
 
@@ -127,30 +126,12 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     private async Task<IResponse> CallbackAsync(IRequest request)
     {
-        if (request is SessionEndSerializerRequest)
-        {
-            await _logger.LogDebugAsync("Session end received by the test host").ConfigureAwait(false);
-
-#pragma warning disable IDE0031 // Null check can be simplified - analyzer doesn't consider multigating. But we can fix when https://github.com/dotnet/csharplang/issues/8631 is implemented.
-            if (_activityTimer is not null)
-            {
-#if NETCOREAPP
-                await _activityTimer.DisposeAsync().ConfigureAwait(false);
-#else
-                _activityTimer.Dispose();
-#endif
-            }
-
-            _namedPipeClient?.Dispose();
-            return VoidResponse.CachedInstance;
-        }
-        else if (request is ConsumerPipeNameRequest consumerPipeNameRequest)
+        if (request is ConsumerPipeNameRequest consumerPipeNameRequest)
         {
             await _logger.LogDebugAsync($"Consumer pipe name received '{consumerPipeNameRequest.PipeName}'").ConfigureAwait(false);
             _namedPipeClient = new NamedPipeClient(consumerPipeNameRequest.PipeName, _environment);
             _namedPipeClient.RegisterSerializer(new GetInProgressTestsResponseSerializer(), typeof(GetInProgressTestsResponse));
             _namedPipeClient.RegisterSerializer(new GetInProgressTestsRequestSerializer(), typeof(GetInProgressTestsRequest));
-            _namedPipeClient.RegisterSerializer(new ExitSignalActivityIndicatorTaskRequestSerializer(), typeof(ExitSignalActivityIndicatorTaskRequest));
             _namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
             _waitConsumerPipeName.Set();
             return VoidResponse.CachedInstance;
@@ -216,6 +197,15 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        if (_activityTimer is not null)
+        {
+#if NETCOREAPP
+            await _activityTimer.DisposeAsync().ConfigureAwait(false);
+#else
+            _activityTimer.Dispose();
+#endif
+        }
 
         if (!testHostProcessInformation.HasExitedGracefully)
         {
@@ -322,7 +312,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
         GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), cancellationToken).ConfigureAwait(false);
-        await _namedPipeClient.RequestReplyAsync<ExitSignalActivityIndicatorTaskRequest, VoidResponse>(new ExitSignalActivityIndicatorTaskRequest(), cancellationToken).ConfigureAwait(false);
         if (tests.Tests.Length > 0)
         {
             string hangTestsFileName = Path.Combine(_configuration.GetTestResultDirectory(), Path.ChangeExtension(Path.GetFileName(finalDumpFileName), ".log"));

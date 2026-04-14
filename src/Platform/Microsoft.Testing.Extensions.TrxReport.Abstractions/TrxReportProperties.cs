@@ -235,3 +235,35 @@ public sealed class TrxCategoriesProperty : IProperty
         return builder.ToString();
     }
 }
+
+/// <summary>
+/// A property that represents the value of <c>name</c> attribute on <c>UnitTest</c> XML elements under <c>TestDefinitions</c> XML element.
+/// When the property is missing, TestNode.DisplayName is used instead.
+/// This can cause issues when multiple test results are reported where different test results have different display names.
+/// </summary>
+public sealed class TrxTestDefinitionName : IProperty
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TrxTestDefinitionName"/> class.
+    /// </summary>
+    /// <param name="testDefinitionName">The name to use.</param>
+    public TrxTestDefinitionName(string testDefinitionName)
+        => TestDefinitionName = testDefinitionName;
+
+    /// <summary>
+    /// Gets the name to use.
+    /// </summary>
+    public string TestDefinitionName { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(TrxTestDefinitionName));
+        builder.Append(" { ");
+        builder.Append($"{nameof(TestDefinitionName)} = ");
+        builder.Append(TestDefinitionName);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+}

@@ -421,16 +421,6 @@
         <target state="translated">{0} tests en cours d’exécution</target>
         <note />
       </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">Aucun sérialiseur inscrit avec l’ID « {0} »</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">Aucun sérialiseur inscrit avec le type « {0} »</target>
-        <note />
-      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">Non disponible</target>
@@ -830,6 +820,25 @@ Les valeurs valides sont « Normal » et « Détaillé ». La valeur par dé
         <target state="translated">--output attend un seul paramètre avec la valeur « Normal » ou « Détaillé ».</target>
         <note />
       </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="translated">--show-stdout et --show-stderr attendent un seul paramètre avec la valeur « All », « Failed » ou « None ».</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Permet de déterminer quand afficher la sortie d’erreur capturée d’un test.
+Les valeurs valides sont « All », « Failed » et « None ». La valeur par défaut est « All ».</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Permet de déterminer quand afficher la sortie standard capturée d’un test.
+Les valeurs valides sont « All », « Failed » et « None ». La valeur par défaut est « All ».</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
         <target state="translated">Écrit les résultats des tests dans le terminal.</target>
@@ -975,11 +984,6 @@ Les valeurs valides sont « Normal » et « Détaillé ». La valeur par dé
         <target state="translated">Appel de télémétrie inattendu, la télémétrie est désactivée.</target>
         <note />
       </trans-unit>
-      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occurred during byte conversion</source>
-        <target state="translated">Une exception inattendue s’est produite lors de la conversion d’octets</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
@@ -1020,11 +1024,6 @@ Les valeurs valides sont « Normal » et « Détaillé ». La valeur par dé
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
         <target state="translated">Un fournisseur de client de messagerie instantanée a déjà été enregistré.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Les extensions IA fonctionnent uniquement avec des générateurs de type « Microsoft.Testing.Platform.Builder.TestApplicationBuilder »</target>
         <note />
       </trans-unit>
     </body>

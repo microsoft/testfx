@@ -44,8 +44,6 @@ public static class DotnetCli
         }
     }
 
-    public static bool DoNotRetry { get; set; }
-
     public static async Task<DotnetMuxerResult> RunAsync(
         string args,
         string nugetGlobalPackagesFolder,
@@ -53,7 +51,6 @@ public static class DotnetCli
         Dictionary<string, string?>? environmentVariables = null,
         bool failIfReturnValueIsNotZero = true,
         bool disableTelemetry = true,
-        int retryCount = 5,
         bool disableCodeCoverage = true,
         bool warnAsError = true,
         bool suppressPreviewDotNetMessage = true,
@@ -96,7 +93,7 @@ public static class DotnetCli
 
             environmentVariables["NUGET_PACKAGES"] = nugetGlobalPackagesFolder;
 
-            string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true" : string.Empty;
+            string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true" : string.Empty;
             extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
             if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
             {

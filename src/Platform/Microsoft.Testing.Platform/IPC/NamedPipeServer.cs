@@ -6,6 +6,7 @@ using System.IO.Pipes;
 using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+
 using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.IPC;
@@ -209,8 +210,14 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 // Write the message size
 #if NET
                 byte[] bytes = _sizeOfIntArray;
-                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
                 ApplicationStateGuard.Ensure(bytes.Length == sizeof(int));
+                if (!BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage))
+                {
+                    // TryWriteBytes only fails if the destination is too small.
+                    // Here, we are writing an int, and we already ensured that the length is correct before calling TryWriteBytes.
+                    throw ApplicationStateGuard.Unreachable();
+                }
+
                 await _messageBuffer.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
 #else
                 await _messageBuffer.WriteAsync(BitConverter.GetBytes(sizeOfTheWholeMessage), 0, sizeof(int), cancellationToken).ConfigureAwait(false);
@@ -219,7 +226,10 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 // Write the serializer id
 #if NET
                 bytes = _sizeOfIntArray;
-                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, responseNamedPipeSerializer.Id), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+                if (!BitConverter.TryWriteBytes(bytes, responseNamedPipeSerializer.Id))
+                {
+                    throw ApplicationStateGuard.Unreachable();
+                }
 
                 await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
 #else
@@ -334,7 +344,10 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             }
             catch (TimeoutException)
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage, nameof(InternalLoopAsync)));
+                throw new InvalidOperationException(string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
+                    nameof(InternalLoopAsync)));
             }
         }
 

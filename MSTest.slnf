@@ -4,6 +4,7 @@
     "projects": [
       "samples\\FSharpPlayground\\FSharpPlayground.fsproj",
       "samples\\FxExtensibility\\FxExtensibility.csproj",
+      "samples\\NUnitPlayground\\NUnitPlayground.csproj",
       "samples\\Playground\\Playground.csproj",
       "src\\Adapter\\MSTest.Engine\\MSTest.Engine.csproj",
       "src\\Adapter\\MSTest.TestAdapter\\MSTest.TestAdapter.csproj",

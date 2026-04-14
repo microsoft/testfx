@@ -4,10 +4,11 @@ on:
     types: [opened, ready_for_review]
 permissions:
   contents: write
+  pull-requests: write
 jobs:
   add_milestone:
     runs-on: ubuntu-latest
-    if: ${{ github.repository == 'microsoft/testfx' && github.event.pull_request.user.login == 'dotnet-bot' && (startsWith(github.event.pull_request.title, 'Localized file check-in') || startsWith(github.event.pull_request.title, 'Update dependencies from dotnet/') || startsWith(github.event.pull_request.title, 'Update dependencies from microsoft/')) }}
+    if: ${{ github.repository == 'microsoft/testfx' && (github.event.pull_request.user.login == 'dotnet-bot' || github.event.pull_request.user.login == 'dotnet-maestro[bot]') && (startsWith(github.event.pull_request.title, 'Localized file check-in') || startsWith(github.event.pull_request.title, '[main] Update dependencies from dotnet/') || startsWith(github.event.pull_request.title, '[main] Update dependencies from microsoft/') || startsWith(github.event.pull_request.title, '[main] Update dependencies from devdiv/')) }}
     steps:
     - name: Enable pull request auto-merge
       env:

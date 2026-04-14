@@ -7,7 +7,6 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public class ExecutionTests : AcceptanceTestBase<ExecutionTests.TestAssetFixture>
 {
     private const string AssetName = "ExecutionTests";
-    private const string AssetName2 = "ExecutionTests2";
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
@@ -161,18 +160,6 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         testHostResult.AssertOutputContains("Error: '--list-tests' and '--minimum-expected-tests' are incompatible options");
     }
 
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    [TestMethod]
-    public async Task Exec_Honor_Request_Complete(string tfm)
-    {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath2, AssetName2, tfm);
-        var stopwatch = Stopwatch.StartNew();
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        stopwatch.Stop();
-        Assert.AreEqual(ExitCodes.Success, testHostResult.ExitCode);
-        Assert.IsGreaterThan(3, stopwatch.Elapsed.TotalSeconds);
-    }
-
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string TestCode = """
@@ -296,95 +283,12 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 }
 """;
 
-        private const string TestCode2 = """
-#file ExecutionTests2.csproj
-<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <OutputType>Exe</OutputType>
-        <UseAppHost>true</UseAppHost>
-        <LangVersion>preview</LangVersion>
-    </PropertyGroup>
-    <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-    </ItemGroup>
-</Project>
-
-#file Program.cs
-using Microsoft.Testing.Platform;
-using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Capabilities;
-using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
-using System.Threading.Tasks;
-
-ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyTestFramework());
-using ITestApplication app = await builder.BuildAsync();
-return await app.RunAsync();
-
-internal class DummyTestFramework : ITestFramework, IDataProducer
-{
-    public string Uid => nameof(DummyTestFramework);
-
-    public string Version => string.Empty;
-
-    public string DisplayName => string.Empty;
-
-    public string Description => string.Empty;
-
-    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
-
-    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
-
-    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context) => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
-
-    public Task ExecuteRequestAsync(ExecuteRequestContext context)
-    {
-        Task.Run(async() =>
-        {
-            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
-                context.Request.Session.SessionUid,
-                new TestNode() { Uid = "0", DisplayName = "Test", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
-
-            Thread.Sleep(3_000);
-
-            context.Complete();
-        });
-
-        return Task.CompletedTask;
-    }
-
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-}
-
-internal class Capabilities : ITestFrameworkCapabilities
-{
-    IReadOnlyCollection<ITestFrameworkCapability> ICapabilities<ITestFrameworkCapability>.Capabilities => Array.Empty<ITestFrameworkCapability>();
-}
-
-""";
-
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public string TargetAssetPath2 => GetAssetPath(AssetName2);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 TestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-
-            yield return (AssetName2, AssetName2,
-                TestCode2
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
     }
 
     public TestContext TestContext { get; set; }

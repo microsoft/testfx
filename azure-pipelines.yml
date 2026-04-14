@@ -3,6 +3,10 @@ trigger:
     include:
     - main
     - rel/*
+  paths:
+    exclude:
+      - .github/**
+      - .gitignore
 
 # Branch(es) that trigger(s) build(s) on PR
 pr:
@@ -11,9 +15,11 @@ pr:
     - "*"
   paths:
     exclude:
-      - .github/*
+      - .github/**
+      - .gitignore
       - .devcontainer/*
       - docs/*
+      - .vscode/*
       - .markdownlint-cli2.jsonc
       - .markdownlintignore
       - CODE_OF_CONDUCT.md
@@ -21,6 +27,7 @@ pr:
       - README.md
       - SECURITY.md
       - azure-pipelines-official.yml
+      - azure-pipelines-codeql.yml
 
 parameters:
 # This option should be used with caution. This is useful for unblocking circular deps issue with testanywhere
@@ -47,11 +54,13 @@ stages:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
-      enablePublishBuildArtifacts: true
       enablePublishTestResults: true
       testResultsFormat: 'vstest'
-      enablePublishBuildAssets: true
-      enablePublishUsingPipelines: true
+      artifacts:
+        publish:
+          artifacts: true
+          logs: true
+          manifests: true
       enableTelemetry: true
       jobs:
       - job: Windows
@@ -107,13 +116,6 @@ stages:
           name: Build
           displayName: Build
 
-        - task: PublishBuildArtifacts@1
-          displayName: 'Publish NuGet packages'
-          inputs:
-            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping'
-            ArtifactName: '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)'
-          condition: always()
-
         - ${{ if eq(parameters.SkipTests, False) }}:
 
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
@@ -165,34 +167,6 @@ stages:
               ArtifactName: TestResults_Windows_$(_BuildConfig)
             condition: failed()
 
-      - job: WindowsSamples
-        timeoutInMinutes: 30
-        pool:
-          name: NetCore-Public
-          demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
-        strategy:
-          matrix:
-            Release:
-              _BuildConfig: Release
-            Debug:
-              _BuildConfig: Debug
-        steps:
-        - task: PowerShell@2
-          displayName: 'Install Windows SDK'
-          inputs:
-            targetType: filePath
-            filePath: './eng/install-windows-sdk.ps1'
-            failOnStderr: true
-            showWarnings: true
-
-        - task: PowerShell@2
-          displayName: 'Build Samples'
-          inputs:
-            targetType: filePath
-            filePath: './eng/build-samples.ps1'
-            arguments: '-Configuration $(_BuildConfig) -TreatWarningsAsErrors -BinaryLogDirectory "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)"'
-            failOnStderr: false
-
       - job: Linux
         timeoutInMinutes: 90
         pool:
@@ -213,13 +187,6 @@ stages:
             /p:NonWindowsBuild=true
             /p:FastAcceptanceTest=true
           displayName: Build
-
-        - task: PublishBuildArtifacts@1
-          displayName: 'Publish NuGet packages'
-          inputs:
-            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping'
-            ArtifactName: '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)'
-          condition: always()
 
         - ${{ if eq(parameters.SkipTests, False) }}:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
@@ -278,13 +245,6 @@ stages:
             /p:FastAcceptanceTest=true
           displayName: Build
 
-        - task: PublishBuildArtifacts@1
-          displayName: 'Publish NuGet packages'
-          inputs:
-            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping'
-            ArtifactName: '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)'
-          condition: always()
-
         - ${{ if eq(parameters.SkipTests, False) }}:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
@@ -319,3 +279,41 @@ stages:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
               ArtifactName: Integration_Tests_MacOS_Binlogs_$(_BuildConfig)
             condition: always()
+
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableMicrobuild: true
+      artifacts:
+        publish:
+          logs:
+            name: 'Logs_Build_$(Agent.JobName)_$(_BuildConfig)'
+          manifests: true
+      enableTelemetry: true
+      jobs:
+      - job: WindowsSamples
+        timeoutInMinutes: 30
+        pool:
+          name: NetCore-Public
+          demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
+        strategy:
+          matrix:
+            Release:
+              _BuildConfig: Release
+            Debug:
+              _BuildConfig: Debug
+        steps:
+        - task: PowerShell@2
+          displayName: 'Install Windows SDK'
+          inputs:
+            targetType: filePath
+            filePath: './eng/install-windows-sdk.ps1'
+            failOnStderr: true
+            showWarnings: true
+
+        - task: PowerShell@2
+          displayName: 'Build Samples'
+          inputs:
+            targetType: filePath
+            filePath: './eng/build-samples.ps1'
+            arguments: '-Configuration $(_BuildConfig) -TreatWarningsAsErrors -BinaryLogDirectory "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)"'
+            failOnStderr: false

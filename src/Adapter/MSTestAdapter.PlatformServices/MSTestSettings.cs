@@ -52,7 +52,6 @@ internal sealed class MSTestSettings
         MapInconclusiveToFailed = false;
         MapNotRunnableToFailed = true;
         TreatDiscoveryWarningsAsErrors = true;
-        TestSettingsFile = null;
         DisableParallelization = false;
         ConsiderEmptyDataSourceAsInconclusive = false;
         TestTimeout = 0;
@@ -91,11 +90,6 @@ internal sealed class MSTestSettings
     /// Gets a value indicating whether capture debug traces.
     /// </summary>
     public bool CaptureDebugTraces { get; private set; }
-
-    /// <summary>
-    /// Gets the path to settings file.
-    /// </summary>
-    public string? TestSettingsFile { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether an inconclusive result be mapped to failed test.
@@ -206,7 +200,6 @@ internal sealed class MSTestSettings
         CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
         CurrentSettings.TestCleanupTimeout = settings.TestCleanupTimeout;
         CurrentSettings.TestInitializeTimeout = settings.TestInitializeTimeout;
-        CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
         CurrentSettings.TestTimeout = settings.TestTimeout;
         CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
         CurrentSettings.LaunchDebuggerOnAssertionFailure = settings.LaunchDebuggerOnAssertionFailure;
@@ -258,7 +251,7 @@ internal sealed class MSTestSettings
 
         // This will contain default adapter settings
         var settings = new MSTestSettings();
-        var runConfigurationSettings = RunConfigurationSettings.PopulateSettings(context?.RunSettings?.SettingsXml);
+        var runConfigurationSettings = RunConfigurationSettings.GetSettings(context?.RunSettings?.SettingsXml);
 
         // We have runsettings, but we don't have testconfig.
         // Just use runsettings.
@@ -295,22 +288,6 @@ internal sealed class MSTestSettings
 
         CurrentSettings = settings;
         RunConfigurationSettings = runConfigurationSettings;
-    }
-
-    /// <summary>
-    /// Get the MSTestV1 adapter settings from the context.
-    /// </summary>
-    /// <param name="logger"> The logger for messages. </param>
-    /// <returns> Returns true if test settings is provided.. </returns>
-    public static bool IsLegacyScenario(IMessageLogger logger)
-    {
-        if (!StringEx.IsNullOrEmpty(CurrentSettings.TestSettingsFile))
-        {
-            logger.SendMessage(TestMessageLevel.Warning, Resource.LegacyScenariosNotSupportedWarning);
-            return true;
-        }
-
-        return false;
     }
 
     /// <summary>
@@ -388,7 +365,6 @@ internal sealed class MSTestSettings
         // (or)
         //
         // <MSTest>
-        //     <SettingsFile>..\..\Local.testsettings</SettingsFile>
         //     <CaptureTraceOutput>true</CaptureTraceOutput>
         // </MSTest>
         MSTestSettings settings = new();
@@ -461,22 +437,6 @@ internal sealed class MSTestSettings
                             else
                             {
                                 logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "TreatDiscoveryWarningsAsErrors"));
-                            }
-
-                            break;
-                        }
-
-                    case "SETTINGSFILE":
-                        {
-                            string fileName = reader.ReadInnerXml();
-
-                            if (!StringEx.IsNullOrEmpty(fileName))
-                            {
-                                settings.TestSettingsFile = fileName;
-                            }
-                            else
-                            {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, fileName, "SettingsFile"));
                             }
 
                             break;

@@ -35,13 +35,11 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
     private bool _exitSignalActivityIndicatorAsync;
     private NamedPipeServer? _singleConnectionNamedPipeServer;
     private PipeNameDescription? _pipeNameDescription;
-    private bool _sessionEndCalled;
 
     public HangDumpActivityIndicator(
         ICommandLineOptions commandLineOptions,
         IEnvironment environment,
         ITask task,
-        ITestApplicationModuleInfo testApplicationModuleInfo,
         ILoggerFactory loggerFactory,
         IClock clock)
     {
@@ -53,15 +51,10 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         _clock = clock;
         if (_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName))
         {
-            string namedPipeSuffix = _environment.GetEnvironmentVariable(HangDumpConfiguration.NamedPipeNameSuffixEnvironmentVariable)
-                ?? throw new InvalidOperationException($"Expected {HangDumpConfiguration.NamedPipeNameSuffixEnvironmentVariable} environment variable set.");
-            // @Marco: Why do we need to duplicate logic here instead of using HangDumpConfiguration.PipeNameKey?
-            string pipeNameEnvironmentVariable = $"{HangDumpConfiguration.PipeNameEnvironmentVariableNamePrefix}_{FNV_1aHashHelper.ComputeStringHash(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_{namedPipeSuffix}";
-            string namedPipeName = _environment.GetEnvironmentVariable(pipeNameEnvironmentVariable)
-                ?? throw new InvalidOperationException($"Expected {pipeNameEnvironmentVariable} environment variable set.");
+            string namedPipeName = _environment.GetEnvironmentVariable(HangDumpEnvironmentVariableProvider.PipeNameEnvironmentVariableName)
+                ?? throw new InvalidOperationException($"Expected {HangDumpEnvironmentVariableProvider.PipeNameEnvironmentVariableName} environment variable set.");
             _namedPipeClient = new NamedPipeClient(namedPipeName, _environment);
             _namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-            _namedPipeClient.RegisterSerializer(new SessionEndSerializerRequestSerializer(), typeof(SessionEndSerializerRequest));
             _namedPipeClient.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
             _namedPipeClient.RegisterSerializer(new ActivitySignalRequestSerializer(), typeof(ActivitySignalRequest));
         }
@@ -98,7 +91,6 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
             _singleConnectionNamedPipeServer.RegisterSerializer(new GetInProgressTestsResponseSerializer(), typeof(GetInProgressTestsResponse));
             _singleConnectionNamedPipeServer.RegisterSerializer(new GetInProgressTestsRequestSerializer(), typeof(GetInProgressTestsRequest));
-            _singleConnectionNamedPipeServer.RegisterSerializer(new ExitSignalActivityIndicatorTaskRequestSerializer(), typeof(ExitSignalActivityIndicatorTaskRequest));
             _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
             await _logger.LogTraceAsync($"Send consumer pipe name to the test controller '{_pipeNameDescription.Name}'").ConfigureAwait(false);
             await _namedPipeClient.RequestReplyAsync<ConsumerPipeNameRequest, VoidResponse>(new ConsumerPipeNameRequest(_pipeNameDescription.Name), cancellationToken)
@@ -119,13 +111,8 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         if (request is GetInProgressTestsRequest)
         {
             await _logger.LogDebugAsync($"Received '{nameof(GetInProgressTestsRequest)}'").ConfigureAwait(false);
-            return new GetInProgressTestsResponse([.. _testsCurrentExecutionState.Select(x => (x.Value.Name, (int)_clock.UtcNow.Subtract(x.Value.StartTime).TotalSeconds))]);
-        }
-        else if (request is ExitSignalActivityIndicatorTaskRequest)
-        {
-            await _logger.LogDebugAsync($"Received '{nameof(ExitSignalActivityIndicatorTaskRequest)}'").ConfigureAwait(false);
             _exitSignalActivityIndicatorAsync = true;
-            return VoidResponse.CachedInstance;
+            return new GetInProgressTestsResponse([.. _testsCurrentExecutionState.Select(x => (x.Value.Name, (int)_clock.UtcNow.Subtract(x.Value.StartTime).TotalSeconds))]);
         }
         else
         {
@@ -183,51 +170,17 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         }
     }
 
-    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
-    {
-        CancellationToken cancellationToken = testSessionContext.CancellationToken;
-        ApplicationStateGuard.Ensure(_namedPipeClient is not null);
-
-        if (!await IsEnabledAsync().ConfigureAwait(false))
-        {
-            return;
-        }
-
-        await _namedPipeClient.RequestReplyAsync<SessionEndSerializerRequest, VoidResponse>(new SessionEndSerializerRequest(), cancellationToken)
-                .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
-
-        await _logger.LogDebugAsync("Signal for test session end'").ConfigureAwait(false);
-        _exitSignalActivityIndicatorAsync = true;
-
-        await _logger.LogTraceAsync("Signaled by process for it's exit").ConfigureAwait(false);
-        _sessionEndCalled = true;
-    }
+    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
+        => Task.CompletedTask;
 
 #if NETCOREAPP
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         _namedPipeClient?.Dispose();
-
-        // If the OnTestSessionFinishingAsync is not called means that something unhandled happened
-        // and we didn't correctly coordinate the shutdown with the HangDumpProcessLifetimeHandler.
-        // If we go do wait for the server we will hang.
-        if (_sessionEndCalled)
-        {
-            await DisposeHelper.DisposeAsync(_singleConnectionNamedPipeServer).ConfigureAwait(false);
-        }
+        return ValueTask.CompletedTask;
     }
 #endif
 
     public void Dispose()
-    {
-        _namedPipeClient?.Dispose();
-
-        // If the OnTestSessionFinishingAsync is not called means that something unhandled happened
-        // and we didn't correctly coordinate the shutdown with the HangDumpProcessLifetimeHandler.
-        // If we go do wait for the server we will hang.
-        if (_sessionEndCalled)
-        {
-            _singleConnectionNamedPipeServer?.Dispose();
-        }
-    }
+        => _namedPipeClient?.Dispose();
 }

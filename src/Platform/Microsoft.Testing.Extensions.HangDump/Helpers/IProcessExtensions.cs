@@ -118,17 +118,9 @@ internal static class IProcessExtensions
         ps.BeginErrorReadLine();
 
         int timeout = 5_000;
-#if !NETSTANDARD2_0
         // This will read the output streams till the end.
-        await ps.WaitForExitAsync(new CancellationTokenSource(timeout).Token).ConfigureAwait(false);
-#else
-        // This won't read the streams till the end. If we timeout, we need to use the
-        // wait without timeout, but that can hang, so we offload that into a task so we can abandon it and continue.
-        if (!ps.WaitForExit(timeout))
-        {
-            await Task.Run(ps.WaitForExit, new CancellationTokenSource(timeout).Token).ConfigureAwait(false);
-        }
-#endif
+        using var cts = new CancellationTokenSource(timeout);
+        await ps.WaitForExitAsync(cts.Token).ConfigureAwait(false);
 
         string o = output.ToString();
         string e = err.ToString();
