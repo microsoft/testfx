@@ -537,9 +537,22 @@ public class TrxTests
         _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
         _ = _environmentMock.SetupGet(_ => _.MachineName).Returns("MachineName");
         _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns("TestAppPath");
-        var trxReportEngine = new TrxReportEngine(_fileSystem.Object, _testApplicationModuleInfoMock.Object, _environmentMock.Object, _commandLineOptionsMock.Object,
-            _configurationMock.Object, _clockMock.Object,
-            _artifactsByExtension, _testFrameworkMock.Object, DateTime.UtcNow, 0, CancellationToken.None);
+        var trxReportEngine = new TrxReportEngine(
+            _fileSystem.Object,
+            _testApplicationModuleInfoMock.Object,
+            _environmentMock.Object,
+            _commandLineOptionsMock.Object,
+            _configurationMock.Object,
+            _clockMock.Object,
+            _artifactsByExtension,
+            _testFrameworkMock.Object,
+            DateTime.UtcNow,
+#if NETCOREAPP
+            0,
+            CancellationToken.None);
+#else
+            0);
+#endif
 
         // Act
         _ = await trxReportEngine.GenerateReportAsync([]);
@@ -693,7 +706,6 @@ public class TrxTests
     private TrxReportEngine GenerateTrxReportEngine(MemoryFileStream memoryStream, bool isExplicitFileName = false)
     {
         DateTime testStartTime = DateTime.Now;
-        CancellationToken cancellationToken = CancellationToken.None;
 
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
         _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), isExplicitFileName ? FileMode.Create : FileMode.CreateNew))
@@ -703,9 +715,22 @@ public class TrxTests
         _ = _environmentMock.SetupGet(_ => _.MachineName).Returns("MachineName");
         _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns("TestAppPath");
 
-        return new TrxReportEngine(_fileSystem.Object, _testApplicationModuleInfoMock.Object, _environmentMock.Object, _commandLineOptionsMock.Object,
-                   _configurationMock.Object, _clockMock.Object,
-                   _artifactsByExtension, _testFrameworkMock.Object, testStartTime, 0, cancellationToken);
+        return new TrxReportEngine(
+            _fileSystem.Object,
+            _testApplicationModuleInfoMock.Object,
+            _environmentMock.Object,
+            _commandLineOptionsMock.Object,
+            _configurationMock.Object,
+            _clockMock.Object,
+            _artifactsByExtension,
+            _testFrameworkMock.Object,
+            testStartTime,
+#if NETCOREAPP
+            0,
+            CancellationToken.None);
+#else
+            0);
+#endif
     }
 
     private sealed class MemoryFileStream : IFileStream

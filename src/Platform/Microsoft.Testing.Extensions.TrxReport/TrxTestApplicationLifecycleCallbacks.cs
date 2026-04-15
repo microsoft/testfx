@@ -14,7 +14,9 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicationLifetime, IDisposable
 {
+#if NETCOREAPP
     [UnsupportedOSPlatformGuard("BROWSER")]
+#endif
     private readonly bool _isEnabled;
 
     private readonly IEnvironment _environment;

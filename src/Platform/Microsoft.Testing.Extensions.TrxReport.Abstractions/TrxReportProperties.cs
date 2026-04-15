@@ -198,7 +198,16 @@ public sealed class TrxMessagesProperty : IProperty
         builder.Append(" { ");
 
         builder.Append($"{nameof(Messages)} = [");
-        builder.AppendJoin(", ", Messages.Select(x => x.ToString()));
+
+        for (int i = 0; i < Messages.Length; i++)
+        {
+            builder.Append(Messages[i].ToString());
+            if (i < Messages.Length - 1)
+            {
+                builder.Append(", ");
+            }
+        }
+
         builder.Append(']');
         builder.Append(" }");
         return builder.ToString();
@@ -229,7 +238,16 @@ public sealed class TrxCategoriesProperty : IProperty
         builder.Append(nameof(TrxCategoriesProperty));
         builder.Append(" { ");
         builder.Append($"{nameof(Categories)} = [");
-        builder.AppendJoin(", ", Categories);
+
+        for (int i = 0; i < Categories.Length; i++)
+        {
+            builder.Append(Categories[i]);
+            if (i < Categories.Length - 1)
+            {
+                builder.Append(", ");
+            }
+        }
+
         builder.Append(']');
         builder.Append(" }");
         return builder.ToString();

@@ -23,9 +23,11 @@ using Microsoft.Diagnostics.NETCore.Client;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
 
+#if NETCOREAPP
 [UnsupportedOSPlatform("browser")]
 [UnsupportedOSPlatform("ios")]
 [UnsupportedOSPlatform("tvos")]
+#endif
 internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeHandler, IOutputDeviceDataProducer, IDataProducer,
 #if NETCOREAPP
     IAsyncDisposable,
@@ -218,9 +220,11 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
     }
 
+#if NETCOREAPP
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
+#endif
     private async Task TakeDumpOfTreeAsync(CancellationToken cancellationToken)
     {
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);

@@ -14,7 +14,9 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
+#if NETCOREAPP
 [UnsupportedOSPlatform("browser")]
+#endif
 internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHandler, IAsyncInitializableExtension
 {
     private readonly IServiceProvider _serviceProvider;

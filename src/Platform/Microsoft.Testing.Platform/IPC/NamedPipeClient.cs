@@ -13,7 +13,9 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.IPC;
 
 [Embedded]
+#if NETCOREAPP
 [UnsupportedOSPlatform("browser")]
+#endif
 internal sealed class NamedPipeClient : NamedPipeBase, IClient
 {
     private const PipeOptions CurrentUserPipeOptions = PipeOptions.None
@@ -39,7 +41,11 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
 
     public NamedPipeClient(string name, IEnvironment environment)
     {
-        Ensure.NotNull(name);
+        if (name is null)
+        {
+            throw new ArgumentNullException(nameof(name));
+        }
+
         _namedPipeClientStream = new(".", name, PipeDirection.InOut, CurrentUserPipeOptions);
         PipeName = name;
         _environment = environment;

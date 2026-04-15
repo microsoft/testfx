@@ -16,7 +16,9 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
 
+#if NETCOREAPP
 [UnsupportedOSPlatform("browser")]
+#endif
 internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLifetimeHandler,
 #if NETCOREAPP
     IAsyncDisposable,

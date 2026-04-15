@@ -48,7 +48,9 @@ public static class TrxReportExtensions
                 serviceProvider.GetService<TrxTestApplicationLifecycleCallbacks>(),
                 serviceProvider.GetLoggerFactory().CreateLogger<TrxReportGenerator>()));
 
+#if NETCOREAPP
         if (!OperatingSystem.IsBrowser())
+#endif
         {
             NonBrowserRegistrations(builder);
         }
@@ -68,7 +70,9 @@ public static class TrxReportExtensions
             serviceProvider.GetRequiredService<ITask>()));
     }
 
+#if NETCOREAPP
     [UnsupportedOSPlatform("browser")]
+#endif
     private static void NonBrowserRegistrations(ITestApplicationBuilder builder)
     {
         builder.TestHost.AddTestHostApplicationLifetime(serviceProvider =>

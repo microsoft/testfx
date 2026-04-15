@@ -17,13 +17,17 @@ public static class MSBuildExtensions
     /// Adds MSBuild support to the test application builder.
     /// </summary>
     /// <param name="builder">The test application builder.</param>
+#if NETCOREAPP
     [UnsupportedOSPlatform("browser")]
+#endif
     public static void AddMSBuild(this ITestApplicationBuilder builder)
     {
+#if NETCOREAPP
         if (OperatingSystem.IsBrowser())
         {
             throw new PlatformNotSupportedException("MSBuild extension is not supported in browser environments.");
         }
+#endif
 
         builder.CommandLine.AddProvider(() => new MSBuildCommandLineProvider());
         builder.TestHost.AddTestHostApplicationLifetime(

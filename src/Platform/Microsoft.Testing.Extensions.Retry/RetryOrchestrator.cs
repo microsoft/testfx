@@ -13,7 +13,9 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
+#if NETCOREAPP
 [UnsupportedOSPlatform("browser")]
+#endif
 internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutputDeviceDataProducer
 {
     private readonly IServiceProvider _serviceProvider;

@@ -6,7 +6,9 @@ using Microsoft.Win32;
 
 namespace Microsoft.Testing.Platform.MSBuild.Tasks;
 
+#if NETCOREAPP
 [UnsupportedOSPlatform("browser")]
+#endif
 internal sealed class DotnetMuxerLocator
 {
     // Mach-O magic numbers from https://en.wikipedia.org/wiki/Mach-O

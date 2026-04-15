@@ -51,25 +51,25 @@ internal static partial class TimeSpanParser
             return true;
         }
 
-        if (suffix.StartsWith('s'))
+        if (suffix.StartsWith("s", StringComparison.Ordinal))
         {
             result = TimeSpan.FromSeconds(number);
             return true;
         }
 
-        if (suffix.StartsWith('m'))
+        if (suffix.StartsWith("m", StringComparison.Ordinal))
         {
             result = TimeSpan.FromMinutes(number);
             return true;
         }
 
-        if (suffix.StartsWith('h'))
+        if (suffix.StartsWith("h", StringComparison.Ordinal))
         {
             result = TimeSpan.FromHours(number);
             return true;
         }
 
-        if (suffix.StartsWith('d'))
+        if (suffix.StartsWith("d", StringComparison.Ordinal))
         {
             result = TimeSpan.FromDays(number);
             return true;
