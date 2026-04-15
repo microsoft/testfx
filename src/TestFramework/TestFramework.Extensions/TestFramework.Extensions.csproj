@@ -35,6 +35,8 @@
     <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
     <AssemblyName>MSTest.TestFramework.Extensions</AssemblyName>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+
+    <DefineConstants>$(DefineConstants);EXCLUDE_RANGE_INDEX_POLYFILL</DefineConstants>
   </PropertyGroup>
 
   <!-- WinUI specific properties -->

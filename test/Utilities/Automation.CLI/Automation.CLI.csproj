@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>$(NetFrameworkMinimum)</TargetFramework>
+    <DefineConstants>$(DefineConstants);EXCLUDE_RANGE_INDEX_POLYFILL</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
