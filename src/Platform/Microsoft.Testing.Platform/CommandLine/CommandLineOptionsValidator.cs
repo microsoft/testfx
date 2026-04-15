@@ -159,7 +159,7 @@ internal static class CommandLineOptionsValidator
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider)
     {
         // Use a dictionary to track option names and their providers
-        Dictionary<string, List<ICommandLineOptionsProvider>> optionNameToProviders = new();
+        var optionNameToProviders = new Dictionary<string, List<ICommandLineOptionsProvider>>();
         foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> kvp in extensionOptionsByProvider)
         {
             ICommandLineOptionsProvider provider = kvp.Key;
