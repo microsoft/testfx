@@ -2,6 +2,8 @@
 
 #nullable enable
 
+#pragma warning disable
+
 #if !NETCOREAPP
 using Microsoft.CodeAnalysis;
 
