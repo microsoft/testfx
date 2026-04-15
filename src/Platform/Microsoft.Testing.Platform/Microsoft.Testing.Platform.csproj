@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>$(SupportedNetFrameworks);netstandard2.0</TargetFrameworks>
@@ -84,6 +84,10 @@ This package provides the core platform and the .NET implementation of the proto
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Polyfills" />
   </ItemGroup>
 
   <!-- NuGet package layout -->

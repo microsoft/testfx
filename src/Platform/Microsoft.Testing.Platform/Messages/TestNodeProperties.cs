@@ -681,7 +681,16 @@ public sealed class TimingProperty : IProperty, IEquatable<TimingProperty>
         builder.Append($"{nameof(GlobalTiming)} = ");
         builder.Append(GlobalTiming);
         builder.Append($", {nameof(StepTimings)} = [");
-        builder.AppendJoin(", ", StepTimings.Select(x => x.ToString()));
+
+        for (int i = 0; i < StepTimings.Length; i++)
+        {
+            builder.Append(StepTimings[i].ToString());
+            if (i < StepTimings.Length - 1)
+            {
+                builder.Append(", ");
+            }
+        }
+
         builder.Append(']');
         builder.Append(" }");
         return builder.ToString();
@@ -1013,7 +1022,16 @@ public sealed class TestMethodIdentifierProperty : IProperty, IEquatable<TestMet
         builder.Append($", {nameof(MethodArity)} = ");
         builder.Append(MethodArity);
         builder.Append($", {nameof(ParameterTypeFullNames)} = [");
-        builder.AppendJoin(", ", ParameterTypeFullNames);
+
+        for (int i = 0; i < ParameterTypeFullNames.Length; i++)
+        {
+            builder.Append(ParameterTypeFullNames[i]);
+            if (i < ParameterTypeFullNames.Length - 1)
+            {
+                builder.Append(", ");
+            }
+        }
+
         builder.Append($"], {nameof(ReturnTypeFullName)} = ");
         builder.Append(ReturnTypeFullName);
         builder.Append(" }");

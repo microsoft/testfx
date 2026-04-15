@@ -7,6 +7,10 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Services;
 
+#if !NETCOREAPP
+using Polyfills;
+#endif
+
 namespace Microsoft.Testing.Extensions;
 
 /// <summary>

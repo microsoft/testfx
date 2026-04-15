@@ -3,6 +3,10 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 
+#if !NETCOREAPP
+using Polyfills;
+#endif
+
 namespace Microsoft.Testing.Extensions.TrxReport;
 
 internal static class TrxModeHelpers

@@ -39,7 +39,7 @@ internal static class Ensure
         }
     }
 
-    public static void NotNullOrWhiteSpace([NotNull] string value, [CallerArgumentExpression(nameof(value))] string name = "")
+    public static string NotNullOrWhiteSpace([NotNull] string value, [CallerArgumentExpression(nameof(value))] string name = "")
     {
         if (value is null)
         {
@@ -48,6 +48,16 @@ internal static class Ensure
         else if (string.IsNullOrWhiteSpace(value))
         {
             throw new ArgumentException("Argument cannot be whitespace.", name);
+        }
+
+        return value;
+    }
+
+    public static void NotEmpty(string value, [CallerArgumentExpression(nameof(value))] string name = "")
+    {
+        if (value?.Length == 0)
+        {
+            throw new ArgumentException("Argument cannot be empty.", name);
         }
     }
 }

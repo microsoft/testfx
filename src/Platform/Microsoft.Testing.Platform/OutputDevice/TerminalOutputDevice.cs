@@ -195,9 +195,10 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             : OutputShowMode.All;
 
     private static string GetShortArchitecture(string runtimeIdentifier)
-        => runtimeIdentifier.Contains(Dash)
-            ? runtimeIdentifier.Split(Dash, 2)[1]
-            : runtimeIdentifier;
+    {
+        int firstIndexOfDash = runtimeIdentifier.IndexOf(Dash);
+        return firstIndexOfDash < 0 ? runtimeIdentifier : runtimeIdentifier.Substring(firstIndexOfDash + 1);
+    }
 
     public Type[] DataTypesConsumed { get; } =
     [
