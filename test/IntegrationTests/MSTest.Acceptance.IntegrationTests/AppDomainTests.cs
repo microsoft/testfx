@@ -125,6 +125,10 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
     <UseVSTest>true</UseVSTest>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageDownload Include="Microsoft.TestPlatform" Version="$MicrosoftNETTestSdkVersion$" />
+  </ItemGroup>
+
 </Project>
 
 #file global.json
@@ -177,6 +181,7 @@ namespace AppDomainTests
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 SingleTestSourceCode
                 .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetFramework[0])
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion));
     }
 }
