@@ -13,6 +13,7 @@
     <!-- Without changing PackageId here, NuGet will view this as a circular reference -->
     <PackageId>NotPublishable</PackageId>
     <IsPackable>false</IsPackable>
+    <DefineConstants>$(DefineConstants);EXCLUDE_RANGE_INDEX_POLYFILL</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

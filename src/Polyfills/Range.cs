@@ -2,7 +2,7 @@
 
 #pragma warning disable
 
-#if !NETCOREAPP
+#if !NETCOREAPP && !EXCLUDE_RANGE_INDEX_POLYFILL
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
