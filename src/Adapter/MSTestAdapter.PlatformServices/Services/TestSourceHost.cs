@@ -199,11 +199,7 @@ internal class TestSourceHost : ITestSourceHost
     /// </param>
     /// <returns>  An instance of the type created in the host. </returns>
     /// <remarks> If a type is to be created in isolation then it needs to be a MarshalByRefObject. </remarks>
-    public object? CreateInstanceForType(
-#if NETCOREAPP
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-#endif
-        Type type, object?[]? args) =>
+    public object? CreateInstanceForType([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type, object?[]? args) =>
 #if NETFRAMEWORK
         // Honor DisableAppDomain setting if it is present in runsettings
         _isAppDomainCreationDisabled
