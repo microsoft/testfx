@@ -100,7 +100,10 @@ internal class XmlUtilities
         string fromVersion,
         string toVersion)
     {
-        Ensure.NotNull(assemblyName);
+        if (assemblyName is null)
+        {
+            throw new ArgumentNullException(nameof(assemblyName));
+        }
 
         // Convert the public key token into a string.
         StringBuilder? publicKeyTokenString = null;

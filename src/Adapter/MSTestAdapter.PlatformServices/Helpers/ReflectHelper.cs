@@ -31,7 +31,10 @@ internal class ReflectHelper : MarshalByRefObject
     public virtual /* for testing */ bool IsAttributeDefined<TAttribute>(MemberInfo memberInfo)
         where TAttribute : Attribute
     {
-        Ensure.NotNull(memberInfo);
+        if (memberInfo is null)
+        {
+            throw new ArgumentNullException(nameof(memberInfo));
+        }
 
         // Get all attributes on the member.
         Attribute[] attributes = GetCustomAttributesCached(memberInfo);
@@ -130,11 +133,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="returnType">The return type to match.</param>
     /// <returns>True if there is a match.</returns>
     internal static bool MatchReturnType(MethodInfo method, Type returnType)
-    {
-        Ensure.NotNull(method);
-        Ensure.NotNull(returnType);
-        return method.ReturnType.Equals(returnType);
-    }
+        => method.ReturnType.Equals(returnType);
 
     /// <summary>
     /// Get categories applied to the test method.

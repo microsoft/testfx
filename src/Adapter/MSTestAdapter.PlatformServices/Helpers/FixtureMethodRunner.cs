@@ -176,7 +176,9 @@ internal static class FixtureMethodRunner
         }
     }
 
+#if NETCOREAPP
     [SupportedOSPlatform("windows")]
+#endif
     private static TestFailedException? RunWithTimeoutAndCancellationWithSTAThread(
         Func<SynchronizationContextPreservingTask> action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
         string methodCanceledMessageFormat, string methodTimedOutMessageFormat)

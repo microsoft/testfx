@@ -36,4 +36,16 @@ internal static class Ensure
             throw new ArgumentException(ArgumentCannotBeEmptyMsg, name);
         }
     }
+
+    public static void NotNullOrWhiteSpace([NotNull] string value, [CallerArgumentExpression(nameof(value))] string name = "")
+    {
+        if (value is null)
+        {
+            throw new ArgumentNullException(name);
+        }
+        else if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new ArgumentException("Argument cannot be whitespace.", name);
+        }
+    }
 }

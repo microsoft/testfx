@@ -101,8 +101,15 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// <returns> The <see cref="TestResult"/>. </returns>
     internal async Task<TestResult[]> RunSingleTestAsync(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
     {
-        Ensure.NotNull(unitTestElement);
-        Ensure.NotNull(testContextProperties);
+        if (unitTestElement is null)
+        {
+            throw new ArgumentNullException(nameof(unitTestElement));
+        }
+
+        if (testContextProperties is null)
+        {
+            throw new ArgumentNullException(nameof(testContextProperties));
+        }
 
         TestMethod testMethod = unitTestElement.TestMethod;
         ITestContext? testContextForTestExecution = null;

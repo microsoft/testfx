@@ -23,5 +23,9 @@ internal interface ITestSourceHost : IDisposable
     /// </param>
     /// <returns> An instance of the type created in the host. </returns>
     /// <remarks> If a type is to be created in isolation then it needs to be a MarshalByRefObject. </remarks>
-    object? CreateInstanceForType([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type, object?[]? args);
+    object? CreateInstanceForType(
+#if NETCOREAPP
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+#endif
+        Type type, object?[]? args);
 }

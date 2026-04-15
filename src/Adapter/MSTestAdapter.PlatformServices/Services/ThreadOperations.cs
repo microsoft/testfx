@@ -45,7 +45,9 @@ internal sealed class ThreadOperations : IThreadOperations
     }
 #endif
 
+#if NETCOREAPP
     [SupportedOSPlatform("windows")]
+#endif
     private static bool ExecuteWithCustomThread(Action action, int timeout, CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)

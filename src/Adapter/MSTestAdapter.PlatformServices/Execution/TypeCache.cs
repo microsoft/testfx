@@ -134,26 +134,41 @@ internal sealed class TypeCache : MarshalByRefObject
         DebugEx.Assert(testMethod != null, "test method is null");
 
         string typeName = testMethod.FullClassName;
+
         // Using GetOrAdd to ensure we calculate only once when this is called by different threads in parallel.
         // Using a static lambda to ensure we don't capture.
-        return _classInfoCache.GetOrAdd(typeName, static (typeName, tuple) =>
+#if NETCOREAPP
+        return _classInfoCache.GetOrAdd(typeName, CreateTestClassInfo, (this, testMethod));
+#else
+        // On .NET Framework, we don't have the GetOrAdd overload that prevents capturing lambdas.
+        // So, we first try to get the value from the cache.
+        if (_classInfoCache.TryGetValue(typeName, out TestClassInfo? cachedClassInfo))
         {
-            TestMethod testMethod = tuple.testMethod;
-            TypeCache @this = tuple.Item1;
+            return cachedClassInfo;
+        }
 
-            // Load the class type
-            Type? type = LoadType(typeName, testMethod.AssemblyName);
+        // If value doesn't already exist in the cache, we fallback to the GetOrAdd that allocates.
+        return _classInfoCache.GetOrAdd(typeName, typeName => CreateTestClassInfo(typeName, (this, testMethod)));
+#endif
+    }
 
-            if (type == null)
-            {
-                // This means the class containing the test method could not be found.
-                // Return null so we return a not found result.
-                return null;
-            }
+    private static TestClassInfo? CreateTestClassInfo(string typeName, (TypeCache Cache, TestMethod Method) tuple)
+    {
+        TestMethod testMethod = tuple.Method;
+        TypeCache @this = tuple.Cache;
 
-            // Get the classInfo
-            return @this.CreateClassInfo(type);
-        }, (this, testMethod));
+        // Load the class type
+        Type? type = LoadType(typeName, testMethod.AssemblyName);
+
+        if (type == null)
+        {
+            // This means the class containing the test method could not be found.
+            // Return null so we return a not found result.
+            return null;
+        }
+
+        // Get the classInfo
+        return @this.CreateClassInfo(type);
     }
 
     /// <summary>
@@ -321,80 +336,94 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <param name="assembly"> The assembly to get its info. </param>
     /// <returns> The <see cref="TestAssemblyInfo"/> instance. </returns>
     private TestAssemblyInfo GetAssemblyInfo(Assembly assembly)
+    {
+#if NETCOREAPP
         // Using GetOrAdd to ensure we calculate only once when this is called by different threads in parallel.
         // Using a static lambda to ensure we don't capture.
-        => _testAssemblyInfoCache.GetOrAdd(assembly, static (assembly, @this) =>
+        return _testAssemblyInfoCache.GetOrAdd(assembly, CreateTestAssemblyInfo, this);
+#else
+        if (_testAssemblyInfoCache.TryGetValue(assembly, out TestAssemblyInfo cachedTestAssemblyInfo))
+        {
+            return cachedTestAssemblyInfo;
+        }
+
+        // Not cached already. Fallback to GetOrAdd call that captures "this" and allocates.
+        return _testAssemblyInfoCache.GetOrAdd(assembly, assembly => CreateTestAssemblyInfo(assembly, this));
+#endif
+    }
+
+    private static TestAssemblyInfo CreateTestAssemblyInfo(Assembly assembly, TypeCache @this)
+    {
+        var assemblyInfo = new TestAssemblyInfo(assembly);
+
+        Type[] types = AssemblyEnumerator.GetTypes(assembly);
+
+        foreach (Type t in types)
+        {
+            try
             {
-                var assemblyInfo = new TestAssemblyInfo(assembly);
-
-                Type[] types = AssemblyEnumerator.GetTypes(assembly);
-
-                foreach (Type t in types)
+                // Only examine classes which are TestClass or derives from TestClass attribute
+                if (!@this._reflectionHelper.IsAttributeDefined<TestClassAttribute>(t))
                 {
-                    try
-                    {
-                        // Only examine classes which are TestClass or derives from TestClass attribute
-                        if (!@this._reflectionHelper.IsAttributeDefined<TestClassAttribute>(t))
-                        {
-                            continue;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // If we fail to discover type from an assembly, then do not abort. Pick the next type.
-                        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
-                        {
-                            PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
-                                "TypeCache: Exception occurred while checking whether type {0} is a test class or not. {1}",
-                                t.FullName,
-                                ex);
-                        }
-
-                        continue;
-                    }
-
-                    // Enumerate through all methods and identify the Assembly Init and cleanup methods.
-                    foreach (MethodInfo methodInfo in PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(t))
-                    {
-                        if (@this.IsAssemblyOrClassInitializeMethod<AssemblyInitializeAttribute>(methodInfo))
-                        {
-                            assemblyInfo.AssemblyInitializeMethod = methodInfo;
-                            assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyInitialize);
-                        }
-                        else if (@this.IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
-                        {
-                            assemblyInfo.AssemblyCleanupMethod = methodInfo;
-                            assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyCleanup);
-                        }
-
-                        bool isGlobalTestInitialize = @this._reflectionHelper.IsAttributeDefined<GlobalTestInitializeAttribute>(methodInfo);
-                        bool isGlobalTestCleanup = @this._reflectionHelper.IsAttributeDefined<GlobalTestCleanupAttribute>(methodInfo);
-
-                        if (isGlobalTestInitialize || isGlobalTestCleanup)
-                        {
-                            // Only try to validate the method if it already has the needed attribute.
-                            // This avoids potential type load exceptions when the return type cannot be resolved.
-                            // NOTE: Users tend to load assemblies in AssemblyInitialize after finishing the discovery.
-                            // We want to avoid loading types early as much as we can.
-                            bool isValid = methodInfo is { IsSpecialName: false, IsPublic: true, IsStatic: true, IsGenericMethod: false, DeclaringType.IsGenericType: false, DeclaringType.IsPublic: true } &&
-                                methodInfo.GetParameters() is { } parameters && parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext) &&
-                                methodInfo.IsValidReturnType();
-
-                            if (isValid && isGlobalTestInitialize)
-                            {
-                                assemblyInfo.GlobalTestInitializations.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestInitialize)));
-                            }
-
-                            if (isValid && isGlobalTestCleanup)
-                            {
-                                assemblyInfo.GlobalTestCleanups.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestCleanup)));
-                            }
-                        }
-                    }
+                    continue;
+                }
+            }
+            catch (Exception ex)
+            {
+                // If we fail to discover type from an assembly, then do not abort. Pick the next type.
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                        "TypeCache: Exception occurred while checking whether type {0} is a test class or not. {1}",
+                        t.FullName,
+                        ex);
                 }
 
-                return assemblyInfo;
-            }, this);
+                continue;
+            }
+
+            // Enumerate through all methods and identify the Assembly Init and cleanup methods.
+            foreach (MethodInfo methodInfo in PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(t))
+            {
+                if (@this.IsAssemblyOrClassInitializeMethod<AssemblyInitializeAttribute>(methodInfo))
+                {
+                    assemblyInfo.AssemblyInitializeMethod = methodInfo;
+                    assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyInitialize);
+                }
+                else if (@this.IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
+                {
+                    assemblyInfo.AssemblyCleanupMethod = methodInfo;
+                    assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyCleanup);
+                }
+
+                bool isGlobalTestInitialize = @this._reflectionHelper.IsAttributeDefined<GlobalTestInitializeAttribute>(methodInfo);
+                bool isGlobalTestCleanup = @this._reflectionHelper.IsAttributeDefined<GlobalTestCleanupAttribute>(methodInfo);
+
+                if (isGlobalTestInitialize || isGlobalTestCleanup)
+                {
+                    // Only try to validate the method if it already has the needed attribute.
+                    // This avoids potential type load exceptions when the return type cannot be resolved.
+                    // NOTE: Users tend to load assemblies in AssemblyInitialize after finishing the discovery.
+                    // We want to avoid loading types early as much as we can.
+                    bool isValid = methodInfo is { IsSpecialName: false, IsPublic: true, IsStatic: true, IsGenericMethod: false, DeclaringType.IsGenericType: false, DeclaringType.IsPublic: true } &&
+                        methodInfo.GetParameters() is { } parameters && parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext) &&
+                        methodInfo.IsValidReturnType();
+
+                    if (isValid && isGlobalTestInitialize)
+                    {
+                        assemblyInfo.GlobalTestInitializations.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestInitialize)));
+                    }
+
+                    if (isValid && isGlobalTestCleanup)
+                    {
+                        assemblyInfo.GlobalTestCleanups.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestCleanup)));
+                    }
+                }
+            }
+        }
+
+        return assemblyInfo;
+    }
 
     /// <summary>
     /// Verify if a given method is an Assembly or Class Initialize method.
@@ -650,10 +679,14 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="MethodInfo"/>. </returns>
     private MethodInfo GetMethodInfoForTestMethod(TestMethod testMethod, TestClassInfo testClassInfo)
     {
-        bool discoverInternals = _discoverInternalsCache.GetOrAdd(
-            testMethod.AssemblyName,
-            static (_, testClassInfo) => testClassInfo.Parent.Assembly.GetCustomAttribute<DiscoverInternalsAttribute>() != null,
-            testClassInfo);
+        // TODO: The cache key could be TestAssemblyInfo or Assembly which would simplify this to not need to capture.
+        // TODO: We might not even need a dictionary cache at all, just let it be part of TestAssemblyInfo directly.
+        if (!_discoverInternalsCache.TryGetValue(testMethod.AssemblyName, out bool discoverInternals))
+        {
+            discoverInternals = _discoverInternalsCache.GetOrAdd(
+                testMethod.AssemblyName,
+                _ => testClassInfo.Parent.Assembly.GetCustomAttribute<DiscoverInternalsAttribute>() is not null);
+        }
 
         MethodInfo? testMethodInfo = testMethod.HasManagedMethodAndTypeProperties
             ? GetMethodInfoUsingManagedNameHelper(testMethod, testClassInfo, discoverInternals)

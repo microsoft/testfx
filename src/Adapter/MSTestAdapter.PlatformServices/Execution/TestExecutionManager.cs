@@ -547,16 +547,16 @@ internal class TestExecutionManager
         // Add tcm properties.
         if (tcmProperties is not null)
         {
-            foreach ((TestProperty key, object? value) in tcmProperties)
+            foreach (KeyValuePair<TestProperty, object?> kvp in tcmProperties)
             {
-                testContextProperties[key.Id] = value;
+                testContextProperties[kvp.Key.Id] = kvp.Value;
             }
         }
 
         // Add source level parameters.
-        foreach ((string key, object value) in sourceLevelParameters)
+        foreach (KeyValuePair<string, object> kvp in sourceLevelParameters)
         {
-            testContextProperties[key] = value;
+            testContextProperties[kvp.Key] = kvp.Value;
         }
 
         if (unitTestElement.Traits is { Length: > 0 })
