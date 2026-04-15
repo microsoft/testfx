@@ -15,8 +15,5 @@ public static class LoggerFactoryExtensions
     /// <param name="factory">The logger factory.</param>
     /// <returns>A logger instance.</returns>
     public static ILogger<TCategoryName> CreateLogger<TCategoryName>(this ILoggerFactory factory)
-    {
-        Ensure.NotNull(factory);
-        return new Logger<TCategoryName>(factory);
-    }
+        => new Logger<TCategoryName>(factory ?? throw new ArgumentNullException(nameof(factory)));
 }

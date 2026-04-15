@@ -24,7 +24,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
 
     internal TreeNodeFilter(string filter)
     {
-        Filter = Ensure.NotNull(filter);
+        Filter = filter ?? throw new ArgumentNullException(nameof(filter));
         _filters = ParseFilter(filter);
     }
 

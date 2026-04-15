@@ -13,9 +13,7 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.IPC;
 
 [Embedded]
-#if NETCOREAPP
 [UnsupportedOSPlatform("browser")]
-#endif
 internal sealed class NamedPipeClient : NamedPipeBase, IClient
 {
     private const PipeOptions CurrentUserPipeOptions = PipeOptions.None

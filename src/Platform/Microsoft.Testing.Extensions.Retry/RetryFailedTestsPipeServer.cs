@@ -11,9 +11,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
-#if NETCOREAPP
 [UnsupportedOSPlatform("browser")]
-#endif
 internal sealed class RetryFailedTestsPipeServer : IDisposable
 {
     private readonly NamedPipeServer _singleConnectionNamedPipeServer;

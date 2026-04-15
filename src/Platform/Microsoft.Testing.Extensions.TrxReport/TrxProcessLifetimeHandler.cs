@@ -115,9 +115,7 @@ internal sealed class TrxProcessLifetimeHandler :
         return Task.CompletedTask;
     }
 
-#if NETCOREAPP
     [UnsupportedOSPlatform("BROWSER")]
-#endif
     private void BeforeTestHostProcessStartCore(CancellationToken cancellationToken)
         => _waitConnectionTask = _task.Run(
             async () =>

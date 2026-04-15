@@ -43,7 +43,6 @@ internal sealed class HotReloadHandler
         }
     }
 
-#if NETCOREAPP
     [SupportedOSPlatformGuard("android")]
     [SupportedOSPlatformGuard("ios")]
     [SupportedOSPlatformGuard("tvos")]
@@ -55,9 +54,6 @@ internal sealed class HotReloadHandler
             OperatingSystem.IsTvOS() ||
             OperatingSystem.IsWasi() ||
             OperatingSystem.IsBrowser();
-#else
-    private static bool IsCancelKeyPressNotSupported() => false;
-#endif
 
     // Called automatically by the runtime through the MetadataUpdateHandlerAttribute
     public static void ClearCache(Type[]? _)

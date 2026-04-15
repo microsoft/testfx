@@ -12,9 +12,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
-#if NETCOREAPP
 [UnsupportedOSPlatform("browser")]
-#endif
 internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandler
 {
     private readonly IServiceProvider _serviceProvider;

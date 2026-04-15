@@ -7,13 +7,8 @@ namespace Microsoft.Testing.Extensions.TrxReport;
 
 internal static class TrxModeHelpers
 {
-#if NETCOREAPP
     [UnsupportedOSPlatformGuard("BROWSER")]
-#endif
     public static bool ShouldUseOutOfProcessTrxGeneration(ICommandLineOptions commandLineOptions)
-        => commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName)
-#if NETCOREAPP
-        && !OperatingSystem.IsBrowser()
-#endif
-        ;
+        => commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) &&
+        !OperatingSystem.IsBrowser();
 }

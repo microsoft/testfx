@@ -18,14 +18,11 @@ public static class HangDumpExtensions
     /// Adds hang dump support to the test application.
     /// </summary>
     /// <param name="builder">The test application builder.</param>
-#if NETCOREAPP
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
-#endif
     public static void AddHangDumpProvider(this ITestApplicationBuilder builder)
     {
-#if NETCOREAPP
         if (OperatingSystem.IsBrowser())
         {
             throw new PlatformNotSupportedException("Hang dump extension is not available on browser");
@@ -35,7 +32,6 @@ public static class HangDumpExtensions
         {
             throw new PlatformNotSupportedException("Hang dump extension is not available on ios nor tvos");
         }
-#endif
 
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
 

@@ -12,9 +12,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
-#if NETCOREAPP
 [UnsupportedOSPlatform("browser")]
-#endif
 internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestHostApplicationLifetime, IDisposable
 {
     private readonly IConfiguration _configuration;
