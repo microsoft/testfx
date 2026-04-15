@@ -36,7 +36,7 @@
     <AssemblyName>MSTest.TestFramework.Extensions</AssemblyName>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
 
-    <DefineConstants>$(DefineConstants);EXCLUDE_RANGE_INDEX_POLYFILL</DefineConstants>
+    <DefineConstants>$(DefineConstants);EXCLUDE_RANGE_INDEX_POLYFILL;EXCLUDE_OS_POLYFILL</DefineConstants>
   </PropertyGroup>
 
   <!-- WinUI specific properties -->
