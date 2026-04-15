@@ -26,7 +26,7 @@ public class ForwardCompatibilityTests : AcceptanceTestBase<ForwardCompatibility
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        private const string PreviousExtensionVersion = "2.1.0";
+        private const string PreviousExtensionVersion = "2.2.1";
 
         private const string ForwardCompatibilityTestCode = """
 #file ForwardCompatibilityTest.csproj
