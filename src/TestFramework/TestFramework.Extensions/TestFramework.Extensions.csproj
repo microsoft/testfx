@@ -56,9 +56,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
-
     <PackageReference Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Include="Microsoft.WindowsAppSDK" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
