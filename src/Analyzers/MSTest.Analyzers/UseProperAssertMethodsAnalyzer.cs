@@ -1430,6 +1430,16 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             {
                 // We have Assert.AreEqual(expectedCount, collection.Count/Length)
                 // We want Assert.HasCount(expectedCount, collection)
+                // Assert.HasCount takes int, so skip if expectedCount is not an int (e.g. int?, long, uint, decimal).
+                if (expectedArgument.Type?.SpecialType != SpecialType.System_Int32)
+                {
+                    nodeToBeReplaced1 = null;
+                    replacement1 = null;
+                    nodeToBeReplaced2 = null;
+                    replacement2 = null;
+                    return CountCheckStatus.Unknown;
+                }
+
                 // So, only a single replacement is needed. We replace collection.Count with collection.
                 nodeToBeReplaced1 = actualArgument.Syntax; // collection.Count
                 replacement1 = expression; // collection
@@ -1461,6 +1471,16 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             {
                 // We have Assert.AreEqual(expectedCount, enumerable.Count())
                 // We want Assert.HasCount(expectedCount, enumerable)
+                // Assert.HasCount takes int, so skip if expectedCount is not an int (e.g. int?, long, uint, decimal).
+                if (expectedArgument.Type?.SpecialType != SpecialType.System_Int32)
+                {
+                    nodeToBeReplaced1 = null;
+                    replacement1 = null;
+                    nodeToBeReplaced2 = null;
+                    replacement2 = null;
+                    return CountCheckStatus.Unknown;
+                }
+
                 nodeToBeReplaced1 = actualArgument.Syntax; // enumerable.Count()
                 replacement1 = linqCollection; // enumerable
                 nodeToBeReplaced2 = null;

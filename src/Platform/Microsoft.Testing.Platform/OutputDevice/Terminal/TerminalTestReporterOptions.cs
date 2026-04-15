@@ -32,6 +32,34 @@ internal sealed class TerminalTestReporterOptions
     /// Gets a value indicating the ANSI mode.
     /// </summary>
     public AnsiMode AnsiMode { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating when to show standard output.
+    /// </summary>
+    public OutputShowMode ShowStdout { get; init; } = OutputShowMode.All;
+
+    /// <summary>
+    /// Gets a value indicating when to show standard error output.
+    /// </summary>
+    public OutputShowMode ShowStderr { get; init; } = OutputShowMode.All;
+}
+
+internal enum OutputShowMode
+{
+    /// <summary>
+    /// Always show the output.
+    /// </summary>
+    All,
+
+    /// <summary>
+    /// Show the output only for failed tests.
+    /// </summary>
+    Failed,
+
+    /// <summary>
+    /// Never show the output.
+    /// </summary>
+    None,
 }
 
 internal enum AnsiMode

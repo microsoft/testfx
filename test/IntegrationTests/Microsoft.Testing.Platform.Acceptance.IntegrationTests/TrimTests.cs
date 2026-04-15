@@ -49,7 +49,6 @@ System.Console.WriteLine("This project validates trim/AOT compatibility via dotn
 
         await DotnetCli.RunAsync(
             $"publish {generator.TargetAssetPath} -r {RID}",
-            retryCount: 0,
             cancellationToken: TestContext.CancellationToken);
     }
 

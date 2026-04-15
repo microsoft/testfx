@@ -291,7 +291,7 @@ public class UnitTest4
 
     private static async Task AssertAnalysisModeAsync(string mode, string[] contains, string[] doesNotContain, string targetAssetPath)
     {
-        async Task<DotnetMuxerResult> BuildTaskAsync() => await DotnetCli.RunAsync($"build {targetAssetPath}", warnAsError: false, retryCount: 0);
+        async Task<DotnetMuxerResult> BuildTaskAsync() => await DotnetCli.RunAsync($"build {targetAssetPath}", warnAsError: false);
 
         string output;
         if (mode is "Recommended" or "All")

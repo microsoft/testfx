@@ -158,28 +158,6 @@ public class MSTestDiscovererTests : TestContainer
     private static string GetCurrentAssembly()
         => Assembly.GetExecutingAssembly().Location.Replace(".exe", ".dll");
 
-    public void DiscoveryShouldNotHappenIfTestSettingsIsGiven()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTest>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                <IgnoreTestImpact>true</IgnoreTestImpact>
-              </MSTest>
-            </RunSettings>
-            """;
-        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        _mockTestSourceHandler.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
-
-        string source = GetCurrentAssembly();
-        _discoverer.DiscoverTests(new List<string> { source }, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
-
-        // Assert.
-        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.Never);
-    }
-
     public void DiscoveryShouldReportAndBailOutOnSettingsException()
     {
         string runSettingsXml =

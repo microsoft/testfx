@@ -56,14 +56,6 @@ public class TypeCacheTests : TestContainer
     private static TestMethod CreateTestMethod(string methodName, string className, string assemblyName, string? displayName)
         => new(className, methodName, null, methodName, className, assemblyName, displayName, null);
 
-    public void GetTestMethodInfoShouldThrowIfTestMethodIsNull()
-    {
-        TestMethod testMethod = CreateTestMethod("M", "C", "A", displayName: null);
-
-        Action action = () => _typeCache.GetTestMethodInfo(null!);
-        action.Should().Throw<ArgumentNullException>();
-    }
-
     public void GetTestMethodInfoShouldReturnNullIfClassInfoForTheMethodIsNull()
     {
         TestMethod testMethod = CreateTestMethod("M", "C", "A", displayName: null);

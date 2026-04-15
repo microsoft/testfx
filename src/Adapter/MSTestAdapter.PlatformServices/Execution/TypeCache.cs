@@ -76,8 +76,6 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestMethodInfo"/>. </returns>
     public TestMethodInfo? GetTestMethodInfo(TestMethod testMethod)
     {
-        Ensure.NotNull(testMethod);
-
         // Get the classInfo (This may throw as GetType calls assembly.GetType(..,true);)
         TestClassInfo? testClassInfo = GetClassInfo(testMethod);
 
@@ -98,8 +96,6 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestMethodInfo"/>. </returns>
     public DiscoveryTestMethodInfo? GetTestMethodInfoForDiscovery(TestMethod testMethod)
     {
-        Ensure.NotNull(testMethod);
-
         // Get the classInfo (This may throw as GetType calls assembly.GetType(..,true);)
         TestClassInfo? testClassInfo = GetClassInfo(testMethod);
 

@@ -125,7 +125,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         bool inCI = string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase) || string.Equals(_environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase);
 
         AnsiMode ansiMode = AnsiMode.AnsiIfPossible;
-        if (noAnsi)
+        // In LLM environments, prefer simple text output so that LLM can parse it easily.
+        // Note that NoAnsi also implies no progress.
+        if (noAnsi || LLMEnvironmentDetector.IsLLMEnvironment())
         {
             // User explicitly specified --no-ansi.
             // We should respect that.
@@ -149,6 +151,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             showPassed = () => true;
         }
+
+        OutputShowMode showStdout = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption);
+        OutputShowMode showStderr = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption);
 
         Func<bool?> shouldShowProgress = noProgress || ansiMode is AnsiMode.NoAnsi or AnsiMode.SimpleAnsi
             // User preference is to not show progress.
@@ -174,8 +179,20 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             AnsiMode = ansiMode,
             ShowActiveTests = true,
             ShowProgress = shouldShowProgress,
+            ShowStdout = showStdout,
+            ShowStderr = showStderr,
         });
     }
+
+    private static OutputShowMode GetShowOutputMode(ICommandLineOptions commandLineOptions, string optionName)
+        => commandLineOptions.TryGetOptionArgumentList(optionName, out string[]? arguments) && arguments is { Length: > 0 }
+            ? arguments[0] switch
+            {
+                string s when TerminalTestReporterCommandLineOptionsProvider.ShowOutputFailedArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => OutputShowMode.Failed,
+                string s when TerminalTestReporterCommandLineOptionsProvider.ShowOutputNoneArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => OutputShowMode.None,
+                _ => OutputShowMode.All,
+            }
+            : OutputShowMode.All;
 
     private static string GetShortArchitecture(string runtimeIdentifier)
         => runtimeIdentifier.Contains(Dash)
@@ -391,6 +408,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             case TestNodeUpdateMessage testNodeStateChanged:
 
                 TimeSpan? duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration;
+                string? standardOutput = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
+                string? standardError = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
                 foreach (FileArtifactProperty artifact in testNodeStateChanged.TestNode.Properties.OfType<FileArtifactProperty>())
                 {
@@ -418,7 +437,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             errorState.Explanation,
                             errorState.Exception,
                             expected: null,
-                            actual: null);
+                            actual: null,
+                            standardOutput,
+                            standardError);
                         break;
 
                     case FailedTestNodeStateProperty failedState:
@@ -431,7 +452,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              failedState.Explanation,
                              failedState.Exception,
                              expected: failedState.Exception?.Data["assert.expected"] as string,
-                             actual: failedState.Exception?.Data["assert.actual"] as string);
+                             actual: failedState.Exception?.Data["assert.actual"] as string,
+                             standardOutput,
+                             standardError);
                         break;
 
                     case TimeoutTestNodeStateProperty timeoutState:
@@ -444,7 +467,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              timeoutState.Explanation,
                              timeoutState.Exception,
                              expected: null,
-                             actual: null);
+                             actual: null,
+                             standardOutput,
+                             standardError);
                         break;
 
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -459,7 +484,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              cancelledState.Explanation,
                              cancelledState.Exception,
                              expected: null,
-                             actual: null);
+                             actual: null,
+                             standardOutput,
+                             standardError);
                         break;
 
                     case PassedTestNodeStateProperty:
@@ -472,7 +499,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             errorMessage: null,
                             exception: null,
                             expected: null,
-                            actual: null);
+                            actual: null,
+                            standardOutput,
+                            standardError);
                         break;
 
                     case SkippedTestNodeStateProperty skippedState:
@@ -485,7 +514,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             errorMessage: null,
                             exception: null,
                             expected: null,
-                            actual: null);
+                            actual: null,
+                            standardOutput,
+                            standardError);
                         break;
 
                     case DiscoveredTestNodeStateProperty:
