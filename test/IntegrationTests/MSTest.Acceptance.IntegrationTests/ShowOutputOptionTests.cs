@@ -142,7 +142,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
         testHostResult.AssertOutputContains("--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture : TestAssetFixtureBase
     {
         public const string ProjectName = "ShowOutputOptionTest";
 
