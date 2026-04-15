@@ -115,7 +115,11 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
         }
         else
         {
-            Ensure.NotNull(testContextMemberName);
+            if (testContextMemberName is null)
+            {
+                throw new ArgumentNullException(testContextMemberName);
+            }
+
             AddCancellationTokenArgument(editor, invocationExpression, testContextMemberName, cancellationTokenParameterName);
         }
 

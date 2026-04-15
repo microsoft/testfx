@@ -331,11 +331,11 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
 
             if (parameterTypesSubstitutions.TryGetValue(parameterType, out (ITypeSymbol Symbol, Type SystemType) existingType))
             {
-                if (argumentType.IsAssignableTo(existingType.SystemType))
+                if (existingType.SystemType.IsAssignableFrom(argumentType))
                 {
                     continue;
                 }
-                else if (existingType.SystemType.IsAssignableTo(argumentType))
+                else if (argumentType.IsAssignableFrom(existingType.SystemType))
                 {
                     parameterTypesSubstitutions[parameterType] = (parameterType, argumentType);
                 }
