@@ -115,7 +115,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "0", DisplayName = "ForwardCompatibilityTest", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+            new TestNode() { Uid = "0", DisplayName = "ForwardCompatibilityTest", Properties = new(PassedTestNodeStateProperty.CachedInstance, new TrxFullyQualifiedTypeNameProperty("MyNS.MyTestClass")) }));
         context.Complete();
     }
 }
