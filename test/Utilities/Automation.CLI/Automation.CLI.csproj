@@ -7,7 +7,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform" />
     <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" />
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

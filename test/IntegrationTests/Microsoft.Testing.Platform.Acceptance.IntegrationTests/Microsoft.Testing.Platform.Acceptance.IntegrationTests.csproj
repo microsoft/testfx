@@ -18,8 +18,11 @@
 
   <ItemGroup>
     <PackageReference Include="MSBuild.StructuredLogger" />
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
     <PackageReference Include="StreamJsonRpc" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
