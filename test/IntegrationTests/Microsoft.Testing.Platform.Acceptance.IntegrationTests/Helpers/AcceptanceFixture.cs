@@ -21,7 +21,7 @@ public static class AcceptanceFixture
         // packages should be picked.
         // If we restore to the same place (whether or not it is the machine-wide cache), NuGet will consider restore up-to-date and
         // will use stale packages.
-        var nugetCache = Path.Combine(s_directoryToCleanup, ".packages");
+        string nugetCache = Path.Combine(s_directoryToCleanup, ".packages");
         Directory.CreateDirectory(nugetCache);
         Environment.SetEnvironmentVariable("NUGET_PACKAGES", nugetCache);
     }
