@@ -6,6 +6,89 @@ namespace Microsoft.Testing.Platform.Helpers;
 // The idea was taken from https://github.com/dotnet/aspnetcore/blob/main/src/Shared/TaskExtensions.cs
 internal static class TaskExtensions
 {
+#if !NETCOREAPP
+    private const uint MaxSupportedTimeout = 0xfffffffe;
+
+    public static Task WaitAsync(this Task target, CancellationToken cancellationToken) =>
+        target.WaitAsync(Timeout.InfiniteTimeSpan, cancellationToken);
+
+    public static Task WaitAsync(
+        this Task target,
+        TimeSpan timeout) =>
+        target.WaitAsync(timeout, default);
+
+    public static async Task WaitAsync(
+        this Task target,
+        TimeSpan timeout,
+        CancellationToken cancellationToken)
+    {
+        long milliseconds = (long)timeout.TotalMilliseconds;
+        if (milliseconds is < -1 or > MaxSupportedTimeout)
+        {
+            throw new ArgumentOutOfRangeException(nameof(timeout));
+        }
+
+        if (target.IsCompleted ||
+            (!cancellationToken.CanBeCanceled && timeout == Timeout.InfiniteTimeSpan))
+        {
+            await target.ConfigureAwait(false);
+            return;
+        }
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            await Task.FromCanceled(cancellationToken).ConfigureAwait(false);
+        }
+
+        if (timeout == TimeSpan.Zero)
+        {
+            throw new TimeoutException();
+        }
+
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        cts.CancelAfter(timeout);
+
+        var cancellationTask = new TaskCompletionSource<bool>();
+#pragma warning disable SA1312 // Variable names should begin with lower-case letter
+        using CancellationTokenRegistration _ = cts.Token.Register(tcs => ((TaskCompletionSource<bool>)tcs!).TrySetResult(true), cancellationTask);
+#pragma warning restore SA1312 // Variable names should begin with lower-case letter
+        await Task.WhenAny(target, cancellationTask.Task).ConfigureAwait(false);
+
+        if (!target.IsCompleted)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                await Task.FromCanceled(cancellationToken).ConfigureAwait(false);
+            }
+
+            throw new TimeoutException();
+        }
+
+        await target.ConfigureAwait(false);
+    }
+
+    public static Task<TResult> WaitAsync<TResult>(
+        this Task<TResult> target,
+        CancellationToken cancellationToken) =>
+        target.WaitAsync<TResult>(Timeout.InfiniteTimeSpan, cancellationToken);
+
+    public static Task<TResult> WaitAsync<TResult>(
+        this Task<TResult> target,
+        TimeSpan timeout) =>
+        target.WaitAsync<TResult>(timeout, default);
+
+    public static async Task<TResult> WaitAsync<TResult>(
+        this Task<TResult> target,
+        TimeSpan timeout,
+        CancellationToken cancellationToken)
+    {
+        await ((Task)target).WaitAsync(timeout, cancellationToken).ConfigureAwait(false);
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
+        return target.Result;
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
+    }
+#endif
+
     // We observe by default because usually we're no more interested in the result of the task
     public static async Task<T> WithCancellationAsync<T>(this Task<T> task, CancellationToken cancellationToken, bool observeException = true)
     {

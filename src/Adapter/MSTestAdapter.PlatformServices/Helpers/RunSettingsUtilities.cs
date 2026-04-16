@@ -24,7 +24,7 @@ internal static class RunSettingsUtilities
     /// <param name="settingsXml">The runsettings xml.</param>
     /// <returns>The test run parameters.</returns>
     /// <remarks>If there is no test run parameters section defined in the settingsxml a blank dictionary is returned.</remarks>
-    internal static Dictionary<string, object>? GetTestRunParameters([StringSyntax(StringSyntaxAttribute.Xml, nameof(settingsXml))] string? settingsXml)
+    internal static Dictionary<string, object>? GetTestRunParameters(string? settingsXml)
         => GetNodeValue(settingsXml, Constants.TestRunParametersName, TestRunParameters.FromXml);
 
     /// <summary>
@@ -47,7 +47,7 @@ internal static class RunSettingsUtilities
     }
 
     private static T? GetNodeValue<T>(
-        [StringSyntax(StringSyntaxAttribute.Xml, nameof(settingsXml))] string? settingsXml,
+        string? settingsXml,
         string nodeName,
         Func<XmlReader, T> nodeParser)
     {

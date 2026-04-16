@@ -46,7 +46,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private readonly TerminalTestReporterOptions _options;
 
     private readonly TestProgressStateAwareTerminal _terminalWithProgress;
+
+#if NET9_0_OR_GREATER
     private readonly Lock _lock = new();
+#else
+    private readonly object _lock = new();
+#endif
 
     private readonly uint? _originalConsoleMode;
 

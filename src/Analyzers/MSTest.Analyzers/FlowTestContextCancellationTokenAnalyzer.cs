@@ -230,7 +230,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
             testContextMember = (testContextMember as IFieldSymbol)?.AssociatedSymbol ?? testContextMember;
             // Workaround https://github.com/dotnet/roslyn/issues/70208
             // https://github.com/dotnet/roslyn/blob/f25ae8e02a91169f45060951a168b233ad588ed3/src/Compilers/CSharp/Portable/Symbols/Synthesized/GeneratedNameKind.cs#L47
-            testContextMemberNameInScope = testContextMember.Name.StartsWith('<') && testContextMember.Name.EndsWith(">P", StringComparison.Ordinal)
+            testContextMemberNameInScope = testContextMember.Name.StartsWith("<", StringComparison.Ordinal) && testContextMember.Name.EndsWith(">P", StringComparison.Ordinal)
                 ? testContextMember.Name.Substring(1, testContextMember.Name.Length - 3)
                 : testContextMember.Name;
             testContextState = TestContextState.InScope;

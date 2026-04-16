@@ -149,9 +149,9 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
                 StringBuilder builder = new();
                 builder.Append(CultureInfo.InvariantCulture, $"Publisher/Consumer loop detected during the drain after {stopwatch.Elapsed}.\n{builder}");
 
-                foreach ((IAsyncConsumerDataProcessor key, long value) in consumerToDrain)
+                foreach (KeyValuePair<IAsyncConsumerDataProcessor, long> kvp in consumerToDrain)
                 {
-                    builder.AppendLine(CultureInfo.InvariantCulture, $"Consumer '{key.DataConsumer}' payload received {value}.");
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"Consumer '{kvp.Key.DataConsumer}' payload received {kvp.Value}.");
                 }
 
                 throw new InvalidOperationException(builder.ToString());
@@ -163,8 +163,16 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
             {
                 foreach (IAsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
                 {
+#if NETCOREAPP
                     consumerToDrain.TryAdd(asyncMultiProducerMultiConsumerDataProcessor, 0);
-
+#else
+#pragma warning disable CA1854 // Prefer the 'IDictionary.TryGetValue(TKey, out TValue)' method
+                    if (!consumerToDrain.ContainsKey(asyncMultiProducerMultiConsumerDataProcessor))
+                    {
+                        consumerToDrain.Add(asyncMultiProducerMultiConsumerDataProcessor, 0);
+                    }
+#pragma warning restore CA1854 // Prefer the 'IDictionary.TryGetValue(TKey, out TValue)' method
+#endif
                     long totalPayloadReceived = await asyncMultiProducerMultiConsumerDataProcessor.DrainDataAsync().ConfigureAwait(false);
                     if (consumerToDrain[asyncMultiProducerMultiConsumerDataProcessor] != totalPayloadReceived)
                     {

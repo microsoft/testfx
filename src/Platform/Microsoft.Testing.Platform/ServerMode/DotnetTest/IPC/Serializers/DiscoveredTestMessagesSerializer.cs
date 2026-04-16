@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
 
 namespace Microsoft.Testing.Platform.IPC.Serializers;
@@ -234,8 +235,8 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
                 }
             }
 
-            Ensure.NotNull(key);
-            Ensure.NotNull(value);
+            _ = key ?? throw ApplicationStateGuard.Unreachable();
+            _ = value ?? throw ApplicationStateGuard.Unreachable();
             traits[i] = new TestMetadataProperty(key, value);
         }
 

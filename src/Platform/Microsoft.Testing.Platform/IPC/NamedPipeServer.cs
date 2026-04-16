@@ -69,7 +69,11 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         int maxNumberOfServerInstances,
         CancellationToken cancellationToken)
     {
-        Ensure.NotNull(pipeNameDescription);
+        if (pipeNameDescription is null)
+        {
+            throw new ArgumentNullException(nameof(pipeNameDescription));
+        }
+
         _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances, PipeTransmissionMode.Byte, AsyncCurrentUserPipeOptions);
         _callback = callback;
         _environment = environment;

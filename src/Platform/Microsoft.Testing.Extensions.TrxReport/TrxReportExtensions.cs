@@ -11,6 +11,10 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 
+#if !NETCOREAPP
+using Polyfills;
+#endif
+
 namespace Microsoft.Testing.Extensions;
 
 /// <summary>
