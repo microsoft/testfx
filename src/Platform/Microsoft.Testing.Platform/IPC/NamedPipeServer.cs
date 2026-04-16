@@ -45,7 +45,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         ILogger logger,
         ITask task,
         CancellationToken cancellationToken)
-        : this(GetPipeName(name, environment), callback, environment, logger, task, cancellationToken)
+        : this(GetPipeName(name), callback, environment, logger, task, cancellationToken)
     {
     }
 
@@ -275,11 +275,6 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         }
     }
 
-    // For compatibility only.
-    // Old versions of MTP used to have this overload without IEnvironment.
-    // Extensions (e.g, TRX) calls into this overload.
-    // If core MTP is updated, but old version of TRX is still used, it will try to call this overload at runtime.
-    // Without it, MissingMethodException will be thrown at runtime.
     public static PipeNameDescription GetPipeName(string name)
     {
         if (!IsUnix)
@@ -290,14 +285,6 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         // Similar to https://github.com/dotnet/roslyn/blob/99bf83c7bc52fa1ff27cf792db38755d5767c004/src/Compilers/Shared/NamedPipeUtil.cs#L26-L42
         return new PipeNameDescription(Path.Combine("/tmp", name));
     }
-
-    // For compatibility only.
-    // Old versions of MTP used to have this overload without IEnvironment.
-    // Extensions (e.g, TRX) calls into this overload.
-    // If core MTP is updated, but old version of TRX is still used, it will try to call this overload at runtime.
-    // Without it, MissingMethodException will be thrown at runtime.
-    public static PipeNameDescription GetPipeName(string name, IEnvironment _)
-        => GetPipeName(name);
 
     public void Dispose()
     {

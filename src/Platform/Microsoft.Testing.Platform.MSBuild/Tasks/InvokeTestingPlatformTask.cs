@@ -61,7 +61,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             Debugger.Launch();
         }
 
-        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), new SystemEnvironment());
+        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
     }
 
     internal InvokeTestingPlatformTask(IFileSystem fileSystem) => _fileSystem = fileSystem;
