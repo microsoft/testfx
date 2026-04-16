@@ -78,8 +78,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
                     commandLineOption.Name,
                     commandLineOption.Description,
                     commandLineOption.IsHidden,
-                    commandLineOption.IsBuiltIn,
-                    commandLineOption.ObsolescenceMessage));
+                    commandLineOption.IsBuiltIn));
             }
         }
 
