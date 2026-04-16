@@ -192,14 +192,14 @@ internal sealed partial class AppInsightsProvider :
                 {
                     StringBuilder builder = new();
                     builder.AppendLine(CultureInfo.InvariantCulture, $"Send telemetry event: {eventName}");
-                    foreach ((string key, string value) in properties)
+                    foreach (KeyValuePair<string, string> kvp in properties)
                     {
-                        builder.AppendLine(CultureInfo.InvariantCulture, $"    {key}: {value}");
+                        builder.AppendLine(CultureInfo.InvariantCulture, $"    {kvp.Key}: {kvp.Value}");
                     }
 
-                    foreach ((string key, double value) in metrics)
+                    foreach (KeyValuePair<string, double> kvp in metrics)
                     {
-                        builder.AppendLine(CultureInfo.InvariantCulture, $"    {key}: {value.ToString("f", CultureInfo.InvariantCulture)}");
+                        builder.AppendLine(CultureInfo.InvariantCulture, $"    {kvp.Key}: {kvp.Value.ToString("f", CultureInfo.InvariantCulture)}");
                     }
 
                     await _logger.LogTraceAsync(builder.ToString()).ConfigureAwait(false);

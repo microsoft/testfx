@@ -157,8 +157,11 @@ public class UnitTestElementTests : TestContainer
 
     public void ToTestCase_WhenStrategyIsData_DoesNotUseDefaultTestCaseId()
     {
-#pragma warning disable CA2263 // Prefer generic overload when type is known
+#if NETCOREAPP
         foreach (DynamicDataType dataType in Enum.GetValues<DynamicDataType>())
+#else
+        foreach (DynamicDataType dataType in Enum.GetValues(typeof(DynamicDataType)))
+#endif
         {
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", null)
             {
@@ -172,7 +175,6 @@ public class UnitTestElementTests : TestContainer
             Guid.TryParse(dataType == DynamicDataType.None ? "157ad7ac-90d2-8e05-a240-056ef4253f19" : "1834fb10-d2d5-8106-8620-918822cdc63a", out Guid expectedId2).Should().BeTrue();
             expectedId.Should().Be(expectedId2);
         }
-#pragma warning restore CA2263 // Prefer generic overload when type is known
 
         static Guid GuidFromString(string data)
         {

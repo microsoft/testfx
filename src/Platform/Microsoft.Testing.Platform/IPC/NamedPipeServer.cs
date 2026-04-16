@@ -12,7 +12,9 @@ using Microsoft.Testing.Platform.Resources;
 namespace Microsoft.Testing.Platform.IPC;
 
 [Embedded]
+#if !MTP_MSBUILD_TASKS
 [UnsupportedOSPlatform("browser")]
+#endif
 internal sealed class NamedPipeServer : NamedPipeBase, IServer
 {
     private const PipeOptions AsyncCurrentUserPipeOptions = PipeOptions.Asynchronous
@@ -69,7 +71,11 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         int maxNumberOfServerInstances,
         CancellationToken cancellationToken)
     {
-        Ensure.NotNull(pipeNameDescription);
+        if (pipeNameDescription is null)
+        {
+            throw new ArgumentNullException(nameof(pipeNameDescription));
+        }
+
         _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances, PipeTransmissionMode.Byte, AsyncCurrentUserPipeOptions);
         _callback = callback;
         _environment = environment;

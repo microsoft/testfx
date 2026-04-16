@@ -29,8 +29,7 @@ internal sealed class RunConfigurationSettings
     /// Gets the configuration settings from the xml.
     /// </summary>
     /// <param name="runSettingsXml"> The xml with the settings passed from the test platform. </param>
-    public static RunConfigurationSettings GetSettings(
-        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml)
+    public static RunConfigurationSettings GetSettings(string? runSettingsXml)
     {
         if (StringEx.IsNullOrEmpty(runSettingsXml))
         {
@@ -68,7 +67,10 @@ internal sealed class RunConfigurationSettings
     /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
     private static RunConfigurationSettings ToSettings(XmlReader reader)
     {
-        Ensure.NotNull(reader);
+        if (reader is null)
+        {
+            throw new ArgumentNullException(nameof(reader));
+        }
 
         // Expected format of the xml is: -
         //

@@ -39,12 +39,10 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
         // messages to Test Explorer as well.
         _serverTestHost = serverTestHost;
 
-        foreach (ServerLogMessage message in _messages)
+        while (_messages.TryTake(out ServerLogMessage? message))
         {
             await LogAsync(message, serverTestHost.ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken).ConfigureAwait(false);
         }
-
-        _messages.Clear();
     }
 
     public string Uid => nameof(ServerModePerCallOutputDevice);

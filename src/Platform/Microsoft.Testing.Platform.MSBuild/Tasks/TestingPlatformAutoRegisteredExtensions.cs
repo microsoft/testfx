@@ -20,6 +20,8 @@ public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Ta
     private const string FSharpLanguageSymbol = "F#";
     private const string VBLanguageSymbol = "VB";
 
+    private readonly IFileSystem _fileSystem;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TestingPlatformSelfRegisteredExtensions"/> class.
     /// </summary>
@@ -81,8 +83,6 @@ Expected item spec:
 Expected method signature
 static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.TestApplicationBuilder builder, string[] args)
 """;
-
-    private readonly IFileSystem _fileSystem;
 
     /// <inheritdoc />
     public override bool Execute()

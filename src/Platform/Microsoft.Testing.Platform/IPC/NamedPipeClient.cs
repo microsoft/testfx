@@ -13,10 +13,12 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.IPC;
 
 [Embedded]
+#if !MTP_MSBUILD_TASKS
 [UnsupportedOSPlatform("browser")]
+#endif
 internal sealed class NamedPipeClient : NamedPipeBase, IClient
 {
-    private const PipeOptions CurrentUserPipeOptions = PipeOptions.None
+    private const PipeOptions AsyncCurrentUserPipeOptions = PipeOptions.Asynchronous
 #if NET
         | PipeOptions.CurrentUserOnly
 #endif
@@ -39,8 +41,12 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
 
     public NamedPipeClient(string name, IEnvironment environment)
     {
-        Ensure.NotNull(name);
-        _namedPipeClientStream = new(".", name, PipeDirection.InOut, CurrentUserPipeOptions);
+        if (name is null)
+        {
+            throw new ArgumentNullException(nameof(name));
+        }
+
+        _namedPipeClientStream = new(".", name, PipeDirection.InOut, AsyncCurrentUserPipeOptions);
         PipeName = name;
         _environment = environment;
     }
