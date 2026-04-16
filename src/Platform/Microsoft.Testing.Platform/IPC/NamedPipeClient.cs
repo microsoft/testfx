@@ -39,7 +39,11 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
 
     public NamedPipeClient(string name, IEnvironment environment)
     {
-        Ensure.NotNull(name);
+        if (name is null)
+        {
+            throw new ArgumentNullException(nameof(name));
+        }
+
         _namedPipeClientStream = new(".", name, PipeDirection.InOut, CurrentUserPipeOptions);
         PipeName = name;
         _environment = environment;

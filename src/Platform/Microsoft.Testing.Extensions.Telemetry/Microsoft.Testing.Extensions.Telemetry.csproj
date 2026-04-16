@@ -48,7 +48,6 @@ This package provides telemetry for the platform.]]>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.ApplicationInsights" />
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
 
     <!-- Microsoft.ApplicationInsights already has a dependency on DiagnosticSource. But we want to update the dependency to 6.0.0 instead of 5.0.0 -->
     <!-- This is because System.Diagnostics.DiagnosticSource is marked as not maintained -->
@@ -60,7 +59,7 @@ This package provides telemetry for the platform.]]>
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Polyfills" />
+    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

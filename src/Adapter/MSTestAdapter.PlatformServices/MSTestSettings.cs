@@ -298,7 +298,7 @@ internal sealed class MSTestSettings
     /// <param name="logger"> The logger for messages. </param>
     /// <returns> The settings if found. Null otherwise. </returns>
     internal static MSTestSettings? GetSettings(
-        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
+        string? runSettingsXml,
         string settingName, IMessageLogger? logger)
     {
         if (StringEx.IsNullOrWhiteSpace(runSettingsXml))
@@ -346,7 +346,10 @@ internal sealed class MSTestSettings
     /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
     private static MSTestSettings ToSettings(XmlReader reader, IMessageLogger? logger)
     {
-        Ensure.NotNull(reader);
+        if (reader is null)
+        {
+            throw new ArgumentNullException(nameof(reader));
+        }
 
         // Expected format of the xml is: -
         //
@@ -673,7 +676,7 @@ internal sealed class MSTestSettings
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidParallelScopeValue,
                                         value,
-                                        string.Join(", ", Enum.GetNames<ExecutionScope>())));
+                                        string.Join(", ", Enum.GetNames(typeof(ExecutionScope)))));
 
                             break;
                         }
@@ -700,10 +703,14 @@ internal sealed class MSTestSettings
     private static bool TryParseEnum<T>(string value, out T result)
         where T : struct, Enum
         => Enum.TryParse(value, true, out result)
+#if NETCOREAPP
         && Enum.IsDefined(result);
+#else
+        && Enum.IsDefined(typeof(T), result);
+#endif
 
     private static void SetGlobalSettings(
-        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runsettingsXml))] string runsettingsXml,
+        string runsettingsXml,
         MSTestSettings settings, IMessageLogger? logger)
     {
         XElement? runConfigElement = XDocument.Parse(runsettingsXml).Element("RunSettings")?.Element("RunConfiguration");
@@ -862,7 +869,7 @@ internal sealed class MSTestSettings
                     CultureInfo.CurrentCulture,
                     Resource.InvalidParallelScopeValue,
                     value,
-                    string.Join(", ", Enum.GetNames<ExecutionScope>())));
+                    string.Join(", ", Enum.GetNames(typeof(ExecutionScope)))));
             }
 
             settings.ParallelizationScope = scope;

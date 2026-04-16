@@ -38,10 +38,10 @@ internal sealed class HandshakeMessageSerializer : BaseSerializer, INamedPipeSer
             return;
         }
 
-        foreach ((byte key, string value) in handshakeMessage.Properties)
+        foreach (KeyValuePair<byte, string> kvp in handshakeMessage.Properties)
         {
-            WriteField(stream, key);
-            WriteField(stream, value);
+            WriteField(stream, kvp.Key);
+            WriteField(stream, kvp.Value);
         }
     }
 }

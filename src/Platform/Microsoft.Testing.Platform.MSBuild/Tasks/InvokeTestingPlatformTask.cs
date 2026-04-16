@@ -34,7 +34,13 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     private readonly CancellationTokenSource _waitForConnections = new();
     private readonly List<NamedPipeServer> _connections = [];
     private readonly StringBuilder _output = new();
+
+#if NET9_0_OR_GREATER
     private readonly Lock _initLock = new();
+#else
+    private readonly object _initLock = new();
+#endif
+
     private readonly Architecture _currentProcessArchitecture = RuntimeInformation.ProcessArchitecture;
 
     private Task? _connectionLoopTask;
@@ -208,7 +214,12 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             }
 
             Log.LogMessage(MessageImportance.Low, $"Current process architecture '{_currentProcessArchitecture}'. Requested test architecture '{TestArchitecture.ItemSpec}'");
+
+#if NETCOREAPP
             PlatformArchitecture targetArchitecture = Enum.Parse<PlatformArchitecture>(TestArchitecture.ItemSpec, ignoreCase: true);
+#else
+            var targetArchitecture = (PlatformArchitecture)Enum.Parse(typeof(PlatformArchitecture), TestArchitecture.ItemSpec, ignoreCase: true);
+#endif
             StringBuilder resolutionLog = new();
             DotnetMuxerLocator dotnetMuxerLocator = new(log => resolutionLog.AppendLine(log));
             if (dotnetMuxerLocator.TryGetDotnetPathByArchitecture(targetArchitecture, out string? dotnetPath))
@@ -242,7 +253,11 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     }
 
     private bool IsCurrentProcessArchitectureCompatible() =>
+#if NETCOREAPP
         _currentProcessArchitecture == Enum.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
+#else
+        _currentProcessArchitecture == (Architecture)Enum.Parse(typeof(Architecture), TestArchitecture.ItemSpec, ignoreCase: true);
+#endif
 
     private string? TryGetRunCommand()
     {
