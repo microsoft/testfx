@@ -19,10 +19,10 @@ internal static class TimeoutHelper
             ? customHangTimeout
             : TimeSpan.FromMinutes(5);
 
-        DefaultHangTimeoutSeconds = (int)DefaultHangTimeSpanTimeout.TotalSeconds;
+        DefaultHangTimeoutSeconds = DefaultHangTimeSpanTimeout.TotalSeconds;
     }
 
-    public static int DefaultHangTimeoutSeconds { get; private set; }
+    public static double DefaultHangTimeoutSeconds { get; }
 
     public static TimeSpan DefaultHangTimeSpanTimeout { get; }
 }
