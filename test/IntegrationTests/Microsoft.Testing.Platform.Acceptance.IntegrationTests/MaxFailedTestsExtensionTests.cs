@@ -36,7 +36,7 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase<MaxFailedTestsExt
         testHostResult.AssertOutputContains("The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
 #file MaxFailedTestsExtensionTests.csproj

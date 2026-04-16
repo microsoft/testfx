@@ -66,7 +66,7 @@ public sealed class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixt
         testHostResult.AssertOutputDoesNotContain("Canceling the test session");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture : TestAssetFixtureBase
     {
         public const string ProjectName = "TimeoutTest";
 

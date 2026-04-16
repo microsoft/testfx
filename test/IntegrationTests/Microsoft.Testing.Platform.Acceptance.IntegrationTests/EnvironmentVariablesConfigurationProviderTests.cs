@@ -62,7 +62,7 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
 #file EnvironmentVariablesConfigurationProvider.csproj

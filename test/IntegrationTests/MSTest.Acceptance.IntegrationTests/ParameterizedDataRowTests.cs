@@ -32,7 +32,7 @@ public sealed class ParameterizedDataRowTests : AcceptanceTestBase<Parameterized
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 3, skipped: 0);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (DataRowAssetName, DataRowAssetName,
                 SourceCodeDataRow

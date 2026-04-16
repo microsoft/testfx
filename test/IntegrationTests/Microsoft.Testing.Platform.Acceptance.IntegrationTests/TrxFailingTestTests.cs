@@ -38,7 +38,7 @@ public sealed class TrxFailingTestTests : AcceptanceTestBase<TrxFailingTestTests
         Assert.Contains("at DummyTestFramework.ExecuteRequestAsync", trxContent, trxContent);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string AssetName = "TrxTest";
         private const string WithFailingTest = nameof(WithFailingTest);

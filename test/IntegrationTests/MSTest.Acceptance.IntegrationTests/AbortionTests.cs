@@ -36,7 +36,7 @@ public sealed class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFi
         testHostResult.AssertOutputMatchesRegex("Canceling the test session.*");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
 #file AbortMSTestAsset.csproj

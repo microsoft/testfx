@@ -63,7 +63,7 @@ public sealed class ParameterizedDataSourceTests : AcceptanceTestBase<Parameteri
         }
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (DataSourceAssetName, DataSourceAssetName,
                 SourceCodeDataSource

@@ -47,7 +47,7 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
         }
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 

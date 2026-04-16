@@ -43,7 +43,7 @@ public sealed class LocalizationFailingTests : AcceptanceTestBase<LocalizationFa
         AssertOutputContainsNormalized(testHostResult, "échec: 1");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string FailingAssetName = "LocalizationTestsFailing";
 

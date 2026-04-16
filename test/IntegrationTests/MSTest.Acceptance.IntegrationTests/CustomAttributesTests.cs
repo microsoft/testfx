@@ -23,7 +23,7 @@ public sealed class CustomAttributesTests : AcceptanceTestBase<CustomAttributesT
         testHostResult.AssertOutputContainsSummary(failed: 1, passed: 1, skipped: 0);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string DuplicateTestMethodProjectName = "DuplicateTestMethodAttribute";
 

@@ -74,7 +74,7 @@ public sealed class TimeoutCooperativeTestMethodTests : AcceptanceTestBase<Timeo
         testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture : TestAssetFixtureBase
     {
         public const string ProjectName = "TimeoutCooperativeTestMethodTimeout";
 

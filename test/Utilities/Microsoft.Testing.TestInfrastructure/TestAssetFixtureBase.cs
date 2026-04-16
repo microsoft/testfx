@@ -21,11 +21,7 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
 {
     private readonly ConcurrentDictionary<string /* asset ID */, TestAsset> _testAssets = new();
     private readonly TempDirectory _tempDirectory = new();
-    private readonly TempDirectory _nugetGlobalPackagesDirectory;
     private bool _disposedValue;
-
-    protected TestAssetFixtureBase(TempDirectory nugetGlobalPackagesDirectory)
-        => _nugetGlobalPackagesDirectory = nugetGlobalPackagesDirectory;
 
     public string GetAssetPath(string assetID)
         => !_testAssets.TryGetValue(assetID, out TestAsset? testAsset)
@@ -36,7 +32,7 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
     {
         (string assetId, string assetName, string assetCode) = GetAssetsToGenerate();
         TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetId, assetCode, _tempDirectory);
-        DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: assetName, cancellationToken: cancellationToken);
+        DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", callerMemberName: assetName, cancellationToken: cancellationToken);
         testAsset.DotnetResult = result;
         _testAssets.TryAdd(assetId, testAsset);
     }

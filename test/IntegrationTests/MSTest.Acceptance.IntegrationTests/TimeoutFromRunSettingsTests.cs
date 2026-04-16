@@ -84,7 +84,7 @@ public sealed class TimeoutFromRunSettingsTests : AcceptanceTestBase<TimeoutFrom
         testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' timed out after {timeoutValue}ms");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture : TestAssetFixtureBase
     {
         public const string ProjectName = "TimeoutCodeWithNoTimeout";
 

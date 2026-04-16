@@ -24,7 +24,7 @@ public class ForwardCompatibilityTests : AcceptanceTestBase<ForwardCompatibility
         Assert.IsNotEmpty(trxFiles, $"At least one TRX file should be generated in: {testResultsPath}");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string PreviousExtensionVersion = "2.2.1";
 

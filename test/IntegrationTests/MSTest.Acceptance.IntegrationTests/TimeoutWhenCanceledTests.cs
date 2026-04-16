@@ -38,7 +38,7 @@ public sealed class TimeoutWhenCanceledTests : AcceptanceTestBase<TimeoutWhenCan
         testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' was canceled");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture : TestAssetFixtureBase
     {
         public const string ProjectName = "TimeoutCodeWithSixtySecTimeout";
 

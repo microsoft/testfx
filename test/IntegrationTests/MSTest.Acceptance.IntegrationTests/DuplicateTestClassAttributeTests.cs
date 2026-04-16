@@ -23,7 +23,7 @@ public sealed class DuplicateTestClassAttributeTests : AcceptanceTestBase<Duplic
         testHostResult.AssertStandardErrorContains("Only one attribute of type 'Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute' is allowed, but multiple were found.");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string DuplicateTestClassProjectName = "DuplicateTestClassAttribute";
 

@@ -96,7 +96,6 @@ num1,num2,expectedSum
 
         await DotnetCli.RunAsync(
             $"build {generator.TargetAssetPath} -c Release",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             cancellationToken: TestContext.CancellationToken);
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "DataSourceTests", "net472");

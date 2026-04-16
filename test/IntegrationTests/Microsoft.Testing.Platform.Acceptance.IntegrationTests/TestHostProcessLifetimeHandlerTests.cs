@@ -20,7 +20,7 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
         Assert.AreEqual("TestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync", File.ReadAllText(Path.Combine(testHost.DirectoryName, "OnTestHostProcessExitedAsync.txt")));
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
 #file TestHostProcessLifetimeHandler.csproj

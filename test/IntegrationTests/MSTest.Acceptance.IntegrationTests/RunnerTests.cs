@@ -30,7 +30,7 @@ public class RunnerTests : AcceptanceTestBase<NopAssetFixture>
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+            cancellationToken: TestContext.CancellationToken);
 
         Build binLog = Serialization.Read(compilationResult.BinlogPath);
         Assert.AreNotEqual(0, binLog.FindChildrenRecursive<AddItem>()
@@ -69,7 +69,7 @@ return await app.RunAsync();
 
         await DotnetCli.RunAsync(
             $"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+            cancellationToken: TestContext.CancellationToken);
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
@@ -92,13 +92,13 @@ return await app.RunAsync();
         if (TargetFrameworks.NetFramework.Any(x => x == tfm))
         {
             // Running under .NET Framework, which doesn't generate an empty entry point.
-            Exception ex = await Assert.ThrowsAsync<Exception>(async () => await DotnetCli.RunAsync($"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken));
+            Exception ex = await Assert.ThrowsAsync<Exception>(async () => await DotnetCli.RunAsync($"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}", cancellationToken: TestContext.CancellationToken));
             Assert.Contains("Program does not contain a static 'Main' method suitable for an entry point", ex.Message);
             return;
         }
 
         // Running on .NET (Core), building should succeed and we should run empty entry point.
-        await DotnetCli.RunAsync($"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        await DotnetCli.RunAsync($"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}", cancellationToken: TestContext.CancellationToken);
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(string.Empty, testHostResult.StandardOutput);
@@ -119,7 +119,7 @@ return await app.RunAsync();
                 .PatchCodeWithReplace("$OutputType$", string.Empty)
                 .PatchCodeWithReplace("$Extra$", string.Empty));
 
-        DotnetMuxerResult result = await DotnetCli.RunAsync($"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult result = await DotnetCli.RunAsync($"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", cancellationToken: TestContext.CancellationToken);
 
         Build binLog = Serialization.Read(result.BinlogPath);
         Assert.DoesNotContain(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer"), binLog.FindChildrenRecursive<AddItem>());

@@ -351,7 +351,7 @@ Registered tools:
         Assert.IsFalse(Directory.Exists(testResultsPath), "TestResults folder should not be created for info command");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string NoExtensionAssetName = "NoExtensionInfoTest";
 

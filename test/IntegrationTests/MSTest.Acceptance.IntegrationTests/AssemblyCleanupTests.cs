@@ -26,7 +26,7 @@ public sealed class AssemblyCleanupTests : AcceptanceTestBase<AssemblyCleanupTes
             """);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "AssemblyCleanupTests";
 

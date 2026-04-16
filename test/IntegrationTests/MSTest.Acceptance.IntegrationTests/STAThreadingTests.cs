@@ -62,7 +62,7 @@ public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.Tes
         testHostResult.AssertOutputContains("Passed!");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "STATestThreading";
 

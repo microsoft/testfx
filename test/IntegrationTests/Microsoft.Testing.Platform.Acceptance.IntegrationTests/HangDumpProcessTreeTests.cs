@@ -25,7 +25,7 @@ public sealed class HangDumpProcessTreeTests : AcceptanceTestBase<HangDumpProces
         Assert.HasCount(4, dumpFiles, $"There should be 4 dumps, one for each process in the tree. {testHostResult}");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string AssetName = "AssetFixture";
 
