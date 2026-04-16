@@ -72,7 +72,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName);
 
         Type[] types = GetTypes(assembly);
-        bool discoverInternals = ReflectHelper.GetDiscoverInternalsAttribute(assembly) != null;
+        bool discoverInternals = ReflectHelper.HasDiscoverInternalsAttribute(assembly);
 
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = ReflectHelper.GetTestDataSourceOptions(assembly)?.UnfoldingStrategy switch
         {
