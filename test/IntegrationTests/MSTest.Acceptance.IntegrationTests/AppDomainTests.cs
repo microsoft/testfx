@@ -126,7 +126,7 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageDownload Include="Microsoft.TestPlatform" Version="$MicrosoftNETTestSdkVersion$" />
+    <PackageDownload Include="Microsoft.TestPlatform" Version="[$MicrosoftNETTestSdkVersion$]" />
   </ItemGroup>
 
 </Project>
