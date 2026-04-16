@@ -32,8 +32,6 @@ internal sealed class TypeCache : MarshalByRefObject
     /// </summary>
     private readonly ConcurrentDictionary<string, TestClassInfo?> _classInfoCache = new();
 
-    private readonly ConcurrentDictionary<string, bool> _discoverInternalsCache = new();
-
     /// <summary>
     /// Initializes a new instance of the <see cref="TypeCache"/> class.
     /// </summary>
@@ -135,9 +133,9 @@ internal sealed class TypeCache : MarshalByRefObject
 
         string typeName = testMethod.FullClassName;
 
+#if NETCOREAPP
         // Using GetOrAdd to ensure we calculate only once when this is called by different threads in parallel.
         // Using a static lambda to ensure we don't capture.
-#if NETCOREAPP
         return _classInfoCache.GetOrAdd(typeName, CreateTestClassInfo, (this, testMethod));
 #else
         // On .NET Framework, we don't have the GetOrAdd overload that prevents capturing lambdas.
@@ -655,7 +653,7 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <returns>
     /// The TestMethodInfo for the given test method. Null if the test method could not be found.
     /// </returns>
-    private TestMethodInfo ResolveTestMethodInfo(TestMethod testMethod, TestClassInfo testClassInfo)
+    private static TestMethodInfo ResolveTestMethodInfo(TestMethod testMethod, TestClassInfo testClassInfo)
     {
         DebugEx.Assert(testMethod != null, "testMethod is Null");
         DebugEx.Assert(testClassInfo != null, "testClassInfo is Null");
@@ -665,7 +663,7 @@ internal sealed class TypeCache : MarshalByRefObject
         return new TestMethodInfo(methodInfo, testClassInfo);
     }
 
-    private DiscoveryTestMethodInfo ResolveTestMethodInfoForDiscovery(TestMethod testMethod, TestClassInfo testClassInfo)
+    private static DiscoveryTestMethodInfo ResolveTestMethodInfoForDiscovery(TestMethod testMethod, TestClassInfo testClassInfo)
     {
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
         return new DiscoveryTestMethodInfo(methodInfo, testClassInfo);
@@ -677,19 +675,10 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <param name="testMethod"> The test Method. </param>
     /// <param name="testClassInfo"> The test Class Info. </param>
     /// <returns> The <see cref="MethodInfo"/>. </returns>
-    private MethodInfo GetMethodInfoForTestMethod(TestMethod testMethod, TestClassInfo testClassInfo)
+    private static MethodInfo GetMethodInfoForTestMethod(TestMethod testMethod, TestClassInfo testClassInfo)
     {
-        // TODO: The cache key could be TestAssemblyInfo or Assembly which would simplify this to not need to capture.
-        // TODO: We might not even need a dictionary cache at all, just let it be part of TestAssemblyInfo directly.
-        if (!_discoverInternalsCache.TryGetValue(testMethod.AssemblyName, out bool discoverInternals))
-        {
-            discoverInternals = _discoverInternalsCache.GetOrAdd(
-                testMethod.AssemblyName,
-                _ => testClassInfo.Parent.Assembly.GetCustomAttribute<DiscoverInternalsAttribute>() is not null);
-        }
-
         MethodInfo? testMethodInfo = testMethod.HasManagedMethodAndTypeProperties
-            ? GetMethodInfoUsingManagedNameHelper(testMethod, testClassInfo, discoverInternals)
+            ? GetMethodInfoUsingManagedNameHelper(testMethod, testClassInfo)
             : throw ApplicationStateGuard.Unreachable();
 
         // if correct method is not found, throw appropriate
@@ -703,7 +692,7 @@ internal sealed class TypeCache : MarshalByRefObject
         return testMethodInfo;
     }
 
-    private static MethodInfo? GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
+    private static MethodInfo? GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo)
     {
         MethodInfo? testMethodInfo = null;
         try
@@ -721,7 +710,7 @@ internal sealed class TypeCache : MarshalByRefObject
         }
 
         return testMethodInfo is null
-            || !testMethodInfo.HasCorrectTestMethodSignature(true, discoverInternals)
+            || !testMethodInfo.HasCorrectTestMethodSignature(true, testClassInfo.Parent.DiscoversInternals)
             ? null
             : testMethodInfo;
     }

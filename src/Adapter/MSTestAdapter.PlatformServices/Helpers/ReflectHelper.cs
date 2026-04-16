@@ -164,10 +164,8 @@ internal class ReflectHelper : MarshalByRefObject
     /// Gets discover internals assembly level attribute.
     /// </summary>
     /// <param name="assembly"> The test assembly. </param>
-    internal static DiscoverInternalsAttribute? GetDiscoverInternalsAttribute(Assembly assembly)
-        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DiscoverInternalsAttribute))
-            .OfType<DiscoverInternalsAttribute>()
-            .FirstOrDefault();
+    internal static bool HasDiscoverInternalsAttribute(Assembly assembly)
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DiscoverInternalsAttribute)).Length > 0;
 
     /// <summary>
     /// Gets TestDataSourceDiscovery assembly level attribute.

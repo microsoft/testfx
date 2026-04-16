@@ -24,7 +24,12 @@ internal sealed class TestAssemblyInfo
     /// </summary>
     /// <param name="assembly">Sets the <see cref="Assembly"/> this class is representing. </param>
     internal TestAssemblyInfo(Assembly assembly)
-        => Assembly = assembly;
+    {
+        Assembly = assembly;
+        DiscoversInternals = assembly.GetCustomAttribute<DiscoverInternalsAttribute>() is not null;
+    }
+
+    internal bool DiscoversInternals { get; }
 
     internal List<(MethodInfo Method, TimeoutInfo? TimeoutInfo)> GlobalTestInitializations { get; } = [];
 
