@@ -16,7 +16,7 @@ namespace Microsoft.Testing.Platform.IPC;
 [UnsupportedOSPlatform("browser")]
 internal sealed class NamedPipeClient : NamedPipeBase, IClient
 {
-    private const PipeOptions CurrentUserPipeOptions = PipeOptions.None
+    private const PipeOptions CurrentUserPipeOptions = PipeOptions.Asynchronous
 #if NET
         | PipeOptions.CurrentUserOnly
 #endif
