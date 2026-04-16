@@ -267,6 +267,11 @@ Tatsächlich: {2}</target>
         <target state="translated">Ungültige GitHub-Ticket-URL.</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsExactInstanceOfValueIsNull">
+        <source>'value' is &lt;null&gt;. {0}</source>
+        <target state="new">'value' is &lt;null&gt;. {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
         <target state="translated">Der Wert „{0}“ liegt nicht im erwarteten Bereich [{1}..{2}]. {3}</target>

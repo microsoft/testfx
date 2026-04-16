@@ -331,31 +331,19 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertIsExactInstanceOfTypeFailed(object? value, Type? expectedType, string userMessage)
     {
-        string finalMessage = userMessage;
-        if (expectedType is not null && value is not null)
-        {
-            finalMessage = string.Format(
+        string finalMessage = expectedType is not null && value is not null
+            ? string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.IsExactInstanceOfFailMsg,
                 userMessage,
                 expectedType.ToString(),
-                value.GetType().ToString());
-        }
-        else if (value is null)
-        {
-            // Ensure proper punctuation before adding the NULL message
-            string trimmedMessage = (userMessage ?? string.Empty).TrimEnd();
-            if (trimmedMessage.Length == 0)
-            {
-                finalMessage = "'value' was NULL.";
-            }
-            else
-            {
-                char lastChar = trimmedMessage[trimmedMessage.Length - 1];
-                bool needsSeparator = lastChar is not '.' and not '!' and not '?';
-                finalMessage = $"{trimmedMessage}{(needsSeparator ? "." : string.Empty)} 'value' was NULL.";
-            }
-        }
+                value.GetType().ToString())
+            : value is null
+                ? string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.IsExactInstanceOfValueIsNull,
+                    userMessage)
+                : userMessage;
 
         ThrowAssertFailed("Assert.IsExactInstanceOfType", finalMessage);
     }

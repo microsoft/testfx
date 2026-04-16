@@ -224,6 +224,9 @@ Actual: {2}</value>
   <data name="IsExactInstanceOfFailMsg" xml:space="preserve">
     <value>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</value>
   </data>
+  <data name="IsExactInstanceOfValueIsNull" xml:space="preserve">
+    <value>'value' is &lt;null&gt;. {0}</value>
+  </data>
   <data name="IsNotExactInstanceOfFailMsg" xml:space="preserve">
     <value>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</value>
   </data>
