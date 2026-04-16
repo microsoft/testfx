@@ -13,7 +13,9 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.IPC;
 
 [Embedded]
+#if !MTP_MSBUILD_TASKS
 [UnsupportedOSPlatform("browser")]
+#endif
 internal sealed class NamedPipeClient : NamedPipeBase, IClient
 {
     private const PipeOptions AsyncCurrentUserPipeOptions = PipeOptions.Asynchronous
