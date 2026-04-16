@@ -24,7 +24,7 @@ internal static partial class TimeSpanParser
         if (RoslynString.IsNullOrWhiteSpace(time))
         {
             result = TimeSpan.Zero;
-            return true;
+            return false;
         }
 
         Match match = Pattern.Match(time);
