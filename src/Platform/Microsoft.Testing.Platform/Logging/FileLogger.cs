@@ -234,7 +234,7 @@ internal sealed class FileLogger : IDisposable
 
     private async Task WriteLogToFileAsync()
     {
-        // We do this check out of the try because we want to crash the process if the _channel/_asyncLogs is null.
+        // We do this check out of the try because we want to crash the process if the _channel is null.
         ApplicationStateGuard.Ensure(_channel is not null);
 
         try
