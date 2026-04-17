@@ -80,17 +80,17 @@
       </trans-unit>
       <trans-unit id="AreNotSameBothNull">
         <source>Both values are &lt;null&gt;. {0}</source>
-        <target state="new">Both values are &lt;null&gt;. {0}</target>
+        <target state="translated">どちらの値も&lt;null&gt;です。{0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="AreSameActualIsNull">
         <source>Actual is &lt;null&gt;. {0}</source>
-        <target state="new">Actual is &lt;null&gt;. {0}</target>
+        <target state="translated">実際の値は &lt;null&gt; です。{0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="AreSameExpectedIsNull">
         <source>Expected is &lt;null&gt;. {0}</source>
-        <target state="new">Expected is &lt;null&gt;. {0}</target>
+        <target state="translated">必要な値は &lt;null&gt;です。{0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="AreSameGivenValues">
