@@ -147,6 +147,11 @@ internal sealed partial class AppInsightsProvider :
             {
                 while (_payloads.TryRead(out (string EventName, IDictionary<string, object> ParamsMap) payload))
                 {
+                    if (_flushTimeoutOrStop.Token.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
                     (string eventName, IDictionary<string, object> paramsMap) = payload;
 #endif
 
@@ -280,6 +285,11 @@ internal sealed partial class AppInsightsProvider :
 #if NETCOREAPP
         await _payloads.Writer.WriteAsync((eventName, paramsMap), cancellationToken).ConfigureAwait(false);
 #else
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return Task.FromCanceled(cancellationToken);
+        }
+
         _payloads.Write((eventName, paramsMap));
         return Task.CompletedTask;
 #endif
