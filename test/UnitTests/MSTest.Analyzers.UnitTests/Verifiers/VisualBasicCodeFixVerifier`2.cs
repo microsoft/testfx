@@ -31,7 +31,9 @@ public static partial class VisualBasicCodeFixVerifier<TAnalyzer, TCodeFix>
 
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyAnalyzerAsync(string, DiagnosticResult[])"/>
     public static async Task VerifyAnalyzerAsync(
+#if NETCOREAPP
         [StringSyntax("VB-test")]
+#endif
         string source, params DiagnosticResult[] expected)
     {
         var test = new Test
@@ -45,27 +47,39 @@ public static partial class VisualBasicCodeFixVerifier<TAnalyzer, TCodeFix>
 
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyCodeFixAsync(string, string)"/>
     public static async Task VerifyCodeFixAsync(
+#if NETCOREAPP
         [StringSyntax("VB-test")]
+#endif
         string source,
+#if NETCOREAPP
         [StringSyntax("VB-test")]
+#endif
         string fixedSource)
         => await VerifyCodeFixAsync(source, DiagnosticResult.EmptyDiagnosticResults, fixedSource);
 
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyCodeFixAsync(string, DiagnosticResult, string)"/>
     public static async Task VerifyCodeFixAsync(
+#if NETCOREAPP
         [StringSyntax("VB-test")]
+#endif
         string source,
         DiagnosticResult expected,
+#if NETCOREAPP
         [StringSyntax("VB-test")]
+#endif
         string fixedSource)
         => await VerifyCodeFixAsync(source, [expected], fixedSource);
 
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyCodeFixAsync(string, DiagnosticResult[], string)"/>
     public static async Task VerifyCodeFixAsync(
+#if NETCOREAPP
         [StringSyntax("VB-test")]
+#endif
         string source,
         DiagnosticResult[] expected,
+#if NETCOREAPP
         [StringSyntax("VB-test")]
+#endif
         string fixedSource)
     {
         var test = new Test

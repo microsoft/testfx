@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="4.2.1" />[4.2.1] - 2026-04-07
+
+See full log [of v4.1.0...v4.2.1](https://github.com/microsoft/testfx/compare/v4.1.0...v4.2.1)
+
+### Added
+
+* \[Experimental] Add TestContext.Current by @Evangelink in [#7315](https://github.com/microsoft/testfx/pull/7315)
+* Add settings to launch debugger on test failure by @Evangelink in [#7318](https://github.com/microsoft/testfx/pull/7318)
+* Include categories in test context properties by @Youssef1313 in [#7349](https://github.com/microsoft/testfx/pull/7349)
+* Produce separate result for class/assembly cleanup failures and report on last unignored test by @Youssef1313 in [#7390](https://github.com/microsoft/testfx/pull/7390)
+* Extend MSTEST0037 to cover array.Length, enumerable.Count(), Any(), and Contains with comparer by @Copilot in [#7540](https://github.com/microsoft/testfx/pull/7540)
+
+### Fixed
+
+* Fix false positive with proper assert analyzer and IComparable by @Evangelink in [#7405](https://github.com/microsoft/testfx/pull/7405)
+* Add missing cases to UseProperAssertMethod analyzer by @Evangelink in [#7406](https://github.com/microsoft/testfx/pull/7406)
+* Fix issue with exception flattener by @Evangelink in [#7414](https://github.com/microsoft/testfx/pull/7414)
+* Fix MSTEST0037 to detect LINQ Enumerable.Contains on interface types by @Evangelink in [#7487](https://github.com/microsoft/testfx/pull/7487)
+* Fix MSTEST0049 false positives inside expression trees by @Evangelink in [#7592](https://github.com/microsoft/testfx/pull/7592)
+* Avoid serialization for parameterized tests when running MTP+DisableAppDomain by @Youssef1313 in [#7602](https://github.com/microsoft/testfx/pull/7602)
+* Fix MSTEST0037 false positive for non-int count argument by @Copilot in [#7624](https://github.com/microsoft/testfx/pull/7624)
+* Fix MSTEST0017 false positive with user-defined conversion operators by @Copilot in [#7626](https://github.com/microsoft/testfx/pull/7626)
+
+### Removed
+
+* Remove unneeded setting `EnableBaseClassTestMethodsFromOtherAssemblies` by @Youssef1313 in [#7404](https://github.com/microsoft/testfx/pull/7404)
+
+### Artifacts
+
+* MSTest: [4.2.1](https://www.nuget.org/packages/MSTest/4.2.1)
+* MSTest.TestFramework: [4.2.1](https://www.nuget.org/packages/MSTest.TestFramework/4.2.1)
+* MSTest.TestAdapter: [4.2.1](https://www.nuget.org/packages/MSTest.TestAdapter/4.2.1)
+* MSTest.Analyzers: [4.2.1](https://www.nuget.org/packages/MSTest.Analyzers/4.2.1)
+* MSTest.Sdk: [4.2.1](https://www.nuget.org/packages/MSTest.Sdk/4.2.1)
+* MSTest.SourceGeneration: [2.0.0-alpha.26202.7](https://www.nuget.org/packages/MSTest.SourceGeneration/2.0.0-alpha.26202.7)
+* MSTest.Engine: [2.0.0-alpha.26202.7](https://www.nuget.org/packages/MSTest.Engine/2.0.0-alpha.26202.7)
+
 ## <a name="4.1.0" />[4.1.0] - 2026-02-03
 
 See full log [of v4.0.2...v4.1.0](https://github.com/microsoft/testfx/compare/v4.0.2...v4.1.0)

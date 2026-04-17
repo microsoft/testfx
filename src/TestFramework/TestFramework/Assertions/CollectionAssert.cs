@@ -207,7 +207,7 @@ public sealed class CollectionAssert
         message = Assert.ReplaceNulls(message);
 
         bool foundNull = false;
-        Dictionary<object, bool> table = [];
+        HashSet<object> table = [];
         foreach (object? current in collection)
         {
             if (current == null)
@@ -231,7 +231,7 @@ public sealed class CollectionAssert
             }
             else
             {
-                if (!table.TryAdd(current, true))
+                if (!table.Add(current))
                 {
                     string userMessage = Assert.BuildUserMessage(message);
                     string finalMessage = string.Format(
@@ -504,7 +504,7 @@ public sealed class CollectionAssert
         }
 
         // If both collections are empty, they are equivalent.
-        if (!expected.Any())
+        if (expectedCollectionCount == 0)
         {
             return;
         }
@@ -661,13 +661,15 @@ public sealed class CollectionAssert
         DebugEx.Assert(notExpected is not null, "expected is not null here");
 
         // Check whether the element counts are different.
-        if (notExpected.Count() != actual.Count())
+        int notExpectedCount = notExpected.Count();
+        int actualCount = actual.Count();
+        if (notExpectedCount != actualCount)
         {
             return;
         }
 
         // If both collections are empty, they are equivalent.
-        if (!notExpected.Any())
+        if (notExpectedCount == 0)
         {
             string userMessage = Assert.BuildUserMessage(message);
             string finalMessage = string.Format(
@@ -743,9 +745,8 @@ public sealed class CollectionAssert
         int i = 0;
         foreach (object? element in collection)
         {
-            if (expectedType.GetTypeInfo() is { } expectedTypeInfo
-                && element?.GetType().GetTypeInfo() is { } elementTypeInfo
-                && !expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
+            if (element?.GetType() is { } elementType
+                && !expectedType.IsAssignableFrom(elementType))
             {
                 string userMessage = Assert.BuildUserMessage(message);
                 string finalMessage = string.Format(

@@ -255,11 +255,6 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">runsettings 项 ‘{1}’ 的值 ‘{0}’ 无效，将忽略设置。</target>
         <note />
       </trans-unit>
-      <trans-unit id="LegacyScenariosNotSupportedWarning">
-        <source>Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter.</source>
-        <target state="translated">警告: MSTest V2 适配器不支持 testsettings 文件或 vsmdi 文件。</target>
-        <note />
-      </trans-unit>
       <trans-unit id="MissingDeploymentDependency">
         <source>Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</source>
         <target state="translated">测试运行部署问题: 找不到程序集或模块“{0}”。原因: {1}</target>

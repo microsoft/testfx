@@ -12,7 +12,7 @@ internal static class VoidResponseFieldsId
     public const int MessagesSerializerId = 0;
 }
 
-internal static class TestHostProcessExitRequestFieldsId
+internal static class TestHostCompletedRequestFieldsId
 {
     public const int MessagesSerializerId = 1;
 }
@@ -36,7 +36,7 @@ internal static class CommandLineOptionMessageFieldsId
     public const ushort Description = 2;
     public const ushort IsHidden = 3;
     public const ushort IsBuiltIn = 4;
-    public const ushort ObsolescenceMessage = 5;
+    // Reserved: field ID 5 was ObsolescenceMessage, removed as unused.
 }
 
 internal static class DiscoveredTestMessagesFieldsId

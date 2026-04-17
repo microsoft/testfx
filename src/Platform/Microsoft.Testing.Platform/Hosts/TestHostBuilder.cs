@@ -10,7 +10,6 @@ using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
-using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
@@ -26,6 +25,7 @@ using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
+using Microsoft.Testing.Platform.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Hosts;
@@ -55,7 +55,9 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
     public IToolsManager Tools { get; } = new ToolsManager();
 
-    public ITestHostOrchestratorManager TestHostOrchestratorManager { get; } = new TestHostOrchestratorManager();
+    private readonly TestHostOrchestratorManager _testHostOrchestratorManager = new Extensions.TestHostOrchestrator.TestHostOrchestratorManager();
+
+    public ITestHostOrchestratorManager TestHostOrchestrator => _testHostOrchestratorManager;
 
     public async Task<IHost> BuildAsync(
         ApplicationLoggingState loggingState,
@@ -303,15 +305,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // to file disc also the banner, so at this point we need to have all services and configuration(result directory) built.
         await DisplayBannerIfEnabledAsync(loggingState, proxyOutputDevice, testFrameworkCapabilities, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
-        // Check for obsolete options and display warnings
-        await CommandLineOptionsValidator.CheckForObsoleteOptionsAsync(
-            loggingState.CommandLineParseResult,
-            commandLineHandler.SystemCommandLineOptionsProviders,
-            commandLineHandler.ExtensionsCommandLineOptionsProviders,
-            proxyOutputDevice,
-            commandLineHandler,
-            testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
-
         // Add global telemetry service.
         // Add at this point or the telemetry banner appearance order will be wrong, we want the testing app banner before the telemetry banner.
         ITelemetryCollector telemetryService = await ((TelemetryManager)Telemetry).BuildTelemetryAsync(serviceProvider, loggerFactory, testApplicationOptions).ConfigureAwait(false);
@@ -407,15 +400,15 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         }
 
         // ======= TEST HOST ORCHESTRATOR ======== //
-        TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await TestHostOrchestratorManager.BuildAsync(serviceProvider).ConfigureAwait(false);
+        TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await _testHostOrchestratorManager.BuildAsync(serviceProvider).ConfigureAwait(false);
         if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 0 && !commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             policiesService.ProcessRole = TestProcessRole.TestHostOrchestrator;
             await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostOrchestrator, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
             // Build and register the test application lifecycle callbacks.
-            ITestHostOrchestratorApplicationLifetime[] orchestratorLifetimes =
-                await ((TestHostOrchestratorManager)TestHostOrchestratorManager).BuildTestHostOrchestratorApplicationLifetimesAsync(serviceProvider).ConfigureAwait(false);
+            Extensions.TestHostOrchestrator.ITestHostOrchestratorApplicationLifetime[] orchestratorLifetimes =
+                await _testHostOrchestratorManager.BuildTestHostOrchestratorApplicationLifetimesAsync(serviceProvider).ConfigureAwait(false);
             serviceProvider.AddServices(orchestratorLifetimes);
 
             builderActivity?.SetTag(BuilderHostTypeOTelKey, nameof(TestHostOrchestratorHost));
@@ -616,8 +609,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         await logger.LogDebugAsync($"Connecting to named pipe '{pipeName}'").ConfigureAwait(false);
         string? seconds = configuration[PlatformConfigurationConstants.PlatformTestHostControllersManagerNamedPipeClientConnectTimeoutSeconds];
 
-        // Default timeout is 30 seconds
-        int timeoutSeconds = seconds is null ? TimeoutHelper.DefaultHangTimeoutSeconds : int.Parse(seconds, CultureInfo.InvariantCulture);
+        double timeoutSeconds = seconds is null ? TimeoutHelper.DefaultHangTimeoutSeconds : double.Parse(seconds, CultureInfo.InvariantCulture);
         await logger.LogDebugAsync($"Setting PlatformTestHostControllersManagerNamedPipeClientConnectTimeoutSeconds '{timeoutSeconds}'").ConfigureAwait(false);
         using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(timeoutSeconds));
         await client.ConnectAsync(timeout.Token).ConfigureAwait(false);

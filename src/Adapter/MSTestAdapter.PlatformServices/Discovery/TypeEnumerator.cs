@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
@@ -18,21 +18,21 @@ internal class TypeEnumerator
     private readonly string _assemblyFilePath;
     private readonly TypeValidator _typeValidator;
     private readonly TestMethodValidator _testMethodValidator;
-    private readonly IReflectionOperations _reflectionOperation;
+    private readonly ReflectHelper _reflectHelper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TypeEnumerator"/> class.
     /// </summary>
     /// <param name="type"> The reflected type. </param>
     /// <param name="assemblyFilePath"> The name of the assembly being reflected. </param>
-    /// <param name="reflectionOperation"> An instance to reflection helper for type information. </param>
+    /// <param name="reflectHelper"> An instance to reflection helper for type information. </param>
     /// <param name="typeValidator"> The validator for test classes. </param>
     /// <param name="testMethodValidator"> The validator for test methods. </param>
-    internal TypeEnumerator(Type type, string assemblyFilePath, IReflectionOperations reflectionOperation, TypeValidator typeValidator, TestMethodValidator testMethodValidator)
+    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator)
     {
         _type = type;
         _assemblyFilePath = assemblyFilePath;
-        _reflectionOperation = reflectionOperation;
+        _reflectHelper = reflectHelper;
         _typeValidator = typeValidator;
         _testMethodValidator = testMethodValidator;
     }
@@ -64,24 +64,19 @@ internal class TypeEnumerator
         var foundTests = new HashSet<string>();
         var tests = new List<UnitTestElement>();
 
+        // Instead of asking reflect helper to query the type for every method we have, we ask once for the type.
+        bool classDisablesParallelization = _reflectHelper.IsAttributeDefined<DoNotParallelizeAttribute>(_type);
+
         // Test class is already valid. Verify methods.
         // PERF: GetRuntimeMethods is used here to get all methods, including non-public, and static methods.
         // if we rely on analyzers to identify all invalid methods on build, we can change this to fit the current settings.
         foreach (MethodInfo method in PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethods(_type))
         {
-            bool isMethodDeclaredInTestTypeAssembly = _reflectionOperation.IsMethodDeclaredInSameAssemblyAsType(method, _type);
-            bool enableMethodsFromOtherAssemblies = MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies;
-
-            if (!isMethodDeclaredInTestTypeAssembly && !enableMethodsFromOtherAssemblies)
-            {
-                continue;
-            }
-
             if (_testMethodValidator.IsValidTestMethod(method, _type, warnings))
             {
                 // ToString() outputs method name and its signature. This is necessary for overloaded methods to be recognized as distinct tests.
                 foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.ToString() ?? method.Name);
-                UnitTestElement testMethod = GetTestFromMethod(method, warnings);
+                UnitTestElement testMethod = GetTestFromMethod(method, classDisablesParallelization, warnings);
 
                 tests.Add(testMethod);
             }
@@ -121,9 +116,10 @@ internal class TypeEnumerator
     /// Gets a UnitTestElement from a MethodInfo object filling it up with appropriate values.
     /// </summary>
     /// <param name="method">The reflected method.</param>
+    /// <param name="classDisablesParallelization">Whether the test class disables parallelization.</param>
     /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns> Returns a UnitTestElement.</returns>
-    internal UnitTestElement GetTestFromMethod(MethodInfo method, ICollection<string> warnings)
+    internal UnitTestElement GetTestFromMethod(MethodInfo method, bool classDisablesParallelization, ICollection<string> warnings)
     {
         // null if the current instance represents a generic type parameter.
         DebugEx.Assert(_type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
@@ -134,28 +130,32 @@ internal class TypeEnumerator
             MethodInfo = method,
         };
 
+        // TODO: For every test method in a class, we are asking reflect helper multiple times for the same
+        // information (like test categories, traits, deployment items) which is not optimal.
         var testElement = new UnitTestElement(testMethod)
         {
-            TestCategory = _reflectionOperation.GetTestCategories(method, _type),
-            DoNotParallelize = _reflectionOperation.IsAttributeDefined<DoNotParallelizeAttribute>(method)
-                || _reflectionOperation.IsAttributeDefined<DoNotParallelizeAttribute>(_type),
-            Priority = _reflectionOperation.GetFirstAttributeOrDefault<PriorityAttribute>(method)?.Priority,
+            TestCategory = _reflectHelper.GetTestCategories(method, _type),
+            DoNotParallelize = classDisablesParallelization || _reflectHelper.IsAttributeDefined<DoNotParallelizeAttribute>(method),
 #if !WINDOWS_UWP && !WIN_UI
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
 #endif
-            Traits = [.. _reflectionOperation.GetTestPropertiesAsTraits(method)],
+            Traits = [.. _reflectHelper.GetTestPropertiesAsTraits(method)],
         };
 
-        Attribute[] attributes = _reflectionOperation.GetCustomAttributesCached(method);
+        Attribute[] attributes = _reflectHelper.GetCustomAttributesCached(method);
         TestMethodAttribute? testMethodAttribute = null;
 
-        // Backward looping for backcompat. This used to be calls to _reflectionOperation.GetFirstAttributeOrDefault
+        // Backward looping for backcompat. This used to be calls to _reflectHelper.GetFirstAttributeOrDefault
         // So, to make sure the first attribute always wins, we loop from end to start.
         for (int i = attributes.Length - 1; i >= 0; i--)
         {
             if (attributes[i] is TestMethodAttribute tma)
             {
                 testMethodAttribute = tma;
+            }
+            else if (attributes[i] is PriorityAttribute priorityAttribute)
+            {
+                testElement.Priority = priorityAttribute.Priority;
             }
         }
 

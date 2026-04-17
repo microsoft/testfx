@@ -13,9 +13,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
-using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 /// <summary>
@@ -25,6 +22,13 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 {
     private readonly TypeCache _typeCache;
     private readonly ClassCleanupManager _classCleanupManager;
+
+    // Only needed to attach class cleanup failures to the right test.
+    // So we only add to this dictionary if the class has a class cleanup.
+    private readonly ConcurrentDictionary<string, UnitTestElement> _lastRunnableTestByClass = new();
+
+    // Used to attach assembly cleanup failures to the right test.
+    private UnitTestElement? _lastRunnableTestInWholeAssembly;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.
@@ -85,22 +89,29 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
     // Task cannot cross app domains.
     // For now, TestExecutionManager will call this sync method which is hacky.
-    // If we removed AppDomains in v4, we should use the async method and remove this one.
-    internal TestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
-        => RunSingleTestAsync(testMethod, testContextProperties, messageLogger).GetAwaiter().GetResult();
+    internal TestResult[] RunSingleTest(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
+        => RunSingleTestAsync(unitTestElement, testContextProperties, messageLogger).GetAwaiter().GetResult();
 
     /// <summary>
     /// Runs a single test.
     /// </summary>
-    /// <param name="testMethod"> The test Method. </param>
+    /// <param name="unitTestElement"> The test Method. </param>
     /// <param name="testContextProperties"> The test context properties. </param>
     /// <param name="messageLogger"> The message logger. </param>
     /// <returns> The <see cref="TestResult"/>. </returns>
-    internal async Task<TestResult[]> RunSingleTestAsync(TestMethod testMethod, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
+    internal async Task<TestResult[]> RunSingleTestAsync(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
     {
-        Ensure.NotNull(testMethod);
-        Ensure.NotNull(testContextProperties);
+        if (unitTestElement is null)
+        {
+            throw new ArgumentNullException(nameof(unitTestElement));
+        }
 
+        if (testContextProperties is null)
+        {
+            throw new ArgumentNullException(nameof(testContextProperties));
+        }
+
+        TestMethod testMethod = unitTestElement.TestMethod;
         ITestContext? testContextForTestExecution = null;
         ITestContext? testContextForAssemblyInit = null;
         ITestContext? testContextForClassInit = null;
@@ -109,12 +120,10 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
         try
         {
-            testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(testMethod, null, testContextProperties, messageLogger, UTF.UnitTestOutcome.InProgress);
+            testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(testMethod, null, testContextProperties, messageLogger, UnitTestOutcome.InProgress);
 
             // Get the testMethod
-            TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
-                testMethod,
-                testContextForTestExecution);
+            TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(testMethod);
 
             TestResult[] result;
             if (!IsTestMethodRunnable(testMethod, testMethodInfo, out TestResult[]? notRunnableResult))
@@ -129,17 +138,24 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
                 TestResult assemblyInitializeResult = await RunAssemblyInitializeIfNeededAsync(testMethodInfo, testContextForAssemblyInit).ConfigureAwait(false);
 
-                if (assemblyInitializeResult.Outcome != UTF.UnitTestOutcome.Passed)
+                if (assemblyInitializeResult.Outcome != UnitTestOutcome.Passed)
                 {
                     result = [assemblyInitializeResult];
                 }
                 else
                 {
+                    if (testMethodInfo.Parent.HasExecutableCleanupMethod)
+                    {
+                        _lastRunnableTestByClass[testMethod.FullClassName] = unitTestElement;
+                    }
+
+                    _lastRunnableTestInWholeAssembly = unitTestElement;
+
                     testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, testContextForAssemblyInit.Context.CurrentTestOutcome);
 
                     TestResult classInitializeResult = await testMethodInfo.Parent.GetResultOrRunClassInitializeAsync(testContextForClassInit, assemblyInitializeResult.LogOutput, assemblyInitializeResult.LogError, assemblyInitializeResult.DebugTrace, assemblyInitializeResult.TestContextMessages).ConfigureAwait(false);
                     DebugEx.Assert(testMethodInfo.Parent.IsClassInitializeExecuted, "IsClassInitializeExecuted should be true after attempting to run it.");
-                    if (classInitializeResult.Outcome != UTF.UnitTestOutcome.Passed)
+                    if (classInitializeResult.Outcome != UnitTestOutcome.Passed)
                     {
                         result = [classInitializeResult];
                     }
@@ -170,7 +186,20 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             {
                 if (testMethodInfo is not null)
                 {
-                    await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup, result).ConfigureAwait(false);
+                    TestResult? cleanupResult = await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup, result).ConfigureAwait(false);
+                    if (cleanupResult is not null)
+                    {
+                        if (notRunnableResult is not null)
+                        {
+                            // Current test is ignored, and we have a class cleanup failure. We need to attach to the right test.
+                            if (_lastRunnableTestByClass.TryGetValue(testMethod.FullClassName, out UnitTestElement? lastRunnableUnitTest))
+                            {
+                                cleanupResult.AssociatedUnitTestElement = lastRunnableUnitTest;
+                            }
+                        }
+
+                        result = [.. result, cleanupResult];
+                    }
                 }
 
                 // Mark the class as complete when all class cleanups are complete. When all classes are complete we progress to running assembly cleanup.
@@ -183,7 +212,17 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 _classCleanupManager.ShouldRunEndOfAssemblyCleanup)
             {
                 testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
-                await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache, result).ConfigureAwait(false);
+                TestResult? assemblyCleanupResult = await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache, result).ConfigureAwait(false);
+                if (assemblyCleanupResult is not null)
+                {
+                    if (notRunnableResult is not null)
+                    {
+                        // Current test is ignored, and we have an assembly cleanup failure. We need to attach to the right test.
+                        assemblyCleanupResult.AssociatedUnitTestElement = _lastRunnableTestInWholeAssembly;
+                    }
+
+                    result = [.. result, assemblyCleanupResult];
+                }
             }
 
             return result;
@@ -212,15 +251,11 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
     private static async Task<TestResult> RunAssemblyInitializeIfNeededAsync(TestMethodInfo testMethodInfo, ITestContext testContext)
     {
-        var result = new TestResult { Outcome = UnitTestOutcome.Passed };
+        TestResult? result = null;
 
         try
         {
-            await testMethodInfo.Parent.Parent.RunAssemblyInitializeAsync(testContext.Context).ConfigureAwait(false);
-        }
-        catch (TestFailedException ex)
-        {
-            result = new TestResult { TestFailureException = ex, Outcome = ex.Outcome };
+            result = await testMethodInfo.Parent.Parent.RunAssemblyInitializeAsync(testContext.Context).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -230,7 +265,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         finally
         {
             var testContextImpl = testContext.Context as TestContextImplementation;
-            result.LogOutput = testContextImpl?.GetOut();
+            result!.LogOutput = testContextImpl?.GetOut();
             result.LogError = testContextImpl?.GetErr();
             result.DebugTrace = testContextImpl?.GetTrace();
             result.TestContextMessages = testContext.GetAndClearDiagnosticMessages();
@@ -239,40 +274,38 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         return result;
     }
 
-    private static async Task RunAssemblyCleanupAsync(ITestContext testContext, TypeCache typeCache, TestResult[] results)
+    private static async Task<TestResult?> RunAssemblyCleanupAsync(ITestContext testContext, TypeCache typeCache, TestResult[] results)
     {
-        try
+        var testContextImpl = testContext as TestContextImplementation;
+        IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
+        foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
         {
-            IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
-            foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
-            {
-                TestFailedException? ex = await assemblyInfo.ExecuteAssemblyCleanupAsync(testContext.Context).ConfigureAwait(false);
+            TestFailedException? ex = await assemblyInfo.ExecuteAssemblyCleanupAsync(testContext.Context).ConfigureAwait(false);
 
-                if (results.Length > 0 && ex is not null)
+            if (ex is not null)
+            {
+                return new TestResult()
                 {
-#pragma warning disable IDE0056 // Use index operator
-                    TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
-                    lastResult.Outcome = UTF.UnitTestOutcome.Error;
-                    lastResult.TestFailureException = ex;
-                    return;
-                }
+                    Outcome = UnitTestOutcome.Failed,
+                    TestFailureException = ex,
+                    LogOutput = testContextImpl?.GetOut(),
+                    LogError = testContextImpl?.GetErr(),
+                    DebugTrace = testContextImpl?.GetTrace(),
+                    TestContextMessages = testContext.GetAndClearDiagnosticMessages(),
+                };
             }
-        }
-        finally
-        {
+
             if (results.Length > 0)
             {
-#pragma warning disable IDE0056 // Use index operator
                 TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
-                var testContextImpl = testContext as TestContextImplementation;
                 lastResult.LogOutput += testContextImpl?.GetOut();
                 lastResult.LogError += testContextImpl?.GetErr();
                 lastResult.DebugTrace += testContextImpl?.GetTrace();
                 lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
             }
         }
+
+        return null;
     }
 
     /// <summary>
@@ -288,32 +321,25 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         [NotNullWhen(false)] out TestResult[]? notRunnableResult)
     {
         // If the specified TestMethod could not be found, return a NotFound result.
-        if (testMethodInfo == null)
+        if (testMethodInfo is null)
         {
-            {
-                notRunnableResult =
-                [
-                    new TestResult
-                    {
-                        Outcome = UnitTestOutcome.NotFound,
-                        IgnoreReason = string.Format(CultureInfo.CurrentCulture, Resource.TestNotFound, testMethod.Name),
-                    },
-                ];
-                return false;
-            }
+            notRunnableResult =
+            [
+                new TestResult
+                {
+                    Outcome = UnitTestOutcome.NotFound,
+                    IgnoreReason = string.Format(CultureInfo.CurrentCulture, Resource.TestNotFound, testMethod.Name),
+                },
+            ];
+            return false;
         }
 
         bool shouldIgnoreClass = testMethodInfo.Parent.ClassType.IsIgnored(out string? ignoreMessageOnClass);
         bool shouldIgnoreMethod = testMethodInfo.MethodInfo.IsIgnored(out string? ignoreMessageOnMethod);
 
-        string? ignoreMessage = ignoreMessageOnClass;
-        if (StringEx.IsNullOrEmpty(ignoreMessage) && shouldIgnoreMethod)
-        {
-            ignoreMessage = ignoreMessageOnMethod;
-        }
-
         if (shouldIgnoreClass || shouldIgnoreMethod)
         {
+            string? ignoreMessage = shouldIgnoreMethod && StringEx.IsNullOrEmpty(ignoreMessageOnClass) ? ignoreMessageOnMethod : ignoreMessageOnClass;
             notRunnableResult =
                 [TestResult.CreateIgnoredResult(ignoreMessage)];
             return false;

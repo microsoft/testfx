@@ -1,12 +1,19 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.Helpers;
 
 /// <summary>
 /// We use positive exit codes for failure because POSIX/BASH exit codes are unsigned 8-bit integers.
 /// On POSIX systems the standard exit code is 0 for success and any number from 1 to 255 for anything else.
 /// </summary>
+// TODO: Consider changing this to an enum, and rename to 'ExitCode' to follow enum naming convention.
+// Being an enum makes it easier to do 'Enum.IsDefined' checks to validate if an exit code is a known MTP exit code.
+// Note: Changing this to enum would be binary breaking for extensions built against MTP <= 2.1 that still consume this via IVT
+// (those extensions reference the class directly from the MTP assembly, not via source embedding).
+[Embedded]
 internal static class ExitCodes
 {
     public const int Success = 0;

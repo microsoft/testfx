@@ -3,8 +3,6 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 /// <summary>
@@ -13,22 +11,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 [Serializable]
 internal sealed class TestFailedException : Exception
 {
-    public TestFailedException(UTF.UnitTestOutcome outcome, string errorMessage)
+    public TestFailedException(UnitTestOutcome outcome, string errorMessage)
         : this(outcome, errorMessage, null, null)
     {
     }
 
-    public TestFailedException(UTF.UnitTestOutcome outcome, string errorMessage, StackTraceInformation? stackTraceInformation)
+    public TestFailedException(UnitTestOutcome outcome, string errorMessage, StackTraceInformation? stackTraceInformation)
         : this(outcome, errorMessage, stackTraceInformation, null)
     {
     }
 
-    public TestFailedException(UTF.UnitTestOutcome outcome, string errorMessage, Exception? realException)
+    public TestFailedException(UnitTestOutcome outcome, string errorMessage, Exception? realException)
         : this(outcome, errorMessage, null, realException)
     {
     }
 
-    public TestFailedException(UTF.UnitTestOutcome outcome, string errorMessage, StackTraceInformation? stackTraceInformation, Exception? realException)
+    public TestFailedException(UnitTestOutcome outcome, string errorMessage, StackTraceInformation? stackTraceInformation, Exception? realException)
         : base(errorMessage, realException)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(errorMessage), "ErrorMessage should not be empty");
@@ -45,7 +43,7 @@ internal sealed class TestFailedException : Exception
     /// <summary>
     /// Gets outcome of the test case.
     /// </summary>
-    public UTF.UnitTestOutcome Outcome { get; private set; }
+    public UnitTestOutcome Outcome { get; private set; }
 
     public override string? StackTrace
         => StackTraceInformation is null ? base.StackTrace : StackTraceInformation.ErrorStackTrace;

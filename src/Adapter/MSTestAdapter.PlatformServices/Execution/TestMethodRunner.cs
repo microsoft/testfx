@@ -71,28 +71,19 @@ internal sealed class TestMethodRunner
         {
             result = await RunTestMethodAsync().ConfigureAwait(false);
         }
-        catch (TestFailedException ex)
-        {
-            result = [new TestResult { TestFailureException = ex }];
-        }
         catch (Exception ex)
         {
-            if (result == null || result.Length == 0)
-            {
-                result = [new TestResult { Outcome = UTF.UnitTestOutcome.Error }];
-            }
-
-#pragma warning disable IDE0056 // Use index operator
-            result[result.Length - 1] = new TestResult
-            {
-                TestFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
-                LogOutput = result[result.Length - 1].LogOutput,
-                LogError = result[result.Length - 1].LogError,
-                DebugTrace = result[result.Length - 1].DebugTrace,
-                TestContextMessages = result[result.Length - 1].TestContextMessages,
-                Duration = result[result.Length - 1].Duration,
-            };
-#pragma warning restore IDE0056 // Use index operator
+            // NOTE: We intentionally don't have any special casing for TestFailedException in this code path.
+            // It's handled down by TestMethodInfo which also unwraps TargetInvocationException.
+            // RunTestMethodAsync is not supposed to throw any exceptions. So it's always an **error** if we got an exception here.
+            result =
+            [
+                new TestResult
+                {
+                    Outcome = UnitTestOutcome.Error,
+                    TestFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                },
+            ];
         }
         finally
         {
@@ -127,7 +118,7 @@ internal sealed class TestMethodRunner
         {
             if (_test.TestDataSourceIgnoreMessage is not null)
             {
-                _testContext.SetOutcome(UTF.UnitTestOutcome.Ignored);
+                _testContext.SetOutcome(UnitTestOutcome.Ignored);
                 return [TestResult.CreateIgnoredResult(_test.TestDataSourceIgnoreMessage)];
             }
 
@@ -160,13 +151,13 @@ internal sealed class TestMethodRunner
         }
 
         // Get aggregate outcome.
-        UTF.UnitTestOutcome aggregateOutcome = GetAggregateOutcome(results);
+        UnitTestOutcome aggregateOutcome = GetAggregateOutcome(results);
         _testContext.SetOutcome(aggregateOutcome);
 
         // In case of data driven, set parent info in results.
         if (isDataDriven)
         {
-            results = UpdateResultsWithParentInfo(results);
+            UpdateResultsWithParentInfo(results);
         }
 
         // Set a result in case no result is present.
@@ -175,7 +166,7 @@ internal sealed class TestMethodRunner
             TestResult emptyResult = new()
             {
                 Outcome = aggregateOutcome,
-                TestFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, Resource.UTA_NoTestResult),
+                TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult),
             };
 
             results.Add(emptyResult);
@@ -213,29 +204,12 @@ internal sealed class TestMethodRunner
                 continue;
             }
 
-            IEnumerable<object?[]>? dataSource;
-
-            // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.
-            // Any change made here should be reflected in AssemblyEnumerator.ProcessTestDataSourceTests as well.
-            dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
-
-            if (!dataSource.Any())
+            // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.TryUnfoldITestDataSource.
+            // Any change made here should be reflected in AssemblyEnumerator.TryUnfoldITestDataSource as well.
+            bool dataSourceHasData = false;
+            foreach (object?[] data in testDataSource.GetData(_testMethodInfo.MethodInfo))
             {
-                if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
-                {
-                    throw testDataSource.GetExceptionForEmptyDataSource(_testMethodInfo.MethodInfo);
-                }
-
-                var inconclusiveResult = new TestResult
-                {
-                    Outcome = UTF.UnitTestOutcome.Inconclusive,
-                };
-                results.Add(inconclusiveResult);
-                continue;
-            }
-
-            foreach (object?[] data in dataSource)
-            {
+                dataSourceHasData = true;
                 try
                 {
                     TestResult[] testResults = await ExecuteTestWithDataSourceAsync(testDataSource, data, actualDataAlreadyHandledDuringDiscovery: false).ConfigureAwait(false);
@@ -247,6 +221,20 @@ internal sealed class TestMethodRunner
                     _testMethodInfo.SetArguments(null);
                 }
             }
+
+            if (!dataSourceHasData)
+            {
+                if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+                {
+                    throw testDataSource.GetExceptionForEmptyDataSource(_testMethodInfo.MethodInfo);
+                }
+
+                var inconclusiveResult = new TestResult
+                {
+                    Outcome = UnitTestOutcome.Inconclusive,
+                };
+                results.Add(inconclusiveResult);
+            }
         }
 
         return hasTestDataSource;
@@ -254,8 +242,7 @@ internal sealed class TestMethodRunner
 
     private async Task ExecuteTestFromDataSourceAttributeAsync(List<TestResult> results)
     {
-        Stopwatch watch = new();
-        watch.Start();
+        var watch = Stopwatch.StartNew();
 
         try
         {
@@ -264,7 +251,7 @@ internal sealed class TestMethodRunner
             {
                 var inconclusiveResult = new TestResult
                 {
-                    Outcome = UTF.UnitTestOutcome.Inconclusive,
+                    Outcome = UnitTestOutcome.Inconclusive,
                     Duration = watch.Elapsed,
                 };
                 results.Add(inconclusiveResult);
@@ -291,7 +278,7 @@ internal sealed class TestMethodRunner
         {
             var failedResult = new TestResult
             {
-                Outcome = UTF.UnitTestOutcome.Error,
+                Outcome = UnitTestOutcome.Error,
                 TestFailureException = ex,
                 Duration = watch.Elapsed,
             };
@@ -383,7 +370,6 @@ internal sealed class TestMethodRunner
         foreach (TestResult testResult in testResults)
         {
             testResult.DisplayName = displayName;
-            testResult.DatarowIndex = rowIndex;
             testResult.Duration = stopwatch.Elapsed;
         }
 
@@ -403,7 +389,7 @@ internal sealed class TestMethodRunner
                 {
                     try
                     {
-                        using (TestContextImplementation.SetCurrentTestContext(_testMethodInfo.TestContext as TestContextImplementation))
+                        using (TestContextImplementation.SetCurrentTestContext(_testContext as TestContext))
                         {
                             tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false));
                         }
@@ -439,49 +425,34 @@ internal sealed class TestMethodRunner
     /// </summary>
     /// <param name="results">Results.</param>
     /// <returns>Aggregate outcome.</returns>
-    private static UTF.UnitTestOutcome GetAggregateOutcome(List<TestResult> results)
+    private static UnitTestOutcome GetAggregateOutcome(List<TestResult> results)
     {
         // In case results are not present, set outcome as unknown.
         if (results.Count == 0)
         {
-            return UTF.UnitTestOutcome.Unknown;
+            return UnitTestOutcome.Unknown;
         }
 
         // Get aggregate outcome.
-        UTF.UnitTestOutcome aggregateOutcome = results[0].Outcome;
-        foreach (TestResult result in results)
+        UnitTestOutcome aggregateOutcome = results[0].Outcome;
+        for (int i = 1; i < results.Count; i++)
         {
-            aggregateOutcome = aggregateOutcome.GetMoreImportantOutcome(result.Outcome);
+            aggregateOutcome = aggregateOutcome.GetMoreImportantOutcome(results[i].Outcome);
         }
 
         return aggregateOutcome;
     }
 
     /// <summary>
-    /// Updates given results with parent info if results are greater than 1.
-    /// Add parent results as first result in updated result.
+    /// Updates each given result with new execution and parent execution identifiers.
     /// </summary>
     /// <param name="results">Results.</param>
-    /// <returns>Updated results which contains parent result as first result. All other results contains parent result info.</returns>
-    private static List<TestResult> UpdateResultsWithParentInfo(List<TestResult> results)
+    private static void UpdateResultsWithParentInfo(List<TestResult> results)
     {
-        // Return results in case there are no results.
-        if (results.Count == 0)
-        {
-            return results;
-        }
-
-        // UpdatedResults contain parent result at first position and remaining results has parent info updated.
-        var updatedResults = new List<TestResult>();
-
         foreach (TestResult result in results)
         {
             result.ExecutionId = Guid.NewGuid();
             result.ParentExecId = Guid.NewGuid();
-
-            updatedResults.Add(result);
         }
-
-        return updatedResults;
     }
 }

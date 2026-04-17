@@ -35,6 +35,8 @@
     <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
     <AssemblyName>MSTest.TestFramework.Extensions</AssemblyName>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+
+    <DefineConstants>$(DefineConstants);EXCLUDE_RANGE_INDEX_POLYFILL;EXCLUDE_OS_POLYFILL</DefineConstants>
   </PropertyGroup>
 
   <!-- WinUI specific properties -->
@@ -56,15 +58,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
-
     <PackageReference Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Include="Microsoft.WindowsAppSDK" />
+  </ItemGroup>
 
-    <!-- This dependency is used only in adapter, but we have to add it to test framework. -->
-    <!-- See comment in MSTest.TestAdapter.nuspec for info. -->
-    <!-- START: Moved from MSTest.TestAdapter -->
-    <PackageReference Include="System.Threading.Tasks.Extensions" Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
-    <!-- END: Moved from MSTest.TestAdapter -->
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">

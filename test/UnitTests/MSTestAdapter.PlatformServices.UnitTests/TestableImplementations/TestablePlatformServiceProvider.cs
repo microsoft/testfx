@@ -74,7 +74,7 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
         return testContextImpl;
     }
 
-    public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle) => MockTestSourceHost.Object;
+    public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings) => MockTestSourceHost.Object;
 
     public void SetupMockReflectionOperations()
     {

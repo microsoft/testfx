@@ -133,7 +133,7 @@ public sealed class PropertyBagTests
         property.Add(objB);
         property.Add(PassedTestNodeStateProperty.CachedInstance);
 
-        Assert.AreEqual(3, property.AsEnumerable().Count());
+        Assert.HasCount(3, property.AsEnumerable());
 
         var list = property.AsEnumerable().ToList();
         foreach (IProperty prop in list.ToArray())
@@ -161,7 +161,7 @@ public sealed class PropertyBagTests
         Assert.IsNull(property.SingleOrDefault<TestNodeStateProperty>());
         Assert.ThrowsExactly<InvalidOperationException>(property.Single<TestNodeStateProperty>);
         Assert.IsEmpty(property.OfType<TestNodeStateProperty>());
-        Assert.AreEqual(0, property.AsEnumerable().Count());
+        Assert.IsEmpty(property.AsEnumerable());
 
         foreach (IProperty item in property)
         {

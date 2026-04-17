@@ -118,6 +118,7 @@ internal sealed class Json
         {
             List<(string Name, object? Value)> properties =
             [
+                with(capacity: 16),
                 (JsonRpcStrings.Uid, message.Uid.Value),
                 (JsonRpcStrings.DisplayName, message.DisplayName)
             ];

@@ -7,7 +7,6 @@ using System.Security;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
@@ -22,20 +21,18 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <summary>
     /// Helper for reflection API's.
     /// </summary>
-    private readonly ReflectionOperations _reflectionOperations;
+    private static readonly ReflectHelper ReflectHelper = ReflectHelper.Instance;
 
     /// <summary>
     /// Type cache.
     /// </summary>
-    private readonly TypeCache _typeCache;
+    private readonly TypeCache _typeCache = new(ReflectHelper);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AssemblyEnumerator"/> class.
     /// </summary>
     public AssemblyEnumerator()
     {
-        _reflectionOperations = (ReflectionOperations)PlatformServiceProvider.Instance.ReflectionOperations;
-        _typeCache = new TypeCache(_reflectionOperations);
     }
 
     /// <summary>
@@ -43,11 +40,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// </summary>
     /// <param name="settings">The settings for the session.</param>
     /// <remarks>Use this constructor when creating this object in a new app domain so the settings for this app domain are set.</remarks>
-    public AssemblyEnumerator(MSTestSettings settings)
-        : this()
+    public AssemblyEnumerator(MSTestSettings settings) =>
         // Populate the settings into the domain(Desktop workflow) performing discovery.
         // This would just be resetting the settings to itself in non desktop workflows.
-        => MSTestSettings.PopulateSettings(settings);
+        MSTestSettings.PopulateSettings(settings);
 
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
@@ -65,31 +61,27 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// Enumerates through all types in the assembly in search of valid test methods.
     /// </summary>
     /// <param name="assemblyFileName">The assembly file name.</param>
+    /// <param name="mustSerialize">Flag set to true when parameterized test data must be serialized.</param>
     /// <returns>A collection of Test Elements.</returns>
-    internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName)
+    internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName, bool mustSerialize)
     {
         List<string> warnings = [];
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
-        List<UnitTestElement> tests = [];
+        var tests = new List<UnitTestElement>();
 
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName);
 
         Type[] types = GetTypes(assembly);
-        bool discoverInternals = _reflectionOperations.GetCustomAttributes(assembly, typeof(DiscoverInternalsAttribute))
-            .OfType<DiscoverInternalsAttribute>()
-            .Any();
+        bool discoverInternals = ReflectHelper.HasDiscoverInternalsAttribute(assembly);
 
-        TestDataSourceOptionsAttribute? assemblyUnfoldingStrategyAttribute = _reflectionOperations.GetCustomAttributes(assembly, typeof(TestDataSourceOptionsAttribute))
-            .OfType<TestDataSourceOptionsAttribute>()
-            .FirstOrDefault();
-        TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = assemblyUnfoldingStrategyAttribute?.UnfoldingStrategy switch
+        TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = ReflectHelper.GetTestDataSourceOptions(assembly)?.UnfoldingStrategy switch
         {
             // When strategy is auto we want to unfold
             TestDataSourceUnfoldingStrategy.Auto => TestDataSourceUnfoldingStrategy.Unfold,
             // When strategy is set, let's use it
             { } value => value,
             // When the attribute is not set, let's look at the legacy attribute
-            null => _reflectionOperations.GetCustomAttributes(assembly, typeof(TestDataSourceDiscoveryAttribute)).OfType<TestDataSourceDiscoveryAttribute>().FirstOrDefault()?.DiscoveryOption switch
+            null => ReflectHelper.GetTestDataSourceDiscoveryOption(assembly) switch
             {
                 TestDataSourceDiscoveryOption.DuringExecution => TestDataSourceUnfoldingStrategy.Fold,
                 _ => TestDataSourceUnfoldingStrategy.Unfold,
@@ -99,7 +91,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         foreach (Type type in types)
         {
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, type, warnings, discoverInternals,
-                dataSourcesUnfoldingStrategy);
+                dataSourcesUnfoldingStrategy, mustSerialize);
             tests.AddRange(testsInType);
         }
 
@@ -151,10 +143,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <returns>a TypeEnumerator instance.</returns>
     internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals)
     {
-        var typeValidator = new TypeValidator(_reflectionOperations, discoverInternals);
-        var testMethodValidator = new TestMethodValidator(_reflectionOperations, discoverInternals);
+        var typeValidator = new TypeValidator(ReflectHelper, discoverInternals);
+        var testMethodValidator = new TestMethodValidator(ReflectHelper, discoverInternals);
 
-        return new TypeEnumerator(type, assemblyFileName, _reflectionOperations, typeValidator, testMethodValidator);
+        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator);
     }
 
     private List<UnitTestElement> DiscoverTestsInType(
@@ -162,10 +154,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
         Type type,
         List<string> warningMessages,
         bool discoverInternals,
-        TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy)
+        TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy,
+        bool mustSerialize)
     {
         string? typeFullName = null;
-        List<UnitTestElement> tests = [];
+        var tests = new List<UnitTestElement>();
 
         try
         {
@@ -179,7 +172,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 {
                     if (_typeCache.GetTestMethodInfoForDiscovery(test.TestMethod) is { } testMethodInfo)
                     {
-                        if (TryUnfoldITestDataSources(test, testMethodInfo, dataSourcesUnfoldingStrategy, tests))
+                        if (TryUnfoldITestDataSources(test, testMethodInfo, dataSourcesUnfoldingStrategy, tests, mustSerialize))
                         {
                             continue;
                         }
@@ -205,7 +198,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return tests;
     }
 
-    private static bool TryUnfoldITestDataSources(UnitTestElement test, DiscoveryTestMethodInfo testMethodInfo, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, List<UnitTestElement> tests)
+    private static bool TryUnfoldITestDataSources(UnitTestElement test, DiscoveryTestMethodInfo testMethodInfo, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, List<UnitTestElement> tests, bool mustSerialize)
     {
         // It should always be `true`, but if any part of the chain is obsolete; it might not contain those.
         // Since we depend on those properties, if they don't exist, we bail out early.
@@ -230,7 +223,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
         // attributes and filter them. We don't have to care if there is one, because this method is only entered when
         // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
-        IEnumerable<ITestDataSource> testDataSources = ((ReflectionOperations)PlatformServiceProvider.Instance.ReflectionOperations).GetAttributes<Attribute>(testMethodInfo.MethodInfo).OfType<ITestDataSource>();
+        IEnumerable<ITestDataSource> testDataSources = ReflectHelper.Instance.GetAttributes<Attribute>(testMethodInfo.MethodInfo).OfType<ITestDataSource>();
 
         // We need to use a temporary list to avoid adding tests to the main list if we fail to expand any data source.
         List<UnitTestElement> tempListOfTests = [];
@@ -242,7 +235,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             foreach (ITestDataSource dataSource in testDataSources)
             {
                 isDataDriven = true;
-                if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.TestMethod.DisplayName), tempListOfTests, ref globalTestCaseIndex))
+                if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.TestMethod.DisplayName), tempListOfTests, ref globalTestCaseIndex, mustSerialize))
                 {
                     // TODO: Improve multi-source design!
                     // Ideally we would want to consider each data source separately but when one source cannot be expanded,
@@ -275,37 +268,21 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests, ref int globalTestCaseIndex)
+    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests, ref int globalTestCaseIndex, bool mustSerialize)
     {
         // Otherwise, unfold the data source and verify it can be serialized.
-        IEnumerable<object?[]>? data;
 
-        // This code is to discover tests. To run the tests code is in TestMethodRunner.ExecuteDataSourceBasedTests.
-        // Any change made here should be reflected in TestMethodRunner.ExecuteDataSourceBasedTests as well.
-        data = dataSource.GetData(methodInfo);
+        // This code is to discover tests. To run the tests code is in TestMethodRunner.TryExecuteFoldedDataDrivenTestsAsync.
+        // Any change made here should be reflected in TestMethodRunner.TryExecuteFoldedDataDrivenTestsAsync as well.
+        IEnumerable<object?[]> dataEnumerable = dataSource.GetData(methodInfo);
         string? testDataSourceIgnoreMessage = (dataSource as ITestDataSourceIgnoreCapability)?.IgnoreMessage;
 
-        if (!data.Any())
-        {
-            if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
-            {
-                throw dataSource.GetExceptionForEmptyDataSource(methodInfo);
-            }
-
-            UnitTestElement discoveredTest = test.Clone();
-            // Make the test not data driven, because it had no data.
-            discoveredTest.TestMethod.DataType = DynamicDataType.None;
-            discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
-            discoveredTest.TestMethod.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.TestMethod.DisplayName;
-            tests.Add(discoveredTest);
-
-            return true;
-        }
-
         var discoveredTests = new List<UnitTestElement>();
+        bool dataSourceHasData = false;
 
-        foreach (object?[] dataOrTestDataRow in data)
+        foreach (object?[] dataOrTestDataRow in dataEnumerable)
         {
+            dataSourceHasData = true;
             object?[] d = dataOrTestDataRow;
             ParameterInfo[] parameters = methodInfo.GetParameters();
             if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out IList<string>? testCategoriesFromTestDataRow))
@@ -349,7 +326,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             try
             {
-                discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
+                if (mustSerialize)
+                {
+                    discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
+                }
+
                 discoveredTest.TestMethod.ActualData = d;
                 discoveredTest.TestMethod.TestCaseIndex = globalTestCaseIndex;
                 discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
@@ -372,6 +353,23 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             discoveredTests.Add(discoveredTest);
             globalTestCaseIndex++;
+        }
+
+        if (!dataSourceHasData)
+        {
+            if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+            {
+                throw dataSource.GetExceptionForEmptyDataSource(methodInfo);
+            }
+
+            UnitTestElement discoveredTest = test.Clone();
+            // Make the test not data driven, because it had no data.
+            discoveredTest.TestMethod.DataType = DynamicDataType.None;
+            discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
+            discoveredTest.TestMethod.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.TestMethod.DisplayName;
+            tests.Add(discoveredTest);
+
+            return true;
         }
 
         tests.AddRange(discoveredTests);

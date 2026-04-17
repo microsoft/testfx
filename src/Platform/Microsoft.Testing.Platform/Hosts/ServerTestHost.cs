@@ -134,26 +134,36 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
     {
         using IPlatformActivity? activity = ServiceProvider.GetPlatformOTelService()?.StartActivity("ServerTestHost");
 
+        await _logger.LogDebugAsync("Starting server mode").ConfigureAwait(false);
+
         try
         {
-            await _logger.LogDebugAsync("Starting server mode").ConfigureAwait(false);
             _messageHandler = await _messageHandlerFactory.CreateMessageHandlerAsync(cancellationToken).ConfigureAwait(false);
 
             await HandleMessagesAsync(cancellationToken).ConfigureAwait(false);
-
-            (_messageHandler as IDisposable)?.Dispose();
         }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
-        {
-        }
-        catch (SocketException ex) when (ex.SocketErrorCode == SocketError.OperationAborted && cancellationToken.IsCancellationRequested)
-        {
-        }
-        catch (ObjectDisposedException) when (cancellationToken.IsCancellationRequested)
+        catch (Exception ex) when
+            // When the cancellation token fires during TCP connect or message handling, several
+            // exception types can surface depending on the exact timing:
+            (cancellationToken.IsCancellationRequested
+            // the standard cancellation path.
+            && (ex is OperationCanceledException
+                // the TcpClient/stream was disposed while an async operation was in flight.
+                or ObjectDisposedException
+                // TOCTOU race in the runtime: ConnectAsync completed successfully at the OS level,
+                // but the cancellation callback (registered via CancellationToken.UnsafeRegister
+                // in SocketAsyncEventArgs.ProcessIOCPResult) called CancelIoEx, tearing down
+                // the socket's connected state before GetStream() could read it.
+                or InvalidOperationException
+                // the pending overlapped I/O was cancelled by CancelIoEx (Windows) from the
+                // cancellation callback, completing with SocketError.OperationAborted.
+                or SocketException { SocketErrorCode: SocketError.OperationAborted }))
         {
         }
         finally
         {
+            (_messageHandler as IDisposable)?.Dispose();
+
             // Cleanup all services but special one because in the per-call mode we needed to keep them alive for reuse
             await DisposeServiceProviderAsync(ServiceProvider).ConfigureAwait(false);
         }
@@ -195,7 +205,9 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
                     if (!_serverClosingTokenSource.IsCancellationRequested)
                     {
                         await _logger.LogDebugAsync("Server requested to shutdown").ConfigureAwait(false);
-                        await _serverClosingTokenSource.CancelAsync().ConfigureAwait(false);
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
+                        _serverClosingTokenSource.Cancel();
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
                     }
 
                     // Signal the exit call
@@ -204,7 +216,9 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
                     // If there're no in-flight request we can close the server
                     if (_clientToServerRequests.IsEmpty)
                     {
-                        await _stopMessageHandler.CancelAsync().ConfigureAwait(false);
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
+                        _stopMessageHandler.Cancel();
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
                     }
 
                     continue;
@@ -701,7 +715,11 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
     private sealed class RpcInvocationState : IDisposable
     {
+#if NET9_0_OR_GREATER
         private readonly Lock _cancellationTokenSourceLock = new();
+#else
+        private readonly object _cancellationTokenSourceLock = new();
+#endif
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private volatile bool _isDisposed;
 

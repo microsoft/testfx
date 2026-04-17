@@ -257,9 +257,9 @@ internal sealed class DeploymentItemUtility
 
         IList<DeploymentItem> result = [];
 
-        foreach ((string? key, string? value) in deploymentItemsData)
+        foreach (KeyValuePair<string, string> kvp in deploymentItemsData)
         {
-            AddDeploymentItem(result, new DeploymentItem(key, value));
+            AddDeploymentItem(result, new DeploymentItem(kvp.Key, kvp.Value));
         }
 
         return result;

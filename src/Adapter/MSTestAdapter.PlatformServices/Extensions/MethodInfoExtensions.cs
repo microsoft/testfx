@@ -130,7 +130,7 @@ internal static class MethodInfoExtensions
         if (methodParameters is { Length: > 0 } && arguments == null)
         {
             throw new TestFailedException(
-                TestTools.UnitTesting.UnitTestOutcome.Error,
+                UnitTestOutcome.Error,
                 string.Format(
                     CultureInfo.InvariantCulture,
                     Resource.CannotRunTestMethodNoDataError,
@@ -173,7 +173,7 @@ internal static class MethodInfoExtensions
             catch (Exception ex) when (ex is TargetParameterCountException or ArgumentException)
             {
                 throw new TestFailedException(
-                    TestTools.UnitTesting.UnitTestOutcome.Error,
+                    UnitTestOutcome.Error,
                     string.Format(
                         CultureInfo.InvariantCulture,
                         Resource.CannotRunTestArgumentsMismatchError,
@@ -204,7 +204,7 @@ internal static class MethodInfoExtensions
 
     private static void InferGenerics(Type parameterType, Type argumentType, List<(Type ParameterType, Type Substitution)> result)
     {
-        if (parameterType.IsGenericMethodParameter())
+        if (parameterType.IsGenericParameter && parameterType.DeclaringMethod is not null)
         {
             // We found a generic parameter. The argument type should be the substitution for it.
             result.Add((parameterType, argumentType));
@@ -254,7 +254,7 @@ internal static class MethodInfoExtensions
             // An example where this could happen is:
             // [TestMethod]
             // public void MyTestMethod<T>() { }
-            throw new TestFailedException(TestTools.UnitTesting.UnitTestOutcome.Error, string.Format(CultureInfo.InvariantCulture, Resource.GenericParameterCantBeInferredBecauseNoArguments, methodInfo.Name));
+            throw new TestFailedException(UnitTestOutcome.Error, string.Format(CultureInfo.InvariantCulture, Resource.GenericParameterCantBeInferredBecauseNoArguments, methodInfo.Name));
         }
 
         Type[] genericDefinitions = methodInfo.GetGenericArguments();
@@ -313,7 +313,7 @@ internal static class MethodInfoExtensions
         {
             // The caller catches ArgumentExceptions and will lose the original exception details.
             // We transform the exception to TestFailedException here to preserve its details.
-            throw new TestFailedException(TestTools.UnitTesting.UnitTestOutcome.Error, e.TryGetMessage(), e.TryGetStackTraceInformation(), e);
+            throw new TestFailedException(UnitTestOutcome.Error, e.TryGetMessage(), e.TryGetStackTraceInformation(), e);
         }
     }
 

@@ -122,11 +122,6 @@
         <target state="translated">Možnost --{0} je vyhrazená a nelze ji použít zprostředkovateli: {0}</target>
         <note />
       </trans-unit>
-      <trans-unit id="CommandLineOptionObsoleteWarning">
-        <source>Warning: Option '--{0}' is obsolete. {1}</source>
-        <target state="translated">Upozornění: Možnost --{0} je zastaralá. {1}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">Možnost --{0} od zprostředkovatele {1} (UID: {2}) používá vyhrazenou předponu --internal.</target>
@@ -419,16 +414,6 @@
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
         <target state="translated">{0} spuštěné testy</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">Není zaregistrovaný žádný serializátor s ID {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">Není zaregistrovaný žádný serializátor s typem {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="NotAvailable">
@@ -830,6 +815,25 @@ Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
         <target state="translated">--output očekává jeden parametr s hodnotou Normal nebo Detailed.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="translated">--show-stdout a --show-stderr očekávají jeden parametr s hodnotou All, Failed nebo None.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Určuje, kdy se má zobrazit zachycený výstup chyby testu.
+Platné hodnoty jsou All, Failed, None. Výchozí hodnota je All.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Určuje, kdy se má zobrazit zachycený standardní výstup testu.
+Platné hodnoty jsou All, Failed, None. Výchozí hodnota je All.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
         <target state="translated">Zapíše výsledky testu do terminálu.</target>
@@ -975,11 +979,6 @@ Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
         <target state="translated">Neočekávané volání telemetrie, telemetrie je zakázaná.</target>
         <note />
       </trans-unit>
-      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occurred during byte conversion</source>
-        <target state="translated">Při převodu bajtů došlo k neočekávané výjimce.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
@@ -1020,11 +1019,6 @@ Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
         <target state="translated">Zprostředkovatel klienta chatu již byl zaregistrován.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Rozšíření AI fungují jenom s tvůrci typu Microsoft.Testing.Platform.Builder.TestApplicationBuilder.</target>
         <note />
       </trans-unit>
     </body>

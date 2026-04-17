@@ -52,30 +52,21 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicatio
 
     public async Task BeforeRunAsync(CancellationToken cancellationToken)
     {
-        if (!_isEnabled || cancellationToken.IsCancellationRequested)
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!_isEnabled)
         {
             return;
         }
 
-        try
-        {
-            if (_isEnabled)
-            {
-                string namedPipeName = _environment.GetEnvironmentVariable(TrxEnvironmentVariableProvider.TRXNAMEDPIPENAME)
-                    ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable, TrxEnvironmentVariableProvider.TRXNAMEDPIPENAME));
-                NamedPipeClient = new NamedPipeClient(namedPipeName, _environment);
-                NamedPipeClient.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
-                NamedPipeClient.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
-                NamedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+        string namedPipeName = _environment.GetEnvironmentVariable(TrxEnvironmentVariableProvider.TRXNAMEDPIPENAME)
+            ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable, TrxEnvironmentVariableProvider.TRXNAMEDPIPENAME));
+        NamedPipeClient = new NamedPipeClient(namedPipeName, _environment);
+        NamedPipeClient.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
+        NamedPipeClient.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
+        NamedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
 
-                // Connect to the named pipe server
-                await NamedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
-            }
-        }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
-        {
-            // Do nothing, we're stopping
-        }
+        // Connect to the named pipe server
+        await NamedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
     }
 
     public void Dispose()
