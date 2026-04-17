@@ -4,7 +4,6 @@
 using Microsoft.Testing.Extensions.Policy.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
 
@@ -25,7 +24,7 @@ internal sealed class RetryExecutionFilterFactory : ITestExecutionFilterFactory
 
     public string Uid => nameof(RetryExecutionFilterFactory);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => ExtensionResources.RetryFailedTestsExtensionDisplayName;
 

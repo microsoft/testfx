@@ -29,7 +29,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
 
     public string Uid => nameof(RetryOrchestrator);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => ExtensionResources.RetryFailedTestsExtensionDisplayName;
 

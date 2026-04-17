@@ -4,7 +4,6 @@
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
@@ -12,7 +11,7 @@ internal sealed class MSBuildCommandLineProvider : ICommandLineOptionsProvider
 {
     public string Uid => nameof(MSBuildCommandLineProvider);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => nameof(MSBuildCommandLineProvider);
 

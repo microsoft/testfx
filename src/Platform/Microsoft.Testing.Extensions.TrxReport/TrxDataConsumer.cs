@@ -90,7 +90,7 @@ internal sealed class TrxReportGenerator :
     public string Uid => nameof(TrxReportGenerator);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = ExtensionResources.TrxReportGeneratorDisplayName;

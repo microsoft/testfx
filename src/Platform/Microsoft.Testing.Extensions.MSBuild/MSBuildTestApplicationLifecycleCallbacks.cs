@@ -30,7 +30,7 @@ internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestHostApplic
 
     public string Uid => nameof(MSBuildTestApplicationLifecycleCallbacks);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => nameof(MSBuildTestApplicationLifecycleCallbacks);
 

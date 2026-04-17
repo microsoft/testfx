@@ -32,7 +32,7 @@ internal sealed class HangDumpCommandLineProvider : ICommandLineOptionsProvider
 
     public string Uid => nameof(HangDumpCommandLineProvider);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => ExtensionResources.HangDumpExtensionDisplayName;
 
