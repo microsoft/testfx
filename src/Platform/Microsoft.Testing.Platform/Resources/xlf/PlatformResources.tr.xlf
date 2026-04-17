@@ -122,11 +122,6 @@
         <target state="translated">'--{0}' seçeneği ayrılmıştır ve şu sağlayıcılar tarafından kullanılamaz: '{0}'</target>
         <note />
       </trans-unit>
-      <trans-unit id="CommandLineOptionObsoleteWarning">
-        <source>Warning: Option '--{0}' is obsolete. {1}</source>
-        <target state="translated">Uyarı: '--{0}' seçeneği artık kullanılmamaktadır. {1}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">'{1}' sağlayıcısındaki (UID: {2}) `--{0}` seçeneği ayrılmış '--internal' önekini kullanıyor</target>
@@ -818,6 +813,25 @@ Geçerli değerler: ‘Normal’, ‘Ayrıntılı’. Varsayılan değer: ‘Nor
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
         <target state="translated">--çıkışta ‘Normal’ veya ‘Ayrıntılı’ değerine sahip tek bir parametre beklenir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="translated">--show-stdout ve --show-stderr, değeri 'Tümü', 'Başarısız' veya 'Yok' olan tek bir parametre bekliyor.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Testte yakalanan hata çıktısının ne zaman gösterileceğini belirler.
+Geçerli değerler: 'Tümü', 'Başarısız', 'Yok'. Varsayılan değer: 'Tümü'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Testte yakalanan standart çıktının ne zaman gösterileceğini belirler.
+Geçerli değerler: 'Tümü', 'Başarısız', 'Yok'. Varsayılan değer: 'Tümü'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">

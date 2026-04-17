@@ -15,14 +15,14 @@ internal class TestHostOrchestratorManager : ITestHostOrchestratorManager, Exten
 
     public void AddTestHostOrchestrator(Func<IServiceProvider, ITestHostExecutionOrchestrator> factory)
     {
-        Ensure.NotNull(factory);
+        _ = factory ?? throw new ArgumentNullException(nameof(factory));
         _factories ??= [];
         _factories.Add(factory);
     }
 
     void Extensions.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestrator(Func<IServiceProvider, Extensions.TestHostOrchestrator.ITestHostOrchestrator> factory)
     {
-        Ensure.NotNull(factory);
+        _ = factory ?? throw new ArgumentNullException(nameof(factory));
         _factories ??= [];
         _factories.Add(sp => factory(sp));
     }
@@ -60,7 +60,7 @@ internal class TestHostOrchestratorManager : ITestHostOrchestratorManager, Exten
 
     public void AddTestHostOrchestratorApplicationLifetime(Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime> testHostOrchestratorApplicationLifetimeFactory)
     {
-        Ensure.NotNull(testHostOrchestratorApplicationLifetimeFactory);
+        _ = testHostOrchestratorApplicationLifetimeFactory ?? throw new ArgumentNullException(nameof(testHostOrchestratorApplicationLifetimeFactory));
         _testHostOrchestratorApplicationLifetimeFactories.Add(testHostOrchestratorApplicationLifetimeFactory);
     }
 

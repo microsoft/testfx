@@ -507,7 +507,11 @@ public sealed partial class Assert
         CheckParameterNotNull(value, "Assert.Contains", "value");
         CheckParameterNotNull(substring, "Assert.Contains", "substring");
 
+#if NETCOREAPP
         if (!value.Contains(substring, comparisonType))
+#else
+        if (value.IndexOf(substring, comparisonType) < 0)
+#endif
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
@@ -760,7 +764,11 @@ public sealed partial class Assert
         CheckParameterNotNull(value, "Assert.DoesNotContain", "value");
         CheckParameterNotNull(substring, "Assert.DoesNotContain", "substring");
 
+#if NETCOREAPP
         if (value.Contains(substring, comparisonType))
+#else
+        if (value.IndexOf(substring, comparisonType) >= 0)
+#endif
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotContainFail, value, substring, userMessage);

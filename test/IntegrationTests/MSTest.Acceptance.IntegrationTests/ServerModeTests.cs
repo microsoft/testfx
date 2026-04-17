@@ -38,7 +38,7 @@ public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAs
         await Task.WhenAll(discoveryListener.WaitCompletion(), runListener.WaitCompletion());
         Assert.ContainsSingle(x => x.Node.NodeType == "action", discoveryCollector.TestNodeUpdates, "Wrong number of discovery");
         Assert.HasCount(2, runCollector.TestNodeUpdates);
-        Assert.AreNotEqual(0, logs.Count, "Logs are empty");
+        Assert.IsNotEmpty(logs, "Logs are empty");
         Assert.IsFalse(telemetry.IsEmpty, "telemetry is empty");
         await jsonClient.Exit();
         Assert.AreEqual(0, await jsonClient.WaitServerProcessExit(TestContext.CancellationToken));
@@ -69,15 +69,13 @@ public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAs
         Assert.AreEqual(3, exitCode);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "MSTestProject";
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (ProjectName, ProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 CurrentMSTestSourceCode
                 .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{TargetFrameworks.All.ToMSBuildTargetFrameworks()}</TargetFrameworks>")
                 .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
@@ -85,6 +83,5 @@ public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAs
                 .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
                 .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
                 .PatchCodeWithReplace("$Extra$", string.Empty));
-        }
     }
 }

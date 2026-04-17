@@ -255,11 +255,6 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">runsettings 항목 '{1}'에 대해 '{0}' 값이 잘못되었습니다. 설정은 무시됩니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="LegacyScenariosNotSupportedWarning">
-        <source>Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter.</source>
-        <target state="translated">경고: MSTest V2 어댑터에서는 testsettings 파일 또는 vsmdi 파일이 지원되지 않습니다.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="MissingDeploymentDependency">
         <source>Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</source>
         <target state="translated">테스트 실행 배포 문제: 어셈블리 또는 모듈 '{0}'을(를) 찾을 수 없습니다. 이유: {1}</target>

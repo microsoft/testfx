@@ -27,7 +27,7 @@ public abstract partial class CLITestBase
         string runSettingsXml = GetRunSettingsXml(string.Empty);
         var context = new InternalDiscoveryContext(runSettingsXml, testCaseFilter);
 
-        unitTestDiscoverer.DiscoverTestsInSource(assemblyPath, logger, sink, context);
+        unitTestDiscoverer.DiscoverTestsInSource(assemblyPath, logger, sink, context, false);
 
         return sink.DiscoveredTests;
     }

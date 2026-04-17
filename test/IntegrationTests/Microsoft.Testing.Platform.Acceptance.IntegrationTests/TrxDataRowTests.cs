@@ -47,7 +47,7 @@ public sealed class TrxDataRowTests : AcceptanceTestBase<TrxDataRowTests.TestAss
         return Regex.IsMatch(await reader.ReadToEndAsync(), pattern);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string AssetNameUsingMSTest = "TrxTestUsingMSTest";
         private const string WithDataRow = nameof(WithDataRow);
@@ -110,15 +110,12 @@ global using Microsoft.VisualStudio.TestTools.UnitTesting;
 
         public string TargetAssetPath => GetAssetPath(WithDataRow);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (WithDataRow, AssetNameUsingMSTest,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (WithDataRow, AssetNameUsingMSTest,
                 MSTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$IgnoreTestAttributeOrNothing$", string.Empty));
-        }
     }
 
     public TestContext TestContext { get; set; }

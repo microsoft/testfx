@@ -87,8 +87,6 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish {generator.TargetAssetPath} -r {RID}",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-            retryCount: 0,
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
 

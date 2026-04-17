@@ -122,11 +122,6 @@
         <target state="translated">L'opzione '--{0}' è riservata e non può essere usata dai provider: '{0}'</target>
         <note />
       </trans-unit>
-      <trans-unit id="CommandLineOptionObsoleteWarning">
-        <source>Warning: Option '--{0}' is obsolete. {1}</source>
-        <target state="translated">Avviso: l'opzione '--{0}' è obsoleta. {1}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">L'opzione '--{0}' del provider '{1}' (UID: {2}) usa il prefisso riservato '--internal'</target>
@@ -818,6 +813,25 @@ I valori validi sono 'Normal', 'Detailed'. L'impostazione predefinita è 'Normal
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
         <target state="translated">--l’output prevede un singolo parametro con un valore 'Normal' o 'Detailed'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="translated">--show-stdout e --show-stderr prevedono un singolo parametro con valore 'All', 'Failed' o 'None'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Determina quando mostrare l'output degli errori acquisito di un test.
+I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Determina quando mostrare l'output standard acquisito di un test.
+I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">

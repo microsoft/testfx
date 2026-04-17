@@ -35,7 +35,7 @@ public sealed partial class PropertyBag
     /// <param name="properties">The collection of properties.</param>
     public PropertyBag(params IProperty[] properties)
     {
-        Ensure.NotNull(properties);
+        _ = properties ?? throw new ArgumentNullException(nameof(properties));
 
         if (properties.Length == 0)
         {
@@ -78,7 +78,7 @@ public sealed partial class PropertyBag
     /// <param name="properties">The collection of properties.</param>
     public PropertyBag(IEnumerable<IProperty> properties)
     {
-        Ensure.NotNull(properties);
+        _ = properties ?? throw new ArgumentNullException(nameof(properties));
 
         foreach (IProperty property in properties)
         {
@@ -123,7 +123,7 @@ public sealed partial class PropertyBag
     /// <param name="property">The property to add.</param>
     public void Add(IProperty property)
     {
-        Ensure.NotNull(property);
+        _ = property ?? throw new ArgumentNullException(nameof(property));
 
         // Optimized access to the TestNodeStateProperty, it's one of the most used property.
         if (property is TestNodeStateProperty testNodeStateProperty)

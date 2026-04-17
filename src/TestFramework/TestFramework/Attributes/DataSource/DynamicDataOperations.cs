@@ -97,9 +97,14 @@ internal static class DynamicDataOperations
 
         ParameterInfo[] methodParameters = method.GetParameters();
         ParameterInfo? lastParameter = methodParameters.Length > 0 ? methodParameters[methodParameters.Length - 1] : null;
+
+#if NET9_0_OR_GREATER
         if (lastParameter is not null &&
             (lastParameter.GetCustomAttribute<ParamArrayAttribute>() is not null ||
                 lastParameter.GetCustomAttribute<ParamCollectionAttribute>() is not null))
+#else
+        if (lastParameter is not null && lastParameter.GetCustomAttribute<ParamArrayAttribute>() is not null)
+#endif
         {
             throw new NotSupportedException(
                 string.Format(

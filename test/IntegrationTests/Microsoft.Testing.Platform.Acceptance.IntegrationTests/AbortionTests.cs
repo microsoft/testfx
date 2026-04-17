@@ -27,7 +27,7 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 0, aborted: true);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
 #file Abort.csproj
@@ -140,20 +140,11 @@ internal class Capabilities : ITestFrameworkCapabilities
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            // We expect the same semantic for Linux, the test setup is not cross and we're using specific
-            // Windows API because this gesture is not easy xplat.
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                yield break;
-            }
-
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
+            => (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
     }
 
     public TestContext TestContext { get; set; }

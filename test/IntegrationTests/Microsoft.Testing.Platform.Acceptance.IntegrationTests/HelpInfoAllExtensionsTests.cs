@@ -102,6 +102,12 @@ Extension options:
         Enable generating TRX report
     --report-trx-filename
         The name of the generated TRX report
+    --show-stderr
+        Determines when to show captured error output of a test.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+    --show-stdout
+        Determines when to show captured standard output of a test.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
@@ -350,6 +356,16 @@ Registered command line providers:
         Hidden: False
         Description: Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+      --show-stderr
+        Arity: 1
+        Hidden: False
+        Description: Determines when to show captured error output of a test.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+      --show-stdout
+        Arity: 1
+        Hidden: False
+        Description: Determines when to show captured standard output of a test.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
   TrxReportGeneratorCommandLine
     Name: TRX report generator
     Version: *
@@ -388,7 +404,7 @@ Registered tools:
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string AllExtensionsAssetName = "AllExtensionsInfoTest";
 
@@ -460,13 +476,10 @@ public class DummyTestFramework : ITestFramework
 
         public string AllExtensionsTargetAssetPath => GetAssetPath(AllExtensionsAssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AllExtensionsAssetName, AllExtensionsAssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AllExtensionsAssetName, AllExtensionsAssetName,
                 AllExtensionsTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
     }
 
     public TestContext TestContext { get; set; }

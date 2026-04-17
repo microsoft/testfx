@@ -215,7 +215,7 @@ public sealed class CollectionAssert
         message = Assert.ReplaceNulls(message);
 
         bool foundNull = false;
-        Dictionary<object, bool> table = [];
+        HashSet<object> table = [];
         foreach (object? current in collection)
         {
             if (current == null)
@@ -239,7 +239,7 @@ public sealed class CollectionAssert
             }
             else
             {
-                if (!table.TryAdd(current, true))
+                if (!table.Add(current))
                 {
                     string userMessage = Assert.BuildUserMessage(message);
                     string finalMessage = string.Format(

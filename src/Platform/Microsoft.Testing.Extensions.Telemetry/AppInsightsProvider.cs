@@ -40,7 +40,7 @@ internal sealed partial class AppInsightsProvider :
     private readonly ITelemetryClientFactory _telemetryClientFactory;
     private readonly bool _isDevelopmentRepository;
     private readonly ILogger<AppInsightsProvider> _logger;
-    private readonly Task? _telemetryTask;
+    private readonly Task _telemetryTask;
     private readonly CancellationTokenSource _flushTimeoutOrStop = new();
 #if NETCOREAPP
     private readonly Channel<(string EventName, IDictionary<string, object> ParamsMap)> _payloads;
@@ -192,14 +192,14 @@ internal sealed partial class AppInsightsProvider :
                 {
                     StringBuilder builder = new();
                     builder.AppendLine(CultureInfo.InvariantCulture, $"Send telemetry event: {eventName}");
-                    foreach ((string key, string value) in properties)
+                    foreach (KeyValuePair<string, string> kvp in properties)
                     {
-                        builder.AppendLine(CultureInfo.InvariantCulture, $"    {key}: {value}");
+                        builder.AppendLine(CultureInfo.InvariantCulture, $"    {kvp.Key}: {kvp.Value}");
                     }
 
-                    foreach ((string key, double value) in metrics)
+                    foreach (KeyValuePair<string, double> kvp in metrics)
                     {
-                        builder.AppendLine(CultureInfo.InvariantCulture, $"    {key}: {value.ToString("f", CultureInfo.InvariantCulture)}");
+                        builder.AppendLine(CultureInfo.InvariantCulture, $"    {kvp.Key}: {kvp.Value.ToString("f", CultureInfo.InvariantCulture)}");
                     }
 
                     await _logger.LogTraceAsync(builder.ToString()).ConfigureAwait(false);
@@ -289,11 +289,6 @@ internal sealed partial class AppInsightsProvider :
 #endif
         if (!_isDisposed)
         {
-            if (_telemetryTask is null)
-            {
-                throw new InvalidOperationException("Unexpected null _telemetryTask");
-            }
-
             int flushForSeconds = 3;
             if (!_telemetryTask.Wait(TimeSpan.FromSeconds(flushForSeconds)))
             {
@@ -311,11 +306,6 @@ internal sealed partial class AppInsightsProvider :
         _payloads.Writer.Complete();
         if (!_isDisposed)
         {
-            if (_telemetryTask is null)
-            {
-                throw new InvalidOperationException("Unexpected null _telemetryTask");
-            }
-
             int flushForSeconds = 3;
             try
             {

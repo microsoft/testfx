@@ -154,7 +154,7 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
-        Assert.AreEqual(2, _serviceProvider.GetServicesInternal<ITestHostApplicationLifetime>().Count());
+        Assert.HasCount(2, _serviceProvider.GetServicesInternal<ITestHostApplicationLifetime>());
     }
 
     [TestMethod]
@@ -163,7 +163,7 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
-        Assert.AreEqual(0, _serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: false, skipInternalOnlyExtensions: true).Count());
+        Assert.IsEmpty(_serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: false, skipInternalOnlyExtensions: true));
     }
 
     [TestMethod]
@@ -172,7 +172,7 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
-        Assert.AreEqual(2, _serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: false, skipInternalOnlyExtensions: false).Count());
+        Assert.HasCount(2, _serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: false, skipInternalOnlyExtensions: false));
     }
 
     [TestMethod]
@@ -181,7 +181,7 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
-        Assert.AreEqual(1, _serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: true, skipInternalOnlyExtensions: false).Count());
+        Assert.HasCount(1, _serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: true, skipInternalOnlyExtensions: false));
     }
 
     [TestMethod]

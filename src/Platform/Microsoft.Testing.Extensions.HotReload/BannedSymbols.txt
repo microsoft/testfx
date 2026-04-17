@@ -1,5 +1,4 @@
-﻿T:System.ArgumentNullException; Use 'Guard' instead
-P:System.DateTime.Now; Use 'IClock' instead
+﻿P:System.DateTime.Now; Use 'IClock' instead
 P:System.DateTime.UtcNow; Use 'IClock' instead
 M:System.Threading.Tasks.Task.Run(System.Action); Use 'ITask' instead
 M:System.Threading.Tasks.Task.WhenAll(System.Threading.Tasks.Task[]); Use 'ITask' instead

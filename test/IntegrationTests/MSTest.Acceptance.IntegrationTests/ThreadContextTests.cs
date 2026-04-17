@@ -41,7 +41,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string InitToTestProjectName = "InitToTestThreadContextProject";
         private const string InitToTestSourceCode = """
@@ -125,13 +125,10 @@ public class UnitTest1
 
         public string InitToTestProjectPath => GetAssetPath(InitToTestProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (InitToTestProjectName, InitToTestProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (InitToTestProjectName, InitToTestProjectName,
                 InitToTestSourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
     }
 
     public TestContext TestContext { get; set; }

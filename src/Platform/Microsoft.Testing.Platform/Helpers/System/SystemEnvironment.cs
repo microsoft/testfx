@@ -12,7 +12,31 @@ internal sealed class SystemEnvironment : IEnvironment
 
     public string NewLine => Environment.NewLine;
 
+#if !NETCOREAPP
+    public int ProcessId
+    {
+        get
+        {
+            int processId = field;
+            if (processId == 0)
+            {
+                field = processId = GetProcessId();
+                // Assume that process Id zero is invalid for user processes. It holds for all mainstream operating systems.
+                Debug.Assert(processId != 0, "processId is expected to be non-zero.");
+            }
+
+            return processId;
+
+            static int GetProcessId()
+            {
+                using var process = Process.GetCurrentProcess();
+                return process.Id;
+            }
+        }
+    }
+#else
     public int ProcessId => Environment.ProcessId;
+#endif
 
     public string OsVersion => Environment.OSVersion.ToString();
 

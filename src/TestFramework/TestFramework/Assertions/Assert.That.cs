@@ -74,12 +74,12 @@ public static partial class AssertExtensions
         IOrderedEnumerable<KeyValuePair<string, object?>> sortedDetails = details.OrderBy(kvp => kvp.Key, StringComparer.Ordinal);
 
         var sb = new StringBuilder();
-        foreach ((string name, object? value) in sortedDetails)
+        foreach (KeyValuePair<string, object?> kvp in sortedDetails)
         {
 #if NET
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {name} = {FormatValue(value)}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {kvp.Key} = {FormatValue(kvp.Value)}");
 #else
-            sb.AppendLine($"  {name} = {FormatValue(value)}");
+            sb.AppendLine($"  {kvp.Key} = {FormatValue(kvp.Value)}");
 #endif
         }
 
@@ -642,7 +642,7 @@ public static partial class AssertExtensions
 
     private static string RemoveOuterParentheses(string input)
     {
-        if (input.Length < 2 || !input.StartsWith('(') || !input.EndsWith(')'))
+        if (input.Length < 2 || !input.StartsWith("(", StringComparison.Ordinal) || !input.EndsWith(")", StringComparison.Ordinal))
         {
             return input;
         }

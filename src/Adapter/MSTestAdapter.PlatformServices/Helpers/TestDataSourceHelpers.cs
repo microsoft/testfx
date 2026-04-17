@@ -53,7 +53,7 @@ internal static class TestDataSourceHelpers
     public static bool TryHandleTupleDataSource(object? data, ParameterInfo[] testMethodParameters, out object?[] array)
     {
         if (testMethodParameters.Length == 1 &&
-            data?.GetType().IsAssignableTo(testMethodParameters[0].ParameterType) == true)
+            testMethodParameters[0].ParameterType?.IsAssignableFrom(data?.GetType()) == true)
         {
             array = [];
             return false;

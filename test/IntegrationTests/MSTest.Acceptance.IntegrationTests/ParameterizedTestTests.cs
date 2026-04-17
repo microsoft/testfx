@@ -135,15 +135,12 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
         }
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (DynamicDataAssetName, DynamicDataAssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (DynamicDataAssetName, DynamicDataAssetName,
                 SourceCodeDynamicData
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCodeDynamicData = """
 #file DynamicData.csproj

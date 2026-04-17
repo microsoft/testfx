@@ -43,7 +43,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
             Debugger.Launch();
         }
 
-        new MSTestDiscoverer(new TestSourceHandler(), CreateTelemetrySender()).DiscoverTests(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink, _configuration);
+        new MSTestDiscoverer(new TestSourceHandler(), CreateTelemetrySender()).DiscoverTests(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink, _configuration, isMTP: true);
         return Task.CompletedTask;
     }
 
@@ -58,7 +58,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
         }
 
         MSTestExecutor testExecutor = new(cancellationToken, CreateTelemetrySender());
-        await testExecutor.RunTestsAsync(request.AssemblyPaths, request.RunContext, request.FrameworkHandle, _configuration).ConfigureAwait(false);
+        await testExecutor.RunTestsAsync(request.AssemblyPaths, request.RunContext, request.FrameworkHandle, _configuration, isMTP: true).ConfigureAwait(false);
     }
 
     protected internal override void AddAdditionalProperties(TestNode testNode, TestCase testCase)

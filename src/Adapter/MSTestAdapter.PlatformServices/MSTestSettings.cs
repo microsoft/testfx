@@ -52,7 +52,6 @@ internal sealed class MSTestSettings
         MapInconclusiveToFailed = false;
         MapNotRunnableToFailed = true;
         TreatDiscoveryWarningsAsErrors = true;
-        TestSettingsFile = null;
         DisableParallelization = false;
         ConsiderEmptyDataSourceAsInconclusive = false;
         TestTimeout = 0;
@@ -91,11 +90,6 @@ internal sealed class MSTestSettings
     /// Gets a value indicating whether capture debug traces.
     /// </summary>
     public bool CaptureDebugTraces { get; private set; }
-
-    /// <summary>
-    /// Gets the path to settings file.
-    /// </summary>
-    public string? TestSettingsFile { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether an inconclusive result be mapped to failed test.
@@ -206,7 +200,6 @@ internal sealed class MSTestSettings
         CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
         CurrentSettings.TestCleanupTimeout = settings.TestCleanupTimeout;
         CurrentSettings.TestInitializeTimeout = settings.TestInitializeTimeout;
-        CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
         CurrentSettings.TestTimeout = settings.TestTimeout;
         CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
         CurrentSettings.LaunchDebuggerOnAssertionFailure = settings.LaunchDebuggerOnAssertionFailure;
@@ -258,7 +251,7 @@ internal sealed class MSTestSettings
 
         // This will contain default adapter settings
         var settings = new MSTestSettings();
-        var runConfigurationSettings = RunConfigurationSettings.PopulateSettings(context?.RunSettings?.SettingsXml);
+        var runConfigurationSettings = RunConfigurationSettings.GetSettings(context?.RunSettings?.SettingsXml);
 
         // We have runsettings, but we don't have testconfig.
         // Just use runsettings.
@@ -310,22 +303,6 @@ internal sealed class MSTestSettings
     }
 
     /// <summary>
-    /// Get the MSTestV1 adapter settings from the context.
-    /// </summary>
-    /// <param name="logger"> The logger for messages. </param>
-    /// <returns> Returns true if test settings is provided.. </returns>
-    public static bool IsLegacyScenario(IMessageLogger logger)
-    {
-        if (!StringEx.IsNullOrEmpty(CurrentSettings.TestSettingsFile))
-        {
-            logger.SendMessage(TestMessageLevel.Warning, Resource.LegacyScenariosNotSupportedWarning);
-            return true;
-        }
-
-        return false;
-    }
-
-    /// <summary>
     /// Gets the adapter specific settings from the xml.
     /// </summary>
     /// <param name="runSettingsXml"> The xml with the settings passed from the test platform. </param>
@@ -333,7 +310,7 @@ internal sealed class MSTestSettings
     /// <param name="logger"> The logger for messages. </param>
     /// <returns> The settings if found. Null otherwise. </returns>
     internal static MSTestSettings? GetSettings(
-        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
+        string? runSettingsXml,
         string settingName, IMessageLogger? logger)
     {
         if (StringEx.IsNullOrWhiteSpace(runSettingsXml))
@@ -381,7 +358,10 @@ internal sealed class MSTestSettings
     /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
     private static MSTestSettings ToSettings(XmlReader reader, IMessageLogger? logger)
     {
-        Ensure.NotNull(reader);
+        if (reader is null)
+        {
+            throw new ArgumentNullException(nameof(reader));
+        }
 
         // Expected format of the xml is: -
         //
@@ -400,7 +380,6 @@ internal sealed class MSTestSettings
         // (or)
         //
         // <MSTest>
-        //     <SettingsFile>..\..\Local.testsettings</SettingsFile>
         //     <CaptureTraceOutput>true</CaptureTraceOutput>
         // </MSTest>
         MSTestSettings settings = new();
@@ -473,22 +452,6 @@ internal sealed class MSTestSettings
                             else
                             {
                                 logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "TreatDiscoveryWarningsAsErrors"));
-                            }
-
-                            break;
-                        }
-
-                    case "SETTINGSFILE":
-                        {
-                            string fileName = reader.ReadInnerXml();
-
-                            if (!StringEx.IsNullOrEmpty(fileName))
-                            {
-                                settings.TestSettingsFile = fileName;
-                            }
-                            else
-                            {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, fileName, "SettingsFile"));
                             }
 
                             break;
@@ -725,7 +688,7 @@ internal sealed class MSTestSettings
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidParallelScopeValue,
                                         value,
-                                        string.Join(", ", Enum.GetNames<ExecutionScope>())));
+                                        string.Join(", ", Enum.GetNames(typeof(ExecutionScope)))));
 
                             break;
                         }
@@ -752,10 +715,14 @@ internal sealed class MSTestSettings
     private static bool TryParseEnum<T>(string value, out T result)
         where T : struct, Enum
         => Enum.TryParse(value, true, out result)
+#if NETCOREAPP
         && Enum.IsDefined(result);
+#else
+        && Enum.IsDefined(typeof(T), result);
+#endif
 
     private static void SetGlobalSettings(
-        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runsettingsXml))] string runsettingsXml,
+        string runsettingsXml,
         MSTestSettings settings, IMessageLogger? logger)
     {
         XElement? runConfigElement = XDocument.Parse(runsettingsXml).Element("RunSettings")?.Element("RunConfiguration");
@@ -914,7 +881,7 @@ internal sealed class MSTestSettings
                     CultureInfo.CurrentCulture,
                     Resource.InvalidParallelScopeValue,
                     value,
-                    string.Join(", ", Enum.GetNames<ExecutionScope>())));
+                    string.Join(", ", Enum.GetNames(typeof(ExecutionScope)))));
             }
 
             settings.ParallelizationScope = scope;
