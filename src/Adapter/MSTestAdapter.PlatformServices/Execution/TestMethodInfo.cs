@@ -55,7 +55,7 @@ internal class TestMethodInfo : ITestMethod
 
     internal ITestContext TestContext
     {
-        get => field ?? (ITestContext?)TestTools.UnitTesting.TestContext.Current ?? throw ApplicationStateGuard.Unreachable();
+        get => field ?? throw ApplicationStateGuard.Unreachable();
         set;
     }
 
