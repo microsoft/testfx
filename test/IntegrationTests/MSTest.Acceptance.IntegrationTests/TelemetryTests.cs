@@ -203,6 +203,10 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="vstest/**" />
+  </ItemGroup>
+
 </Project>
 
 #file UnitTest1.cs
