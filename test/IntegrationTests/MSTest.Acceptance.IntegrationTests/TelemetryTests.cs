@@ -11,7 +11,6 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture>
 {
     private const string MTPAssetName = "TelemetryMTPProject";
-    private const string VSTestAssetName = "TelemetryVSTestProject";
     private const string TestResultsFolderName = "TestResults";
 
     #region MTP mode - Run
@@ -115,8 +114,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     public async Task VSTest_RunTests_Succeeds(string tfm)
     {
         DotnetMuxerResult testResult = await DotnetCli.RunAsync(
-            $"test -c Release {AssetFixture.VSTestProjectPath} --no-build --framework {tfm}",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            $"test -c Release {AssetFixture.VSTestProjectPath} --framework {tfm}",
             workingDirectory: AssetFixture.VSTestProjectPath,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
@@ -134,8 +132,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     public async Task VSTest_DiscoverTests_Succeeds(string tfm)
     {
         DotnetMuxerResult testResult = await DotnetCli.RunAsync(
-            $"test -c Release {AssetFixture.VSTestProjectPath} --no-build --framework {tfm} --list-tests",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            $"test -c Release {AssetFixture.VSTestProjectPath} --framework {tfm} --list-tests",
             workingDirectory: AssetFixture.VSTestProjectPath,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
@@ -175,32 +172,22 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
 
     #endregion
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
-        private const string MTPProjectId = nameof(TelemetryTests) + "_MTP";
-        private const string VSTestProjectId = nameof(TelemetryTests) + "_VSTest";
+        private const string AssetId = nameof(TelemetryTests);
 
-        public string MTPProjectPath => GetAssetPath(MTPProjectId);
+        public string MTPProjectPath => GetAssetPath(AssetId);
 
-        public string VSTestProjectPath => GetAssetPath(VSTestProjectId);
+        public string VSTestProjectPath => Path.Combine(GetAssetPath(AssetId), "vstest");
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            // MTP mode project (MSTest runner enabled, no global.json override)
-            yield return (MTPProjectId, MTPAssetName,
-                MTPSourceCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-
-            // VSTest mode project (uses global.json to force VSTest runner)
-            yield return (VSTestProjectId, VSTestAssetName,
-                VSTestSourceCode
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
+            => (AssetId, MTPAssetName,
+                SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion));
-        }
 
-        private const string MTPSourceCode = """
+        private const string SourceCode = """
 #file TelemetryMTPProject.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
@@ -243,10 +230,8 @@ public class UnitTest1
     {
     }
 }
-""";
 
-        private const string VSTestSourceCode = """
-#file TelemetryVSTestProject.csproj
+#file vstest/TelemetryVSTestProject.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -264,14 +249,14 @@ public class UnitTest1
 
 </Project>
 
-#file global.json
+#file vstest/global.json
 {
   "test": {
     "runner": "VSTest"
   }
 }
 
-#file UnitTest1.cs
+#file vstest/UnitTest1.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]

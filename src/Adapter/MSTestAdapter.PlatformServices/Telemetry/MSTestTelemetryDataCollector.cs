@@ -325,7 +325,6 @@ internal sealed class MSTestTelemetryDataCollector
         metrics["mstest.setting.consider_empty_data_source_as_inconclusive"] = settings.ConsiderEmptyDataSourceAsInconclusive;
         metrics["mstest.setting.order_tests_by_name"] = settings.OrderTestsByNameInClass;
         metrics["mstest.setting.capture_debug_traces"] = settings.CaptureDebugTraces;
-        metrics["mstest.setting.has_test_settings_file"] = settings.TestSettingsFile is not null;
     }
 
     private static string AnonymizeString(string value)
