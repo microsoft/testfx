@@ -161,11 +161,11 @@ public class TestMethodRunnerTests : TestContainer
         public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
         {
             var taskCompletionSource = new TaskCompletionSource<TestResult>();
-            ThreadPool.UnsafeQueueUserWorkItem(async _ =>
+            ThreadPool.UnsafeQueueUserWorkItem(_ =>
             {
                 try
                 {
-                    taskCompletionSource.SetResult(await testMethod.InvokeAsync(null).ConfigureAwait(false));
+                    taskCompletionSource.SetResult(testMethod.InvokeAsync(null).ConfigureAwait(false).GetAwaiter().GetResult());
                 }
                 catch (Exception exception)
                 {
