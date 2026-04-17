@@ -21,12 +21,18 @@ jobs:
         with:
           repository: dotnet/skills
           path: dotnet-skills-clone
-          sparse-checkout: plugins/dotnet-test
+          sparse-checkout: |
+            plugins/dotnet-test
+            plugins/dotnet-experimental
 
       - name: Sync dotnet-test skills to .github
         run: |
           mkdir -p .github/skills
           cp -r dotnet-skills-clone/plugins/dotnet-test/skills/. .github/skills
+
+      - name: Sync dotnet-experimental skills to .github
+        run: |
+          cp -r dotnet-skills-clone/plugins/dotnet-experimental/skills/. .github/skills
 
       - name: Sync dotnet-test agents to .github
         run: |
