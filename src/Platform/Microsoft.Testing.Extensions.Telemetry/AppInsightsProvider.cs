@@ -224,7 +224,7 @@ internal sealed partial class AppInsightsProvider :
                         // If we have a lot of issues with the network we could have a lot of logs here.
                         // We log one error every 3 seconds.
                         // We could do better back-pressure.
-                        if (_logger.IsEnabled(LogLevel.Error) && (!lastLoggedError.HasValue || (lastLoggedError.Value - _clock.UtcNow).TotalSeconds > 3))
+                        if (_logger.IsEnabled(LogLevel.Error) && (!lastLoggedError.HasValue || (_clock.UtcNow - lastLoggedError.Value).TotalSeconds > 3))
                         {
                             await _logger.LogErrorAsync("Error during telemetry report.", ex).ConfigureAwait(false);
                             lastLoggedError = _clock.UtcNow;
