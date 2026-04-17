@@ -267,11 +267,6 @@ Actual: {2}</source>
         <target state="translated">無效的 GitHub 票證 URL</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsExactInstanceOfValueIsNull">
-        <source>'value' is &lt;null&gt;. {0}</source>
-        <target state="new">'value' is &lt;null&gt;. {0}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
         <target state="translated">值 '{0}' 不在預期的範圍 [{1}, {2}] 內。{3}</target>

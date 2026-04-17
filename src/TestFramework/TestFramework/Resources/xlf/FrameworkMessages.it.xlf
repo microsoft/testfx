@@ -267,11 +267,6 @@ Effettivo: {2}</target>
         <target state="translated">L'URL del ticket GitHub non è valido</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsExactInstanceOfValueIsNull">
-        <source>'value' is &lt;null&gt;. {0}</source>
-        <target state="new">'value' is &lt;null&gt;. {0}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
         <target state="translated">Il valore '{0}' non è compreso nell'intervallo previsto [{1}, {2}]. {3}</target>

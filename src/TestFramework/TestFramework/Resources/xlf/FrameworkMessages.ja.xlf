@@ -267,11 +267,6 @@ Actual: {2}</source>
         <target state="translated">GitHub チケット URL が無効です</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsExactInstanceOfValueIsNull">
-        <source>'value' is &lt;null&gt;. {0}</source>
-        <target state="new">'value' is &lt;null&gt;. {0}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
         <target state="translated">値 '{0}' は予期される範囲 [{1}..{2}] 内にありません。{3}</target>
