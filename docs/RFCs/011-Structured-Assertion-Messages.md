@@ -237,7 +237,7 @@ Assert.AreEqual(..., actualJson)
 
 #### Unavailable expressions
 
-If `CallerArgumentExpression` is not available (e.g. older TFMs, indirect calls through helpers, or reflection-based invocations), the call-site line is omitted entirely. The stack trace still provides the location.
+If `CallerArgumentExpression` data is unavailable or empty (e.g. when using an older compiler, indirect calls through helpers, or reflection-based invocations), the call-site line is omitted entirely. The stack trace still provides the location.
 
 ### Stack Trace
 
@@ -951,7 +951,7 @@ Note: `Assert.Fail` has no summary line beyond the prefix — the user message (
 Assert.Inconclusive. Database server not available for integration tests.
 ```
 
-Note: `Assert.Inconclusive` throws `AssertInconclusiveException` (not `AssertFailedException`) and uses a distinct prefix. It is intentionally excluded from the universal `Assertion failed.` prefix because an inconclusive result is not a failure — it signals that the test could not be run to completion.
+Note: Today, `Assert.Inconclusive` uses the same `"{0} failed. {1}"` format as other assertions (producing `Assert.Inconclusive failed. <message>`). This RFC proposes dropping the word "failed" for inconclusive results, since an inconclusive outcome is not a failure — it signals that the test could not be run to completion. This is a **breaking change** to the `AssertInconclusiveException.Message` format and should be listed alongside the other backward-compatibility notes. `Assert.Inconclusive` throws `AssertInconclusiveException` (not `AssertFailedException`) and is intentionally excluded from the universal `Assertion failed.` prefix.
 
 #### Assert.That
 
@@ -1260,7 +1260,7 @@ Mitigation:
 - The change ships in a new major version (MSTest v4).
 - The assertion prefix line (`Assertion failed.`) is preserved and can still serve as a parsing anchor.
 
-## Unresolved Questions
+## Unresolved questions
 
 1. **User message placement** — See the "Open Question" section above. Needs broader feedback.
 2. **Maximum truncation length** — What should the default be? 512? 1024? 4096?
