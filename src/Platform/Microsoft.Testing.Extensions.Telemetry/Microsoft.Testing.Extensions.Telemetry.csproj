@@ -8,6 +8,7 @@
   <ItemGroup>
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Messages\SingleConsumerUnboundedChannel.cs" Link="Helpers\SingleConsumerUnboundedChannel.cs" />
   </ItemGroup>
 
   <!-- NuGet properties -->
