@@ -382,6 +382,7 @@ internal sealed class TestMethodRunner
         try
         {
             var tcs = new TaskCompletionSource<TestResult[]>();
+            var contextBoundTestMethod = new ContextBoundTestMethod(testMethodInfo, _testContext);
 
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
             ExecutionContextHelpers.RunOnContext(
@@ -392,7 +393,7 @@ internal sealed class TestMethodRunner
                     {
                         using (TestContextImplementation.SetCurrentTestContext(_testContext as TestContext))
                         {
-                            tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false));
+                            tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(contextBoundTestMethod).ConfigureAwait(false));
                         }
                     }
                     catch (Exception e)
@@ -419,6 +420,36 @@ internal sealed class TestMethodRunner
                 },
             ];
         }
+    }
+
+    private sealed class ContextBoundTestMethod(TestMethodInfo testMethodInfo, ITestContext testContext) : ITestMethod
+    {
+        public string TestMethodName => testMethodInfo.TestMethodName;
+
+        public string TestClassName => testMethodInfo.TestClassName;
+
+        public Type ReturnType => testMethodInfo.ReturnType;
+
+        public object?[]? Arguments => testMethodInfo.Arguments;
+
+        public ParameterInfo[] ParameterTypes => testMethodInfo.ParameterTypes;
+
+        public MethodInfo MethodInfo => testMethodInfo.MethodInfo;
+
+        public async Task<TestResult> InvokeAsync(object[]? arguments)
+        {
+            using (TestContextImplementation.SetCurrentTestContext(testContext.Context))
+            {
+                return await testMethodInfo.InvokeAsync(arguments).ConfigureAwait(false);
+            }
+        }
+
+        public Attribute[]? GetAllAttributes()
+            => testMethodInfo.GetAllAttributes();
+
+        public TAttributeType[] GetAttributes<TAttributeType>()
+            where TAttributeType : Attribute
+            => testMethodInfo.GetAttributes<TAttributeType>();
     }
 
     /// <summary>

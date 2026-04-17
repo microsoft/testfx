@@ -156,6 +156,27 @@ public class TestMethodRunnerTests : TestContainer
             ]);
     }
 
+    private sealed class ExecutionContextUnsafeThreadTestMethodAttribute : TestMethodAttribute
+    {
+        public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+        {
+            var taskCompletionSource = new TaskCompletionSource<TestResult>();
+            ThreadPool.UnsafeQueueUserWorkItem(async _ =>
+            {
+                try
+                {
+                    taskCompletionSource.SetResult(await testMethod.InvokeAsync(null).ConfigureAwait(false));
+                }
+                catch (Exception exception)
+                {
+                    taskCompletionSource.SetException(exception);
+                }
+            }, null);
+
+            return [await taskCompletionSource.Task.ConfigureAwait(false)];
+        }
+    }
+
     public async Task RunTestMethodForMultipleResultsReturnMultipleResults()
     {
         var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), new TestMethodWithFailingAndPassingResultsAttribute());
@@ -176,6 +197,21 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
         TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
+        results[0].Outcome.Should().Be(UnitTestOutcome.Passed);
+    }
+
+    public async Task RunTestMethodShouldPassWhenAttributeInvokesTestMethodOnExecutionContextUnsafeThread()
+    {
+        var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), new ExecutionContextUnsafeThreadTestMethodAttribute());
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            TimeoutInfo = localTestMethodOptions.TimeoutInfo,
+            Executor = localTestMethodOptions.TestMethodAttribute,
+        };
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
+        results.Should().HaveCount(1);
         results[0].Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
