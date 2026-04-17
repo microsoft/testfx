@@ -43,7 +43,7 @@ public sealed class ExtensionVersionTests
         Type? extensionVersionType = extensionType.Assembly.GetType(extensionVersionTypeName);
         Assert.IsNotNull(extensionVersionType);
 
-        FieldInfo? defaultSemVer = extensionVersionType.GetField("DefaultSemVer", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+        FieldInfo? defaultSemVer = extensionVersionType.GetField("DefaultSemVer", BindingFlags.Public | BindingFlags.Static);
         Assert.IsNotNull(defaultSemVer);
 
         return (string?)defaultSemVer.GetValue(null) ?? string.Empty;
