@@ -111,17 +111,30 @@ internal static class CommandLineOptionsValidator
             }
         }
 
-        StringBuilder? stringBuilder = null;
-        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in extensionOptionsByProvider)
+        // Aggregate reserved options by name and track all offending providers
+        var reservedOptionToProviderNames = new Dictionary<string, HashSet<string>>();
+        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> kvp in extensionOptionsByProvider)
         {
-            foreach (CommandLineOption option in provider.Value)
+            foreach (CommandLineOption option in kvp.Value)
             {
                 if (systemOptionNames.Contains(option.Name))
                 {
-                    stringBuilder ??= new StringBuilder();
-                    stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsReserved, option.Name, provider.Key.DisplayName));
+                    if (!reservedOptionToProviderNames.TryGetValue(option.Name, out HashSet<string>? providerNames))
+                    {
+                        providerNames = new HashSet<string>();
+                        reservedOptionToProviderNames[option.Name] = providerNames;
+                    }
+
+                    providerNames.Add(kvp.Key.DisplayName);
                 }
             }
+        }
+
+        StringBuilder? stringBuilder = null;
+        foreach (KeyValuePair<string, HashSet<string>> kvp in reservedOptionToProviderNames)
+        {
+            stringBuilder ??= new StringBuilder();
+            stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsReserved, kvp.Key, string.Join("', '", kvp.Value)));
         }
 
         return stringBuilder?.Length > 0
@@ -132,17 +145,17 @@ internal static class CommandLineOptionsValidator
     private static ValidationResult ValidateOptionsAreNotDuplicated(
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider)
     {
-        // Use a dictionary to track option names and their providers
-        var optionNameToProviders = new Dictionary<string, List<ICommandLineOptionsProvider>>();
+        // Use a dictionary to track option names and their distinct providers
+        var optionNameToProviders = new Dictionary<string, HashSet<ICommandLineOptionsProvider>>();
         foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> kvp in extensionOptionsByProvider)
         {
             ICommandLineOptionsProvider provider = kvp.Key;
             foreach (CommandLineOption option in kvp.Value)
             {
                 string name = option.Name;
-                if (!optionNameToProviders.TryGetValue(name, out List<ICommandLineOptionsProvider>? providers))
+                if (!optionNameToProviders.TryGetValue(name, out HashSet<ICommandLineOptionsProvider>? providers))
                 {
-                    providers = new List<ICommandLineOptionsProvider>();
+                    providers = [];
                     optionNameToProviders[name] = providers;
                 }
 
@@ -152,7 +165,7 @@ internal static class CommandLineOptionsValidator
 
         // Check for duplications
         StringBuilder? stringBuilder = null;
-        foreach (KeyValuePair<string, List<ICommandLineOptionsProvider>> kvp in optionNameToProviders)
+        foreach (KeyValuePair<string, HashSet<ICommandLineOptionsProvider>> kvp in optionNameToProviders)
         {
             if (kvp.Value.Count > 1)
             {
@@ -302,22 +315,12 @@ internal static class CommandLineOptionsValidator
 
     private static string ToTrimmedString(this StringBuilder stringBuilder)
     {
-        // Use a more efficient approach to trim without creating unnecessary intermediate strings
-        string result = stringBuilder.ToString();
-        int end = result.Length;
-
-        // Find the last non-whitespace char
-        while (end > 0)
+        // Trim trailing CR/LF characters directly from the StringBuilder to avoid extra allocations
+        while (stringBuilder.Length > 0 && stringBuilder[stringBuilder.Length - 1] is '\r' or '\n')
         {
-            char c = result[end - 1];
-            if (c is not ('\r' or '\n'))
-            {
-                break;
-            }
-
-            end--;
+            stringBuilder.Length--;
         }
 
-        return end == result.Length ? result : result.Substring(0, end);
+        return stringBuilder.ToString();
     }
 }

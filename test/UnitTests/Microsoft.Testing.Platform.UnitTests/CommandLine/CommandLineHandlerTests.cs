@@ -529,9 +529,10 @@ public sealed class CommandLineHandlerTests
         {
             _option = optionName;
             DisplayName = displayName;
+            Uid = $"TestMock_{displayName}";
         }
 
-        public string Uid { get; } = nameof(PlatformCommandLineProvider);
+        public string Uid { get; }
 
         /// <inheritdoc />
         public string Version { get; } = AppVersion.DefaultSemVer;
@@ -540,7 +541,7 @@ public sealed class CommandLineHandlerTests
         public string DisplayName { get; }
 
         /// <inheritdoc />
-        public string Description { get; } = "Built-in command line provider";
+        public string Description { get; } = "Test extension command line provider";
 
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
