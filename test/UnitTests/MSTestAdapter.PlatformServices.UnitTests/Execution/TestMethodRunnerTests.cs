@@ -422,6 +422,11 @@ public class TestMethodRunnerTests : TestContainer
 
     public async Task RunTestMethodShouldPassWhenAttributeInvokesTestMethodOnExecutionContextUnsafeThread()
     {
+        _testablePlatformServiceProvider.MockThreadOperations
+            .Setup(tho => tho.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Returns(true)
+            .Callback((Action a, int timeout, CancellationToken token) => a.Invoke());
+
         var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), new ExecutionContextUnsafeThreadTestMethodAttribute());
         var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
         {
