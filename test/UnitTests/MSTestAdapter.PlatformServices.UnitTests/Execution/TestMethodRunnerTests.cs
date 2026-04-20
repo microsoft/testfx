@@ -444,6 +444,8 @@ public class TestMethodRunnerTests : TestContainer
 
     private sealed class ExecutionContextUnsafeThreadTestMethodAttribute : TestMethodAttribute
     {
+        private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(10);
+
         public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
         {
             var taskCompletionSource = new TaskCompletionSource<TestResult>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -461,7 +463,7 @@ public class TestMethodRunnerTests : TestContainer
                 },
                 null);
 
-            return [await taskCompletionSource.Task.WaitAsync(TimeSpan.FromSeconds(10)).ConfigureAwait(false)];
+            return [await taskCompletionSource.Task.WaitAsync(WaitTimeout).ConfigureAwait(false)];
         }
     }
 
