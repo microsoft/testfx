@@ -5,13 +5,5 @@ namespace Microsoft.Testing.Extensions;
 
 internal static class ExtensionVersion
 {
-    public static readonly string DefaultSemVer = GetDefaultSemVer();
-
-    private static string GetDefaultSemVer()
-    {
-        Assembly extensionAssembly = typeof(ExtensionVersion).Assembly;
-        return extensionAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-            ?? extensionAssembly.GetName().Version?.ToString()
-            ?? string.Empty;
-    }
+    public const string DefaultSemVer = ExtensionBuildVersion.Version;
 }

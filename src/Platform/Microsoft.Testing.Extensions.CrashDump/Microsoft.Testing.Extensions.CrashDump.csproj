@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
     <RootNamespace>Microsoft.Testing.Extensions.Diagnostics</RootNamespace>
+    <GenerateBuildInfo>true</GenerateBuildInfo>
   </PropertyGroup>
 
   <ItemGroup>

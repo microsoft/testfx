@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
+    <GenerateBuildInfo>true</GenerateBuildInfo>
   </PropertyGroup>
 
   <ItemGroup>

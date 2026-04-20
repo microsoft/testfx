@@ -6,6 +6,7 @@
     different namespace is used for the shared file.-->
     <DefineConstants>$(DefineConstants);USE_TRX_NAMESPACE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateBuildInfo>true</GenerateBuildInfo>
   </PropertyGroup>
 
   <ItemGroup>
