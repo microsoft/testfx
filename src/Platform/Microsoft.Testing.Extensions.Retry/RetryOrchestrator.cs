@@ -204,10 +204,15 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                     using (IFileStream stream = _fileSystem.NewFileStream(responseFilePath, FileMode.Create, FileAccess.Write))
                     using (var writer = new StreamWriter(stream.Stream))
                     {
-                        await writer.WriteAsync($"--{PlatformCommandLineProvider.FilterUidOptionKey}").ConfigureAwait(false);
+                        // Write one UID per line. The RSP parser (ResponseFileHelper.SplitCommandLine) splits
+                        // each line by whitespace and uses '"' for grouping. Wrapping each UID in quotes
+                        // handles UIDs containing whitespace or starting with '#' (comment marker).
+                        // Note: UIDs containing literal '"' characters cannot be safely round-tripped
+                        // through the RSP parser because it strips all quote characters from tokens.
+                        await writer.WriteLineAsync($"--{PlatformCommandLineProvider.FilterUidOptionKey}").ConfigureAwait(false);
                         foreach (string uid in lastListOfFailedId)
                         {
-                            await writer.WriteAsync($" \"{uid}\"").ConfigureAwait(false);
+                            await writer.WriteLineAsync($"\"{uid}\"").ConfigureAwait(false);
                         }
                     }
 
@@ -429,7 +434,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             // Always remove subsequent non-option arguments (the option's values),
             // even when the first value was provided inline with = or :, because
             // multi-arity options (e.g. --filter-uid=1 2) can have trailing values.
-            while (idx < arguments.Count && !arguments[idx].StartsWith('-'))
+            while (idx < arguments.Count && (arguments[idx].Length == 0 || arguments[idx][0] != '-'))
             {
                 arguments.RemoveAt(idx);
             }
