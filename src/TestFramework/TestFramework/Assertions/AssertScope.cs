@@ -13,7 +13,7 @@ internal sealed class AssertScope : IDisposable
 {
     private static readonly AsyncLocal<AssertScope?> CurrentScope = new();
 
-    private readonly ConcurrentQueue<AssertFailedException> _errors = new();
+    private readonly ConcurrentQueue<ExceptionDispatchInfo> _errors = new();
     private bool _disposed;
 
     internal AssertScope()
@@ -32,9 +32,10 @@ internal sealed class AssertScope : IDisposable
     internal static AssertScope? Current => CurrentScope.Value;
 
     /// <summary>
-    /// Adds an assertion failure message to the current scope.
+    /// Adds an assertion failure to the current scope, capturing the exception dispatch info
+    /// to preserve the original stack trace from the assertion call site.
     /// </summary>
-    /// <param name="error">The assertion failure message.</param>
+    /// <param name="error">The assertion failure exception.</param>
     internal void AddError(AssertFailedException error)
     {
 #pragma warning disable CA1513 // Use ObjectDisposedException throw helper - ThrowIf is not available on all target frameworks
@@ -44,7 +45,7 @@ internal sealed class AssertScope : IDisposable
         }
 #pragma warning restore CA1513 // Use ObjectDisposedException throw helper
 
-        _errors.Enqueue(error);
+        _errors.Enqueue(ExceptionDispatchInfo.Capture(error));
     }
 
     /// <inheritdoc/>
@@ -64,19 +65,18 @@ internal sealed class AssertScope : IDisposable
         // Snapshot the ConcurrentQueue into an array to avoid multiple O(n) enumerations
         // (ConcurrentQueue<T>.Count is O(n)) and to get a consistent view for branching,
         // message formatting, and building the AggregateException.
-        AssertFailedException[] errorsSnapshot = _errors.ToArray();
+        ExceptionDispatchInfo[] errorsSnapshot = _errors.ToArray();
         if (errorsSnapshot.Length == 1)
         {
-            // Use ExceptionDispatchInfo to preserve the original stack trace captured at the
-            // assertion call site, rather than resetting it to point at Dispose.
-            ExceptionDispatchInfo.Capture(errorsSnapshot[0]).Throw();
+            // Re-throw preserving the original stack trace captured at the assertion call site.
+            errorsSnapshot[0].Throw();
         }
 
         if (errorsSnapshot.Length > 0)
         {
             throw new AssertFailedException(
                 string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertScopeFailure, errorsSnapshot.Length),
-                new AggregateException(errorsSnapshot));
+                new AggregateException(Array.ConvertAll(errorsSnapshot, static edi => edi.SourceException)));
         }
     }
 }
