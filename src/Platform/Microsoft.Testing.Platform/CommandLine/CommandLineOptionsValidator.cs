@@ -121,7 +121,7 @@ internal static class CommandLineOptionsValidator
                 {
                     if (!reservedOptionToProviderNames.TryGetValue(option.Name, out HashSet<string>? providerNames))
                     {
-                        providerNames = new HashSet<string>();
+                        providerNames = [];
                         reservedOptionToProviderNames[option.Name] = providerNames;
                     }
 
