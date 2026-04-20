@@ -28,7 +28,6 @@ public sealed class AspireSdkTests : AcceptanceTestBase<AspireSdkTests.TestAsset
             : testHost.FullName + ".dll";
         DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
             $"test {exeOrDllName}",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: AssetFixture.AspireProjectPath,
             warnAsError: false,
             suppressPreviewDotNetMessage: false,
@@ -39,7 +38,7 @@ public sealed class AspireSdkTests : AcceptanceTestBase<AspireSdkTests.TestAsset
         dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string AspireProjectName = "AspireProject";
 
@@ -85,12 +84,9 @@ public class IntegrationTest1
 
         public string AspireProjectPath => GetAssetPath(AspireProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AspireProjectName, AspireProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AspireProjectName, AspireProjectName,
                 AspireSourceCode
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
     }
 }

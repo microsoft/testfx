@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -23,19 +23,16 @@ public sealed class DuplicateTestClassAttributeTests : AcceptanceTestBase<Duplic
         testHostResult.AssertStandardErrorContains("Only one attribute of type 'Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute' is allowed, but multiple were found.");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string DuplicateTestClassProjectName = "DuplicateTestClassAttribute";
 
         public string DuplicateTestClassProjectPath => GetAssetPath(DuplicateTestClassProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (DuplicateTestClassProjectName, DuplicateTestClassProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (DuplicateTestClassProjectName, DuplicateTestClassProjectName,
                 DuplicateTestClassSourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string DuplicateTestClassSourceCode = """
 #file DuplicateTestClassAttribute.csproj

@@ -46,7 +46,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private readonly TerminalTestReporterOptions _options;
 
     private readonly TestProgressStateAwareTerminal _terminalWithProgress;
+
+#if NET9_0_OR_GREATER
     private readonly Lock _lock = new();
+#else
+    private readonly object _lock = new();
+#endif
 
     private readonly uint? _originalConsoleMode;
 
@@ -468,7 +473,23 @@ internal sealed partial class TerminalTestReporter : IDisposable
         FormatExpectedAndActual(terminal, expected, actual);
         FormatStackTrace(terminal, flatExceptions, 0);
         FormatInnerExceptions(terminal, flatExceptions);
-        FormatStandardAndErrorOutput(terminal, standardOutput, errorOutput);
+
+        bool isFailed = outcome is TestOutcome.Fail or TestOutcome.Error or TestOutcome.Timeout or TestOutcome.Canceled;
+        string? stdoutToShow = _options.ShowStdout switch
+        {
+            OutputShowMode.All => standardOutput,
+            OutputShowMode.Failed => isFailed ? standardOutput : null,
+            OutputShowMode.None => null,
+            _ => throw ApplicationStateGuard.Unreachable(),
+        };
+        string? stderrToShow = _options.ShowStderr switch
+        {
+            OutputShowMode.All => errorOutput,
+            OutputShowMode.Failed => isFailed ? errorOutput : null,
+            OutputShowMode.None => null,
+            _ => throw ApplicationStateGuard.Unreachable(),
+        };
+        FormatStandardAndErrorOutput(terminal, stdoutToShow, stderrToShow);
     }
 
     private static void FormatInnerExceptions(ITerminal terminal, FlatException[] exceptions)
@@ -556,22 +577,33 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.ResetColor();
     }
 
-    private static void FormatStandardAndErrorOutput(ITerminal terminal, string? standardOutput, string? standardError)
+    private static void FormatStandardAndErrorOutput(ITerminal terminal, string? standardOutput, string? errorOutput)
     {
-        if (RoslynString.IsNullOrWhiteSpace(standardOutput) && RoslynString.IsNullOrWhiteSpace(standardError))
+        bool hasStdOut = !RoslynString.IsNullOrWhiteSpace(standardOutput);
+        bool hasStdErr = !RoslynString.IsNullOrWhiteSpace(errorOutput);
+        if (!hasStdOut && !hasStdErr)
         {
             return;
         }
 
         terminal.SetColor(TerminalColor.DarkGray);
-        terminal.Append(SingleIndentation);
-        terminal.AppendLine(PlatformResources.StandardOutput);
-        string? standardOutputWithoutSpecialChars = MakeControlCharactersVisible(standardOutput, normalizeWhitespaceCharacters: false);
-        AppendIndentedLine(terminal, standardOutputWithoutSpecialChars, DoubleIndentation);
-        terminal.Append(SingleIndentation);
-        terminal.AppendLine(PlatformResources.StandardError);
-        string? standardErrorWithoutSpecialChars = MakeControlCharactersVisible(standardError, normalizeWhitespaceCharacters: false);
-        AppendIndentedLine(terminal, standardErrorWithoutSpecialChars, DoubleIndentation);
+
+        if (hasStdOut)
+        {
+            terminal.Append(SingleIndentation);
+            terminal.AppendLine(PlatformResources.StandardOutput);
+            string? standardOutputWithoutSpecialChars = MakeControlCharactersVisible(standardOutput, normalizeWhitespaceCharacters: false);
+            AppendIndentedLine(terminal, standardOutputWithoutSpecialChars, DoubleIndentation);
+        }
+
+        if (hasStdErr)
+        {
+            terminal.Append(SingleIndentation);
+            terminal.AppendLine(PlatformResources.StandardError);
+            string? standardErrorWithoutSpecialChars = MakeControlCharactersVisible(errorOutput, normalizeWhitespaceCharacters: false);
+            AppendIndentedLine(terminal, standardErrorWithoutSpecialChars, DoubleIndentation);
+        }
+
         terminal.ResetColor();
     }
 

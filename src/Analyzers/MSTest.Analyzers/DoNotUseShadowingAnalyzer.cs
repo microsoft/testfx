@@ -64,7 +64,12 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
         Dictionary<string, List<ISymbol>> membersByName = GetBaseMembers(namedTypeSymbol);
         foreach (ISymbol member in namedTypeSymbol.GetMembers())
         {
-            foreach (ISymbol baseMember in membersByName.GetValueOrDefault(member.Name, []))
+            if (!membersByName.TryGetValue(member.Name, out List<ISymbol>? members))
+            {
+                continue;
+            }
+
+            foreach (ISymbol baseMember in members)
             {
                 // Check if the member is shadowing a base class member
                 if (IsMemberShadowing(member, baseMember))

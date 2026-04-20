@@ -57,6 +57,32 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
 #endif
     }
 
+#if !NETCOREAPP
+    private static int ProcessId
+    {
+        get
+        {
+            int processId = field;
+            if (processId == 0)
+            {
+                field = processId = GetProcessId();
+                // Assume that process Id zero is invalid for user processes. It holds for all mainstream operating systems.
+                Debug.Assert(processId != 0, "processId is expected to be non-zero.");
+            }
+
+            return processId;
+
+            static int GetProcessId()
+            {
+                using var process = Process.GetCurrentProcess();
+                return process.Id;
+            }
+        }
+    }
+#else
+    private static int ProcessId => Environment.ProcessId;
+#endif
+
     /// <summary>
     /// Get root deployment directory.
     /// </summary>
@@ -64,7 +90,8 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
     /// <returns>Root deployment directory.</returns>
     public override string GetRootDeploymentDirectory(string baseDirectory)
     {
-        string dateTimeSuffix = $"{DateTime.Now.ToString("yyyyMMddTHHmmss", DateTimeFormatInfo.InvariantInfo)}_{Environment.ProcessId}";
+        string dateTimeSuffix = $"{DateTime.Now.ToString("yyyyMMddTHHmmss", DateTimeFormatInfo.InvariantInfo)}_{ProcessId}";
+
         string directoryName = string.Format(CultureInfo.InvariantCulture, Resource.TestRunName, DeploymentFolderPrefix,
 #if NETFRAMEWORK
             Environment.UserName,

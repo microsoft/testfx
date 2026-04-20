@@ -22,7 +22,6 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase<NopAssetFixture>
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -p:GenerateTestingPlatformEntryPoint=False {testAsset.TargetAssetPath} -v:n",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
         SL.Build binLog = SL.Serialization.Read(compilationResult.BinlogPath!);
@@ -134,7 +133,7 @@ module MicrosoftTestingPlatformEntryPoint =
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, finalSourceCode);
 
-        DotnetMuxerResult buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} {testAsset.TargetAssetPath} -v:n", cancellationToken: TestContext.CancellationToken);
         SL.Build binLog = SL.Serialization.Read(buildResult.BinlogPath!);
         SL.Target[] generateTestingPlatformEntryPointTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "_GenerateTestingPlatformEntryPoint").ToArray();
         Assert.HasCount(1, generateTestingPlatformEntryPointTargets, "Expected exactly one _GenerateTestingPlatformEntryPoint target");
@@ -162,7 +161,7 @@ module MicrosoftTestingPlatformEntryPoint =
         Assert.IsNotNull(sourceFilePathInObj);
 
         File.Delete(buildResult.BinlogPath!);
-        buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} {testAsset.TargetAssetPath} -v:n", cancellationToken: TestContext.CancellationToken);
         binLog = SL.Serialization.Read(buildResult.BinlogPath!);
         generateTestingPlatformEntryPointTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "_GenerateTestingPlatformEntryPoint" && t.Children.Count > 0).ToArray();
         Assert.HasCount(1, generateTestingPlatformEntryPointTargets, "Expected exactly one _GenerateTestingPlatformEntryPoint target with children on rebuild");

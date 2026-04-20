@@ -39,17 +39,28 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
     [System.Security.SecurityCritical]
     [SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "Discovery context can be null.")]
     public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink)
-        => DiscoverTests(sources, discoveryContext, logger, discoverySink, null);
+        => DiscoverTests(sources, discoveryContext, logger, discoverySink, null, isMTP: false);
 
-    internal void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IConfiguration? configuration)
+    internal void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IConfiguration? configuration, bool isMTP)
     {
-        Ensure.NotNull(sources);
-        Ensure.NotNull(logger);
-        Ensure.NotNull(discoverySink);
+        if (sources is null)
+        {
+            throw new ArgumentNullException(nameof(sources));
+        }
+
+        if (logger is null)
+        {
+            throw new ArgumentNullException(nameof(logger));
+        }
+
+        if (discoverySink is null)
+        {
+            throw new ArgumentNullException(nameof(discoverySink));
+        }
 
         if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext, logger, configuration, _testSourceHandler))
         {
-            new UnitTestDiscoverer(_testSourceHandler).DiscoverTests(sources, logger, discoverySink, discoveryContext);
+            new UnitTestDiscoverer(_testSourceHandler).DiscoverTests(sources, logger, discoverySink, discoveryContext, isMTP);
         }
     }
 }

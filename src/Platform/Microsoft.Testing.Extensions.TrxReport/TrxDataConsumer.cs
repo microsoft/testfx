@@ -191,9 +191,23 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
         ApplicationStateGuard.Ensure(_testStartTime is not null);
 
         int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
-        var trxReportGeneratorEngine = new TrxReportEngine(_fileSystem, _testApplicationModuleInfo, _environment, _commandLineOptionsService, _configuration,
-            _clock, _artifactsByExtension,
-            _testFramework, _testStartTime.Value, exitCode, cancellationToken);
+        var trxReportGeneratorEngine = new TrxReportEngine(
+            _fileSystem,
+            _testApplicationModuleInfo,
+            _environment,
+            _commandLineOptionsService,
+            _configuration,
+            _clock,
+            _artifactsByExtension,
+            _testFramework,
+            _testStartTime.Value,
+#if NETCOREAPP
+            exitCode,
+            cancellationToken);
+#else
+            exitCode);
+#endif
+
         (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync([.. _tests]).ConfigureAwait(false);
         if (warning is not null)
         {

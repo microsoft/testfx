@@ -69,6 +69,12 @@ Extension options:
     --output
         Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+    --show-stderr
+        Determines when to show captured error output of a test.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+    --show-stdout
+        Determines when to show captured standard output of a test.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardMatchPattern);
@@ -262,6 +268,16 @@ Registered command line providers:
         Hidden: False
         Description: Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+      --show-stderr
+        Arity: 1
+        Hidden: False
+        Description: Determines when to show captured error output of a test.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+      --show-stdout
+        Arity: 1
+        Hidden: False
+        Description: Determines when to show captured standard output of a test.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
 Registered tools:
   There are no registered tools\.
 """;
@@ -335,7 +351,7 @@ Registered tools:
         Assert.IsFalse(Directory.Exists(testResultsPath), "TestResults folder should not be created for info command");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string NoExtensionAssetName = "NoExtensionInfoTest";
 
@@ -400,13 +416,10 @@ public class DummyTestFramework : ITestFramework
 
         public string NoExtensionTargetAssetPath => GetAssetPath(NoExtensionAssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (NoExtensionAssetName, NoExtensionAssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (NoExtensionAssetName, NoExtensionAssetName,
                 NoExtensionTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
     }
 
     public TestContext TestContext { get; set; }

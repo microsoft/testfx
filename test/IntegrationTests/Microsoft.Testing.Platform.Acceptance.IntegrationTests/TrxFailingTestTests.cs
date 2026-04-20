@@ -38,7 +38,7 @@ public sealed class TrxFailingTestTests : AcceptanceTestBase<TrxFailingTestTests
         Assert.Contains("at DummyTestFramework.ExecuteRequestAsync", trxContent, trxContent);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string AssetName = "TrxTest";
         private const string WithFailingTest = nameof(WithFailingTest);
@@ -130,13 +130,10 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         public string TargetAssetPath => GetAssetPath(WithFailingTest);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (WithFailingTest, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (WithFailingTest, AssetName,
                 FailingTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
     }
 
     public TestContext TestContext { get; set; }
