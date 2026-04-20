@@ -446,7 +446,7 @@ public class TestMethodRunnerTests : TestContainer
     {
         public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
         {
-            var taskCompletionSource = new TaskCompletionSource<TestResult>();
+            var taskCompletionSource = new TaskCompletionSource<TestResult>(TaskCreationOptions.RunContinuationsAsynchronously);
             ThreadPool.UnsafeQueueUserWorkItem(
                 _ =>
                 {
@@ -461,7 +461,7 @@ public class TestMethodRunnerTests : TestContainer
                 },
                 null);
 
-            return [await taskCompletionSource.Task.ConfigureAwait(false)];
+            return [await taskCompletionSource.Task.WaitAsync(TimeSpan.FromSeconds(10)).ConfigureAwait(false)];
         }
     }
 
