@@ -10,17 +10,15 @@ using System.IO.Pipes;
 using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 
-#if NET
-using Microsoft.Testing.Platform.Resources;
-#endif
-
 namespace Microsoft.Testing.Platform.IPC;
 
 [Embedded]
+#if !MTP_MSBUILD_TASKS
 [UnsupportedOSPlatform("browser")]
+#endif
 internal sealed class NamedPipeClient : NamedPipeBase, IClient
 {
-    private const PipeOptions CurrentUserPipeOptions = PipeOptions.None
+    private const PipeOptions AsyncCurrentUserPipeOptions = PipeOptions.Asynchronous
 #if NET
         | PipeOptions.CurrentUserOnly
 #endif
@@ -43,8 +41,12 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
 
     public NamedPipeClient(string name, IEnvironment environment)
     {
-        Ensure.NotNull(name);
-        _namedPipeClientStream = new(".", name, PipeDirection.InOut, CurrentUserPipeOptions);
+        if (name is null)
+        {
+            throw new ArgumentNullException(nameof(name));
+        }
+
+        _namedPipeClientStream = new(".", name, PipeDirection.InOut, AsyncCurrentUserPipeOptions);
         PipeName = name;
         _environment = environment;
     }
@@ -84,7 +86,13 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
             byte[] bytes = ArrayPool<byte>.Shared.Rent(sizeof(int));
             try
             {
-                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+                if (!BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage))
+                {
+                    // TryWriteBytes only fails if destination is small.
+                    // Here, we are writing an int, and we are sure that the destination (bytes) given by array pool is at least sizeof(int).
+                    throw ApplicationStateGuard.Unreachable();
+                }
+
                 await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
             }
             finally
@@ -100,7 +108,13 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
             bytes = ArrayPool<byte>.Shared.Rent(sizeof(int));
             try
             {
-                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, requestNamedPipeSerializer.Id), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+                if (!BitConverter.TryWriteBytes(bytes, requestNamedPipeSerializer.Id))
+                {
+                    // TryWriteBytes only fails if destination is small.
+                    // Here, we are writing an int, and we are sure that the destination (bytes) given by array pool is at least sizeof(int).
+                    throw ApplicationStateGuard.Unreachable();
+                }
+
                 await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
             }
             finally
@@ -239,25 +253,4 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
         _namedPipeClientStream.Dispose();
         _disposed = true;
     }
-
-#if NETCOREAPP
-    [Obsolete("All owned fields are disposed synchronously. Introduction of DisposeAsync here is unnecessary complexity.")]
-    // NOTE: While NamedPipeClient is internal API, it's breaking to change it as it's consumed via IVT by MTP extensions.
-    // If we removed DisposeAsync in newer MTP version, but an old MTP extension is used with newer MTP version, we will get MissingMethodException.
-    // It might be more safe to obsolete for now, and potentially remove after few versions are released when most users will
-    // already be on those newer versions, and the risk of break is reduced.
-    public async ValueTask DisposeAsync()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _lock.Dispose();
-        await _serializationBuffer.DisposeAsync().ConfigureAwait(false);
-        await _messageBuffer.DisposeAsync().ConfigureAwait(false);
-        await _namedPipeClientStream.DisposeAsync().ConfigureAwait(false);
-        _disposed = true;
-    }
-#endif
 }

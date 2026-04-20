@@ -41,7 +41,11 @@ public sealed class CountDownEventTests
         CancellationTokenSource cts = new();
         CancellationToken cancelToken = cts.Token;
         Task<bool> waiter = Task.Run(() => countdownEvent.WaitAsync(cancelToken), cancelToken);
+#if NETCOREAPP
         await cts.CancelAsync();
+#else
+        cts.Cancel();
+#endif
         await Assert.ThrowsAsync<OperationCanceledException>(async () => await waiter);
     }
 

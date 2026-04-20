@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.CodeAnalysis;
-using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.IPC;
 
@@ -19,18 +18,8 @@ internal abstract class NamedPipeBase
     }
 
     protected INamedPipeSerializer GetSerializer(int id)
-        => _idSerializer.TryGetValue(id, out INamedPipeSerializer? serializer)
-            ? serializer
-            : throw new ArgumentException(string.Format(
-                CultureInfo.InvariantCulture,
-                PlatformResources.NoSerializerRegisteredWithIdErrorMessage,
-                id));
+        => _idSerializer[id];
 
     protected INamedPipeSerializer GetSerializer(Type type)
-        => _typeSerializer.TryGetValue(type, out INamedPipeSerializer? serializer)
-            ? serializer
-            : throw new ArgumentException(string.Format(
-                CultureInfo.InvariantCulture,
-                PlatformResources.NoSerializerRegisteredWithTypeErrorMessage,
-                type));
+        => _typeSerializer[type];
 }

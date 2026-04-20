@@ -32,7 +32,6 @@ public static class CrashDumpExtensions
             => new CrashDumpEnvironmentVariableProvider(
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetCommandLineOptions(),
-                serviceProvider.GetTestApplicationModuleInfo(),
                 crashDumpGeneratorConfiguration,
                 serviceProvider.GetLoggerFactory()));
 

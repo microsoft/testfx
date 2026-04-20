@@ -154,23 +154,38 @@ public sealed partial class Assert
     /// <returns>The item that matches the predicate.</returns>
     public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        var matchingElements = collection.Where(predicate).ToList();
-        int actualCount = matchingElements.Count;
+        T firstMatch = default!;
+        int matchCount = 0;
 
-        if (actualCount == 1)
+        foreach (T item in collection)
         {
-            return matchingElements[0];
+            if (!predicate(item))
+            {
+                continue;
+            }
+
+            if (matchCount == 0)
+            {
+                firstMatch = item;
+            }
+
+            matchCount++;
+        }
+
+        if (matchCount == 1)
+        {
+            return firstMatch;
         }
 
         if (string.IsNullOrEmpty(predicateExpression))
         {
             string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-            ReportAssertContainsSingleFailed(actualCount, userMessage);
+            ReportAssertContainsSingleFailed(matchCount, userMessage);
         }
         else
         {
             string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
-            ReportAssertSingleMatchFailed(actualCount, userMessage);
+            ReportAssertSingleMatchFailed(matchCount, userMessage);
         }
 
         // Unreachable code but compiler cannot work it out
@@ -474,7 +489,11 @@ public sealed partial class Assert
         CheckParameterNotNull(value, "Assert.Contains", "value");
         CheckParameterNotNull(substring, "Assert.Contains", "substring");
 
+#if NETCOREAPP
         if (!value.Contains(substring, comparisonType))
+#else
+        if (value.IndexOf(substring, comparisonType) < 0)
+#endif
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
@@ -713,7 +732,11 @@ public sealed partial class Assert
         CheckParameterNotNull(value, "Assert.DoesNotContain", "value");
         CheckParameterNotNull(substring, "Assert.DoesNotContain", "substring");
 
+#if NETCOREAPP
         if (value.Contains(substring, comparisonType))
+#else
+        if (value.IndexOf(substring, comparisonType) >= 0)
+#endif
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotContainFail, value, substring, userMessage);

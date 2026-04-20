@@ -24,7 +24,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
 
     internal TreeNodeFilter(string filter)
     {
-        Filter = Ensure.NotNull(filter);
+        Filter = filter ?? throw new ArgumentNullException(nameof(filter));
         _filters = ParseFilter(filter);
     }
 
@@ -482,8 +482,8 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     /// <param name="filterableProperties">The URL encoded node properties.</param>
     public bool MatchesFilter(string testNodeFullPath, PropertyBag filterableProperties)
     {
-        Ensure.NotNullOrEmpty(testNodeFullPath);
-        ArgumentGuard.Ensure(testNodeFullPath[0] == PathSeparator, nameof(testNodeFullPath),
+        _ = testNodeFullPath ?? throw new ArgumentNullException(nameof(testNodeFullPath));
+        ArgumentGuard.Ensure(testNodeFullPath.Length > 0 && testNodeFullPath[0] == PathSeparator, nameof(testNodeFullPath),
             string.Format(CultureInfo.InvariantCulture, PlatformResources.TreeNodeFilterPathShouldStartWithSlashErrorMessage, PathSeparator));
 
         int currentCharIndex = 1;

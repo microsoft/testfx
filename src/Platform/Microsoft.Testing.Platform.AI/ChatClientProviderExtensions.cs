@@ -2,8 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.AI;
+using Microsoft.Testing.Platform.AI.Resources;
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.AI;
@@ -23,7 +23,7 @@ public static class ChatClientProviderExtensions
     {
         if (testApplicationBuilder is not TestApplicationBuilder builder)
         {
-            throw new InvalidOperationException(PlatformResources.InvalidTestApplicationBuilderTypeForAI);
+            throw new InvalidOperationException(AIExtensionResources.InvalidTestApplicationBuilderTypeForAI);
         }
 
         builder.ChatClientManager.AddChatClientProvider(chatClientProvider);

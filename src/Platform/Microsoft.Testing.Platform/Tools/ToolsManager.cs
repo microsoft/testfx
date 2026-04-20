@@ -10,10 +10,7 @@ internal sealed class ToolsManager : IToolsManager
     private readonly List<Func<IServiceProvider, ITool>> _toolsFactories = [];
 
     public void AddTool(Func<IServiceProvider, ITool> toolFactory)
-    {
-        Ensure.NotNull(toolFactory);
-        _toolsFactories.Add(toolFactory);
-    }
+        => _toolsFactories.Add(toolFactory ?? throw new ArgumentNullException(nameof(toolFactory)));
 
     internal async Task<IReadOnlyList<ITool>> BuildAsync(IServiceProvider serviceProvider)
     {

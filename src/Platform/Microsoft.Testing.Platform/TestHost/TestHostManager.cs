@@ -30,13 +30,12 @@ internal sealed class TestHostManager : ITestHostManager
 
     public void AddTestFrameworkInvoker(Func<IServiceProvider, ITestFrameworkInvoker> testFrameworkInvokerFactory)
     {
-        Ensure.NotNull(testFrameworkInvokerFactory);
         if (_testFrameworkInvokerFactory is not null)
         {
             throw new InvalidOperationException(PlatformResources.TestAdapterInvokerFactoryAlreadySetErrorMessage);
         }
 
-        _testFrameworkInvokerFactory = testFrameworkInvokerFactory;
+        _testFrameworkInvokerFactory = testFrameworkInvokerFactory ?? throw new ArgumentNullException(nameof(testFrameworkInvokerFactory));
     }
 
     internal async Task<ActionResult<ITestFrameworkInvoker>> TryBuildTestAdapterInvokerAsync(ServiceProvider serviceProvider)
@@ -61,13 +60,12 @@ internal sealed class TestHostManager : ITestHostManager
 
     public void AddTestExecutionFilterFactory(Func<IServiceProvider, ITestExecutionFilterFactory> testExecutionFilterFactory)
     {
-        Ensure.NotNull(testExecutionFilterFactory);
         if (_testExecutionFilterFactory is not null)
         {
             throw new InvalidOperationException(PlatformResources.TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage);
         }
 
-        _testExecutionFilterFactory = testExecutionFilterFactory;
+        _testExecutionFilterFactory = testExecutionFilterFactory ?? throw new ArgumentNullException(nameof(testExecutionFilterFactory));
     }
 
     internal async Task<ActionResult<ITestExecutionFilterFactory>> TryBuildTestExecutionFilterFactoryAsync(ServiceProvider serviceProvider)
@@ -91,10 +89,7 @@ internal sealed class TestHostManager : ITestHostManager
     }
 
     public void AddTestHostApplicationLifetime(Func<IServiceProvider, ITestHostApplicationLifetime> testHostApplicationLifetime)
-    {
-        Ensure.NotNull(testHostApplicationLifetime);
-        _testApplicationLifecycleCallbacksFactories.Add(testHostApplicationLifetime);
-    }
+        => _testApplicationLifecycleCallbacksFactories.Add(testHostApplicationLifetime ?? throw new ArgumentNullException(nameof(testHostApplicationLifetime)));
 
     internal async Task<ITestHostApplicationLifetime[]> BuildTestApplicationLifecycleCallbackAsync(ServiceProvider serviceProvider)
     {
@@ -121,16 +116,14 @@ internal sealed class TestHostManager : ITestHostManager
 
     public void AddDataConsumer(Func<IServiceProvider, IDataConsumer> dataConsumerFactory)
     {
-        Ensure.NotNull(dataConsumerFactory);
-        _dataConsumerFactories.Add(dataConsumerFactory);
+        _dataConsumerFactories.Add(dataConsumerFactory ?? throw new ArgumentNullException(nameof(dataConsumerFactory)));
         _factoryOrdering.Add(dataConsumerFactory);
     }
 
     public void AddDataConsumer<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, IDataConsumer
     {
-        Ensure.NotNull(compositeServiceFactory);
-        if (_dataConsumersCompositeServiceFactories.Contains(compositeServiceFactory))
+        if (_dataConsumersCompositeServiceFactories.Contains(compositeServiceFactory ?? throw new ArgumentNullException(nameof(compositeServiceFactory))))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
         }
@@ -218,16 +211,14 @@ internal sealed class TestHostManager : ITestHostManager
 
     public void AddTestSessionLifetimeHandler(Func<IServiceProvider, ITestSessionLifetimeHandler> testSessionLifetimeHandleFactory)
     {
-        Ensure.NotNull(testSessionLifetimeHandleFactory);
-        _testSessionLifetimeHandlerFactories.Add(testSessionLifetimeHandleFactory);
+        _testSessionLifetimeHandlerFactories.Add(testSessionLifetimeHandleFactory ?? throw new ArgumentNullException(nameof(testSessionLifetimeHandleFactory)));
         _factoryOrdering.Add(testSessionLifetimeHandleFactory);
     }
 
     public void AddTestSessionLifetimeHandler<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, ITestSessionLifetimeHandler
     {
-        Ensure.NotNull(compositeServiceFactory);
-        if (_testSessionLifetimeHandlerCompositeFactories.Contains(compositeServiceFactory))
+        if (_testSessionLifetimeHandlerCompositeFactories.Contains(compositeServiceFactory ?? throw new ArgumentNullException(nameof(compositeServiceFactory))))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
         }

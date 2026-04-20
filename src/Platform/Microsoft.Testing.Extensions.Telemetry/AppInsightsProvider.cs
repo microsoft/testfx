@@ -9,6 +9,9 @@ using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+#if !NETCOREAPP
+using Microsoft.Testing.Platform.Messages;
+#endif
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 
@@ -40,12 +43,12 @@ internal sealed partial class AppInsightsProvider :
     private readonly ITelemetryClientFactory _telemetryClientFactory;
     private readonly bool _isDevelopmentRepository;
     private readonly ILogger<AppInsightsProvider> _logger;
-    private readonly Task? _telemetryTask;
+    private readonly Task _telemetryTask;
     private readonly CancellationTokenSource _flushTimeoutOrStop = new();
 #if NETCOREAPP
     private readonly Channel<(string EventName, IDictionary<string, object> ParamsMap)> _payloads;
 #else
-    private readonly BlockingCollection<(string EventName, IDictionary<string, object> ParamsMap)> _payloads;
+    private readonly SingleConsumerUnboundedChannel<(string EventName, IDictionary<string, object> ParamsMap)> _payloads;
 #endif
 #if DEBUG
     // Telemetry properties that are allowed to contain unhashed information.
@@ -101,14 +104,11 @@ internal sealed partial class AppInsightsProvider :
             AllowSynchronousContinuations = false,
         });
 
-        _telemetryTask = task.Run(IngestLoopAsync, _testApplicationCancellationTokenSource.CancellationToken);
 #else
-        // Keep the custom thread to avoid to waste one from thread pool.
-        // We have some await but we should stay on the custom thread if not for special cases like trace log or exception.
-        _payloads = [];
-        _telemetryTask = _task.RunLongRunning(IngestLoopAsync, "Telemetry AppInsightsProvider", _testApplicationCancellationTokenSource.CancellationToken);
+        _payloads = new SingleConsumerUnboundedChannel<(string EventName, IDictionary<string, object> ParamsMap)>();
 #endif
 
+        _telemetryTask = task.Run(IngestLoopAsync, _testApplicationCancellationTokenSource.CancellationToken);
         _logger = loggerFactory.CreateLogger<AppInsightsProvider>();
     }
 
@@ -134,90 +134,101 @@ internal sealed partial class AppInsightsProvider :
 
         DateTimeOffset? lastLoggedError = null;
         _testApplicationCancellationTokenSource.CancellationToken.Register(_flushTimeoutOrStop.Cancel);
+
         try
         {
 #if NETCOREAPP
             while (await _payloads.Reader.WaitToReadAsync(_flushTimeoutOrStop.Token).ConfigureAwait(false))
             {
-                (string eventName, IDictionary<string, object> paramsMap) = await _payloads.Reader.ReadAsync().ConfigureAwait(false);
+                {
+                    (string eventName, IDictionary<string, object> paramsMap) = await _payloads.Reader.ReadAsync().ConfigureAwait(false);
 #else
-            foreach ((string eventName, IDictionary<string, object> paramsMap) in _payloads.GetConsumingEnumerable(_flushTimeoutOrStop.Token))
+            while (await _payloads.WaitToReadAsync(_flushTimeoutOrStop.Token).ConfigureAwait(false))
             {
+                while (_payloads.TryRead(out (string EventName, IDictionary<string, object> ParamsMap) payload))
+                {
+                    if (_flushTimeoutOrStop.Token.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    (string eventName, IDictionary<string, object> paramsMap) = payload;
 #endif
 
-                // Add common properties.
-                paramsMap.Add(TelemetryProperties.VersionPropertyName, _telemetryInformation.Version);
-                paramsMap.Add(TelemetryProperties.SessionId, _currentSessionId);
-                paramsMap.Add(TelemetryProperties.ReporterIdPropertyName, CurrentReporterId);
-                paramsMap.Add(TelemetryProperties.IsCIPropertyName, _isCi.AsTelemetryBool());
+                    // Add common properties.
+                    paramsMap.Add(TelemetryProperties.VersionPropertyName, _telemetryInformation.Version);
+                    paramsMap.Add(TelemetryProperties.SessionId, _currentSessionId);
+                    paramsMap.Add(TelemetryProperties.ReporterIdPropertyName, CurrentReporterId);
+                    paramsMap.Add(TelemetryProperties.IsCIPropertyName, _isCi.AsTelemetryBool());
 
-                if (_isDevelopmentRepository)
-                {
-                    paramsMap.Add(TelemetryProperties.HostProperties.IsDevelopmentRepositoryPropertyName, TelemetryProperties.True);
-                }
-
-                var metrics = new Dictionary<string, double>();
-                var properties = new Dictionary<string, string>();
-
-                foreach (KeyValuePair<string, object> pair in paramsMap)
-                {
-                    switch (pair.Value)
+                    if (_isDevelopmentRepository)
                     {
-                        // Metrics:
-                        case double value:
-                            metrics.Add(pair.Key, value);
-                            break;
-                        case DateTimeOffset value:
-                            metrics.Add(pair.Key, ToUnixTimeNanoseconds(value));
-                            break;
+                        paramsMap.Add(TelemetryProperties.HostProperties.IsDevelopmentRepositoryPropertyName, TelemetryProperties.True);
+                    }
 
-                        // Properties:
+                    var metrics = new Dictionary<string, double>();
+                    var properties = new Dictionary<string, string>();
+
+                    foreach (KeyValuePair<string, object> pair in paramsMap)
+                    {
+                        switch (pair.Value)
+                        {
+                            // Metrics:
+                            case double value:
+                                metrics.Add(pair.Key, value);
+                                break;
+                            case DateTimeOffset value:
+                                metrics.Add(pair.Key, ToUnixTimeNanoseconds(value));
+                                break;
+
+                            // Properties:
 #if DEBUG
-                        case string value:
-                            AssertHashed(pair.Key, value);
-                            properties.Add(pair.Key, value);
-                            break;
+                            case string value:
+                                AssertHashed(pair.Key, value);
+                                properties.Add(pair.Key, value);
+                                break;
 #endif
-                        case bool value:
-                            RoslynDebug.Assert(false, $"Telemetry entry '{pair.Key}' contains a boolean value, boolean values should always be converted to string using: .{nameof(TelemetryExtensions.AsTelemetryBool)}()");
-                            properties.Add(pair.Key, value.AsTelemetryBool());
-                            break;
-                        default:
-                            properties.Add(pair.Key, pair.Value?.ToString() ?? string.Empty);
-                            break;
-                    }
-                }
-
-                if (_logger.IsEnabled(LogLevel.Trace))
-                {
-                    StringBuilder builder = new();
-                    builder.AppendLine(CultureInfo.InvariantCulture, $"Send telemetry event: {eventName}");
-                    foreach ((string key, string value) in properties)
-                    {
-                        builder.AppendLine(CultureInfo.InvariantCulture, $"    {key}: {value}");
+                            case bool value:
+                                RoslynDebug.Assert(false, $"Telemetry entry '{pair.Key}' contains a boolean value, boolean values should always be converted to string using: .{nameof(TelemetryExtensions.AsTelemetryBool)}()");
+                                properties.Add(pair.Key, value.AsTelemetryBool());
+                                break;
+                            default:
+                                properties.Add(pair.Key, pair.Value?.ToString() ?? string.Empty);
+                                break;
+                        }
                     }
 
-                    foreach ((string key, double value) in metrics)
+                    if (_logger.IsEnabled(LogLevel.Trace))
                     {
-                        builder.AppendLine(CultureInfo.InvariantCulture, $"    {key}: {value.ToString("f", CultureInfo.InvariantCulture)}");
+                        StringBuilder builder = new();
+                        builder.AppendLine(CultureInfo.InvariantCulture, $"Send telemetry event: {eventName}");
+                        foreach (KeyValuePair<string, string> kvp in properties)
+                        {
+                            builder.AppendLine(CultureInfo.InvariantCulture, $"    {kvp.Key}: {kvp.Value}");
+                        }
+
+                        foreach (KeyValuePair<string, double> kvp in metrics)
+                        {
+                            builder.AppendLine(CultureInfo.InvariantCulture, $"    {kvp.Key}: {kvp.Value.ToString("f", CultureInfo.InvariantCulture)}");
+                        }
+
+                        await _logger.LogTraceAsync(builder.ToString()).ConfigureAwait(false);
                     }
 
-                    await _logger.LogTraceAsync(builder.ToString()).ConfigureAwait(false);
-                }
-
-                try
-                {
-                    _client.TrackEvent(eventName, properties, metrics);
-                }
-                catch (Exception ex)
-                {
-                    // If we have a lot of issues with the network we could have a lot of logs here.
-                    // We log one error every 3 seconds.
-                    // We could do better back-pressure.
-                    if (_logger.IsEnabled(LogLevel.Error) && (!lastLoggedError.HasValue || (lastLoggedError.Value - _clock.UtcNow).TotalSeconds > 3))
+                    try
                     {
-                        await _logger.LogErrorAsync("Error during telemetry report.", ex).ConfigureAwait(false);
-                        lastLoggedError = _clock.UtcNow;
+                        _client.TrackEvent(eventName, properties, metrics);
+                    }
+                    catch (Exception ex)
+                    {
+                        // If we have a lot of issues with the network we could have a lot of logs here.
+                        // We log one error every 3 seconds.
+                        // We could do better back-pressure.
+                        if (_logger.IsEnabled(LogLevel.Error) && (!lastLoggedError.HasValue || (_clock.UtcNow - lastLoggedError.Value).TotalSeconds > 3))
+                        {
+                            await _logger.LogErrorAsync("Error during telemetry report.", ex).ConfigureAwait(false);
+                            lastLoggedError = _clock.UtcNow;
+                        }
                     }
                 }
             }
@@ -274,7 +285,12 @@ internal sealed partial class AppInsightsProvider :
 #if NETCOREAPP
         await _payloads.Writer.WriteAsync((eventName, paramsMap), cancellationToken).ConfigureAwait(false);
 #else
-        _payloads.Add((eventName, paramsMap), cancellationToken);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return Task.FromCanceled(cancellationToken);
+        }
+
+        _payloads.Write((eventName, paramsMap));
         return Task.CompletedTask;
 #endif
     }
@@ -285,15 +301,10 @@ internal sealed partial class AppInsightsProvider :
 #if NETCOREAPP
         _payloads.Writer.Complete();
 #else
-        _payloads.CompleteAdding();
+        _payloads.Complete();
 #endif
         if (!_isDisposed)
         {
-            if (_telemetryTask is null)
-            {
-                throw new InvalidOperationException("Unexpected null _telemetryTask");
-            }
-
             int flushForSeconds = 3;
             if (!_telemetryTask.Wait(TimeSpan.FromSeconds(flushForSeconds)))
             {
@@ -311,11 +322,6 @@ internal sealed partial class AppInsightsProvider :
         _payloads.Writer.Complete();
         if (!_isDisposed)
         {
-            if (_telemetryTask is null)
-            {
-                throw new InvalidOperationException("Unexpected null _telemetryTask");
-            }
-
             int flushForSeconds = 3;
             try
             {
