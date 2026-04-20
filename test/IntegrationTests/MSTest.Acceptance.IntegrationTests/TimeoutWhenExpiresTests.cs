@@ -149,7 +149,7 @@ public sealed class TimeoutWhenExpiresTests : AcceptanceTestBase<TimeoutWhenExpi
         testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' timed out after 1000ms");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture : TestAssetFixtureBase
     {
         public const string ProjectName = "TimeoutCodeWithOneSecTimeout";
 

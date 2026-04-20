@@ -36,7 +36,7 @@ public sealed class MaxFailedTestsExtensionTests : AcceptanceTestBase<MaxFailedT
         Assert.AreEqual(12, total);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
 #file MaxFailedTestsExtensionTests.csproj

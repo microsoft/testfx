@@ -19,10 +19,8 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
             throw new InvalidOperationException("Cannot register TestArgumentsEntry provider after registration is frozen.");
         }
 
-        if (!_testArgumentsEntryProviders.TryAdd(testNodeStableUid, argumentPropertiesProviderCallback))
-        {
-            throw new InvalidOperationException($"TestArgumentsEntry provider is already registered for test node with UID '{testNodeStableUid}'.");
-        }
+        // Add will throw an exception if the key already exists, which is intended.
+        _testArgumentsEntryProviders.Add(testNodeStableUid, argumentPropertiesProviderCallback);
     }
 
     internal void FreezeRegistration() => _isRegistrationFrozen = true;

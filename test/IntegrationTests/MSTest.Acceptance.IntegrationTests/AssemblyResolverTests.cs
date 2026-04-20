@@ -24,7 +24,7 @@ public class AssemblyResolverTests : AcceptanceTestBase<AssemblyResolverTests.Te
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 

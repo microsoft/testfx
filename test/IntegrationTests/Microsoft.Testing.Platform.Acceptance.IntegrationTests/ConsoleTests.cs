@@ -72,7 +72,7 @@ public class ConsoleTests : AcceptanceTestBase<ConsoleTests.TestAssetFixture>
         testHostResult.AssertOutputContains("ABCDEF123");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
 #file ConsoleTests.csproj

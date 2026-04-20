@@ -122,11 +122,6 @@
         <target state="translated">Параметр "--{0}" зарезервирован и не может использоваться поставщиками: "{0}"</target>
         <note />
       </trans-unit>
-      <trans-unit id="CommandLineOptionObsoleteWarning">
-        <source>Warning: Option '--{0}' is obsolete. {1}</source>
-        <target state="translated">Предупреждение: параметр "--{0}" устарел. {1}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">Параметр "--{0}" от поставщика "{1}" (UID: {2}) использует зарезервированный префикс "--internal"</target>
@@ -743,6 +738,16 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">Трассировка стека</target>
         <note />
       </trans-unit>
+      <trans-unit id="StandardError">
+        <source>Error output</source>
+        <target state="translated">Вывод ошибок</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
+        <target state="translated">Стандартный вывод</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
         <target state="translated">Запуск тестового сеанса.</target>
@@ -808,6 +813,25 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
         <target state="translated">--output ожидает один параметр со значением "Normal" или "Detailed".</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="translated">--show-stdout и --show-stderr принимают один параметр со значением "All" (Все), "Failed" (Сбой), "None" (Нет).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Определяет, когда показывать зафиксированный вывод ошибок теста.
+Допустимые значения: "All" (Все), "Failed" (Сбой), "None" (Нет). Значение по умолчанию — "All" (Все).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Определяет, когда показывать зафиксированный стандартный вывод теста.
+Допустимые значения: "All" (Все), "Failed" (Сбой), "None" (Нет). Значение по умолчанию — "All" (Все).</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">

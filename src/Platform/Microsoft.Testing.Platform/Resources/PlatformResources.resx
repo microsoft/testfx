@@ -319,9 +319,6 @@
   <data name="CommandLineOptionIsReserved" xml:space="preserve">
     <value>Option '--{0}' is reserved and cannot be used by providers: '{0}'</value>
   </data>
-  <data name="CommandLineOptionObsoleteWarning" xml:space="preserve">
-    <value>Warning: Option '--{0}' is obsolete. {1}</value>
-  </data>
   <data name="CommandLineParserUnexpectedArgument" xml:space="preserve">
     <value>Unexpected argument {0}</value>
   </data>
@@ -606,6 +603,17 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</value>
   <data name="TerminalOutputOptionInvalidArgument" xml:space="preserve">
     <value>--output expects a single parameter with value 'Normal' or 'Detailed'.</value>
   </data>
+  <data name="TerminalShowStdoutOptionDescription" xml:space="preserve">
+    <value>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</value>
+  </data>
+  <data name="TerminalShowStderrOptionDescription" xml:space="preserve">
+    <value>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</value>
+  </data>
+  <data name="TerminalShowOutputOptionInvalidArgument" xml:space="preserve">
+    <value>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</value>
+  </data>
   <data name="PlatformCommandLineTimeoutArgumentErrorMessage" xml:space="preserve">
     <value>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</value>
   </data>
@@ -624,6 +632,12 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   </data>
   <data name="MissingClientPortFoJsonRpc" xml:space="preserve">
     <value>Expected --client-port when jsonRpc protocol is used.</value>
+  </data>
+  <data name="StandardError" xml:space="preserve">
+    <value>Error output</value>
+  </data>
+  <data name="StandardOutput" xml:space="preserve">
+    <value>Standard output</value>
   </data>
   <data name="DiscoveringTestsFrom" xml:space="preserve">
     <value>Discovering tests from</value>

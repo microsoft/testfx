@@ -62,10 +62,9 @@ internal sealed class TestFrameworkEngine : IDataProducer
         CancellationToken cancellationToken)
     {
         List<TestNode> allRootTestNodes = [];
-        TestFixtureManager fixtureManager = new(cancellationToken);
-        TestArgumentsManager argumentsManager = new();
-        TestSessionContext testSessionContext = new(_configuration, fixtureManager, argumentsManager, request.Session.SessionUid,
-            PublishDataAsync, cancellationToken);
+        var fixtureManager = new TestFixtureManager();
+        var argumentsManager = new TestArgumentsManager();
+        var testSessionContext = new TestSessionContext(_configuration, request.Session.SessionUid, PublishDataAsync, cancellationToken);
 
         try
         {
@@ -77,7 +76,6 @@ internal sealed class TestFrameworkEngine : IDataProducer
 
             // We have built all test nodes, now we need to process them. Before that, we want to make sure to freeze managers
             // to ensure that no new registrations are allowed.
-            fixtureManager.FreezeRegistration();
             argumentsManager.FreezeRegistration();
 
             BFSTestNodeVisitor testNodesVisitor = new(allRootTestNodes, request.Filter, argumentsManager);
@@ -142,10 +140,9 @@ internal sealed class TestFrameworkEngine : IDataProducer
         CancellationToken cancellationToken)
     {
         List<TestNode> allRootTestNodes = [];
-        TestFixtureManager fixtureManager = new(cancellationToken);
-        TestArgumentsManager argumentsManager = new();
-        TestSessionContext testSessionContext = new(_configuration, fixtureManager, argumentsManager, request.Session.SessionUid,
-            PublishDataAsync, cancellationToken);
+        var fixtureManager = new TestFixtureManager();
+        var argumentsManager = new TestArgumentsManager();
+        var testSessionContext = new TestSessionContext(_configuration, request.Session.SessionUid, PublishDataAsync, cancellationToken);
 
         try
         {
@@ -157,7 +154,6 @@ internal sealed class TestFrameworkEngine : IDataProducer
 
             // We have built all test nodes, now we need to process them. Before that, we want to make sure to freeze managers
             // to ensure that no new registrations are allowed.
-            fixtureManager.FreezeRegistration();
             argumentsManager.FreezeRegistration();
 
             BFSTestNodeVisitor testNodesVisitor = new(allRootTestNodes, request.Filter, argumentsManager);

@@ -20,7 +20,7 @@ public sealed class ExecutionRequestCompleteTests : AcceptanceTestBase<Execution
         Assert.IsGreaterThan(3, stopwatch.Elapsed.TotalSeconds);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string TestCode = """
 #file ExecutionTests2.csproj

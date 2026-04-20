@@ -55,7 +55,7 @@ public sealed class STATestClassTimeoutTests : AcceptanceTestBase<STATestClassTi
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyCleanup");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 

@@ -80,7 +80,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
         testHostResult.AssertStandardErrorContains("dummyconfigfile_not_existing_file.json");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "ConfigurationSettings";
 

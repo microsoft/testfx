@@ -122,11 +122,6 @@
         <target state="translated">オプション '--{0}' は予約されており、プロバイダーでは使用できません: '{0}'</target>
         <note />
       </trans-unit>
-      <trans-unit id="CommandLineOptionObsoleteWarning">
-        <source>Warning: Option '--{0}' is obsolete. {1}</source>
-        <target state="translated">警告: オプション '--{0}' は廃止されています。{1}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">プロバイダー '{1}' のオプション '--{0}' (UID:{2}) は予約済みプレフィックス '--internal' を 使用しています</target>
@@ -744,6 +739,16 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">スタック トレース</target>
         <note />
       </trans-unit>
+      <trans-unit id="StandardError">
+        <source>Error output</source>
+        <target state="translated">エラー出力</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
+        <target state="translated">標準出力</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
         <target state="translated">テスト セッションを開始しています。</target>
@@ -809,6 +814,25 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
         <target state="translated">--output には、値が 'Normal' または 'Detailed' の単一のパラメーターが必要です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="translated">--show-stdout と --show-stderr には、値が 'All'、'Failed'、または 'None' の 1 つのパラメーターが必要です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">テストのキャプチャされたエラー出力を表示するタイミングを決定します。
+有効な値は 'All'、'Failed'、'None' です。既定値は 'All' です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">テストのキャプチャされた標準の出力を表示するタイミングを決定します。
+有効な値は 'All'、'Failed'、'None' です。既定値は 'All' です。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">

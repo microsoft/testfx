@@ -122,11 +122,6 @@
         <target state="translated">'--{0}' 옵션은 예약되어 있으므로 공급자 '{0}'이(가) 사용할 수 없습니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="CommandLineOptionObsoleteWarning">
-        <source>Warning: Option '--{0}' is obsolete. {1}</source>
-        <target state="translated">경고: 옵션 '--{0}'이(가) 사용되지 않습니다. {1}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">공급자 '{1}'(UID: {2})의 옵션 '-- {0}'이 예약된 접두사 '--internal'을 사용하고 있습니다.</target>
@@ -743,6 +738,16 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">스택 추적</target>
         <note />
       </trans-unit>
+      <trans-unit id="StandardError">
+        <source>Error output</source>
+        <target state="translated">오류 출력</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
+        <target state="translated">표준 출력</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
         <target state="translated">테스트 세션을 시작하는 중입니다.</target>
@@ -808,6 +813,25 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
         <target state="translated">--output에는 값이 'Normal' 또는 'Detailed'인 단일 매개 변수가 필요합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="translated">--show-stdout 및 --show-stderr에는 값이 'All', 'Failed' 또는 'None'인 단일 매개 변수가 필요합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">테스트에서 캡처한 오류 출력을 언제 표시할지 결정합니다.
+유효한 값은 'All', 'Failed', 'None'입니다. 기본값은 'All'입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">테스트에서 캡처한 표준 출력을 언제 표시할지 결정합니다.
+유효한 값은 'All', 'Failed', 'None'입니다. 기본값은 'All'입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">

@@ -132,7 +132,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             _namedPipeClient = new NamedPipeClient(consumerPipeNameRequest.PipeName, _environment);
             _namedPipeClient.RegisterSerializer(new GetInProgressTestsResponseSerializer(), typeof(GetInProgressTestsResponse));
             _namedPipeClient.RegisterSerializer(new GetInProgressTestsRequestSerializer(), typeof(GetInProgressTestsRequest));
-            _namedPipeClient.RegisterSerializer(new ExitSignalActivityIndicatorTaskRequestSerializer(), typeof(ExitSignalActivityIndicatorTaskRequest));
             _namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
             _waitConsumerPipeName.Set();
             return VoidResponse.CachedInstance;
@@ -313,7 +312,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
         GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), cancellationToken).ConfigureAwait(false);
-        await _namedPipeClient.RequestReplyAsync<ExitSignalActivityIndicatorTaskRequest, VoidResponse>(new ExitSignalActivityIndicatorTaskRequest(), cancellationToken).ConfigureAwait(false);
         if (tests.Tests.Length > 0)
         {
             string hangTestsFileName = Path.Combine(_configuration.GetTestResultDirectory(), Path.ChangeExtension(Path.GetFileName(finalDumpFileName), ".log"));

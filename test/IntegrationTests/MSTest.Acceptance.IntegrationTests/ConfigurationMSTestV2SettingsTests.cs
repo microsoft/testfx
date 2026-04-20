@@ -24,7 +24,7 @@ public sealed class ConfigurationMSTestV2SettingsTests : AcceptanceTestBase<Conf
         testHostResult.AssertStandardErrorContains("Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectNameWithMSTestV2RunSettings = "ConfigurationMSTestV2Settings";
 

@@ -131,7 +131,7 @@ internal class TestSourceHost : ITestSourceHost
 
         if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
-            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(',', resolutionPaths));
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(",", resolutionPaths));
         }
 
         // NOTE: These 2 lines are super important, see https://github.com/microsoft/testfx/issues/2922

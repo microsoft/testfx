@@ -93,21 +93,6 @@ internal sealed class AssemblyEnumeratorWrapper
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var assemblyEnumerator = (AssemblyEnumerator)isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), [MSTestSettings.CurrentSettings])!;
 
-        // This might not be supported if an older version of Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
-        // assembly is already loaded into the App Domain.
-        string? xml = null;
-        try
-        {
-            xml = runSettings?.SettingsXml;
-        }
-        catch
-        {
-            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
-            {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(Resource.OlderTFMVersionFound);
-            }
-        }
-
         // This method runs inside of appdomain, when appdomains are available and enabled.
         // Be careful how you pass data from the method. We were previously passing in a collection
         // of strings normally (by reference), and we were mutating that collection in the appdomain.

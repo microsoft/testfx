@@ -26,7 +26,7 @@ public sealed class LifecycleAttributesVoidThreadingTests : AcceptanceTestBase<L
         testHostResult.AssertOutputContains("Passed!");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "LifecycleAttributesVoid";
 

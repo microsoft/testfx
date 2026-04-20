@@ -20,10 +20,9 @@ internal class DotnetMuxer : IStep<SingleProject, BuildArtifact>
             throw new NotSupportedException();
         }
 
-        string nugetRestoreFolder = Path.Combine(payload.TestAsset.TargetAssetPath, ".packages");
         string buildCommand = $"build {payload.TestAsset.TargetAssetPath} -c {_buildConfiguration}";
         Console.WriteLine($"Building: '{buildCommand}'");
-        await DotnetCli.RunAsync(buildCommand, nugetRestoreFolder);
+        await DotnetCli.RunAsync(buildCommand);
         var testHost = TestHost.LocateFrom(payload.TestAsset.TargetAssetPath, payload.AssetName, payload.Tfms.Single(), buildConfiguration: _buildConfiguration);
         return new BuildArtifact(testHost, payload.TestAsset);
     }

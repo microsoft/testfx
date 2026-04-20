@@ -51,7 +51,7 @@ public sealed class DynamicDataMethodTests : AcceptanceTestBase<DynamicDataMetho
         testHostResult.AssertOutputContains("TestMethodSingleParameterIntArray called with: 9");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "DynamicDataMethodTests";
 

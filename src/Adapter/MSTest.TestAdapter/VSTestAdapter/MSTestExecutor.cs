@@ -102,8 +102,18 @@ internal sealed class MSTestExecutor : ITestExecutor
             PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor.RunTests: Running tests from testcases.");
         }
 
-        Ensure.NotNull(frameworkHandle);
-        Ensure.NotNullOrEmpty(tests);
+        if (frameworkHandle is null)
+        {
+            throw new ArgumentNullException(nameof(frameworkHandle));
+        }
+
+        // TODO: Verify why VSTest annotates the IEnumerable as nullable.
+        if (tests is null)
+        {
+            throw new ArgumentNullException(nameof(tests));
+        }
+
+        Ensure.NotEmpty(tests);
 
         if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
         {
@@ -120,8 +130,18 @@ internal sealed class MSTestExecutor : ITestExecutor
             PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor.RunTests: Running tests from sources.");
         }
 
-        Ensure.NotNull(frameworkHandle);
-        Ensure.NotNullOrEmpty(sources);
+        if (frameworkHandle is null)
+        {
+            throw new ArgumentNullException(nameof(frameworkHandle));
+        }
+
+        // TODO: Verify why VSTest annotates the IEnumerable as nullable.
+        if (sources is null)
+        {
+            throw new ArgumentNullException(nameof(sources));
+        }
+
+        Ensure.NotEmpty(sources);
 
         TestSourceHandler testSourceHandler = new();
         if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))

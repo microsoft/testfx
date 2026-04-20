@@ -135,7 +135,7 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
         }
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (DynamicDataAssetName, DynamicDataAssetName,
                 SourceCodeDynamicData

@@ -78,7 +78,7 @@ public class GenericTestMethodTests : AcceptanceTestBase<GenericTestMethodTests.
             """, RegexOptions.Singleline);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => ("GenericTestMethodTests", "GenericTestMethodTests",
                 SourceGenericTestMethod

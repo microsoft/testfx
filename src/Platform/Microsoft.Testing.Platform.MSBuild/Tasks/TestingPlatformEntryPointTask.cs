@@ -17,6 +17,8 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
     private const string FSharpLanguageSymbol = "F#";
     private const string VBLanguageSymbol = "VB";
 
+    private readonly IFileSystem _fileSystem;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TestingPlatformEntryPointTask"/> class.
     /// </summary>
@@ -57,8 +59,6 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
     /// </summary>
     [Output]
     public ITaskItem TestingPlatformEntryPointGeneratedFilePath { get; set; }
-
-    private readonly IFileSystem _fileSystem;
 
     /// <inheritdoc />
     public override bool Execute()

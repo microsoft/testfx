@@ -47,7 +47,7 @@ public sealed class TrxDataRowTests : AcceptanceTestBase<TrxDataRowTests.TestAss
         return Regex.IsMatch(await reader.ReadToEndAsync(), pattern);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string AssetNameUsingMSTest = "TrxTestUsingMSTest";
         private const string WithDataRow = nameof(WithDataRow);

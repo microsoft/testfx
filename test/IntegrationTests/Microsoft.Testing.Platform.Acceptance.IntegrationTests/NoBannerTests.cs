@@ -65,7 +65,7 @@ public class NoBannerTests : AcceptanceTestBase<NoBannerTests.TestAssetFixture>
         testHostResult.AssertOutputMatchesRegex(_bannerRegexMatchPattern);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string NoBannerTestCode = """
 #file NoBannerTest.csproj

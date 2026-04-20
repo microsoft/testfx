@@ -52,7 +52,7 @@ public sealed class TupleDynamicDataTests : AcceptanceTestBase<TupleDynamicDataT
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "TupleDynamicDataTests";
 

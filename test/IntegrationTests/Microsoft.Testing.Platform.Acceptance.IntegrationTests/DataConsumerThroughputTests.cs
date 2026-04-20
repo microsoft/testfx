@@ -24,7 +24,7 @@ public class DataConsumerThroughputTests : AcceptanceTestBase<DataConsumerThroug
         Assert.IsLessThan(7, stopwatch.Elapsed.TotalSeconds, testHostResult.ToString());
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string TestCode = """
 #file DataConsumerThroughputTests.csproj
