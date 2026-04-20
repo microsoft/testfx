@@ -133,18 +133,14 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// <param name="runSettings">
     /// The run Settings for the session.
     /// </param>
-    /// <param name="frameworkHandle">
-    /// The handle to the test platform.
-    /// </param>
     /// <returns>
     /// Returns the host for the source provided.
     /// </returns>
     public ITestSourceHost CreateTestSourceHost(
         string source,
-        TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings,
-        TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle)
+        TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings)
     {
-        var testSourceHost = new TestSourceHost(source, runSettings, frameworkHandle);
+        var testSourceHost = new TestSourceHost(source, runSettings);
         testSourceHost.SetupHost();
 
         return testSourceHost;

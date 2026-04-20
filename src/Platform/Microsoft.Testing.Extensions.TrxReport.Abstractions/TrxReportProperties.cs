@@ -198,7 +198,16 @@ public sealed class TrxMessagesProperty : IProperty
         builder.Append(" { ");
 
         builder.Append($"{nameof(Messages)} = [");
-        builder.AppendJoin(", ", Messages.Select(x => x.ToString()));
+
+        for (int i = 0; i < Messages.Length; i++)
+        {
+            builder.Append(Messages[i].ToString());
+            if (i < Messages.Length - 1)
+            {
+                builder.Append(", ");
+            }
+        }
+
         builder.Append(']');
         builder.Append(" }");
         return builder.ToString();
@@ -229,8 +238,49 @@ public sealed class TrxCategoriesProperty : IProperty
         builder.Append(nameof(TrxCategoriesProperty));
         builder.Append(" { ");
         builder.Append($"{nameof(Categories)} = [");
-        builder.AppendJoin(", ", Categories);
+
+        for (int i = 0; i < Categories.Length; i++)
+        {
+            builder.Append(Categories[i]);
+            if (i < Categories.Length - 1)
+            {
+                builder.Append(", ");
+            }
+        }
+
         builder.Append(']');
+        builder.Append(" }");
+        return builder.ToString();
+    }
+}
+
+/// <summary>
+/// A property that represents the value of <c>name</c> attribute on <c>UnitTest</c> XML elements under <c>TestDefinitions</c> XML element.
+/// When the property is missing, TestNode.DisplayName is used instead.
+/// This can cause issues when multiple test results are reported where different test results have different display names.
+/// </summary>
+public sealed class TrxTestDefinitionName : IProperty
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TrxTestDefinitionName"/> class.
+    /// </summary>
+    /// <param name="testDefinitionName">The name to use.</param>
+    public TrxTestDefinitionName(string testDefinitionName)
+        => TestDefinitionName = testDefinitionName;
+
+    /// <summary>
+    /// Gets the name to use.
+    /// </summary>
+    public string TestDefinitionName { get; }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(TrxTestDefinitionName));
+        builder.Append(" { ");
+        builder.Append($"{nameof(TestDefinitionName)} = ");
+        builder.Append(TestDefinitionName);
         builder.Append(" }");
         return builder.ToString();
     }

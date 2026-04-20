@@ -151,6 +151,8 @@
     "tools/**/*.md",
     ".dotnet/**/*.md",
     ".github/ISSUE_TEMPLATE/**/*.md",
+    ".github/skills/**/*.md",
+    ".github/agents/**/*.md",
     "**/AnalyzerReleases.*.md"
   ]
 }

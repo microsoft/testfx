@@ -11,16 +11,8 @@ public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSTestProject";
 
-    internal static IEnumerable<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)> GetBuildMatrix()
-    {
-        foreach ((string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm) entry in GetBuildMatrixSingleAndMultiTfmBuildConfiguration())
-        {
-            yield return new(entry.SingleTfmOrMultiTfm, entry.BuildConfiguration, entry.IsMultiTfm);
-        }
-    }
-
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrix))]
+    [DynamicData(nameof(GetBuildMatrixSingleAndMultiTfmBuildConfiguration))]
     public async Task MSBuildTestTarget_SingleAndMultiTfm_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration buildConfiguration, bool isMultiTfm)
     {
         // Get the template project
@@ -51,10 +43,10 @@ public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
         }
 
         // Build the solution
-        DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore {solution.SolutionFile} --configfile {nugetFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore {solution.SolutionFile} --configfile {nugetFile}", cancellationToken: TestContext.CancellationToken);
         restoreResult.AssertOutputDoesNotContain("An approximate best match of");
 
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"build --no-restore /t:Test {solution.SolutionFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: generator.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"build --no-restore /t:Test {solution.SolutionFile}", workingDirectory: generator.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
 
         if (isMultiTfm)
         {

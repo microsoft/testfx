@@ -122,11 +122,6 @@
         <target state="translated">選項 '--{0}' 已保留，無法供提供者 '{0}' 使用</target>
         <note />
       </trans-unit>
-      <trans-unit id="CommandLineOptionObsoleteWarning">
-        <source>Warning: Option '--{0}' is obsolete. {1}</source>
-        <target state="translated">警告: 選項 '--{0}' 已過時。{1}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">提供者 '{1}' (UID: {2}) 中的選項 '--{0}' 使用保留的前置詞 '--internal'</target>
@@ -419,16 +414,6 @@
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
         <target state="translated">正在執行 {0} 測試</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">沒有使用識別碼 '{0}' 註冊的序列化程式</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">沒有使用類型 '{0}' 註冊的序列化程式</target>
         <note />
       </trans-unit>
       <trans-unit id="NotAvailable">
@@ -830,6 +815,25 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">--輸出需要值為 'Normal' 或 'Detailed' 的單一參數。</target>
         <note />
       </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="translated">--show-stdout 和 --show-stderr 需接收一個參數，其值必須為「All」、「Failed」或「None」。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">決定何時顯示測試擷取到的錯誤輸出。
+有效值為「All」、「Failed」或「None」。預設值為「All」。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">決定何時顯示測試擷取到的標準輸出。
+有效值為「All」、「Failed」或「None」。預設值為「All」。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
         <target state="translated">將測試結果寫入終端機。</target>
@@ -975,11 +979,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">未預期的遙測呼叫，遙測已停用。</target>
         <note />
       </trans-unit>
-      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occurred during byte conversion</source>
-        <target state="translated">位元組轉換期間發生未預期的例外狀況</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
@@ -1020,11 +1019,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
         <target state="translated">聊天用戶端提供者已經註冊。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">AI 延伸模組僅適用於類型為 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 的建立器</target>
         <note />
       </trans-unit>
     </body>

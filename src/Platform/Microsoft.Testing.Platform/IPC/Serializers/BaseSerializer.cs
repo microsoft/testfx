@@ -7,7 +7,6 @@ using System.Buffers;
 
 #if NET
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
 #endif
 
 using Microsoft.CodeAnalysis;
@@ -56,7 +55,11 @@ internal abstract class BaseSerializer
         try
         {
             Span<byte> len = stackalloc byte[sizeof(int)];
-            ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(len, stringutf8TotalBytes), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+            if (!BitConverter.TryWriteBytes(len, stringutf8TotalBytes))
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
+
             stream.Write(len);
 
             Encoding.UTF8.GetBytes(str, bytes);
@@ -88,7 +91,10 @@ internal abstract class BaseSerializer
         int stringutf8TotalBytes = Encoding.UTF8.GetByteCount(str);
         Span<byte> len = stackalloc byte[sizeof(int)];
 
-        ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(len, stringutf8TotalBytes), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+        if (!BitConverter.TryWriteBytes(len, stringutf8TotalBytes))
+        {
+            throw ApplicationStateGuard.Unreachable();
+        }
 
         stream.Write(len);
     }
@@ -99,7 +105,10 @@ internal abstract class BaseSerializer
         int sizeInBytes = GetSize<T>();
         Span<byte> len = stackalloc byte[sizeof(int)];
 
-        ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(len, sizeInBytes), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+        if (!BitConverter.TryWriteBytes(len, sizeInBytes))
+        {
+            throw ApplicationStateGuard.Unreachable();
+        }
 
         stream.Write(len);
     }
@@ -107,7 +116,10 @@ internal abstract class BaseSerializer
     protected static void WriteInt(Stream stream, int value)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int)];
-        ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, value), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+        if (!BitConverter.TryWriteBytes(bytes, value))
+        {
+            throw ApplicationStateGuard.Unreachable();
+        }
 
         stream.Write(bytes);
     }
@@ -115,7 +127,10 @@ internal abstract class BaseSerializer
     protected static void WriteLong(Stream stream, long value)
     {
         Span<byte> bytes = stackalloc byte[sizeof(long)];
-        ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, value), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+        if (!BitConverter.TryWriteBytes(bytes, value))
+        {
+            throw ApplicationStateGuard.Unreachable();
+        }
 
         stream.Write(bytes);
     }
@@ -123,7 +138,10 @@ internal abstract class BaseSerializer
     protected static void WriteUShort(Stream stream, ushort value)
     {
         Span<byte> bytes = stackalloc byte[sizeof(ushort)];
-        ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, value), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+        if (!BitConverter.TryWriteBytes(bytes, value))
+        {
+            throw ApplicationStateGuard.Unreachable();
+        }
 
         stream.Write(bytes);
     }
@@ -131,7 +149,10 @@ internal abstract class BaseSerializer
     protected static void WriteBool(Stream stream, bool value)
     {
         Span<byte> bytes = stackalloc byte[sizeof(bool)];
-        ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, value), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+        if (!BitConverter.TryWriteBytes(bytes, value))
+        {
+            throw ApplicationStateGuard.Unreachable();
+        }
 
         stream.Write(bytes);
     }

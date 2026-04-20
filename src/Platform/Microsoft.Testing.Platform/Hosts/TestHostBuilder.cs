@@ -305,15 +305,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // to file disc also the banner, so at this point we need to have all services and configuration(result directory) built.
         await DisplayBannerIfEnabledAsync(loggingState, proxyOutputDevice, testFrameworkCapabilities, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
-        // Check for obsolete options and display warnings
-        await CommandLineOptionsValidator.CheckForObsoleteOptionsAsync(
-            loggingState.CommandLineParseResult,
-            commandLineHandler.SystemCommandLineOptionsProviders,
-            commandLineHandler.ExtensionsCommandLineOptionsProviders,
-            proxyOutputDevice,
-            commandLineHandler,
-            testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
-
         // Add global telemetry service.
         // Add at this point or the telemetry banner appearance order will be wrong, we want the testing app banner before the telemetry banner.
         ITelemetryCollector telemetryService = await ((TelemetryManager)Telemetry).BuildTelemetryAsync(serviceProvider, loggerFactory, testApplicationOptions).ConfigureAwait(false);
@@ -618,8 +609,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         await logger.LogDebugAsync($"Connecting to named pipe '{pipeName}'").ConfigureAwait(false);
         string? seconds = configuration[PlatformConfigurationConstants.PlatformTestHostControllersManagerNamedPipeClientConnectTimeoutSeconds];
 
-        // Default timeout is 30 seconds
-        int timeoutSeconds = seconds is null ? TimeoutHelper.DefaultHangTimeoutSeconds : int.Parse(seconds, CultureInfo.InvariantCulture);
+        double timeoutSeconds = seconds is null ? TimeoutHelper.DefaultHangTimeoutSeconds : double.Parse(seconds, CultureInfo.InvariantCulture);
         await logger.LogDebugAsync($"Setting PlatformTestHostControllersManagerNamedPipeClientConnectTimeoutSeconds '{timeoutSeconds}'").ConfigureAwait(false);
         using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(timeoutSeconds));
         await client.ConnectAsync(timeout.Token).ConfigureAwait(false);

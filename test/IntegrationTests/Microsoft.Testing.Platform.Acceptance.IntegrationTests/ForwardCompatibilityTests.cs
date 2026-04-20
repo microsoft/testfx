@@ -24,9 +24,9 @@ public class ForwardCompatibilityTests : AcceptanceTestBase<ForwardCompatibility
         Assert.IsNotEmpty(trxFiles, $"At least one TRX file should be generated in: {testResultsPath}");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
-        private const string PreviousExtensionVersion = "2.0.0";
+        private const string PreviousExtensionVersion = "2.2.1";
 
         private const string ForwardCompatibilityTestCode = """
 #file ForwardCompatibilityTest.csproj
@@ -115,7 +115,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "0", DisplayName = "ForwardCompatibilityTest", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+            new TestNode() { Uid = "0", DisplayName = "ForwardCompatibilityTest", Properties = new(PassedTestNodeStateProperty.CachedInstance, new TrxFullyQualifiedTypeNameProperty("MyNS.MyTestClass")) }));
         context.Complete();
     }
 }
@@ -123,14 +123,11 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 ForwardCompatibilityTestCode
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$PreviousExtensionVersion$", PreviousExtensionVersion));
-        }
     }
 
     public TestContext TestContext { get; set; }

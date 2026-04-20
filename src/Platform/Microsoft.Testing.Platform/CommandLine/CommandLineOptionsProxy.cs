@@ -17,8 +17,5 @@ internal sealed class CommandLineOptionsProxy : ICommandLineOptions
             : _commandLineOptions.TryGetOptionArgumentList(optionName, out arguments);
 
     public void SetCommandLineOptions(ICommandLineOptions commandLineOptions)
-    {
-        Ensure.NotNull(commandLineOptions);
-        _commandLineOptions = commandLineOptions;
-    }
+        => _commandLineOptions = commandLineOptions;
 }

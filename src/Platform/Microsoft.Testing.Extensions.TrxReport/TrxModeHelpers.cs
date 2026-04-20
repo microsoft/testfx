@@ -3,6 +3,10 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 
+#if !NETCOREAPP
+using Polyfills;
+#endif
+
 namespace Microsoft.Testing.Extensions.TrxReport;
 
 internal static class TrxModeHelpers
@@ -10,5 +14,5 @@ internal static class TrxModeHelpers
     [UnsupportedOSPlatformGuard("BROWSER")]
     public static bool ShouldUseOutOfProcessTrxGeneration(ICommandLineOptions commandLineOptions)
         => commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) &&
-            !OperatingSystem.IsBrowser();
+        !OperatingSystem.IsBrowser();
 }

@@ -44,16 +44,12 @@ public static class DotnetCli
         }
     }
 
-    public static bool DoNotRetry { get; set; }
-
     public static async Task<DotnetMuxerResult> RunAsync(
         string args,
-        string nugetGlobalPackagesFolder,
         string? workingDirectory = null,
         Dictionary<string, string?>? environmentVariables = null,
         bool failIfReturnValueIsNotZero = true,
         bool disableTelemetry = true,
-        int retryCount = 5,
         bool disableCodeCoverage = true,
         bool warnAsError = true,
         bool suppressPreviewDotNetMessage = true,
@@ -93,8 +89,6 @@ public static class DotnetCli
             {
                 environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
             }
-
-            environmentVariables["NUGET_PACKAGES"] = nugetGlobalPackagesFolder;
 
             string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true" : string.Empty;
             extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;

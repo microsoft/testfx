@@ -177,13 +177,22 @@ internal sealed class TrxProcessLifetimeHandler :
         // If _fileNameRequest is null, that means that the TestHost crashed before it wrote the TRX file.
         if (_fileNameRequest is null)
         {
-            var trxReportGeneratorEngine = new TrxReportEngine(_fileSystem, _testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,
+            var trxReportGeneratorEngine = new TrxReportEngine(
+                _fileSystem,
+                _testApplicationModuleInfo,
+                _environment,
+                _commandLineOptions,
+                _configuration,
                 _clock,
                 artifacts,
                 new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),
                 _startTime,
+#if NETCOREAPP
                 testHostProcessInformation.ExitCode,
                 cancellationToken);
+#else
+                testHostProcessInformation.ExitCode);
+#endif
 
             (string fileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync(
                 [],
@@ -213,13 +222,22 @@ internal sealed class TrxProcessLifetimeHandler :
         // Add attachments to the trx.
         if (_fileArtifacts.Count > 0)
         {
-            var trxReportGeneratorEngine = new TrxReportEngine(_fileSystem, _testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,
-               _clock,
-               artifacts,
-               new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),
-               _startTime,
-               testHostProcessInformation.ExitCode,
-               cancellationToken);
+            var trxReportGeneratorEngine = new TrxReportEngine(
+                _fileSystem,
+                _testApplicationModuleInfo,
+                _environment,
+                _commandLineOptions,
+                _configuration,
+                _clock,
+                artifacts,
+                new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),
+                _startTime,
+#if NETCOREAPP
+                testHostProcessInformation.ExitCode,
+                cancellationToken);
+#else
+                testHostProcessInformation.ExitCode);
+#endif
 
             await trxReportGeneratorEngine.AddArtifactsAsync(trxFile, artifacts).ConfigureAwait(false);
         }

@@ -141,7 +141,7 @@ internal class TestExecutionManager
 #endif
     }
 
-    internal async Task RunTestsAsync(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, ITestSourceHandler testSourceHandler, TestRunCancellationToken cancellationToken)
+    internal async Task RunTestsAsync(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, ITestSourceHandler testSourceHandler, bool isMTP, TestRunCancellationToken cancellationToken)
     {
         _testRunCancellationToken = cancellationToken;
         PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
@@ -158,7 +158,7 @@ internal class TestExecutionManager
             var logger = (IMessageLogger)frameworkHandle;
 
             // discover the tests
-            GetUnitTestDiscoverer(testSourceHandler).DiscoverTestsInSource(source, logger, discoverySink, runContext);
+            GetUnitTestDiscoverer(testSourceHandler).DiscoverTestsInSource(source, logger, discoverySink, runContext, isMTP);
             tests.AddRange(discoverySink.Tests);
 
             // Clear discoverSinksTests so that it just stores test for one source at one point of time
@@ -285,7 +285,7 @@ internal class TestExecutionManager
         }
 #endif
 
-        using MSTestAdapter.PlatformServices.Interface.ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle);
+        using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings);
         bool usesAppDomains = isolationHost is TestSourceHost { UsesAppDomain: true };
 
         if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
@@ -547,16 +547,16 @@ internal class TestExecutionManager
         // Add tcm properties.
         if (tcmProperties is not null)
         {
-            foreach ((TestProperty key, object? value) in tcmProperties)
+            foreach (KeyValuePair<TestProperty, object?> kvp in tcmProperties)
             {
-                testContextProperties[key.Id] = value;
+                testContextProperties[kvp.Key.Id] = kvp.Value;
             }
         }
 
         // Add source level parameters.
-        foreach ((string key, object value) in sourceLevelParameters)
+        foreach (KeyValuePair<string, object> kvp in sourceLevelParameters)
         {
-            testContextProperties[key] = value;
+            testContextProperties[kvp.Key] = kvp.Value;
         }
 
         if (unitTestElement.Traits is { Length: > 0 })

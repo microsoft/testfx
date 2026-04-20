@@ -6,7 +6,6 @@ using AwesomeAssertions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -107,7 +106,6 @@ public class MSTestSettingsTests : TestContainer
                     <AssemblyInitializeTimeout>timeout</AssemblyInitializeTimeout>
                     <ConsiderEmptyDataSourceAsInconclusive>3</ConsiderEmptyDataSourceAsInconclusive>
                     <AssemblyCleanupTimeout>timeout</AssemblyCleanupTimeout>
-                    <SettingsFile></SettingsFile>
                     <CaptureTraceOutput>3</CaptureTraceOutput>
                     <MapInconclusiveToFailed>3</MapInconclusiveToFailed>
                     <MapNotRunnableToFailed>3</MapNotRunnableToFailed>
@@ -119,7 +117,7 @@ public class MSTestSettingsTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(14));
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(13));
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'CooperativeCancellationTimeout', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'TestCleanupTimeout', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'ClassCleanupTimeout', setting will be ignored."), Times.Once);
@@ -130,7 +128,6 @@ public class MSTestSettingsTests : TestContainer
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'ClassInitializeTimeout', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'AssemblyInitializeTimeout', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'TestTimeout', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '' for runsettings entry 'SettingsFile', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'TreatDiscoveryWarningsAsErrors', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'MapInconclusiveToFailed', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'ConsiderEmptyDataSourceAsInconclusive', setting will be ignored."), Times.Once);
@@ -150,37 +147,6 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-    }
-
-    public void TestSettingsFileIsByDefaultNullWhenNotSpecified()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTest>
-              </MSTest>
-            </RunSettings>
-            """;
-
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object)!;
-
-        adapterSettings.TestSettingsFile.Should().BeNull();
-    }
-
-    public void TestSettingsFileShouldNotBeNullWhenSpecifiedInRunSettings()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTest>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-              </MSTest>
-            </RunSettings>
-            """;
-
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object)!;
-
-        adapterSettings.TestSettingsFile.Should().NotBeNull();
     }
 
     public void CaptureDebugTracesShouldBeTrueByDefault()
@@ -482,14 +448,14 @@ public class MSTestSettingsTests : TestContainer
               <MSTestV2>
                 <Parallelize>
                 </Parallelize>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <TestTimeout>12</TestTimeout>
               </MSTestV2>
             </RunSettings>
             """;
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
-        adapterSettings.TestSettingsFile.Should().NotBeNull();
+        adapterSettings.TestTimeout.Should().Be(12);
     }
 
     public void GetSettingsShouldBeAbleToReadAfterParallelizationSettingsWithData()
@@ -502,14 +468,14 @@ public class MSTestSettingsTests : TestContainer
                   <Workers>127</Workers>
                   <Scope>MethodLevel</Scope>
                 </Parallelize>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <TestTimeout>12</TestTimeout>
               </MSTestV2>
             </RunSettings>
             """;
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
-        adapterSettings.TestSettingsFile.Should().NotBeNull();
+        adapterSettings.TestTimeout.Should().Be(12);
         adapterSettings.ParallelizationWorkers.Should().Be(127);
         adapterSettings.ParallelizationScope.Should().Be(ExecutionScope.MethodLevel);
     }
@@ -521,14 +487,14 @@ public class MSTestSettingsTests : TestContainer
             <RunSettings>
               <MSTestV2>
                 <Parallelize/>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <TestTimeout>12</TestTimeout>
               </MSTestV2>
             </RunSettings>
             """;
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
-        adapterSettings.TestSettingsFile.Should().NotBeNull();
+        adapterSettings.TestTimeout.Should().Be(12);
     }
 
     public void DisableParallelizationShouldBeFalseByDefault()
@@ -643,7 +609,7 @@ public class MSTestSettingsTests : TestContainer
                 <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
                 <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
                 <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <TestTimeout>12</TestTimeout>
               </MSTest>
             </RunSettings>
             """;
@@ -683,7 +649,7 @@ public class MSTestSettingsTests : TestContainer
         dummyPlatformSpecificSetting.Should().BeTrue();
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-        adapterSettings.TestSettingsFile.Should().Be("DummyPath\\\\TestSettings1.testsettings");
+        adapterSettings.TestTimeout.Should().Be(12);
     }
 
     public void GetSettingsShouldBeAbleToReadSettingsIfThePlatformServiceDoesNotUnderstandASetting()
@@ -696,7 +662,7 @@ public class MSTestSettingsTests : TestContainer
                 <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
                 <UnReadableSetting>foobar</UnReadableSetting>
                 <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <TestTimeout>12</TestTimeout>
               </MSTest>
             </RunSettings>
             """;
@@ -736,7 +702,7 @@ public class MSTestSettingsTests : TestContainer
         dummyPlatformSpecificSetting.Should().BeTrue();
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-        adapterSettings.TestSettingsFile.Should().Be("DummyPath\\\\TestSettings1.testsettings");
+        adapterSettings.TestTimeout.Should().Be(12);
     }
 
     public void GetSettingsShouldOnlyReadTheAdapterSection()
@@ -859,7 +825,7 @@ public class MSTestSettingsTests : TestContainer
             """
             <RunSettings>
               <MSTest>
-                 <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                 <TestTimeout>12</TestTimeout>
               </MSTest>
             </RunSettings>
             """;
@@ -872,7 +838,7 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings adapterSettings2 = MSTestSettings.CurrentSettings;
 
         adapterSettings.Should().NotBeNull();
-        adapterSettings.TestSettingsFile.Should().NotBeNullOrEmpty();
+        adapterSettings.TestTimeout.Should().Be(12);
 
         (adapterSettings == adapterSettings2).Should().BeTrue();
     }
@@ -890,7 +856,7 @@ public class MSTestSettingsTests : TestContainer
                 <CaptureTraceOutput>False</CaptureTraceOutput>
                 <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
                 <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <TestTimeout>12</TestTimeout>
               </MSTest>
             </RunSettings>
             """;
@@ -902,7 +868,7 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings.CurrentSettings.CaptureDebugTraces.Should().BeFalse();
         MSTestSettings.CurrentSettings.MapInconclusiveToFailed.Should().BeTrue();
         MSTestSettings.CurrentSettings.MapNotRunnableToFailed.Should().BeTrue();
-        MSTestSettings.CurrentSettings.TestSettingsFile.Should().NotBeNullOrEmpty();
+        MSTestSettings.CurrentSettings.TestTimeout.Should().Be(12);
     }
 
     public void PopulateSettingsShouldInitializeDefaultAdapterSettingsWhenDiscoveryContextIsNull()
@@ -945,7 +911,7 @@ public class MSTestSettingsTests : TestContainer
             """
             <RunSettings>
               <FooUnit>
-               <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+               <TestTimeout>12</TestTimeout>
               </FooUnit>
             </RunSettings>
             """;
@@ -970,7 +936,7 @@ public class MSTestSettingsTests : TestContainer
               <MSTest>
                 <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
                 <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <TestTimeout>12</TestTimeout>
               </MSTest>
             </RunSettings>
             """;
@@ -985,7 +951,7 @@ public class MSTestSettingsTests : TestContainer
 
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-        adapterSettings.TestSettingsFile.Should().NotBeNullOrEmpty();
+        adapterSettings.TestTimeout.Should().Be(12);
     }
 
     public void PopulateSettingsShouldInitializeSettingsFromMSTestV2Section()
@@ -996,7 +962,7 @@ public class MSTestSettingsTests : TestContainer
               <MSTestV2>
                 <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
                 <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <TestTimeout>12</TestTimeout>
               </MSTestV2>
             </RunSettings>
             """;
@@ -1011,7 +977,7 @@ public class MSTestSettingsTests : TestContainer
 
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-        adapterSettings.TestSettingsFile.Should().NotBeNullOrEmpty();
+        adapterSettings.TestTimeout.Should().Be(12);
     }
 
     public void PopulateSettingsShouldInitializeSettingsFromMSTestV2OverMSTestV1Section()
@@ -1025,7 +991,7 @@ public class MSTestSettingsTests : TestContainer
               </MSTestV2>
               <MSTest>
                 <CaptureDebugTraces>False</CaptureDebugTraces>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <TestTimeout>12</TestTimeout>
               </MSTest>
             </RunSettings>
             """;
@@ -1041,66 +1007,7 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
         adapterSettings.CaptureDebugTraces.Should().BeTrue();
-        adapterSettings.TestSettingsFile.Should().BeNullOrEmpty();
-    }
-
-    #endregion
-
-    #region IsLegacyScenario tests
-
-    public void IsLegacyScenarioReturnsFalseWhenDiscoveryContextIsNull()
-    {
-        MSTestSettings.PopulateSettings(null, _mockMessageLogger.Object, null);
-        MSTestSettings.IsLegacyScenario(null!).Should().BeFalse();
-    }
-
-    public void IsLegacyScenarioReturnsFalseWhenTestSettingsFileIsNotGiven()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-               <MSTest>
-               </MSTest>
-            </RunSettings>
-            """;
-
-        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
-        MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object).Should().BeFalse();
-    }
-
-    public void IsLegacyScenarioReturnsTrueWhenTestSettingsFileIsGiven()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-               <MSTest>
-                 <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-               </MSTest>
-            </RunSettings>
-            """;
-        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
-        MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object).Should().BeTrue();
-    }
-
-    public void LegacyScenariosNotSupportedWarningIsPrintedWhenVsmdiFileIsGiven()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-               <MSTest>
-                <SettingsFile>DummyPath\\vsmdiFile.vsmdi</SettingsFile>
-               </MSTest>
-            </RunSettings>
-            """;
-        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
-        MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object).Should().BeTrue();
-        _mockMessageLogger.Verify(logger => logger.SendMessage(TestMessageLevel.Warning, Resource.LegacyScenariosNotSupportedWarning), Times.Once);
+        adapterSettings.TestTimeout.Should().Be(0);
     }
 
     #endregion

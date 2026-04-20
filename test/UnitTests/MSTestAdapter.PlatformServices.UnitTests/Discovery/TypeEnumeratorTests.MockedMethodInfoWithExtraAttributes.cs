@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NET6_0_OR_GREATER
-using Polyfills;
-#endif
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 
 public partial class TypeEnumeratorTests
@@ -68,7 +64,7 @@ public partial class TypeEnumeratorTests
 
         public override object[] GetCustomAttributes(bool inherit) => _original.GetCustomAttributes().Concat(_extraAttributes).ToArray();
 
-        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => _original.GetCustomAttributes().Concat(_extraAttributes.Where(a => a.GetType().IsAssignableTo(attributeType))).ToArray();
+        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => _original.GetCustomAttributes().Concat(_extraAttributes.Where(a => attributeType.IsAssignableFrom(a.GetType()))).ToArray();
 
         public override IList<CustomAttributeData> GetCustomAttributesData() => _original.GetCustomAttributesData();
 
@@ -86,7 +82,7 @@ public partial class TypeEnumeratorTests
             => _original.Invoke(obj, invokeAttr, binder, parameters, culture);
 
         public override bool IsDefined(Type attributeType, bool inherit)
-            => _original.IsDefined(attributeType, inherit) || _extraAttributes.Any(a => a.GetType().IsAssignableTo(attributeType));
+            => _original.IsDefined(attributeType, inherit) || _extraAttributes.Any(a => attributeType.IsAssignableFrom(a.GetType()));
 
         public override MethodInfo MakeGenericMethod(params Type[] typeArguments) => _original.MakeGenericMethod(typeArguments);
 

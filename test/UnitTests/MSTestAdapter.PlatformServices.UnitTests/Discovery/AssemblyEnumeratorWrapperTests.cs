@@ -37,10 +37,10 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
     }
 
     public void GetTestsShouldReturnNullIfAssemblyNameIsNull()
-        => AssemblyEnumeratorWrapper.GetTests(null, null, _mockTestSourceHandler.Object, out _).Should().BeNull();
+        => AssemblyEnumeratorWrapper.GetTests(null, null, _mockTestSourceHandler.Object, false, out _).Should().BeNull();
 
     public void GetTestsShouldReturnNullIfAssemblyNameIsEmpty()
-        => AssemblyEnumeratorWrapper.GetTests(string.Empty, null, _mockTestSourceHandler.Object, out _).Should().BeNull();
+        => AssemblyEnumeratorWrapper.GetTests(string.Empty, null, _mockTestSourceHandler.Object, false, out _).Should().BeNull();
 
     public void GetTestsShoulThrowIfSourceFileDoesNotExistInContext()
     {
@@ -52,7 +52,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(assemblyName))
             .Returns(false);
 
-        Action action = () => AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, out _);
+        Action action = () => AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, false, out _);
 
         action.Should().Throw<FileNotFoundException>()
             .WithMessage(string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, assemblyName));
@@ -65,7 +65,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         // Setup mocks.
         SetupMocks(assemblyName, doesFileExist: true, isAssemblyReferenced: false);
 
-        AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, out _).Should().BeNull();
+        AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, false, out _).Should().BeNull();
     }
 
     public void GetTestsShouldReturnTestElements()
@@ -75,7 +75,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         // Setup mocks.
         SetupMocks(assemblyName, doesFileExist: true, isAssemblyReferenced: true);
 
-        ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, out _);
+        ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, false, out _);
 
         tests.Should().NotBeNull();
 
@@ -90,7 +90,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         // Setup mocks.
         SetupMocks(assemblyName, doesFileExist: true, isAssemblyReferenced: true);
 
-        AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, out _);
+        AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, false, out _);
 
         _testablePlatformServiceProvider.MockTestSourceHost.Verify(ih => ih.CreateInstanceForType(typeof(AssemblyEnumerator), It.IsAny<object[]>()), Times.Once);
     }
@@ -110,7 +110,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(assemblyName))
             .Returns(true);
 
-        Action act = () => AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, out _);
+        Action act = () => AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, false, out _);
         act.Should().Throw<FileNotFoundException>().WithMessage(string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, fullFilePath));
     }
 

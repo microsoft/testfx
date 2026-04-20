@@ -83,12 +83,28 @@ internal sealed partial class TrxReportEngine
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension;
     private readonly ITestFramework _testFrameworkAdapter;
     private readonly DateTimeOffset _testStartTime;
+#if NETCOREAPP
     private readonly CancellationToken _cancellationToken;
+#endif
     private readonly int _exitCode;
     private readonly IFileSystem _fileSystem;
-    private readonly bool _isCopyingFileAllowed;
 
-    public TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
+    public TrxReportEngine(
+        IFileSystem fileSystem,
+        ITestApplicationModuleInfo testApplicationModuleInfo,
+        IEnvironment environment,
+        ICommandLineOptions commandLineOptionsService,
+        IConfiguration configuration,
+        IClock clock,
+        Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension,
+        ITestFramework testFrameworkAdapter,
+        DateTimeOffset testStartTime,
+#if NETCOREAPP
+        int exitCode,
+        CancellationToken cancellationToken)
+#else
+        int exitCode)
+#endif
     {
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _environment = environment;
@@ -98,10 +114,11 @@ internal sealed partial class TrxReportEngine
         _artifactsByExtension = artifactsByExtension;
         _testFrameworkAdapter = testFrameworkAdapter;
         _testStartTime = testStartTime;
+#if NETCOREAPP
         _cancellationToken = cancellationToken;
+#endif
         _exitCode = exitCode;
         _fileSystem = fileSystem;
-        _isCopyingFileAllowed = isCopyingFileAllowed;
     }
 
     public async Task<(string FileName, string? Warning)> GenerateReportAsync(TestNodeUpdateMessage[] testNodeUpdateMessages, string testHostCrashInfo = "", bool isTestHostCrashed = false)
@@ -140,14 +157,17 @@ internal sealed partial class TrxReportEngine
                 isFileNameExplicitlyProvided = false;
             }
 
-            SummaryCounts summaryCounts = AddResults(testNodeUpdateMessages, testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out bool hasFailedTests);
+            var testDefinitions = new XElement("TestDefinitions");
+            var testEntries = new XElement("TestEntries");
+            SummaryCounts summaryCounts = AddResults(testNodeUpdateMessages, testAppModule, testRun, runDeploymentRoot, testDefinitions, testEntries);
             testRun.Add(testDefinitions);
             testRun.Add(testEntries);
             AddTestLists(testRun);
 
+            bool hasFailedTests = summaryCounts.Failed > 0 || summaryCounts.Timedout > 0;
             string trxOutcome = isTestHostCrashed || _exitCode != ExitCodes.Success || hasFailedTests ? "Failed" : "Completed";
 
-            await AddResultSummaryAsync(testRun, trxOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, summaryCounts, isTestHostCrashed).ConfigureAwait(false);
+            AddResultSummary(testRun, trxOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, summaryCounts, isTestHostCrashed);
 
             // will need catch Unauthorized access
             document.Add(testRun);
@@ -173,7 +193,11 @@ internal sealed partial class TrxReportEngine
             // Note that we need to dispose the IFileStream, not the inner stream.
             // IFileStream implementations will be responsible to dispose their inner stream.
             using IFileStream stream = _fileSystem.NewFileStream(finalFileName, isFileNameExplicitlyProvided ? FileMode.Create : FileMode.CreateNew);
+#if NETCOREAPP
             await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
+#else
+            document.Save(stream.Stream, SaveOptions.None);
+#endif
             return isFileNameExplicitlyProvidedAndFileExists
                 ? (finalFileName, string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxFileExistsAndWillBeOverwritten, finalFileName))
                 : (finalFileName, null);
@@ -224,20 +248,20 @@ internal sealed partial class TrxReportEngine
             resultSummary.Add(collectorDataEntries);
         }
 
-        await AddArtifactsToCollectionAsync(artifacts, collectorDataEntries, runDeploymentRoot).ConfigureAwait(false);
+        AddArtifactsToCollection(artifacts, collectorDataEntries, runDeploymentRoot);
 
         using FileStream fs = File.OpenWrite(trxFile.FullName);
+#if NETCOREAPP
         await document.SaveAsync(fs, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
+#else
+        document.Save(fs, SaveOptions.None);
+#endif
     }
 
-    private async Task AddArtifactsToCollectionAsync(Dictionary<IExtension, List<SessionFileArtifact>> artifacts, XElement collectorDataEntries, string runDeploymentRoot)
+    private void AddArtifactsToCollection(Dictionary<IExtension, List<SessionFileArtifact>> artifacts, XElement collectorDataEntries, string runDeploymentRoot)
     {
         foreach (KeyValuePair<IExtension, List<SessionFileArtifact>> extensionArtifacts in artifacts)
         {
-            // TODO: VSTest seems to also add agentDisplayName
-            // agentDisplayName always matches agentName and is always MachineName.
-            // NOTE: VSTest always adds isFromRemoteAgent with value false.
-            // But this is not necessary to add as the XSD defines false as the default.
             var collector = new XElement(
                 NamespaceUri + "Collector",
                 new XAttribute("agentName", _environment.MachineName),
@@ -250,13 +274,13 @@ internal sealed partial class TrxReportEngine
 
             foreach (SessionFileArtifact artifact in extensionArtifacts.Value)
             {
-                string href = await CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(artifact.FileInfo, runDeploymentRoot).ConfigureAwait(false);
+                string href = CopyArtifactIntoTrxDirectoryAndReturnHrefValue(artifact.FileInfo, runDeploymentRoot);
                 uriAttachments.Add(new XElement(NamespaceUri + "UriAttachment", new XElement(NamespaceUri + "A", new XAttribute("href", href))));
             }
         }
     }
 
-    private async Task AddResultSummaryAsync(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, int exitCode, SummaryCounts summaryCounts, bool isTestHostCrashed = false)
+    private void AddResultSummary(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, int exitCode, SummaryCounts summaryCounts, bool isTestHostCrashed = false)
     {
         // TODO: VSTest adds Output/StdOut element to ResultSummary which we don't add.
         // VSTest adds mainly two things in that element:
@@ -333,10 +357,10 @@ internal sealed partial class TrxReportEngine
         var collectorDataEntries = new XElement(NamespaceUri + "CollectorDataEntries");
         resultSummary.Add(collectorDataEntries);
 
-        await AddArtifactsToCollectionAsync(_artifactsByExtension, collectorDataEntries, runDeploymentRoot).ConfigureAwait(false);
+        AddArtifactsToCollection(_artifactsByExtension, collectorDataEntries, runDeploymentRoot);
     }
 
-    private async Task<string> CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(FileInfo artifact, string runDeploymentRoot)
+    private string CopyArtifactIntoTrxDirectoryAndReturnHrefValue(FileInfo artifact, string runDeploymentRoot)
     {
         string artifactDirectory = CreateOrGetTrxArtifactDirectory(runDeploymentRoot);
         string fileName = artifact.Name;
@@ -357,7 +381,7 @@ internal sealed partial class TrxReportEngine
             break;
         }
 
-        await CopyFileAsync(artifact, new FileInfo(destination)).ConfigureAwait(false);
+        _fileSystem.CopyFile(artifact.FullName, new FileInfo(destination).FullName);
 
         return Path.Combine(_environment.MachineName, Path.GetFileName(destination));
     }
@@ -371,18 +395,6 @@ internal sealed partial class TrxReportEngine
         }
 
         return directoryName;
-    }
-
-    private async Task CopyFileAsync(FileInfo origin, FileInfo destination)
-    {
-        if (!_isCopyingFileAllowed)
-        {
-            return;
-        }
-
-        using FileStream fileStream = File.OpenRead(origin.FullName);
-        using var destinationStream = new FileStream(destination.FullName, FileMode.Create);
-        await fileStream.CopyToAsync(destinationStream, _cancellationToken).ConfigureAwait(false);
     }
 
     private static void AddTestLists(XElement testRun)
@@ -403,7 +415,7 @@ internal sealed partial class TrxReportEngine
         testRun.Add(testLists);
     }
 
-    private SummaryCounts AddResults(TestNodeUpdateMessage[] testNodeUpdateMessages, string testAppModule, XElement testRun, out XElement testDefinitions, out XElement testEntries, out bool hasFailedTests)
+    private SummaryCounts AddResults(TestNodeUpdateMessage[] testNodeUpdateMessages, string testAppModule, XElement testRun, string runDeploymentRoot, XElement testDefinitions, XElement testEntries)
     {
         int passed = 0;
         int failed = 0;
@@ -412,11 +424,11 @@ internal sealed partial class TrxReportEngine
         var results = new XElement("Results");
 
         // Duplicate test ids are not allowed inside the TestDefinitions element.
-        testDefinitions = new XElement("TestDefinitions");
-        var uniqueTestDefinitionTestIds = new HashSet<string>();
+        // We create a dictionary to map test id to test definition name.
+        // It's not expected to get the same test id twice but with different test definition name.
+        // However, due to backcompat concerns, we will disallow this only for frameworks that start using TrxTestDefinitionName property.
+        var uniqueTestDefinitionTestIds = new Dictionary<string, (string TestDefinitionName, bool IsExplicitlyProvided)>();
 
-        testEntries = new XElement("TestEntries");
-        hasFailedTests = false;
         foreach (TestNodeUpdateMessage nodeMessage in testNodeUpdateMessages)
         {
             TestNode testNode = nodeMessage.TestNode;
@@ -430,7 +442,11 @@ internal sealed partial class TrxReportEngine
 
             // NOTE: In VSTest, MSTestDiscoverer.TmiTestId property is preferred if present.
             string id = guid.ToString();
-            string displayName = RemoveInvalidXmlChar(testNode.DisplayName)!;
+            string testResultDisplayName = RemoveInvalidXmlChar(testNode.DisplayName)!;
+            (string testDefinitionName, bool isExplicitlyProvided) = testNode.Properties.SingleOrDefault<TrxTestDefinitionName>() is { } trxTestDefinitionName
+                ? (RemoveInvalidXmlChar(trxTestDefinitionName.TestDefinitionName), true)
+                : (testResultDisplayName, false);
+
             string executionId = Guid.NewGuid().ToString();
 
             // Results
@@ -438,7 +454,7 @@ internal sealed partial class TrxReportEngine
                 "UnitTestResult",
                 new XAttribute("executionId", executionId),
                 new XAttribute("testId", id),
-                new XAttribute("testName", displayName),
+                new XAttribute("testName", testResultDisplayName),
                 new XAttribute("computerName", _environment.MachineName));
 
             TimingProperty? timing = testNode.Properties.SingleOrDefault<TimingProperty>();
@@ -483,7 +499,6 @@ internal sealed partial class TrxReportEngine
             else if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, testState.GetType()) >= 0)
             {
                 currentTestOutcome = "Failed";
-                hasFailedTests = true;
 
                 if (testState is TimeoutTestNodeStateProperty)
                 {
@@ -556,8 +571,6 @@ internal sealed partial class TrxReportEngine
             }
 
             // TODO: VSTest used to store the relative paths in a sorted list (ignoring case).
-            // Here, we are not making the paths relative.
-            // And we are not sorting them.
             // TODO: VSTest is able to classify per-test attachments into two categories:
             // 1. ResultFiles
             // 2. CollectorDataEntries
@@ -566,9 +579,11 @@ internal sealed partial class TrxReportEngine
             foreach (FileArtifactProperty testFileArtifact in testNode.Properties.OfType<FileArtifactProperty>())
             {
                 resultFiles ??= new XElement("ResultFiles");
+
+                string href = CopyArtifactIntoTrxDirectoryAndReturnHrefValue(testFileArtifact.FileInfo, runDeploymentRoot);
                 resultFiles.Add(new XElement(
                     "ResultFile",
-                    new XAttribute("path", testFileArtifact.FileInfo.FullName)));
+                    new XAttribute("path", href)));
             }
 
             if (resultFiles is not null)
@@ -580,9 +595,31 @@ internal sealed partial class TrxReportEngine
 
             // TestDefinitions
             // Add the test method to the test definitions if it's not already there
-            if (uniqueTestDefinitionTestIds.Add(id))
+            if (uniqueTestDefinitionTestIds.TryGetValue(id, out (string ExistingTestDefinitionName, bool ExistingIsExplicitlyProvided) existing))
             {
-                XElement unitTest = CreateUnitTestElementForTestDefinition(displayName, testAppModule, id, testNode, executionId);
+                // Value already exists. We only do a validation.
+                // Owner, Description, Priority, and TestCategory are also part of the test definition.
+                // Unfortunately, MSTest allows TestCategories via TestDataRow, which is one case where
+                // we might receive the same test id and same test definition name, but different categories.
+                // It's probably best if TRX is able to "merge" categories in this case (which we don't do yet).
+                // For Owner, Description, Priority, this needs investigation whether or not it's expected to be different,
+                // and what should we do in this case.
+                if ((isExplicitlyProvided || existing.ExistingIsExplicitlyProvided) &&
+                    existing.ExistingTestDefinitionName != testDefinitionName)
+                {
+                    throw new InvalidOperationException($"Received two different test definition names ('{existing.ExistingTestDefinitionName}' and '{testDefinitionName}') for the same test id '{id}'.");
+                }
+
+                if (!existing.ExistingIsExplicitlyProvided && isExplicitlyProvided)
+                {
+                    // We got a first result that didn't have explicit test definition name, but a second result that has an explicit test definition name.
+                    uniqueTestDefinitionTestIds[id] = (testDefinitionName, true);
+                }
+            }
+            else
+            {
+                uniqueTestDefinitionTestIds.Add(id, (testDefinitionName, isExplicitlyProvided));
+                XElement unitTest = CreateUnitTestElementForTestDefinition(testDefinitionName, testAppModule, id, testNode, executionId);
 
                 var testMethod = new XElement(
                     "TestMethod",
@@ -593,13 +630,13 @@ internal sealed partial class TrxReportEngine
                 (string className, string? testMethodName) = GetClassAndMethodName(testNode);
                 testMethod.SetAttributeValue("className", className);
 
-                // NOTE: Historically, MTP used to always use displayName here.
-                // While VSTest never uses displayName.
-                // The use of displayName here is very wrong.
+                // NOTE: Historically, MTP used to always use testResultDisplayName here.
+                // While VSTest never uses testResultDisplayName.
+                // The use of testResultDisplayName here is very wrong.
                 // We keep it as a fallback if we cannot determine the testMethodName (when TestMethodIdentifierProperty isn't present).
                 // This will most likely be hit for NUnit.
                 // However, this is very wrong and we probably should fail if TestMethodIdentifierProperty isn't present.
-                testMethod.SetAttributeValue("name", testMethodName ?? displayName);
+                testMethod.SetAttributeValue("name", testMethodName ?? testResultDisplayName);
 
                 unitTest.Add(testMethod);
 
@@ -645,11 +682,11 @@ internal sealed partial class TrxReportEngine
         return (classNameFromIdentifierProperty, testMethodIdentifierProperty.MethodName);
     }
 
-    private static XElement CreateUnitTestElementForTestDefinition(string displayName, string testAppModule, string id, TestNode testNode, string executionId)
+    private static XElement CreateUnitTestElementForTestDefinition(string testDefinitionName, string testAppModule, string id, TestNode testNode, string executionId)
     {
         var unitTest = new XElement(
             "UnitTest",
-            new XAttribute("name", displayName),
+            new XAttribute("name", testDefinitionName),
             new XAttribute("storage", testAppModule.ToLowerInvariant()),
             new XAttribute("id", id));
 
@@ -823,7 +860,7 @@ internal sealed partial class TrxReportEngine
     private static Regex BuildInvalidXmlCharReplace() => new(@"[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD]");
 #endif
 
-    private static string? RemoveInvalidXmlChar(string? str) => str is null ? null : InvalidXmlCharReplace.Replace(str, InvalidXmlEvaluator);
+    private static string RemoveInvalidXmlChar(string str) => InvalidXmlCharReplace.Replace(str, InvalidXmlEvaluator);
 
     private static string ReplaceInvalidCharacterWithUniCodeEscapeSequence(Match match)
     {

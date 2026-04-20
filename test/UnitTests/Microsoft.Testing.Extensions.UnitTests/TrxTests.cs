@@ -537,10 +537,22 @@ public class TrxTests
         _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
         _ = _environmentMock.SetupGet(_ => _.MachineName).Returns("MachineName");
         _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns("TestAppPath");
-        var trxReportEngine = new TrxReportEngine(_fileSystem.Object, _testApplicationModuleInfoMock.Object, _environmentMock.Object, _commandLineOptionsMock.Object,
-            _configurationMock.Object, _clockMock.Object,
-            _artifactsByExtension, _testFrameworkMock.Object, DateTime.UtcNow, 0, CancellationToken.None,
-            isCopyingFileAllowed: false);
+        var trxReportEngine = new TrxReportEngine(
+            _fileSystem.Object,
+            _testApplicationModuleInfoMock.Object,
+            _environmentMock.Object,
+            _commandLineOptionsMock.Object,
+            _configurationMock.Object,
+            _clockMock.Object,
+            _artifactsByExtension,
+            _testFrameworkMock.Object,
+            DateTime.UtcNow,
+#if NETCOREAPP
+            0,
+            CancellationToken.None);
+#else
+            0);
+#endif
 
         // Act
         _ = await trxReportEngine.GenerateReportAsync([]);
@@ -598,6 +610,72 @@ public class TrxTests
         Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern), trxContent);
     }
 
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithTrxTestDefinitionName_UnitTestNameIsFromTrxTestDefinitionName()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        var propertyBag = new PropertyBag(
+            new PassedTestNodeStateProperty(),
+            new TrxTestDefinitionName("ExplicitTestDefinitionName"));
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestResultDisplayName", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        AssertExpectedTrxFileName(fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
+        AssertTrxOutcome(xml, "Completed");
+        string trxContent = xml.ToString();
+        // UnitTest/@name should use TrxTestDefinitionName, not the display name
+        Assert.Contains(@"<UnitTest name=""ExplicitTestDefinitionName""", trxContent, trxContent);
+        // UnitTestResult/@testName should use the display name
+        Assert.Contains(@"testName=""TestResultDisplayName""", trxContent, trxContent);
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithDuplicateTestIdAndDifferentExplicitTestDefinitionNames_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        TestNodeUpdateMessage[] messages = [
+            CreateTestNodeUpdate("same-uid", "DisplayName1", new PropertyBag(new PassedTestNodeStateProperty(), new TrxTestDefinitionName("ExplicitName1"))),
+            CreateTestNodeUpdate("same-uid", "DisplayName2", new PropertyBag(new PassedTestNodeStateProperty(), new TrxTestDefinitionName("ExplicitName2"))),
+        ];
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
+
+        // Act & Assert
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => trxReportEngine.GenerateReportAsync(messages));
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithFallbackNameFirstThenMatchingExplicitTestDefinitionName_Succeeds()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+
+        // First result has no TrxTestDefinitionName, so it falls back to the display name "MethodName".
+        // Second result provides an explicit TrxTestDefinitionName "MethodName" that matches the fallback.
+        TestNodeUpdateMessage[] messages = [
+            CreateTestNodeUpdate("same-uid", "MethodName", new PropertyBag(new PassedTestNodeStateProperty())),
+            CreateTestNodeUpdate("same-uid", "MethodName", new PropertyBag(new PassedTestNodeStateProperty(), new TrxTestDefinitionName("MethodName"))),
+        ];
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync(messages);
+
+        // Assert: no exception, UnitTest/@name is "MethodName"
+        Assert.IsNull(warning);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
+        string trxContent = xml.ToString();
+        Assert.Contains(@"<UnitTest name=""MethodName""", trxContent, trxContent);
+    }
+
     private static void AssertTrxOutcome(XDocument xml, string expectedOutcome)
     {
         Assert.IsNotNull(xml);
@@ -628,7 +706,6 @@ public class TrxTests
     private TrxReportEngine GenerateTrxReportEngine(MemoryFileStream memoryStream, bool isExplicitFileName = false)
     {
         DateTime testStartTime = DateTime.Now;
-        CancellationToken cancellationToken = CancellationToken.None;
 
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
         _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), isExplicitFileName ? FileMode.Create : FileMode.CreateNew))
@@ -638,10 +715,22 @@ public class TrxTests
         _ = _environmentMock.SetupGet(_ => _.MachineName).Returns("MachineName");
         _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns("TestAppPath");
 
-        return new TrxReportEngine(_fileSystem.Object, _testApplicationModuleInfoMock.Object, _environmentMock.Object, _commandLineOptionsMock.Object,
-                   _configurationMock.Object, _clockMock.Object,
-                   _artifactsByExtension, _testFrameworkMock.Object, testStartTime, 0, cancellationToken,
-                   isCopyingFileAllowed: false);
+        return new TrxReportEngine(
+            _fileSystem.Object,
+            _testApplicationModuleInfoMock.Object,
+            _environmentMock.Object,
+            _commandLineOptionsMock.Object,
+            _configurationMock.Object,
+            _clockMock.Object,
+            _artifactsByExtension,
+            _testFrameworkMock.Object,
+            testStartTime,
+#if NETCOREAPP
+            0,
+            CancellationToken.None);
+#else
+            0);
+#endif
     }
 
     private sealed class MemoryFileStream : IFileStream

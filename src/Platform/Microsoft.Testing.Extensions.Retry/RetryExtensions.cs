@@ -6,6 +6,10 @@ using Microsoft.Testing.Extensions.Policy.Resources;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
 
+#if !NETCOREAPP
+using Polyfills;
+#endif
+
 namespace Microsoft.Testing.Extensions;
 
 /// <summary>

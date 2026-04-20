@@ -47,7 +47,6 @@ internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime, ID
 
         ILogger<RetryLifecycleCallbacks> logger = _serviceProvider.GetLoggerFactory().CreateLogger<RetryLifecycleCallbacks>();
 
-        Ensure.NotNull(pipeName);
         ArgumentGuard.Ensure(pipeName.Length == 1, nameof(pipeName), "Pipe name expected");
         logger.LogDebug($"Connecting to pipe '{pipeName[0]}'");
 
