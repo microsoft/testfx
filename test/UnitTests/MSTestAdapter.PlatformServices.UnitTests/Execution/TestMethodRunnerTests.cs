@@ -463,7 +463,13 @@ public class TestMethodRunnerTests : TestContainer
                 },
                 null);
 
-            return [await taskCompletionSource.Task.WaitAsync(WaitTimeout).ConfigureAwait(false)];
+            Task completedTask = await Task.WhenAny(taskCompletionSource.Task, Task.Delay(WaitTimeout)).ConfigureAwait(false);
+            if (completedTask != taskCompletionSource.Task)
+            {
+                throw new TimeoutException($"The execution did not complete within {WaitTimeout}.");
+            }
+
+            return [await taskCompletionSource.Task.ConfigureAwait(false)];
         }
     }
 
