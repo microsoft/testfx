@@ -50,8 +50,11 @@
           Inputs="$(_TemplatePropertiesCacheFile)"
           Outputs="$(IntermediateOutputPath)BuildInfo.cs"
           Condition=" '$(GenerateBuildInfo)' == 'true' ">
+    <PropertyGroup>
+      <BuildInfoTemplateFile Condition=" '$(BuildInfoTemplateFile)' == '' ">$(MSBuildProjectDirectory)/BuildInfo.cs.template</BuildInfoTemplateFile>
+    </PropertyGroup>
     <ItemGroup>
-      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/BuildInfo.cs.template" Destination="$(IntermediateOutputPath)BuildInfo.cs" />
+      <_TemplateCsproj Include="$(BuildInfoTemplateFile)" Destination="$(IntermediateOutputPath)BuildInfo.cs" />
     </ItemGroup>
     <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
       <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
