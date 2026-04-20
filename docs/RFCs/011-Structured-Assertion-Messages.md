@@ -75,7 +75,7 @@ Examples:
 | `AreEqual` (string) | `Assertion failed. Expected strings to be equal (case-sensitive).` |
 | `IsTrue` | `Assertion failed. Expected condition to be true.` |
 | `IsNull` | `Assertion failed. Expected value to be null.` |
-| `IsInstanceOfType` | `Assertion failed. Expected value to be an instance of String.` |
+| `IsInstanceOfType` | `Assertion failed. Expected value to be of type String (or derived).` |
 | `ThrowsExactly` | `Assertion failed. Expected exception of type ArgumentException but no exception was thrown.` |
 | `Contains` (collection) | `Assertion failed. Expected collection to contain the specified element.` |
 
@@ -140,15 +140,15 @@ For very long strings where the value is truncated, the `...` appears inside the
 Extra context that is specific to the assertion, displayed as labeled lines after the values:
 
 ```text
-expected:   42
-actual:     37
-ignoreCase: true
-culture:    tr-TR
+expected:     42
+actual:       37
+ignore case:  true
+culture:      tr-TR
 ```
 
-In this example, `expected:` and `actual:` are the core value labels, while `ignoreCase:` and `culture:` are assertion-specific details. All labels share a single alignment column within the block.
+In this example, `expected:` and `actual:` are the core value labels, while `ignore case:` and `culture:` are assertion-specific details. All labels share a single alignment column within the block.
 
-Note: Alignment is applied **within each evidence block as a whole**. All labels in the block (value labels like `expected:` / `actual:` and detail labels like `ignoreCase:` / `culture:`) are padded to match the longest label in the block. This means values and details share a single alignment column.
+Note: Alignment is applied **within each evidence block as a whole**. All labels in the block (value labels like `expected:` / `actual:` and detail labels like `ignore case:` / `culture:`) are padded to match the longest label in the block. This means values and details share a single alignment column.
 
 ### Call-Site Expression
 
@@ -168,10 +168,10 @@ Assert.AreEqual(expectedPrice, actualPrice, 0.01, "after discount");
 The call-site would display:
 
 ```text
-Assert.AreEqual(expectedPrice, actualPrice, ...)
+Assert.AreEqual(expectedPrice, actualPrice, <delta>)
 ```
 
-The `...` indicates that additional parameters were passed but are not captured. The omitted parameters (like `delta`) are shown in the assertion-specific details section when relevant.
+The `<param>` placeholders indicate parameters that were passed but are not captured by `CallerArgumentExpression`. The placeholder uses the parameter name (e.g. `<delta>`) to help identify which argument occupies that position. The omitted parameters' values are shown in the assertion-specific details section when relevant.
 
 #### Long variable names or expressions
 
@@ -227,13 +227,13 @@ Displaying this verbatim in the call-site line would be confusing — the newlin
 Assert.AreEqual(""" { "name": "Alice", "age": 30 } """, actualJson)
 ```
 
-**Approach 2 — Omit the multiline argument and show `...`:** Detect that the expression contains newlines and replace it with `...`:
+**Approach 2 — Omit the multiline argument and show `<param>`:** Detect that the expression contains newlines and replace it with a `<param>` placeholder using the parameter name:
 
 ```text
-Assert.AreEqual(..., actualJson)
+Assert.AreEqual(<expected>, actualJson)
 ```
 
-**Recommendation:** Use Approach 2 (omit with `...`) when the captured expression contains newlines. The full value is already displayed in the `expected:` / `actual:` lines, so repeating it in the call-site is redundant. The call-site should identify *where* the call happened, not *what* the values were.
+**Recommendation:** Use Approach 2 (omit with `<param>`) when the captured expression contains newlines. The full value is already displayed in the `expected:` / `actual:` lines, so repeating it in the call-site is redundant. The call-site should identify *where* the call happened, not *what* the values were.
 
 #### Unavailable expressions
 
@@ -327,7 +327,7 @@ Assert.AreEqual(expectedConfig, actualConfig)
 Assertion failed. Expected collection to contain the specified element.
 
 expected to contain: "banana"
-collection:          ["apple", "cherry", "date"]
+actual:              ["apple", "cherry", "date"]
 
 Assert.Contains(fruits, "banana")
    at MyTests.FruitTests.ShouldIncludeBanana() in FruitTests.cs:line 12
@@ -341,7 +341,7 @@ Source:
 Assert.AreEqual(expectedPrice, actualPrice, 0.01);
 ```
 
-Output — `delta` is not captured by `CallerArgumentExpression`, so the call-site shows `...`:
+Output — `delta` is not captured by `CallerArgumentExpression`, so the call-site shows `<delta>`:
 
 ```text
 Assertion failed. Expected values to be equal within tolerance.
@@ -350,7 +350,7 @@ expected: 95.00
 actual:   100.00
 delta:    0.01
 
-Assert.AreEqual(expectedPrice, actualPrice, ...)
+Assert.AreEqual(expectedPrice, actualPrice, <delta>)
    at MyTests.PriceTests.DiscountedPrice_ShouldMatch() in PriceTests.cs:line 44
 ```
 
@@ -369,7 +369,7 @@ Assert.AreEqual(
     actualJson);
 ```
 
-Output — the multiline expression is replaced with `...` in the call-site:
+Output — the multiline expression is replaced with `<expected>` in the call-site:
 
 ```text
 Assertion failed. Expected strings to be equal (case-sensitive).
@@ -378,7 +378,7 @@ Strings differ at 1 location(s). First difference at index 22.
 expected: "{\n  \"name\": \"Alice\",\n  \"age\": 30\n}"
 actual:   "{\n  \"name\": \"Alice\",\n  \"age\": 31\n}"
 
-Assert.AreEqual(..., actualJson)
+Assert.AreEqual(<expected>, actualJson)
    at MyTests.JsonTests.ShouldSerializeUser() in JsonTests.cs:line 27
 ```
 
@@ -447,10 +447,10 @@ actual:   "hello wrold"
 Assertion failed. Expected strings to be equal (case-insensitive).
 Strings have different lengths (expected: 6, actual: 8) and differ at 1 location(s). First difference at index 6.
 
-expected:   "straße"
-actual:     "STRASSE!"
-ignoreCase: true
-culture:    de-DE
+expected:     "straße"
+actual:       "STRASSE!"
+ignore case:  true
+culture:      de-DE
 ```
 
 Note: Under `de-DE` culture with case-insensitive comparison, `"straße"` and `"STRASSE"` are considered equal (ß expands to SS). The example above shows a genuinely failing comparison where the actual string has additional content beyond the case-equivalent portion.
@@ -460,8 +460,8 @@ Note: Under `de-DE` culture with case-insensitive comparison, `"straße"` and `"
 ```text
 Assertion failed. Expected values to differ.
 
-notExpected: 42
-actual:      42
+not expected: 42
+actual:       42
 ```
 
 #### Assert.AreNotEqual (with delta)
@@ -469,9 +469,9 @@ actual:      42
 ```text
 Assertion failed. Expected values to differ beyond tolerance.
 
-notExpected: 3.14
-actual:      3.14
-delta:       0.001
+not expected: 3.14
+actual:       3.14
+delta:        0.001
 ```
 
 #### Assert.AreNotEqual (string)
@@ -479,8 +479,8 @@ delta:       0.001
 ```text
 Assertion failed. Expected strings to differ.
 
-notExpected: "hello"
-actual:      "hello"
+not expected: "hello"
+actual:       "hello"
 ```
 
 #### Assert.AreNotEqual (string, case-insensitive with culture)
@@ -488,10 +488,10 @@ actual:      "hello"
 ```text
 Assertion failed. Expected strings to differ (case-insensitive).
 
-notExpected: "Straße"
-actual:      "STRASSE"
-ignoreCase:  true
-culture:     de-DE
+not expected: "Straße"
+actual:       "STRASSE"
+ignore case:  true
+culture:      de-DE
 ```
 
 Note: Under `de-DE` culture with case-insensitive comparison, `"Straße"` and `"STRASSE"` are considered equal (ß expands to SS), so `AreNotEqual` fails.
@@ -598,9 +598,9 @@ actual: (null)
 #### Assert.IsInstanceOfType
 
 ```text
-Assertion failed. Expected value to be an instance of String.
+Assertion failed. Expected value to be of type String (or derived).
 
-expected type: System.String
+expected type: System.String (or derived)
 actual type:   System.Int32
 actual value:  42
 ```
@@ -608,19 +608,19 @@ actual value:  42
 #### Assert.IsInstanceOfType (value is null)
 
 ```text
-Assertion failed. Expected value to be an instance of String.
+Assertion failed. Expected value to be of type String (or derived).
 
-expected type: System.String
+expected type: System.String (or derived)
 actual:        (null)
 ```
 
 #### Assert.IsNotInstanceOfType
 
 ```text
-Assertion failed. Expected value to not be an instance of String.
+Assertion failed. Expected value to not be of type String (or derived).
 
-wrong type: System.String
-actual:     "hello"
+wrong type:   System.String (or derived)
+actual value: "hello"
 ```
 
 #### Assert.IsExactInstanceOfType
@@ -630,6 +630,7 @@ Assertion failed. Expected value to be exactly of type ArgumentException.
 
 expected type: System.ArgumentException
 actual type:   System.ArgumentNullException
+actual value:  System.ArgumentNullException: Value cannot be null.
 ```
 
 #### Assert.IsExactInstanceOfType (value is null)
@@ -646,8 +647,8 @@ actual:        (null)
 ```text
 Assertion failed. Expected value to not be exactly of type String.
 
-wrong type: System.String
-actual:     "hello"
+wrong type:   System.String
+actual value: "hello"
 ```
 
 ### Assert — Exceptions
@@ -778,7 +779,7 @@ actual:  "123-4567"
 Assertion failed. Expected collection to contain the specified element.
 
 expected to contain: "banana"
-collection:          ["apple", "cherry", "date"]
+actual:              ["apple", "cherry", "date"]
 ```
 
 #### Assert.Contains (predicate)
@@ -786,8 +787,8 @@ collection:          ["apple", "cherry", "date"]
 ```text
 Assertion failed. Expected collection to contain an element matching the predicate.
 
-predicate:  x => x.StartsWith("b")
-collection: ["apple", "cherry", "date"]
+predicate: x => x.StartsWith("b")
+actual:    ["apple", "cherry", "date"]
 ```
 
 #### Assert.DoesNotContain (item)
@@ -795,8 +796,8 @@ collection: ["apple", "cherry", "date"]
 ```text
 Assertion failed. Expected collection to not contain the specified element.
 
-element:    "apple"
-collection: ["apple", "cherry", "date"]
+element: "apple"
+actual:  ["apple", "cherry", "date"]
 ```
 
 #### Assert.DoesNotContain (predicate)
@@ -804,8 +805,8 @@ collection: ["apple", "cherry", "date"]
 ```text
 Assertion failed. Expected no element in the collection to match the predicate.
 
-predicate:  x => x.StartsWith("a")
-collection: ["apple", "cherry", "date"]
+predicate: x => x.StartsWith("a")
+actual:    ["apple", "cherry", "date"]
 ```
 
 #### Assert.ContainsSingle
@@ -815,7 +816,7 @@ Assertion failed. Expected collection to contain exactly one element but found 3
 
 expected count: 1
 actual count:   3
-collection:     ["apple", "cherry", "date"]
+actual:         ["apple", "cherry", "date"]
 ```
 
 #### Assert.ContainsSingle (predicate, none match)
@@ -825,7 +826,7 @@ Assertion failed. Expected exactly one element to match the predicate but found 
 
 predicate:   x => x.StartsWith("z")
 match count: 0
-collection:  ["apple", "cherry", "date"]
+actual:      ["apple", "cherry", "date"]
 ```
 
 #### Assert.ContainsSingle (predicate, multiple match)
@@ -835,7 +836,7 @@ Assertion failed. Expected exactly one element to match the predicate but found 
 
 predicate:   x => x.Length == 5
 match count: 2
-collection:  ["apple", "cherry", "date"]
+actual:      ["apple", "cherry", "date"]
 ```
 
 #### Assert.HasCount
@@ -845,6 +846,7 @@ Assertion failed. Expected collection to have 5 element(s) but found 3.
 
 expected count: 5
 actual count:   3
+actual:         ["apple", "cherry", "date"]
 ```
 
 #### Assert.IsEmpty
@@ -854,6 +856,7 @@ Assertion failed. Expected collection to be empty but found 3 element(s).
 
 expected count: 0
 actual count:   3
+actual:         ["apple", "cherry", "date"]
 ```
 
 #### Assert.IsNotEmpty
@@ -869,11 +872,11 @@ actual count: 0
 #### Assert.IsInRange
 
 ```text
-Assertion failed. Expected value to be in range [5, 10].
+Assertion failed. Expected value to be in range 5..10.
 
-value:    3
-minValue: 5
-maxValue: 10
+min value: 5
+max value: 10
+actual:    3
 ```
 
 #### Assert.IsGreaterThan
@@ -881,8 +884,8 @@ maxValue: 10
 ```text
 Assertion failed. Expected value to be greater than the lower bound.
 
-lowerBound: 10
-actual:     7
+lower bound: 10
+actual:      7
 ```
 
 #### Assert.IsGreaterThanOrEqualTo
@@ -890,8 +893,8 @@ actual:     7
 ```text
 Assertion failed. Expected value to be greater than or equal to the lower bound.
 
-lowerBound: 10
-actual:     7
+lower bound: 10
+actual:      7
 ```
 
 #### Assert.IsLessThan
@@ -899,8 +902,8 @@ actual:     7
 ```text
 Assertion failed. Expected value to be less than the upper bound.
 
-upperBound: 5
-actual:     7
+upper bound: 5
+actual:      7
 ```
 
 #### Assert.IsLessThanOrEqualTo
@@ -908,8 +911,8 @@ actual:     7
 ```text
 Assertion failed. Expected value to be less than or equal to the upper bound.
 
-upperBound: 5
-actual:     7
+upper bound: 5
+actual:      7
 ```
 
 #### Assert.IsPositive
@@ -958,9 +961,8 @@ Note: Today, `Assert.Inconclusive` uses the same `"{0} failed. {1}"` format as o
 ```text
 Assertion failed. Expected condition to be true.
 
-condition: order.Total > 0
-values:
-  order.Total = -5
+condition:   order.Total > 0
+order.Total: -5
 
 Assert.That(() => order.Total > 0)
 ```
@@ -975,12 +977,18 @@ The `CollectionAssert` class predates the modern `Assert.Contains`/`Assert.HasCo
 
 ```text
 Assertion failed. Expected collection to contain the specified element.
+
+expected to contain: "banana"
+actual:              ["apple", "cherry", "date"]
 ```
 
 #### CollectionAssert.DoesNotContain
 
 ```text
 Assertion failed. Expected collection to not contain the specified element.
+
+element: "apple"
+actual:  ["apple", "cherry", "date"]
 ```
 
 #### CollectionAssert.AllItemsAreNotNull
@@ -988,6 +996,8 @@ Assertion failed. Expected collection to not contain the specified element.
 ```text
 Assertion failed. Expected all items in the collection to be non-null.
 Found null element at index 2.
+
+actual: ["apple", "cherry", (null), "date"]
 ```
 
 #### CollectionAssert.AllItemsAreUnique
@@ -995,28 +1005,38 @@ Found null element at index 2.
 ```text
 Assertion failed. Expected all items in the collection to be unique.
 Duplicate element found: "apple".
+
+actual: ["apple", "cherry", "apple", "date"]
 ```
 
 #### CollectionAssert.AllItemsAreInstancesOfType
 
 ```text
-Assertion failed. Expected all items in the collection to be instances of String.
+Assertion failed. Expected all items in the collection to be of type String (or derived).
 Element at index 2 is of type Int32.
 
-expected type: System.String
+expected type: System.String (or derived)
 actual type:   System.Int32 (at index 2)
+actual:        ["apple", "cherry", 42, "date"]
 ```
 
 #### CollectionAssert.IsSubsetOf
 
 ```text
 Assertion failed. Expected collection to be a subset of the specified collection.
+
+actual:    ["apple", "banana", "cherry"]
+expected:  ["apple", "cherry", "date"]
+not found: ["banana"]
 ```
 
 #### CollectionAssert.IsNotSubsetOf
 
 ```text
 Assertion failed. Expected collection to not be a subset of the specified collection.
+
+actual:   ["apple", "cherry"]
+expected: ["apple", "cherry", "date"]
 ```
 
 #### CollectionAssert.AreEquivalent
@@ -1033,6 +1053,9 @@ unexpected: ["fig"]
 
 ```text
 Assertion failed. Expected collections to not contain the same elements.
+
+actual:   ["apple", "cherry", "date"]
+expected: ["date", "apple", "cherry"]
 ```
 
 #### CollectionAssert.AreEqual
@@ -1049,6 +1072,9 @@ actual[2]:   "date"
 
 ```text
 Assertion failed. Expected collections to differ.
+
+actual:   ["apple", "cherry", "date"]
+expected: ["apple", "cherry", "date"]
 ```
 
 ### StringAssert (legacy)
@@ -1255,19 +1281,27 @@ All newlines within the message (between the assertion prefix and the stack trac
 
 This is a **breaking change** for anyone who parses assertion messages as structured data (e.g. regex-based log parsers). The `AssertFailedException.Message` property will contain the new multi-line format.
 
+Specific breaking changes:
+
+- **Message format**: All assertion messages change from single-line concatenated format to the structured multi-line format described in this RFC.
+- **`Assert.Inconclusive`**: The message prefix changes from `Assert.Inconclusive failed. <message>` to `Assert.Inconclusive. <message>` (dropping the word "failed"), since an inconclusive outcome is not a failure. This changes the `AssertInconclusiveException.Message` format.
+
 Mitigation:
 
-- The change ships in a new major version (MSTest v4).
+- These changes are part of MSTest v4, which already includes other breaking changes. Message format changes are treated as output changes within the major version — they do not require a new major version for each evolution.
 - The assertion prefix line (`Assertion failed.`) is preserved and can still serve as a parsing anchor.
 
 ## Unresolved questions
 
 1. **User message placement** — See the "Open Question" section above. Needs broader feedback.
 2. **Maximum truncation length** — What should the default be? 512? 1024? 4096?
-3. **Diff rendering for strings** — Should we include an inline diff (e.g. `^` caret under the first differing character)? This would be valuable but adds complexity.
+3. **Diff rendering for strings** — Should we include an inline diff (e.g. `^` caret under the first differing character, or a reserved marker character for highlighting)? This would be valuable for spotting differences in long strings but adds complexity. Consider reserving a character or escape for inline diff highlighting to enable future diff-aware rendering.
 4. **Collection rendering limits** — How many elements of a collection should be shown before truncating? Should we show elements around the point of failure? Proposed: 32 elements.
 5. **Structured data for tooling** — Should `AssertFailedException` carry structured properties (e.g. `Expected`, `Actual`) in addition to the formatted message, to enable richer IDE/tooling integration without parsing?
 6. **"Substantially different" threshold** — At what percentage of differing characters should strings be considered "substantially different" and the per-index summary be dropped? Proposed: 50%.
 7. **Custom comparer display** — Several assertions accept `IEqualityComparer<T>` or `IComparer`. Should the comparer type name be shown in the evidence block (e.g. `comparer: MyCustomComparer`) to help diagnose unexpected comparison results?
 8. **Framework diagnostic vs user message ambiguity** — The framework’s multi-line summary diagnostics and the developer’s user message are both displayed as plain text on consecutive lines with no distinguishing prefix. Should user messages be visually distinguished (e.g. with a label, indentation, or quotation marks) to avoid confusion?
 9. **`AreEqual<T>` where `T` is `string`** — When the generic `AreEqual<T>` overload is called with `T = string` (without `ignoreCase`/`culture` parameters), should the message use the generic format (`"Expected values to be equal."`) or auto-detect the string type and use the string-specific format (`"Expected strings to be equal (case-sensitive)."`)? Proposed: use the generic format, since the caller chose the generic overload.
+10. **Control character rendering strategy** — Should control characters be rendered as C#-style escape sequences (`\n`, `\t`) or as Unicode printable replacement characters (e.g. `␊` for newline, `␉` for tab)? Printable replacements preserve single-character width alignment, which is useful for visual comparison. An alternative is to keep actual newlines to preserve the user's text formatting while escaping other non-printable characters with their printable equivalents. The current proposal uses C#-style escapes but this needs validation.
+11. **Evidence block internal API** — How should assertions pass labeled evidence to the message formatter? Options include: (a) arrays of label/value pairs, (b) a single formatted string split on the first `:` per line, or (c) a structured `EvidenceBlock` type. This affects extensibility and third-party assertion authors.
+12. **Collection multi-line rendering** — When collection elements are long (e.g. 30+ characters each, or total rendered length exceeds 200+ characters), should the collection be rendered with one element per line instead of inline? Both `expected` and `actual` collections should use the same rendering style for visual comparison.
