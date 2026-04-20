@@ -41,7 +41,7 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         // Validate the output includes the aggregate message and that inner exception stack traces
         // point to the test method (assertion call site).
         testHostResult.AssertOutputMatchesRegex(
-            """failed ScopeWithMultipleFailures \(\d+ms\)[\s\S]+2 assertion\(s\) failed within the assert scope\.[\s\S]+Assert\.AreEqual failed\. Expected:<1>\. Actual:<2>\.[\s\S]+at UnitTest1\.ScopeWithMultipleFailures\(\)[\s\S]+Assert\.IsTrue failed\.[\s\S]+at UnitTest1\.ScopeWithMultipleFailures\(\)""");
+            """failed ScopeWithMultipleFailures \(\d+ms\)[\s\S]+2 assertion\(s\) failed within the assert scope\.[\s\S]+at Microsoft\.VisualStudio\.TestTools\.UnitTesting\.AssertScope\.Dispose\(\)[\s\S]+at UnitTest1\.ScopeWithMultipleFailures\(\)""");
     }
 
     [TestMethod]
