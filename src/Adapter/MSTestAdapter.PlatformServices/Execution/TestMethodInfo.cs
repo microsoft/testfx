@@ -53,7 +53,11 @@ internal class TestMethodInfo : ITestMethod
 
     internal TestMethodAttribute Executor { get; /*For testing only*/set; }
 
-    internal static ITestContext TestContext => (ITestContext?)TestTools.UnitTesting.TestContext.Current ?? throw ApplicationStateGuard.Unreachable();
+    internal ITestContext TestContext
+    {
+        get => field ?? (ITestContext?)TestTools.UnitTesting.TestContext.Current ?? throw ApplicationStateGuard.Unreachable();
+        set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether timeout is set.
