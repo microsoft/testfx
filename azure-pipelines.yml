@@ -132,7 +132,8 @@ stages:
 
           # Integration tests are redundant in Release—they spawn child processes that already cover
           # both Debug and Release configurations. Use --test-modules to run only unit tests.
-          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/net4*/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --no-progress --output detailed
+          # Use *.exe to cover both net4x (native exe) and net8+/net9+ (apphost exe) in a single glob.
+          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --no-progress --output detailed
             name: TestRelease
             displayName: Test (unit tests only)
             condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
