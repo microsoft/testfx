@@ -5,7 +5,9 @@ using System.Net;
 using System.Net.Sockets;
 
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
+#if NETSTANDARD
 using Microsoft.Testing.Platform.Helpers;
+#endif
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
 

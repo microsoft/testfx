@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.ServerMode;
 
 namespace Microsoft.Testing.Platform.TestHostControllers;
