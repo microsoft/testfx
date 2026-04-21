@@ -2,7 +2,7 @@
 
 ## Design notes
 
-Do not use the `IsImplictlyDefined="true"` attribute in the `PackageReference` element in the `.targets` files. If we use
+Do not use the `IsImplicitlyDefined="true"` attribute in the `PackageReference` element in the `.targets` files. If we use
 'IsImplicitlyDefined' attribute, the package will be "defined twice" which will lead to `NU1009` warnings that are most of
 the time updated as errors (warnAsError).
 
