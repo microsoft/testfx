@@ -56,6 +56,14 @@ public sealed class ExtensionVersionTests
             ?? extensionAssembly.GetName().Version?.ToString()
             ?? string.Empty;
 
+        // Strip build metadata (e.g. "+<commit>") from informational version since
+        // ExtensionVersion.DefaultSemVer is generated from $(Version) which is semver only.
+        int plusIndex = expectedVersion.LastIndexOf('+');
+        if (plusIndex >= 0)
+        {
+            expectedVersion = expectedVersion[..plusIndex];
+        }
+
         Assert.AreEqual(expectedVersion, reportedVersion);
     }
 }
