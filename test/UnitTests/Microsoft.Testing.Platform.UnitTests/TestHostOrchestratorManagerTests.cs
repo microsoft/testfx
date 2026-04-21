@@ -153,7 +153,7 @@ public sealed class TestHostOrchestratorManagerTests
 
         public string Uid { get; }
 
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         public string DisplayName => Uid;
 
@@ -171,7 +171,7 @@ public sealed class TestHostOrchestratorManagerTests
 
         public string Uid { get; }
 
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         public string DisplayName => Uid;
 

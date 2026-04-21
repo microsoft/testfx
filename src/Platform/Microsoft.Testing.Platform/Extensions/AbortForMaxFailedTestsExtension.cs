@@ -43,7 +43,7 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
     public string Uid => nameof(AbortForMaxFailedTestsExtension);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     /// <inheritdoc />
     public string DisplayName => nameof(AbortForMaxFailedTestsExtension);

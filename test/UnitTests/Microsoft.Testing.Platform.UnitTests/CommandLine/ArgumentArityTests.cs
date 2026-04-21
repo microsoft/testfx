@@ -146,7 +146,7 @@ public sealed class ArgumentArityTests
         public string Uid => nameof(PlatformCommandLineProvider);
 
         /// <inheritdoc />
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         /// <inheritdoc />
         public string DisplayName => "Microsoft Testing Platform command line provider";

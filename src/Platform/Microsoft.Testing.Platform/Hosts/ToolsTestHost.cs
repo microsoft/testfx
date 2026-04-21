@@ -27,7 +27,7 @@ internal sealed class ToolsHost(
     public string Uid => nameof(ToolsHost);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     /// <inheritdoc />
     public string DisplayName => string.Empty;

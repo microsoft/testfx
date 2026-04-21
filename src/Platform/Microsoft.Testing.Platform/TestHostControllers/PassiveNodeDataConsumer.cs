@@ -23,7 +23,7 @@ internal sealed class PassiveNodeDataConsumer : IDataConsumer, IDisposable
         => nameof(PassiveNodeDataConsumer);
 
     public string Version
-        => AppVersion.DefaultSemVer;
+        => PlatformVersion.Version;
 
     public string DisplayName
         => nameof(PassiveNodeDataConsumer);

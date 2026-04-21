@@ -10,7 +10,7 @@ internal sealed class ServerTestExecutionFilterFactory : ITestExecutionFilterFac
 {
     public string Uid => nameof(ServerTestExecutionFilterFactory);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => PlatformResources.ServerTestExecutionFilterFactoryDisplayName;
 

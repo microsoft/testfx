@@ -14,7 +14,7 @@ internal sealed class ConsoleTestExecutionFilterFactory(ICommandLineOptions comm
 
     public string Uid => nameof(ConsoleTestExecutionFilterFactory);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => PlatformResources.ConsoleTestExecutionFilterFactoryDisplayName;
 

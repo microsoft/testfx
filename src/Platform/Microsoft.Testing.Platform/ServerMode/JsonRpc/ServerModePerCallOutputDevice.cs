@@ -47,7 +47,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
 
     public string Uid => nameof(ServerModePerCallOutputDevice);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => nameof(ServerModePerCallOutputDevice);
 

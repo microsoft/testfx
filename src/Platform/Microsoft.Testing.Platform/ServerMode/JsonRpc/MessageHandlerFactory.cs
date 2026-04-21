@@ -33,7 +33,7 @@ internal sealed partial class ServerModeManager
 
         public string Uid => nameof(MessageHandlerFactory);
 
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         public string DisplayName => nameof(MessageHandlerFactory);
 

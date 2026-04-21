@@ -24,7 +24,7 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
 
     public string Uid => nameof(TestHostTestFrameworkInvoker);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => string.Empty;
 

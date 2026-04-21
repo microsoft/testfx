@@ -99,7 +99,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
     public string Uid => GetType().Name;
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     /// <inheritdoc />
     public abstract string DisplayName { get; }

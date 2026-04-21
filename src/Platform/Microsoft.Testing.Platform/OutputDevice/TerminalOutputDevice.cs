@@ -211,7 +211,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     public string Uid => nameof(TerminalOutputDevice);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     /// <inheritdoc />
     public string DisplayName => "Test Platform Console Service";
