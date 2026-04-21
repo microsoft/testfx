@@ -132,7 +132,7 @@ stages:
 
           # Integration tests are redundant in Release—they spawn child processes that already cover
           # both Debug and Release configurations. Use --test-modules to run only unit tests.
-          - script: dotnet test --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/net4*/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --no-progress --output detailed
+          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/net4*/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --no-progress --output detailed
             name: TestRelease
             displayName: Test (unit tests only)
             condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
@@ -147,7 +147,6 @@ stages:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
               ArtifactName: TestResults_Windows_$(_BuildConfig)_Attempt$(System.JobAttempt)
             condition: always()
-            continueOnError: true
 
           - task: CopyFiles@2
             displayName: 'Copy binlogs'
@@ -216,7 +215,7 @@ stages:
 
           # Integration tests are redundant in Release—they spawn child processes that already cover
           # both Debug and Release configurations. Use --test-modules to run only unit tests.
-          - script: dotnet test --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed
+          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed
             name: TestRelease
             displayName: Test (unit tests only)
             condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
@@ -231,7 +230,6 @@ stages:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
               ArtifactName: TestResults_Linux_$(_BuildConfig)_Attempt$(System.JobAttempt)
             condition: always()
-            continueOnError: true
 
           - task: CopyFiles@2
             displayName: 'Copy binlogs'
@@ -286,7 +284,7 @@ stages:
 
           # Integration tests are redundant in Release—they spawn child processes that already cover
           # both Debug and Release configurations. Use --test-modules to run only unit tests.
-          - script: dotnet test --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed
+          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed
             name: TestRelease
             displayName: Test (unit tests only)
             condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
@@ -301,7 +299,6 @@ stages:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
               ArtifactName: TestResults_MacOs_$(_BuildConfig)_Attempt$(System.JobAttempt)
             condition: always()
-            continueOnError: true
 
           - task: CopyFiles@2
             displayName: 'Copy binlogs'
