@@ -2,8 +2,11 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Playwright.MSTest.v4" Sdk="MSTest"
-                      Version="$(MicrosoftPlaywrightVersion)" VersionOverride="$(MicrosoftPlaywrightVersion)" />
+    <PackageReference Include="Microsoft.Playwright.MSTest.v4" Sdk="MSTest">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftPlaywrightVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="$(MicrosoftPlaywrightVersion)"
+                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 
   <!--
