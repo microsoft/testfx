@@ -31,6 +31,12 @@ When making change to resource files, you MUST:
 - Add a corresponding entry in the resource file (`.resx`).
 - NEVER manually modify `*.xlf` files. Instead, build the project to automatically generate the corresponding `*.xlf` files.
 
+## Public API guidelines
+
+- Public API for MSTest and Microsoft.Testing.Platform MUST NOT use `init` accessors.
+  - Exception: Existing APIs in Microsoft.Testing.Platform, because changing them right now would be a breaking change. However, we MUST NOT introduce **new** APIs using `init` accessors.
+  - IMPORTANT: Make sure to apply this rule strictly both during PR review and when working on code changes.
+
 ## Testing Guidelines
 
 - Tests for MTP and MSTest analyzers MUST use MSTest.

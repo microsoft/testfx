@@ -205,7 +205,9 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
                     if (!_serverClosingTokenSource.IsCancellationRequested)
                     {
                         await _logger.LogDebugAsync("Server requested to shutdown").ConfigureAwait(false);
-                        await _serverClosingTokenSource.CancelAsync().ConfigureAwait(false);
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
+                        _serverClosingTokenSource.Cancel();
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
                     }
 
                     // Signal the exit call
@@ -214,7 +216,9 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
                     // If there're no in-flight request we can close the server
                     if (_clientToServerRequests.IsEmpty)
                     {
-                        await _stopMessageHandler.CancelAsync().ConfigureAwait(false);
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
+                        _stopMessageHandler.Cancel();
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
                     }
 
                     continue;
@@ -711,7 +715,11 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
     private sealed class RpcInvocationState : IDisposable
     {
+#if NET9_0_OR_GREATER
         private readonly Lock _cancellationTokenSourceLock = new();
+#else
+        private readonly object _cancellationTokenSourceLock = new();
+#endif
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private volatile bool _isDisposed;
 

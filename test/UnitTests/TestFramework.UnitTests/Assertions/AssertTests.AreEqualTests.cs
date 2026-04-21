@@ -1649,7 +1649,7 @@ public partial class AssertTests : TestContainer
                 {
                     string p = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(e, d), DigitString(a, d), diffIndex: d, 11));
 
-                    string[] lines = p.Split("\n");
+                    string[] lines = p.Split('\n');
                     int diffIndicator = lines[2].IndexOf('^');
                     bool line0PointsOnEllipsis = lines[0].Length > diffIndicator && lines[0][diffIndicator] == '.';
                     bool line1PointsOnEllipsis = lines[1].Length > diffIndicator && lines[1][diffIndicator] == '.';

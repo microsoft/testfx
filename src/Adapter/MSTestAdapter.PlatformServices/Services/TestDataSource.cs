@@ -142,7 +142,11 @@ internal sealed class TestDataSource : ITestDataSource
         providerNameInvariant = ConfigurationManager.ConnectionStrings[element.ConnectionString].ProviderName;
         connectionString = ConfigurationManager.ConnectionStrings[element.ConnectionString].ConnectionString;
         tableName = element.DataTableName;
+#if NETCOREAPP
         dataAccessMethod = Enum.Parse<DataAccessMethod>(element.DataAccessMethod);
+#else
+        dataAccessMethod = (DataAccessMethod)Enum.Parse(typeof(DataAccessMethod), element.DataAccessMethod);
+#endif
     }
 #endif
 }

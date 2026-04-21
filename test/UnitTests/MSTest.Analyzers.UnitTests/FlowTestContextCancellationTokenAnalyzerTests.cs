@@ -830,4 +830,108 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenInsideExpressionTree_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            using System.Linq.Expressions;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Expression<Func<Task>> expr = () => Task.Delay(1000);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenInsideExpressionTreeWithOverloadHavingCancellationToken_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            using System.Linq.Expressions;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            public interface IMyService
+            {
+                Task DoWorkAsync(string input);
+                Task DoWorkAsync(string input, CancellationToken cancellationToken);
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Expression<Func<IMyService, Task>> expr = svc => svc.DoWorkAsync("test");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenInsideLambdaButNotExpressionTree_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    Func<Task> action = () => [|Task.Delay(1000)|];
+                    await action();
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    Func<Task> action = () => Task.Delay(1000, TestContext.CancellationToken);
+                    await action();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

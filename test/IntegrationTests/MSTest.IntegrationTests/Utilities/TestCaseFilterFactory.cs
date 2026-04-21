@@ -7,8 +7,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
-using Polyfills;
-
 namespace DiscoveryAndExecutionTests.Utilities;
 
 internal static class TestCaseFilterFactory
@@ -19,7 +17,11 @@ internal static class TestCaseFilterFactory
 
     public static ITestCaseFilterExpression ParseTestFilter(string filterString)
     {
-        Ensure.NotNullOrEmpty(filterString);
+        if (string.IsNullOrEmpty(filterString))
+        {
+            throw new ArgumentException("Filter string cannot be null or empty.", nameof(filterString));
+        }
+
         if (Regex.IsMatch(filterString, @"\(\s*\)"))
         {
             throw new FormatException($"Invalid filter, empty parenthesis: {filterString}");
@@ -119,7 +121,7 @@ internal static class TestCaseFilterFactory
 
     private static void MergeExpression(Stack<Expression<Func<Func<string, object?>, bool>>> exp, Operator op)
     {
-        Ensure.NotNull(exp);
+        _ = exp ?? throw new ArgumentNullException(nameof(exp));
         if (op is not Operator.And and not Operator.Or)
         {
             throw new ArgumentException($"Unexpected operator: {op}", nameof(op));
@@ -190,7 +192,6 @@ internal static class TestCaseFilterFactory
 
     private static IEnumerable<string> TokenizeCondition(string conditionString)
     {
-        Ensure.NotNullOrEmpty(conditionString);
         var token = new StringBuilder(conditionString.Length);
 
         for (int i = 0; i < conditionString.Length; i++)
@@ -286,7 +287,10 @@ internal static class TestCaseFilterFactory
 
     private static Expression<Func<Func<string, object?>, bool>> ConditionExpression(string conditionString)
     {
-        Ensure.NotNull(conditionString);
+        if (string.IsNullOrEmpty(conditionString))
+        {
+            throw new ArgumentException("Condition string cannot be null or empty.", nameof(conditionString));
+        }
 
         string[] condition = [.. TokenizeCondition(conditionString)];
 

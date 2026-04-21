@@ -30,7 +30,7 @@ public sealed class AsynchronousMessageBusTests
 
         // Fire consume with a good message
         await proxy.PublishAsync(new DummyProducer("DummyProducer", typeof(InvalidTypePublished.ValidDataToProduce)), new InvalidTypePublished.ValidDataToProduce());
-        consumer.Published.WaitOne(TimeoutHelper.DefaultHangTimeoutMilliseconds);
+        consumer.Published.WaitOne();
         await Assert.ThrowsAsync<InvalidOperationException>(proxy.DrainDataAsync);
     }
 
