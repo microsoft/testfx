@@ -15,14 +15,30 @@
 
   <!-- Core -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Sdk="MSTest"
-                      Version="$(MicrosoftTestingPlatformVersion)" VersionOverride="$(MicrosoftTestingPlatformVersion)" />
-    <PackageReference Include="MSTest.TestFramework" Sdk="MSTest"
-                      Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.Engine" Sdk="MSTest"
-                      Version="$(MSTestEngineVersion)" VersionOverride="$(MSTestEngineVersion)" />
-    <PackageReference Include="MSTest.SourceGeneration" Sdk="MSTest"
-                      Version="$(MSTestEngineVersion)" VersionOverride="$(MSTestEngineVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Sdk="MSTest">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingPlatformVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)"
+                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
+
+    <PackageReference Include="MSTest.TestFramework" Sdk="MSTest">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="MSTest.TestFramework" Version="$(MSTestVersion)"
+                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
+
+    <PackageReference Include="MSTest.Engine" Sdk="MSTest">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestEngineVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="MSTest.Engine" Version="$(MSTestEngineVersion)"
+                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
+
+    <PackageReference Include="MSTest.SourceGeneration" Sdk="MSTest">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestEngineVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="MSTest.SourceGeneration" Version="$(MSTestEngineVersion)"
+                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
+
     <!--
       Most of the times this dependency is not required but we leave the opportunity to align the version of the platform being used.
       At the moment this is mainly used for our acceptance tests because the locally/CI built version ends with -dev or -ci which is
@@ -30,22 +46,36 @@
       selected.
       -->
     <PackageReference Include="Microsoft.Testing.Platform" Sdk="MSTest"
-                      Version="$(MicrosoftTestingPlatformVersion)" VersionOverride="$(MicrosoftTestingPlatformVersion)"
-                      Condition=" '$(EnableMicrosoftTestingPlatform)' == 'true' " />
+                      Condition=" '$(EnableMicrosoftTestingPlatform)' == 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingPlatformVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Testing.Platform" Version="$(MicrosoftTestingPlatformVersion)"
+                    Condition=" '$(EnableMicrosoftTestingPlatform)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 
   <!-- Extensions -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Sdk="MSTest"
-                      Version="$(MicrosoftTestingExtensionsTrxReportVersion)" VersionOverride="$(MicrosoftTestingExtensionsTrxReportVersion)"
-                      Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' " />
+                      Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsTrxReportVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportVersion)"
+                    Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Sdk="MSTest"
-                      Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" VersionOverride="$(MicrosoftTestingExtensionsCodeCoverageVersion)"
-                      Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' " />
+                      Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsCodeCoverageVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)"
+                    Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+
     <!-- Support for -p:AotMsCodeCoverageInstrumentation="true" during dotnet publish for native aot -->
     <PackageReference Include="Microsoft.CodeCoverage.MSBuild" Sdk="MSTest"
-                      Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" VersionOverride="$(MicrosoftTestingExtensionsCodeCoverageVersion)"
-                      Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' and $(PublishAot) == 'true' " />
+                      Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' and $(PublishAot) == 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsCodeCoverageVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.CodeCoverage.MSBuild" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)"
+                    Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' and $(PublishAot) == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 
 </Project>

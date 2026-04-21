@@ -25,6 +25,6 @@ public sealed partial class Assert
     {
         string userMessage = BuildUserMessage(message);
         throw new AssertInconclusiveException(
-            string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, "Assert.Inconclusive", userMessage));
+            FormatAssertionFailed("Assert.Inconclusive", userMessage));
     }
 }
