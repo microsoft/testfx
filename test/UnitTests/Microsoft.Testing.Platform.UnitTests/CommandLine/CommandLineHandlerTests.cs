@@ -271,9 +271,7 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.Contains("Option '--help' is reserved and cannot be used by providers:", result.ErrorMessage);
-        Assert.Contains("Microsoft Testing Platform command line provider", result.ErrorMessage);
-        Assert.Contains("Provider2", result.ErrorMessage);
+        Assert.AreEqual("Option '--help' is reserved and cannot be used by providers: 'Microsoft Testing Platform command line provider', 'Provider2'", result.ErrorMessage);
     }
 
     [TestMethod]
