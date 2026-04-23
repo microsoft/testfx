@@ -8,15 +8,14 @@ on:
 permissions:
   contents: read
   actions: read
-  security-events: write
+  security-events: read
 
 tracker-id: malicious-code-scan
 
 tools:
   github:
     toolsets: [repos, code_security]
-  bash:
-    commands: [git, grep, sort, uniq, cat, tr, head, date, file]
+  bash: [git, grep, sort, uniq, cat, tr, head, date, file]
 
 safe-outputs:
   create-code-scanning-alert:
