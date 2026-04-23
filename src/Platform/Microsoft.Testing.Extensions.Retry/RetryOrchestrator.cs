@@ -176,21 +176,44 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 RemoveOption(finalArguments, TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter);
                 RemoveOption(finalArguments, PlatformCommandLineProvider.FilterUidOptionKey);
 
-                // Estimate command line length to avoid hitting OS limits (notably ~32K on Windows).
-                const int CommandLineLengthLimit = 30_000;
-                int predictedLength = 0;
-                foreach (string arg in finalArguments)
-                {
-                    predictedLength += arg.Length + 1;
-                }
-
-                predictedLength += 2 + PlatformCommandLineProvider.FilterUidOptionKey.Length + 1;
+                // The RSP parser (ResponseFileHelper.SplitCommandLine) strips all '"' characters
+                // from tokens, so UIDs containing literal '"' (e.g. parameterized tests with
+                // string arguments that include double quotes) cannot safely round-trip through
+                // a response file. In that case we must always use inline arguments.
+                bool hasUidsWithQuotes = false;
                 foreach (string uid in lastListOfFailedId)
                 {
-                    predictedLength += uid.Length + 1;
+                    if (uid.IndexOf('"') >= 0)
+                    {
+                        hasUidsWithQuotes = true;
+                        break;
+                    }
                 }
 
-                if (predictedLength <= CommandLineLengthLimit)
+                bool useResponseFile = false;
+                if (!hasUidsWithQuotes)
+                {
+                    // Estimate command line length to avoid hitting OS limits (~32K on Windows).
+                    // Add per-argument overhead to account for PasteArguments quoting on pre-.NET 8
+                    // targets where each argument may gain wrapping quotes and a separator space.
+                    const int CommandLineLengthLimit = 30_000;
+                    const int PerArgumentOverhead = 3;
+                    int predictedLength = 0;
+                    foreach (string arg in finalArguments)
+                    {
+                        predictedLength += arg.Length + PerArgumentOverhead;
+                    }
+
+                    predictedLength += 2 + PlatformCommandLineProvider.FilterUidOptionKey.Length + 1;
+                    foreach (string uid in lastListOfFailedId)
+                    {
+                        predictedLength += uid.Length + PerArgumentOverhead;
+                    }
+
+                    useResponseFile = predictedLength > CommandLineLengthLimit;
+                }
+
+                if (!useResponseFile)
                 {
                     finalArguments.Add($"--{PlatformCommandLineProvider.FilterUidOptionKey}");
                     finalArguments.AddRange(lastListOfFailedId);
@@ -204,16 +227,16 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                     using (IFileStream stream = _fileSystem.NewFileStream(responseFilePath, FileMode.Create, FileAccess.Write))
                     using (var writer = new StreamWriter(stream.Stream))
                     {
-                        // Write one UID per line. The RSP parser (ResponseFileHelper.SplitCommandLine) splits
-                        // each line by whitespace and uses '"' for grouping. Wrapping each UID in quotes
-                        // handles UIDs containing whitespace or starting with '#' (comment marker).
-                        // Note: UIDs containing literal '"' characters cannot be safely round-tripped
-                        // through the RSP parser because it strips all quote characters from tokens.
-                        await writer.WriteLineAsync($"--{PlatformCommandLineProvider.FilterUidOptionKey}").ConfigureAwait(false);
+                        // Write all UIDs on a single line, each quoted. The RSP parser splits
+                        // by whitespace and uses '"' for grouping, so quoting handles UIDs
+                        // containing whitespace or starting with '#' (comment marker).
+                        await writer.WriteAsync($"--{PlatformCommandLineProvider.FilterUidOptionKey}").ConfigureAwait(false);
                         foreach (string uid in lastListOfFailedId)
                         {
-                            await writer.WriteLineAsync($"\"{uid}\"").ConfigureAwait(false);
+                            await writer.WriteAsync($" \"{uid}\"").ConfigureAwait(false);
                         }
+
+                        await writer.WriteLineAsync().ConfigureAwait(false);
                     }
 
                     finalArguments.Add($"@{responseFilePath}");
