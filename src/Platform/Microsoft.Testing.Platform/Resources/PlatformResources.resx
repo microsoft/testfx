@@ -317,7 +317,7 @@
     <value>You can fix the previous option clash by overriding the option name using the configuration file</value>
   </data>
   <data name="CommandLineOptionIsReserved" xml:space="preserve">
-    <value>Option '--{0}' is reserved and cannot be used by providers: '{0}'</value>
+    <value>Option '--{0}' is reserved and cannot be used by providers: '{1}'</value>
   </data>
   <data name="CommandLineParserUnexpectedArgument" xml:space="preserve">
     <value>Unexpected argument {0}</value>
