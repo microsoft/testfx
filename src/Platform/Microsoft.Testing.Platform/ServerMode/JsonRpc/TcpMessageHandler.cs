@@ -124,7 +124,11 @@ internal sealed class TcpMessageHandler(
         await _writer.WriteLineAsync("Content-Type: application/testingplatform").ConfigureAwait(false);
         await _writer.WriteLineAsync().ConfigureAwait(false);
         await _writer.WriteAsync(messageStr).ConfigureAwait(false);
+#if NETCOREAPP
         await _writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+#else
+        await _writer.FlushAsync().ConfigureAwait(false);
+#endif
     }
 
     public void Dispose()

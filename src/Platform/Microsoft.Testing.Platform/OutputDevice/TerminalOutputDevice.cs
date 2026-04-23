@@ -125,7 +125,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         bool inCI = string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase) || string.Equals(_environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase);
 
         AnsiMode ansiMode = AnsiMode.AnsiIfPossible;
-        if (noAnsi)
+        // In LLM environments, prefer simple text output so that LLM can parse it easily.
+        // Note that NoAnsi also implies no progress.
+        if (noAnsi || LLMEnvironmentDetector.IsLLMEnvironment())
         {
             // User explicitly specified --no-ansi.
             // We should respect that.
@@ -149,6 +151,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             showPassed = () => true;
         }
+
+        OutputShowMode showStdout = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption);
+        OutputShowMode showStderr = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption);
 
         Func<bool?> shouldShowProgress = noProgress || ansiMode is AnsiMode.NoAnsi or AnsiMode.SimpleAnsi
             // User preference is to not show progress.
@@ -174,13 +179,26 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             AnsiMode = ansiMode,
             ShowActiveTests = true,
             ShowProgress = shouldShowProgress,
+            ShowStdout = showStdout,
+            ShowStderr = showStderr,
         });
     }
 
+    private static OutputShowMode GetShowOutputMode(ICommandLineOptions commandLineOptions, string optionName)
+        => commandLineOptions.TryGetOptionArgumentList(optionName, out string[]? arguments) && arguments is { Length: > 0 }
+            ? arguments[0] switch
+            {
+                string s when TerminalTestReporterCommandLineOptionsProvider.ShowOutputFailedArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => OutputShowMode.Failed,
+                string s when TerminalTestReporterCommandLineOptionsProvider.ShowOutputNoneArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => OutputShowMode.None,
+                _ => OutputShowMode.All,
+            }
+            : OutputShowMode.All;
+
     private static string GetShortArchitecture(string runtimeIdentifier)
-        => runtimeIdentifier.Contains(Dash)
-            ? runtimeIdentifier.Split(Dash, 2)[1]
-            : runtimeIdentifier;
+    {
+        int firstIndexOfDash = runtimeIdentifier.IndexOf(Dash);
+        return firstIndexOfDash < 0 ? runtimeIdentifier : runtimeIdentifier.Substring(firstIndexOfDash + 1);
+    }
 
     public Type[] DataTypesConsumed { get; } =
     [
@@ -327,6 +345,10 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             {
                 _terminalTestReporter.AssemblyRunCompleted();
                 _terminalTestReporter.TestExecutionCompleted(_clock.UtcNow);
+            }
+            else
+            {
+                _terminalTestReporter.PrintOutOfProcessArtifacts();
             }
         }
     }

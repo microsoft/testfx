@@ -232,6 +232,91 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
+    public async Task ParseAndValidateAsync_MultipleUnknownOptions_ReportsAll()
+    {
+        // Arrange
+        string[] args = ["--x", "--y"];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+
+        ICommandLineOptionsProvider[] extensionCommandLineProvider =
+        [
+            new ExtensionCommandLineProviderMockUnknownOption()
+        ];
+
+        // Act
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
+            extensionCommandLineProvider, new Mock<ICommandLineOptions>().Object);
+
+        // Assert
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("Unknown option '--x'", result.ErrorMessage);
+        Assert.Contains("Unknown option '--y'", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_MultipleReservedOptionsFromDifferentProviders_ReturnsFalse()
+    {
+        // Arrange
+        string[] args = [];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+        ICommandLineOptionsProvider[] extensionCommandLineProvider =
+        [
+            new ExtensionCommandLineProviderMockReservedOptions(),
+            new ExtensionCommandLineProviderMockWithNamedOption("help", "Provider2")
+        ];
+
+        // Act
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
+            extensionCommandLineProvider, new Mock<ICommandLineOptions>().Object);
+
+        // Assert
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("Option '--help' is reserved and cannot be used by providers: 'help'", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_DuplicateOptionWithDistinctProviderNames_ReportsAllProviders()
+    {
+        // Arrange
+        string[] args = [];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+        ICommandLineOptionsProvider[] extensionCommandLineOptionsProviders =
+        [
+            new ExtensionCommandLineProviderMockWithNamedOption("userOption", "ProviderOne"),
+            new ExtensionCommandLineProviderMockWithNamedOption("userOption", "ProviderTwo")
+        ];
+
+        // Act
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
+            extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+
+        // Assert
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("Option '--userOption' is declared by multiple extensions: 'ProviderOne', 'ProviderTwo'", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_ValidOptionsWithManyProviders_ReturnsTrue()
+    {
+        // Arrange
+        string[] args = ["--option1", "--option2", "--option3"];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+        ICommandLineOptionsProvider[] extensionCommandLineOptionsProviders =
+        [
+            new ExtensionCommandLineProviderMockWithNamedOption("option1", "Provider1"),
+            new ExtensionCommandLineProviderMockWithNamedOption("option2", "Provider2"),
+            new ExtensionCommandLineProviderMockWithNamedOption("option3", "Provider3")
+        ];
+
+        // Act
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
+            extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+
+        // Assert
+        Assert.IsTrue(result.IsValid);
+    }
+
+    [TestMethod]
     public async Task ParseAndValidateAsync_InvalidValidConfiguration_ReturnsFalse()
     {
         // Arrange
@@ -432,6 +517,41 @@ public sealed class CommandLineHandlerTests
         ];
 
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => ValidationResult.InvalidTask("Invalid configuration errorMessage");
+
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
+    }
+
+    private sealed class ExtensionCommandLineProviderMockWithNamedOption : ICommandLineOptionsProvider
+    {
+        private readonly string _option;
+
+        public ExtensionCommandLineProviderMockWithNamedOption(string optionName, string displayName)
+        {
+            _option = optionName;
+            DisplayName = displayName;
+            Uid = $"TestMock_{displayName}";
+        }
+
+        public string Uid { get; }
+
+        /// <inheritdoc />
+        public string Version { get; } = AppVersion.DefaultSemVer;
+
+        /// <inheritdoc />
+        public string DisplayName { get; }
+
+        /// <inheritdoc />
+        public string Description { get; } = "Test extension command line provider";
+
+        /// <inheritdoc />
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
+        [
+            new(_option, "Show command line option.", ArgumentArity.ZeroOrOne, false)
+        ];
+
+        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => ValidationResult.ValidTask;
 
         public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
     }

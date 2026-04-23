@@ -12,7 +12,7 @@ internal sealed class SingleThreadedSTASynchronizationContext : SynchronizationC
     public SingleThreadedSTASynchronizationContext()
     {
 #if !NETFRAMEWORK
-        if (!OperatingSystem.IsWindows())
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             throw new NotSupportedException("SingleThreadedSTASynchronizationContext is only supported on Windows.");
         }

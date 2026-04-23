@@ -53,7 +53,11 @@ internal class TestMethodInfo : ITestMethod
 
     internal TestMethodAttribute Executor { get; /*For testing only*/set; }
 
-    internal static ITestContext TestContext => (ITestContext?)TestTools.UnitTesting.TestContext.Current ?? throw ApplicationStateGuard.Unreachable();
+    internal ITestContext TestContext
+    {
+        get => field ?? (ITestContext?)TestTools.UnitTesting.TestContext.Current ?? throw ApplicationStateGuard.Unreachable();
+        set;
+    }
 
     /// <summary>
     /// Gets a value indicating whether timeout is set.
@@ -1070,7 +1074,9 @@ internal class TestMethodInfo : ITestMethod
         else
         {
             // Cancel the token source as test has timed out
-            await TestContext.Context.CancellationTokenSource.CancelAsync().ConfigureAwait(false);
+#pragma warning disable VSTHRD103 // Call async methods when in an async method - likely fine in this context. CancelAsync is .NET Core only. We prefer having the same behavior between .NET Core and .NET Framework.
+            TestContext.Context.CancellationTokenSource.Cancel();
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
         }
 
         TestResult timeoutResult = new() { Outcome = UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(UnitTestOutcome.Timeout, errorMessage) };

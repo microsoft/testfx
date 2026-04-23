@@ -14,6 +14,10 @@ using Microsoft.Testing.Extensions.Hosting;
 [assembly: MetadataUpdateHandler(typeof(HotReloadHandler))]
 #endif
 
+#if !NETCOREAPP
+using Polyfills;
+#endif
+
 namespace Microsoft.Testing.Extensions.Hosting;
 
 internal sealed class HotReloadHandler
