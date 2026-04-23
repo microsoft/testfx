@@ -26,9 +26,13 @@ on:
   workflow_dispatch:
   slash_command:
     name: lean-squad
+    events: [pull_request_comment]
   reaction: "eyes"
 
-permissions: read-all
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
 
 network:
   allowed:
@@ -46,7 +50,30 @@ tools:
   web-fetch:
   github:
     toolsets: [default]
-  bash: true
+  bash:
+    - find
+    - grep
+    - wc
+    - ls
+    - cat
+    - sed
+    - awk
+    - sort
+    - uniq
+    - head
+    - tail
+    - mkdir
+    - git
+    - gh
+    - python3
+    - curl
+    - sh
+    - lake
+    - elan
+    - rm
+    - cp
+    - mv
+    - chmod
   repo-memory:
     max-patch-size: 102400
 
@@ -68,12 +95,12 @@ safe-outputs:
     title-prefix: "[Lean Squad] "
     labels: [automation, lean-squad]
     max: 2
-    protected-files: allowed
+    protected-files: fallback-to-issue
     draft: false
   push-to-pull-request-branch:
     target: "*"
     title-prefix: "[Lean Squad] "
-    protected-files: allowed
+    protected-files: fallback-to-issue
     max: 4
   add-comment:
     max: 3
@@ -302,7 +329,7 @@ At the start of your run, read `/tmp/gh-aw/task_selection.json`. It contains:
 - `phase_flags`: coarse heuristics derived from repository state about which phases are underway
 - `selected_tasks`: two tasks chosen by a phase-weighted random draw
 
-**Before executing any task**, merge all open `[Lean Squad]` PRs into your working branch so each run is additive on all prior in-flight work.
+**Before executing any task**, use only the current working branch and changes that are already merged into the repository's default branch. Do **not** merge, fetch into your branch, or otherwise incorporate content from open `[Lean Squad]` PRs during the run.
 
 **Execute both selected tasks**, then always do the mandatory **Task Final: Update Lean Squad Status Issue**.
 
