@@ -11,9 +11,7 @@ network:
   - defaults
   - dotnet
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: read-all
 
 tracker-id: code-simplifier
 
@@ -30,8 +28,7 @@ safe-outputs:
 tools:
   github:
     toolsets: [default]
-  bash:
-    commands: [git, dotnet, date, grep, find, cat, head, tail, sed, mkdir]
+  bash: [git, dotnet, date, grep, find, cat, head, tail, sed, mkdir]
   edit:
 
 timeout-minutes: 30
