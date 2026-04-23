@@ -9,6 +9,14 @@ on:
   workflow_dispatch:
   reaction: "eyes"
 
+permissions:
+  actions: read
+  contents: read
+  discussions: read
+  issues: read
+  pull-requests: read
+  security-events: read
+
 timeout-minutes: 60
 
 network:
@@ -29,8 +37,7 @@ safe-outputs:
     title-prefix: "[Efficiency Improver] "
     labels: [automation, efficiency, green-software]
     max: 1
-    protected-files:
-      - .github/workflows/**
+    protected-files: fallback-to-issue
   push-to-pull-request-branch:
     target: "*"
     title-prefix: "[Efficiency Improver] "

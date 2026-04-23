@@ -18,6 +18,14 @@ on:
     events: [pull_request_comment]
   reaction: "eyes"
 
+permissions:
+  actions: read
+  contents: read
+  discussions: read
+  issues: read
+  pull-requests: read
+  security-events: read
+
 timeout-minutes: 60
 
 network:
