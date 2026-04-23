@@ -1224,7 +1224,7 @@ public sealed class CollectionAssert
                     stack.Push(new(expectedEnum, actualEnum, position + 1));
                     stack.Push(new(curExpectedEnum.GetEnumerator(), curActualEnum.GetEnumerator(), 0));
                 }
-                else if (comparer.Compare(curExpected, curActual) != 0)
+                else
                 {
                     reason = string.Format(
                         CultureInfo.CurrentCulture,
