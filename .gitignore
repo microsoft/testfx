@@ -132,7 +132,7 @@ project.fragment.lock.json
 # ===========================
 # Language Server cache
 # ===========================
-.lscache/
+*.lscache
 
 # Arcade files
 .dotnet/

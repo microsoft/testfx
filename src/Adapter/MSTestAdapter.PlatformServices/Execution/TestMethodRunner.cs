@@ -392,6 +392,7 @@ internal sealed class TestMethodRunner
                     {
                         using (TestContextImplementation.SetCurrentTestContext(_testContext as TestContext))
                         {
+                            testMethodInfo.TestContext = _testContext;
                             tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false));
                         }
                     }

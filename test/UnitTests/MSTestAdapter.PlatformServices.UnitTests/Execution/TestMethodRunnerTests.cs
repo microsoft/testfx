@@ -420,7 +420,55 @@ public class TestMethodRunnerTests : TestContainer
         }
     }
 
+    public async Task RunTestMethodShouldPassWhenAttributeInvokesTestMethodOnExecutionContextUnsafeThread()
+    {
+        _testablePlatformServiceProvider.MockThreadOperations
+            .Setup(tho => tho.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Returns(true)
+            .Callback((Action a, int timeout, CancellationToken token) => a.Invoke());
+
+        var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), new ExecutionContextUnsafeThreadTestMethodAttribute());
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            TimeoutInfo = localTestMethodOptions.TimeoutInfo,
+            Executor = localTestMethodOptions.TestMethodAttribute,
+        };
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
+        results.Should().HaveCount(1);
+        results[0].Outcome.Should().Be(UnitTestOutcome.Passed);
+    }
+
     #region Test data
+
+    private sealed class ExecutionContextUnsafeThreadTestMethodAttribute : TestMethodAttribute
+    {
+        private static readonly TimeSpan WaitTimeout = TimeSpan.FromSeconds(10);
+
+        public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+        {
+            var taskCompletionSource = new TaskCompletionSource<TestResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+            ThreadPool.UnsafeQueueUserWorkItem(
+                _ =>
+                {
+                    try
+                    {
+                        taskCompletionSource.SetResult(testMethod.InvokeAsync(null).ConfigureAwait(false).GetAwaiter().GetResult());
+                    }
+                    catch (Exception exception)
+                    {
+                        taskCompletionSource.SetException(exception);
+                    }
+                },
+                null);
+
+            Task completedTask = await Task.WhenAny(taskCompletionSource.Task, Task.Delay(WaitTimeout)).ConfigureAwait(false);
+            return completedTask == taskCompletionSource.Task
+                ? [await taskCompletionSource.Task.ConfigureAwait(false)]
+                : throw new TimeoutException($"The execution did not complete within {WaitTimeout}.");
+        }
+    }
 
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Use through reflection")]
     private static void InitMethodThrowingException(TestContext tc)
