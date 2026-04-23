@@ -155,9 +155,10 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
     private static (ISymbol? Member, bool AreTooMany) TryGetMember(INamedTypeSymbol declaringType, string memberName)
     {
         INamedTypeSymbol? currentType = declaringType;
+        bool disallowPrivate = false;
         while (currentType is not null)
         {
-            (ISymbol? Member, bool AreTooMany) result = TryGetMemberCore(currentType, memberName);
+            (ISymbol? Member, bool AreTooMany) result = TryGetMemberCore(currentType, memberName, disallowPrivate);
             if (result.Member is not null || result.AreTooMany)
             {
                 return result;
@@ -165,14 +166,21 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
 
             // Only continue to look at base types if the member is not found on the current type and we are not hit by "too many methods" rule.
             currentType = currentType.BaseType;
+            disallowPrivate = true;
         }
 
         return (null, false);
 
-        static (ISymbol? Member, bool AreTooMany) TryGetMemberCore(INamedTypeSymbol declaringType, string memberName)
+        static (ISymbol? Member, bool AreTooMany) TryGetMemberCore(INamedTypeSymbol declaringType, string memberName, bool disallowPrivate)
         {
+            ImmutableArray<ISymbol> potentialMembers = declaringType.GetMembers(memberName);
+            if (disallowPrivate)
+            {
+                potentialMembers = potentialMembers.RemoveAll(m => m.DeclaredAccessibility == Accessibility.Private);
+            }
+
             // If we cannot find the member on the given type, report a diagnostic.
-            if (declaringType.GetMembers(memberName) is { Length: 0 } potentialMembers)
+            if (potentialMembers is { Length: 0 })
             {
                 return (null, false);
             }
