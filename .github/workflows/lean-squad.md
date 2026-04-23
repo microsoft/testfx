@@ -41,7 +41,6 @@ network:
     - "leanprover-community.github.io"
     - "leanlang.org"
     - "lean-lang.org"
-    - "raw.githubusercontent.com"
 
 checkout:
   fetch: ["*"]
