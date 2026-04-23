@@ -41,6 +41,7 @@ network:
     - "leanprover-community.github.io"
     - "leanlang.org"
     - "lean-lang.org"
+    - "raw.githubusercontent.com"
 
 checkout:
   fetch: ["*"]
@@ -86,7 +87,7 @@ safe-outputs:
   create-issue:
     title-prefix: "[Lean Squad] "
     labels: [automation, lean-squad]
-    max: 4
+    max: 1
   update-issue:
     target: "*"
     title-prefix: "[Lean Squad] "
@@ -94,14 +95,14 @@ safe-outputs:
   create-pull-request:
     title-prefix: "[Lean Squad] "
     labels: [automation, lean-squad]
-    max: 2
+    max: 1
     protected-files: fallback-to-issue
     draft: false
   push-to-pull-request-branch:
     target: "*"
     title-prefix: "[Lean Squad] "
     protected-files: fallback-to-issue
-    max: 4
+    max: 1
   add-comment:
     max: 3
     target: "*"
@@ -279,12 +280,42 @@ When performing Tasks 3, 4, or 5, install Lean 4 and run `lake build`. Capture a
 ```bash
 if ! command -v lean &>/dev/null; then
   echo "=== Lean Squad: attempting elan installation ==="
-  if curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
-       | sh -s -- -y --default-toolchain leanprover/lean4:stable 2>&1; then
-    echo "=== Lean Squad: elan installation SUCCEEDED ==="
-  else
-    echo "=== Lean Squad: elan installation FAILED — check network/firewall ==="
+
+  ELAN_VERSION="v3.1.0"
+  ELAN_TARGET=""
+  case "$(uname -s)-$(uname -m)" in
+    Linux-x86_64)
+      ELAN_TARGET="x86_64-unknown-linux-gnu"
+      ;;
+    Linux-aarch64|Linux-arm64)
+      ELAN_TARGET="aarch64-unknown-linux-gnu"
+      ;;
+    *)
+      echo "=== Lean Squad: unsupported platform for pinned elan install: $(uname -s)-$(uname -m) ==="
+      ;;
+  esac
+
+  if [ -n "$ELAN_TARGET" ]; then
+    ELAN_ARCHIVE="elan-${ELAN_TARGET}.tar.gz"
+    ELAN_BASE_URL="https://github.com/leanprover/elan/releases/download/${ELAN_VERSION}"
+    ELAN_TMP_DIR="$(mktemp -d)"
+
+    if curl -sSfL "${ELAN_BASE_URL}/${ELAN_ARCHIVE}" -o "${ELAN_TMP_DIR}/${ELAN_ARCHIVE}" \
+      && curl -sSfL "${ELAN_BASE_URL}/${ELAN_ARCHIVE}.sha256" -o "${ELAN_TMP_DIR}/${ELAN_ARCHIVE}.sha256" \
+      && (
+        cd "${ELAN_TMP_DIR}" || exit 1
+        sha256sum -c "${ELAN_ARCHIVE}.sha256"
+      ) \
+      && tar -xzf "${ELAN_TMP_DIR}/${ELAN_ARCHIVE}" -C "${ELAN_TMP_DIR}" \
+      && "${ELAN_TMP_DIR}/elan-init" -y --default-toolchain leanprover/lean4:stable 2>&1; then
+      echo "=== Lean Squad: elan installation SUCCEEDED ==="
+    else
+      echo "=== Lean Squad: elan installation FAILED — check network/firewall/checksum ==="
+    fi
+
+    rm -rf "${ELAN_TMP_DIR}"
   fi
+
   export PATH="$HOME/.elan/bin:$PATH"
 fi
 
