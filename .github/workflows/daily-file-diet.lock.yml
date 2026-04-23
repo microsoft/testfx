@@ -1,5 +1,5 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"7adf000ec65e16027051558bdd9c86f0282b7b1678f7a4692f034e45ca915e17","compiler_version":"v0.68.3","strict":true,"agent_id":"copilot"}
-# gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_CI_TRIGGER_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"373c709c69115d41ff229c7e5df9f8788daa9553","version":"v9"},{"repo":"actions/setup-python","sha":"a309ff8b426b58ec0e2a45f0f869d46889d02405","version":"v6.2.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"ba90f2186d7ad780ec640f364005fa24e797b360","version":"v0.68.3"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.20"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.20"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.20"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.2.19"},{"image":"ghcr.io/github/github-mcp-server:v0.32.0"},{"image":"node:lts-alpine"}]}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"3819d1bf82fd0ca9fd10b7549ba3ec58053d789372094b967fb8fee46d8768e3","compiler_version":"v0.68.3","strict":true,"agent_id":"copilot"}
+# gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_AGENT_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"373c709c69115d41ff229c7e5df9f8788daa9553","version":"v9"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"ba90f2186d7ad780ec640f364005fa24e797b360","version":"v0.68.3"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.20"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.20"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.20"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.2.19"},{"image":"ghcr.io/github/github-mcp-server:v0.32.0"},{"image":"node:lts-alpine"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
 #  | |_| | __ _  ___ _ __ | |_ _  ___ 
@@ -22,30 +22,11 @@
 #
 # For more information: https://github.github.com/gh-aw/introduction/overview/
 #
-# Lean Squad: an optimistic multi-phase system that progressively applies
-# Lean 4 formal verification to your codebase, one target at a time.
-# Can also be triggered on-demand via '/lean-squad <instructions>' to perform specific tasks.
-# 
-# Each run selects tasks weighted to current FV progress:
-# 1. Research — survey codebase, identify FV-amenable targets, document approach
-# 2. Informal Spec Extraction — extract design intentions and informal contracts
-# 3. Formal Spec Writing — write Lean 4 type signatures and property statements
-# 4. Implementation Extraction — translate code to a Lean-verifiable functional model
-# 5. Proof Assistance — attempt proofs, find counterexamples, report bugs
-# 6. Correspondence Review — document how the Lean model corresponds to the source
-# 7. Proof Utility Critique — assess the value and coverage of what has been proven
-# 8. Implementation Correspondence Validation — write and run executable correspondence tests
-# 9. CI Automation — set up and maintain CI workflows that verify proofs on every PR
-# 10. Project Report — create and incrementally maintain REPORT.md with mermaid diagrams
-# 
-# Phases are sequentially weighted: Task 1 dominates until research is done,
-# then Task 2 rises, and so on up to proofs. Each run builds on prior runs
-# (assumes merged PRs). Notes, targets, choices, and progress live in repo-memory.
-# Outputs are pull requests (specs, proofs) and issues (bugs, status).
+# Analyzes source files daily to identify oversized files that exceed healthy size thresholds, creating actionable refactoring issues
 #
 # Secrets used:
 #   - COPILOT_GITHUB_TOKEN
-#   - GH_AW_CI_TRIGGER_TOKEN
+#   - GH_AW_AGENT_TOKEN
 #   - GH_AW_GITHUB_MCP_SERVER_TOKEN
 #   - GH_AW_GITHUB_TOKEN
 #   - GITHUB_TOKEN
@@ -54,7 +35,6 @@
 #   - actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 #   - actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
 #   - actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
-#   - actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
 #   - actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
 #   - github/gh-aw-actions/setup@ba90f2186d7ad780ec640f364005fa24e797b360 # v0.68.3
 #
@@ -66,36 +46,12 @@
 #   - ghcr.io/github/github-mcp-server:v0.32.0
 #   - node:lts-alpine
 
-name: "Lean Squad"
+name: "Daily File Diet"
 "on":
-  discussion:
-    types:
-    - created
-    - edited
-  discussion_comment:
-    types:
-    - created
-    - edited
-  issue_comment:
-    types:
-    - created
-    - edited
-  issues:
-    types:
-    - opened
-    - edited
-    - reopened
-  pull_request:
-    types:
-    - opened
-    - edited
-    - reopened
-  pull_request_review_comment:
-    types:
-    - created
-    - edited
   schedule:
-  - cron: "5 */8 * * *"
+  - cron: "53 21 * * 1-5"
+    # Friendly format: daily on weekdays (scattered)
+  # skip-if-match: is:issue is:open in:title "[file-diet]" # Skip-if-match processed as search check in pre-activation job
   workflow_dispatch:
     inputs:
       aw_context:
@@ -107,34 +63,26 @@ name: "Lean Squad"
 permissions: {}
 
 concurrency:
-  group: "gh-aw-${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}"
+  group: "gh-aw-${{ github.workflow }}"
 
-run-name: "Lean Squad"
+run-name: "Daily File Diet"
 
 jobs:
   activation:
     needs: pre_activation
-    if: "needs.pre_activation.outputs.activated == 'true' && ((github.event_name == 'issues' || github.event_name == 'issue_comment' || github.event_name == 'pull_request' || github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' || github.event_name == 'discussion_comment') && (github.event_name == 'issues' && (startsWith(github.event.issue.body, '/lean-squad ') || startsWith(github.event.issue.body, '/lean-squad\n') || github.event.issue.body == '/lean-squad') || github.event_name == 'issue_comment' && (startsWith(github.event.comment.body, '/lean-squad ') || startsWith(github.event.comment.body, '/lean-squad\n') || github.event.comment.body == '/lean-squad') && github.event.issue.pull_request == null || github.event_name == 'issue_comment' && (startsWith(github.event.comment.body, '/lean-squad ') || startsWith(github.event.comment.body, '/lean-squad\n') || github.event.comment.body == '/lean-squad') && github.event.issue.pull_request != null || github.event_name == 'pull_request_review_comment' && (startsWith(github.event.comment.body, '/lean-squad ') || startsWith(github.event.comment.body, '/lean-squad\n') || github.event.comment.body == '/lean-squad') || github.event_name == 'pull_request' && (startsWith(github.event.pull_request.body, '/lean-squad ') || startsWith(github.event.pull_request.body, '/lean-squad\n') || github.event.pull_request.body == '/lean-squad') || github.event_name == 'discussion' && (startsWith(github.event.discussion.body, '/lean-squad ') || startsWith(github.event.discussion.body, '/lean-squad\n') || github.event.discussion.body == '/lean-squad') || github.event_name == 'discussion_comment' && (startsWith(github.event.comment.body, '/lean-squad ') || startsWith(github.event.comment.body, '/lean-squad\n') || github.event.comment.body == '/lean-squad')) || (!(github.event_name == 'issues')) && (!(github.event_name == 'issue_comment')) && (!(github.event_name == 'pull_request')) && (!(github.event_name == 'pull_request_review_comment')) && (!(github.event_name == 'discussion')) && (!(github.event_name == 'discussion_comment')))"
+    if: needs.pre_activation.outputs.activated == 'true'
     runs-on: ubuntu-slim
     permissions:
       actions: read
       contents: read
-      discussions: write
-      issues: write
-      pull-requests: write
     outputs:
-      body: ${{ steps.sanitized.outputs.body }}
-      comment_id: ${{ steps.add-comment.outputs.comment-id }}
-      comment_repo: ${{ steps.add-comment.outputs.comment-repo }}
-      comment_url: ${{ steps.add-comment.outputs.comment-url }}
+      comment_id: ""
+      comment_repo: ""
       lockdown_check_failed: ${{ steps.generate_aw_info.outputs.lockdown_check_failed == 'true' }}
       model: ${{ steps.generate_aw_info.outputs.model }}
       secret_verification_result: ${{ steps.validate-secret.outputs.verification_result }}
       setup-trace-id: ${{ steps.setup.outputs.trace-id }}
-      slash_command: ${{ needs.pre_activation.outputs.matched_command }}
       stale_lock_file_failed: ${{ steps.check-lock-file.outputs.stale_lock_file_failed == 'true' }}
-      text: ${{ steps.sanitized.outputs.text }}
-      title: ${{ steps.sanitized.outputs.title }}
     steps:
       - name: Setup Scripts
         id: setup
@@ -152,11 +100,11 @@ jobs:
           GH_AW_INFO_VERSION: "1.0.21"
           GH_AW_INFO_AGENT_VERSION: "1.0.21"
           GH_AW_INFO_CLI_VERSION: "v0.68.3"
-          GH_AW_INFO_WORKFLOW_NAME: "Lean Squad"
+          GH_AW_INFO_WORKFLOW_NAME: "Daily File Diet"
           GH_AW_INFO_EXPERIMENTAL: "false"
           GH_AW_INFO_SUPPORTS_TOOLS_ALLOWLIST: "true"
           GH_AW_INFO_STAGED: "false"
-          GH_AW_INFO_ALLOWED_DOMAINS: '["defaults","github","leanprover-community.github.io","leanlang.org","lean-lang.org","raw.githubusercontent.com"]'
+          GH_AW_INFO_ALLOWED_DOMAINS: '["defaults"]'
           GH_AW_INFO_FIREWALL_ENABLED: "true"
           GH_AW_INFO_AWF_VERSION: "v0.25.20"
           GH_AW_INFO_AWMG_VERSION: ""
@@ -169,19 +117,6 @@ jobs:
             setupGlobals(core, github, context, exec, io, getOctokit);
             const { main } = require('${{ runner.temp }}/gh-aw/actions/generate_aw_info.cjs');
             await main(core, context);
-      - name: Add eyes reaction for immediate feedback
-        id: react
-        if: github.event_name == 'issues' || github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' || github.event_name == 'discussion_comment' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.id == github.repository_id
-        uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
-        env:
-          GH_AW_REACTION: "eyes"
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
-            setupGlobals(core, github, context, exec, io, getOctokit);
-            const { main } = require('${{ runner.temp }}/gh-aw/actions/add_reaction.cjs');
-            await main();
       - name: Validate COPILOT_GITHUB_TOKEN secret
         id: validate-secret
         run: bash "${RUNNER_TEMP}/gh-aw/actions/validate_multi_secret.sh" COPILOT_GITHUB_TOKEN 'GitHub Copilot CLI' https://github.github.com/gh-aw/reference/engines/#github-copilot-default
@@ -200,7 +135,7 @@ jobs:
         id: check-lock-file
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         env:
-          GH_AW_WORKFLOW_FILE: "lean-squad.lock.yml"
+          GH_AW_WORKFLOW_FILE: "daily-file-diet.lock.yml"
           GH_AW_CONTEXT_WORKFLOW_REF: "${{ github.workflow_ref }}"
         with:
           script: |
@@ -218,28 +153,6 @@ jobs:
             setupGlobals(core, github, context, exec, io, getOctokit);
             const { main } = require('${{ runner.temp }}/gh-aw/actions/check_version_updates.cjs');
             await main();
-      - name: Compute current body text
-        id: sanitized
-        uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
-        with:
-          script: |
-            const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
-            setupGlobals(core, github, context, exec, io, getOctokit);
-            const { main } = require('${{ runner.temp }}/gh-aw/actions/compute_text.cjs');
-            await main();
-      - name: Add comment with workflow run link
-        id: add-comment
-        if: github.event_name == 'issues' || github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' || github.event_name == 'discussion_comment' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.id == github.repository_id
-        uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
-        env:
-          GH_AW_WORKFLOW_NAME: "Lean Squad"
-          GH_AW_SAFE_OUTPUT_MESSAGES: "{\"footer\":\"\\u003e Generated by 📐 {workflow_name}, see [workflow run]({run_url}).\",\"runStarted\":\"{workflow_name} is processing {event_type}, see [workflow run]({run_url})...\",\"runSuccess\":\"✓ {workflow_name} completed successfully, see [workflow run]({run_url}).\",\"runFailure\":\"✗ {workflow_name} encountered {status}, see [workflow run]({run_url}).\"}"
-        with:
-          script: |
-            const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
-            setupGlobals(core, github, context, exec, io, getOctokit);
-            const { main } = require('${{ runner.temp }}/gh-aw/actions/add_workflow_run_comment.cjs');
-            await main();
       - name: Create prompt with built-in context
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
@@ -251,30 +164,21 @@ jobs:
           GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
-          GH_AW_GITHUB_SERVER_URL: ${{ github.server_url }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
-          GH_AW_IS_PR_COMMENT: ${{ github.event.issue.pull_request && 'true' || '' }}
-          GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT: ${{ steps.sanitized.outputs.text }}
-          GH_AW_WIKI_NOTE: ${{ '' }}
         # poutine:ignore untrusted_checkout_exec
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_18a96e9cc8d7b1c1_EOF'
+          cat << 'GH_AW_PROMPT_6c54e931d110a4b8_EOF'
           <system>
-          GH_AW_PROMPT_18a96e9cc8d7b1c1_EOF
+          GH_AW_PROMPT_6c54e931d110a4b8_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
-          cat "${RUNNER_TEMP}/gh-aw/prompts/repo_memory_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_18a96e9cc8d7b1c1_EOF'
+          cat << 'GH_AW_PROMPT_6c54e931d110a4b8_EOF'
           <safe-output-tools>
-          Tools: add_comment(max:3), create_issue(max:4), update_issue, create_pull_request(max:2), push_to_pull_request_branch(max:4), missing_tool, missing_data, noop
-          GH_AW_PROMPT_18a96e9cc8d7b1c1_EOF
-          cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_create_pull_request.md"
-          cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_push_to_pr_branch.md"
-          cat << 'GH_AW_PROMPT_18a96e9cc8d7b1c1_EOF'
+          Tools: create_issue, missing_tool, missing_data, noop
           </safe-output-tools>
           <github-context>
           The following GitHub context information is available for this workflow:
@@ -302,32 +206,21 @@ jobs:
           {{#if __GH_AW_GITHUB_RUN_ID__ }}
           - **workflow-run-id**: __GH_AW_GITHUB_RUN_ID__
           {{/if}}
-          - **checkouts**: The following repositories have been checked out and are available in the workspace:
-            - `$GITHUB_WORKSPACE` → `__GH_AW_GITHUB_REPOSITORY__` (cwd) [full history, all branches available as remote-tracking refs] [additional refs fetched: *]
-            - **Note**: If a branch you need is not in the list above and is not listed as an additional fetched ref, it has NOT been checked out. For private repositories you cannot fetch it without proper authentication. If the branch is required and not available, exit with an error and ask the user to add it to the `fetch:` option of the `checkout:` configuration (e.g., `fetch: ["refs/pulls/open/*"]` for all open PR refs, or `fetch: ["main", "feature/my-branch"]` for specific branches).
           </github-context>
           
-          GH_AW_PROMPT_18a96e9cc8d7b1c1_EOF
+          GH_AW_PROMPT_6c54e931d110a4b8_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          if [ "$GITHUB_EVENT_NAME" = "issue_comment" ] && [ -n "$GH_AW_IS_PR_COMMENT" ] || [ "$GITHUB_EVENT_NAME" = "pull_request_review_comment" ] || [ "$GITHUB_EVENT_NAME" = "pull_request_review" ]; then
-            cat "${RUNNER_TEMP}/gh-aw/prompts/pr_context_prompt.md"
-          fi
-          if [ "$GITHUB_EVENT_NAME" = "issue_comment" ] && [ -n "$GH_AW_IS_PR_COMMENT" ] || [ "$GITHUB_EVENT_NAME" = "pull_request_review_comment" ] || [ "$GITHUB_EVENT_NAME" = "pull_request_review" ]; then
-            cat "${RUNNER_TEMP}/gh-aw/prompts/pr_context_push_to_pr_branch_guidance.md"
-          fi
-          cat << 'GH_AW_PROMPT_18a96e9cc8d7b1c1_EOF'
+          cat << 'GH_AW_PROMPT_6c54e931d110a4b8_EOF'
           </system>
-          {{#runtime-import .github/workflows/lean-squad.md}}
-          GH_AW_PROMPT_18a96e9cc8d7b1c1_EOF
+          {{#runtime-import .github/workflows/daily-file-diet.md}}
+          GH_AW_PROMPT_6c54e931d110a4b8_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
-          GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
-          GH_AW_GITHUB_SERVER_URL: ${{ github.server_url }}
-          GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT: ${{ steps.sanitized.outputs.text }}
+          GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
         with:
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
@@ -345,18 +238,8 @@ jobs:
           GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
-          GH_AW_GITHUB_SERVER_URL: ${{ github.server_url }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
-          GH_AW_IS_PR_COMMENT: ${{ github.event.issue.pull_request && 'true' || '' }}
-          GH_AW_MEMORY_BRANCH_NAME: 'memory/lean-squad'
-          GH_AW_MEMORY_CONSTRAINTS: "\n\n**Constraints:**\n- **Max File Size**: 10240 bytes (0.01 MB) per file\n- **Max File Count**: 100 files per commit\n- **Max Patch Size**: 102400 bytes (100 KB) total per push (max: 100 KB)\n"
-          GH_AW_MEMORY_DESCRIPTION: ''
-          GH_AW_MEMORY_DIR: '/tmp/gh-aw/repo-memory/default/'
-          GH_AW_MEMORY_TARGET_REPO: ' of the current repository'
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: ${{ needs.pre_activation.outputs.activated }}
-          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_MATCHED_COMMAND: ${{ needs.pre_activation.outputs.matched_command }}
-          GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT: ${{ steps.sanitized.outputs.text }}
-          GH_AW_WIKI_NOTE: ''
         with:
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
@@ -375,18 +258,8 @@ jobs:
                 GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER: process.env.GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER,
                 GH_AW_GITHUB_REPOSITORY: process.env.GH_AW_GITHUB_REPOSITORY,
                 GH_AW_GITHUB_RUN_ID: process.env.GH_AW_GITHUB_RUN_ID,
-                GH_AW_GITHUB_SERVER_URL: process.env.GH_AW_GITHUB_SERVER_URL,
                 GH_AW_GITHUB_WORKSPACE: process.env.GH_AW_GITHUB_WORKSPACE,
-                GH_AW_IS_PR_COMMENT: process.env.GH_AW_IS_PR_COMMENT,
-                GH_AW_MEMORY_BRANCH_NAME: process.env.GH_AW_MEMORY_BRANCH_NAME,
-                GH_AW_MEMORY_CONSTRAINTS: process.env.GH_AW_MEMORY_CONSTRAINTS,
-                GH_AW_MEMORY_DESCRIPTION: process.env.GH_AW_MEMORY_DESCRIPTION,
-                GH_AW_MEMORY_DIR: process.env.GH_AW_MEMORY_DIR,
-                GH_AW_MEMORY_TARGET_REPO: process.env.GH_AW_MEMORY_TARGET_REPO,
-                GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED,
-                GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_MATCHED_COMMAND: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_MATCHED_COMMAND,
-                GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT: process.env.GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT,
-                GH_AW_WIKI_NOTE: process.env.GH_AW_WIKI_NOTE
+                GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED
               }
             });
       - name: Validate prompt placeholders
@@ -414,14 +287,19 @@ jobs:
   agent:
     needs: activation
     runs-on: ubuntu-latest
-    permissions: read-all
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    concurrency:
+      group: "gh-aw-copilot-${{ github.workflow }}"
     env:
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
       GH_AW_ASSETS_ALLOWED_EXTS: ""
       GH_AW_ASSETS_BRANCH: ""
       GH_AW_ASSETS_MAX_SIZE_KB: 0
       GH_AW_MCP_LOG_DIR: /tmp/gh-aw/mcp-logs/safeoutputs
-      GH_AW_WORKFLOW_ID_SANITIZED: leansquad
+      GH_AW_WORKFLOW_ID_SANITIZED: dailyfilediet
     outputs:
       agentic_engine_timeout: ${{ steps.detect-copilot-errors.outputs.agentic_engine_timeout || 'false' }}
       checkout_pr_success: ${{ steps.checkout-pr.outputs.checkout_pr_success || 'true' }}
@@ -454,38 +332,12 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-          fetch-depth: 0
-      - name: Fetch additional refs
-        env:
-          GH_AW_FETCH_TOKEN: ${{ secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
-        run: |
-          header=$(printf "x-access-token:%s" "${GH_AW_FETCH_TOKEN}" | base64 -w 0)
-          git -c "http.extraheader=Authorization: Basic ${header}" fetch origin '+refs/heads/*:refs/remotes/origin/*'
-      - name: Setup Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with:
-          python-version: '3.12'
       - name: Create gh-aw temp directory
         run: bash "${RUNNER_TEMP}/gh-aw/actions/create_gh_aw_tmp_dir.sh"
       - name: Configure gh CLI for GitHub Enterprise
         run: bash "${RUNNER_TEMP}/gh-aw/actions/configure_gh_for_ghe.sh"
         env:
           GH_TOKEN: ${{ github.token }}
-      - env:
-          GH_TOKEN: ${{ github.token }}
-        name: Assess FV state and compute task weights
-        run: "mkdir -p /tmp/gh-aw\n\n# Count Lean files, excluding the .lake build cache\nfind . -name \"*.lean\" 2>/dev/null | grep -cv \"\\.lake/\" > /tmp/gh-aw/lean_count.txt || echo 0 > /tmp/gh-aw/lean_count.txt\n\n# Detect CI workflows for FV\n[ -f \".github/workflows/lean-ci.yml\" ] && echo 1 > /tmp/gh-aw/has_lean_ci.txt || echo 0 > /tmp/gh-aw/has_lean_ci.txt\n\n# Count runnable correspondence-test artifacts\nfind . \\( -path \"./formal-verification/tests/*\" -o -path \"./formal-verification/correspondence-tests/*\" \\) -type f 2>/dev/null \\\n  | wc -l > /tmp/gh-aw/correspondence_test_count.txt || echo 0 > /tmp/gh-aw/correspondence_test_count.txt\n\n# Detect key FV docs\n[ -f \"formal-verification/CORRESPONDENCE.md\" ] && echo 1 > /tmp/gh-aw/has_correspondence.txt || echo 0 > /tmp/gh-aw/has_correspondence.txt\n[ -f \"formal-verification/CRITIQUE.md\" ] && echo 1 > /tmp/gh-aw/has_critique.txt || echo 0 > /tmp/gh-aw/has_critique.txt\n[ -f \"formal-verification/REPORT.md\" ] && echo 1 > /tmp/gh-aw/has_report.txt || echo 0 > /tmp/gh-aw/has_report.txt\n[ -d \"formal-verification\" ] && echo 1 > /tmp/gh-aw/fv_dir.txt || echo 0 > /tmp/gh-aw/fv_dir.txt\n\n# Count markdown docs inside formal-verification/\nfind . \\( -path \"*/formal-verification/*.md\" -o -path \"*/formal-verification/specs/*.md\" \\) 2>/dev/null \\\n  | wc -l > /tmp/gh-aw/fv_docs.txt || echo 0 > /tmp/gh-aw/fv_docs.txt\n\n# Fetch open FV Squad issues and PRs\ngh issue list --state open --label lean-squad --json number 2>/dev/null \\\n  > /tmp/gh-aw/fv_issues.json || echo \"[]\" > /tmp/gh-aw/fv_issues.json\ngh pr list --state open --limit 50 --json number,title 2>/dev/null \\\n  | python3 -c \"\nimport json, sys\nd = json.load(sys.stdin)\nprint(json.dumps([x for x in d if x['title'].startswith('[Lean Squad]')]))\" \\\n  > /tmp/gh-aw/fv_prs.json || echo \"[]\" > /tmp/gh-aw/fv_prs.json\n\npython3 - << 'EOF'\nimport json, os, random, re\nfrom pathlib import Path\n\nlean_count   = int(open('/tmp/gh-aw/lean_count.txt').read().strip() or 0)\nhas_lean_ci  = int(open('/tmp/gh-aw/has_lean_ci.txt').read().strip() or 0)\ncorrespondence_test_count = int(open('/tmp/gh-aw/correspondence_test_count.txt').read().strip() or 0)\nhas_correspondence = int(open('/tmp/gh-aw/has_correspondence.txt').read().strip() or 0)\nhas_critique = int(open('/tmp/gh-aw/has_critique.txt').read().strip() or 0)\nhas_report   = int(open('/tmp/gh-aw/has_report.txt').read().strip() or 0)\nfv_dir       = int(open('/tmp/gh-aw/fv_dir.txt').read().strip() or 0)\nfv_docs      = int(open('/tmp/gh-aw/fv_docs.txt').read().strip() or 0)\nfv_issues    = json.load(open('/tmp/gh-aw/fv_issues.json'))\nfv_prs       = json.load(open('/tmp/gh-aw/fv_prs.json'))\n\nn_issues = len(fv_issues)\nn_prs    = len(fv_prs)\n\nhas_research   = bool(fv_dir) and (fv_docs >= 1 or n_issues >= 1 or lean_count >= 1)\nhas_inf_specs  = fv_docs >= 2 or lean_count >= 1\nhas_lean_specs = lean_count >= 1\nhas_impl       = lean_count >= 3\nhas_proofs     = lean_count >= 1  # simplified\nhas_ci         = bool(has_lean_ci)\nhas_correspondence_tests = correspondence_test_count >= 1\n\ntask_names = {\n    1: 'Research & Target Identification',\n    2: 'Informal Spec Extraction',\n    3: 'Formal Spec Writing (Lean 4)',\n    4: 'Implementation Extraction',\n    5: 'Proof Assistance',\n    6: 'Correspondence Review',\n    7: 'Proof Utility Critique',\n    8: 'Implementation Correspondence Validation',\n    9: 'CI Automation',\n    10: 'Project Report',\n}\n\nweights = {\n    1: 10.0 if not has_research else 2.0,\n    2: (8.0 if not has_inf_specs else 2.0) if has_research else 0.5,\n    3: (8.0 if not has_lean_specs else 2.0) if has_inf_specs else 0.3,\n    4: (6.0 if not has_impl else 2.0) if has_lean_specs else 0.2,\n    5: (12.0 if has_impl else 0.1),\n    6: (10.0 if not has_correspondence else 3.0) if has_impl else 0.5,\n    7: (4.0 if not has_critique else 2.0) if has_impl else 0.0,\n    8: (12.0 if not has_correspondence_tests else 3.0) if has_impl else 0.2,\n    9: 12.0 if (has_lean_specs and not has_ci) else 2.0,\n    10: (8.0 if not has_report else 3.0) if has_impl else 0.0,\n}\n\nrun_id = int(os.environ.get('GITHUB_RUN_ID', '0'))\nrng    = random.Random(run_id)\nnon_main  = list(weights.keys())\nnm_weights = list(weights.values())\nchosen, seen = [], set()\nfor t in rng.choices(non_main, weights=nm_weights, k=30):\n    if t not in seen:\n        seen.add(t)\n        chosen.append(t)\n    if len(chosen) == 2:\n        break\n\nresult = {\n    'lean_count': lean_count,\n    'fv_dir': bool(fv_dir), 'fv_docs': fv_docs,\n    'correspondence_test_count': correspondence_test_count,\n    'phase_flags': {\n        'has_research': has_research,\n        'has_inf_specs': has_inf_specs,\n        'has_lean_specs': has_lean_specs,\n        'has_impl': has_impl,\n        'has_proofs': has_proofs,\n        'has_ci': has_ci,\n        'has_correspondence_tests': has_correspondence_tests,\n        'has_correspondence': bool(has_correspondence),\n        'has_critique': bool(has_critique),\n        'has_report': bool(has_report),\n    },\n    'task_names': task_names,\n    'weights': {str(k): round(v, 2) for k, v in weights.items()},\n    'selected_tasks': chosen,\n}\nwith open('/tmp/gh-aw/task_selection.json', 'w') as f:\n    json.dump(result, f, indent=2)\nEOF\n"
-
-      # Repo memory git-based storage configuration from frontmatter processed below
-      - name: Clone repo-memory branch (default)
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GITHUB_SERVER_URL: ${{ github.server_url }}
-          BRANCH_NAME: memory/lean-squad
-          TARGET_REPO: ${{ github.repository }}
-          MEMORY_DIR: /tmp/gh-aw/repo-memory/default
-          CREATE_ORPHAN: true
-        run: bash "${RUNNER_TEMP}/gh-aw/actions/clone_repo_memory_branch.sh"
       - name: Configure Git credentials
         env:
           REPO_NAME: ${{ github.repository }}
@@ -536,47 +388,21 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_887fe100cf9c5932_EOF'
-          {"add_comment":{"max":3,"target":"*"},"create_issue":{"labels":["automation","lean-squad"],"max":4,"title_prefix":"[Lean Squad] "},"create_pull_request":{"draft":false,"labels":["automation","lean-squad"],"max":2,"max_patch_size":1024,"protected_files":["package.json","bun.lockb","bunfig.toml","deno.json","deno.jsonc","deno.lock","global.json","NuGet.Config","Directory.Packages.props","mix.exs","mix.lock","go.mod","go.sum","stack.yaml","stack.yaml.lock","pom.xml","build.gradle","build.gradle.kts","settings.gradle","settings.gradle.kts","gradle.properties","package-lock.json","yarn.lock","pnpm-lock.yaml","npm-shrinkwrap.json","requirements.txt","Pipfile","Pipfile.lock","pyproject.toml","setup.py","setup.cfg","Gemfile","Gemfile.lock","uv.lock","CODEOWNERS"],"protected_files_policy":"allowed","protected_path_prefixes":[".github/",".agents/"],"title_prefix":"[Lean Squad] "},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"true"},"push_repo_memory":{"memories":[{"dir":"/tmp/gh-aw/repo-memory/default","id":"default","max_file_count":100,"max_file_size":10240,"max_patch_size":102400}]},"push_to_pull_request_branch":{"if_no_changes":"warn","max":4,"max_patch_size":1024,"protected_files":["package.json","bun.lockb","bunfig.toml","deno.json","deno.jsonc","deno.lock","global.json","NuGet.Config","Directory.Packages.props","mix.exs","mix.lock","go.mod","go.sum","stack.yaml","stack.yaml.lock","pom.xml","build.gradle","build.gradle.kts","settings.gradle","settings.gradle.kts","gradle.properties","package-lock.json","yarn.lock","pnpm-lock.yaml","npm-shrinkwrap.json","requirements.txt","Pipfile","Pipfile.lock","pyproject.toml","setup.py","setup.cfg","Gemfile","Gemfile.lock","uv.lock","CODEOWNERS"],"protected_files_policy":"allowed","protected_path_prefixes":[".github/",".agents/"],"target":"*","title_prefix":"[Lean Squad] "},"report_incomplete":{},"update_issue":{"allow_body":true,"max":1,"target":"*","title_prefix":"[Lean Squad] "}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_887fe100cf9c5932_EOF
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_e927f4c03c28c635_EOF'
+          {"create_issue":{"assignees":["copilot"],"max":1},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"true"},"report_incomplete":{}}
+          GH_AW_SAFE_OUTPUTS_CONFIG_e927f4c03c28c635_EOF
       - name: Write Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
             {
               "description_suffixes": {
-                "add_comment": " CONSTRAINTS: Maximum 3 comment(s) can be added. Target: *. Supports reply_to_id for discussion threading.",
-                "create_issue": " CONSTRAINTS: Maximum 4 issue(s) can be created. Title will be prefixed with \"[Lean Squad] \". Labels [\"automation\" \"lean-squad\"] will be automatically added.",
-                "create_pull_request": " CONSTRAINTS: Maximum 2 pull request(s) can be created. Title will be prefixed with \"[Lean Squad] \". Labels [\"automation\" \"lean-squad\"] will be automatically added.",
-                "push_to_pull_request_branch": " CONSTRAINTS: Maximum 4 push(es) can be made. The target pull request title must start with \"[Lean Squad] \".",
-                "update_issue": " CONSTRAINTS: Maximum 1 issue(s) can be updated. Target: *. The target issue title must start with \"[Lean Squad] \"."
+                "create_issue": " CONSTRAINTS: Maximum 1 issue(s) can be created. Assignees [\"copilot\"] will be automatically assigned."
               },
               "repo_params": {},
               "dynamic_tools": []
             }
           GH_AW_VALIDATION_JSON: |
             {
-              "add_comment": {
-                "defaultMax": 1,
-                "fields": {
-                  "body": {
-                    "required": true,
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 65000
-                  },
-                  "item_number": {
-                    "issueOrPRNumber": true
-                  },
-                  "reply_to_id": {
-                    "type": "string",
-                    "maxLength": 256
-                  },
-                  "repo": {
-                    "type": "string",
-                    "maxLength": 256
-                  }
-                }
-              },
               "create_issue": {
                 "defaultMax": 1,
                 "fields": {
@@ -601,42 +427,6 @@ jobs:
                   },
                   "temporary_id": {
                     "type": "string"
-                  },
-                  "title": {
-                    "required": true,
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 128
-                  }
-                }
-              },
-              "create_pull_request": {
-                "defaultMax": 1,
-                "fields": {
-                  "body": {
-                    "required": true,
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 65000
-                  },
-                  "branch": {
-                    "required": true,
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 256
-                  },
-                  "draft": {
-                    "type": "boolean"
-                  },
-                  "labels": {
-                    "type": "array",
-                    "itemType": "string",
-                    "itemSanitize": true,
-                    "itemMaxLength": 128
-                  },
-                  "repo": {
-                    "type": "string",
-                    "maxLength": 256
                   },
                   "title": {
                     "required": true,
@@ -703,26 +493,6 @@ jobs:
                   }
                 }
               },
-              "push_to_pull_request_branch": {
-                "defaultMax": 1,
-                "fields": {
-                  "branch": {
-                    "required": true,
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 256
-                  },
-                  "message": {
-                    "required": true,
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 65000
-                  },
-                  "pull_request_number": {
-                    "issueOrPRNumber": true
-                  }
-                }
-              },
               "report_incomplete": {
                 "defaultMax": 5,
                 "fields": {
@@ -738,60 +508,6 @@ jobs:
                     "maxLength": 1024
                   }
                 }
-              },
-              "update_issue": {
-                "defaultMax": 1,
-                "fields": {
-                  "assignees": {
-                    "type": "array",
-                    "itemType": "string",
-                    "itemSanitize": true,
-                    "itemMaxLength": 39
-                  },
-                  "body": {
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 65000
-                  },
-                  "issue_number": {
-                    "issueOrPRNumber": true
-                  },
-                  "labels": {
-                    "type": "array",
-                    "itemType": "string",
-                    "itemSanitize": true,
-                    "itemMaxLength": 128
-                  },
-                  "milestone": {
-                    "optionalPositiveInteger": true
-                  },
-                  "operation": {
-                    "type": "string",
-                    "enum": [
-                      "replace",
-                      "append",
-                      "prepend",
-                      "replace-island"
-                    ]
-                  },
-                  "repo": {
-                    "type": "string",
-                    "maxLength": 256
-                  },
-                  "status": {
-                    "type": "string",
-                    "enum": [
-                      "open",
-                      "closed"
-                    ]
-                  },
-                  "title": {
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 128
-                  }
-                },
-                "customValidation": "requiresOneOf:status,title,body"
               }
             }
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
@@ -869,7 +585,7 @@ jobs:
           export MCP_GATEWAY_DOCKER_COMMAND='docker run -i --rm --network host -v /var/run/docker.sock:/var/run/docker.sock -e MCP_GATEWAY_PORT -e MCP_GATEWAY_DOMAIN -e MCP_GATEWAY_API_KEY -e MCP_GATEWAY_PAYLOAD_DIR -e MCP_GATEWAY_PAYLOAD_SIZE_THRESHOLD -e DEBUG -e MCP_GATEWAY_LOG_DIR -e GH_AW_MCP_LOG_DIR -e GH_AW_SAFE_OUTPUTS -e GH_AW_SAFE_OUTPUTS_CONFIG_PATH -e GH_AW_SAFE_OUTPUTS_TOOLS_PATH -e GH_AW_ASSETS_BRANCH -e GH_AW_ASSETS_MAX_SIZE_KB -e GH_AW_ASSETS_ALLOWED_EXTS -e DEFAULT_BRANCH -e GITHUB_MCP_SERVER_TOKEN -e GITHUB_MCP_GUARD_MIN_INTEGRITY -e GITHUB_MCP_GUARD_REPOS -e GITHUB_REPOSITORY -e GITHUB_SERVER_URL -e GITHUB_SHA -e GITHUB_WORKSPACE -e GITHUB_TOKEN -e GITHUB_RUN_ID -e GITHUB_RUN_NUMBER -e GITHUB_RUN_ATTEMPT -e GITHUB_JOB -e GITHUB_ACTION -e GITHUB_EVENT_NAME -e GITHUB_EVENT_PATH -e GITHUB_ACTOR -e GITHUB_ACTOR_ID -e GITHUB_TRIGGERING_ACTOR -e GITHUB_WORKFLOW -e GITHUB_WORKFLOW_REF -e GITHUB_WORKFLOW_SHA -e GITHUB_REF -e GITHUB_REF_NAME -e GITHUB_REF_TYPE -e GITHUB_HEAD_REF -e GITHUB_BASE_REF -e GH_AW_SAFE_OUTPUTS_PORT -e GH_AW_SAFE_OUTPUTS_API_KEY -v /tmp/gh-aw/mcp-payloads:/tmp/gh-aw/mcp-payloads:rw -v /opt:/opt:ro -v /tmp:/tmp:rw -v '"${GITHUB_WORKSPACE}"':'"${GITHUB_WORKSPACE}"':rw ghcr.io/github/gh-aw-mcpg:v0.2.19'
           
           mkdir -p /home/runner/.copilot
-          cat << GH_AW_MCP_CONFIG_31e78a773219ac2f_EOF | bash "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.sh"
+          cat << GH_AW_MCP_CONFIG_37d1b256f8e7f157_EOF | bash "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.sh"
           {
             "mcpServers": {
               "github": {
@@ -910,7 +626,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_31e78a773219ac2f_EOF
+          GH_AW_MCP_CONFIG_37d1b256f8e7f157_EOF
       - name: Download activation artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -922,14 +638,38 @@ jobs:
       - name: Execute GitHub Copilot CLI
         id: agentic_execution
         # Copilot CLI tool arguments (sorted):
-        timeout-minutes: 120
+        # --allow-tool github
+        # --allow-tool safeoutputs
+        # --allow-tool shell(cat *)
+        # --allow-tool shell(cat)
+        # --allow-tool shell(date)
+        # --allow-tool shell(echo)
+        # --allow-tool shell(git ls-tree -r --name-only HEAD | grep -E * | grep -vE * | xargs wc -l 2>/dev/null)
+        # --allow-tool shell(git ls-tree -r --name-only HEAD | grep -E * | xargs wc -l 2>/dev/null)
+        # --allow-tool shell(git ls-tree -r --name-only HEAD)
+        # --allow-tool shell(git ls-tree -r -l --full-name HEAD)
+        # --allow-tool shell(grep -n * *)
+        # --allow-tool shell(grep)
+        # --allow-tool shell(head -n * *)
+        # --allow-tool shell(head)
+        # --allow-tool shell(ls)
+        # --allow-tool shell(pwd)
+        # --allow-tool shell(sort *)
+        # --allow-tool shell(sort)
+        # --allow-tool shell(tail)
+        # --allow-tool shell(uniq)
+        # --allow-tool shell(wc -l *)
+        # --allow-tool shell(wc)
+        # --allow-tool shell(yq)
+        # --allow-tool write
+        timeout-minutes: 20
         run: |
           set -o pipefail
           touch /tmp/gh-aw/agent-step-summary.md
           (umask 177 && touch /tmp/gh-aw/agent-stdio.log)
           # shellcheck disable=SC1003
-          sudo -E awf --container-workdir "${GITHUB_WORKSPACE}" --mount "${RUNNER_TEMP}/gh-aw:${RUNNER_TEMP}/gh-aw:ro" --mount "${RUNNER_TEMP}/gh-aw:/host${RUNNER_TEMP}/gh-aw:ro" --env-all --exclude-env COPILOT_GITHUB_TOKEN --exclude-env GITHUB_MCP_SERVER_TOKEN --exclude-env MCP_GATEWAY_API_KEY --allow-domains '*.githubusercontent.com,api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,api.snapcraft.io,archive.ubuntu.com,azure.archive.ubuntu.com,codeload.github.com,crl.geotrust.com,crl.globalsign.com,crl.identrust.com,crl.sectigo.com,crl.thawte.com,crl.usertrust.com,crl.verisign.com,crl3.digicert.com,crl4.digicert.com,crls.ssl.com,docs.github.com,github-cloud.githubusercontent.com,github-cloud.s3.amazonaws.com,github.blog,github.com,github.githubassets.com,host.docker.internal,json-schema.org,json.schemastore.org,keyserver.ubuntu.com,lean-lang.org,leanlang.org,leanprover-community.github.io,lfs.github.com,objects.githubusercontent.com,ocsp.digicert.com,ocsp.geotrust.com,ocsp.globalsign.com,ocsp.identrust.com,ocsp.sectigo.com,ocsp.ssl.com,ocsp.thawte.com,ocsp.usertrust.com,ocsp.verisign.com,packagecloud.io,packages.cloud.google.com,packages.microsoft.com,ppa.launchpad.net,raw.githubusercontent.com,registry.npmjs.org,s.symcb.com,s.symcd.com,security.ubuntu.com,telemetry.enterprise.githubcopilot.com,ts-crl.ws.symantec.com,ts-ocsp.ws.symantec.com,www.googleapis.com' --log-level info --proxy-logs-dir /tmp/gh-aw/sandbox/firewall/logs --audit-dir /tmp/gh-aw/sandbox/firewall/audit --enable-host-access --image-tag 0.25.20 --skip-pull --enable-api-proxy \
-            -- /bin/bash -c 'node ${RUNNER_TEMP}/gh-aw/actions/copilot_driver.cjs /usr/local/bin/copilot --add-dir /tmp/gh-aw/ --log-level all --log-dir /tmp/gh-aw/sandbox/agent/logs/ --disable-builtin-mcps --no-ask-user --allow-all-tools --allow-all-paths --add-dir "${GITHUB_WORKSPACE}" --prompt "$(cat /tmp/gh-aw/aw-prompts/prompt.txt)"' 2>&1 | tee -a /tmp/gh-aw/agent-stdio.log
+          sudo -E awf --container-workdir "${GITHUB_WORKSPACE}" --mount "${RUNNER_TEMP}/gh-aw:${RUNNER_TEMP}/gh-aw:ro" --mount "${RUNNER_TEMP}/gh-aw:/host${RUNNER_TEMP}/gh-aw:ro" --env-all --exclude-env COPILOT_GITHUB_TOKEN --exclude-env GITHUB_MCP_SERVER_TOKEN --exclude-env MCP_GATEWAY_API_KEY --allow-domains api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,api.snapcraft.io,archive.ubuntu.com,azure.archive.ubuntu.com,crl.geotrust.com,crl.globalsign.com,crl.identrust.com,crl.sectigo.com,crl.thawte.com,crl.usertrust.com,crl.verisign.com,crl3.digicert.com,crl4.digicert.com,crls.ssl.com,github.com,host.docker.internal,json-schema.org,json.schemastore.org,keyserver.ubuntu.com,ocsp.digicert.com,ocsp.geotrust.com,ocsp.globalsign.com,ocsp.identrust.com,ocsp.sectigo.com,ocsp.ssl.com,ocsp.thawte.com,ocsp.usertrust.com,ocsp.verisign.com,packagecloud.io,packages.cloud.google.com,packages.microsoft.com,ppa.launchpad.net,raw.githubusercontent.com,registry.npmjs.org,s.symcb.com,s.symcd.com,security.ubuntu.com,telemetry.enterprise.githubcopilot.com,ts-crl.ws.symantec.com,ts-ocsp.ws.symantec.com,www.googleapis.com --log-level info --proxy-logs-dir /tmp/gh-aw/sandbox/firewall/logs --audit-dir /tmp/gh-aw/sandbox/firewall/audit --enable-host-access --image-tag 0.25.20 --skip-pull --enable-api-proxy \
+            -- /bin/bash -c 'node ${RUNNER_TEMP}/gh-aw/actions/copilot_driver.cjs /usr/local/bin/copilot --add-dir /tmp/gh-aw/ --log-level all --log-dir /tmp/gh-aw/sandbox/agent/logs/ --disable-builtin-mcps --no-ask-user --allow-tool github --allow-tool safeoutputs --allow-tool '\''shell(cat *)'\'' --allow-tool '\''shell(cat)'\'' --allow-tool '\''shell(date)'\'' --allow-tool '\''shell(echo)'\'' --allow-tool '\''shell(git ls-tree -r --name-only HEAD | grep -E * | grep -vE * | xargs wc -l 2>/dev/null)'\'' --allow-tool '\''shell(git ls-tree -r --name-only HEAD | grep -E * | xargs wc -l 2>/dev/null)'\'' --allow-tool '\''shell(git ls-tree -r --name-only HEAD)'\'' --allow-tool '\''shell(git ls-tree -r -l --full-name HEAD)'\'' --allow-tool '\''shell(grep -n * *)'\'' --allow-tool '\''shell(grep)'\'' --allow-tool '\''shell(head -n * *)'\'' --allow-tool '\''shell(head)'\'' --allow-tool '\''shell(ls)'\'' --allow-tool '\''shell(pwd)'\'' --allow-tool '\''shell(sort *)'\'' --allow-tool '\''shell(sort)'\'' --allow-tool '\''shell(tail)'\'' --allow-tool '\''shell(uniq)'\'' --allow-tool '\''shell(wc -l *)'\'' --allow-tool '\''shell(wc)'\'' --allow-tool '\''shell(yq)'\'' --allow-tool write --allow-all-paths --add-dir "${GITHUB_WORKSPACE}" --prompt "$(cat /tmp/gh-aw/aw-prompts/prompt.txt)"' 2>&1 | tee -a /tmp/gh-aw/agent-stdio.log
         env:
           COPILOT_AGENT_RUNNER_TYPE: STANDALONE
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
@@ -1014,10 +754,9 @@ jobs:
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         env:
           GH_AW_SAFE_OUTPUTS: ${{ steps.set-runtime-paths.outputs.GH_AW_SAFE_OUTPUTS }}
-          GH_AW_ALLOWED_DOMAINS: "*.githubusercontent.com,api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,api.snapcraft.io,archive.ubuntu.com,azure.archive.ubuntu.com,codeload.github.com,crl.geotrust.com,crl.globalsign.com,crl.identrust.com,crl.sectigo.com,crl.thawte.com,crl.usertrust.com,crl.verisign.com,crl3.digicert.com,crl4.digicert.com,crls.ssl.com,docs.github.com,github-cloud.githubusercontent.com,github-cloud.s3.amazonaws.com,github.blog,github.com,github.githubassets.com,host.docker.internal,json-schema.org,json.schemastore.org,keyserver.ubuntu.com,lean-lang.org,leanlang.org,leanprover-community.github.io,lfs.github.com,objects.githubusercontent.com,ocsp.digicert.com,ocsp.geotrust.com,ocsp.globalsign.com,ocsp.identrust.com,ocsp.sectigo.com,ocsp.ssl.com,ocsp.thawte.com,ocsp.usertrust.com,ocsp.verisign.com,packagecloud.io,packages.cloud.google.com,packages.microsoft.com,ppa.launchpad.net,raw.githubusercontent.com,registry.npmjs.org,s.symcb.com,s.symcd.com,security.ubuntu.com,telemetry.enterprise.githubcopilot.com,ts-crl.ws.symantec.com,ts-ocsp.ws.symantec.com,www.googleapis.com"
+          GH_AW_ALLOWED_DOMAINS: "api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,api.snapcraft.io,archive.ubuntu.com,azure.archive.ubuntu.com,crl.geotrust.com,crl.globalsign.com,crl.identrust.com,crl.sectigo.com,crl.thawte.com,crl.usertrust.com,crl.verisign.com,crl3.digicert.com,crl4.digicert.com,crls.ssl.com,github.com,host.docker.internal,json-schema.org,json.schemastore.org,keyserver.ubuntu.com,ocsp.digicert.com,ocsp.geotrust.com,ocsp.globalsign.com,ocsp.identrust.com,ocsp.sectigo.com,ocsp.ssl.com,ocsp.thawte.com,ocsp.usertrust.com,ocsp.verisign.com,packagecloud.io,packages.cloud.google.com,packages.microsoft.com,ppa.launchpad.net,raw.githubusercontent.com,registry.npmjs.org,s.symcb.com,s.symcd.com,security.ubuntu.com,telemetry.enterprise.githubcopilot.com,ts-crl.ws.symantec.com,ts-ocsp.ws.symantec.com,www.googleapis.com"
           GITHUB_SERVER_URL: ${{ github.server_url }}
           GITHUB_API_URL: ${{ github.api_url }}
-          GH_AW_COMMAND: lean-squad
         with:
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
@@ -1076,15 +815,6 @@ jobs:
           if [ ! -f /tmp/gh-aw/agent_output.json ]; then
             echo '{"items":[]}' > /tmp/gh-aw/agent_output.json
           fi
-      # Upload repo memory as artifacts for push job
-      - name: Upload repo-memory artifact (default)
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: repo-memory-default
-          path: /tmp/gh-aw/repo-memory/default
-          retention-days: 1
-          if-no-files-found: ignore
       - name: Upload agent artifacts
         if: always()
         continue-on-error: true
@@ -1113,19 +843,16 @@ jobs:
       - activation
       - agent
       - detection
-      - push_repo_memory
       - safe_outputs
     if: >
       always() && (needs.agent.result != 'skipped' || needs.activation.outputs.lockdown_check_failed == 'true' ||
       needs.activation.outputs.stale_lock_file_failed == 'true')
     runs-on: ubuntu-slim
     permissions:
-      contents: write
-      discussions: write
+      contents: read
       issues: write
-      pull-requests: write
     concurrency:
-      group: "gh-aw-conclusion-lean-squad"
+      group: "gh-aw-conclusion-daily-file-diet"
       cancel-in-progress: false
     outputs:
       incomplete_count: ${{ steps.report_incomplete.outputs.incomplete_count }}
@@ -1160,7 +887,8 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_NOOP_MAX: "1"
-          GH_AW_WORKFLOW_NAME: "Lean Squad"
+          GH_AW_WORKFLOW_NAME: "Daily File Diet"
+          GH_AW_TRACKER_ID: "daily-file-diet"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_NOOP_REPORT_AS_ISSUE: "true"
@@ -1176,7 +904,8 @@ jobs:
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Lean Squad"
+          GH_AW_WORKFLOW_NAME: "Daily File Diet"
+          GH_AW_TRACKER_ID: "daily-file-diet"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_DETECTION_CONCLUSION: ${{ needs.detection.outputs.detection_conclusion }}
           GH_AW_DETECTION_REASON: ${{ needs.detection.outputs.detection_reason }}
@@ -1193,7 +922,8 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_MISSING_TOOL_CREATE_ISSUE: "true"
-          GH_AW_WORKFLOW_NAME: "Lean Squad"
+          GH_AW_WORKFLOW_NAME: "Daily File Diet"
+          GH_AW_TRACKER_ID: "daily-file-diet"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1207,7 +937,8 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_REPORT_INCOMPLETE_CREATE_ISSUE: "true"
-          GH_AW_WORKFLOW_NAME: "Lean Squad"
+          GH_AW_WORKFLOW_NAME: "Daily File Diet"
+          GH_AW_TRACKER_ID: "daily-file-diet"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1221,10 +952,11 @@ jobs:
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Lean Squad"
+          GH_AW_WORKFLOW_NAME: "Daily File Diet"
+          GH_AW_TRACKER_ID: "daily-file-diet"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
-          GH_AW_WORKFLOW_ID: "lean-squad"
+          GH_AW_WORKFLOW_ID: "daily-file-diet"
           GH_AW_ENGINE_ID: "copilot"
           GH_AW_SECRET_VERIFICATION_RESULT: ${{ needs.activation.outputs.secret_verification_result }}
           GH_AW_CHECKOUT_PR_SUCCESS: ${{ needs.agent.outputs.checkout_pr_success }}
@@ -1232,44 +964,19 @@ jobs:
           GH_AW_MCP_POLICY_ERROR: ${{ needs.agent.outputs.mcp_policy_error }}
           GH_AW_AGENTIC_ENGINE_TIMEOUT: ${{ needs.agent.outputs.agentic_engine_timeout }}
           GH_AW_MODEL_NOT_SUPPORTED_ERROR: ${{ needs.agent.outputs.model_not_supported_error }}
-          GH_AW_CODE_PUSH_FAILURE_ERRORS: ${{ needs.safe_outputs.outputs.code_push_failure_errors }}
-          GH_AW_CODE_PUSH_FAILURE_COUNT: ${{ needs.safe_outputs.outputs.code_push_failure_count }}
+          GH_AW_ASSIGN_COPILOT_FAILURE_COUNT: ${{ needs.safe_outputs.outputs.assign_copilot_failure_count }}
+          GH_AW_ASSIGN_COPILOT_ERRORS: ${{ needs.safe_outputs.outputs.assign_copilot_errors }}
           GH_AW_LOCKDOWN_CHECK_FAILED: ${{ needs.activation.outputs.lockdown_check_failed }}
           GH_AW_STALE_LOCK_FILE_FAILED: ${{ needs.activation.outputs.stale_lock_file_failed }}
-          GH_AW_SAFE_OUTPUT_MESSAGES: "{\"footer\":\"\\u003e Generated by 📐 {workflow_name}, see [workflow run]({run_url}).\",\"runStarted\":\"{workflow_name} is processing {event_type}, see [workflow run]({run_url})...\",\"runSuccess\":\"✓ {workflow_name} completed successfully, see [workflow run]({run_url}).\",\"runFailure\":\"✗ {workflow_name} encountered {status}, see [workflow run]({run_url}).\"}"
-          GH_AW_PUSH_REPO_MEMORY_RESULT: ${{ needs.push_repo_memory.result }}
-          GH_AW_REPO_MEMORY_VALIDATION_FAILED_default: ${{ needs.push_repo_memory.outputs.validation_failed_default }}
-          GH_AW_REPO_MEMORY_VALIDATION_ERROR_default: ${{ needs.push_repo_memory.outputs.validation_error_default }}
-          GH_AW_REPO_MEMORY_PATCH_SIZE_EXCEEDED_default: ${{ needs.push_repo_memory.outputs.patch_size_exceeded_default }}
           GH_AW_GROUP_REPORTS: "false"
           GH_AW_FAILURE_REPORT_AS_ISSUE: "true"
-          GH_AW_TIMEOUT_MINUTES: "120"
+          GH_AW_TIMEOUT_MINUTES: "20"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
             setupGlobals(core, github, context, exec, io, getOctokit);
             const { main } = require('${{ runner.temp }}/gh-aw/actions/handle_agent_failure.cjs');
-            await main();
-      - name: Update reaction comment with completion status
-        id: conclusion
-        uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
-        env:
-          GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
-          GH_AW_COMMENT_ID: ${{ needs.activation.outputs.comment_id }}
-          GH_AW_COMMENT_REPO: ${{ needs.activation.outputs.comment_repo }}
-          GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          GH_AW_WORKFLOW_NAME: "Lean Squad"
-          GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
-          GH_AW_DETECTION_CONCLUSION: ${{ needs.detection.outputs.detection_conclusion }}
-          GH_AW_DETECTION_REASON: ${{ needs.detection.outputs.detection_reason }}
-          GH_AW_SAFE_OUTPUT_MESSAGES: "{\"footer\":\"\\u003e Generated by 📐 {workflow_name}, see [workflow run]({run_url}).\",\"runStarted\":\"{workflow_name} is processing {event_type}, see [workflow run]({run_url})...\",\"runSuccess\":\"✓ {workflow_name} completed successfully, see [workflow run]({run_url}).\",\"runFailure\":\"✗ {workflow_name} encountered {status}, see [workflow run]({run_url}).\"}"
-        with:
-          github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
-          script: |
-            const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
-            setupGlobals(core, github, context, exec, io, getOctokit);
-            const { main } = require('${{ runner.temp }}/gh-aw/actions/notify_comment_error.cjs');
             await main();
 
   detection:
@@ -1357,8 +1064,8 @@ jobs:
         if: always() && steps.detection_guard.outputs.run_detection == 'true'
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         env:
-          WORKFLOW_NAME: "Lean Squad"
-          WORKFLOW_DESCRIPTION: "Lean Squad: an optimistic multi-phase system that progressively applies\nLean 4 formal verification to your codebase, one target at a time.\nCan also be triggered on-demand via '/lean-squad <instructions>' to perform specific tasks.\n\nEach run selects tasks weighted to current FV progress:\n1. Research — survey codebase, identify FV-amenable targets, document approach\n2. Informal Spec Extraction — extract design intentions and informal contracts\n3. Formal Spec Writing — write Lean 4 type signatures and property statements\n4. Implementation Extraction — translate code to a Lean-verifiable functional model\n5. Proof Assistance — attempt proofs, find counterexamples, report bugs\n6. Correspondence Review — document how the Lean model corresponds to the source\n7. Proof Utility Critique — assess the value and coverage of what has been proven\n8. Implementation Correspondence Validation — write and run executable correspondence tests\n9. CI Automation — set up and maintain CI workflows that verify proofs on every PR\n10. Project Report — create and incrementally maintain REPORT.md with mermaid diagrams\n\nPhases are sequentially weighted: Task 1 dominates until research is done,\nthen Task 2 rises, and so on up to proofs. Each run builds on prior runs\n(assumes merged PRs). Notes, targets, choices, and progress live in repo-memory.\nOutputs are pull requests (specs, proofs) and issues (bugs, status)."
+          WORKFLOW_NAME: "Daily File Diet"
+          WORKFLOW_DESCRIPTION: "Analyzes source files daily to identify oversized files that exceed healthy size thresholds, creating actionable refactoring issues"
           HAS_PATCH: ${{ needs.agent.outputs.has_patch }}
         with:
           script: |
@@ -1430,11 +1137,10 @@ jobs:
             await main();
 
   pre_activation:
-    if: "(github.event_name == 'issues' || github.event_name == 'issue_comment' || github.event_name == 'pull_request' || github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' || github.event_name == 'discussion_comment') && (github.event_name == 'issues' && (startsWith(github.event.issue.body, '/lean-squad ') || startsWith(github.event.issue.body, '/lean-squad\n') || github.event.issue.body == '/lean-squad') || github.event_name == 'issue_comment' && (startsWith(github.event.comment.body, '/lean-squad ') || startsWith(github.event.comment.body, '/lean-squad\n') || github.event.comment.body == '/lean-squad') && github.event.issue.pull_request == null || github.event_name == 'issue_comment' && (startsWith(github.event.comment.body, '/lean-squad ') || startsWith(github.event.comment.body, '/lean-squad\n') || github.event.comment.body == '/lean-squad') && github.event.issue.pull_request != null || github.event_name == 'pull_request_review_comment' && (startsWith(github.event.comment.body, '/lean-squad ') || startsWith(github.event.comment.body, '/lean-squad\n') || github.event.comment.body == '/lean-squad') || github.event_name == 'pull_request' && (startsWith(github.event.pull_request.body, '/lean-squad ') || startsWith(github.event.pull_request.body, '/lean-squad\n') || github.event.pull_request.body == '/lean-squad') || github.event_name == 'discussion' && (startsWith(github.event.discussion.body, '/lean-squad ') || startsWith(github.event.discussion.body, '/lean-squad\n') || github.event.discussion.body == '/lean-squad') || github.event_name == 'discussion_comment' && (startsWith(github.event.comment.body, '/lean-squad ') || startsWith(github.event.comment.body, '/lean-squad\n') || github.event.comment.body == '/lean-squad')) || (!(github.event_name == 'issues')) && (!(github.event_name == 'issue_comment')) && (!(github.event_name == 'pull_request')) && (!(github.event_name == 'pull_request_review_comment')) && (!(github.event_name == 'discussion')) && (!(github.event_name == 'discussion_comment'))"
     runs-on: ubuntu-slim
     outputs:
-      activated: ${{ steps.check_membership.outputs.is_team_member == 'true' && steps.check_command_position.outputs.command_position_ok == 'true' }}
-      matched_command: ${{ steps.check_command_position.outputs.matched_command }}
+      activated: ${{ steps.check_membership.outputs.is_team_member == 'true' && steps.check_skip_if_match.outputs.skip_check_ok == 'true' }}
+      matched_command: ''
       setup-trace-id: ${{ steps.setup.outputs.trace-id }}
     steps:
       - name: Setup Scripts
@@ -1443,7 +1149,7 @@ jobs:
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
-      - name: Check team membership for command workflow
+      - name: Check team membership for workflow
         id: check_membership
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         env:
@@ -1455,89 +1161,18 @@ jobs:
             setupGlobals(core, github, context, exec, io, getOctokit);
             const { main } = require('${{ runner.temp }}/gh-aw/actions/check_membership.cjs');
             await main();
-      - name: Check command position
-        id: check_command_position
+      - name: Check skip-if-match query
+        id: check_skip_if_match
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         env:
-          GH_AW_COMMANDS: "[\"lean-squad\"]"
+          GH_AW_SKIP_QUERY: "is:issue is:open in:title \"[file-diet]\""
+          GH_AW_WORKFLOW_NAME: "Daily File Diet"
+          GH_AW_SKIP_MAX_MATCHES: "1"
         with:
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
             setupGlobals(core, github, context, exec, io, getOctokit);
-            const { main } = require('${{ runner.temp }}/gh-aw/actions/check_command_position.cjs');
-            await main();
-
-  push_repo_memory:
-    needs:
-      - activation
-      - agent
-      - detection
-    if: >
-      always() && (!cancelled()) && (needs.detection.result == 'success' || needs.detection.result == 'skipped') &&
-      needs.agent.result != 'skipped'
-    runs-on: ubuntu-slim
-    permissions:
-      contents: write
-    concurrency:
-      group: "push-repo-memory-${{ github.repository }}|memory/lean-squad"
-      cancel-in-progress: false
-    outputs:
-      patch_size_exceeded_default: ${{ steps.push_repo_memory_default.outputs.patch_size_exceeded }}
-      validation_error_default: ${{ steps.push_repo_memory_default.outputs.validation_error }}
-      validation_failed_default: ${{ steps.push_repo_memory_default.outputs.validation_failed }}
-    steps:
-      - name: Setup Scripts
-        id: setup
-        uses: github/gh-aw-actions/setup@ba90f2186d7ad780ec640f364005fa24e797b360 # v0.68.3
-        with:
-          destination: ${{ runner.temp }}/gh-aw/actions
-          job-name: ${{ github.job }}
-          trace-id: ${{ needs.activation.outputs.setup-trace-id }}
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-          sparse-checkout: .
-      - name: Configure Git credentials
-        env:
-          REPO_NAME: ${{ github.repository }}
-          SERVER_URL: ${{ github.server_url }}
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-          git config --global am.keepcr true
-          # Re-authenticate git with GitHub token
-          SERVER_URL_STRIPPED="${SERVER_URL#https://}"
-          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@${SERVER_URL_STRIPPED}/${REPO_NAME}.git"
-          echo "Git configured with standard GitHub Actions identity"
-      - name: Download repo-memory artifact (default)
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        continue-on-error: true
-        with:
-          name: repo-memory-default
-          path: /tmp/gh-aw/repo-memory/default
-      - name: Push repo-memory changes (default)
-        id: push_repo_memory_default
-        if: always()
-        uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
-          GITHUB_SERVER_URL: ${{ github.server_url }}
-          ARTIFACT_DIR: /tmp/gh-aw/repo-memory/default
-          MEMORY_ID: default
-          TARGET_REPO: ${{ github.repository }}
-          BRANCH_NAME: memory/lean-squad
-          MAX_FILE_SIZE: 10240
-          MAX_FILE_COUNT: 100
-          MAX_PATCH_SIZE: 102400
-          ALLOWED_EXTENSIONS: '[]'
-        with:
-          script: |
-            const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
-            setupGlobals(core, github, context, exec, io, getOctokit);
-            const { main } = require('${{ runner.temp }}/gh-aw/actions/push_repo_memory.cjs');
+            const { main } = require('${{ runner.temp }}/gh-aw/actions/check_skip_if_match.cjs');
             await main();
 
   safe_outputs:
@@ -1548,36 +1183,30 @@ jobs:
     if: (!cancelled()) && needs.agent.result != 'skipped' && needs.detection.result == 'success'
     runs-on: ubuntu-slim
     permissions:
-      contents: write
-      discussions: write
+      contents: read
       issues: write
-      pull-requests: write
     timeout-minutes: 15
     env:
-      GH_AW_CALLER_WORKFLOW_ID: "${{ github.repository }}/lean-squad"
+      GH_AW_CALLER_WORKFLOW_ID: "${{ github.repository }}/daily-file-diet"
       GH_AW_DETECTION_CONCLUSION: ${{ needs.detection.outputs.detection_conclusion }}
       GH_AW_DETECTION_REASON: ${{ needs.detection.outputs.detection_reason }}
       GH_AW_EFFECTIVE_TOKENS: ${{ needs.agent.outputs.effective_tokens }}
       GH_AW_ENGINE_ID: "copilot"
       GH_AW_ENGINE_MODEL: ${{ needs.agent.outputs.model }}
-      GH_AW_SAFE_OUTPUT_MESSAGES: "{\"footer\":\"\\u003e Generated by 📐 {workflow_name}, see [workflow run]({run_url}).\",\"runStarted\":\"{workflow_name} is processing {event_type}, see [workflow run]({run_url})...\",\"runSuccess\":\"✓ {workflow_name} completed successfully, see [workflow run]({run_url}).\",\"runFailure\":\"✗ {workflow_name} encountered {status}, see [workflow run]({run_url}).\"}"
-      GH_AW_WORKFLOW_ID: "lean-squad"
-      GH_AW_WORKFLOW_NAME: "Lean Squad"
+      GH_AW_TRACKER_ID: "daily-file-diet"
+      GH_AW_WORKFLOW_ID: "daily-file-diet"
+      GH_AW_WORKFLOW_NAME: "Daily File Diet"
     outputs:
+      assign_copilot_errors: ${{ steps.assign_copilot_to_created_issues.outputs.assign_copilot_errors }}
+      assign_copilot_failure_count: ${{ steps.assign_copilot_to_created_issues.outputs.assign_copilot_failure_count }}
       code_push_failure_count: ${{ steps.process_safe_outputs.outputs.code_push_failure_count }}
       code_push_failure_errors: ${{ steps.process_safe_outputs.outputs.code_push_failure_errors }}
-      comment_id: ${{ steps.process_safe_outputs.outputs.comment_id }}
-      comment_url: ${{ steps.process_safe_outputs.outputs.comment_url }}
       create_discussion_error_count: ${{ steps.process_safe_outputs.outputs.create_discussion_error_count }}
       create_discussion_errors: ${{ steps.process_safe_outputs.outputs.create_discussion_errors }}
       created_issue_number: ${{ steps.process_safe_outputs.outputs.created_issue_number }}
       created_issue_url: ${{ steps.process_safe_outputs.outputs.created_issue_url }}
-      created_pr_number: ${{ steps.process_safe_outputs.outputs.created_pr_number }}
-      created_pr_url: ${{ steps.process_safe_outputs.outputs.created_pr_url }}
       process_safe_outputs_processed_count: ${{ steps.process_safe_outputs.outputs.processed_count }}
       process_safe_outputs_temporary_id_map: ${{ steps.process_safe_outputs.outputs.temporary_id_map }}
-      push_commit_sha: ${{ steps.process_safe_outputs.outputs.push_commit_sha }}
-      push_commit_url: ${{ steps.process_safe_outputs.outputs.push_commit_url }}
     steps:
       - name: Setup Scripts
         id: setup
@@ -1600,34 +1229,6 @@ jobs:
           mkdir -p /tmp/gh-aw/
           find "/tmp/gh-aw/" -type f -print
           echo "GH_AW_AGENT_OUTPUT=/tmp/gh-aw/agent_output.json" >> "$GITHUB_OUTPUT"
-      - name: Download patch artifact
-        continue-on-error: true
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: agent
-          path: /tmp/gh-aw/
-      - name: Checkout repository
-        if: (!cancelled()) && needs.agent.result != 'skipped' && contains(needs.agent.outputs.output_types, 'create_pull_request') || (!cancelled()) && needs.agent.result != 'skipped' && contains(needs.agent.outputs.output_types, 'push_to_pull_request_branch')
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          ref: ${{ github.base_ref || github.event.pull_request.base.ref || github.ref_name || github.event.repository.default_branch }}
-          token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
-          persist-credentials: false
-          fetch-depth: 1
-      - name: Configure Git credentials
-        if: (!cancelled()) && needs.agent.result != 'skipped' && contains(needs.agent.outputs.output_types, 'create_pull_request') || (!cancelled()) && needs.agent.result != 'skipped' && contains(needs.agent.outputs.output_types, 'push_to_pull_request_branch')
-        env:
-          REPO_NAME: ${{ github.repository }}
-          SERVER_URL: ${{ github.server_url }}
-          GIT_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-          git config --global am.keepcr true
-          # Re-authenticate git with GitHub token
-          SERVER_URL_STRIPPED="${SERVER_URL#https://}"
-          git remote set-url origin "https://x-access-token:${GIT_TOKEN}@${SERVER_URL_STRIPPED}/${REPO_NAME}.git"
-          echo "Git configured with standard GitHub Actions identity"
       - name: Configure GH_HOST for enterprise compatibility
         id: ghes-host-config
         shell: bash
@@ -1642,17 +1243,32 @@ jobs:
         uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
-          GH_AW_ALLOWED_DOMAINS: "*.githubusercontent.com,api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,api.snapcraft.io,archive.ubuntu.com,azure.archive.ubuntu.com,codeload.github.com,crl.geotrust.com,crl.globalsign.com,crl.identrust.com,crl.sectigo.com,crl.thawte.com,crl.usertrust.com,crl.verisign.com,crl3.digicert.com,crl4.digicert.com,crls.ssl.com,docs.github.com,github-cloud.githubusercontent.com,github-cloud.s3.amazonaws.com,github.blog,github.com,github.githubassets.com,host.docker.internal,json-schema.org,json.schemastore.org,keyserver.ubuntu.com,lean-lang.org,leanlang.org,leanprover-community.github.io,lfs.github.com,objects.githubusercontent.com,ocsp.digicert.com,ocsp.geotrust.com,ocsp.globalsign.com,ocsp.identrust.com,ocsp.sectigo.com,ocsp.ssl.com,ocsp.thawte.com,ocsp.usertrust.com,ocsp.verisign.com,packagecloud.io,packages.cloud.google.com,packages.microsoft.com,ppa.launchpad.net,raw.githubusercontent.com,registry.npmjs.org,s.symcb.com,s.symcd.com,security.ubuntu.com,telemetry.enterprise.githubcopilot.com,ts-crl.ws.symantec.com,ts-ocsp.ws.symantec.com,www.googleapis.com"
+          GH_AW_ALLOWED_DOMAINS: "api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,api.snapcraft.io,archive.ubuntu.com,azure.archive.ubuntu.com,crl.geotrust.com,crl.globalsign.com,crl.identrust.com,crl.sectigo.com,crl.thawte.com,crl.usertrust.com,crl.verisign.com,crl3.digicert.com,crl4.digicert.com,crls.ssl.com,github.com,host.docker.internal,json-schema.org,json.schemastore.org,keyserver.ubuntu.com,ocsp.digicert.com,ocsp.geotrust.com,ocsp.globalsign.com,ocsp.identrust.com,ocsp.sectigo.com,ocsp.ssl.com,ocsp.thawte.com,ocsp.usertrust.com,ocsp.verisign.com,packagecloud.io,packages.cloud.google.com,packages.microsoft.com,ppa.launchpad.net,raw.githubusercontent.com,registry.npmjs.org,s.symcb.com,s.symcd.com,security.ubuntu.com,telemetry.enterprise.githubcopilot.com,ts-crl.ws.symantec.com,ts-ocsp.ws.symantec.com,www.googleapis.com"
           GITHUB_SERVER_URL: ${{ github.server_url }}
           GITHUB_API_URL: ${{ github.api_url }}
-          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"add_comment\":{\"max\":3,\"target\":\"*\"},\"create_issue\":{\"labels\":[\"automation\",\"lean-squad\"],\"max\":4,\"title_prefix\":\"[Lean Squad] \"},\"create_pull_request\":{\"draft\":false,\"labels\":[\"automation\",\"lean-squad\"],\"max\":2,\"max_patch_size\":1024,\"protected_files\":[\"package.json\",\"bun.lockb\",\"bunfig.toml\",\"deno.json\",\"deno.jsonc\",\"deno.lock\",\"global.json\",\"NuGet.Config\",\"Directory.Packages.props\",\"mix.exs\",\"mix.lock\",\"go.mod\",\"go.sum\",\"stack.yaml\",\"stack.yaml.lock\",\"pom.xml\",\"build.gradle\",\"build.gradle.kts\",\"settings.gradle\",\"settings.gradle.kts\",\"gradle.properties\",\"package-lock.json\",\"yarn.lock\",\"pnpm-lock.yaml\",\"npm-shrinkwrap.json\",\"requirements.txt\",\"Pipfile\",\"Pipfile.lock\",\"pyproject.toml\",\"setup.py\",\"setup.cfg\",\"Gemfile\",\"Gemfile.lock\",\"uv.lock\",\"CODEOWNERS\",\"AGENTS.md\"],\"protected_files_policy\":\"allowed\",\"protected_path_prefixes\":[\".github/\",\".agents/\"],\"title_prefix\":\"[Lean Squad] \"},\"create_report_incomplete_issue\":{},\"missing_data\":{},\"missing_tool\":{},\"noop\":{\"max\":1,\"report-as-issue\":\"true\"},\"push_to_pull_request_branch\":{\"if_no_changes\":\"warn\",\"max\":4,\"max_patch_size\":1024,\"protected_files\":[\"package.json\",\"bun.lockb\",\"bunfig.toml\",\"deno.json\",\"deno.jsonc\",\"deno.lock\",\"global.json\",\"NuGet.Config\",\"Directory.Packages.props\",\"mix.exs\",\"mix.lock\",\"go.mod\",\"go.sum\",\"stack.yaml\",\"stack.yaml.lock\",\"pom.xml\",\"build.gradle\",\"build.gradle.kts\",\"settings.gradle\",\"settings.gradle.kts\",\"gradle.properties\",\"package-lock.json\",\"yarn.lock\",\"pnpm-lock.yaml\",\"npm-shrinkwrap.json\",\"requirements.txt\",\"Pipfile\",\"Pipfile.lock\",\"pyproject.toml\",\"setup.py\",\"setup.cfg\",\"Gemfile\",\"Gemfile.lock\",\"uv.lock\",\"CODEOWNERS\",\"AGENTS.md\"],\"protected_files_policy\":\"allowed\",\"protected_path_prefixes\":[\".github/\",\".agents/\"],\"target\":\"*\",\"title_prefix\":\"[Lean Squad] \"},\"report_incomplete\":{},\"update_issue\":{\"allow_body\":true,\"max\":1,\"target\":\"*\",\"title_prefix\":\"[Lean Squad] \"}}"
-          GH_AW_CI_TRIGGER_TOKEN: ${{ secrets.GH_AW_CI_TRIGGER_TOKEN }}
+          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"create_issue\":{\"assignees\":[\"copilot\"],\"max\":1},\"create_report_incomplete_issue\":{},\"missing_data\":{},\"missing_tool\":{},\"noop\":{\"max\":1,\"report-as-issue\":\"true\"},\"report_incomplete\":{}}"
+          GH_AW_ASSIGN_COPILOT: "true"
+          GH_AW_ASSIGN_TO_AGENT_TOKEN: ${{ secrets.GH_AW_AGENT_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
             setupGlobals(core, github, context, exec, io, getOctokit);
             const { main } = require('${{ runner.temp }}/gh-aw/actions/safe_output_handler_manager.cjs');
+            await main();
+      - name: Assign Copilot to created issues
+        id: assign_copilot_to_created_issues
+        if: steps.process_safe_outputs.outputs.issues_to_assign_copilot != ''
+        continue-on-error: true
+        uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
+        env:
+          GH_AW_ISSUES_TO_ASSIGN_COPILOT: ${{ steps.process_safe_outputs.outputs.issues_to_assign_copilot }}
+        with:
+          github-token: ${{ secrets.GH_AW_AGENT_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          script: |
+            const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
+            setupGlobals(core, github, context, exec, io, getOctokit);
+            const { main } = require('${{ runner.temp }}/gh-aw/actions/assign_copilot_to_created_issues.cjs');
             await main();
       - name: Upload Safe Outputs Items
         if: always()
