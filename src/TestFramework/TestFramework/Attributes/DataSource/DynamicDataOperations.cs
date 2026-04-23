@@ -170,5 +170,4 @@ internal static class DynamicDataOperations
         data = null;
         return false;
     }
-
 }
