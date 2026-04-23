@@ -26,15 +26,13 @@ tools:
   github:
     toolsets: [default]
   bash:
-    - "git ls-tree -r --name-only HEAD"
-    - "git ls-tree -r -l --full-name HEAD"
-    - "git ls-tree -r --name-only HEAD | grep -E * | grep -vE * | xargs wc -l 2>/dev/null"
-    - "git ls-tree -r --name-only HEAD | grep -E * | xargs wc -l 2>/dev/null"
-    - "wc -l *"
-    - "head -n * *"
-    - "grep -n * *"
-    - "sort *"
-    - "cat *"
+    - "git"
+    - "grep"
+    - "xargs"
+    - "wc"
+    - "head"
+    - "sort"
+    - "cat"
 
 timeout-minutes: 20
 ---

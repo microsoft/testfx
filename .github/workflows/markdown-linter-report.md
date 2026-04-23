@@ -22,9 +22,6 @@ safe-outputs:
 name: Markdown Linter
 timeout-minutes: 15
 
-imports:
-  - shared/reporting.md
-
 jobs:
   super_linter:
     runs-on: ubuntu-latest
@@ -83,7 +80,14 @@ tools:
   cache-memory: true
   edit:
   bash:
-    - "*"
+    - "cat"
+    - "grep"
+    - "sed"
+    - "awk"
+    - "wc"
+    - "head"
+    - "tail"
+    - "mkdir"
 ---
 
 # Markdown Quality Report
@@ -167,7 +171,7 @@ Use format: "Markdown Quality Report - [Date] - [X] issues found"
 - **Use proper formatting**: Make the issue easy to read and navigate
 - **If no errors found**: Call `noop` celebrating clean markdown
 
-**Important**: Always call exactly one safe-output tool before finishing (`create_issue` or `noop`).
+**Important**: Always call exactly one safe-output tool before finishing (`create-issue` or `noop`).
 
 ```json
 {"noop": {"message": "No action needed: [brief explanation of what was analyzed and why]"}}

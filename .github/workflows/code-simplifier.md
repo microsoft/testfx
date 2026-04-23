@@ -11,13 +11,14 @@ network:
   - defaults
   - dotnet
 
-permissions: read-all
+permissions:
+  contents: write
+  pull-requests: write
 
 tracker-id: code-simplifier
 
 imports:
   - shared/repo-build-setup.md
-  - shared/reporting.md
 
 safe-outputs:
   create-pull-request:
@@ -29,7 +30,8 @@ safe-outputs:
 tools:
   github:
     toolsets: [default]
-  bash: true
+  bash:
+    commands: [git, dotnet, date, grep, find, cat, head, tail, sed, mkdir]
   edit:
 
 timeout-minutes: 30

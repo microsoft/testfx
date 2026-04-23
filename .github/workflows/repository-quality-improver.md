@@ -13,7 +13,19 @@ permissions:
   pull-requests: read
 
 tools:
-  bash: ["*"]
+  bash:
+    - "git"
+    - "grep"
+    - "find"
+    - "cat"
+    - "head"
+    - "tail"
+    - "wc"
+    - "sort"
+    - "sed"
+    - "date"
+    - "mkdir"
+    - "dotnet"
   cache-memory:
     - id: focus-areas
       key: quality-focus-${{ github.workflow }}
