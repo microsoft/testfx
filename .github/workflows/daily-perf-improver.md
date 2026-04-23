@@ -15,11 +15,10 @@ on:
   workflow_dispatch:
   slash_command:
     name: perf-assist
+    events: [pull_request_comment]
   reaction: "eyes"
 
 timeout-minutes: 60
-
-permissions: read-all
 
 network:
   allowed:
@@ -31,7 +30,7 @@ imports:
 
 safe-outputs:
   add-comment:
-    max: 10
+    max: 3
     target: "*"
     hide-older-comments: true
   create-pull-request:

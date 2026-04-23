@@ -11,8 +11,6 @@ on:
 
 timeout-minutes: 60
 
-permissions: read-all
-
 network:
   allowed:
   - defaults
@@ -23,16 +21,20 @@ imports:
 
 safe-outputs:
   add-comment:
-    max: 10
+    max: 3
     target: "*"
     hide-older-comments: true
   create-pull-request:
     draft: true
     title-prefix: "[Efficiency Improver] "
     labels: [automation, efficiency, green-software]
+    max: 1
+    protected-files:
+      - .github/workflows/**
   push-to-pull-request-branch:
     target: "*"
     title-prefix: "[Efficiency Improver] "
+    max: 1
   create-issue:
     title-prefix: "[Efficiency Improver] "
     labels: [automation, efficiency, green-software]
@@ -286,14 +288,15 @@ Always do Task 7 (Update Monthly Activity Summary Issue) every run. In all comme
    - Look for production metrics or monitoring configs referenced in the repo
    - Identify the most energy-intensive code paths based on architecture analysis
    - Note which areas lack measurement coverage
-4. **Propose or implement infrastructure improvements**:
+4. **Propose infrastructure improvements**:
    - Add missing benchmarks for energy-critical code paths
    - Configure profiling tool integration
    - Create helper scripts for common efficiency investigations
    - Document how to run benchmarks and interpret results with an energy lens
-5. **Create PR or issue** for infrastructure work:
-   - For code changes: create draft PR with clear rationale and usage instructions
-   - For larger proposals: create issue outlining the plan and seeking maintainer input
+5. **Create issue only** for infrastructure work:
+   - Do not create PRs or commit infrastructure changes directly from this workflow
+   - Open an issue outlining the proposal, rationale, expected energy-measurement value, and any usage guidance
+   - Ask maintainers for input before any infrastructure implementation proceeds
 6. Update memory with:
    - Infrastructure gaps identified
    - Real-world priorities discovered (ranked by estimated energy impact)
