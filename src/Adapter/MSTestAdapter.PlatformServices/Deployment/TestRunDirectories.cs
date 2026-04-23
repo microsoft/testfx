@@ -49,9 +49,9 @@ internal sealed class TestRunDirectories
             ? Path.GetDirectoryName(firstTestSource)
             : null;
 
-        OutDirectory = !StringEx.IsNullOrEmpty(testSourceDirectory)
-            ? testSourceDirectory!
-            : Path.Combine(RootDeploymentDirectory, DeploymentOutDirectorySuffix);
+        OutDirectory = StringEx.IsNullOrEmpty(testSourceDirectory)
+            ? Path.Combine(RootDeploymentDirectory, DeploymentOutDirectorySuffix)
+            : testSourceDirectory;
 
         InMachineNameDirectory = Path.Combine(InDirectory, Environment.MachineName);
     }
