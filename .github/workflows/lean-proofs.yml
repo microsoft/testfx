@@ -1,0 +1,64 @@
+name: Lean Proofs
+
+# 🔬 Lean Squad — CI workflow for formal verification proofs.
+# Runs `lake build` to verify Lean 4 proofs in formal-verification/lean/.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - "formal-verification/lean/**"
+      - ".github/workflows/lean-proofs.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "formal-verification/lean/**"
+  workflow_dispatch:
+
+jobs:
+  lean-build:
+    name: Build Lean proofs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install elan (Lean version manager)
+        run: |
+          ELAN_VERSION="v3.1.0"
+          ELAN_TARGET="x86_64-unknown-linux-gnu"
+          ELAN_ARCHIVE="elan-${ELAN_TARGET}.tar.gz"
+          ELAN_BASE_URL="https://github.com/leanprover/elan/releases/download/${ELAN_VERSION}"
+          ELAN_TMP_DIR="$(mktemp -d)"
+
+          curl -sSfL "${ELAN_BASE_URL}/${ELAN_ARCHIVE}" -o "${ELAN_TMP_DIR}/${ELAN_ARCHIVE}"
+          curl -sSfL "${ELAN_BASE_URL}/${ELAN_ARCHIVE}.sha256" -o "${ELAN_TMP_DIR}/${ELAN_ARCHIVE}.sha256"
+          cd "${ELAN_TMP_DIR}"
+          sha256sum -c "${ELAN_ARCHIVE}.sha256"
+          tar -xzf "${ELAN_ARCHIVE}"
+          ./elan-init -y --default-toolchain leanprover/lean4:stable
+          rm -rf "${ELAN_TMP_DIR}"
+
+      - name: Add elan to PATH
+        run: echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Show Lean version
+        run: lean --version
+
+      - name: Cache Lean / Lake build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            formal-verification/lean/.lake
+            ~/.elan
+          key: lean-${{ runner.os }}-${{ hashFiles('formal-verification/lean/lakefile.toml', 'formal-verification/lean/lake-manifest.json') }}
+          restore-keys: |
+            lean-${{ runner.os }}-
+
+      - name: Build Lean proofs
+        working-directory: formal-verification/lean
+        run: lake build
