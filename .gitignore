@@ -88,6 +88,9 @@ ehthumbs.db
 /.dotnet/
 /TestAssets/
 
+# Lean build artifacts
+.lake/
+
 # ===========================
 # Tools
 # ===========================
