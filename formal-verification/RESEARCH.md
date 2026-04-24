@@ -54,20 +54,20 @@ A simple value struct for describing how many arguments a command-line option ac
 1. All five predefined constants satisfy `Min ≤ Max`.
 2. `Zero` has Min=0, Max=0.
 3. `ZeroOrOne` has Min=0, Max=1.
-4. `ZeroOrMore` has Min=0, Max=`Int.max`.
-5. `OneOrMore` has Min=1, Max=`Int.max`.
+4. `ZeroOrMore` has Min=0, Max=`maxInt32`.
+5. `OneOrMore` has Min=1, Max=`maxInt32`.
 6. `ExactlyOne` has Min=1, Max=1.
 7. `Equals` is an equivalence relation (reflexive, symmetric, transitive).
 8. `==` and `!=` agree with `Equals`.
 
-**Approximations**: Model `int.MaxValue` as a sentinel constant (e.g., `Int32.max`).
+**Approximations**: Model `int.MaxValue` with an explicit Lean sentinel constant, for example `def maxInt32 : Int := 2^31 - 1`.
 
 ---
 
 ### Target 2 — `CommandLineParser.TryUnescape` ★★★★☆
 
 **File**: `src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs` (inner function)
-**Type**: `string × option × IEnvironment → Result(string, string)`
+**Informal signature**: command-line text × optional quote context × environment → either unescaped text or an error message
 
 A pure function that unescapes command-line argument strings — handling single-quote and double-quote conventions.
 
@@ -150,6 +150,6 @@ Structural equality over a parse result: tool name, list of options (name + argu
 
 ## Open Questions
 
-- Should we model `int.MaxValue` as Lean's `Int.max` (i.e., `2^31 - 1`) or leave it as an opaque constant?
+- Should we model `int.MaxValue` as an explicit Lean constant (e.g., `def maxInt32 : Int := 2^31 - 1`) or leave it as an opaque constant?
 - The `TryUnescape` function handles environment `NewLine` — should we abstract over this or assume `"\n"`?
 - Is the lack of a `Min ≤ Max` invariant in `ArgumentArity` a real bug or an accepted API choice? Worth filing an issue if a "bad" arity causes unexpected validator behaviour.
