@@ -100,12 +100,12 @@
       </trans-unit>
       <trans-unit id="AssertScopeFailure">
         <source>{0} assertion(s) failed within the assert scope.</source>
-        <target state="new">{0} assertion(s) failed within the assert scope.</target>
+        <target state="translated">Сбой утверждений ({0}) в области assert.</target>
         <note>{0} is the number of assertion failures collected in the scope.</note>
       </trans-unit>
       <trans-unit id="AssertScopeNestedNotAllowed">
         <source>Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</source>
-        <target state="new">Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</target>
+        <target state="translated">Вложенные области assert не допускаются. Освободите текущую область перед созданием новой.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThatDetailsPrefix">
@@ -254,7 +254,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed.</source>
-        <target state="new">{0} failed.</target>
+        <target state="translated">Сбой {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="HasCountFailMsg">
