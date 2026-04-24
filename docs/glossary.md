@@ -1,0 +1,111 @@
+# Glossary
+
+This glossary defines key terms and concepts used throughout the MSTest and Microsoft.Testing.Platform (MTP) documentation and codebase.
+
+## A
+
+### AzureDevOpsReport
+
+An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats and reports test results to Azure DevOps pipelines. It generates pipeline-compatible output including TFM and test name details for richer CI reporting.
+
+## C
+
+### CrashDump
+
+An MTP extension (`Microsoft.Testing.Extensions.CrashDump`) that automatically captures a process memory dump when the test host crashes. Useful for diagnosing unexpected process termination during test runs.
+
+## F
+
+### FQN (Fully Qualified Name)
+
+A unique string that identifies a test by its complete namespace, class, and method path (e.g., `MyNamespace.MyClass.MyTestMethod`). Used in IDE integration and JSON-RPC protocol messages to unambiguously reference individual tests.
+
+## H
+
+### HangDump
+
+An MTP extension (`Microsoft.Testing.Extensions.HangDump`) that captures a process memory dump when a test exceeds a configured timeout. Helps diagnose deadlocks, infinite loops, or unexpectedly slow tests.
+
+## I
+
+### IsTestingPlatformApplication
+
+An MSBuild property (`<IsTestingPlatformApplication>true</IsTestingPlatformApplication>`) that marks a project as an MTP test application. When set, the project builds into a self-contained test runner executable rather than a class library consumed by a separate test host.
+
+## J
+
+### JSON-RPC Protocol
+
+The communication protocol used between a test runner executable (server) and a client (IDE, CLI, or CI tool). Based on [JSON-RPC 2.0](https://www.jsonrpc.org/specification), it defines messages for test discovery (`testing/discoverTests`), test execution (`testing/runTests`), result reporting, debugger attachment, and telemetry.
+
+## M
+
+### MSTest
+
+Microsoft's unit testing framework for .NET. Provides attributes (`[TestClass]`, `[TestMethod]`, `[DataRow]`, etc.), assertions (`Assert`, `CollectionAssert`), and lifecycle hooks for writing and organizing tests. Packaged as `MSTest.TestFramework`, `MSTest.TestAdapter`, `MSTest.Analyzers`, and `MSTest.Sdk`.
+
+### MSTest Runner
+
+The self-contained test runner mode for MSTest, built on top of Microsoft.Testing.Platform. When `IsTestingPlatformApplication` is set, the test project compiles into a standalone executable that runs tests directly without requiring `dotnet test` or `vstest.console`.
+
+### MSTest.Sdk
+
+A meta-package that bundles `MSTest.TestFramework`, `MSTest.TestAdapter`, and `MSTest.Analyzers` with default MSBuild SDK configuration. Simplifies project setup by providing a single package reference.
+
+### MTP
+
+See **Microsoft.Testing.Platform**.
+
+### Microsoft.Testing.Platform (MTP)
+
+A lightweight, extensible test platform for .NET that serves as a modern alternative to VSTest. MTP ships as a NuGet package (`Microsoft.Testing.Platform`) and provides the core infrastructure for running tests: command-line parsing, test session management, result reporting, and an extension model. Test frameworks (e.g., MSTest, xUnit adapters) and extensions (e.g., CrashDump, HangDump) plug into MTP.
+
+## N
+
+### NopFilter
+
+A built-in MTP test filter that matches no tests. Used primarily in scenarios where filtering is required by the API but no tests should be selected (e.g., for dry-run or diagnostic purposes).
+
+## O
+
+### Orchestrator
+
+A component in MTP that coordinates multi-process test execution. The orchestrator manages the lifecycle of one or more test host processes, aggregates results, and handles communication between the outer process (e.g., `dotnet test`) and the inner test runner processes.
+
+### OpenTelemetry extension
+
+An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exports test session telemetry using the [OpenTelemetry](https://opentelemetry.io/) standard, enabling integration with distributed tracing and observability platforms.
+
+## R
+
+### Retry
+
+An MTP extension (`Microsoft.Testing.Extensions.Retry`) that automatically re-runs failed tests a configurable number of times. Useful for reducing flakiness in CI environments.
+
+### RFC
+
+Request for Comments document in the `docs/RFCs/` folder. RFCs describe design decisions, proposed features, and implementation details for MSTest and MTP.
+
+## T
+
+### TFM (Target Framework Moniker)
+
+A short string that identifies a specific .NET target framework (e.g., `net9.0`, `net48`, `netstandard2.0`). Used to distinguish test runs across multiple frameworks in multi-targeted projects.
+
+### TrxReport
+
+An MTP extension (`Microsoft.Testing.Extensions.TrxReport`) that generates a `.trx` (Test Results XML) file upon test session completion. TRX files are the standard Visual Studio and Azure DevOps test result format.
+
+### TRX (Test Results XML)
+
+The XML-based test result file format used by Visual Studio, Azure DevOps, and `vstest.console`. Contains test run metadata, individual test outcomes, error messages, and stack traces. Generated by the **TrxReport** extension.
+
+## V
+
+### VSTest
+
+Microsoft's previous-generation test platform (`vstest.console.exe`, `Microsoft.TestPlatform.*`). MSTest v2 originally ran on top of VSTest. MTP is the modern successor to VSTest, offering better performance and a simplified extension model.
+
+### VSTestBridge
+
+An MTP extension (`Microsoft.Testing.Extensions.VSTestBridge`) that provides backward compatibility for test adapters written against the VSTest API. Allows existing VSTest-based test frameworks and adapters to run on MTP without a full rewrite.
