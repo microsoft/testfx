@@ -153,6 +153,21 @@ public sealed class DuplicateDataRowAnalyzer : DiagnosticAnalyzer
             {
                 hashCode.Add(typedConstant.Kind);
                 hashCode.Add(SymbolEqualityComparer.Default.GetHashCode(typedConstant.Type));
+
+                if (!typedConstant.IsNull)
+                {
+                    if (typedConstant.Kind == TypedConstantKind.Array)
+                    {
+                        // Recursively hash array elements to match recursive equality check.
+                        hashCode.Add(GetHashCode(typedConstant.Values));
+                    }
+                    else
+                    {
+                        // Include the value so distinct primitives (e.g., DataRow(1) vs DataRow(2))
+                        // hash to different buckets instead of colliding on kind+type alone.
+                        hashCode.Add(typedConstant.Value);
+                    }
+                }
             }
 
             return hashCode.ToHashCode();
