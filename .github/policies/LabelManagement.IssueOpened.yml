@@ -13,13 +13,16 @@ configuration:
           - payloadType: Issues
           - isAction:
               action: Opened
-          - and:
-            - not:
-                activitySenderHasPermission:
-                  permission: Admin
-            - not:
-                activitySenderHasPermission:
-                  permission: Write
+          - or:
+            - and:
+              - not:
+                  activitySenderHasPermission:
+                    permission: Admin
+              - not:
+                  activitySenderHasPermission:
+                    permission: Write
+            - isActivitySender:
+                user: github-actions[bot]
         then:
           - addLabel:
               label: 'Needs: Triage :mag:'
