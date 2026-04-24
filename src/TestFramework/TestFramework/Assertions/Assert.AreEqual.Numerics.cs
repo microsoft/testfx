@@ -54,11 +54,24 @@ public sealed partial class Assert
     }
 
     private static bool AreEqualFailing(decimal expected, decimal actual, decimal delta)
-        => Math.Abs(expected - actual) > delta;
+    {
+        if (delta < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(delta));
+        }
+
+        return Math.Abs(expected - actual) > delta;
+    }
 
     private static bool AreEqualFailing(long expected, long actual, long delta)
-        => Math.Abs(expected - actual) > delta;
+    {
+        if (delta < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(delta));
+        }
 
+        return Math.Abs(expected - actual) > delta;
+    }
     [DoesNotReturn]
     private static void ReportAssertAreEqualFailed<T>(T expected, T actual, T delta, string userMessage)
         where T : struct, IConvertible
@@ -498,7 +511,7 @@ public sealed partial class Assert
 
     [DoesNotReturn]
     private static void ReportAssertAreNotEqualFailed<T>(T notExpected, T actual, T delta, string userMessage)
-    where T : struct, IConvertible
+        where T : struct, IConvertible
     {
         string finalMessage = string.Format(
             CultureInfo.CurrentCulture,

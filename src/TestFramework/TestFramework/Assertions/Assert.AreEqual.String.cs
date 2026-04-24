@@ -127,7 +127,7 @@ public sealed partial class Assert
     /// </exception>
     public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
-        CheckParameterNotNull(culture, "Assert.AreEqual", "culture");
+        CheckParameterNotNull(culture, "Assert.AreEqual", nameof(culture));
         if (!AreEqualFailing(expected, actual, ignoreCase, culture))
         {
             return;
@@ -300,7 +300,7 @@ internal static class StringPreviewHelper
         // If the string is shorter than the preview, start cutting from 0, otherwise start cutting from the calculated start.
         int cutStart = Math.Max(0, start);
         // From here we need to handle longer and shorter string separately, because one of the can be shorter,
-        // and we want to show the maximum we can that fits in thew preview window.
+        // and we want to show the maximum we can that fits in the preview window.
         int cutEndShort = Math.Min(cutStart + fullPreviewLength, shorterStringLength);
         int cutEndLong = Math.Min(cutStart + fullPreviewLength, longerStringLength);
 
