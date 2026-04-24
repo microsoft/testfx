@@ -16,7 +16,7 @@
 
 | # | Name | File | Phase | Status | PR/Issue |
 |---|------|------|-------|--------|----------|
-| 1 | `ArgumentArity` | `src/Platform/Microsoft.Testing.Extensions.CommandLine/ArgumentArity.cs` | 1 | Identified | — |
+| 1 | `ArgumentArity` | `src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs` | 2 | Informal spec extracted | [PR #7799](https://github.com/microsoft/testfx/pull/7799) |
 | 2 | `CommandLineParser.TryUnescape` | `src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs` | 1 | Identified | — |
 | 3 | `CommandLineParser.ParseOptionAndSeparators` | `src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs` | 1 | Identified | — |
 | 4 | `CommandLineOptionsValidator` arity validation | `src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs` | 1 | Identified | — |
