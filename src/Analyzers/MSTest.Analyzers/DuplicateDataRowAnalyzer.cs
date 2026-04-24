@@ -153,6 +153,18 @@ public sealed class DuplicateDataRowAnalyzer : DiagnosticAnalyzer
             {
                 hashCode.Add(typedConstant.Kind);
                 hashCode.Add(SymbolEqualityComparer.Default.GetHashCode(typedConstant.Type));
+
+                if (!typedConstant.IsNull)
+                {
+                    if (typedConstant.Kind == TypedConstantKind.Array)
+                    {
+                        hashCode.Add(GetHashCode(typedConstant.Values));
+                    }
+                    else
+                    {
+                        hashCode.Add(typedConstant.Value);
+                    }
+                }
             }
 
             return hashCode.ToHashCode();
