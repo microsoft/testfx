@@ -162,12 +162,32 @@ public sealed class DuplicateDataRowAnalyzer : DiagnosticAnalyzer
                     }
                     else
                     {
-                        hashCode.Add(typedConstant.Value);
+                        AddTypedConstantValueHash(ref hashCode, typedConstant);
                     }
                 }
             }
 
             return hashCode.ToHashCode();
+        }
+
+        private static void AddTypedConstantValueHash(ref RoslynHashCode hashCode, TypedConstant typedConstant)
+        {
+            if (typedConstant.Kind == TypedConstantKind.Primitive)
+            {
+                switch (typedConstant.Type?.SpecialType)
+                {
+                    case SpecialType.System_Single:
+                        // BitConverter.SingleToInt32Bits isn't available on netstandard2.0, so we use BitConverter.GetBytes instead.
+                        hashCode.Add(BitConverter.ToInt32(BitConverter.GetBytes((float)typedConstant.Value!), 0));
+                        return;
+
+                    case SpecialType.System_Double:
+                        hashCode.Add(BitConverter.DoubleToInt64Bits((double)typedConstant.Value!));
+                        return;
+                }
+            }
+
+            hashCode.Add(typedConstant.Value);
         }
     }
 }
