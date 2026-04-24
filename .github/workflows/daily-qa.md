@@ -13,7 +13,11 @@ timeout-minutes: 15
 
 permissions: read-all
 
-network: defaults
+network:
+  allowed:
+    - defaults
+    - "dc.services.visualstudio.com"
+    - "pkgs.dev.azure.com"
 
 imports:
   - shared/repo-build-setup.md
