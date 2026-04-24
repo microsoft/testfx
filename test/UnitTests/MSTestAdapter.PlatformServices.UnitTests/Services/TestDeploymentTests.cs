@@ -219,8 +219,12 @@ public class TestDeploymentTests : TestContainer
         // Deployment should not happen
         testDeployment.Deploy(new List<TestCase> { testCase }, null, null!).Should().BeFalse();
 
-        // Deployment directories should get created
+        // Deployment directories should get created on .NET Framework for compat, but not on .NET Core
+#if NETFRAMEWORK
         testDeployment.GetDeploymentDirectory().Should().NotBeNull();
+#else
+        testDeployment.GetDeploymentDirectory().Should().BeNull();
+#endif
     }
 
     public void DeployShouldReturnFalseWhenDeploymentEnabledSetToTrueButHasNoDeploymentItems()
@@ -242,8 +246,12 @@ public class TestDeploymentTests : TestContainer
         // Deployment should not happen
         testDeployment.Deploy(new List<TestCase> { testCase }, null, null!).Should().BeFalse();
 
-        // Deployment directories should get created
+        // Deployment directories should get created on .NET Framework for compat, but not on .NET Core
+#if NETFRAMEWORK
         testDeployment.GetDeploymentDirectory().Should().NotBeNull();
+#else
+        testDeployment.GetDeploymentDirectory().Should().BeNull();
+#endif
     }
 
     // TODO: This test has to have mocks. It actually deploys stuff and we cannot assume that all the dependencies get copied over to bin\debug.
