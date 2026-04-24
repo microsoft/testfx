@@ -72,6 +72,7 @@ public sealed partial class Assert
 
         return Math.Abs(expected - actual) > delta;
     }
+
     [DoesNotReturn]
     private static void ReportAssertAreEqualFailed<T>(T expected, T actual, T delta, string userMessage)
         where T : struct, IConvertible
