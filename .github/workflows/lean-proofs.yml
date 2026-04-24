@@ -35,12 +35,25 @@ jobs:
           ELAN_BASE_URL="https://github.com/leanprover/elan/releases/download/${ELAN_VERSION}"
           ELAN_TMP_DIR="$(mktemp -d)"
 
+          LEAN_TOOLCHAIN_FILE="formal-verification/lean/lean-toolchain"
+
+          if [ ! -f "${LEAN_TOOLCHAIN_FILE}" ]; then
+            echo "Missing Lean toolchain file: ${LEAN_TOOLCHAIN_FILE}" >&2
+            exit 1
+          fi
+
+          LEAN_TOOLCHAIN="$(tr -d '\r\n' < "${LEAN_TOOLCHAIN_FILE}")"
+
+          if [ -z "${LEAN_TOOLCHAIN}" ]; then
+            echo "Lean toolchain file is empty: ${LEAN_TOOLCHAIN_FILE}" >&2
+            exit 1
+          fi
+
           curl -sSfL "${ELAN_BASE_URL}/${ELAN_ARCHIVE}" -o "${ELAN_TMP_DIR}/${ELAN_ARCHIVE}"
-          curl -sSfL "${ELAN_BASE_URL}/${ELAN_ARCHIVE}.sha256" -o "${ELAN_TMP_DIR}/${ELAN_ARCHIVE}.sha256"
           cd "${ELAN_TMP_DIR}"
-          sha256sum -c "${ELAN_ARCHIVE}.sha256"
+          echo "4e717523217af592fa2d7b9c479410a31816c065d66ccbf0c2149337cfec0f5c  ${ELAN_ARCHIVE}" | sha256sum -c -
           tar -xzf "${ELAN_ARCHIVE}"
-          ./elan-init -y --default-toolchain leanprover/lean4:stable
+          ./elan-init -y --default-toolchain "${LEAN_TOOLCHAIN}"
           rm -rf "${ELAN_TMP_DIR}"
 
       - name: Add elan to PATH
