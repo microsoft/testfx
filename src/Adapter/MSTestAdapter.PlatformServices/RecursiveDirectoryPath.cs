@@ -53,9 +53,7 @@ internal sealed class RecursiveDirectoryPath : MarshalByRefObject
     /// </returns>
     [SecurityCritical]
 #if NET5_0_OR_GREATER
-#pragma warning disable CA1041 // Provide ObsoleteAttribute message
-    [Obsolete]
-#pragma warning restore CA1041 // Provide ObsoleteAttribute message
+    [Obsolete("MarshalByRefObject.InitializeLifetimeService is obsolete in .NET 5+. This override is required to maintain infinite lifetime service.")]
 #endif
     public override object InitializeLifetimeService() => null!;
 }
