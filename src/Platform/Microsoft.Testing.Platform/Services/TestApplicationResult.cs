@@ -47,7 +47,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     public string Uid => nameof(TestApplicationResult);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     /// <inheritdoc />
     public string DisplayName { get; } = PlatformResources.TestApplicationResultDisplayName;

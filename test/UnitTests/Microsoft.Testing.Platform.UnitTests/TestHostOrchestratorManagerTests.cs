@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 
 using BackCompat = Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
@@ -153,7 +152,7 @@ public sealed class TestHostOrchestratorManagerTests
 
         public string Uid { get; }
 
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         public string DisplayName => Uid;
 
@@ -171,7 +170,7 @@ public sealed class TestHostOrchestratorManagerTests
 
         public string Uid { get; }
 
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         public string DisplayName => Uid;
 

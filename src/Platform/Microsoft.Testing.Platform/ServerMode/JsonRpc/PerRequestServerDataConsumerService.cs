@@ -45,7 +45,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
     public string Uid => nameof(PerRequestServerDataConsumer);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     /// <inheritdoc />
     public string DisplayName => string.Empty;

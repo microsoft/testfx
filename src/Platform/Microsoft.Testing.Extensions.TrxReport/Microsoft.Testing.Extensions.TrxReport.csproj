@@ -6,6 +6,8 @@
     different namespace is used for the shared file.-->
     <DefineConstants>$(DefineConstants);USE_TRX_NAMESPACE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateBuildInfo>true</GenerateBuildInfo>
+    <BuildInfoTemplateFile>$(RepoRoot)src\Platform\SharedExtensionHelpers\BuildInfo.cs.template</BuildInfoTemplateFile>
   </PropertyGroup>
 
   <ItemGroup>

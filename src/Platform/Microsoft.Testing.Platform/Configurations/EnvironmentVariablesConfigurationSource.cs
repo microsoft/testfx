@@ -12,7 +12,7 @@ internal sealed class EnvironmentVariablesConfigurationSource(IEnvironment envir
 
     public string Uid => nameof(EnvironmentVariablesConfigurationSource);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     // Can be empty string because it's not used in the UI
     public string DisplayName => string.Empty;

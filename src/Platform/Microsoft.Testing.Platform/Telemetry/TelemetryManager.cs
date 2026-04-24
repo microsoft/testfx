@@ -19,7 +19,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
     public string Uid => nameof(TelemetryManager);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => string.Empty;
 

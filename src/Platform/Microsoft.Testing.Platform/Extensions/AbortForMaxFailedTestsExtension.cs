@@ -4,7 +4,6 @@
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
@@ -43,7 +42,7 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
     public string Uid => nameof(AbortForMaxFailedTestsExtension);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     /// <inheritdoc />
     public string DisplayName => nameof(AbortForMaxFailedTestsExtension);

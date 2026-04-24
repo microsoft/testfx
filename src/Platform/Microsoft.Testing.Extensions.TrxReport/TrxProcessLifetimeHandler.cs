@@ -80,7 +80,7 @@ internal sealed class TrxProcessLifetimeHandler :
 
     public string Uid => nameof(TrxProcessLifetimeHandler);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => string.Empty;
 

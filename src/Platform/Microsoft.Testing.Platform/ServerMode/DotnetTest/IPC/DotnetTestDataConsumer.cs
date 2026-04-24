@@ -32,7 +32,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
     public string Uid => nameof(DotnetTestDataConsumer);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => nameof(DotnetTestDataConsumer);
 

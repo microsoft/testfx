@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -47,7 +46,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
 
     public string Uid => nameof(ServerModePerCallOutputDevice);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => nameof(ServerModePerCallOutputDevice);
 
