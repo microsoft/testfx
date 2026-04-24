@@ -127,9 +127,8 @@ internal sealed class TestDeployment : ITestDeployment
             return false;
         }
 
-        string? firstTestSource = testCases.FirstOrDefault()?.Source;
-
 #if NETFRAMEWORK
+        string? firstTestSource = testCases.FirstOrDefault()?.Source;
         RunDirectories = _deploymentUtility.CreateDeploymentDirectories(runContext, firstTestSource);
 
         // Deployment directories are created but deployment will not happen.
@@ -145,6 +144,7 @@ internal sealed class TestDeployment : ITestDeployment
             return false;
         }
 
+        string? firstTestSource = testCases.FirstOrDefault()?.Source;
         RunDirectories = _deploymentUtility.CreateDeploymentDirectories(runContext, firstTestSource);
 #endif
 
