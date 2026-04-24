@@ -13,11 +13,13 @@
 
   <PropertyGroup>
     <EnableAspireTesting Condition=" '$(EnableAspireTesting)' == '' ">false</EnableAspireTesting>
+    <EnableDesktopTesting Condition=" '$(EnableDesktopTesting)' == '' ">false</EnableDesktopTesting>
     <EnablePlaywright Condition=" '$(EnablePlaywright)' == '' ">false</EnablePlaywright>
     <UseVSTest Condition=" '$(UseVSTest)' == '' " >false</UseVSTest>
 
     <AspireHostingTestingVersion Condition=" '$(AspireHostingTestingVersion)' == '' ">${AspireHostingTestingVersion}</AspireHostingTestingVersion>
     <MicrosoftNETTestSdkVersion Condition=" '$(MicrosoftNETTestSdkVersion)' == '' ">${MicrosoftNETTestSdkVersion}</MicrosoftNETTestSdkVersion>
+    <MSTestDesktopTestingVersion Condition=" '$(MSTestDesktopTestingVersion)' == '' ">${MSTestDesktopTestingVersion}</MSTestDesktopTestingVersion>
     <MicrosoftPlaywrightVersion Condition=" '$(MicrosoftPlaywrightVersion)' == '' ">${MicrosoftPlaywrightVersion}</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >${MicrosoftTestingExtensionsCodeCoverageVersion}</MicrosoftTestingExtensionsCodeCoverageVersion>
     <MicrosoftTestingExtensionsFakesVersion Condition=" '$(MicrosoftTestingExtensionsFakesVersion)' == '' " >${MicrosoftTestingExtensionsFakesVersion}</MicrosoftTestingExtensionsFakesVersion>
