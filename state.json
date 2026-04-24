@@ -7,10 +7,10 @@
     {
       "id": 1,
       "name": "ArgumentArity",
-      "file": "src/Platform/Microsoft.Testing.Extensions.CommandLine/ArgumentArity.cs",
-      "phase": 1,
+      "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs",
+      "phase": 2,
       "priority": 1,
-      "notes": "Tiny self-contained struct. Predefined constants + equality. All decidable. Best first target."
+      "notes": "Informal spec extracted. 14 properties across 4 groups. Open question: constructor does not enforce Min <= Max. Next: Task 3 (Lean 4 formal spec). 5 predefined constants all decidable."
     },
     {
       "id": 2,
@@ -47,21 +47,31 @@
   ],
   "open_prs": [
     {
-      "title": "feat: formal verification infrastructure - research & CI automation",
-      "branch": "lean-squad/research-and-ci-2026-04-24",
-      "status": "draft",
-      "tasks": ["Task 1: Research", "Task 9: CI Automation"]
+      "number": 7799,
+      "title": "[Lean Squad] feat: formal verification infrastructure — research & CI automation",
+      "branch": "lean-squad/research-and-ci-2026-04-24-a3943919f2a5931a",
+      "status": "open",
+      "tasks": ["Task 1: Research", "Task 2: Informal Spec (ArgumentArity)", "Task 9: CI Automation"]
     }
   ],
   "open_issues": [
     {
+      "number": 7793,
       "title": "[Lean Squad] Formal Verification Status",
       "purpose": "status dashboard"
     }
   ],
-  "next_priority": "Extract informal spec for ArgumentArity (Task 2), then write Lean 4 spec (Task 3)",
+  "next_priority": "Task 3: Write Lean 4 formal spec for ArgumentArity (types + theorem stubs with sorry, attempt decide proofs for predefined constants)",
   "approach": {
     "focus_area": "src/Platform/Microsoft.Testing.Platform/CommandLine/",
     "rationale": "Pure functions, clear algebraic properties, well-documented POSIX/CLI conventions"
-  }
+  },
+  "findings": [
+    {
+      "type": "potential-bug",
+      "target": "ArgumentArity",
+      "description": "Constructor does not enforce Min <= Max invariant. Ill-formed arities silently accepted. ValidateOptionsArgumentArity may produce misleading error messages for Min > Max inputs.",
+      "status": "open-question"
+    }
+  ]
 }
