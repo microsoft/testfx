@@ -52,19 +52,22 @@ internal sealed class TestSourceHandler : ITestSourceHandler
         ];
 #endif
 
+    // PERF: Cached to avoid allocating a new list on every property access.
+    private static readonly IEnumerable<string> CachedValidSourceExtensions =
+        [
+            EngineConstants.DllExtension,
+#if NETFRAMEWORK
+            EngineConstants.PhoneAppxPackageExtension,
+#elif WINDOWS_UWP || WIN_UI
+            EngineConstants.AppxPackageExtension,
+#endif
+            EngineConstants.ExeExtension,
+        ];
+
     /// <summary>
     /// Gets the set of valid extensions for sources targeting this platform.
     /// </summary>
-    public IEnumerable<string> ValidSourceExtensions => new List<string>
-            {
-                EngineConstants.DllExtension,
-#if NETFRAMEWORK
-                EngineConstants.PhoneAppxPackageExtension,
-#elif WINDOWS_UWP || WIN_UI
-                EngineConstants.AppxPackageExtension,
-#endif
-                EngineConstants.ExeExtension,
-            };
+    public IEnumerable<string> ValidSourceExtensions => CachedValidSourceExtensions;
 
     /// <summary>
     /// Verifies if the assembly provided is referenced by the source.
