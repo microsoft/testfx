@@ -20,7 +20,7 @@
       "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs",
       "phase": 2,
       "priority": 2,
-      "notes": "Informal spec extracted (this run, PR pending). 15 properties across 4 groups. Potential bug: single-char \"'\" input causes ArgumentOutOfRangeException via IndexOf(char,int,int) with count=-1. Three modes: unquoted passthrough, single-quoted (no escapes), double-quoted (5 backslash escapes). Next: Task 3 (Lean 4 formal spec).",
+      "notes": "Informal spec extracted (this run, draft PR). 24 properties across 5 groups. Two confirmed bugs: (1) single-char input '\\'' causes ArgumentOutOfRangeException via IndexOf(char,1,-1); (2) single-char input '\"' causes range exception via input[1..^1] with start>end. Fix: add length<2 guard. Next: Task 3 (Lean 4 formal spec).",
       "spec_file": "formal-verification/specs/commandlineparser_tryunescape_informal.md"
     },
     {
@@ -58,12 +58,7 @@
   ],
   "open_prs": [
     {
-      "branch": "lean-squad/task9-ci-2026-04-25",
-      "title": "[Lean Squad] feat(fv): Task 9 — CI skip guard + FVSquad/ directory scaffold",
-      "tasks": ["Task 9: CI skip guard", "FVSquad/ .gitkeep placeholder"]
-    },
-    {
-      "branch": "lean-squad/task2-tryunescape-informal-2026-04-25",
+      "branch": "lean-squad/task2-tryunescape-2026-04-25",
       "title": "[Lean Squad] feat(fv): Task 2 — informal spec for CommandLineParser.TryUnescape",
       "tasks": ["Task 2: Informal Spec (TryUnescape)"]
     }
@@ -75,7 +70,7 @@
       "purpose": "status dashboard"
     }
   ],
-  "next_priority": "Task 3: Write Lean 4 formal spec for ArgumentArity (phase 2 → 3). Then Task 3 for TryUnescape. Both blocked by Lean toolchain. If Lean ever becomes available, start with ArgumentArity.lean using the plan in lean_formal_spec_plan.",
+  "next_priority": "Task 3: Write Lean 4 formal spec for ArgumentArity (phase 2 -> 3). Then Task 3 for TryUnescape. Both blocked by Lean toolchain. If Lean ever becomes available, start with ArgumentArity.lean using the plan in lean_formal_spec_plan.",
   "approach": {
     "focus_area": "src/Platform/Microsoft.Testing.Platform/CommandLine/",
     "rationale": "Pure functions, clear algebraic properties, well-documented POSIX/CLI conventions"
@@ -88,11 +83,18 @@
       "status": "open-question"
     },
     {
-      "type": "potential-bug",
+      "type": "confirmed-bug",
       "target": "CommandLineParser.TryUnescape",
-      "description": "Input consisting of exactly one single-quote character triggers ArgumentOutOfRangeException: IndexOf(char, 1, -1) called when input.Length == 1, count = input.Length - 2 = -1.",
-      "status": "open-question",
-      "note": "No existing test covers this case."
+      "description": "EC-1: Input consisting of exactly one single-quote character triggers ArgumentOutOfRangeException: IndexOf(char, 1, -1) called when input.Length == 1, count = input.Length - 2 = -1.",
+      "status": "open",
+      "fix": "Add length < 2 guard before quoted-mode branching"
+    },
+    {
+      "type": "confirmed-bug",
+      "target": "CommandLineParser.TryUnescape",
+      "description": "EC-2: Input consisting of exactly one double-quote character triggers range exception: input[1..^1] where start=1 > end=0 when input.Length == 1.",
+      "status": "open",
+      "fix": "Add length < 2 guard before quoted-mode branching"
     }
   ],
   "lean_formal_spec_plan": {
