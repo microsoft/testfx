@@ -119,7 +119,7 @@
       </trans-unit>
       <trans-unit id="CommandLineOptionIsReserved">
         <source>Option '--{0}' is reserved and cannot be used by providers: '{1}'</source>
-        <target state="new">Option '--{0}' is reserved and cannot be used by providers: '{1}'</target>
+        <target state="translated">'--{0}' 옵션은 예약되어 있으므로 공급자 '{1}'이(가) 사용할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
