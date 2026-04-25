@@ -4,7 +4,7 @@
   "lakefile_format": "toml",
   "lean_dir": "formal-verification/lean",
   "lean_install_blocked": true,
-  "lean_install_blocked_reason": "Network firewall + bash allow-list blocks curl in runner environment. elan download fails on every run. Task 3 deferred until network access available.",
+  "lean_install_blocked_reason": "Network firewall blocks curl in runner environment. elan download fails on every run. Task 3 deferred until network access available.",
   "targets": [
     {
       "id": 1,
@@ -12,15 +12,16 @@
       "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs",
       "phase": 2,
       "priority": 1,
-      "notes": "Informal spec extracted and merged (PR #7799). 14 properties across 4 groups. Open question: constructor does not enforce Min <= Max. Next: Task 3 (Lean 4 formal spec). Blocked by Lean toolchain unavailability in CI runner. 5 predefined constants all decidable. FVSquad/ dir now exists (.gitkeep committed)."
+      "notes": "Informal spec extracted and merged (PR #7799). 14 properties across 4 groups. Open question: constructor does not enforce Min <= Max. Next: Task 3 (Lean 4 formal spec). Blocked by Lean toolchain unavailability in CI runner."
     },
     {
       "id": 2,
       "name": "CommandLineParser.TryUnescape",
       "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs",
-      "phase": 1,
+      "phase": 2,
       "priority": 2,
-      "notes": "Pure inner function. Single/double quote unescaping. Security-relevant."
+      "notes": "Informal spec extracted (this run, PR pending). 15 properties across 4 groups. Potential bug: single-char \"'\" input causes ArgumentOutOfRangeException via IndexOf(char,int,int) with count=-1. Three modes: unquoted passthrough, single-quoted (no escapes), double-quoted (5 backslash escapes). Next: Task 3 (Lean 4 formal spec).",
+      "spec_file": "formal-verification/specs/commandlineparser_tryunescape_informal.md"
     },
     {
       "id": 3,
@@ -57,11 +58,14 @@
   ],
   "open_prs": [
     {
-      "number": null,
-      "title": "[Lean Squad] feat(fv): Task 9 — CI skip guard + FVSquad/ directory scaffold",
       "branch": "lean-squad/task9-ci-2026-04-25",
-      "status": "pending-push",
-      "tasks": ["Task 9: CI skip guard for lake build", "FVSquad/ .gitkeep placeholder"]
+      "title": "[Lean Squad] feat(fv): Task 9 — CI skip guard + FVSquad/ directory scaffold",
+      "tasks": ["Task 9: CI skip guard", "FVSquad/ .gitkeep placeholder"]
+    },
+    {
+      "branch": "lean-squad/task2-tryunescape-informal-2026-04-25",
+      "title": "[Lean Squad] feat(fv): Task 2 — informal spec for CommandLineParser.TryUnescape",
+      "tasks": ["Task 2: Informal Spec (TryUnescape)"]
     }
   ],
   "open_issues": [
@@ -71,7 +75,7 @@
       "purpose": "status dashboard"
     }
   ],
-  "next_priority": "Task 3: Write Lean 4 formal spec for ArgumentArity — requires Lean toolchain to be available. Plan: write ArgumentArity.lean with structure definition, 5 predefined constants, 14 theorem stubs (4 groups), attempt decide proofs for predefined constant properties. Needs network access to download elan/Lean toolchain.",
+  "next_priority": "Task 3: Write Lean 4 formal spec for ArgumentArity (phase 2 → 3). Then Task 3 for TryUnescape. Both blocked by Lean toolchain. If Lean ever becomes available, start with ArgumentArity.lean using the plan in lean_formal_spec_plan.",
   "approach": {
     "focus_area": "src/Platform/Microsoft.Testing.Platform/CommandLine/",
     "rationale": "Pure functions, clear algebraic properties, well-documented POSIX/CLI conventions"
@@ -80,8 +84,15 @@
     {
       "type": "potential-bug",
       "target": "ArgumentArity",
-      "description": "Constructor does not enforce Min <= Max invariant. Ill-formed arities silently accepted. ValidateOptionsArgumentArity may produce misleading error messages for Min > Max inputs.",
+      "description": "Constructor does not enforce Min <= Max invariant. Ill-formed arities silently accepted.",
       "status": "open-question"
+    },
+    {
+      "type": "potential-bug",
+      "target": "CommandLineParser.TryUnescape",
+      "description": "Input consisting of exactly one single-quote character triggers ArgumentOutOfRangeException: IndexOf(char, 1, -1) called when input.Length == 1, count = input.Length - 2 = -1.",
+      "status": "open-question",
+      "note": "No existing test covers this case."
     }
   ],
   "lean_formal_spec_plan": {
