@@ -1,10 +1,10 @@
 {
-  "last_run": "2026-04-24",
+  "last_run": "2026-04-25",
   "fv_tool": "Lean 4 + Mathlib",
   "lakefile_format": "toml",
   "lean_dir": "formal-verification/lean",
   "lean_install_blocked": true,
-  "lean_install_blocked_reason": "Network firewall blocked elan download in runner environment (2026-04-24 run). Task 3 deferred until network access available.",
+  "lean_install_blocked_reason": "Network firewall + bash allow-list blocks curl in runner environment. elan download fails on every run. Task 3 deferred until network access available.",
   "targets": [
     {
       "id": 1,
@@ -12,7 +12,7 @@
       "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs",
       "phase": 2,
       "priority": 1,
-      "notes": "Informal spec extracted and merged (PR #7799). 14 properties across 4 groups. Open question: constructor does not enforce Min <= Max. Next: Task 3 (Lean 4 formal spec). Blocked by Lean toolchain unavailability in CI runner. 5 predefined constants all decidable."
+      "notes": "Informal spec extracted and merged (PR #7799). 14 properties across 4 groups. Open question: constructor does not enforce Min <= Max. Next: Task 3 (Lean 4 formal spec). Blocked by Lean toolchain unavailability in CI runner. 5 predefined constants all decidable. FVSquad/ dir now exists (.gitkeep committed)."
     },
     {
       "id": 2,
@@ -58,10 +58,10 @@
   "open_prs": [
     {
       "number": null,
-      "title": "[Lean Squad] feat: CI improvement — skip lake build when no .lean files; create FVSquad scaffold",
-      "branch": "lean-squad/ci-and-task3-2026-04-24",
+      "title": "[Lean Squad] feat(fv): Task 9 — CI skip guard + FVSquad/ directory scaffold",
+      "branch": "lean-squad/task9-ci-2026-04-25",
       "status": "pending-push",
-      "tasks": ["Task 9: CI improvement", "FVSquad directory scaffold"]
+      "tasks": ["Task 9: CI skip guard for lake build", "FVSquad/ .gitkeep placeholder"]
     }
   ],
   "open_issues": [
@@ -71,7 +71,7 @@
       "purpose": "status dashboard"
     }
   ],
-  "next_priority": "Task 3: Write Lean 4 formal spec for ArgumentArity — requires Lean toolchain to be available. Plan: write ArgumentArity.lean with structure definition, 5 predefined constants, 14 theorem stubs (4 groups), attempt decide proofs for predefined constant properties.",
+  "next_priority": "Task 3: Write Lean 4 formal spec for ArgumentArity — requires Lean toolchain to be available. Plan: write ArgumentArity.lean with structure definition, 5 predefined constants, 14 theorem stubs (4 groups), attempt decide proofs for predefined constant properties. Needs network access to download elan/Lean toolchain.",
   "approach": {
     "focus_area": "src/Platform/Microsoft.Testing.Platform/CommandLine/",
     "rationale": "Pure functions, clear algebraic properties, well-documented POSIX/CLI conventions"
@@ -95,13 +95,13 @@
       "theorem zeroOrMore_spec : ArgumentArity.zeroOrMore = { min := 0, max := 2147483647 }",
       "theorem exactlyOne_spec : ArgumentArity.exactlyOne = { min := 1, max := 1 }",
       "theorem oneOrMore_spec : ArgumentArity.oneOrMore = { min := 1, max := 2147483647 }",
-      "theorem predefined_nonneg_min : ∀ c ∈ [zero, zeroOrOne, zeroOrMore, exactlyOne, oneOrMore], c.min ≥ 0",
-      "theorem predefined_wellformed : ∀ c ∈ [...], c.min ≤ c.max",
-      "theorem eq_reflexive : ∀ a, a = a",
-      "theorem eq_symmetric : ∀ a b, a = b → b = a",
-      "theorem eq_transitive : ∀ a b c, a = b → b = c → a = c",
-      "theorem eq_extensional : ∀ a b, a = b ↔ a.min = b.min ∧ a.max = b.max",
-      "theorem predefined_distinct : ..."
+      "theorem predefined_nonneg_min : for all c in predefined list, c.min >= 0",
+      "theorem predefined_wellformed : for all c in predefined list, c.min <= c.max",
+      "theorem eq_reflexive : for all a, a = a",
+      "theorem eq_symmetric : for all a b, a = b -> b = a",
+      "theorem eq_transitive : for all a b c, a = b -> b = c -> a = c",
+      "theorem eq_extensional : for all a b, a = b iff a.min = b.min and a.max = b.max",
+      "theorem predefined_distinct : all 5 predefined constants are pairwise distinct"
     ],
     "approach": "Use Int for min/max. Model Int32.MaxValue as 2147483647 concrete value. Use decide for concrete theorems about predefined constants."
   }
