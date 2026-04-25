@@ -50,6 +50,16 @@ Movendo arquivos de ativo da última tentativa para o diretório de resultados p
         <target state="translated">Falha ao iniciar o processo '{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryFailedTestsDelayOptionDescription">
+        <source>Add a delay between retries. The delay is expressed as a time value, e.g. 1s, 2.5m, 1h. Default unit is milliseconds.</source>
+        <target state="new">Add a delay between retries. The delay is expressed as a time value, e.g. 1s, 2.5m, 1h. Default unit is milliseconds.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
+        <source>Option '--retry-failed-tests-delay' requires a valid time span value (e.g. 200, 1s, 2.5m, 1h)</source>
+        <target state="new">Option '--retry-failed-tests-delay' requires a valid time span value (e.g. 200, 1s, 2.5m, 1h)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">
         <source>Retry failed tests feature allows to restart test execution upon failure.</source>
         <target state="translated">O recurso repetir testes com falha permite reiniciar a execução de teste após falha.</target>

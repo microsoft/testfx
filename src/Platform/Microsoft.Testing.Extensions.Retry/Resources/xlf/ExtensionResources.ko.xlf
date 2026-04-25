@@ -50,6 +50,16 @@ Moving last attempt asset files to the default result directory
         <target state="translated">프로세스 '{0}'을(를) 시작하지 못했습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryFailedTestsDelayOptionDescription">
+        <source>Add a delay between retries. The delay is expressed as a time value, e.g. 1s, 2.5m, 1h. Default unit is milliseconds.</source>
+        <target state="new">Add a delay between retries. The delay is expressed as a time value, e.g. 1s, 2.5m, 1h. Default unit is milliseconds.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
+        <source>Option '--retry-failed-tests-delay' requires a valid time span value (e.g. 200, 1s, 2.5m, 1h)</source>
+        <target state="new">Option '--retry-failed-tests-delay' requires a valid time span value (e.g. 200, 1s, 2.5m, 1h)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">
         <source>Retry failed tests feature allows to restart test execution upon failure.</source>
         <target state="translated">실패한 테스트 다시 시도 기능을 사용하면 실패 시 테스트 실행을 다시 시작할 수 있습니다.</target>

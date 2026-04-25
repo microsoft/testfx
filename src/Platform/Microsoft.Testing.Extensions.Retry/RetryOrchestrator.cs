@@ -124,6 +124,13 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             indexToCleanup.Add(argIndex + 1);
         }
 
+        argIndex = GetOptionArgumentIndex(RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName, executableArguments);
+        if (argIndex > -1)
+        {
+            indexToCleanup.Add(argIndex);
+            indexToCleanup.Add(argIndex + 1);
+        }
+
         argIndex = GetOptionArgumentIndex(PlatformCommandLineProvider.ResultDirectoryOptionKey, executableArguments);
         if (argIndex > -1)
         {
@@ -361,6 +368,15 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
 
                 finalArguments.Clear();
                 lastListOfFailedId = retryFailedTestsPipeServer.FailedUID?.ToArray();
+
+                // Apply delay between retries if configured
+                if (_commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName, out string[]? retryDelay)
+                    && attemptCount < userMaxRetryCount + 1)
+                {
+                    TimeSpan delay = TimeSpanParser.Parse(retryDelay[0]);
+                    await logger.LogDebugAsync($"Waiting {delay} before next retry attempt").ConfigureAwait(false);
+                    await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+                }
             }
             else
             {
