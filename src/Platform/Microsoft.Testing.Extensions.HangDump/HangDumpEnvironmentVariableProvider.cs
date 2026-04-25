@@ -5,7 +5,6 @@ using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
 
@@ -24,7 +23,7 @@ internal sealed class HangDumpEnvironmentVariableProvider : ITestHostEnvironment
 
     public string Uid => nameof(HangDumpEnvironmentVariableProvider);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => ExtensionResources.HangDumpExtensionDisplayName;
 

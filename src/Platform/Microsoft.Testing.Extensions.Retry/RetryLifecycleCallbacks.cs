@@ -32,7 +32,7 @@ internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime, ID
 
     public string Uid => nameof(RetryLifecycleCallbacks);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => ExtensionResources.RetryFailedTestsExtensionDisplayName;
 

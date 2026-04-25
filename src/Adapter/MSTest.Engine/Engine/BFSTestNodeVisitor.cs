@@ -7,6 +7,8 @@ using Microsoft.Testing.Framework.Helpers;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
 
+using PlatformTestNodeUid = Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid;
+
 namespace Microsoft.Testing.Framework;
 
 internal sealed class BFSTestNodeVisitor
@@ -32,6 +34,11 @@ internal sealed class BFSTestNodeVisitor
 
     public async Task VisitAsync(Func<TestNode, TestNodeUid?, Task> onIncludedTestNodeAsync)
     {
+        // Precompute a HashSet for O(1) UID lookups when filtering by UID list.
+        HashSet<PlatformTestNodeUid>? uidFilterSet = _testExecutionFilter is TestNodeUidListFilter listFilter
+            ? [.. listFilter.TestNodeUids]
+            : null;
+
         // This is case sensitive, and culture insensitive, to keep UIDs unique, and comparable between different system.
         Dictionary<TestNodeUid, List<TestNode>> testNodesByUid = [];
         Queue<(TestNode CurrentNode, TestNodeUid? ParentNodeUid, StringBuilder NodeFullPath)> queue = new();
@@ -81,8 +88,8 @@ internal sealed class BFSTestNodeVisitor
             }
 
             // If the node is not filtered out by the test execution filter, we call the callback with the node.
-            if (_testExecutionFilter is not TestNodeUidListFilter listFilter
-                || listFilter.TestNodeUids.Any(uid => currentNode.StableUid.ToPlatformTestNodeUid() == uid))
+            if (uidFilterSet is null
+                || uidFilterSet.Contains(currentNode.StableUid.ToPlatformTestNodeUid()))
             {
                 await onIncludedTestNodeAsync(currentNode, parentNodeUid).ConfigureAwait(false);
             }

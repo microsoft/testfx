@@ -57,7 +57,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
     public string Uid => nameof(TestHostControllersTestHost);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => string.Empty;
 

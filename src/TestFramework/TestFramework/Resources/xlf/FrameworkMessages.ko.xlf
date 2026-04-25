@@ -100,12 +100,12 @@
       </trans-unit>
       <trans-unit id="AssertScopeFailure">
         <source>{0} assertion(s) failed within the assert scope.</source>
-        <target state="new">{0} assertion(s) failed within the assert scope.</target>
+        <target state="translated">어설션 범위 내에서 {0}개의 어설션이 실패했습니다.</target>
         <note>{0} is the number of assertion failures collected in the scope.</note>
       </trans-unit>
       <trans-unit id="AssertScopeNestedNotAllowed">
         <source>Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</source>
-        <target state="new">Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</target>
+        <target state="translated">중첩된 어설션 범위는 허용되지 않습니다. 새 범위를 만들기 전에 현재 범위를 해제합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThatDetailsPrefix">
@@ -254,7 +254,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed.</source>
-        <target state="new">{0} failed.</target>
+        <target state="translated">{0}이(가) 실패했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="HasCountFailMsg">

@@ -442,7 +442,7 @@ public sealed class CommandLineHandlerTests
         public string Uid => nameof(PlatformCommandLineProvider);
 
         /// <inheritdoc />
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         /// <inheritdoc />
         public string DisplayName => "Microsoft Testing Platform command line provider";
@@ -470,7 +470,7 @@ public sealed class CommandLineHandlerTests
         public string Uid => nameof(PlatformCommandLineProvider);
 
         /// <inheritdoc />
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         /// <inheritdoc />
         public string DisplayName => "Microsoft Testing Platform command line provider";
@@ -500,7 +500,7 @@ public sealed class CommandLineHandlerTests
         public string Uid => nameof(PlatformCommandLineProvider);
 
         /// <inheritdoc />
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         /// <inheritdoc />
         public string DisplayName => "Microsoft Testing Platform command line provider";
@@ -535,7 +535,7 @@ public sealed class CommandLineHandlerTests
         public string Uid { get; }
 
         /// <inheritdoc />
-        public string Version { get; } = AppVersion.DefaultSemVer;
+        public string Version { get; } = PlatformVersion.Version;
 
         /// <inheritdoc />
         public string DisplayName { get; }

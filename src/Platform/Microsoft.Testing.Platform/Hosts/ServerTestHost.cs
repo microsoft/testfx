@@ -93,7 +93,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
     public string Uid => nameof(ServerTestHost);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => PlatformResources.ServerTestHostDisplayName;
 

@@ -1,0 +1,77 @@
+name: Lean Proofs
+
+# 🔬 Lean Squad — CI workflow for formal verification proofs.
+# Runs `lake build` to verify Lean 4 proofs in formal-verification/lean/.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - "formal-verification/lean/**"
+      - ".github/workflows/lean-proofs.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "formal-verification/lean/**"
+  workflow_dispatch:
+
+jobs:
+  lean-build:
+    name: Build Lean proofs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install elan (Lean version manager)
+        run: |
+          ELAN_VERSION="v4.2.1"
+          ELAN_TARGET="x86_64-unknown-linux-gnu"
+          ELAN_ARCHIVE="elan-${ELAN_TARGET}.tar.gz"
+          ELAN_BASE_URL="https://github.com/leanprover/elan/releases/download/${ELAN_VERSION}"
+          ELAN_TMP_DIR="$(mktemp -d)"
+
+          LEAN_TOOLCHAIN_FILE="formal-verification/lean/lean-toolchain"
+
+          if [ ! -f "${LEAN_TOOLCHAIN_FILE}" ]; then
+            echo "Missing Lean toolchain file: ${LEAN_TOOLCHAIN_FILE}" >&2
+            exit 1
+          fi
+
+          LEAN_TOOLCHAIN="$(tr -d '\r\n' < "${LEAN_TOOLCHAIN_FILE}")"
+
+          if [ -z "${LEAN_TOOLCHAIN}" ]; then
+            echo "Lean toolchain file is empty: ${LEAN_TOOLCHAIN_FILE}" >&2
+            exit 1
+          fi
+
+          curl -sSfL "${ELAN_BASE_URL}/${ELAN_ARCHIVE}" -o "${ELAN_TMP_DIR}/${ELAN_ARCHIVE}"
+          cd "${ELAN_TMP_DIR}"
+          echo "4e717523217af592fa2d7b9c479410a31816c065d66ccbf0c2149337cfec0f5c  ${ELAN_ARCHIVE}" | sha256sum -c -
+          tar -xzf "${ELAN_ARCHIVE}"
+          ./elan-init -y --default-toolchain "${LEAN_TOOLCHAIN}"
+          rm -rf "${ELAN_TMP_DIR}"
+
+      - name: Add elan to PATH
+        run: echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Show Lean version
+        run: lean --version
+
+      - name: Cache Lean / Lake build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            formal-verification/lean/.lake
+            ~/.elan
+          key: lean-${{ runner.os }}-${{ hashFiles('formal-verification/lean/lakefile.toml', 'formal-verification/lean/lake-manifest.json') }}
+          restore-keys: |
+            lean-${{ runner.os }}-
+
+      - name: Build Lean proofs
+        working-directory: formal-verification/lean
+        run: lake build

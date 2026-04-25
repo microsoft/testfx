@@ -4,6 +4,10 @@
     <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
     <Nullable>enable</Nullable>
     <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
+    <GenerateBuildInfo>true</GenerateBuildInfo>
+    <BuildInfoTemplateFile>$(RepoRoot)src\Platform\SharedExtensionHelpers\BuildInfo.cs.template</BuildInfoTemplateFile>
+    <!-- Override VersionPrefix so that ExtensionVersion.DefaultSemVer matches the Testing Platform version, not the MSTest version. -->
+    <VersionPrefix>$(TestingPlatformVersionPrefix)</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>

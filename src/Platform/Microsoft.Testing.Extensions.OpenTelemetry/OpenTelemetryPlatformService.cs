@@ -12,8 +12,8 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
     internal const string ActivitySourceName = "Microsoft.Testing.Platform";
     internal const string MeterName = "Microsoft.Testing.Platform";
 
-    private readonly ActivitySource _activitySource = new(ActivitySourceName, PlatformVersion.Version);
-    private readonly Meter _meter = new(MeterName, PlatformVersion.Version);
+    private readonly ActivitySource _activitySource = new(ActivitySourceName, ExtensionVersion.DefaultSemVer);
+    private readonly Meter _meter = new(MeterName, ExtensionVersion.DefaultSemVer);
 
     public IPlatformActivity? TestFrameworkActivity { get; set; }
 
