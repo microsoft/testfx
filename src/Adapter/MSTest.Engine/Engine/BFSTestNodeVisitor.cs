@@ -6,8 +6,6 @@ using System.Web;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
 
-using PlatformTestNodeUid = Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid;
-
 namespace Microsoft.Testing.Framework;
 
 internal sealed class BFSTestNodeVisitor
@@ -36,16 +34,10 @@ internal sealed class BFSTestNodeVisitor
     public async Task VisitAsync(Func<TestNode, TestNodeUid?, Task> onIncludedTestNodeAsync)
     {
         // Precompute a HashSet<string> for O(1) UID lookups when filtering by UID list.
-        // Using string values directly avoids allocating a PlatformTestNodeUid wrapper for each lookup.
-        HashSet<string>? uidFilterSet = null;
-        if (_testExecutionFilter is TestNodeUidListFilter listFilter)
-        {
-            uidFilterSet = new HashSet<string>(StringComparer.Ordinal);
-            foreach (PlatformTestNodeUid uid in listFilter.TestNodeUids)
-            {
-                uidFilterSet.Add(uid.Value);
-            }
-        }
+        // Using string values directly avoids allocating a wrapper for each lookup.
+        HashSet<string>? uidFilterSet = _testExecutionFilter is TestNodeUidListFilter listFilter
+            ? new HashSet<string>(listFilter.TestNodeUids.Select(static uid => uid.Value), StringComparer.Ordinal)
+            : null;
 
         // This is case sensitive, and culture insensitive, to keep UIDs unique, and comparable between different system.
         Dictionary<TestNodeUid, List<TestNode>> testNodesByUid = [];
