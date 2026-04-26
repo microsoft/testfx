@@ -12,7 +12,7 @@
       "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs",
       "phase": 2,
       "priority": 1,
-      "notes": "Informal spec extracted and merged (PR #7799). 14 properties across 4 groups. Open question: constructor does not enforce Min <= Max; CommandLineOption constructor validates this. Next: Task 3 (Lean 4 formal spec). Blocked by Lean toolchain unavailability in CI runner."
+      "notes": "Informal spec extracted and merged (PR #7799). 14 properties across 4 groups. Open question: constructor does not enforce Min <= Max. Correspondence documented in CORRESPONDENCE.md (Task 6). Next: Task 3 (Lean 4 formal spec). Blocked by Lean toolchain unavailability in CI runner."
     },
     {
       "id": 2,
@@ -20,7 +20,7 @@
       "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs",
       "phase": 2,
       "priority": 2,
-      "notes": "Informal spec extracted (PR #7833, open). 24 properties across 5 groups. Two confirmed bugs: (1) single-char input '\\'' causes ArgumentOutOfRangeException; (2) single-char input '\"' causes range exception. Fix: add length<2 guard. Next: Task 3 (Lean 4 formal spec).",
+      "notes": "Informal spec extracted (PR #7833, open). 24 properties across 5 groups. Two confirmed bugs: (1) single-char input triggers ArgumentOutOfRangeException; (2) same for double-quote. Correspondence documented in CORRESPONDENCE.md (Task 6). Next: Task 3.",
       "spec_file": "formal-verification/specs/commandlineparser_tryunescape_informal.md"
     },
     {
@@ -29,7 +29,7 @@
       "file": "src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs",
       "phase": 1,
       "priority": 3,
-      "notes": "NEW (2026-04-26). Pure recursive Boolean filter evaluator. Models Boolean algebra (And, Or, Not, Nop). Properties: De Morgan, double negation, idempotence, NopExpression=true. Abstract match predicate. Ideal for structural induction. Best Lean target after ArgumentArity."
+      "notes": "Pure recursive Boolean filter evaluator. Models Boolean algebra (And, Or, Not, Nop). Correspondence documented in CORRESPONDENCE.md (Task 6): FilterExpression->inductive FilterExpr, Regex->String->Bool predicate, PropertyBag->String->String->Bool. 9 Boolean-algebra theorems planned."
     },
     {
       "id": 6,
@@ -37,7 +37,7 @@
       "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs",
       "phase": 1,
       "priority": 4,
-      "notes": "NEW (2026-04-26). Pure tokeniser. State machine: seeking (TokenStart/WordEnd) x seekingQuote (QuoteStart/QuoteEnd). Properties: empty->empty, whitespace splits, double-quotes group and strip. Derived from dotnet/command-line-api."
+      "notes": "Pure tokeniser. State machine: seeking x seekingQuote. Properties: empty->empty, whitespace splits, double-quotes group and strip. Correspondence planned in CORRESPONDENCE.md."
     },
     {
       "id": 3,
@@ -45,7 +45,7 @@
       "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs",
       "phase": 1,
       "priority": 5,
-      "notes": "Pure inner function. Splits --opt=val into name+arg. Strips leading dashes."
+      "notes": "Pure inner function. Splits --opt=val into name+arg. Strips leading dashes. Correspondence planned."
     },
     {
       "id": 4,
@@ -53,7 +53,7 @@
       "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs",
       "phase": 1,
       "priority": 6,
-      "notes": "ValidateOptionsArgumentArity function. Arity bounds checking. First branch (arity > Max && Max == 0) is a special case of third branch — intentional for UX (different error message)."
+      "notes": "ValidateOptionsArgumentArity function. Arity bounds checking. Correspondence planned."
     },
     {
       "id": 5,
@@ -61,7 +61,7 @@
       "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs",
       "phase": 1,
       "priority": 7,
-      "notes": "Structural equality. Reflexivity, symmetry, transitivity."
+      "notes": "Structural equality. Reflexivity, symmetry, transitivity. Correspondence planned."
     }
   ],
   "merged_prs": [
@@ -80,9 +80,14 @@
       "tasks": ["Task 2: Informal Spec (TryUnescape)"]
     },
     {
-      "branch": "lean-squad/task1-new-targets-2026-04-26",
+      "branch": "lean-squad/task1-new-targets-2026-04-26-af98d23215b156cc",
       "title": "[Lean Squad] feat(fv): Task 1 — expand FV targets (SplitCommandLine + TreeNodeFilter)",
       "tasks": ["Task 1: Research (new targets)"]
+    },
+    {
+      "branch": "lean-squad/task6-correspondence-2026-04-26",
+      "title": "[Lean Squad] feat(fv): Task 6 — Lean–C# correspondence review for primary targets",
+      "tasks": ["Task 6: Correspondence Review"]
     }
   ],
   "open_issues": [
@@ -136,5 +141,15 @@
       "theorem predefined_distinct"
     ],
     "approach": "Use Int for min/max. Model Int32.MaxValue as 2147483647. Use decide for concrete theorems."
+  },
+  "correspondence_notes": {
+    "documented_in": "formal-verification/CORRESPONDENCE.md",
+    "last_updated": "2026-04-26",
+    "targets_covered": ["ArgumentArity", "CommandLineParser.TryUnescape", "TreeNodeFilter.MatchFilterPattern"],
+    "key_decisions": {
+      "ArgumentArity": "Int (not Int32); Int32.MaxValue=2147483647 concrete; DecidableEq for Equals; GetHashCode excluded",
+      "TryUnescape": "IEnvironment->newLine:String; option dropped; Except String String; exception bugs excluded",
+      "MatchFilterPattern": "FilterExpression->inductive; Regex->String->Bool; PropertyBag->String->String->Bool"
+    }
   }
 }
