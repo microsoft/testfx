@@ -13,14 +13,20 @@ internal readonly struct FrameworkEngineMetadataProperty() : IProperty
 
     public static FrameworkEngineMetadataProperty GetFromProperties(IProperty[] properties)
     {
+        FrameworkEngineMetadataProperty? result = null;
         foreach (IProperty property in properties)
         {
             if (property is FrameworkEngineMetadataProperty frameworkEngineMetadataProperty)
             {
-                return frameworkEngineMetadataProperty;
+                if (result is not null)
+                {
+                    throw new InvalidOperationException("Sequence contains more than one matching element");
+                }
+
+                result = frameworkEngineMetadataProperty;
             }
         }
 
-        return default;
+        return result ?? default;
     }
 }
