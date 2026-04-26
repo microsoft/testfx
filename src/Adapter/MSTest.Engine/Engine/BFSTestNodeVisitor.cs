@@ -12,6 +12,8 @@ namespace Microsoft.Testing.Framework;
 
 internal sealed class BFSTestNodeVisitor
 {
+    private static readonly string PathSeparatorString = TreeNodeFilter.PathSeparator.ToString();
+
     private readonly IEnumerable<TestNode> _rootTestNodes;
     private readonly ITestExecutionFilter _testExecutionFilter;
     private readonly TestArgumentsManager _testArgumentsManager;
@@ -38,7 +40,7 @@ internal sealed class BFSTestNodeVisitor
         HashSet<string>? uidFilterSet = null;
         if (_testExecutionFilter is TestNodeUidListFilter listFilter)
         {
-            uidFilterSet = [];
+            uidFilterSet = new HashSet<string>(StringComparer.Ordinal);
             foreach (PlatformTestNodeUid uid in listFilter.TestNodeUids)
             {
                 uidFilterSet.Add(uid.Value);
@@ -72,7 +74,7 @@ internal sealed class BFSTestNodeVisitor
             // a well-known proven standard encoding that is reversible.
             string encodedName = EncodeString(currentNode.OverriddenEdgeName ?? currentNode.DisplayName);
             string currentNodeFullPath = nodeFullPath.Length == 0 || nodeFullPath[^1] != TreeNodeFilter.PathSeparator
-                ? string.Concat(nodeFullPath, "/", encodedName)
+                ? string.Concat(nodeFullPath, PathSeparatorString, encodedName)
                 : string.Concat(nodeFullPath, encodedName);
 
             // When we are filtering as tree filter and the current node does not match the filter, we skip the node and its children.
