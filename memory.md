@@ -1,7 +1,7 @@
 # TestFX Test Improver Memory
 
 ## Last Updated
-2026-04-25
+2026-04-28
 
 ## Build/Test Commands
 
@@ -42,20 +42,29 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
   - Uses `AwesomeAssertions` for assertions
   - Namespace: `UnitTestFramework.Tests` or `Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes`
   - Requires `-p:UseSharedCompilation=false` due to sandbox restrictions on shared compiler server
+  - **NOT included in `NonWindowsTests.slnf`** — Linux/macOS CI never builds or tests this project
+  - Windows CI builds it with `-p:TreatWarningsAsErrors=true` — all IDE style warnings become errors
+  - Always validate new tests with: `dotnet build ... -p:TreatWarningsAsErrors=true` before pushing
 - **Microsoft.Testing.Platform.UnitTests**: Uses MSTest
 
 ## Testing Backlog (prioritized)
 
 1. ✅ **DONE** `UseConditionBaseWithTestClassAnalyzer` (MSTEST0041) - was the only analyzer without tests → PR #7809 merged
-2. ✅ **DONE** `RetryAttribute` unit tests → PR submitted 2026-04-25
+2. ✅ **DONE** `RetryAttribute` unit tests → PR #7838 open, CI fixed 2026-04-28
 3. Investigate `Microsoft.Testing.Platform.UnitTests` for gaps in Configuration and ServerMode tests
 4. Explore `TestFramework.UnitTests` assertion tests for edge cases
 5. Check if MSTest integration test suite covers `CICondition/OSCondition` scenarios
 
 ## Completed Work
 
+### 2026-04-28
+- **Fixed PR #7838 CI failures**: IDE0008/IDE0017 code style violations
+  - `TestFramework.UnitTests` not in `NonWindowsTests.slnf` → Linux CI passes, Windows CI fails
+  - Windows uses `TreatWarningsAsErrors=true` → IDE0008/IDE0017 become errors
+  - Fix: object initializers (IDE0017), explicit types for non-apparent var (IDE0008)
+
 ### 2026-04-25
-- **PR created**: `[Test Improver] Add unit tests for RetryAttribute`
+- **PR #7838 created**: `[Test Improver] Add unit tests for RetryAttribute`
   - 13 new tests covering constructor validation, BackoffType, and ExecuteAsync retry logic
   - All 809 tests pass (796 baseline + 13 new)
 
@@ -70,10 +79,10 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 | Task 1: Discover commands | 2026-04-24 |
 | Task 2: Identify opportunities | 2026-04-24 |
 | Task 3: Implement tests | 2026-04-25 |
-| Task 4: Maintain PRs | 2026-04-25 (no open PRs to maintain) |
+| Task 4: Maintain PRs | 2026-04-28 |
 | Task 5: Comment on issues | - |
 | Task 6: Test infrastructure | - |
-| Task 7: Monthly summary | 2026-04-25 |
+| Task 7: Monthly summary | 2026-04-28 |
 
 ## Maintainer Priorities
 - PR #7809 (MSTEST0041 tests) was merged within hours - maintainer is receptive to test PRs
@@ -87,3 +96,6 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
   - The shared Roslyn compiler server is sandboxed and cannot access NuGet package DLLs in ~/.nuget
   - The full ./build.sh does NOT have this problem
 - `AwesomeAssertions` is banned in MSTest.Analyzers.UnitTests and Microsoft.Testing.Platform.UnitTests (see BannedSymbols.txt)
+- **IMPORTANT**: When adding tests to `TestFramework.UnitTests`, always validate with `TreatWarningsAsErrors=true`
+  since Linux CI never builds this project (not in NonWindowsTests.slnf) but Windows CI does and treats
+  all warnings as errors. Use: `dotnet build ... -f net8.0 -p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true`
