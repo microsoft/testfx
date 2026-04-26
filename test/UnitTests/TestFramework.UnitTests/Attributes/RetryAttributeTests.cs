@@ -56,8 +56,7 @@ public class RetryAttributeTests : TestContainer
 
     public void BackoffType_WhenSetToExponential_Succeeds()
     {
-        var attribute = new RetryAttribute(2);
-        attribute.BackoffType = DelayBackoffType.Exponential;
+        RetryAttribute attribute = new(2) { BackoffType = DelayBackoffType.Exponential };
         attribute.BackoffType.Should().Be(DelayBackoffType.Exponential);
     }
 
@@ -75,7 +74,7 @@ public class RetryAttributeTests : TestContainer
         var passResult = new TestResult { Outcome = UnitTestOutcome.Passed };
         var failResult = new TestResult { Outcome = UnitTestOutcome.Failed };
 
-        var firstRunResults = new[] { failResult };
+        TestResult[] firstRunResults = [failResult];
         var context = new RetryContext(
             () =>
             {
@@ -97,7 +96,7 @@ public class RetryAttributeTests : TestContainer
         int callCount = 0;
 
         var failResult = new TestResult { Outcome = UnitTestOutcome.Failed };
-        var firstRunResults = new[] { failResult };
+        TestResult[] firstRunResults = [failResult];
 
         var context = new RetryContext(
             () =>
@@ -117,12 +116,12 @@ public class RetryAttributeTests : TestContainer
         var attribute = new RetryAttribute(maxRetryAttempts: 2);
         int callCount = 0;
 
-        var firstRunResults = new[] { new TestResult { Outcome = UnitTestOutcome.Failed } };
+        TestResult[] firstRunResults = [new TestResult { Outcome = UnitTestOutcome.Failed }];
         var context = new RetryContext(
             () =>
             {
                 callCount++;
-                var outcome = callCount == 2 ? UnitTestOutcome.Timeout : UnitTestOutcome.Failed;
+                UnitTestOutcome outcome = callCount == 2 ? UnitTestOutcome.Timeout : UnitTestOutcome.Failed;
                 return Task.FromResult(new[] { new TestResult { Outcome = outcome } });
             },
             firstRunResults);
@@ -138,12 +137,12 @@ public class RetryAttributeTests : TestContainer
         var attribute = new RetryAttribute(maxRetryAttempts: 5);
         int callCount = 0;
 
-        var firstRunResults = new[] { new TestResult { Outcome = UnitTestOutcome.Failed } };
+        TestResult[] firstRunResults = [new TestResult { Outcome = UnitTestOutcome.Failed }];
         var context = new RetryContext(
             () =>
             {
                 callCount++;
-                var outcome = callCount < 3 ? UnitTestOutcome.Failed : UnitTestOutcome.Passed;
+                UnitTestOutcome outcome = callCount < 3 ? UnitTestOutcome.Failed : UnitTestOutcome.Passed;
                 return Task.FromResult(new[] { new TestResult { Outcome = outcome } });
             },
             firstRunResults);
@@ -160,7 +159,7 @@ public class RetryAttributeTests : TestContainer
         var attribute = new RetryAttribute(maxRetryAttempts: 5);
         int callCount = 0;
 
-        var firstRunResults = new[] { new TestResult { Outcome = UnitTestOutcome.Failed } };
+        TestResult[] firstRunResults = [new TestResult { Outcome = UnitTestOutcome.Failed }];
         var context = new RetryContext(
             () =>
             {
