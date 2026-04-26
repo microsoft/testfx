@@ -7,7 +7,7 @@ using AwesomeAssertions;
 
 using TestFramework.ForTestingMSTest;
 
-namespace UnitTestFramework.Tests;
+namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
 
 /// <summary>
 /// Tests for <see cref="RetryAttribute"/> constructor validation and retry execution logic.
@@ -106,7 +106,7 @@ public class RetryAttributeTests : TestContainer
             },
             firstRunResults);
 
-        RetryResult result = await attribute.ExecuteAsync(context);
+        await attribute.ExecuteAsync(context);
 
         callCount.Should().Be(3);
     }
