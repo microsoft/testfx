@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-04-25",
+  "last_run": "2026-04-26",
   "fv_tool": "Lean 4 + Mathlib",
   "lakefile_format": "toml",
   "lean_dir": "formal-verification/lean",
@@ -20,7 +20,7 @@
       "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs",
       "phase": 2,
       "priority": 2,
-      "notes": "Informal spec extracted (this run, draft PR). 24 properties across 5 groups. Two confirmed bugs: (1) single-char input '\\'' causes ArgumentOutOfRangeException via IndexOf(char,1,-1); (2) single-char input '\"' causes range exception via input[1..^1] with start>end. Fix: add length<2 guard. Next: Task 3 (Lean 4 formal spec).",
+      "notes": "Informal spec extracted (PR #7833, open). 24 properties across 5 groups. Two confirmed bugs: (1) single-char input '\\'' causes ArgumentOutOfRangeException via IndexOf(char,1,-1); (2) single-char input '\"' causes range exception via input[1..^1] with start>end. Fix: add length<2 guard. Next: Task 3 (Lean 4 formal spec).",
       "spec_file": "formal-verification/specs/commandlineparser_tryunescape_informal.md"
     },
     {
@@ -59,8 +59,14 @@
   "open_prs": [
     {
       "branch": "lean-squad/task2-tryunescape-2026-04-25",
+      "number": 7833,
       "title": "[Lean Squad] feat(fv): Task 2 — informal spec for CommandLineParser.TryUnescape",
       "tasks": ["Task 2: Informal Spec (TryUnescape)"]
+    },
+    {
+      "branch": "lean-squad/task9-ci-2026-04-26",
+      "title": "[Lean Squad] feat(ci): improve lean-proofs.yml — skip guard and lake update step",
+      "tasks": ["Task 9: CI Automation"]
     }
   ],
   "open_issues": [
@@ -70,7 +76,7 @@
       "purpose": "status dashboard"
     }
   ],
-  "next_priority": "Task 3: Write Lean 4 formal spec for ArgumentArity (phase 2 -> 3). Then Task 3 for TryUnescape. Both blocked by Lean toolchain. If Lean ever becomes available, start with ArgumentArity.lean using the plan in lean_formal_spec_plan.",
+  "next_priority": "Task 3: Write Lean 4 formal spec for ArgumentArity (phase 2 -> 3). Blocked by Lean toolchain. If Lean ever becomes available, start with ArgumentArity.lean.",
   "approach": {
     "focus_area": "src/Platform/Microsoft.Testing.Platform/CommandLine/",
     "rationale": "Pure functions, clear algebraic properties, well-documented POSIX/CLI conventions"
@@ -85,14 +91,14 @@
     {
       "type": "confirmed-bug",
       "target": "CommandLineParser.TryUnescape",
-      "description": "EC-1: Input consisting of exactly one single-quote character triggers ArgumentOutOfRangeException: IndexOf(char, 1, -1) called when input.Length == 1, count = input.Length - 2 = -1.",
+      "description": "EC-1: Input of exactly one single-quote character triggers ArgumentOutOfRangeException: IndexOf(char, 1, -1) called when input.Length == 1, count = input.Length - 2 = -1.",
       "status": "open",
       "fix": "Add length < 2 guard before quoted-mode branching"
     },
     {
       "type": "confirmed-bug",
       "target": "CommandLineParser.TryUnescape",
-      "description": "EC-2: Input consisting of exactly one double-quote character triggers range exception: input[1..^1] where start=1 > end=0 when input.Length == 1.",
+      "description": "EC-2: Input of exactly one double-quote character triggers range exception: input[1..^1] where start=1 > end=0 when input.Length == 1.",
       "status": "open",
       "fix": "Add length < 2 guard before quoted-mode branching"
     }
@@ -108,14 +114,11 @@
       "theorem zeroOrMore_spec : ArgumentArity.zeroOrMore = { min := 0, max := 2147483647 }",
       "theorem exactlyOne_spec : ArgumentArity.exactlyOne = { min := 1, max := 1 }",
       "theorem oneOrMore_spec : ArgumentArity.oneOrMore = { min := 1, max := 2147483647 }",
-      "theorem predefined_nonneg_min : for all c in predefined list, c.min >= 0",
-      "theorem predefined_wellformed : for all c in predefined list, c.min <= c.max",
-      "theorem eq_reflexive : for all a, a = a",
-      "theorem eq_symmetric : for all a b, a = b -> b = a",
-      "theorem eq_transitive : for all a b c, a = b -> b = c -> a = c",
-      "theorem eq_extensional : for all a b, a = b iff a.min = b.min and a.max = b.max",
-      "theorem predefined_distinct : all 5 predefined constants are pairwise distinct"
+      "theorem predefined_nonneg_min",
+      "theorem predefined_wellformed",
+      "theorem eq_extensional",
+      "theorem predefined_distinct"
     ],
-    "approach": "Use Int for min/max. Model Int32.MaxValue as 2147483647 concrete value. Use decide for concrete theorems about predefined constants."
+    "approach": "Use Int for min/max. Model Int32.MaxValue as 2147483647. Use decide for concrete theorems."
   }
 }
