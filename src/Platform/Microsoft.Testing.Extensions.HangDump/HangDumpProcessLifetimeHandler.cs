@@ -311,14 +311,18 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
         ApplicationStateGuard.Ensure(_dumpType is not null);
 
+        string processId = process.Id.ToString(CultureInfo.InvariantCulture);
         var customReplacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["pname"] = process.Name,
-            ["pid"] = process.Id.ToString(CultureInfo.InvariantCulture),
-            ["%p"] = process.Id.ToString(CultureInfo.InvariantCulture),
+            ["pid"] = processId,
         };
 
-        string finalDumpFileName = _artifactNamingService.ResolveTemplate(_dumpFileNamePattern ?? $"{process.Name}_%p_hang.dmp", customReplacements);
+        string pattern = _dumpFileNamePattern ?? $"{process.Name}_%p_hang.dmp";
+
+        // First resolve <placeholder> templates, then handle legacy %p pattern for backward compatibility.
+        string finalDumpFileName = _artifactNamingService.ResolveTemplate(pattern, customReplacements)
+            .Replace("%p", processId);
         finalDumpFileName = Path.Combine(_configuration.GetTestResultDirectory(), finalDumpFileName);
 
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);

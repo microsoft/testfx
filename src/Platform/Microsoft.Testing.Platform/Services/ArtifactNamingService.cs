@@ -28,7 +28,10 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
 
     public string ResolveTemplate(string template, IDictionary<string, string>? customReplacements = null)
     {
-        Guard.NotNullOrEmpty(template);
+        if (RoslynString.IsNullOrEmpty(template))
+        {
+            throw new ArgumentException("Template cannot be null or empty.", nameof(template));
+        }
 
         Dictionary<string, string> defaultReplacements = GetDefaultReplacements();
         Dictionary<string, string> allReplacements = MergeReplacements(defaultReplacements, customReplacements);
@@ -67,13 +70,10 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
         }
 
         // Time info (precision to 1 second)
-        replacements["time"] = _clock.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+        replacements["time"] = _clock.UtcNow.ToString("yyyy-MM-ddTHH-mm-ss", CultureInfo.InvariantCulture);
 
         // Random ID for uniqueness
         replacements["id"] = GenerateShortId();
-
-        // Root directory
-        replacements["root"] = GetRootDirectory();
 
         return replacements;
     }
@@ -86,75 +86,49 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
         }
 
         var merged = new Dictionary<string, string>(defaultReplacements, StringComparer.OrdinalIgnoreCase);
-        foreach ((string? key, string? value) in customReplacements)
+        foreach (KeyValuePair<string, string> kvp in customReplacements)
         {
-            merged[key] = value;
+            merged[kvp.Key] = kvp.Value;
         }
 
         return merged;
     }
 
     private static string GetOperatingSystemName()
-    {
-        if (OperatingSystem.IsWindows())
-        {
-            return "windows";
-        }
-
-        if (OperatingSystem.IsLinux())
-        {
-            return "linux";
-        }
-
-        if (OperatingSystem.IsMacOS())
-        {
-            return "macos";
-        }
-
-        // Fallback for unknown OS
-        return "unknown";
-    }
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows"
+            : RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "linux"
+            : RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "macos"
+            : "unknown";
 
     private string GetTargetFrameworkMoniker()
     {
-        // Extract TFM from current runtime
         string frameworkDescription = RuntimeInformation.FrameworkDescription;
 
-        if (frameworkDescription.Contains(".NET Core"))
+        // .NET 5+ reports as ".NET X.Y.Z"
+        if (frameworkDescription.StartsWith(".NET ", StringComparison.Ordinal) &&
+            !frameworkDescription.StartsWith(".NET Framework", StringComparison.Ordinal) &&
+            !frameworkDescription.StartsWith(".NET Core", StringComparison.Ordinal))
         {
-            // Try to extract version from .NET Core description
+            Match match = Regex.Match(frameworkDescription, @"\.NET (\d+)\.\d+");
+            if (match.Success)
+            {
+                return $"net{match.Groups[1].Value}.0";
+            }
+        }
+        else if (frameworkDescription.StartsWith(".NET Core", StringComparison.Ordinal))
+        {
             Match match = Regex.Match(frameworkDescription, @"\.NET Core (\d+\.\d+)");
             if (match.Success)
             {
                 return $"netcoreapp{match.Groups[1].Value}";
             }
         }
-        else if (frameworkDescription.Contains(".NET "))
+        else if (frameworkDescription.StartsWith(".NET Framework", StringComparison.Ordinal))
         {
-            // Try to extract version from .NET 5+ description
-            Match match = Regex.Match(frameworkDescription, @"\.NET (\d+\.\d+)");
+            Match match = Regex.Match(frameworkDescription, @"\.NET Framework (\d+)\.(\d+)");
             if (match.Success)
             {
-                string version = match.Groups[1].Value;
-                return version switch
-                {
-                    "5.0" => "net5.0",
-                    "6.0" => "net6.0",
-                    "7.0" => "net7.0",
-                    "8.0" => "net8.0",
-                    "9.0" => "net9.0",
-                    "10.0" => "net10.0",
-                    _ => $"net{version}",
-                };
-            }
-        }
-        else if (frameworkDescription.Contains(".NET Framework"))
-        {
-            // Try to extract version from .NET Framework description
-            Match match = Regex.Match(frameworkDescription, @"\.NET Framework (\d+\.\d+)");
-            if (match.Success)
-            {
-                return $"net{match.Groups[1].Value.Replace(".", string.Empty)}";
+                return $"net{match.Groups[1].Value}{match.Groups[2].Value}";
             }
         }
 
@@ -162,49 +136,5 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
     }
 
     private static string GenerateShortId()
-        => Guid.NewGuid().ToString("N")[..8];
-
-    private string GetRootDirectory()
-    {
-        string currentDirectory = _testApplicationModuleInfo.GetCurrentTestApplicationDirectory();
-
-        // Try to find solution root, git root, or working directory
-        string? rootDirectory = FindSolutionRoot(currentDirectory)
-            ?? FindGitRoot(currentDirectory)
-            ?? currentDirectory;
-
-        return rootDirectory;
-    }
-
-    private static string? FindSolutionRoot(string startDirectory)
-    {
-        string? directory = startDirectory;
-        while (directory is not null)
-        {
-            if (Directory.GetFiles(directory, "*.sln").Length > 0)
-            {
-                return directory;
-            }
-
-            directory = Directory.GetParent(directory)?.FullName;
-        }
-
-        return null;
-    }
-
-    private static string? FindGitRoot(string startDirectory)
-    {
-        string? directory = startDirectory;
-        while (directory is not null)
-        {
-            if (Directory.Exists(Path.Combine(directory, ".git")))
-            {
-                return directory;
-            }
-
-            directory = Directory.GetParent(directory)?.FullName;
-        }
-
-        return null;
-    }
+        => Guid.NewGuid().ToString("N").Substring(0, 8);
 }
