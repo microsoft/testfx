@@ -13,6 +13,7 @@ using MSTest.Acceptance.IntegrationTests.Messages.V100;
 #endif
 
 using Microsoft.Extensions.AI;
+using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.AI;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -37,6 +38,7 @@ public class Program
 
             // Test MSTest
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
+            testApplicationBuilder.AddCrashDumpProvider();
 
             // Add Chat client provider
             // testApplicationBuilder.AddAzureOpenAIChatClientProvider();
@@ -48,7 +50,7 @@ public class Program
             // testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
 
             // Enable Trx
-            // testApplicationBuilder.AddTrxReportProvider();
+            testApplicationBuilder.AddTrxReportProvider();
 
             // Enable Telemetry
             // testApplicationBuilder.AddAppInsightsTelemetryProvider();
@@ -89,10 +91,10 @@ public class Program
             await runRequest.WaitCompletionAsync();
 
             await client.ExitAsync();
+
+            return 0;
 #endif
         }
-
-        return 0;
     }
 }
 
@@ -191,9 +193,9 @@ public sealed class OutOfProc : ITestHostProcessLifetimeHandler, IDataProducer
     public OutOfProc(IMessageBus messageBus)
         => _messageBus = messageBus;
 
-    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
         => await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(@"C:\sampleFile"), "Sample", "sample description"));
 
-    public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+    public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
         => Task.CompletedTask;
 }

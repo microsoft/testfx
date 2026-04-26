@@ -182,4 +182,52 @@ public sealed class TestContextPropertiesContainsKeyFixerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenTestContextPropertiesContainsWithMultiLineContext_PreservesIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var key = GetKey(
+                        "prefix",
+                        "suffix");
+                    bool hasKey = TestContext.Properties.Contains({|CS1503:key|});
+                }
+
+                private string GetKey(string prefix, string suffix) => prefix + suffix;
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var key = GetKey(
+                        "prefix",
+                        "suffix");
+                    bool hasKey = TestContext.Properties.ContainsKey(key);
+                }
+
+                private string GetKey(string prefix, string suffix) => prefix + suffix;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

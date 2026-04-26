@@ -39,24 +39,31 @@ public static partial class AssertExtensions
             var sb = new StringBuilder();
             string expressionText = conditionExpression
                 ?? throw new ArgumentNullException(nameof(conditionExpression));
-            sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatFailedFormat, expressionText));
             if (!string.IsNullOrWhiteSpace(message))
             {
+                sb.AppendLine();
                 sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatMessageFormat, message));
             }
 
             string details = ExtractDetails(condition.Body);
             if (!string.IsNullOrWhiteSpace(details))
             {
+                if (sb.Length == 0)
+                {
+                    sb.AppendLine();
+                }
+
                 sb.AppendLine(FrameworkMessages.AssertThatDetailsPrefix);
                 sb.AppendLine(details);
             }
 
-            throw new AssertFailedException(sb.ToString().TrimEnd());
+            Assert.ReportAssertFailed($"Assert.That({expressionText})", sb.ToString().TrimEnd());
         }
     }
 
+#pragma warning disable IDE0051 // Remove unused private members - false positive
     private static string ExtractDetails(Expression expr)
+#pragma warning restore IDE0051 // Remove unused private members
     {
         var details = new Dictionary<string, object?>();
         ExtractVariablesFromExpression(expr, details);
@@ -70,12 +77,12 @@ public static partial class AssertExtensions
         IOrderedEnumerable<KeyValuePair<string, object?>> sortedDetails = details.OrderBy(kvp => kvp.Key, StringComparer.Ordinal);
 
         var sb = new StringBuilder();
-        foreach ((string name, object? value) in sortedDetails)
+        foreach (KeyValuePair<string, object?> kvp in sortedDetails)
         {
 #if NET
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {name} = {FormatValue(value)}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {kvp.Key} = {FormatValue(kvp.Value)}");
 #else
-            sb.AppendLine($"  {name} = {FormatValue(value)}");
+            sb.AppendLine($"  {kvp.Key} = {FormatValue(kvp.Value)}");
 #endif
         }
 
@@ -638,7 +645,7 @@ public static partial class AssertExtensions
 
     private static string RemoveOuterParentheses(string input)
     {
-        if (input.Length < 2 || !input.StartsWith('(') || !input.EndsWith(')'))
+        if (input.Length < 2 || !input.StartsWith("(", StringComparison.Ordinal) || !input.EndsWith(")", StringComparison.Ordinal))
         {
             return input;
         }
@@ -691,7 +698,7 @@ public static partial class AssertExtensions
 
                 // Keep at most 2 consecutive parentheses
                 int keepCount = Math.Min(count, 2);
-                result.Append(new string(currentChar, keepCount));
+                result.Append(currentChar, keepCount);
                 i += count;
             }
             else

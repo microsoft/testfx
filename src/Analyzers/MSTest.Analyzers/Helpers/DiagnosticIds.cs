@@ -67,4 +67,5 @@ internal static class DiagnosticIds
     public const string DuplicateTestMethodAttributeRuleId = "MSTEST0060";
     public const string UseOSConditionAttributeInsteadOfRuntimeCheckRuleId = "MSTEST0061";
     public const string AvoidOutRefTestMethodParametersRuleId = "MSTEST0062";
+    public const string TestClassConstructorShouldBeValidRuleId = "MSTEST0063";
 }

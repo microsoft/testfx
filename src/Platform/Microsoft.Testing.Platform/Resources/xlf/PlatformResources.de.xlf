@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
         <source>Browser platform is only supported on .NET 7.0 or greater.</source>
-        <target state="new">Browser platform is only supported on .NET 7.0 or greater.</target>
+        <target state="translated">Die Browserplattform wird nur unter .NET 7.0 oder höher unterstützt.</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -118,13 +118,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsReserved">
-        <source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</source>
-        <target state="translated">Die Option "--{0}" ist reserviert und kann nicht von Anbietern verwendet werden: "{0}"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineOptionObsoleteWarning">
-        <source>Warning: Option '--{0}' is obsolete. {1}</source>
-        <target state="translated">Warnung: Die Option „--{0}“ ist veraltet. {1}</target>
+        <source>Option '--{0}' is reserved and cannot be used by providers: '{1}'</source>
+        <target state="new">Option '--{0}' is reserved and cannot be used by providers: '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
@@ -419,16 +414,6 @@
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
         <target state="translated">{0} ausgeführten Tests</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">Es ist kein Serialisierungsmodul mit der ID "{0}" registriert</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">Es ist kein Serialisierungsmodul mit dem Typ "{0}" registriert</target>
         <note />
       </trans-unit>
       <trans-unit id="NotAvailable">
@@ -830,6 +815,25 @@ Gültige Werte sind „Normal“, „Detailed“. Der Standardwert ist „Normal
         <target state="translated">„--output“ erwartet einen einzelnen Parameter mit dem Wert „Normal“ oder „Detailed“.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="translated">Die Optionen --show-stdout und --show-stderr erwarten einen einzelnen Parameter mit dem Wert „Alle“, „Fehlgeschlagen“ oder „Keine“.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Legt fest, wann die erfasste Fehlerausgabe eines Tests angezeigt werden soll.
+Gültige Werte sind „Alle“, „Fehlgeschlagen“ und „Keine“. Der Standardwert ist „Alle“.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Legt fest, wann die erfasste Standardausgabe eines Tests angezeigt werden soll.
+Gültige Werte sind „Alle“, „Fehlgeschlagen“ und „Keine“. Der Standardwert ist „Alle“.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
         <target state="translated">Schreibt Testergebnisse in das Terminal.</target>
@@ -975,11 +979,6 @@ Gültige Werte sind „Normal“, „Detailed“. Der Standardwert ist „Normal
         <target state="translated">Unerwarteter Telemetrieaufruf. Die Telemetrie ist deaktiviert.</target>
         <note />
       </trans-unit>
-      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occurred during byte conversion</source>
-        <target state="translated">Unerwartete Ausnahme während der Bytekonvertierung.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
@@ -1020,11 +1019,6 @@ Gültige Werte sind „Normal“, „Detailed“. Der Standardwert ist „Normal
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
         <target state="translated">Ein Chatclientanbieter wurde bereits registriert.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">KI-Erweiterungen funktionieren nur mit Generatoren vom Typ „Microsoft.Testing.Platform.Builder.TestApplicationBuilder“</target>
         <note />
       </trans-unit>
     </body>

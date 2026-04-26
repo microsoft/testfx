@@ -6,7 +6,6 @@
 using Microsoft.Build.Framework;
 using Microsoft.Testing.Extensions.MSBuild;
 using Microsoft.Testing.Extensions.MSBuild.Serializers;
-using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
@@ -24,7 +23,6 @@ namespace Microsoft.Testing.Platform.MSBuild;
 /// <summary>
 /// Task that invokes the Testing Platform.
 /// </summary>
-[UnsupportedOSPlatform("browser")]
 public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 {
     private const string MonoRunnerName = "mono";
@@ -35,11 +33,18 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     private readonly CancellationTokenSource _waitForConnections = new();
     private readonly List<NamedPipeServer> _connections = [];
     private readonly StringBuilder _output = new();
+
+#if NET9_0_OR_GREATER
     private readonly Lock _initLock = new();
+#else
+    private readonly object _initLock = new();
+#endif
+
     private readonly Architecture _currentProcessArchitecture = RuntimeInformation.ProcessArchitecture;
 
     private Task? _connectionLoopTask;
     private ModuleInfoRequest? _moduleInfo;
+    private bool _receivedRunSummaryInfoRequest;
     private string? _outputFileName;
     private StreamWriter? _outputFileStream;
     private string? _toolCommand;
@@ -55,7 +60,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             Debugger.Launch();
         }
 
-        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), new SystemEnvironment());
+        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
     }
 
     internal InvokeTestingPlatformTask(IFileSystem fileSystem) => _fileSystem = fileSystem;
@@ -208,7 +213,12 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             }
 
             Log.LogMessage(MessageImportance.Low, $"Current process architecture '{_currentProcessArchitecture}'. Requested test architecture '{TestArchitecture.ItemSpec}'");
+
+#if NETCOREAPP
             PlatformArchitecture targetArchitecture = Enum.Parse<PlatformArchitecture>(TestArchitecture.ItemSpec, ignoreCase: true);
+#else
+            var targetArchitecture = (PlatformArchitecture)Enum.Parse(typeof(PlatformArchitecture), TestArchitecture.ItemSpec, ignoreCase: true);
+#endif
             StringBuilder resolutionLog = new();
             DotnetMuxerLocator dotnetMuxerLocator = new(log => resolutionLog.AppendLine(log));
             if (dotnetMuxerLocator.TryGetDotnetPathByArchitecture(targetArchitecture, out string? dotnetPath))
@@ -242,7 +252,11 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     }
 
     private bool IsCurrentProcessArchitectureCompatible() =>
+#if NETCOREAPP
         _currentProcessArchitecture == Enum.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
+#else
+        _currentProcessArchitecture == (Architecture)Enum.Parse(typeof(Architecture), TestArchitecture.ItemSpec, ignoreCase: true);
+#endif
 
     private string? TryGetRunCommand()
     {
@@ -292,9 +306,9 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         // If we are not "dotnet.exe" and not "mono", then we are given an executable from user and we are running on Windows.
         builder.AppendSwitchIfNotNull($"--{MSBuildConstants.MSBuildNodeOptionKey} ", _pipeNameDescription.Name);
 
-        if (!string.IsNullOrEmpty(TestingPlatformCommandLineArguments?.ItemSpec))
+        if (!RoslynString.IsNullOrEmpty(TestingPlatformCommandLineArguments?.ItemSpec))
         {
-            builder.AppendTextUnquoted($" {TestingPlatformCommandLineArguments!.ItemSpec} ");
+            builder.AppendTextUnquoted($" {TestingPlatformCommandLineArguments.ItemSpec} ");
         }
 
         if (VSTestCLIRunSettings?.Length > 0)
@@ -389,6 +403,18 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
         if (returnValue)
         {
+            if (_moduleInfo is null)
+            {
+                Log.LogError(Resources.MSBuildResources.DidNotReceiveModuleInfo, TargetPath.ItemSpec.Trim());
+                return false;
+            }
+
+            if (!_receivedRunSummaryInfoRequest)
+            {
+                Log.LogError(Resources.MSBuildResources.DidNotReceiveRunSummaryInfo, TargetPath.ItemSpec.Trim());
+                return false;
+            }
+
             Log.LogMessage(MessageImportance.High, Resources.MSBuildResources.TestsSucceeded, TargetPath.ItemSpec.Trim(), TargetFramework.ItemSpec, TestArchitecture.ItemSpec);
         }
 
@@ -416,7 +442,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             // If the output file name is null and the exit code is invalid command line we create a default one.
             if (_outputFileName is null && ExitCode == ExitCodes.InvalidCommandLine)
             {
-                _outputFileName = Path.Combine(Path.GetDirectoryName(TargetPath.ItemSpec.Trim())!, AggregatedConfiguration.DefaultTestResultFolderName);
+                _outputFileName = Path.Combine(Path.GetDirectoryName(TargetPath.ItemSpec.Trim())!, "TestResults");
                 _fileSystem.CreateDirectory(_outputFileName);
                 _outputFileName = Path.Combine(_outputFileName, $"{Path.GetFileNameWithoutExtension(TargetPath.ItemSpec.Trim())}_{TargetFramework.ItemSpec}_{TestArchitecture.ItemSpec}.log");
                 Log.LogMessage(MessageImportance.Low, $"Invalid command line exit code and empty output file name, creating default one '{_outputFileName}'");
@@ -515,6 +541,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                 Log.LogMessage(MessageImportance.High, summary);
             }
 
+            _receivedRunSummaryInfoRequest = true;
             return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
         }
 

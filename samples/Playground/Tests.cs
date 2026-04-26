@@ -5,6 +5,8 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
+
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
 
 namespace Playground;
@@ -15,9 +17,7 @@ public class TestClass
     [TestMethod]
     public void Test1()
     {
-        // string commonPart = new('a', 1000);
-        // string expected = commonPart + "expected";
-        // string actual = commonPart + "actual";
-        // Assert.AreEqual(expected, actual, ignoreCase: true);
+        Thread.Sleep(5000);
+        Assert.IsPositive(1);
     }
 }

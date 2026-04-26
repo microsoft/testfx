@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
         <source>Browser platform is only supported on .NET 7.0 or greater.</source>
-        <target state="new">Browser platform is only supported on .NET 7.0 or greater.</target>
+        <target state="translated">Браузерная платформа поддерживается только в версии .NET 7.0 или более поздних версиях.</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -118,13 +118,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsReserved">
-        <source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</source>
-        <target state="translated">Параметр "--{0}" зарезервирован и не может использоваться поставщиками: "{0}"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineOptionObsoleteWarning">
-        <source>Warning: Option '--{0}' is obsolete. {1}</source>
-        <target state="translated">Предупреждение: параметр "--{0}" устарел. {1}</target>
+        <source>Option '--{0}' is reserved and cannot be used by providers: '{1}'</source>
+        <target state="translated">Параметр "--{0}" зарезервирован и не может использоваться поставщиками: "{1}"</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
@@ -419,16 +414,6 @@
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
         <target state="translated">{0} тестов</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">Не зарегистрирован сериализатор с ИД "{0}"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">Не зарегистрирован сериализатор с типом "{0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="NotAvailable">
@@ -830,6 +815,25 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">--output ожидает один параметр со значением "Normal" или "Detailed".</target>
         <note />
       </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="translated">--show-stdout и --show-stderr принимают один параметр со значением "All" (Все), "Failed" (Сбой), "None" (Нет).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Определяет, когда показывать зафиксированный вывод ошибок теста.
+Допустимые значения: "All" (Все), "Failed" (Сбой), "None" (Нет). Значение по умолчанию — "All" (Все).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Определяет, когда показывать зафиксированный стандартный вывод теста.
+Допустимые значения: "All" (Все), "Failed" (Сбой), "None" (Нет). Значение по умолчанию — "All" (Все).</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
         <target state="translated">Записывает результаты теста в терминал.</target>
@@ -975,11 +979,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">Непредвиденный вызов телеметрии. Телеметрия отключена.</target>
         <note />
       </trans-unit>
-      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occurred during byte conversion</source>
-        <target state="translated">При преобразовании байт возникло непредвиденное исключение</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
@@ -1020,11 +1019,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
         <target state="translated">Поставщик клиента чата уже зарегистрирован.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Расширения ИИ работают только с построителями типа "Microsoft.Testing.Platform.Builder.TestApplicationBuilder"</target>
         <note />
       </trans-unit>
     </body>

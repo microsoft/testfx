@@ -53,7 +53,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         string testResultFolder = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformCommandLineArguments=\"--results-directory %22{testResultFolder}%22\" -p:Configuration={compilationMode} -p:nodeReuse=false \"{testAsset.TargetAssetPath}\"", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformCommandLineArguments=\"--results-directory %22{testResultFolder}%22\" -p:Configuration={compilationMode} \"{testAsset.TargetAssetPath}\"", workingDirectory: testAsset.TargetAssetPath, failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
 
         foreach (string tfmToAssert in tfmsToAssert)
         {
@@ -84,12 +84,10 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
 
         DotnetMuxerResult compilationResult = testCommand.StartsWith("test", StringComparison.OrdinalIgnoreCase)
             ? await DotnetCli.RunAsync(
-                $"{testCommand} -p:Configuration={compilationMode} -p:nodeReuse=false \"{testAsset.TargetAssetPath}\" -- --treenode-filter <whatever> --results-directory \"{testResultFolder}\"",
-                AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+                $"{testCommand} -p:Configuration={compilationMode} \"{testAsset.TargetAssetPath}\" -- --treenode-filter <whatever> --results-directory \"{testResultFolder}\"",
                 workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken)
             : await DotnetCli.RunAsync(
-                $"{testCommand} -p:TestingPlatformCommandLineArguments=\"--treenode-filter <whatever> --results-directory \"{testResultFolder}\"\" -p:Configuration={compilationMode} -p:nodeReuse=false \"{testAsset.TargetAssetPath}\"",
-                AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+                $"{testCommand} -p:TestingPlatformCommandLineArguments=\"--treenode-filter <whatever> --results-directory \"{testResultFolder}\"\" -p:Configuration={compilationMode} \"{testAsset.TargetAssetPath}\"",
                 workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
 
         foreach (string tfmToAssert in tfmsToAssert)
@@ -143,8 +141,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         await DotnetCli.RunAsync(
-            $"build -t:Test --arch x86 -p:Configuration=Release -p:nodeReuse=false \"{testAsset.TargetAssetPath}\"",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            $"build -t:Test --arch x86 -p:Configuration=Release \"{testAsset.TargetAssetPath}\"",
             workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: dotnetRootX86,
             failIfReturnValueIsNotZero: false,
@@ -179,7 +176,6 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build -t:Test --arch {incompatibleArchitecture} \"{testAsset.TargetAssetPath}\"",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: testAsset.TargetAssetPath,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
@@ -230,8 +226,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         await DotnetCli.RunAsync(
-            $"build -t:Test -p:Configuration=Release -p:nodeReuse=false \"{testAsset.TargetAssetPath}\"",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            $"build -t:Test -p:Configuration=Release \"{testAsset.TargetAssetPath}\"",
             workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: dotnetHostPathEnvVar,
             failIfReturnValueIsNotZero: false,
@@ -281,7 +276,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$TargetFrameworks$", $"<targetFramework>{tfm}</targetFramework>")
             .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformShowTestsFailure=True -p:TestingPlatformCaptureOutput=False -p:Configuration={compilationMode} -p:nodeReuse=false {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformShowTestsFailure=True -p:TestingPlatformCaptureOutput=False -p:Configuration={compilationMode} {testAsset.TargetAssetPath}", workingDirectory: testAsset.TargetAssetPath, failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
 
         compilationResult.AssertOutputContains("error test failed: Test2 (");
         compilationResult.AssertOutputContains("FAILED: Expected 'true', but got 'false'.");
@@ -298,7 +293,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$TargetFrameworks$", $"<targetFramework>{TargetFrameworks.NetCurrent}</targetFramework>")
             .PatchCodeWithReplace("$AssertValue$", "true")
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -p:TestingPlatformDisableCustomTestTarget=true -p:ImportUserDefinedTestTarget=true -t:\"Build;Test\"", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -p:TestingPlatformDisableCustomTestTarget=true -p:ImportUserDefinedTestTarget=true -t:\"Build;Test\"", failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
 
         compilationResult.AssertOutputContains("Error from UserDefinedTestTarget.targets");
     }

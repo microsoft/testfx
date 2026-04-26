@@ -7,6 +7,11 @@ trigger:
     exclude:
     - rel/2.*
     - rel/3.0.*
+  paths:
+    exclude:
+      - .github/**
+      - .gitignore
+      - formal-verification/**
 
 parameters:
 - name: isRTM
@@ -24,6 +29,10 @@ parameters:
 # This option should be used with caution. This is useful for unblocking circular deps issue with testanywhere
 - name: SkipTests
   displayName: "Skip tests"
+  type: boolean
+  default: False
+- name: codeQLForce
+  displayName: "Try collecting CodeQL before default CodeQL cadence"
   type: boolean
   default: False
 
@@ -51,8 +60,13 @@ variables:
   - ${{ if eq(parameters.isRTM, True) }}:
     - name: _ReleaseVersionKind
       value: release
-
-  - group: DotNet-Symbol-Server-Pats
+  
+  # Set to 0 to force CodeQL scan without waiting 72 from last attempt (even if it failed).
+  # This is only a hint for the tool, it might reject to run it if it already has up to date data.
+  # See the Starting Code QL step for details.
+  - ${{ if eq(parameters.codeQLForce, True) }}:
+    - name: Codeql.Cadence 
+      value: 0
 
 resources:
   repositories:
@@ -88,14 +102,17 @@ extends:
       - template: /eng/common/templates-official/jobs/jobs.yml@self
         parameters:
           enableMicrobuild: true
-          enablePublishBuildArtifacts: true
           enablePublishTestResults: true
           testResultsFormat: 'vstest'
-          enablePublishBuildAssets: true
-          enablePublishUsingPipelines: true
+          publishingVersion: 4
+          artifacts:
+            publish:
+              logs: true
+              manifests: true
           enableTelemetry: true
           jobs:
           - job: Windows
+            enablePublishing: true
             timeoutInMinutes: 90
             pool:
               name: $(DncEngInternalBuildPool)
@@ -131,9 +148,6 @@ extends:
                 -prepareMachine
                 /p:TeamName=$(_TeamName)
                 /p:DotNetFinalVersionKind=$(_ReleaseVersionKind)
-                /p:DotNetPublishUsingPipelines=true
-                /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
-                /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
                 /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
                 /p:ProductsToBuild=$(_Products)
                 /p:Test=false
@@ -242,4 +256,6 @@ extends:
             LclSource: lclFilesfromPackage
             LclPackageId: 'LCL-JUNO-PROD-TESTFX'
 
-    - template: eng\common\templates-official\post-build\post-build.yml@self
+    - template: eng/common/templates-official/post-build/post-build.yml@self
+      parameters:
+        publishingInfraVersion: 4

@@ -301,7 +301,7 @@ dotnet_diagnostic.IDE0082.severity = warning
 dotnet_diagnostic.IDE0083.severity = warning
 
 # IDE0090: Use 'new(...)'
-dotnet_diagnostic.IDE0090.severity = warning
+dotnet_diagnostic.IDE0090.severity = none
 
 # IDE0100: Remove unnecessary equality operator
 dotnet_diagnostic.IDE0100.severity = warning
@@ -342,8 +342,11 @@ dotnet_diagnostic.IDE0270.severity = warning
 # IDE0280: Use 'nameof'
 dotnet_diagnostic.IDE0280.severity = warning
 
+# IDE0305: Simplify collection initialization
+dotnet_diagnostic.IDE0305.severity = none
+
 # IDE0370: Remove unnecessary suppression
-dotnet_diagnostic.IDE0370.severity = warning
+dotnet_diagnostic.IDE0370.severity = none
 
 # IDE1005: Use conditional delegate call
 dotnet_diagnostic.IDE1005.severity = warning

@@ -28,7 +28,7 @@ public class FrameworkOnlyTests : AcceptanceTestBase<FrameworkOnlyTests.TestAsse
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
 #file FrameworkOnlyTests.csproj
@@ -85,13 +85,10 @@ public class UnitTest1
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
     }
 
     public TestContext TestContext { get; set; }

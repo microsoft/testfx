@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Extensions.TestReports.Resources;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
+using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
@@ -10,6 +10,10 @@ using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
+
+#if !NETCOREAPP
+using Polyfills;
+#endif
 
 namespace Microsoft.Testing.Extensions;
 
@@ -36,6 +40,7 @@ public static class TrxReportExtensions
                 new TrxReportGenerator(
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetRequiredService<IFileSystem>(),
                 serviceProvider.GetTestApplicationModuleInfo(),
                 serviceProvider.GetMessageBus(),
                 serviceProvider.GetSystemClock(),
@@ -44,7 +49,7 @@ public static class TrxReportExtensions
                 serviceProvider.GetTestFramework(),
                 serviceProvider.GetTestFrameworkCapabilities(),
                 serviceProvider.GetTestApplicationProcessExitCode(),
-                OperatingSystem.IsBrowser() ? null : serviceProvider.GetService<TrxTestApplicationLifecycleCallbacks>(),
+                serviceProvider.GetService<TrxTestApplicationLifecycleCallbacks>(),
                 serviceProvider.GetLoggerFactory().CreateLogger<TrxReportGenerator>()));
 
         if (!OperatingSystem.IsBrowser())
@@ -53,7 +58,7 @@ public static class TrxReportExtensions
         }
 
         builder.TestHost.AddDataConsumer(compositeTestSessionTrxService);
-        builder.TestHost.AddTestSessionLifetimeHandle(compositeTestSessionTrxService);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeTestSessionTrxService);
 
         builder.CommandLine.AddProvider(() => commandLine);
 
@@ -75,7 +80,7 @@ public static class TrxReportExtensions
                 serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetEnvironment()));
 
-        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), new SystemEnvironment());
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
         var compositeLifeTimeHandler =
             new CompositeExtensionFactory<TrxProcessLifetimeHandler>(serviceProvider =>
             {
@@ -86,6 +91,7 @@ public static class TrxReportExtensions
                     serviceProvider.GetEnvironment(),
                     loggerFactory,
                     serviceProvider.GetMessageBus(),
+                    serviceProvider.GetRequiredService<IFileSystem>(),
                     serviceProvider.GetTestApplicationModuleInfo(),
                     serviceProvider.GetConfiguration(),
                     serviceProvider.GetSystemClock(),

@@ -25,7 +25,11 @@ internal sealed class RunConfigurationSettings
     /// </summary>
     internal ApartmentState? ExecutionApartmentState { get; private set; }
 
-    public static RunConfigurationSettings PopulateSettings([StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml)
+    /// <summary>
+    /// Gets the configuration settings from the xml.
+    /// </summary>
+    /// <param name="runSettingsXml"> The xml with the settings passed from the test platform. </param>
+    public static RunConfigurationSettings GetSettings(string? runSettingsXml)
     {
         if (StringEx.IsNullOrEmpty(runSettingsXml))
         {
@@ -33,21 +37,6 @@ internal sealed class RunConfigurationSettings
             return new RunConfigurationSettings();
         }
 
-        RunConfigurationSettings? settings = GetSettings(runSettingsXml, SettingsName);
-
-        return settings ?? new RunConfigurationSettings();
-    }
-
-    /// <summary>
-    /// Gets the configuration settings from the xml.
-    /// </summary>
-    /// <param name="runSettingsXml"> The xml with the settings passed from the test platform. </param>
-    /// <param name="settingName"> The name of the settings to fetch.</param>
-    /// <returns> The settings if found. Null otherwise. </returns>
-    internal static RunConfigurationSettings? GetSettings(
-        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string runSettingsXml,
-        string settingName)
-    {
         using var stringReader = new StringReader(runSettingsXml);
         var reader = XmlReader.Create(stringReader, new() { IgnoreComments = true, IgnoreWhitespace = true, DtdProcessing = DtdProcessing.Prohibit });
 
@@ -56,7 +45,7 @@ internal sealed class RunConfigurationSettings
         ReadToNextElement(reader);
 
         // Read till we reach nodeName element or reach EOF
-        while (!string.Equals(reader.Name, settingName, StringComparison.OrdinalIgnoreCase)
+        while (!string.Equals(reader.Name, SettingsName, StringComparison.OrdinalIgnoreCase)
                 && !reader.EOF)
         {
             SkipToNextElement(reader);
@@ -68,7 +57,7 @@ internal sealed class RunConfigurationSettings
             return ToSettings(reader.ReadSubtree());
         }
 
-        return null;
+        return new RunConfigurationSettings();
     }
 
     /// <summary>
@@ -78,7 +67,10 @@ internal sealed class RunConfigurationSettings
     /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
     private static RunConfigurationSettings ToSettings(XmlReader reader)
     {
-        Guard.NotNull(reader);
+        if (reader is null)
+        {
+            throw new ArgumentNullException(nameof(reader));
+        }
 
         // Expected format of the xml is: -
         //

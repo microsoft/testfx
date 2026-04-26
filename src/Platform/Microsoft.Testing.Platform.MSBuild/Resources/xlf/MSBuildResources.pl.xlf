@@ -7,6 +7,16 @@
         <target state="translated">Wartość rzeczywista: {0}.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DidNotReceiveModuleInfo">
+        <source>MSBuild extension failed to receive test application information from '{0}'</source>
+        <target state="translated">Rozszerzenie MSBuild nie mogło odebrać informacji o aplikacji testowej z „{0}”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DidNotReceiveRunSummaryInfo">
+        <source>MSBuild extension failed to receive test run summary from '{0}'</source>
+        <target state="translated">Rozszerzenie MSBuild nie mogło odebrać podsumowania przebiegu testu z „{0}”</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ExpectedValue">
         <source>Expected value: {0}</source>
         <target state="translated">Oczekiwana wartość: {0}.</target>

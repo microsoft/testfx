@@ -19,7 +19,7 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public Mock<IFileOperations> MockFileOperations { get; } = new();
 
-    public Mock<IAdapterTraceLogger> MockTraceLogger { get; } = new();
+    public Mock<ITraceLogger> MockTraceLogger { get; } = new();
 
     public Mock<ITestSourceHost> MockTestSourceHost { get; } = new();
 
@@ -39,7 +39,7 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public IFileOperations FileOperations => MockFileOperations.Object;
 
-    public IAdapterTraceLogger AdapterTraceLogger { get => MockTraceLogger.Object; set => throw new NotSupportedException(); }
+    public ITraceLogger AdapterTraceLogger { get => MockTraceLogger.Object; set => throw new NotSupportedException(); }
 
 #if !WINDOWS_UWP && !WIN_UI
     public ITestDeployment TestDeployment => MockTestDeployment.Object;
@@ -72,7 +72,7 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
         return testContextImpl;
     }
 
-    public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle) => MockTestSourceHost.Object;
+    public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings) => MockTestSourceHost.Object;
 
     public void SetupMockReflectionOperations() => MockReflectionOperations = new Mock<IReflectionOperations>();
 }

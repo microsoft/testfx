@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Extensions.TestReports.Resources;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers;
+using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -28,6 +28,7 @@ internal sealed class TrxReportGenerator :
 {
     private readonly IConfiguration _configuration;
     private readonly ICommandLineOptions _commandLineOptionsService;
+    private readonly IFileSystem _fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly IMessageBus _messageBus;
     private readonly IClock _clock;
@@ -43,15 +44,12 @@ internal sealed class TrxReportGenerator :
     private readonly bool _isEnabled;
 
     private DateTimeOffset? _testStartTime;
-    private int _failedTestsCount;
-    private int _passedTestsCount;
-    private int _notExecutedTestsCount;
-    private int _timeoutTestsCount;
     private bool _adapterSupportTrxCapability;
 
     public TrxReportGenerator(
         IConfiguration configuration,
         ICommandLineOptions commandLineOptionsService,
+        IFileSystem fileSystem,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         IMessageBus messageBus,
         IClock clock,
@@ -66,6 +64,7 @@ internal sealed class TrxReportGenerator :
     {
         _configuration = configuration;
         _commandLineOptionsService = commandLineOptionsService;
+        _fileSystem = fileSystem;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _messageBus = messageBus;
         _clock = clock;
@@ -91,7 +90,7 @@ internal sealed class TrxReportGenerator :
     public string Uid => nameof(TrxReportGenerator);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = ExtensionResources.TrxReportGeneratorDisplayName;
@@ -104,62 +103,34 @@ internal sealed class TrxReportGenerator :
 
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        if (!_isEnabled || cancellationToken.IsCancellationRequested)
+        // This is only run in TestHost, and not TestHostController.
+        cancellationToken.ThrowIfCancellationRequested();
+
+        switch (value)
         {
-            return Task.CompletedTask;
-        }
+            case TestNodeUpdateMessage nodeChangedMessage:
+                TestNodeStateProperty? nodeState = nodeChangedMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+                if (nodeState is null or DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
+                {
+                    return Task.CompletedTask;
+                }
 
-        try
-        {
-            switch (value)
-            {
-                case TestNodeUpdateMessage nodeChangedMessage:
-                    TestNodeStateProperty? nodeState = nodeChangedMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
-                    if (nodeState is null)
-                    {
-                        return Task.CompletedTask;
-                    }
+                _tests.Add(nodeChangedMessage);
 
-                    if (nodeState is PassedTestNodeStateProperty)
-                    {
-                        _tests.Add(nodeChangedMessage);
-                        _passedTestsCount++;
-                    }
-                    else if (nodeState is TimeoutTestNodeStateProperty)
-                    {
-                        _tests.Add(nodeChangedMessage);
-                        _timeoutTestsCount++;
-                    }
-                    else if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, nodeState.GetType()) != -1)
-                    {
-                        _tests.Add(nodeChangedMessage);
-                        _failedTestsCount++;
-                    }
-                    else if (nodeState is SkippedTestNodeStateProperty)
-                    {
-                        _tests.Add(nodeChangedMessage);
-                        _notExecutedTestsCount++;
-                    }
+                break;
 
-                    break;
+            case SessionFileArtifact fileArtifact:
+                if (!_artifactsByExtension.TryGetValue(dataProducer, out List<SessionFileArtifact>? sessionFileArtifacts))
+                {
+                    sessionFileArtifacts = [fileArtifact];
+                    _artifactsByExtension[dataProducer] = sessionFileArtifacts;
+                }
+                else
+                {
+                    sessionFileArtifacts.Add(fileArtifact);
+                }
 
-                case SessionFileArtifact fileArtifact:
-                    if (!_artifactsByExtension.TryGetValue(dataProducer, out List<SessionFileArtifact>? sessionFileArtifacts))
-                    {
-                        sessionFileArtifacts = [fileArtifact];
-                        _artifactsByExtension[dataProducer] = sessionFileArtifacts;
-                    }
-                    else
-                    {
-                        sessionFileArtifacts.Add(fileArtifact);
-                    }
-
-                    break;
-            }
-        }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
-        {
-            // Do nothing, we're stopping
+                break;
         }
 
         return Task.CompletedTask;
@@ -167,39 +138,35 @@ internal sealed class TrxReportGenerator :
 
     public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
+        // This is only run in TestHost, and not TestHostController.
         CancellationToken cancellationToken = testSessionContext.CancellationToken;
-        if (!_isEnabled || cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
+        bool shouldUseOutOfProcessTrxGeneration = TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptionsService);
         if (_logger.IsEnabled(LogLevel.Debug))
         {
             await _logger.LogDebugAsync($"""
 CrashDumpCommandLineOptions.CrashDumpOptionName: {_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName)}
 TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)}
+shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
 """).ConfigureAwait(false);
         }
 
-        if (_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName)
-            && !OperatingSystem.IsBrowser())
+        if (shouldUseOutOfProcessTrxGeneration)
         {
             ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
             ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
 
-            try
-            {
-                await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<TestAdapterInformationRequest, VoidResponse>(new TestAdapterInformationRequest(_testFramework.Uid, _testFramework.Version), cancellationToken)
-                    .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
-            {
-                // Do nothing, we're stopping
-            }
+            // This tells the TestHostController process the info of the registered ITestFramework.
+            // The TestHostController needs that info to create the TrxReportEngine so that the info are written to the TRX file.
+            // Note: TestHostController cannot retrieve ITestFramework from service provider which is why we need the extra complexity here.
+            // TODO: Investigate if TestHostController can/should have access to ITestFramework and simplify this.
+            await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<TestAdapterInformationRequest, VoidResponse>(new TestAdapterInformationRequest(_testFramework.Uid, _testFramework.Version), cancellationToken)
+                .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
         }
 
         ITrxReportCapability? trxCapability = _testFrameworkCapabilities.GetCapability<ITrxReportCapability>();
-        if (_isEnabled && trxCapability is not null && trxCapability.IsSupported)
+        if (trxCapability is not null && trxCapability.IsSupported)
         {
             _adapterSupportTrxCapability = true;
             trxCapability.Enable();
@@ -210,46 +177,57 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
 
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
+        // This is only run in TestHost, and not TestHostController.
+        // The current implementation tries to keep the TRX generation logic always in-process.
+        // However, in case of a crash, the TestHostController takes over this responsibility (when running in out-of-proc mode).
         CancellationToken cancellationToken = testSessionContext.CancellationToken;
-        if (!_isEnabled || cancellationToken.IsCancellationRequested)
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (!_adapterSupportTrxCapability)
         {
-            return;
+            await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportFrameworkDoesNotSupportTrxReportCapability, _testFramework.DisplayName, _testFramework.Uid)), testSessionContext.CancellationToken).ConfigureAwait(false);
         }
 
-        try
+        ApplicationStateGuard.Ensure(_testStartTime is not null);
+
+        int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
+        var trxReportGeneratorEngine = new TrxReportEngine(
+            _fileSystem,
+            _testApplicationModuleInfo,
+            _environment,
+            _commandLineOptionsService,
+            _configuration,
+            _clock,
+            _artifactsByExtension,
+            _testFramework,
+            _testStartTime.Value,
+#if NETCOREAPP
+            exitCode,
+            cancellationToken);
+#else
+            exitCode);
+#endif
+
+        (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync([.. _tests]).ConfigureAwait(false);
+        if (warning is not null)
         {
-            if (!_adapterSupportTrxCapability)
-            {
-                await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportFrameworkDoesNotSupportTrxReportCapability, _testFramework.DisplayName, _testFramework.Uid)), testSessionContext.CancellationToken).ConfigureAwait(false);
-            }
-
-            ApplicationStateGuard.Ensure(_testStartTime is not null);
-
-            int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
-            TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptionsService, _configuration,
-                _clock, [.. _tests], _failedTestsCount, _passedTestsCount, _notExecutedTestsCount, _timeoutTestsCount, _artifactsByExtension,
-                _adapterSupportTrxCapability, _testFramework, _testStartTime.Value, exitCode, cancellationToken);
-            (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync().ConfigureAwait(false);
-            if (warning is not null)
-            {
-                await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
-            }
-
-            // If crash dump is not enabled we run trx in-process only
-            if (!_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName))
-            {
-                await _messageBus.PublishAsync(this, new SessionFileArtifact(testSessionContext.SessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
-            }
-            else if (!OperatingSystem.IsBrowser())
-            {
-                ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
-                ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
-                await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<ReportFileNameRequest, VoidResponse>(new ReportFileNameRequest(reportFileName), cancellationToken).ConfigureAwait(false);
-            }
+            await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
         }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
+
+        // TRX can run in two modes. In-process or out-of-process.
+        // If we are already running with the in-process mode, we publish the SessionFileArtifact to the message bus directly.
+        // If we are running with out-of-process mode, we communicate via pipe to the TestHostController and send the ReportFileNameRequest.
+        if (!TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptionsService))
         {
-            // Do nothing, we're stopping
+            await _messageBus.PublishAsync(this, new SessionFileArtifact(testSessionContext.SessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
+        }
+        else
+        {
+            // The TestHostController will receive the TRX file name.
+            // Then, it will **modify** it and add any additional artifacts that were produced by TestHostController.
+            ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
+            ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
+            await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<ReportFileNameRequest, VoidResponse>(new ReportFileNameRequest(reportFileName), cancellationToken).ConfigureAwait(false);
         }
     }
 }

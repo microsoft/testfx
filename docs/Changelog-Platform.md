@@ -4,6 +4,112 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="2.2.1" />[2.2.1] - 2026-04-07
+
+See full log [of v4.1.0...v4.2.1](https://github.com/microsoft/testfx/compare/v4.1.0...v4.2.1)
+
+### Added
+
+* Open up orchestrator experimentally by @Evangelink in [#7409](https://github.com/microsoft/testfx/pull/7409)
+* Display TFM and test name in Azure DevOps report by @Evangelink in [#7412](https://github.com/microsoft/testfx/pull/7412)
+* Print out-of-process artifacts by @Youssef1313 in [#7534](https://github.com/microsoft/testfx/pull/7534)
+* Add `--show-stdout` and `--show-stderr` command-line options by @Youssef1313 in [#7637](https://github.com/microsoft/testfx/pull/7637)
+* Stabilize StdOut/StdErr MTP properties by @Youssef1313 in [#7640](https://github.com/microsoft/testfx/pull/7640)
+* Avoid ANSI and progress output when running in LLM environment by @Youssef1313 in [#7649](https://github.com/microsoft/testfx/pull/7649)
+
+### Fixed
+
+* Fix cursor positioning when Console.BufferWidth exceeds Console.WindowWidth by @Copilot in [#7305](https://github.com/microsoft/testfx/pull/7305)
+* HangDump should trigger even after test session finish by @Youssef1313 in [#7392](https://github.com/microsoft/testfx/pull/7392)
+* Make tracing environment variable case insensitive by @Evangelink in [#7407](https://github.com/microsoft/testfx/pull/7407)
+* Ensure post-session display runs after cancellation by @Evangelink in [#7410](https://github.com/microsoft/testfx/pull/7410)
+* Fix TestMethod/name value in generated TRX by @Youssef1313 in [#7491](https://github.com/microsoft/testfx/pull/7491)
+* Fix ArgumentException in `TestApplicationResult.ConsumeAsync` by @Youssef1313 in [#7496](https://github.com/microsoft/testfx/pull/7496)
+* Fix MTP TRX handling of result files by @Youssef1313 in [#7516](https://github.com/microsoft/testfx/pull/7516)
+* Guard MTP test targets with `IsTestingPlatformApplication` to prevent interference with VSTest projects by @Copilot in [#7539](https://github.com/microsoft/testfx/pull/7539)
+* Fix test definition names in TRX to correspond to test case display names by @Youssef1313 in [#7595](https://github.com/microsoft/testfx/pull/7595)
+* Avoid IndexOutOfRangeException in command-line parsing by @Youssef1313 in [#7648](https://github.com/microsoft/testfx/pull/7648)
+* Fix TRX fully qualified type name to use TestMethodIdentifierProperty by @Youssef1313 in [#7650](https://github.com/microsoft/testfx/pull/7650)
+
+### Changed
+
+* Use the actual process exit code instead of IPC TestHostProcessExitRequest by @Youssef1313 in [#7430](https://github.com/microsoft/testfx/pull/7430)
+* Improve ordering of `ITestSessionLifetimeHandler.OnTestSessionFinishingAsync` by @Youssef1313 in [#7520](https://github.com/microsoft/testfx/pull/7520)
+* Make MSBuild extension more strict by @Youssef1313 in [#7525](https://github.com/microsoft/testfx/pull/7525)
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Platform/2.2.1)
+* Microsoft.Testing.Platform.MSBuild: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/2.2.1)
+* Microsoft.Testing.Extensions.CrashDump: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/2.2.1)
+* Microsoft.Testing.Extensions.HangDump: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/2.2.1)
+* Microsoft.Testing.Extensions.HotReload: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/2.2.1)
+* Microsoft.Testing.Extensions.Retry: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/2.2.1)
+* Microsoft.Testing.Extensions.Telemetry: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/2.2.1)
+* Microsoft.Testing.Extensions.TrxReport: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/2.2.1)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/2.2.1)
+* Microsoft.Testing.Extensions.VSTestBridge: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/2.2.1)
+* Microsoft.Testing.Extensions.AzureDevOpsReport: [2.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/2.2.1)
+* Microsoft.Testing.Platform.AI: [1.0.0-alpha.26202.7](https://www.nuget.org/packages/Microsoft.Testing.Platform.AI/1.0.0-alpha.26202.7)
+* Microsoft.Testing.Extensions.AzureFoundry: [1.0.0-alpha.26202.7](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureFoundry/1.0.0-alpha.26202.7)
+* Microsoft.Testing.Extensions.OpenTelemetry: [1.0.0-alpha.26202.7](https://www.nuget.org/packages/Microsoft.Testing.Extensions.OpenTelemetry/1.0.0-alpha.26202.7)
+
+## <a name="2.1.0" />[2.1.0] - 2026-02-03
+
+See full log [of v4.0.2...v4.1.0](https://github.com/microsoft/testfx/compare/v4.0.2...v4.1.0)
+
+### Added
+
+* Add AI support to the `Microsoft.Testing.Platform` by @MarcoRossignoli in [#6777](https://github.com/microsoft/testfx/pull/6777)
+  * this is currently a prototype only.
+* Avoid BlockingCollection in AsyncConsumerDataProcessor by @Youssef1313 in [#6887](https://github.com/microsoft/testfx/pull/6887)
+* \[MTP] Add initial support for OTel by @Evangelink in [#6511](https://github.com/microsoft/testfx/pull/6511)
+* Remove experimental attr from NopFilter by @mariam-abdulla in [#7169](https://github.com/microsoft/testfx/pull/7169)
+* Obsolete AddTestSessionLifetimeHandle in favor of AddTestSessionLifetimeHandler by @Youssef1313 in [#7200](https://github.com/microsoft/testfx/pull/7200)
+* Allow none for --hangdump-type by @Youssef1313 in [#7213](https://github.com/microsoft/testfx/pull/7213)
+
+### Fixed
+
+* VSTestBridge: Don't add TRX properties when TRX not enabled by @Youssef1313 in [#6872](https://github.com/microsoft/testfx/pull/6872)
+* Obsolete CancelledTestNodeStateProperty by @Copilot in [#6828](https://github.com/microsoft/testfx/pull/6828)
+* Fix hangdump not working under dotnet test with .NET 10 SDK by @Copilot in [#6968](https://github.com/microsoft/testfx/pull/6968)
+* Remove incorrect DefaultHangTimeSpanTimeout in HangDumpActivityIndicator by @Youssef1313 in [#7006](https://github.com/microsoft/testfx/pull/7006)
+* Fix hangdump on macOS by @Youssef1313 in [#7005](https://github.com/microsoft/testfx/pull/7005)
+* Include test display name in AzDO error reports by @Copilot in [#7026](https://github.com/microsoft/testfx/pull/7026)
+* Fix race in HangDumpProcessLifetimeHandler for pipe server field read/write by @Youssef1313 in [#7048](https://github.com/microsoft/testfx/pull/7048)
+* Fix MTP command-line parsing by @Youssef1313 in [#7044](https://github.com/microsoft/testfx/pull/7044)
+* Fix TRX not produced under `dotnet test` when using `--crashdump` and crash happens by @Copilot in [#7040](https://github.com/microsoft/testfx/pull/7040)
+* Fix: runsettings environment variables ignored during test discovery by @Copilot in [#7078](https://github.com/microsoft/testfx/pull/7078)
+* Fix Jsonite implementation to handle surrogates correctly by @Youssef1313 in [#7201](https://github.com/microsoft/testfx/pull/7201)
+* Fix MTP Trx handling of the final outcome by @Youssef1313 in [#7234](https://github.com/microsoft/testfx/pull/7234)
+* Avoid duplicating exception message when running with dotnet test by @Youssef1313 in [#7250](https://github.com/microsoft/testfx/pull/7250)
+* Disable progress on non-capable terminals by @Youssef1313 in [#7248](https://github.com/microsoft/testfx/pull/7248)
+* Report discovered telemetry events correctly for MTP by @Youssef1313 in [#7219](https://github.com/microsoft/testfx/pull/7219)
+
+### Housekeeping
+
+* Cleanup TestApplication by @Youssef1313 in [#6728](https://github.com/microsoft/testfx/pull/6728)
+* Cleanup Dispose implementations by @Youssef1313 in [#6730](https://github.com/microsoft/testfx/pull/6730)
+* Clarify --retry-failed-tests requires a numeric argument by @Copilot in [#6830](https://github.com/microsoft/testfx/pull/6830)
+* Cleanup vstest.TestCase.StandardError/vstest.TestCase.StandardOutput by @Youssef1313 in [#6870](https://github.com/microsoft/testfx/pull/6870)
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Platform/2.1.0)
+* Microsoft.Testing.Platform.MSBuild: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/2.1.0)
+* Microsoft.Testing.Extensions.CrashDump: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/2.1.0)
+* Microsoft.Testing.Extensions.HangDump: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/2.1.0)
+* Microsoft.Testing.Extensions.HotReload: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/2.1.0)
+* Microsoft.Testing.Extensions.Retry: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/2.1.0)
+* Microsoft.Testing.Extensions.Telemetry: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/2.1.0)
+* Microsoft.Testing.Extensions.TrxReport: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/2.1.0)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/2.1.0)
+* Microsoft.Testing.Extensions.VSTestBridge: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/2.1.0)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/2.1.0)
+* Microsoft.Testing.Platform.AI: [1.0.0-alpha.26103.11](https://www.nuget.org/packages/Microsoft.Testing.Platform.AI/1.0.0-alpha.26103.11)
+* Microsoft.Testing.Extensions.AzureFoundry: [1.0.0-alpha.26103.11](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureFoundry/1.0.0-alpha.26103.11)
+* Microsoft.Testing.Extensions.OpenTelemetry: [1.0.0-alpha.26103.11](https://www.nuget.org/packages/Microsoft.Testing.Extensions.OpenTelemetry/1.0.0-alpha.26103.11)
+
 ## <a name="2.0.2" />[2.0.2] - 2025-11-11
 
 See full log [of v4.0.1...v4.0.2](https://github.com/microsoft/testfx/compare/v4.0.1...v4.0.2)

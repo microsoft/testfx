@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
         <source>Browser platform is only supported on .NET 7.0 or greater.</source>
-        <target state="new">Browser platform is only supported on .NET 7.0 or greater.</target>
+        <target state="translated">ブラウザー プラットフォームは、.NET 7.0 以降でのみサポートされています。</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -118,13 +118,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsReserved">
-        <source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</source>
-        <target state="translated">オプション '--{0}' は予約されており、プロバイダーでは使用できません: '{0}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineOptionObsoleteWarning">
-        <source>Warning: Option '--{0}' is obsolete. {1}</source>
-        <target state="translated">警告: オプション '--{0}' は廃止されています。{1}</target>
+        <source>Option '--{0}' is reserved and cannot be used by providers: '{1}'</source>
+        <target state="translated">オプション '--{0}' は予約されており、プロバイダーでは使用できません: '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
@@ -419,16 +414,6 @@
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
         <target state="translated">{0} テストを実行しています</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">ID '{0}' で登録されたシリアライザーがありません</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">型 '{0}' で登録されたシリアライザーがありません</target>
         <note />
       </trans-unit>
       <trans-unit id="NotAvailable">
@@ -831,6 +816,25 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">--output には、値が 'Normal' または 'Detailed' の単一のパラメーターが必要です。</target>
         <note />
       </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="translated">--show-stdout と --show-stderr には、値が 'All'、'Failed'、または 'None' の 1 つのパラメーターが必要です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">テストのキャプチャされたエラー出力を表示するタイミングを決定します。
+有効な値は 'All'、'Failed'、'None' です。既定値は 'All' です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">テストのキャプチャされた標準の出力を表示するタイミングを決定します。
+有効な値は 'All'、'Failed'、'None' です。既定値は 'All' です。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
         <target state="translated">テスト結果をターミナルに書き込みます。</target>
@@ -976,11 +980,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">予期しないテレメトリ呼び出しです。テレメトリは無効になっています。</target>
         <note />
       </trans-unit>
-      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occurred during byte conversion</source>
-        <target state="translated">バイト変換中に予期しない例外が発生しました</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
@@ -1021,11 +1020,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
         <target state="translated">チャット クライアント プロバイダーは既に登録されています。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">AI 拡張機能は、種類が 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' のビルダーでのみ機能します</target>
         <note />
       </trans-unit>
     </body>

@@ -19,7 +19,10 @@ builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 builder.AddCodeCoverageProvider();
 #endif
 builder.AddCrashDumpProvider();
+
+#if !NETFRAMEWORK
 if (!OperatingSystem.IsBrowser())
+#endif
 {
     builder.AddHangDumpProvider();
 }
@@ -27,9 +30,5 @@ if (!OperatingSystem.IsBrowser())
 builder.AddTrxReportProvider();
 builder.AddAzureDevOpsProvider();
 
-// Custom suite tools
-CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory = new(_ => new SlowestTestsConsumer());
-builder.TestHost.AddDataConsumer(slowestTestCompositeServiceFactory);
-builder.TestHost.AddTestSessionLifetimeHandle(slowestTestCompositeServiceFactory);
 ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();

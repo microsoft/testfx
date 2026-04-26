@@ -63,7 +63,7 @@ public class TestExecutionManagerTests : TestContainer
         _mockTestSourceHandler = new Mock<ITestSourceHandler>();
 
         _testExecutionManager = new TestExecutionManager(
-            new EnvironmentWrapper(),
+            EnvironmentWrapper.Instance,
             task =>
             {
                 _enqueuedParallelTestsCount++;
@@ -371,7 +371,7 @@ public class TestExecutionManagerTests : TestContainer
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
-        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _mockTestSourceHandler.Object, _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _mockTestSourceHandler.Object, false, _cancellationToken);
 
         _frameworkHandle.TestCaseStartList.Contains("PassingTest").Should().BeTrue();
         _frameworkHandle.TestCaseEndList.Contains("PassingTest:Passed").Should().BeTrue();
@@ -393,7 +393,7 @@ public class TestExecutionManagerTests : TestContainer
             </RunSettings>
             """);
 
-        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _mockTestSourceHandler.Object, _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _mockTestSourceHandler.Object, false, _cancellationToken);
 
         DummyTestClass.TestContextProperties!.Contains(
             new KeyValuePair<string, object>("webAppUrl", "http://localhost")).Should().BeTrue();
@@ -404,7 +404,7 @@ public class TestExecutionManagerTests : TestContainer
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
-        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _mockTestSourceHandler.Object, _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _mockTestSourceHandler.Object, false, _cancellationToken);
 
         DummyTestClass.TestContextProperties.Should().NotBeNull();
     }
@@ -418,22 +418,8 @@ public class TestExecutionManagerTests : TestContainer
             ExecuteTestsWrapper = (tests, runContext, frameworkHandle, isDeploymentDone) => testsCount += tests.Count(),
         };
 
-        await testableTestExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _mockTestSourceHandler.Object, _cancellationToken);
+        await testableTestExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _mockTestSourceHandler.Object, false, _cancellationToken);
         testsCount.Should().Be(4);
-    }
-
-    #endregion
-
-    #region SendTestResults tests
-
-    public void SendTestResultsShouldFillInDataRowIndexIfTestIsDataDriven()
-    {
-        var testCase = new TestCase("DummyTest", new Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
-        TestTools.UnitTesting.TestResult unitTestResult1 = new() { DatarowIndex = 0, DisplayName = "DummyTest" };
-        TestTools.UnitTesting.TestResult unitTestResult2 = new() { DatarowIndex = 1, DisplayName = "DummyTest" };
-        _testExecutionManager.SendTestResults(testCase, [unitTestResult1, unitTestResult2], default, default, _frameworkHandle);
-        _frameworkHandle.TestDisplayNameList[0].Should().Be("DummyTest (Data Row 0)");
-        _frameworkHandle.TestDisplayNameList[1].Should().Be("DummyTest (Data Row 1)");
     }
 
     #endregion

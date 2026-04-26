@@ -30,6 +30,13 @@ public class STATestMethodAttribute : TestMethodAttribute
         => _testMethodAttribute = testMethodAttribute;
 
     /// <summary>
+    ///  Gets or sets a value indicating whether the attribute will set a <see cref="SynchronizationContext"/> that preserves the same
+    ///  STA thread for async continuations.
+    ///  The default is <see langword="false"/>.
+    /// </summary>
+    public bool UseSTASynchronizationContext { get; set; }
+
+    /// <summary>
     /// The core execution of STA test method, which happens on the STA thread.
     /// </summary>
     /// <param name="testMethod">The test method to execute.</param>
@@ -38,18 +45,39 @@ public class STATestMethodAttribute : TestMethodAttribute
         => _testMethodAttribute is null ? base.ExecuteAsync(testMethod) : _testMethodAttribute.ExecuteAsync(testMethod);
 
     /// <inheritdoc />
-    public override Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+    public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
     {
+        if (UseSTASynchronizationContext)
+        {
+            SynchronizationContext? originalContext = SynchronizationContext.Current;
+            var syncContext = new SingleThreadedSTASynchronizationContext();
+            try
+            {
+                SynchronizationContext.SetSynchronizationContext(syncContext);
+
+                // The yield ensures that we switch to the STA thread created by SingleThreadedSTASynchronizationContext.
+                await Task.Yield();
+                TestResult[] testResults = await ExecuteCoreAsync(testMethod).ConfigureAwait(false);
+                return testResults;
+            }
+            finally
+            {
+                SynchronizationContext.SetSynchronizationContext(originalContext);
+                syncContext.Complete();
+                syncContext.Dispose();
+            }
+        }
+
         if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
         {
-            return ExecuteCoreAsync(testMethod);
+            return await ExecuteCoreAsync(testMethod).ConfigureAwait(false);
         }
 
 #if !NETFRAMEWORK
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             // TODO: Throw?
-            return ExecuteCoreAsync(testMethod);
+            return await ExecuteCoreAsync(testMethod).ConfigureAwait(false);
         }
 #endif
 
@@ -61,6 +89,6 @@ public class STATestMethodAttribute : TestMethodAttribute
         t.SetApartmentState(ApartmentState.STA);
         t.Start();
         t.Join();
-        return Task.FromResult(results!);
+        return results!;
     }
 }

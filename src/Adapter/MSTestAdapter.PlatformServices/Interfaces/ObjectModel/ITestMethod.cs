@@ -52,5 +52,5 @@ internal interface ITestMethod
     /// <remarks>
     /// Contains four items in order: Namespace, class name, test group, display name.
     /// </remarks>
-    IReadOnlyCollection<string?> Hierarchy { get; }
+    IReadOnlyCollection<string?>? Hierarchy { get; }
 }

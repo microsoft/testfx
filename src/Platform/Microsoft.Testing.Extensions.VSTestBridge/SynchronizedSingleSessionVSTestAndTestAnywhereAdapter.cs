@@ -150,7 +150,7 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
         => ExecuteRequestWithRequestCountGuardAsync(async () =>
         {
 #pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
-            string[] testAssemblyPaths = [.. _getTestAssemblies().Select(x => x.Location)];
+            string[] testAssemblyPaths = [.. _getTestAssemblies().Select(GetAssemblyPath)];
 #pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
             switch (request)
             {
@@ -178,6 +178,33 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
+
+    /// <summary>
+    /// Gets the path of an assembly, falling back to the assembly name when
+    /// <see cref="Assembly.Location"/> returns an empty string (e.g. on Android CoreCLR
+    /// where assemblies are memory-mapped).
+    /// </summary>
+#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
+    internal static string GetAssemblyPath(Assembly assembly)
+    {
+#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
+        string location = assembly.Location;
+#pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
+        if (!string.IsNullOrEmpty(location))
+        {
+            return location;
+        }
+
+        // On platforms like Android CoreCLR, assemblies may be memory-mapped and
+        // Assembly.Location returns an empty string. Use the assembly name as a
+        // synthetic path since the downstream code (on .NET Core) loads assemblies
+        // by name via Assembly.Load, not by file path.
+        string name = assembly.GetName().Name
+            ?? throw new InvalidOperationException($"Cannot determine the name of assembly '{assembly}'.");
+
+        return name + ".dll";
+    }
+#pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
 
     private async Task ExecuteRequestWithRequestCountGuardAsync(Func<Task> asyncFunc)
     {

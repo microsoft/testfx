@@ -1419,7 +1419,7 @@ public partial class AssertTests : TestContainer
         var collection = new ArrayList { 1, 2, 3, 4, 5, "a" };
 
         // Act
-        object? result = Assert.ContainsSingle(x => x.Equals(3), collection);
+        object? result = Assert.ContainsSingle(x => x!.Equals(3), collection);
 
         // Assert
         result.Should().Be(3);

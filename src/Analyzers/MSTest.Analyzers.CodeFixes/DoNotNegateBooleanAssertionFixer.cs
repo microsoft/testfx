@@ -121,8 +121,9 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
         // Create the new member access expression
         MemberAccessExpressionSyntax newMemberAccess = memberAccess.WithName(newMethodName);
 
-        // Create the new argument with the unnegated expression
-        ArgumentSyntax newArgument = conditionArgument.WithExpression(currentExpression);
+        // Create the new argument with the unnegated expression, preserving trivia
+        ArgumentSyntax newArgument = conditionArgument.WithExpression(
+            currentExpression.WithLeadingTrivia(argumentExpression.GetLeadingTrivia()));
 
         // Find the index of the condition argument in the invocation's argument list
         int conditionArgumentIndex = -1;

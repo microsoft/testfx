@@ -78,20 +78,40 @@
         <target state="translated">Différence attendue supérieure à &lt;{3}&gt; comprise entre la valeur attendue &lt;{1}&gt; et la valeur réelle &lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreNotSameBothNull">
+        <source>Both values are &lt;null&gt;. {0}</source>
+        <target state="translated">Les deux valeurs sont &lt;null&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameActualIsNull">
+        <source>Actual is &lt;null&gt;. {0}</source>
+        <target state="translated">La valeur réelle est &lt;null&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameExpectedIsNull">
+        <source>Expected is &lt;null&gt;. {0}</source>
+        <target state="translated">La valeur attendue est &lt;null&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
       <trans-unit id="AreSameGivenValues">
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
         <target state="translated">Ne passez pas de types valeur à AreSame(). Les valeurs converties en Object ne seront plus jamais les mêmes. Si possible, utilisez AreEqual(). {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AssertScopeFailure">
+        <source>{0} assertion(s) failed within the assert scope.</source>
+        <target state="translated">{0} assertion(s) ont échoué dans la portée de l’assertion.</target>
+        <note>{0} is the number of assertion failures collected in the scope.</note>
+      </trans-unit>
+      <trans-unit id="AssertScopeNestedNotAllowed">
+        <source>Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</source>
+        <target state="translated">Les portées d’assertion imbriquées ne sont pas autorisées. Libérez la portée actuelle avant d’en créer une nouvelle.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssertThatDetailsPrefix">
         <source>Details:</source>
         <target state="translated">Détails :</target>
         <note />
-      </trans-unit>
-      <trans-unit id="AssertThatFailedFormat">
-        <source>Assert.That({0}) failed.</source>
-        <target state="translated">Désolé, échec de Assert.That({0}).</target>
-        <note>{0} is the user code expression</note>
       </trans-unit>
       <trans-unit id="AssertThatMessageFormat">
         <source>Message: {0}</source>
@@ -233,9 +253,9 @@ Réel : {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionFailed">
-        <source>{0} failed. {1}</source>
-        <target state="translated">Échec de {0}. {1}</target>
-        <note></note>
+        <source>{0} failed.</source>
+        <target state="translated">Échec de {0}.</target>
+        <note />
       </trans-unit>
       <trans-unit id="HasCountFailMsg">
         <source>Expected collection of size {1}. Actual: {2}. {0}</source>

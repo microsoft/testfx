@@ -14,7 +14,7 @@ using Microsoft.Testing.Platform.Services;
 namespace Microsoft.Testing.Extensions.Policy;
 
 [UnsupportedOSPlatform("browser")]
-internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDataProducer
+internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutputDeviceDataProducer
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ICommandLineOptions _commandLineOptions;
@@ -29,7 +29,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
 
     public string Uid => nameof(RetryOrchestrator);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => ExtensionResources.RetryFailedTestsExtensionDisplayName;
 
@@ -169,6 +169,79 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             using RetryFailedTestsPipeServer retryFailedTestsPipeServer = new(_serviceProvider, lastListOfFailedId ?? [], logger);
             finalArguments.Add($"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}");
             finalArguments.Add(retryFailedTestsPipeServer.PipeName);
+
+            // When retrying, replace any existing test filter with --filter-uid for the failed tests
+            if (lastListOfFailedId is { Length: > 0 })
+            {
+                RemoveOption(finalArguments, TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter);
+                RemoveOption(finalArguments, PlatformCommandLineProvider.FilterUidOptionKey);
+
+                // The RSP parser (ResponseFileHelper.SplitCommandLine) strips all '"' characters
+                // from tokens, so UIDs containing literal '"' (e.g. parameterized tests with
+                // string arguments that include double quotes) cannot safely round-trip through
+                // a response file. In that case we must always use inline arguments.
+                bool hasUidsWithQuotes = false;
+                foreach (string uid in lastListOfFailedId)
+                {
+                    if (uid.IndexOf('"') >= 0)
+                    {
+                        hasUidsWithQuotes = true;
+                        break;
+                    }
+                }
+
+                bool useResponseFile = false;
+                if (!hasUidsWithQuotes)
+                {
+                    // Estimate command line length to avoid hitting OS limits (~32K on Windows).
+                    // Add per-argument overhead to account for PasteArguments quoting on pre-.NET 8
+                    // targets where each argument may gain wrapping quotes and a separator space.
+                    const int CommandLineLengthLimit = 30_000;
+                    const int PerArgumentOverhead = 3;
+                    int predictedLength = 0;
+                    foreach (string arg in finalArguments)
+                    {
+                        predictedLength += arg.Length + PerArgumentOverhead;
+                    }
+
+                    predictedLength += 2 + PlatformCommandLineProvider.FilterUidOptionKey.Length + 1;
+                    foreach (string uid in lastListOfFailedId)
+                    {
+                        predictedLength += uid.Length + PerArgumentOverhead;
+                    }
+
+                    useResponseFile = predictedLength > CommandLineLengthLimit;
+                }
+
+                if (!useResponseFile)
+                {
+                    finalArguments.Add($"--{PlatformCommandLineProvider.FilterUidOptionKey}");
+                    finalArguments.AddRange(lastListOfFailedId);
+                }
+                else
+                {
+                    // Use a response file to avoid exceeding command-line length limits.
+                    // Write to retryRootFolder (not the per-attempt folder) so it won't be included
+                    // in the final results move.
+                    string responseFilePath = Path.Combine(retryRootFolder, $"retry-filter-uids-{attemptCount}.rsp");
+                    using (IFileStream stream = _fileSystem.NewFileStream(responseFilePath, FileMode.Create, FileAccess.Write))
+                    using (var writer = new StreamWriter(stream.Stream))
+                    {
+                        // Write all UIDs on a single line, each quoted. The RSP parser splits
+                        // by whitespace and uses '"' for grouping, so quoting handles UIDs
+                        // containing whitespace or starting with '#' (comment marker).
+                        await writer.WriteAsync($"--{PlatformCommandLineProvider.FilterUidOptionKey}").ConfigureAwait(false);
+                        foreach (string uid in lastListOfFailedId)
+                        {
+                            await writer.WriteAsync($" \"{uid}\"").ConfigureAwait(false);
+                        }
+
+                        await writer.WriteLineAsync().ConfigureAwait(false);
+                    }
+
+                    finalArguments.Add($"@{responseFilePath}");
+                }
+            }
 
 #if NET8_0_OR_GREATER
             // On net8.0+, we can pass the arguments as a collection directly to ProcessStartInfo.
@@ -350,5 +423,44 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
 
         index = Array.IndexOf(executableArgs, "--" + optionName);
         return index >= 0 ? index : -1;
+    }
+
+    private static void RemoveOption(List<string> arguments, string optionName)
+    {
+        string longForm = $"--{optionName}";
+        string shortForm = $"-{optionName}";
+
+        // Remove all occurrences since options like --filter-uid can appear multiple times.
+        // Also handle --option=value and --option:value forms produced by the command-line parser.
+        while (true)
+        {
+            int idx = -1;
+            for (int i = 0; i < arguments.Count; i++)
+            {
+                string arg = arguments[i];
+                if (arg == longForm || arg == shortForm
+                    || arg.StartsWith(longForm + "=", StringComparison.Ordinal) || arg.StartsWith(longForm + ":", StringComparison.Ordinal)
+                    || arg.StartsWith(shortForm + "=", StringComparison.Ordinal) || arg.StartsWith(shortForm + ":", StringComparison.Ordinal))
+                {
+                    idx = i;
+                    break;
+                }
+            }
+
+            if (idx < 0)
+            {
+                break;
+            }
+
+            arguments.RemoveAt(idx);
+
+            // Always remove subsequent non-option arguments (the option's values),
+            // even when the first value was provided inline with = or :, because
+            // multi-arity options (e.g. --filter-uid=1 2) can have trailing values.
+            while (idx < arguments.Count && (arguments[idx].Length == 0 || arguments[idx][0] != '-'))
+            {
+                arguments.RemoveAt(idx);
+            }
+        }
     }
 }

@@ -1,0 +1,11 @@
+name = "FVSquad"
+version = "0.1.0"
+defaultTargets = ["FVSquad"]
+
+[[lean_lib]]
+name = "FVSquad"
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "v4.14.0"

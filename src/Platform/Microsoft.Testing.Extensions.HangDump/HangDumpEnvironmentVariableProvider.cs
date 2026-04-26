@@ -5,24 +5,25 @@ using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
 
 internal sealed class HangDumpEnvironmentVariableProvider : ITestHostEnvironmentVariableProvider
 {
-    private readonly ICommandLineOptions _commandLineOptions;
-    private readonly HangDumpConfiguration _hangDumpConfiguration;
+    public const string PipeNameEnvironmentVariableName = "TESTINGPLATFORM_HANGDUMP_PIPENAME";
 
-    public HangDumpEnvironmentVariableProvider(ICommandLineOptions commandLineOptions, HangDumpConfiguration hangDumpConfiguration)
+    private readonly ICommandLineOptions _commandLineOptions;
+    private readonly string _pipeName;
+
+    public HangDumpEnvironmentVariableProvider(ICommandLineOptions commandLineOptions, string pipeName)
     {
         _commandLineOptions = commandLineOptions;
-        _hangDumpConfiguration = hangDumpConfiguration;
+        _pipeName = pipeName;
     }
 
     public string Uid => nameof(HangDumpEnvironmentVariableProvider);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => ExtensionResources.HangDumpExtensionDisplayName;
 
@@ -33,40 +34,24 @@ internal sealed class HangDumpEnvironmentVariableProvider : ITestHostEnvironment
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
         environmentVariables.SetVariable(
-            new(_hangDumpConfiguration.PipeNameKey, _hangDumpConfiguration.PipeNameValue, false, true));
-        environmentVariables.SetVariable(
-            new(HangDumpConfiguration.NamedPipeNameSuffixEnvironmentVariable, _hangDumpConfiguration.NamedPipeSuffix, false, true));
+            new EnvironmentVariable(PipeNameEnvironmentVariableName, _pipeName, isSecret: false, isLocked: true));
         return Task.CompletedTask;
     }
 
     public Task<ValidationResult> ValidateTestHostEnvironmentVariablesAsync(IReadOnlyEnvironmentVariables environmentVariables)
     {
-        if (!environmentVariables.TryGetVariable(_hangDumpConfiguration.PipeNameKey, out OwnedEnvironmentVariable? envVar))
+        if (!environmentVariables.TryGetVariable(PipeNameEnvironmentVariableName, out OwnedEnvironmentVariable? envVar))
         {
             return Task.FromResult(
                 ValidationResult.Invalid(
-                    string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpEnvironmentVariableIsMissingErrorMessage, _hangDumpConfiguration.PipeNameKey)));
+                    string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpEnvironmentVariableIsMissingErrorMessage, PipeNameEnvironmentVariableName)));
         }
 
-        if (envVar.Value != _hangDumpConfiguration.PipeNameValue)
+        if (envVar.Value != _pipeName)
         {
             return Task.FromResult(
                 ValidationResult.Invalid(
-                    string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpEnvironmentVariableInvalidValueErrorMessage, _hangDumpConfiguration.PipeNameKey, envVar.Value, _hangDumpConfiguration.PipeNameKey)));
-        }
-
-        if (!environmentVariables.TryGetVariable(HangDumpConfiguration.NamedPipeNameSuffixEnvironmentVariable, out envVar))
-        {
-            return Task.FromResult(
-                ValidationResult.Invalid(
-                    string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpEnvironmentVariableIsMissingErrorMessage, HangDumpConfiguration.NamedPipeNameSuffixEnvironmentVariable)));
-        }
-
-        if (envVar.Value != _hangDumpConfiguration.NamedPipeSuffix)
-        {
-            return Task.FromResult(
-                ValidationResult.Invalid(
-                    string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpEnvironmentVariableInvalidValueErrorMessage, HangDumpConfiguration.NamedPipeNameSuffixEnvironmentVariable, envVar.Value, _hangDumpConfiguration.NamedPipeSuffix)));
+                    string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpEnvironmentVariableInvalidValueErrorMessage, PipeNameEnvironmentVariableName, envVar.Value, _pipeName)));
         }
 
         // No problem found

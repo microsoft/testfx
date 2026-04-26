@@ -16,7 +16,8 @@ internal sealed class TerminalTestReporterOptions
     public int MinimumExpectedTests { get; init; }
 
     /// <summary>
-    /// Gets a value indicating whether we should write the progress periodically to screen. When ANSI is allowed we update the progress as often as we can. When ANSI is not allowed we update it every 3 seconds.
+    /// Gets a value indicating whether we should write the progress periodically to screen. When ANSI is allowed we update the progress as often as we can.
+    /// When ANSI is not allowed we never have progress.
     /// This is a callback to nullable bool, because we don't know if we are running as test host controller until after we setup the console. So we should be polling for the value, until we get non-null boolean
     /// and then cache that value.
     /// </summary>
@@ -28,18 +29,60 @@ internal sealed class TerminalTestReporterOptions
     public bool ShowActiveTests { get; init; }
 
     /// <summary>
-    /// Gets a value indicating whether we should use ANSI escape codes or disable them. When true the capabilities of the console are autodetected.
+    /// Gets a value indicating the ANSI mode.
     /// </summary>
-    public bool UseAnsi { get; init; }
+    public AnsiMode AnsiMode { get; init; }
 
     /// <summary>
-    /// Gets a value indicating whether we are running in compatible CI, and should use simplified ANSI renderer, which colors output, but does not move cursor.
-    /// Setting <see cref="UseAnsi"/> to false will disable this option.
+    /// Gets a value indicating when to show standard output.
     /// </summary>
-    public bool UseCIAnsi { get; init; }
+    public OutputShowMode ShowStdout { get; init; } = OutputShowMode.All;
 
     /// <summary>
-    /// Gets a value indicating whether we should force ANSI escape codes. When true the ANSI is used without auto-detecting capabilities of the console. This is needed only for testing.
+    /// Gets a value indicating when to show standard error output.
     /// </summary>
-    internal /* for testing */ bool? ForceAnsi { get; init; }
+    public OutputShowMode ShowStderr { get; init; } = OutputShowMode.All;
+}
+
+internal enum OutputShowMode
+{
+    /// <summary>
+    /// Always show the output.
+    /// </summary>
+    All,
+
+    /// <summary>
+    /// Show the output only for failed tests.
+    /// </summary>
+    Failed,
+
+    /// <summary>
+    /// Never show the output.
+    /// </summary>
+    None,
+}
+
+internal enum AnsiMode
+{
+    /// <summary>
+    /// Disable ANSI escape codes.
+    /// </summary>
+    NoAnsi,
+
+    /// <summary>
+    /// Use simplified ANSI renderer, which colors output, but does not move cursor.
+    /// This is used in compatible CI environments.
+    /// </summary>
+    SimpleAnsi,
+
+    /// <summary>
+    /// Enable ANSI escape codes, including cursor movement, when the capabilities of the console allow it.
+    /// </summary>
+    AnsiIfPossible,
+
+    /// <summary>
+    /// Force ANSI escape codes, regardless of the capabilities of the console.
+    /// This is needed only for testing.
+    /// </summary>
+    ForceAnsi,
 }

@@ -17,7 +17,6 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
     private readonly List<Func<IServiceProvider, ITestHostEnvironmentVariableProvider>> _environmentVariableProviderFactories = [];
     private readonly List<Func<IServiceProvider, ITestHostProcessLifetimeHandler>> _lifetimeHandlerFactories = [];
-    private readonly List<Func<IServiceProvider, IDataConsumer>> _dataConsumerFactories = [];
     private readonly List<ICompositeExtensionFactory> _environmentVariableProviderCompositeFactories = [];
     private readonly List<ICompositeExtensionFactory> _lifetimeHandlerCompositeFactories = [];
     private readonly List<ICompositeExtensionFactory> _alreadyBuiltServices = [];
@@ -31,7 +30,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
         }
 
-        Guard.NotNull(environmentVariableProviderFactory);
+        _ = environmentVariableProviderFactory ?? throw new ArgumentNullException(nameof(environmentVariableProviderFactory));
         _environmentVariableProviderFactories.Add(environmentVariableProviderFactory);
         _factoryOrdering.Add(environmentVariableProviderFactory);
     }
@@ -45,7 +44,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
         }
 
-        Guard.NotNull(compositeServiceFactory);
+        _ = compositeServiceFactory ?? throw new ArgumentNullException(nameof(compositeServiceFactory));
         if (_environmentVariableProviderCompositeFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
@@ -63,7 +62,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
         }
 
-        Guard.NotNull(lifetimeHandler);
+        _ = lifetimeHandler ?? throw new ArgumentNullException(nameof(lifetimeHandler));
         _lifetimeHandlerFactories.Add(lifetimeHandler);
         _factoryOrdering.Add(lifetimeHandler);
     }
@@ -77,7 +76,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
         }
 
-        Guard.NotNull(compositeServiceFactory);
+        _ = compositeServiceFactory ?? throw new ArgumentNullException(nameof(compositeServiceFactory));
         if (_lifetimeHandlerCompositeFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
@@ -96,7 +95,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
         }
 
-        Guard.NotNull(compositeServiceFactory);
+        _ = compositeServiceFactory ?? throw new ArgumentNullException(nameof(compositeServiceFactory));
         if (_dataConsumersCompositeServiceFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
@@ -229,22 +228,6 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         }
 
         List<(IDataConsumer Consumer, int RegistrationOrder)> dataConsumers = [];
-        foreach (Func<IServiceProvider, IDataConsumer> dataConsumerFactory in _dataConsumerFactories)
-        {
-            IDataConsumer service = dataConsumerFactory(serviceProvider);
-
-            // Check if we have already extensions of the same type with same id registered
-            dataConsumers.ValidateUniqueExtension(service, x => x.Consumer);
-
-            // We initialize only if enabled
-            if (await service.IsEnabledAsync().ConfigureAwait(false))
-            {
-                await service.TryInitializeAsync().ConfigureAwait(false);
-
-                // Register the extension for usage
-                dataConsumers.Add((service, _factoryOrdering.IndexOf(dataConsumerFactory)));
-            }
-        }
 
         foreach (ICompositeExtensionFactory compositeServiceFactory in _dataConsumersCompositeServiceFactories)
         {

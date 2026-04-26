@@ -15,6 +15,7 @@ internal sealed class SystemTask : ITask
         => Task.Run(function, cancellationToken);
 
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
     {
         // We create custom thread so we can assign the name that will help us to identify the thread in the dump
@@ -56,6 +57,6 @@ internal sealed class SystemTask : ITask
     public Task Delay(int millisecondDelay)
         => Task.Delay(millisecondDelay);
 
-    public Task Delay(TimeSpan timeSpan, CancellationToken cancellation)
-        => Task.Delay(timeSpan, cancellation);
+    public Task Delay(TimeSpan timeSpan, CancellationToken cancellationToken)
+        => Task.Delay(timeSpan, cancellationToken);
 }

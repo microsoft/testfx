@@ -6,11 +6,7 @@ using Microsoft.CodeAnalysis;
 namespace Microsoft.Testing.Platform.IPC;
 
 [Embedded]
-internal interface IClient :
-#if NETCOREAPP
-    IAsyncDisposable,
-#endif
-    IDisposable
+internal interface IClient : IDisposable
 {
     bool IsConnected { get; }
 

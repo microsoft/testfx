@@ -38,7 +38,9 @@ internal sealed class TestResultConsoleReporter :
             SkippedTestNodeStateProperty => "was skipped",
             ErrorTestNodeStateProperty => "errored",
             TimeoutTestNodeStateProperty => "timed out",
+#pragma warning disable CS0618 // Type or member is obsolete
             CancelledTestNodeStateProperty => "was cancelled",
+#pragma warning disable CS0618 // Type or member is obsolete
             _ => null,
         };
 

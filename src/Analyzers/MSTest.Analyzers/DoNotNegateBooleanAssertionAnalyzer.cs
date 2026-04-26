@@ -31,7 +31,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
         MessageFormat,
         null,
         Category.Usage,
-        DiagnosticSeverity.Warning,
+        DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
     /// <inheritdoc />

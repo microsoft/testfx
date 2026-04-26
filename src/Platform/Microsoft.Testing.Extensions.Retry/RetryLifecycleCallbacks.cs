@@ -32,7 +32,7 @@ internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime, ID
 
     public string Uid => nameof(RetryLifecycleCallbacks);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => ExtensionResources.RetryFailedTestsExtensionDisplayName;
 
@@ -47,7 +47,6 @@ internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime, ID
 
         ILogger<RetryLifecycleCallbacks> logger = _serviceProvider.GetLoggerFactory().CreateLogger<RetryLifecycleCallbacks>();
 
-        Guard.NotNull(pipeName);
         ArgumentGuard.Ensure(pipeName.Length == 1, nameof(pipeName), "Pipe name expected");
         logger.LogDebug($"Connecting to pipe '{pipeName[0]}'");
 
@@ -66,7 +65,7 @@ internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime, ID
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(_commandLineOptions.IsOptionSet(RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName));
 
-    public Task AfterRunAsync(int exitCode, CancellationToken cancellation)
+    public Task AfterRunAsync(int exitCode, CancellationToken cancellationToken)
         => Task.CompletedTask;
 
     public void Dispose() => Client?.Dispose();

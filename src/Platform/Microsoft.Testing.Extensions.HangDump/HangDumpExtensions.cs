@@ -4,9 +4,12 @@
 using Microsoft.Testing.Extensions.Diagnostics;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Services;
+
+#if !NETCOREAPP
+using Polyfills;
+#endif
 
 namespace Microsoft.Testing.Extensions;
 
@@ -34,11 +37,7 @@ public static class HangDumpExtensions
             throw new PlatformNotSupportedException("Hang dump extension is not available on ios nor tvos");
         }
 
-        var environment = new SystemEnvironment();
-        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(environment, new SystemProcessHandler());
-        string namedPipeSuffix = Guid.NewGuid().ToString("N");
-        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), environment);
-        HangDumpConfiguration hangDumpConfiguration = new(testApplicationModuleInfo, pipeNameDescription, namedPipeSuffix);
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
 
         builder.TestHostControllers.AddProcessLifetimeHandler(serviceProvider
             => new HangDumpProcessLifetimeHandler(
@@ -55,7 +54,7 @@ public static class HangDumpExtensions
                 serviceProvider.GetArtifactNamingService()));
 
         builder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider
-            => new HangDumpEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), hangDumpConfiguration));
+            => new HangDumpEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), pipeNameDescription.Name));
 
         builder.CommandLine.AddProvider(()
             => new HangDumpCommandLineProvider());
@@ -65,11 +64,10 @@ public static class HangDumpExtensions
                 serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetEnvironment(),
                 serviceProvider.GetTask(),
-                serviceProvider.GetTestApplicationModuleInfo(),
                 serviceProvider.GetLoggerFactory(),
                 serviceProvider.GetClock()));
 
         builder.TestHost.AddDataConsumer(hangDumpActivityIndicatorComposite);
-        builder.TestHost.AddTestSessionLifetimeHandle(hangDumpActivityIndicatorComposite);
+        builder.TestHost.AddTestSessionLifetimeHandler(hangDumpActivityIndicatorComposite);
     }
 }

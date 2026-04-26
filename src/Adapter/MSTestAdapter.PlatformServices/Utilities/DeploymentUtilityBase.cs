@@ -3,6 +3,8 @@
 
 #if !WINDOWS_UWP && !WIN_UI
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 
@@ -24,7 +26,7 @@ internal abstract class DeploymentUtilityBase
     protected const string DeploymentFolderPrefix = "Deploy";
 
     public DeploymentUtilityBase()
-        : this(new DeploymentItemUtility(new ReflectionUtility()), new AssemblyUtility(), new FileUtility())
+        : this(new DeploymentItemUtility(ReflectHelper.Instance), new AssemblyUtility(), new FileUtility())
     {
     }
 
@@ -137,8 +139,8 @@ internal abstract class DeploymentUtilityBase
     /// <returns>Returns a list of deployment warnings.</returns>
     protected IEnumerable<string> Deploy(IList<DeploymentItem> deploymentItems, string testSourceHandler, string deploymentDirectory, string resultsDirectory)
     {
-        Guard.NotNullOrWhiteSpace(deploymentDirectory);
-        Guard.NotNullOrWhiteSpace(testSourceHandler);
+        Ensure.NotNullOrWhiteSpace(deploymentDirectory);
+        Ensure.NotNullOrWhiteSpace(testSourceHandler);
         ApplicationStateGuard.Ensure(FileUtility.DoesDirectoryExist(deploymentDirectory), $"Deployment directory {deploymentDirectory} does not exist");
         ApplicationStateGuard.Ensure(FileUtility.DoesFileExist(testSourceHandler), $"TestSource {testSourceHandler} does not exist.");
 
@@ -153,8 +155,6 @@ internal abstract class DeploymentUtilityBase
         // Copy the deployment items. (As deployment item can correspond to directories as well, so each deployment item may map to n files)
         foreach (DeploymentItem deploymentItem in deploymentItems)
         {
-            Guard.NotNull(deploymentItem);
-
             // Validate the output directory.
             if (!IsOutputDirectoryValid(deploymentItem, deploymentDirectory, warnings))
             {
@@ -258,11 +258,13 @@ internal abstract class DeploymentUtilityBase
                     }
                     else if (!string.Equals(fileToDeploy, value, StringComparison.OrdinalIgnoreCase))
                     {
-                        EqtTrace.WarningIf(
-                            EqtTrace.IsWarningEnabled,
-                            "Conflict during copying file: '{0}' and '{1}' are from different origins although they might be the same.",
-                            fileToDeploy,
-                            value);
+                        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                        {
+                            PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                                "Conflict during copying file: '{0}' and '{1}' are from different origins although they might be the same.",
+                                fileToDeploy,
+                                value);
+                        }
                     }
                 } // foreach fileToDeploy.
             } // foreach itemFile.
@@ -411,18 +413,21 @@ internal abstract class DeploymentUtilityBase
 
     private bool Deploy(string source, IRunContext? runContext, ITestExecutionRecorder testExecutionRecorder, IList<DeploymentItem> deploymentItems, TestRunDirectories runDirectories)
     {
-        Guard.NotNull(runDirectories);
-        if (EqtTrace.IsInfoEnabled)
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
-            EqtTrace.Info("MSTestExecutor: Found that deployment items for source {0} are: ", source);
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor: Found that deployment items for source {0} are: ", source);
             foreach (DeploymentItem item in deploymentItems)
             {
-                EqtTrace.Info("MSTestExecutor: SourcePath: - {0}", item.SourcePath);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor: SourcePath: - {0}", item.SourcePath);
             }
         }
 
         // Do the deployment.
-        EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "MSTestExecutor: Using deployment directory {0} for source {1}.", runDirectories.OutDirectory, source);
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+        {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor: Using deployment directory {0} for source {1}.", runDirectories.OutDirectory, source);
+        }
+
         IEnumerable<string> warnings = Deploy([.. deploymentItems], source, runDirectories.OutDirectory, GetTestResultsDirectory(runContext));
 
         // Log warnings

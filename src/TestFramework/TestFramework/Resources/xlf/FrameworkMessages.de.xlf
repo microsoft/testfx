@@ -78,20 +78,40 @@
         <target state="translated">Es wurde eine Differenz größer als &lt;{3}&gt; zwischen dem erwarteten Wert &lt;{1}&gt; und dem tatsächlichen Wert &lt;{2}&gt; erwartet. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreNotSameBothNull">
+        <source>Both values are &lt;null&gt;. {0}</source>
+        <target state="translated">Beide Werte sind &lt;null&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameActualIsNull">
+        <source>Actual is &lt;null&gt;. {0}</source>
+        <target state="translated">Aktuell ist &lt;null&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameExpectedIsNull">
+        <source>Expected is &lt;null&gt;. {0}</source>
+        <target state="translated">Erwartet wird &lt;null&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
       <trans-unit id="AreSameGivenValues">
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
         <target state="translated">Übergeben Sie keine Werttypen an AreSame(). In ein Objekt konvertierte Werte sind niemals identisch. Verwenden Sie stattdessen AreEqual(). {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AssertScopeFailure">
+        <source>{0} assertion(s) failed within the assert scope.</source>
+        <target state="translated">{0} Assertion(en) innerhalb des Assert-Bereichs fehlgeschlagen.</target>
+        <note>{0} is the number of assertion failures collected in the scope.</note>
+      </trans-unit>
+      <trans-unit id="AssertScopeNestedNotAllowed">
+        <source>Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</source>
+        <target state="translated">Geschachtelte Assert-Bereiche sind nicht zulässig. Verwerfen Sie den aktuellen Bereich, bevor Sie einen neuen erstellen.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssertThatDetailsPrefix">
         <source>Details:</source>
         <target state="translated">Details:</target>
         <note />
-      </trans-unit>
-      <trans-unit id="AssertThatFailedFormat">
-        <source>Assert.That({0}) failed.</source>
-        <target state="translated">Assert.That({0}) fehlgeschlagen.</target>
-        <note>{0} is the user code expression</note>
       </trans-unit>
       <trans-unit id="AssertThatMessageFormat">
         <source>Message: {0}</source>
@@ -233,9 +253,9 @@ Tatsächlich: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionFailed">
-        <source>{0} failed. {1}</source>
-        <target state="translated">Fehler bei "{0}". {1}</target>
-        <note></note>
+        <source>{0} failed.</source>
+        <target state="translated">{0} fehlgeschlagen.</target>
+        <note />
       </trans-unit>
       <trans-unit id="HasCountFailMsg">
         <source>Expected collection of size {1}. Actual: {2}. {0}</source>

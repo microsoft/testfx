@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
         <source>Browser platform is only supported on .NET 7.0 or greater.</source>
-        <target state="new">Browser platform is only supported on .NET 7.0 or greater.</target>
+        <target state="translated">브라우저 플랫폼은 .NET 7.0 이상에서만 지원됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -118,13 +118,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsReserved">
-        <source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</source>
-        <target state="translated">'--{0}' 옵션은 예약되어 있으므로 공급자 '{0}'이(가) 사용할 수 없습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineOptionObsoleteWarning">
-        <source>Warning: Option '--{0}' is obsolete. {1}</source>
-        <target state="translated">경고: 옵션 '--{0}'이(가) 사용되지 않습니다. {1}</target>
+        <source>Option '--{0}' is reserved and cannot be used by providers: '{1}'</source>
+        <target state="translated">'--{0}' 옵션은 예약되어 있으므로 공급자 '{1}'이(가) 사용할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
@@ -419,16 +414,6 @@
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
         <target state="translated">실행 중인 테스트 {0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">ID '{0}'(으)로 등록된 직렬 변환기가 없습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">'{0}' 형식으로 등록된 직렬 변환기가 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="NotAvailable">
@@ -830,6 +815,25 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">--output에는 값이 'Normal' 또는 'Detailed'인 단일 매개 변수가 필요합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="translated">--show-stdout 및 --show-stderr에는 값이 'All', 'Failed' 또는 'None'인 단일 매개 변수가 필요합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">테스트에서 캡처한 오류 출력을 언제 표시할지 결정합니다.
+유효한 값은 'All', 'Failed', 'None'입니다. 기본값은 'All'입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">테스트에서 캡처한 표준 출력을 언제 표시할지 결정합니다.
+유효한 값은 'All', 'Failed', 'None'입니다. 기본값은 'All'입니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
         <target state="translated">테스트 결과를 터미널에 씁니다.</target>
@@ -975,11 +979,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">예기치 않은 원격 분석 호출로 인해 원격 분석을 사용할 수 없습니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occurred during byte conversion</source>
-        <target state="translated">바이트 변환 중 예기치 않은 예외 발생</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
@@ -1020,11 +1019,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
         <target state="translated">채팅 클라이언트 공급자가 이미 등록되었습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">AI 확장은 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 유형의 작성기에서만 작동합니다.</target>
         <note />
       </trans-unit>
     </body>

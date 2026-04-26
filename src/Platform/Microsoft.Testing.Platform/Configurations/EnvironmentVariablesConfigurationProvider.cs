@@ -17,7 +17,7 @@ internal sealed class EnvironmentVariablesConfigurationProvider : IConfiguration
 
     private readonly string _normalizedPrefix;
 
-    private readonly Dictionary<string, string?> _data = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string?> _data = [with(StringComparer.OrdinalIgnoreCase)];
 
     private readonly IEnvironment _environmentVariables;
 
@@ -74,7 +74,8 @@ internal sealed class EnvironmentVariablesConfigurationProvider : IConfiguration
 
     public bool TryGet(string key, out string? value)
     {
-        Guard.NotNullOrEmpty(key, nameof(key));
+        _ = key ?? throw new ArgumentNullException(nameof(key));
+        Ensure.NotEmpty(key);
         return _data.TryGetValue(key, out value);
     }
 

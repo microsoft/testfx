@@ -114,7 +114,7 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests
             public class Base
             {
             }
-            
+
             public class MyTestClass : Base
             {
                 public void MyTestMethod()
@@ -131,11 +131,11 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            
+
             public class DerivedTestClass : TestClassAttribute
             {
             }
-            
+
             [DerivedTestClass]
             public class MyTestClass
             {
@@ -184,11 +184,11 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            
+
             public class DerivedTestClass : TestClassAttribute
             {
             }
-            
+
             [DerivedTestClass]
             public class MyTestClass
             {
@@ -200,11 +200,11 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests
 
         string fixedCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            
+
             public class DerivedTestClass : TestClassAttribute
             {
             }
-            
+
             [DerivedTestClass]
             public class MyTestClass
             {
@@ -341,5 +341,48 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests
             }
             """;
         await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsPublicWithMultiLineBody_PreservesIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public void [|MyTestMethod|]()
+                {
+                    var result = SomeMethod(
+                        1,
+                        2,
+                        3);
+                }
+
+                private int SomeMethod(int a, int b, int c) => a + b + c;
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var result = SomeMethod(
+                        1,
+                        2,
+                        3);
+                }
+
+                private int SomeMethod(int a, int b, int c) => a + b + c;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 }

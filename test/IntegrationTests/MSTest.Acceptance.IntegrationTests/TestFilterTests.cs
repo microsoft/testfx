@@ -42,38 +42,6 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task UsingTestPropertyForOwnerAndPriorityAndTestCategory_TestsFailed(string currentTfm)
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
-
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter tree!~one", cancellationToken: TestContext.CancellationToken);
-
-        testHostResult.AssertOutputContains("""
-failed PriorityTest (0ms)
-  UTA023: TestClass: Cannot define predefined property Priority on method PriorityTest.
-failed OwnerTest (0ms)
-  UTA023: TestClass: Cannot define predefined property Owner on method OwnerTest.
-failed TestCategoryTest (0ms)
-  UTA023: TestClass: Cannot define predefined property TestCategory on method TestCategoryTest.
-""");
-    }
-
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task RunWithFilter_UsingTestPropertyForOwner_FilteredButTestsFailed(string currentTfm)
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
-
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter owner=testOwner", cancellationToken: TestContext.CancellationToken);
-
-        testHostResult.AssertOutputContains("""
-failed OwnerTest (0ms)
-  UTA023: TestClass: Cannot define predefined property Owner on method OwnerTest.
-""");
-    }
-
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task RunWithFilter_UsingTestPropertyForPriorityAndTestCategory_NotFiltered(string currentTfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
@@ -100,9 +68,7 @@ failed OwnerTest (0ms)
         testHostResult.AssertOutputContains("Running test: CategoryAOnly");
         testHostResult.AssertOutputContains("Running test: CategoryBOnly");
         testHostResult.AssertOutputContains("Running test: CategoryAAndB");
-        // PriorityTest, OwnerTest, and TestCategoryTest are reported as failing.
-        // See the test UsingTestPropertyForOwnerAndPriorityAndTestCategory_TestsFailed
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         testHostResult = await testHost.ExecuteAsync("--settings CategoryA.runsettings --filter TestCategory~CategoryA", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContains("Running test: CategoryAOnly");
@@ -117,17 +83,14 @@ failed OwnerTest (0ms)
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file TestFilter.csproj

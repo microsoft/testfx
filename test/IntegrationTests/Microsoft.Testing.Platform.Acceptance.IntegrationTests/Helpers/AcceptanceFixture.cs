@@ -6,13 +6,38 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestClass]
 public static class AcceptanceFixture
 {
-    public static TempDirectory NuGetGlobalPackagesFolder { get; private set; } = null!;
+    private static string? s_directoryToCleanup;
 
     [AssemblyInitialize]
     public static void AssemblyInitialize(TestContext context)
-        => NuGetGlobalPackagesFolder = new(".packages");
+    {
+        Environment.SetEnvironmentVariable("MSBUILDDISABLENODEREUSE", "1");
+
+        s_directoryToCleanup = Path.Combine(TempDirectory.TestSuiteDirectory, RandomId.Next());
+
+        // Ensure all integration tests restore packages in a centralized place other than the NuGet cache.
+        // The centralized place also changes between runs (RandomId.Next()) so that re-packaging locally works as expected.
+        // So, when running Build.cmd -pack, running test, running Build.cmd -pack again, and running test again, the latest
+        // packages should be picked.
+        // If we restore to the same place (whether or not it is the machine-wide cache), NuGet will consider restore up-to-date and
+        // will use stale packages.
+        string nugetCache = Path.Combine(s_directoryToCleanup, ".packages");
+        Directory.CreateDirectory(nugetCache);
+        Environment.SetEnvironmentVariable("NUGET_PACKAGES", nugetCache);
+    }
 
     [AssemblyCleanup]
-    public static void AssemblyCleanup()
-        => NuGetGlobalPackagesFolder.Dispose();
+    public static void AssemblyCleanup(TestContext context)
+    {
+        if (s_directoryToCleanup is not null)
+        {
+            try
+            {
+                Directory.Delete(s_directoryToCleanup, recursive: true);
+            }
+            catch (IOException)
+            {
+            }
+        }
+    }
 }

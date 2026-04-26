@@ -9,8 +9,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensi
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using UTFUnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 /// <summary>
@@ -244,14 +242,6 @@ internal sealed class TestClassInfo
             return;
         }
 
-        if (testContext == null)
-        {
-            // TODO: Change this exception type to ArgumentNullException
-#pragma warning disable CA2201 // Do not raise reserved exception types
-            throw new NullReferenceException(Resource.TestContextIsNull);
-#pragma warning restore CA2201 // Do not raise reserved exception types
-        }
-
         MethodInfo? initializeMethod = null;
         string? failedClassInitializeMethodName = string.Empty;
 
@@ -305,7 +295,7 @@ internal sealed class TestClassInfo
         // Fail the current test if it was a failure.
         Exception realException = ClassInitializationException.GetRealException();
 
-        UTFUnitTestOutcome outcome = realException is AssertInconclusiveException ? UTFUnitTestOutcome.Inconclusive : UTFUnitTestOutcome.Failed;
+        UnitTestOutcome outcome = realException is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed;
 
         // Do not use StackTraceHelper.GetFormattedExceptionMessage(realException) as it prefixes the message with the exception type name.
         string exceptionMessage = realException.TryGetMessage();
@@ -357,7 +347,7 @@ internal sealed class TestClassInfo
         if (ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
         {
             IsClassInitializeExecuted = true;
-            return _classInitializeResult = new() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed };
+            return _classInitializeResult = new() { Outcome = UnitTestOutcome.Passed };
         }
 
         // At this point, maybe class initialize was executed by another thread such
@@ -389,7 +379,7 @@ internal sealed class TestClassInfo
             {
                 var result = new TestResult
                 {
-                    Outcome = TestTools.UnitTesting.UnitTestOutcome.Error,
+                    Outcome = UnitTestOutcome.Error,
                     IgnoreReason = "MSTest STATestClass ClassInitialize didn't complete",
                 };
 
@@ -408,11 +398,15 @@ internal sealed class TestClassInfo
                 }
                 catch (Exception ex)
                 {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error(ex.ToString());
+                    }
+
                     return new TestResult
                     {
-                        TestFailureException = new TestFailedException(UTFUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
-                        Outcome = UTFUnitTestOutcome.Error,
+                        TestFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                        Outcome = UnitTestOutcome.Error,
                     };
                 }
             }
@@ -421,7 +415,10 @@ internal sealed class TestClassInfo
                 // If the requested apartment state is STA and the OS is not Windows, then warn the user.
                 if (!isWindowsOS && isSTATestClass)
                 {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(Resource.STAIsOnlySupportedOnWindowsWarning);
+                    }
                 }
 
                 return await DoRunAsync().ConfigureAwait(false);
@@ -437,7 +434,7 @@ internal sealed class TestClassInfo
         {
             var result = new TestResult
             {
-                Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed,
+                Outcome = UnitTestOutcome.Passed,
             };
 
             try
@@ -453,8 +450,8 @@ internal sealed class TestClassInfo
             {
                 result = new TestResult
                 {
-                    TestFailureException = new TestFailedException(UTFUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
-                    Outcome = UTFUnitTestOutcome.Error,
+                    TestFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                    Outcome = UnitTestOutcome.Error,
                 };
             }
             finally
@@ -490,7 +487,7 @@ internal sealed class TestClassInfo
             {
                 // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
                 // It's safer to reset it before the capture.
-                using (TestContextImplementation.SetCurrentTestContext(testContext as TestContextImplementation))
+                using (TestContextImplementation.SetCurrentTestContext(testContext))
                 {
                     Task? task = methodInfo.GetInvokeResultAsync(null, testContext);
                     if (task is not null)
@@ -605,7 +602,7 @@ internal sealed class TestClassInfo
         StackTraceInformation? exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
 
         var testFailedException = new TestFailedException(
-            UTFUnitTestOutcome.Failed,
+            UnitTestOutcome.Failed,
             string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.UTA_ClassCleanupMethodWasUnsuccesful,
@@ -620,23 +617,12 @@ internal sealed class TestClassInfo
         return testFailedException;
     }
 
-    internal async Task RunClassCleanupAsync(ITestContext testContext, ClassCleanupManager classCleanupManager, TestMethodInfo testMethodInfo, TestResult[] results)
+    internal async Task<TestResult?> RunClassCleanupAsync(ITestContext testContext, TestResult[] results)
     {
-        DebugEx.Assert(testMethodInfo.Parent == this, "Parent of testMethodInfo should be this TestClassInfo.");
-
-        classCleanupManager.MarkTestComplete(testMethodInfo, out bool shouldRunEndOfClassCleanup);
-        if (!shouldRunEndOfClassCleanup)
-        {
-            return;
-        }
-
-        // TODO: Looks like 'ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0' is always false?
-        // shouldRunEndOfClassCleanup should be false if there are no class cleanup methods at all.
-        if ((ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0)
-                || IsClassCleanupExecuted)
+        if (!HasExecutableCleanupMethod || IsClassCleanupExecuted)
         {
             // DoRun will already do nothing for this condition. So, we gain a bit of performance.
-            return;
+            return null;
         }
 
         bool isSTATestClass = ClassAttribute is STATestClassAttribute;
@@ -645,7 +631,8 @@ internal sealed class TestClassInfo
             && isWindowsOS
             && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
         {
-            var entryPointThread = new Thread(() => DoRunAsync().GetAwaiter().GetResult())
+            TestResult? result = null;
+            var entryPointThread = new Thread(() => result = DoRunAsync().GetAwaiter().GetResult())
             {
                 Name = "MSTest STATestClass ClassCleanup",
             };
@@ -659,49 +646,57 @@ internal sealed class TestClassInfo
             }
             catch (Exception ex)
             {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Error(ex.ToString());
+                }
             }
+
+            return result;
         }
         else
         {
             // If the requested apartment state is STA and the OS is not Windows, then warn the user.
             if (!isWindowsOS && isSTATestClass)
             {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(Resource.STAIsOnlySupportedOnWindowsWarning);
+                }
             }
 
-            await DoRunAsync().ConfigureAwait(false);
+            return await DoRunAsync().ConfigureAwait(false);
         }
 
         // Local functions
-        async Task DoRunAsync()
+        async Task<TestResult?> DoRunAsync()
         {
-            try
+            TestFailedException? ex = await ExecuteClassCleanupAsync(testContext.Context).ConfigureAwait(false);
+            var testContextImpl = testContext as TestContextImplementation;
+            if (ex is not null)
             {
-                TestFailedException? ex = await ExecuteClassCleanupAsync(testContext.Context).ConfigureAwait(false);
-                if (ex is not null && results.Length > 0)
+                return new TestResult()
                 {
-#pragma warning disable IDE0056 // Use index operator
-                    TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
-                    lastResult.Outcome = TestTools.UnitTesting.UnitTestOutcome.Error;
-                    lastResult.TestFailureException = ex;
-                }
+                    Outcome = UnitTestOutcome.Failed,
+                    DisplayName = $"[{ClassType.FullName} ClassCleanup]",
+                    TestFailureException = ex,
+                    LogOutput = testContextImpl?.GetOut(),
+                    LogError = testContextImpl?.GetErr(),
+                    DebugTrace = testContextImpl?.GetTrace(),
+                    TestContextMessages = testContext.GetAndClearDiagnosticMessages(),
+                };
             }
-            finally
+
+            if (results.Length > 0)
             {
-                if (results.Length > 0)
-                {
-#pragma warning disable IDE0056 // Use index operator
-                    TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
-                    var testContextImpl = testContext as TestContextImplementation;
-                    lastResult.LogOutput += testContextImpl?.GetOut();
-                    lastResult.LogError += testContextImpl?.GetErr();
-                    lastResult.DebugTrace += testContextImpl?.GetTrace();
-                    lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
-                }
+                TestResult lastResult = results[results.Length - 1];
+                lastResult.LogOutput += testContextImpl?.GetOut();
+                lastResult.LogError += testContextImpl?.GetErr();
+                lastResult.DebugTrace += testContextImpl?.GetTrace();
+                lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
             }
+
+            return null;
         }
     }
 
@@ -718,7 +713,7 @@ internal sealed class TestClassInfo
             {
                 // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
                 // It's safer to reset it before the capture.
-                using (TestContextImplementation.SetCurrentTestContext(testContext as TestContextImplementation))
+                using (TestContextImplementation.SetCurrentTestContext(testContext))
                 {
                     Task? task = methodInfo.GetParameters().Length == 0
                         ? methodInfo.GetInvokeResultAsync(null)

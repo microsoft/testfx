@@ -1,1 +1,5 @@
 #nullable enable
+[TPEXP]Microsoft.Testing.Extensions.AzureFoundry.TestApplicationBuilderExtensions
+[TPEXP]static Microsoft.Testing.Extensions.AzureFoundry.TestApplicationBuilderExtensions.AddAzureOpenAIChatClientProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder) -> void
+Microsoft.Testing.Extensions.AzureFoundry.TestingPlatformBuilderHook
+static Microsoft.Testing.Extensions.AzureFoundry.TestingPlatformBuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, string![]! _) -> void

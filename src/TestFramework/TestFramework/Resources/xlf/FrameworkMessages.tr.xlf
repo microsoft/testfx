@@ -78,20 +78,40 @@
         <target state="translated">Beklenen değer &lt;{1}&gt; ile gerçek değer &lt;{2}&gt; arasında, şundan büyük olan fark bekleniyor: &lt;{3}&gt;. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreNotSameBothNull">
+        <source>Both values are &lt;null&gt;. {0}</source>
+        <target state="translated">Her iki değer: &lt;null&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameActualIsNull">
+        <source>Actual is &lt;null&gt;. {0}</source>
+        <target state="translated">Gerçek değer :&lt;null&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameExpectedIsNull">
+        <source>Expected is &lt;null&gt;. {0}</source>
+        <target state="translated">Beklenen değer: &lt;null&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
       <trans-unit id="AreSameGivenValues">
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
         <target state="translated">AreSame()'e değer türleri geçirmeyin. Object olarak dönüştürülen değerler asla aynı olamayacak. AreEqual() kullanmayı düşün. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AssertScopeFailure">
+        <source>{0} assertion(s) failed within the assert scope.</source>
+        <target state="translated">{0} onay belgesi onaylama kapsamıyla başarısız oldu.</target>
+        <note>{0} is the number of assertion failures collected in the scope.</note>
+      </trans-unit>
+      <trans-unit id="AssertScopeNestedNotAllowed">
+        <source>Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</source>
+        <target state="translated">İç içe onaylama kapsamlarına izin verilmiyor. Yeni bir kapsam oluşturmadan önce geçerli kapsamı atın.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssertThatDetailsPrefix">
         <source>Details:</source>
         <target state="translated">Ayrıntılar:</target>
         <note />
-      </trans-unit>
-      <trans-unit id="AssertThatFailedFormat">
-        <source>Assert.That({0}) failed.</source>
-        <target state="translated">Assert.That({0}) başarısız oldu.</target>
-        <note>{0} is the user code expression</note>
       </trans-unit>
       <trans-unit id="AssertThatMessageFormat">
         <source>Message: {0}</source>
@@ -233,9 +253,9 @@ Gerçekte olan: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionFailed">
-        <source>{0} failed. {1}</source>
-        <target state="translated">{0} başarısız. {1}</target>
-        <note></note>
+        <source>{0} failed.</source>
+        <target state="translated">{0} başarısız oldu.</target>
+        <note />
       </trans-unit>
       <trans-unit id="HasCountFailMsg">
         <source>Expected collection of size {1}. Actual: {2}. {0}</source>

@@ -1073,17 +1073,32 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersTitle">
         <source>Avoid using 'out' or 'ref' parameters in test methods</source>
-        <target state="new">Avoid using 'out' or 'ref' parameters in test methods</target>
+        <target state="translated">Избегайте использования параметров "out" или "ref" в тестовых методах</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersMessageFormat">
         <source>Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</source>
-        <target state="new">Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</target>
+        <target state="translated">Тестовый метод "{0}" содержит параметры "out" или "ref", поддержка которых будет прекращена в будущем основном номере версии</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersDescription">
         <source>'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</source>
-        <target state="new">'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</target>
+        <target state="translated">Параметры "out" и "ref" не добавляют ценности в тестовых методах и могут быть безопасно заменены обычными параметрами.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassConstructorShouldBeValidTitle">
+        <source>Test classes should have valid constructors</source>
+        <target state="translated">У тестовых классов должны быть допустимые конструкторы</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
+        <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
+        <target state="translated">У тестового класса "{0}" нет допустимого конструктора. Допустимые конструкторы определяются как общедоступные и либо не имеют параметров, либо имеют один параметр типа "TestContext".</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassConstructorShouldBeValidDescription">
+        <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
+        <target state="translated">У тестовых классов должен быть общедоступный конструктор, который либо не имеет параметров, либо имеет один параметр типа "TestContext". Это позволяет платформе тестирования надлежащим образом создавать экземпляр тестового класса.</target>
         <note />
       </trans-unit>
     </body>

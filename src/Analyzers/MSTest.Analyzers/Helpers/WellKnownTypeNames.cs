@@ -49,6 +49,8 @@ internal static class WellKnownTypeNames
     public const string SystemFunc1 = "System.Func`1";
     public const string SystemIAsyncDisposable = "System.IAsyncDisposable";
     public const string SystemIDisposable = "System.IDisposable";
+    public const string SystemLinqEnumerable = "System.Linq.Enumerable";
+    public const string SystemLinqExpressionsExpression1 = "System.Linq.Expressions.Expression`1";
     public const string SystemOperatingSystem = "System.OperatingSystem";
     public const string SystemReflectionMethodInfo = "System.Reflection.MethodInfo";
     public const string SystemRuntimeCompilerServicesCallerFilePathAttribute = "System.Runtime.CompilerServices.CallerFilePathAttribute";

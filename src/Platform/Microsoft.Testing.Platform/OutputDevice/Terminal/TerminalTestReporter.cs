@@ -46,7 +46,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private readonly TerminalTestReporterOptions _options;
 
     private readonly TestProgressStateAwareTerminal _terminalWithProgress;
+
+#if NET9_0_OR_GREATER
     private readonly Lock _lock = new();
+#else
+    private readonly object _lock = new();
+#endif
 
     private readonly uint? _originalConsoleMode;
 
@@ -86,36 +91,34 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _options = options;
 
-        Func<bool?> showProgress = _options.ShowProgress;
-        TestProgressStateAwareTerminal terminalWithProgress;
-
-        // When not writing to ANSI we write the progress to screen and leave it there so we don't want to write it more often than every few seconds.
-        int nonAnsiUpdateCadenceInMs = 3_000;
-        // When writing to ANSI we update the progress in place and it should look responsive so we update every half second, because we only show seconds on the screen, so it is good enough.
-        int ansiUpdateCadenceInMs = 500;
-        if (!_options.UseAnsi || _options.ForceAnsi is false)
+        Func<bool?> showProgress = options.ShowProgress;
+        ITerminal terminal;
+        if (_options.AnsiMode == AnsiMode.SimpleAnsi)
         {
-            terminalWithProgress = new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
+            // We are told externally that we are in CI, use simplified ANSI mode.
+            terminal = new SimpleAnsiTerminal(console);
         }
         else
         {
-            if (_options.UseCIAnsi)
+            // We are not in CI, or in CI non-compatible with simple ANSI, autodetect terminal capabilities
+            (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
+            _originalConsoleMode = originalConsoleMode;
+            bool useAnsi = _options.AnsiMode switch
             {
-                // We are told externally that we are in CI, use simplified ANSI mode.
-                terminalWithProgress = new TestProgressStateAwareTerminal(new SimpleAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: nonAnsiUpdateCadenceInMs);
-            }
-            else
+                AnsiMode.ForceAnsi => true,
+                AnsiMode.NoAnsi => false,
+                AnsiMode.AnsiIfPossible => consoleAcceptsAnsiCodes,
+                _ => throw ApplicationStateGuard.Unreachable(),
+            };
+
+            terminal = useAnsi ? new AnsiTerminal(console) : new NonAnsiTerminal(console);
+            if (!useAnsi)
             {
-                // We are not in CI, or in CI non-compatible with simple ANSI, autodetect terminal capabilities
-                (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
-                _originalConsoleMode = originalConsoleMode;
-                terminalWithProgress = consoleAcceptsAnsiCodes || _options.ForceAnsi is true
-                    ? new TestProgressStateAwareTerminal(new AnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: ansiUpdateCadenceInMs)
-                        : new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
+                showProgress = () => false;
             }
         }
 
-        _terminalWithProgress = terminalWithProgress;
+        _terminalWithProgress = new TestProgressStateAwareTerminal(terminal, showProgress);
     }
 
     public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount, bool isDiscovery)
@@ -149,6 +152,30 @@ internal sealed partial class TerminalTestReporter : IDisposable
             _testProgressState = assemblyRun;
             return assemblyRun;
         }
+    }
+
+    public void PrintOutOfProcessArtifacts()
+    {
+        if (_artifacts.Count == 0)
+        {
+            return;
+        }
+
+        _terminalWithProgress.WriteToTerminal(terminal =>
+        {
+            terminal.Append(SingleIndentation);
+            terminal.AppendLine(PlatformResources.OutOfProcessArtifactsProduced);
+
+            foreach (TestRunArtifact artifact in _artifacts)
+            {
+                terminal.Append(DoubleIndentation);
+                terminal.Append("- ");
+                terminal.AppendLink(artifact.Path, lineNumber: null);
+                terminal.AppendLine();
+            }
+
+            terminal.AppendLine();
+        });
     }
 
     public void TestExecutionCompleted(DateTimeOffset endTime)
@@ -446,7 +473,23 @@ internal sealed partial class TerminalTestReporter : IDisposable
         FormatExpectedAndActual(terminal, expected, actual);
         FormatStackTrace(terminal, flatExceptions, 0);
         FormatInnerExceptions(terminal, flatExceptions);
-        FormatStandardAndErrorOutput(terminal, standardOutput, errorOutput);
+
+        bool isFailed = outcome is TestOutcome.Fail or TestOutcome.Error or TestOutcome.Timeout or TestOutcome.Canceled;
+        string? stdoutToShow = _options.ShowStdout switch
+        {
+            OutputShowMode.All => standardOutput,
+            OutputShowMode.Failed => isFailed ? standardOutput : null,
+            OutputShowMode.None => null,
+            _ => throw ApplicationStateGuard.Unreachable(),
+        };
+        string? stderrToShow = _options.ShowStderr switch
+        {
+            OutputShowMode.All => errorOutput,
+            OutputShowMode.Failed => isFailed ? errorOutput : null,
+            OutputShowMode.None => null,
+            _ => throw ApplicationStateGuard.Unreachable(),
+        };
+        FormatStandardAndErrorOutput(terminal, stdoutToShow, stderrToShow);
     }
 
     private static void FormatInnerExceptions(ITerminal terminal, FlatException[] exceptions)
@@ -534,22 +577,33 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.ResetColor();
     }
 
-    private static void FormatStandardAndErrorOutput(ITerminal terminal, string? standardOutput, string? standardError)
+    private static void FormatStandardAndErrorOutput(ITerminal terminal, string? standardOutput, string? errorOutput)
     {
-        if (RoslynString.IsNullOrWhiteSpace(standardOutput) && RoslynString.IsNullOrWhiteSpace(standardError))
+        bool hasStdOut = !RoslynString.IsNullOrWhiteSpace(standardOutput);
+        bool hasStdErr = !RoslynString.IsNullOrWhiteSpace(errorOutput);
+        if (!hasStdOut && !hasStdErr)
         {
             return;
         }
 
         terminal.SetColor(TerminalColor.DarkGray);
-        terminal.Append(SingleIndentation);
-        terminal.AppendLine(PlatformResources.StandardOutput);
-        string? standardOutputWithoutSpecialChars = MakeControlCharactersVisible(standardOutput, normalizeWhitespaceCharacters: false);
-        AppendIndentedLine(terminal, standardOutputWithoutSpecialChars, DoubleIndentation);
-        terminal.Append(SingleIndentation);
-        terminal.AppendLine(PlatformResources.StandardError);
-        string? standardErrorWithoutSpecialChars = MakeControlCharactersVisible(standardError, normalizeWhitespaceCharacters: false);
-        AppendIndentedLine(terminal, standardErrorWithoutSpecialChars, DoubleIndentation);
+
+        if (hasStdOut)
+        {
+            terminal.Append(SingleIndentation);
+            terminal.AppendLine(PlatformResources.StandardOutput);
+            string? standardOutputWithoutSpecialChars = MakeControlCharactersVisible(standardOutput, normalizeWhitespaceCharacters: false);
+            AppendIndentedLine(terminal, standardOutputWithoutSpecialChars, DoubleIndentation);
+        }
+
+        if (hasStdErr)
+        {
+            terminal.Append(SingleIndentation);
+            terminal.AppendLine(PlatformResources.StandardError);
+            string? standardErrorWithoutSpecialChars = MakeControlCharactersVisible(errorOutput, normalizeWhitespaceCharacters: false);
+            AppendIndentedLine(terminal, standardErrorWithoutSpecialChars, DoubleIndentation);
+        }
+
         terminal.ResetColor();
     }
 
@@ -793,18 +847,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
     }
 
     internal void WriteErrorMessage(string text, int? padding)
-    {
-        TestProgressState asm = GetOrAddAssemblyRun();
-        asm.AddError(text);
-        WriteMessage(text, TerminalColor.DarkRed, padding);
-    }
+        => WriteMessage(text, TerminalColor.DarkRed, padding);
 
     internal void WriteWarningMessage(string text, int? padding)
-    {
-        TestProgressState asm = GetOrAddAssemblyRun();
-        asm.AddWarning(text);
-        WriteMessage(text, TerminalColor.DarkYellow, padding);
-    }
+        => WriteMessage(text, TerminalColor.DarkYellow, padding);
 
     internal void WriteErrorMessage(Exception exception)
         => WriteErrorMessage(exception.ToString(), padding: null);

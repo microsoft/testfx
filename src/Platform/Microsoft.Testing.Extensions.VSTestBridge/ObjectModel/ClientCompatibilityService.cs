@@ -15,6 +15,8 @@ internal readonly struct ClientCompatibilityService
     // And for vstestProvider, it uses vstest.TestCase.CodeFilePath and vstest.TestCase.LineNumber.
     // This behavior changed and we now always support location.* both for vstestProvider and non-vstestProvider.
     // However, we still want to send the vstest.TestCase.* if the client doesn't respect location.*
+    // Note that this refers to VS 2026, as the fix here was not backported to VS 2022.
+    // Internal VS PR: https://devdiv.visualstudio.com/DevDiv/_git/VSUnitTesting/pullrequest/630376
     private static readonly Version VersionRespectingLocationForVSTestProvider = new("1.0.1");
 
     public ClientCompatibilityService(IClientInfo clientInfo)

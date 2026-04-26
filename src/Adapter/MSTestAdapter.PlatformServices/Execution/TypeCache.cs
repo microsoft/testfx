@@ -3,12 +3,11 @@
 
 using System.Security;
 
-using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -18,11 +17,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </summary>
 internal sealed class TypeCache : MarshalByRefObject
 {
-    /// <summary>
-    /// Predefined test Attribute names.
-    /// </summary>
-    private static readonly string[] PredefinedNames = ["Priority", "TestCategory", "Owner"];
-
     /// <summary>
     /// Helper for reflection API's.
     /// </summary>
@@ -37,8 +31,6 @@ internal sealed class TypeCache : MarshalByRefObject
     /// ClassInfo cache.
     /// </summary>
     private readonly ConcurrentDictionary<string, TestClassInfo?> _classInfoCache = new();
-
-    private readonly ConcurrentDictionary<string, bool> _discoverInternalsCache = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TypeCache"/> class.
@@ -80,11 +72,8 @@ internal sealed class TypeCache : MarshalByRefObject
     /// Get the test method info corresponding to the parameter test Element.
     /// </summary>
     /// <returns> The <see cref="TestMethodInfo"/>. </returns>
-    public TestMethodInfo? GetTestMethodInfo(TestMethod testMethod, ITestContext testContext)
+    public TestMethodInfo? GetTestMethodInfo(TestMethod testMethod)
     {
-        Guard.NotNull(testMethod);
-        Guard.NotNull(testContext);
-
         // Get the classInfo (This may throw as GetType calls assembly.GetType(..,true);)
         TestClassInfo? testClassInfo = GetClassInfo(testMethod);
 
@@ -96,7 +85,7 @@ internal sealed class TypeCache : MarshalByRefObject
         }
 
         // Get the testMethod
-        return ResolveTestMethodInfo(testMethod, testClassInfo, testContext);
+        return ResolveTestMethodInfo(testMethod, testClassInfo);
     }
 
     /// <summary>
@@ -105,8 +94,6 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestMethodInfo"/>. </returns>
     public DiscoveryTestMethodInfo? GetTestMethodInfoForDiscovery(TestMethod testMethod)
     {
-        Guard.NotNull(testMethod);
-
         // Get the classInfo (This may throw as GetType calls assembly.GetType(..,true);)
         TestClassInfo? testClassInfo = GetClassInfo(testMethod);
 
@@ -129,7 +116,7 @@ internal sealed class TypeCache : MarshalByRefObject
     /// </returns>
     [SecurityCritical]
 #if NET5_0_OR_GREATER
-    [Obsolete]
+    [Obsolete("MarshalByRefObject.InitializeLifetimeService is obsolete in .NET 5+. This override is required to maintain infinite lifetime service.")]
 #endif
     public override object InitializeLifetimeService() => null!;
 
@@ -145,26 +132,41 @@ internal sealed class TypeCache : MarshalByRefObject
         DebugEx.Assert(testMethod != null, "test method is null");
 
         string typeName = testMethod.FullClassName;
+
+#if NETCOREAPP
         // Using GetOrAdd to ensure we calculate only once when this is called by different threads in parallel.
         // Using a static lambda to ensure we don't capture.
-        return _classInfoCache.GetOrAdd(typeName, static (typeName, tuple) =>
+        return _classInfoCache.GetOrAdd(typeName, CreateTestClassInfo, (this, testMethod));
+#else
+        // On .NET Framework, we don't have the GetOrAdd overload that prevents capturing lambdas.
+        // So, we first try to get the value from the cache.
+        if (_classInfoCache.TryGetValue(typeName, out TestClassInfo? cachedClassInfo))
         {
-            TestMethod testMethod = tuple.testMethod;
-            TypeCache @this = tuple.Item1;
+            return cachedClassInfo;
+        }
 
-            // Load the class type
-            Type? type = LoadType(typeName, testMethod.AssemblyName);
+        // If value doesn't already exist in the cache, we fallback to the GetOrAdd that allocates.
+        return _classInfoCache.GetOrAdd(typeName, typeName => CreateTestClassInfo(typeName, (this, testMethod)));
+#endif
+    }
 
-            if (type == null)
-            {
-                // This means the class containing the test method could not be found.
-                // Return null so we return a not found result.
-                return null;
-            }
+    private static TestClassInfo? CreateTestClassInfo(string typeName, (TypeCache Cache, TestMethod Method) tuple)
+    {
+        TestMethod testMethod = tuple.Method;
+        TypeCache @this = tuple.Cache;
 
-            // Get the classInfo
-            return @this.CreateClassInfo(type);
-        }, (this, testMethod));
+        // Load the class type
+        Type? type = LoadType(typeName, testMethod.AssemblyName);
+
+        if (type == null)
+        {
+            // This means the class containing the test method could not be found.
+            // Return null so we return a not found result.
+            return null;
+        }
+
+        // Get the classInfo
+        return @this.CreateClassInfo(type);
     }
 
     /// <summary>
@@ -256,7 +258,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
         TestAssemblyInfo assemblyInfo = GetAssemblyInfo(classType.Assembly);
 
-        TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TestClassAttribute>(classType);
+        TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetSingleAttributeOrDefault<TestClassAttribute>(classType);
         DebugEx.Assert(testClassAttribute is not null, "testClassAttribute is null");
         var classInfo = new TestClassInfo(classType, constructor, isParameterLessConstructor, testClassAttribute, assemblyInfo);
 
@@ -332,77 +334,94 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <param name="assembly"> The assembly to get its info. </param>
     /// <returns> The <see cref="TestAssemblyInfo"/> instance. </returns>
     private TestAssemblyInfo GetAssemblyInfo(Assembly assembly)
+    {
+#if NETCOREAPP
         // Using GetOrAdd to ensure we calculate only once when this is called by different threads in parallel.
         // Using a static lambda to ensure we don't capture.
-        => _testAssemblyInfoCache.GetOrAdd(assembly, static (assembly, @this) =>
+        return _testAssemblyInfoCache.GetOrAdd(assembly, CreateTestAssemblyInfo, this);
+#else
+        if (_testAssemblyInfoCache.TryGetValue(assembly, out TestAssemblyInfo cachedTestAssemblyInfo))
+        {
+            return cachedTestAssemblyInfo;
+        }
+
+        // Not cached already. Fallback to GetOrAdd call that captures "this" and allocates.
+        return _testAssemblyInfoCache.GetOrAdd(assembly, assembly => CreateTestAssemblyInfo(assembly, this));
+#endif
+    }
+
+    private static TestAssemblyInfo CreateTestAssemblyInfo(Assembly assembly, TypeCache @this)
+    {
+        var assemblyInfo = new TestAssemblyInfo(assembly);
+
+        Type[] types = AssemblyEnumerator.GetTypes(assembly);
+
+        foreach (Type t in types)
+        {
+            try
             {
-                var assemblyInfo = new TestAssemblyInfo(assembly);
-
-                Type[] types = AssemblyEnumerator.GetTypes(assembly);
-
-                foreach (Type t in types)
+                // Only examine classes which are TestClass or derives from TestClass attribute
+                if (!@this._reflectionHelper.IsAttributeDefined<TestClassAttribute>(t))
                 {
-                    try
-                    {
-                        // Only examine classes which are TestClass or derives from TestClass attribute
-                        if (!@this._reflectionHelper.IsAttributeDefined<TestClassAttribute>(t))
-                        {
-                            continue;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // If we fail to discover type from an assembly, then do not abort. Pick the next type.
-                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
-                            "TypeCache: Exception occurred while checking whether type {0} is a test class or not. {1}",
-                            t.FullName,
-                            ex);
-
-                        continue;
-                    }
-
-                    // Enumerate through all methods and identify the Assembly Init and cleanup methods.
-                    foreach (MethodInfo methodInfo in PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(t))
-                    {
-                        if (@this.IsAssemblyOrClassInitializeMethod<AssemblyInitializeAttribute>(methodInfo))
-                        {
-                            assemblyInfo.AssemblyInitializeMethod = methodInfo;
-                            assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyInitialize);
-                        }
-                        else if (@this.IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
-                        {
-                            assemblyInfo.AssemblyCleanupMethod = methodInfo;
-                            assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyCleanup);
-                        }
-
-                        bool isGlobalTestInitialize = @this._reflectionHelper.IsAttributeDefined<GlobalTestInitializeAttribute>(methodInfo);
-                        bool isGlobalTestCleanup = @this._reflectionHelper.IsAttributeDefined<GlobalTestCleanupAttribute>(methodInfo);
-
-                        if (isGlobalTestInitialize || isGlobalTestCleanup)
-                        {
-                            // Only try to validate the method if it already has the needed attribute.
-                            // This avoids potential type load exceptions when the return type cannot be resolved.
-                            // NOTE: Users tend to load assemblies in AssemblyInitialize after finishing the discovery.
-                            // We want to avoid loading types early as much as we can.
-                            bool isValid = methodInfo is { IsSpecialName: false, IsPublic: true, IsStatic: true, IsGenericMethod: false, DeclaringType.IsGenericType: false, DeclaringType.IsPublic: true } &&
-                                methodInfo.GetParameters() is { } parameters && parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext) &&
-                                methodInfo.IsValidReturnType();
-
-                            if (isValid && isGlobalTestInitialize)
-                            {
-                                assemblyInfo.GlobalTestInitializations.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestInitialize)));
-                            }
-
-                            if (isValid && isGlobalTestCleanup)
-                            {
-                                assemblyInfo.GlobalTestCleanups.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestCleanup)));
-                            }
-                        }
-                    }
+                    continue;
+                }
+            }
+            catch (Exception ex)
+            {
+                // If we fail to discover type from an assembly, then do not abort. Pick the next type.
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                        "TypeCache: Exception occurred while checking whether type {0} is a test class or not. {1}",
+                        t.FullName,
+                        ex);
                 }
 
-                return assemblyInfo;
-            }, this);
+                continue;
+            }
+
+            // Enumerate through all methods and identify the Assembly Init and cleanup methods.
+            foreach (MethodInfo methodInfo in PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(t))
+            {
+                if (@this.IsAssemblyOrClassInitializeMethod<AssemblyInitializeAttribute>(methodInfo))
+                {
+                    assemblyInfo.AssemblyInitializeMethod = methodInfo;
+                    assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyInitialize);
+                }
+                else if (@this.IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
+                {
+                    assemblyInfo.AssemblyCleanupMethod = methodInfo;
+                    assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyCleanup);
+                }
+
+                bool isGlobalTestInitialize = @this._reflectionHelper.IsAttributeDefined<GlobalTestInitializeAttribute>(methodInfo);
+                bool isGlobalTestCleanup = @this._reflectionHelper.IsAttributeDefined<GlobalTestCleanupAttribute>(methodInfo);
+
+                if (isGlobalTestInitialize || isGlobalTestCleanup)
+                {
+                    // Only try to validate the method if it already has the needed attribute.
+                    // This avoids potential type load exceptions when the return type cannot be resolved.
+                    // NOTE: Users tend to load assemblies in AssemblyInitialize after finishing the discovery.
+                    // We want to avoid loading types early as much as we can.
+                    bool isValid = methodInfo is { IsSpecialName: false, IsPublic: true, IsStatic: true, IsGenericMethod: false, DeclaringType.IsGenericType: false, DeclaringType.IsPublic: true } &&
+                        methodInfo.GetParameters() is { } parameters && parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext) &&
+                        methodInfo.IsValidReturnType();
+
+                    if (isValid && isGlobalTestInitialize)
+                    {
+                        assemblyInfo.GlobalTestInitializations.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestInitialize)));
+                    }
+
+                    if (isValid && isGlobalTestCleanup)
+                    {
+                        assemblyInfo.GlobalTestCleanups.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestCleanup)));
+                    }
+                }
+            }
+        }
+
+        return assemblyInfo;
+    }
 
     /// <summary>
     /// Verify if a given method is an Assembly or Class Initialize method.
@@ -634,21 +653,17 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <returns>
     /// The TestMethodInfo for the given test method. Null if the test method could not be found.
     /// </returns>
-    private TestMethodInfo ResolveTestMethodInfo(TestMethod testMethod, TestClassInfo testClassInfo, ITestContext testContext)
+    private static TestMethodInfo ResolveTestMethodInfo(TestMethod testMethod, TestClassInfo testClassInfo)
     {
         DebugEx.Assert(testMethod != null, "testMethod is Null");
         DebugEx.Assert(testClassInfo != null, "testClassInfo is Null");
 
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
 
-        var testMethodInfo = new TestMethodInfo(methodInfo, testClassInfo, testContext);
-
-        SetCustomProperties(testMethodInfo, testContext);
-
-        return testMethodInfo;
+        return new TestMethodInfo(methodInfo, testClassInfo);
     }
 
-    private DiscoveryTestMethodInfo ResolveTestMethodInfoForDiscovery(TestMethod testMethod, TestClassInfo testClassInfo)
+    private static DiscoveryTestMethodInfo ResolveTestMethodInfoForDiscovery(TestMethod testMethod, TestClassInfo testClassInfo)
     {
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
         return new DiscoveryTestMethodInfo(methodInfo, testClassInfo);
@@ -660,15 +675,10 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <param name="testMethod"> The test Method. </param>
     /// <param name="testClassInfo"> The test Class Info. </param>
     /// <returns> The <see cref="MethodInfo"/>. </returns>
-    private MethodInfo GetMethodInfoForTestMethod(TestMethod testMethod, TestClassInfo testClassInfo)
+    private static MethodInfo GetMethodInfoForTestMethod(TestMethod testMethod, TestClassInfo testClassInfo)
     {
-        bool discoverInternals = _discoverInternalsCache.GetOrAdd(
-            testMethod.AssemblyName,
-            static (_, testClassInfo) => testClassInfo.Parent.Assembly.GetCustomAttribute<DiscoverInternalsAttribute>() != null,
-            testClassInfo);
-
         MethodInfo? testMethodInfo = testMethod.HasManagedMethodAndTypeProperties
-            ? GetMethodInfoUsingManagedNameHelper(testMethod, testClassInfo, discoverInternals)
+            ? GetMethodInfoUsingManagedNameHelper(testMethod, testClassInfo)
             : throw ApplicationStateGuard.Unreachable();
 
         // if correct method is not found, throw appropriate
@@ -682,9 +692,9 @@ internal sealed class TypeCache : MarshalByRefObject
         return testMethodInfo;
     }
 
-    private static MethodInfo? GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
+    private static MethodInfo? GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo)
     {
-        MethodBase? methodBase = null;
+        MethodInfo? testMethodInfo = null;
         try
         {
             // testMethod.MethodInfo can be null if 'TestMethod' instance crossed app domain boundaries.
@@ -693,114 +703,15 @@ internal sealed class TypeCache : MarshalByRefObject
             // In addition, it also happens when deployment items are used and app domain is disabled.
             // We explicitly set it to null in this case because the original MethodInfo calculated during discovery cannot be used because
             // it points to the type loaded from the assembly in bin instead of from deployment directory.
-            methodBase = testMethod.MethodInfo ?? ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
+            testMethodInfo = testMethod.MethodInfo ?? ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
         }
         catch (InvalidManagedNameException)
         {
         }
 
-        MethodInfo? testMethodInfo = null;
-        if (methodBase is MethodInfo mi)
-        {
-            testMethodInfo = mi;
-        }
-        else if (methodBase != null)
-        {
-            Type[] parameters = [.. methodBase.GetParameters().Select(i => i.ParameterType)];
-            // TODO: Should we pass true for includeNonPublic?
-            testMethodInfo = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethod(methodBase.DeclaringType!, methodBase.Name, parameters, includeNonPublic: true);
-        }
-
         return testMethodInfo is null
-            || !testMethodInfo.HasCorrectTestMethodSignature(true, discoverInternals)
+            || !testMethodInfo.HasCorrectTestMethodSignature(true, testClassInfo.Parent.DiscoversInternals)
             ? null
             : testMethodInfo;
-    }
-
-    /// <summary>
-    /// Set custom properties.
-    /// </summary>
-    /// <param name="testMethodInfo"> The test Method Info. </param>
-    /// <param name="testContext"> The test Context. </param>
-    private void SetCustomProperties(TestMethodInfo testMethodInfo, ITestContext testContext)
-    {
-        DebugEx.Assert(testMethodInfo != null, "testMethodInfo is Null");
-        DebugEx.Assert(testMethodInfo.MethodInfo != null, "testMethodInfo.TestMethod is Null");
-
-        // Avoid calling GetAttributes<T> to prevent iterator state machine allocations.
-        _ = ValidateAttributes(_reflectionHelper.GetCustomAttributesCached(testMethodInfo.MethodInfo), testMethodInfo, testContext) &&
-            ValidateAttributes(_reflectionHelper.GetCustomAttributesCached(testMethodInfo.Parent.ClassType), testMethodInfo, testContext);
-
-        static bool ValidateAttributes(Attribute[] attributes, TestMethodInfo testMethodInfo, ITestContext testContext)
-        {
-            foreach (Attribute attribute in attributes)
-            {
-                if (attribute is not TestPropertyAttribute testPropertyAttribute)
-                {
-                    continue;
-                }
-
-                if (!ValidateAndAssignTestProperty(testMethodInfo, testContext, testPropertyAttribute.Name, testPropertyAttribute.Value, isPredefinedAttribute: attribute is OwnerAttribute or PriorityAttribute))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-    }
-
-    /// <summary>
-    /// Validates If a Custom test property is valid and then adds it to the TestContext property list.
-    /// </summary>
-    /// <param name="testMethodInfo"> The test method info. </param>
-    /// <param name="testContext"> The test context. </param>
-    /// <param name="propertyName"> The property name. </param>
-    /// <param name="propertyValue"> The property value. </param>
-    /// <param name="isPredefinedAttribute"> If the property originates from a predefined attribute. </param>
-    /// <returns> True if its a valid Test Property. </returns>
-    private static bool ValidateAndAssignTestProperty(
-        TestMethodInfo testMethodInfo,
-        ITestContext testContext,
-        string propertyName,
-        string propertyValue,
-        bool isPredefinedAttribute)
-    {
-        if (!isPredefinedAttribute && PredefinedNames.Any(predefinedProp => predefinedProp == propertyName))
-        {
-            testMethodInfo.NotRunnableReason = string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_ErrorPredefinedTestProperty,
-                testMethodInfo.MethodInfo.DeclaringType!.FullName,
-                testMethodInfo.MethodInfo.Name,
-                propertyName);
-
-            return false;
-        }
-
-        if (StringEx.IsNullOrEmpty(propertyName))
-        {
-            testMethodInfo.NotRunnableReason = string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_ErrorTestPropertyNullOrEmpty,
-                testMethodInfo.MethodInfo.DeclaringType!.FullName,
-                testMethodInfo.MethodInfo.Name);
-
-            return false;
-        }
-
-        if (testContext.TryGetPropertyValue(propertyName, out object? existingValue))
-        {
-            // Do not add to the test context because it would conflict with an already existing value.
-            // We were at one point reporting a warning here. However with extensibility centered around TestProperty where
-            // users can have multiple WorkItemAttributes(say) we cannot throw a warning here. Users would have multiple of these attributes
-            // so that it shows up in reporting rather than seeing them in TestContext properties.
-        }
-        else
-        {
-            testContext.AddProperty(propertyName, propertyValue);
-        }
-
-        return true;
     }
 }

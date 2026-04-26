@@ -12,6 +12,35 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class TerminalTestReporterTests
 {
     [TestMethod]
+    public void ExceptionFlattener_WhenNestedInnerExceptions_ShouldKeepAllMessagesInOrder()
+    {
+        var exception = new Exception("outer", new InvalidOperationException("inner-1", new ArgumentException("inner-2")));
+
+        FlatException[] flattenedExceptions = ExceptionFlattener.Flatten(null, exception);
+
+        Assert.HasCount(3, flattenedExceptions);
+        Assert.AreEqual("outer", flattenedExceptions[0].ErrorMessage);
+        Assert.AreEqual("inner-1", flattenedExceptions[1].ErrorMessage);
+        Assert.AreEqual("inner-2", flattenedExceptions[2].ErrorMessage);
+    }
+
+    [TestMethod]
+    public void ExceptionFlattener_WhenAggregateException_ShouldKeepTopLevelThenFlattenedInnerExceptions()
+    {
+        var exception = new AggregateException(
+            "top",
+            new InvalidOperationException("inner-1"),
+            new ArgumentException("inner-2"));
+
+        FlatException[] flattenedExceptions = ExceptionFlattener.Flatten(null, exception);
+
+        Assert.HasCount(3, flattenedExceptions);
+        Assert.AreEqual(typeof(AggregateException).FullName, flattenedExceptions[0].ErrorType);
+        Assert.AreEqual("inner-1", flattenedExceptions[1].ErrorMessage);
+        Assert.AreEqual("inner-2", flattenedExceptions[2].ErrorMessage);
+    }
+
+    [TestMethod]
     public void AppendStackFrameFormatsStackTraceLineCorrectly()
     {
         var terminal = new StringBuilderTerminal();
@@ -80,7 +109,7 @@ public sealed class TerminalTestReporterTests
             ShowPassedTests = () => true,
 
             // Like --no-ansi in commandline, should disable ANSI altogether.
-            UseAnsi = false,
+            AnsiMode = AnsiMode.NoAnsi,
 
             ShowProgress = () => false,
         });
@@ -90,9 +119,6 @@ public sealed class TerminalTestReporterTests
         terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
 
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
-        string folderNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work" : "/mnt/work";
-        string folderLink = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work/" : "mnt/work/";
-        string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
 
         terminalReporter.AssemblyRunStarted();
         string standardOutput = "Hello!";
@@ -177,10 +203,9 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
+
             // Like if we autodetect that we are in CI (e.g. by looking at TF_BUILD, and we don't disable ANSI.
-            UseAnsi = true,
-            UseCIAnsi = true,
-            ForceAnsi = true,
+            AnsiMode = AnsiMode.SimpleAnsi,
 
             ShowProgress = () => false,
         });
@@ -190,9 +215,6 @@ public sealed class TerminalTestReporterTests
         terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
 
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
-        string folderNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work" : "/mnt/work";
-        string folderLink = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work/" : "mnt/work/";
-        string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
 
         terminalReporter.AssemblyRunStarted();
         string standardOutput = "Hello!";
@@ -260,7 +282,7 @@ public sealed class TerminalTestReporterTests
             ␛[m  succeeded: 1
               skipped: 1
               duration: 3652058d 23h 59m 59s 999ms
-            
+
             """;
 
         Assert.AreEqual(expected, ShowEscape(output));
@@ -278,9 +300,7 @@ public sealed class TerminalTestReporterTests
         {
             ShowPassedTests = () => true,
             // Like if we autodetect that we are in ANSI capable terminal.
-            UseAnsi = true,
-            UseCIAnsi = false,
-            ForceAnsi = true,
+            AnsiMode = AnsiMode.ForceAnsi,
 
             ShowProgress = () => false,
         });
@@ -290,7 +310,6 @@ public sealed class TerminalTestReporterTests
         terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
 
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
-        string folderNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work" : "/mnt/work";
         string folderLink = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work/" : "mnt/work/";
         string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
 
@@ -360,7 +379,7 @@ public sealed class TerminalTestReporterTests
             ␛[m  succeeded: 1
               skipped: 1
               duration: 3652058d 23h 59m 59s 999ms
-            
+
             """;
 
         Assert.AreEqual(expected, ShowEscape(output));
@@ -379,9 +398,7 @@ public sealed class TerminalTestReporterTests
         {
             ShowPassedTests = () => true,
             // Like if we autodetect that we are in ANSI capable terminal.
-            UseAnsi = true,
-            UseCIAnsi = false,
-            ForceAnsi = true,
+            AnsiMode = AnsiMode.ForceAnsi,
 
             ShowActiveTests = true,
             ShowProgress = () => true,
@@ -402,9 +419,6 @@ public sealed class TerminalTestReporterTests
         terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
 
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
-        string folderNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work" : "/mnt/work";
-        string folderLink = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work/" : "mnt/work/";
-        string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
 
         terminalReporter.AssemblyRunStarted();
         string standardOutput = "Hello!";
@@ -444,11 +458,11 @@ public sealed class TerminalTestReporterTests
               Error output
                 Oh no!
             ␛[m
-            [␛[32m✓1␛[m/␛[31mx0␛[m/␛[33m↓0␛[m] assembly.dll (net8.0|x64)␛[2147483640G(1m 31s)
-              SkippedTest1␛[2147483640G(1m 31s)
-              InProgressTest1␛[2147483640G(1m 31s)
-              InProgressTest2␛[2147483643G(31s)
-              InProgressTest3␛[2147483644G(1s)
+            [␛[32m✓1␛[m/␛[31mx0␛[m/␛[33m↓0␛[m] assembly.dll (net8.0|x64)␛[242G(1m 31s)
+              SkippedTest1␛[242G(1m 31s)
+              InProgressTest1␛[242G(1m 31s)
+              InProgressTest2␛[245G(31s)
+              InProgressTest3␛[246G(1s)
             ␛[7F
             ␛[J␛[33mskipped␛[m SkippedTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
@@ -456,14 +470,125 @@ public sealed class TerminalTestReporterTests
               Error output
                 Oh no!
             ␛[m
-            [␛[32m✓1␛[m/␛[31mx0␛[m/␛[33m↓1␛[m] assembly.dll (net8.0|x64)␛[2147483640G(1m 31s)
-              InProgressTest1␛[2147483640G(1m 31s)
-              InProgressTest2␛[2147483643G(31s)
-              InProgressTest3␛[2147483644G(1s)
-            
+            [␛[32m✓1␛[m/␛[31mx0␛[m/␛[33m↓1␛[m] assembly.dll (net8.0|x64)␛[242G(1m 31s)
+              InProgressTest1␛[242G(1m 31s)
+              InProgressTest2␛[245G(31s)
+              InProgressTest3␛[246G(1s)
+
             """;
 
         Assert.AreEqual(expected, ShowEscape(output));
+    }
+
+    [TestMethod]
+    public void TestProgressStateAwareTerminal_WriteToTerminal_ShouldEraseProgressThenRenderProgress()
+    {
+        var terminal = new RecordingTerminal();
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true);
+
+        var stopwatchFactory = new StopwatchFactory();
+        var progressState = new TestProgressState(1, "assembly.dll", "net8.0", "x64", stopwatchFactory.CreateStopwatch(), isDiscovery: false);
+
+        progressAwareTerminal.StartShowingProgress(workerCount: 1);
+        int slotIndex = progressAwareTerminal.AddWorker(progressState);
+        progressAwareTerminal.UpdateWorker(slotIndex);
+
+        progressAwareTerminal.WriteToTerminal(t => t.AppendLine("Slowest 10 tests"));
+        progressAwareTerminal.StopShowingProgress();
+
+        int writeStartIndex = terminal.Events.FindIndex(e => e == "StartUpdate");
+        Assert.IsGreaterThanOrEqualTo(0, writeStartIndex, "StartUpdate should be called before writing to terminal.");
+
+        int eraseIndex = terminal.Events.FindIndex(writeStartIndex + 1, e => e == "EraseProgress");
+        Assert.IsGreaterThan(writeStartIndex, eraseIndex, "EraseProgress should be called after StartUpdate.");
+
+        int writeIndex = terminal.Events.FindIndex(eraseIndex + 1, e => e == "AppendLine:Slowest 10 tests");
+        Assert.IsGreaterThan(eraseIndex, writeIndex, "User output should be written after erasing progress.");
+
+        int renderIndex = terminal.Events.FindIndex(writeIndex + 1, e => e == "RenderProgress");
+        Assert.IsGreaterThan(writeIndex, renderIndex, "Progress should be rendered after user output.");
+
+        int stopUpdateIndex = terminal.Events.FindIndex(renderIndex + 1, e => e == "StopUpdate");
+        Assert.IsGreaterThan(renderIndex, stopUpdateIndex, "StopUpdate should be called after rendering progress.");
+    }
+
+    [TestMethod]
+    public void NonAnsiTerminal_ShowOutputNone_DoesNotShowOutput()
+    {
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowStdout = OutputShowMode.None,
+            ShowStderr = OutputShowMode.None,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+        terminalReporter.AssemblyRunStarted();
+
+        terminalReporter.TestCompleted(testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: "Hello!", errorOutput: "Oh no!");
+        terminalReporter.TestCompleted(testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: "Tests failed", exception: null, expected: null, actual: null, standardOutput: "Hello!", errorOutput: "Oh no!");
+
+        terminalReporter.AssemblyRunCompleted();
+        terminalReporter.TestExecutionCompleted(endTime);
+
+        string output = stringBuilderConsole.Output;
+
+        Assert.DoesNotContain("Standard output", output);
+        Assert.DoesNotContain("Error output", output);
+        Assert.DoesNotContain("Hello!", output);
+        Assert.DoesNotContain("Oh no!", output);
+    }
+
+    [TestMethod]
+    public void NonAnsiTerminal_ShowOutputFailed_ShowsOutputOnlyForFailedTests()
+    {
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowStdout = OutputShowMode.Failed,
+            ShowStderr = OutputShowMode.Failed,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+        terminalReporter.AssemblyRunStarted();
+
+        terminalReporter.TestCompleted(testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: "passed-stdout", errorOutput: "passed-stderr");
+        terminalReporter.TestCompleted(testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: "Tests failed", exception: null, expected: null, actual: null, standardOutput: "failed-stdout", errorOutput: "failed-stderr");
+
+        terminalReporter.AssemblyRunCompleted();
+        terminalReporter.TestExecutionCompleted(endTime);
+
+        string output = stringBuilderConsole.Output;
+
+        // stdout/stderr for passed tests should NOT appear
+        Assert.DoesNotContain("passed-stdout", output);
+        Assert.DoesNotContain("passed-stderr", output);
+
+        // stdout/stderr for failed tests SHOULD appear
+        Assert.Contains("failed-stdout", output);
+        Assert.Contains("failed-stderr", output);
     }
 
     private static string? ShowEscape(string? text)
@@ -510,7 +635,11 @@ public sealed class TerminalTestReporterTests
 
         public int BufferHeight => int.MaxValue;
 
-        public int BufferWidth => int.MinValue;
+        public int BufferWidth => int.MaxValue;
+
+        public int WindowHeight => int.MaxValue;
+
+        public int WindowWidth => int.MaxValue;
 
         public bool IsOutputRedirected => false;
 
@@ -591,6 +720,49 @@ public sealed class TerminalTestReporterTests
         public void StopUpdate() => throw new NotImplementedException();
     }
 
+    private sealed class RecordingTerminal : ITerminal
+    {
+        public List<string> Events { get; } = [];
+
+        public int Width => int.MaxValue;
+
+        public int Height => int.MaxValue;
+
+        public void Append(char value) => Events.Add($"Append:{value}");
+
+        public void Append(string value) => Events.Add($"Append:{value}");
+
+        public void AppendLine() => Events.Add("AppendLine");
+
+        public void AppendLine(string value) => Events.Add($"AppendLine:{value}");
+
+        public void AppendLink(string path, int? lineNumber) => Events.Add("AppendLink");
+
+        public void EraseProgress() => Events.Add("EraseProgress");
+
+        public void HideCursor() => Events.Add("HideCursor");
+
+        public void MoveCursorUp(int lineCount) => Events.Add($"MoveCursorUp:{lineCount}");
+
+        public void RenderProgress(TestProgressState?[] progress) => Events.Add("RenderProgress");
+
+        public void ResetColor() => Events.Add("ResetColor");
+
+        public void SetColor(TerminalColor color) => Events.Add($"SetColor:{color}");
+
+        public void SetCursorHorizontal(int position) => Events.Add($"SetCursorHorizontal:{position}");
+
+        public void ShowCursor() => Events.Add("ShowCursor");
+
+        public void StartBusyIndicator() => Events.Add("StartBusyIndicator");
+
+        public void StartUpdate() => Events.Add("StartUpdate");
+
+        public void StopBusyIndicator() => Events.Add("StopBusyIndicator");
+
+        public void StopUpdate() => Events.Add("StopUpdate");
+    }
+
     private class StackTraceException : Exception
     {
         public StackTraceException(string stackTrace) => StackTrace = stackTrace;
@@ -642,7 +814,7 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
-            UseAnsi = false,
+            AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
         });
 
@@ -722,7 +894,7 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
-            UseAnsi = false,
+            AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
         });
 
@@ -794,7 +966,7 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(assembly, "net8.0", "x64", stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
         {
             ShowPassedTests = () => false,
-            UseAnsi = false,
+            AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
         });
 
@@ -813,5 +985,179 @@ public sealed class TerminalTestReporterTests
 
         // Assert - should contain information about 2 tests discovered
         Assert.IsTrue(output.Contains('2') || output.Contains("TestMethod1"), "Output should contain information about discovered tests");
+    }
+
+    [TestMethod]
+    public void SimpleTerminal_UsesWindowWidthNotBufferWidth()
+    {
+        // Arrange - Create a console where BufferWidth and WindowWidth are different
+        var console = new TestConsoleWithDifferentBufferAndWindowWidth
+        {
+            BufferWidth = 4096,
+            WindowWidth = 120,
+        };
+
+        var terminal = new NonAnsiTerminal(console);
+
+        // Assert - Width should use WindowWidth, not BufferWidth
+        Assert.AreEqual(120, terminal.Width);
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_UsesWindowWidthNotBufferWidth()
+    {
+        // Arrange - Create a console where BufferWidth and WindowWidth are different
+        var console = new TestConsoleWithDifferentBufferAndWindowWidth
+        {
+            BufferWidth = 4096,
+            WindowWidth = 120,
+        };
+
+        var terminal = new AnsiTerminal(console);
+
+        // Assert - Width should use WindowWidth, not BufferWidth
+        Assert.AreEqual(120, terminal.Width);
+    }
+
+    /// <summary>
+    /// Reproduces the bug from issue #7240: when Console.BufferWidth > Console.WindowWidth,
+    /// the ANSI cursor positioning places timings off-screen because it was using BufferWidth
+    /// (capped to 250) instead of WindowWidth.
+    ///
+    /// Before fix: cursor goes to column 242 (= MaxColumn 250 - 8), off-screen for 120-col window.
+    /// After fix:  cursor goes to column 112 (= WindowWidth 120 - 8), visible in window.
+    /// </summary>
+    [TestMethod]
+    public void AnsiTerminal_ProgressFrame_UseWindowWidthForCursorPositioning_WhenBufferWidthIsLarger()
+    {
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        // Console with BufferWidth=4096 but WindowWidth=120, mimicking the bug scenario.
+        var stringBuilderConsole = new StringBuilderConsoleWithCustomWidths(bufferWidth: 4096, windowWidth: 120);
+        var stopwatchFactory = new StopwatchFactory();
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = AnsiMode.ForceAnsi,
+            ShowActiveTests = true,
+            ShowProgress = () => true,
+        })
+        {
+            CreateStopwatch = stopwatchFactory.CreateStopwatch,
+        };
+
+        var startHandle = new AutoResetEvent(initialState: false);
+        var stopHandle = new AutoResetEvent(initialState: false);
+
+        terminalReporter.OnProgressStartUpdate += (sender, args) => startHandle.WaitOne();
+        terminalReporter.OnProgressStopUpdate += (sender, args) => stopHandle.Set();
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+        terminalReporter.AssemblyRunStarted();
+
+        terminalReporter.TestInProgress(testNodeUid: "Test1", displayName: "Test1");
+        stopwatchFactory.AddTime(TimeSpan.FromMinutes(1) + TimeSpan.FromSeconds(31));
+
+        terminalReporter.TestCompleted(testNodeUid: "Test1", "Test1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+
+        string output = stringBuilderConsole.Output;
+        startHandle.Set();
+        stopHandle.WaitOne();
+
+        string escapedOutput = ShowEscape(output)!;
+
+        // With WindowWidth=120, cursor for "(1m 31s)" (8 chars) should be at column 120-8=112.
+        // Before the fix, BufferWidth=4096 was capped to MaxColumn=250, giving column 250-8=242.
+        Assert.Contains("␛[112G(1m 31s)", escapedOutput,
+            "Cursor should be positioned at column 112 (WindowWidth=120 minus duration length), not at 242 (MaxColumn=250 minus duration length)");
+        Assert.DoesNotContain("␛[242G", escapedOutput,
+            "Cursor must NOT be positioned at column 242 which would happen if BufferWidth (4096, capped to 250) was used instead of WindowWidth");
+    }
+
+    internal class TestConsoleWithDifferentBufferAndWindowWidth : IConsole
+    {
+        public int BufferHeight { get; set; } = 300;
+
+        public int BufferWidth { get; set; } = 4096;
+
+        public int WindowHeight { get; set; } = 30;
+
+        public int WindowWidth { get; set; } = 120;
+
+        public bool IsOutputRedirected => false;
+
+        public event ConsoleCancelEventHandler? CancelKeyPress = (sender, e) => { };
+
+        public void Clear() => throw new NotImplementedException();
+
+        public ConsoleColor GetForegroundColor() => ConsoleColor.White;
+
+        public void SetForegroundColor(ConsoleColor color)
+        {
+        }
+
+        public void Write(string? value)
+        {
+        }
+
+        public void Write(char value)
+        {
+        }
+
+        public void WriteLine()
+        {
+        }
+
+        public void WriteLine(string? value)
+        {
+        }
+    }
+
+    /// <summary>
+    /// A StringBuilderConsole variant that captures output and allows custom Buffer/Window dimensions.
+    /// </summary>
+    internal sealed class StringBuilderConsoleWithCustomWidths : IConsole
+    {
+        private readonly StringBuilder _output = new();
+
+        public StringBuilderConsoleWithCustomWidths(int bufferWidth, int windowWidth)
+        {
+            BufferWidth = bufferWidth;
+            WindowWidth = windowWidth;
+        }
+
+        public int BufferHeight => int.MaxValue;
+
+        public int BufferWidth { get; }
+
+        public int WindowHeight => int.MaxValue;
+
+        public int WindowWidth { get; }
+
+        public bool IsOutputRedirected => false;
+
+        public string Output => _output.ToString();
+
+        public event ConsoleCancelEventHandler? CancelKeyPress = (sender, e) => { };
+
+        public void Clear() => throw new NotImplementedException();
+
+        public ConsoleColor GetForegroundColor() => ConsoleColor.White;
+
+        public void SetForegroundColor(ConsoleColor color)
+        {
+        }
+
+        public void Write(string? value) => _output.Append(value);
+
+        public void Write(char value) => _output.Append(value);
+
+        public void WriteLine() => _output.AppendLine();
+
+        public void WriteLine(string? value) => _output.AppendLine(value);
     }
 }

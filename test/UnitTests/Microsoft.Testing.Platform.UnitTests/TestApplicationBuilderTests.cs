@@ -62,8 +62,8 @@ public sealed class TestApplicationBuilderTests
     public async Task TestSessionLifetimeHandle_DuplicatedId_ShouldFail()
     {
         TestHostManager testHostManager = new();
-        testHostManager.AddTestSessionLifetimeHandle(_ => new TestSessionLifetimeHandler("duplicatedId"));
-        testHostManager.AddTestSessionLifetimeHandle(_ => new TestSessionLifetimeHandler("duplicatedId"));
+        testHostManager.AddTestSessionLifetimeHandler(_ => new TestSessionLifetimeHandler("duplicatedId"));
+        testHostManager.AddTestSessionLifetimeHandler(_ => new TestSessionLifetimeHandler("duplicatedId"));
         InvalidOperationException invalidOperationException = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => testHostManager.BuildTestSessionLifetimeHandleAsync(_serviceProvider, []));
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestSessionLifetimeHandler).ToString()));
     }
@@ -73,8 +73,8 @@ public sealed class TestApplicationBuilderTests
     {
         TestHostManager testHostManager = new();
         CompositeExtensionFactory<TestSessionLifetimeHandler> compositeExtensionFactory = new(() => new TestSessionLifetimeHandler("duplicatedId"));
-        testHostManager.AddTestSessionLifetimeHandle(_ => new TestSessionLifetimeHandler("duplicatedId"));
-        testHostManager.AddTestSessionLifetimeHandle(compositeExtensionFactory);
+        testHostManager.AddTestSessionLifetimeHandler(_ => new TestSessionLifetimeHandler("duplicatedId"));
+        testHostManager.AddTestSessionLifetimeHandler(compositeExtensionFactory);
         InvalidOperationException invalidOperationException = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => testHostManager.BuildTestSessionLifetimeHandleAsync(_serviceProvider, []));
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestSessionLifetimeHandler).ToString()));
     }
@@ -89,7 +89,7 @@ public sealed class TestApplicationBuilderTests
             withParameter
             ? new(sp => new TestSessionLifetimeHandlerPlusConsumer(sp))
             : new(() => new TestSessionLifetimeHandlerPlusConsumer());
-        testHostManager.AddTestSessionLifetimeHandle(compositeExtensionFactory);
+        testHostManager.AddTestSessionLifetimeHandler(compositeExtensionFactory);
         testHostManager.AddDataConsumer(compositeExtensionFactory);
         List<ICompositeExtensionFactory> compositeExtensions = [];
         IDataConsumer[] consumers = [.. (await testHostManager.BuildDataConsumersAsync(_serviceProvider, compositeExtensions)).Select(x => (IDataConsumer)x.Consumer)];
@@ -189,7 +189,7 @@ public sealed class TestApplicationBuilderTests
 
         public string Uid => nameof(InvalidComposition);
 
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         public string DisplayName => nameof(InvalidComposition);
 
@@ -199,9 +199,9 @@ public sealed class TestApplicationBuilderTests
 
         public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
 
-        public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
 
-        public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
 
         public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext) => throw new NotImplementedException();
 
@@ -220,7 +220,7 @@ public sealed class TestApplicationBuilderTests
 
         public string Uid => nameof(TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider);
 
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         public string DisplayName => nameof(TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider);
 
@@ -232,9 +232,9 @@ public sealed class TestApplicationBuilderTests
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
 
-        public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
 
         public Task UpdateAsync(IEnvironmentVariables environmentVariables) => throw new NotImplementedException();
     }
@@ -255,9 +255,9 @@ public sealed class TestApplicationBuilderTests
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
 
-        public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
     }
 
     private sealed class TestHostEnvironmentVariableProvider : ITestHostEnvironmentVariableProvider
@@ -291,7 +291,7 @@ public sealed class TestApplicationBuilderTests
 
         public string Uid => nameof(TestSessionLifetimeHandlerPlusConsumer);
 
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         public string DisplayName => nameof(TestSessionLifetimeHandlerPlusConsumer);
 

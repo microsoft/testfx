@@ -32,7 +32,6 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
 
         DotnetMuxerResult testResult = await DotnetCli.RunAsync(
             $"test --project \"{AssetFixture.TargetAssetPath}\" --no-build -c Release -f {TargetFrameworks.NetCurrent} --hangdump --hangdump-timeout 8s --results-directory \"{resultDirectory}\"",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             environmentVariables: new Dictionary<string, string?>
             {
                 { "SLEEPTIMEMS1", "4000" },
@@ -42,8 +41,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        // This should be TestHostProcessExitedNonGracefully instead of GenericFailure. This will likely be fixed by https://github.com/dotnet/sdk/pull/51857
-        testResult.AssertExitCodeIs(ExitCodes.GenericFailure);
+        testResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
         Assert.ContainsSingle(dumpFiles, $"Expected single dump file. Found: {Environment.NewLine}{string.Join(Environment.NewLine, dumpFiles)}{Environment.NewLine}{testResult}");
     }
@@ -55,7 +53,6 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
 
         DotnetMuxerResult testResult = await DotnetCli.RunAsync(
             $"test --project \"{AssetFixture.TargetAssetPath}\" --no-build -c Release -f {TargetFrameworks.NetCurrent} --hangdump --hangdump-timeout 7s --results-directory \"{resultDirectory}\"",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             environmentVariables: new Dictionary<string, string?>
             {
                 { "SLEEPTIMEMS1", "5000" },
@@ -99,7 +96,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             new Dictionary<string, string?>
             {
                 { "SLEEPTIMEMS1", "4000" },
-                { "SLEEPTIMEMS2", "20000" },
+                { "SLEEPTIMEMS2", "600000" },
             },
             cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
@@ -144,6 +141,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     [DataRow("Heap")]
     [DataRow("Triage")]
     [DataRow("Full")]
+    [DataRow("None")]
     [TestMethod]
     public async Task HangDump_Formats_CreateDump(string format)
     {
@@ -158,8 +156,16 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             },
             cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+
         string? dumpFile = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories).SingleOrDefault();
-        Assert.IsNotNull(dumpFile, $"Dump file not found '{format}'\n{testHostResult}'");
+        if (format != "None")
+        {
+            Assert.IsNotNull(dumpFile, $"Dump file not found '{format}'\n{testHostResult}'");
+        }
+        else
+        {
+            Assert.IsNull(dumpFile, $"Dump file was incorrectly created for None dump type.\n{testHostResult}'");
+        }
     }
 
     [TestMethod]
@@ -178,23 +184,39 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("""
             Option '--hangdump-type' has invalid arguments: 'invalid' is not a valid dump type.
-            Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'
+            Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'
             """);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    [TestMethod]
+    public async Task HangDump_WithForegroundThreadAfterSessionFinish_CreateDump()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--hangdump --hangdump-timeout 8s --results-directory {resultDirectory}",
+            new Dictionary<string, string?>
+            {
+                { "SLEEPTIMEMS1", "4000" },
+                { "SLEEPTIMEMS2", "4000" },
+                { "SPAWN_FOREGROUND_THREAD", "true" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
+        Assert.ContainsSingle(dumpFiles, $"Expected single dump file. Found: {Environment.NewLine}{string.Join(Environment.NewLine, dumpFiles)}{Environment.NewLine}{testHostResult}");
+    }
+
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string AssetName = "AssetFixture";
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
 
         private const string Sources = """
 #file HangDump.csproj
@@ -278,6 +300,18 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             DisplayName = "Test2",
             Properties = new PropertyBag(new PassedTestNodeStateProperty()),
         }));
+
+        // Spawn a foreground thread that continues running after the test session finishes
+        // to verify that hang dump triggers even after session end
+        if (Environment.GetEnvironmentVariable("SPAWN_FOREGROUND_THREAD") == "true")
+        {
+            Thread foregroundThread = new Thread(() =>
+            {
+                Thread.Sleep(600000); // Sleep for 10 minutes to trigger hang dump
+            });
+            foregroundThread.IsBackground = false; // Foreground thread to prevent process exit
+            foregroundThread.Start();
+        }
 
         context.Complete();
     }

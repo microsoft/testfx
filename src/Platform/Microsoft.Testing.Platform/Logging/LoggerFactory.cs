@@ -16,7 +16,7 @@ internal sealed class LoggerFactory(ILoggerProvider[] loggerProviders, LogLevel 
     private readonly ILoggerProvider[] _loggerProviders = loggerProviders;
     private readonly LogLevel _logLevel = logLevel;
     private readonly IMonitor _monitor = monitor;
-    private readonly Dictionary<string, Logger> _loggers = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, Logger> _loggers = [with(StringComparer.Ordinal)];
 
     public ILogger CreateLogger(string categoryName)
     {
@@ -35,7 +35,7 @@ internal sealed class LoggerFactory(ILoggerProvider[] loggerProviders, LogLevel 
 
     private ILogger[] CreateLoggers(string categoryName)
     {
-        List<ILogger> loggers = new(_loggerProviders.Length);
+        List<ILogger> loggers = [with(_loggerProviders.Length)];
         foreach (ILoggerProvider loggerProvider in _loggerProviders)
         {
             loggers.Add(loggerProvider.CreateLogger(categoryName));

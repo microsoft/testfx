@@ -16,8 +16,15 @@ namespace Microsoft.Testing.Platform.Telemetry;
 
 internal static class ExtensionInformationCollector
 {
-    public static async Task<string> CollectAndSerializeToJsonAsync(ServiceProvider serviceProvider)
+    public static async Task<string?> CollectAndSerializeToJsonAsync(ServiceProvider serviceProvider)
     {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Create("WASI")))
+        {
+            // HashWithNormalizedCasing not supported on WASI at time of writing.
+            // https://github.com/dotnet/runtime/issues/99126
+            return null;
+        }
+
         HashSet<ExtensionInformation> extensionsInformation = [];
 
         foreach (object service in serviceProvider.Services)

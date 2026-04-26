@@ -26,7 +26,7 @@ public sealed partial class Assert
     public static Assert That { get; } = new();
 
     /// <summary>
-    /// Helper function that creates and throws an AssertionFailedException.
+    /// Reports an assertion failure and always throws, even within an <see cref="AssertScope"/>.
     /// </summary>
     /// <param name="assertionName">
     /// name of the assertion throwing an exception.
@@ -37,75 +37,84 @@ public sealed partial class Assert
     [DoesNotReturn]
     [StackTraceHidden]
     internal static void ThrowAssertFailed(string assertionName, string? message)
-        => throw new AssertFailedException(
-            string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
+    {
+        LaunchDebuggerIfNeeded();
+        throw CreateAssertFailedException(assertionName, message);
+    }
 
     /// <summary>
-    /// Helper function that creates and throws an AssertionFailedException with expected and actual values.
+    /// Reports an assertion failure. Within an <see cref="AssertScope"/>, the failure is collected
+    /// and execution continues. Outside a scope, the failure is thrown immediately.
     /// </summary>
-    /// <typeparam name="T">
-    /// The type of the expected and actual values.
-    /// </typeparam>
     /// <param name="assertionName">
     /// name of the assertion throwing an exception.
     /// </param>
     /// <param name="message">
     /// The assertion failure message.
     /// </param>
-    /// <param name="expected">
-    /// Expected value to store in exception data.
-    /// </param>
-    /// <param name="actual">
-    /// Actual value to store in exception data.
-    /// </param>
+#pragma warning disable CS8763 // A method marked [DoesNotReturn] should not return - Deliberately keeping [DoesNotReturn] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
     [DoesNotReturn]
     [StackTraceHidden]
-    internal static void ThrowAssertFailed<T>(string assertionName, string? message, T? expected = default, T? actual = default)
+    internal static void ReportAssertFailed(string assertionName, string? message)
     {
-        AssertFailedException exception = new(
-            string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
-
-        // Store expected and actual values in exception Data for types with known good ToString implementations
-        if (HasKnownGoodToString(expected))
+        LaunchDebuggerIfNeeded();
+        AssertFailedException assertionFailedException = CreateAssertFailedException(assertionName, message);
+        if (AssertScope.Current is { } scope)
         {
-            exception.Data["assert.expected"] = expected;
+            // Throw and catch to capture the stack trace at the point of failure,
+            // so the exception has a meaningful stack trace when reported from the scope.
+            try
+            {
+                throw assertionFailedException;
+            }
+            catch (AssertFailedException ex)
+            {
+                assertionFailedException = ex;
+            }
+
+            scope.AddError(assertionFailedException);
+            return;
         }
 
-        if (HasKnownGoodToString(actual))
+        throw assertionFailedException;
+    }
+#pragma warning restore CS8763 // A method marked [DoesNotReturn] should not return
+
+    private static void LaunchDebuggerIfNeeded()
+    {
+        if (ShouldLaunchDebugger())
         {
-            exception.Data["assert.actual"] = actual;
+            if (Debugger.IsAttached)
+            {
+                Debugger.Break();
+            }
+            else
+            {
+                Debugger.Launch();
+            }
         }
 
-        throw exception;
+        // Local functions
+        static bool ShouldLaunchDebugger()
+            => AssertionFailureSettings.LaunchDebuggerOnAssertionFailure switch
+            {
+                DebuggerLaunchMode.Enabled => true,
+                DebuggerLaunchMode.EnabledExcludingCI => !CIEnvironmentDetector.Instance.IsCIEnvironment(),
+                _ => false,
+            };
     }
 
-    private static bool HasKnownGoodToString<T>([NotNullWhen(true)] T? value)
+    private static AssertFailedException CreateAssertFailedException(string assertionName, string? message)
+        => new(FormatAssertionFailed(assertionName, message));
+
+    private static string FormatAssertionFailed(string assertionName, string? message)
     {
-        if (value is null)
-        {
-            return false;
-        }
-
-        Type type = typeof(T);
-
-        // Unwrap nullable value types
-        type = Nullable.GetUnderlyingType(type) ?? type;
-
-        // Primitive types and string
-        if (type.IsPrimitive || type == typeof(string))
-        {
-            return true;
-        }
-
-        // Common types with good ToString implementations
-        return type == typeof(decimal)
-            || type == typeof(DateTime)
-            || type == typeof(DateTimeOffset)
-            || type == typeof(TimeSpan)
-            || type == typeof(Guid)
-            || type == typeof(Uri)
-            || type.IsEnum
-            || typeof(Exception).IsAssignableFrom(type);
+        string failedMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName);
+        return string.IsNullOrWhiteSpace(message)
+            ? failedMessage
+            : message![0] is '\n' or '\r'
+                ? string.Concat(failedMessage, message)
+                : $"{failedMessage} {message}";
     }
 
     /// <summary>
@@ -230,10 +239,10 @@ public sealed partial class Assert
     /// </param>
     internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName)
     {
-        if (param == null)
+        if (param is null)
         {
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName);
-            ThrowAssertFailed(assertionName, finalMessage);
+            throw CreateAssertFailedException(assertionName, finalMessage);
         }
     }
 

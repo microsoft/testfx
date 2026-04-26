@@ -27,7 +27,7 @@ internal interface IPlatformServiceProvider
     /// <summary>
     /// Gets or sets an instance to the platform service for trace logging.
     /// </summary>
-    IAdapterTraceLogger AdapterTraceLogger { get; set; }
+    ITraceLogger AdapterTraceLogger { get; set; }
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <summary>
@@ -70,16 +70,12 @@ internal interface IPlatformServiceProvider
     /// <param name="runSettings">
     /// The run Settings for the session.
     /// </param>
-    /// <param name="frameworkHandle">
-    /// The handle to the test platform.
-    /// </param>
     /// <returns>
     /// Returns the host for the source provided.
     /// </returns>
     ITestSourceHost CreateTestSourceHost(
         string source,
-        TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings,
-        TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle);
+        TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings);
 
     /// <summary>
     /// Gets the TestContext object for a platform.

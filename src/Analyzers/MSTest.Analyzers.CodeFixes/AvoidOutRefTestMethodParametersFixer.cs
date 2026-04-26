@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -51,37 +51,32 @@ public sealed class AvoidOutRefTestMethodParametersFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.AvoidOutRefTestMethodParametersFix,
-                createChangedSolution: c => RemoveOutRefModifiersAsync(context.Document, methodDeclaration, c),
+                createChangedDocument: c => RemoveOutRefModifiersAsync(context.Document, methodDeclaration, c),
                 equivalenceKey: nameof(AvoidOutRefTestMethodParametersFixer)),
             diagnostic);
     }
 
-    private static async Task<Solution> RemoveOutRefModifiersAsync(Document document, MethodDeclarationSyntax methodDeclaration, CancellationToken cancellationToken)
+    private static async Task<Document> RemoveOutRefModifiersAsync(Document document, MethodDeclarationSyntax methodDeclaration, CancellationToken cancellationToken)
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
-
-        // Remove out/ref modifiers from parameters
-        SeparatedSyntaxList<ParameterSyntax> newParameters = methodDeclaration.ParameterList.Parameters;
-
-        for (int i = 0; i < newParameters.Count; i++)
+        foreach (ParameterSyntax parameter in methodDeclaration.ParameterList.Parameters)
         {
-            ParameterSyntax parameter = newParameters[i];
-            SyntaxTokenList filteredModifiers = SyntaxFactory.TokenList(
-                parameter.Modifiers.Where(m => !m.IsKind(SyntaxKind.OutKeyword) && !m.IsKind(SyntaxKind.RefKeyword)));
-
-            if (filteredModifiers.Count != parameter.Modifiers.Count)
+            int indexToRemove = parameter.Modifiers.IndexOf(SyntaxKind.OutKeyword);
+            if (indexToRemove < 0)
             {
-                ParameterSyntax newParameter = parameter.WithModifiers(filteredModifiers);
-                newParameters = newParameters.Replace(parameter, newParameter);
+                indexToRemove = parameter.Modifiers.IndexOf(SyntaxKind.RefKeyword);
+            }
+
+            if (indexToRemove >= 0)
+            {
+                editor.ReplaceNode(parameter, (node, _) =>
+                {
+                    var parameter = (ParameterSyntax)node;
+                    return parameter.WithModifiers(parameter.Modifiers.RemoveAt(indexToRemove)).WithLeadingTrivia(parameter.GetLeadingTrivia());
+                });
             }
         }
 
-        MethodDeclarationSyntax newMethodDeclaration = methodDeclaration.WithParameterList(
-            methodDeclaration.ParameterList.WithParameters(newParameters));
-
-        editor.ReplaceNode(methodDeclaration, newMethodDeclaration);
-
-        Document newDocument = editor.GetChangedDocument();
-        return newDocument.Project.Solution;
+        return editor.GetChangedDocument();
     }
 }

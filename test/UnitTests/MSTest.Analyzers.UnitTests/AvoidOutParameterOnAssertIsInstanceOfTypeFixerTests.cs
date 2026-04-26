@@ -271,4 +271,50 @@ public sealed class AvoidOutParameterOnAssertIsInstanceOfTypeFixerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task FixIsInstanceOfTypeWithMultiLineStatements_PreservesIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    object value = GetValue(
+                        1,
+                        2,
+                        3);
+                    Assert.IsInstanceOfType<string>(value, out {|CS1615:var result|});
+                }
+
+                private object GetValue(int a, int b, int c) => "test";
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    object value = GetValue(
+                        1,
+                        2,
+                        3);
+                    var result = Assert.IsInstanceOfType<string>(value);
+                }
+
+                private object GetValue(int a, int b, int c) => "test";
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

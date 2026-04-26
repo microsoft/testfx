@@ -60,11 +60,6 @@ Déplacement des fichiers de ressources de la dernière tentative vers le réper
         <target state="translated">Nouvelle tentative de tests ayant échoué</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
-        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Les nouvelles tentatives de tests ayant échoué fonctionnent uniquement avec les générateurs de type « Microsoft.Testing.Platform.Builder.TestApplicationBuilder »</target>
-        <note />
-      </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
         <target state="translated">Désactiver le mécanisme de nouvelle tentative si le pourcentage de tests ayant échoué est supérieur à la valeur spécifiée</target>

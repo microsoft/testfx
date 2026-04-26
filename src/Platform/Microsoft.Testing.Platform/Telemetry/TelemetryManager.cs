@@ -19,23 +19,17 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
     public string Uid => nameof(TelemetryManager);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => string.Empty;
 
     public string Description => string.Empty;
 
     public void AddTelemetryCollectorProvider(Func<IServiceProvider, ITelemetryCollector> telemetryFactory)
-    {
-        Guard.NotNull(telemetryFactory);
-        _telemetryFactory = telemetryFactory;
-    }
+        => _telemetryFactory = telemetryFactory ?? throw new ArgumentNullException(nameof(telemetryFactory));
 
     public void AddOpenTelemetryProvider(Func<IServiceProvider, IOpenTelemetryProvider> openTelemetryProviderFactory)
-    {
-        Guard.NotNull(openTelemetryProviderFactory);
-        _openTelemetryProviderFactory = openTelemetryProviderFactory;
-    }
+        => _openTelemetryProviderFactory = openTelemetryProviderFactory ?? throw new ArgumentNullException(nameof(openTelemetryProviderFactory));
 
     public IOpenTelemetryProvider? BuildOTelProvider(ServiceProvider serviceProvider)
         => _openTelemetryProviderFactory is null

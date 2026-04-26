@@ -16,7 +16,7 @@ CompositeExtensionFactory<TestResultConsoleReporter> testUpdateConsoleReporter =
 
 // Register the extension as a data consumer and test session lifetime handler.
 builder.TestHost.AddDataConsumer(testUpdateConsoleReporter);
-builder.TestHost.AddTestSessionLifetimeHandle(testUpdateConsoleReporter);
+builder.TestHost.AddTestSessionLifetimeHandler(testUpdateConsoleReporter);
 
 ITestApplication app = await builder.BuildAsync();
 

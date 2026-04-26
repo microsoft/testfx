@@ -19,7 +19,7 @@ internal sealed class RunSettingsConfigurationProvider(IFileSystem fileSystem) :
     public string Uid => nameof(RunSettingsConfigurationProvider);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName => "VSTest Helpers: runsettings configuration";

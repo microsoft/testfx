@@ -289,9 +289,6 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="InvalidSettingsXmlAttribute" xml:space="preserve">
     <value>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</value>
   </data>
-  <data name="LegacyScenariosNotSupportedWarning" xml:space="preserve">
-    <value>Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter.</value>
-  </data>
   <data name="OlderTFMVersionFound" xml:space="preserve">
     <value>An older version of MSTestV2 package is loaded in assembly, test discovery might fail to discover all data tests if they depend on `.runsettings` file.</value>
   </data>
@@ -306,9 +303,6 @@ but received {4} argument(s), with types '{5}'.</value>
   </data>
   <data name="TestCleanupWasCancelled" xml:space="preserve">
     <value>Test cleanup method '{0}.{1}' was canceled</value>
-  </data>
-  <data name="TestContextIsNull" xml:space="preserve">
-    <value>TestContext cannot be Null.</value>
   </data>
   <data name="TestContextMessageBanner" xml:space="preserve">
     <value>TestContext Messages:</value>
@@ -383,14 +377,8 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="UTA_ErrorNonPublicTestClass" xml:space="preserve">
     <value>UTA001: TestClass attribute defined on non-public class {0}</value>
   </data>
-  <data name="UTA_ErrorPredefinedTestProperty" xml:space="preserve">
-    <value>UTA023: {0}: Cannot define predefined property {2} on method {1}.</value>
-  </data>
   <data name="UTA_ErrorTestClassIsGenericNonAbstract" xml:space="preserve">
     <value>TestClass attribute defined on generic non-abstract class {0}</value>
-  </data>
-  <data name="UTA_ErrorTestPropertyNullOrEmpty" xml:space="preserve">
-    <value>UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.</value>
   </data>
   <data name="UTA_ExecuteThrewException" xml:space="preserve">
     <value>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
@@ -457,5 +445,8 @@ but received {4} argument(s), with types '{5}'.</value>
   </data>
   <data name="UTA_OutRefParametersNotSupported" xml:space="preserve">
     <value>Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</value>
+  </data>
+  <data name="DuplicateAttributeError" xml:space="preserve">
+    <value>Only one attribute of type '{0}' is allowed, but multiple were found.</value>
   </data>
 </root>

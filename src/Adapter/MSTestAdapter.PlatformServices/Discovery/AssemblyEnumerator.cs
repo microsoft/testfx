@@ -7,8 +7,6 @@ using System.Security;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
@@ -42,7 +40,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// </summary>
     /// <param name="settings">The settings for the session.</param>
     /// <remarks>Use this constructor when creating this object in a new app domain so the settings for this app domain are set.</remarks>
-    public AssemblyEnumerator(MSTestSettings? settings) =>
+    public AssemblyEnumerator(MSTestSettings settings) =>
         // Populate the settings into the domain(Desktop workflow) performing discovery.
         // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
@@ -55,7 +53,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// </returns>
     [SecurityCritical]
 #if NET5_0_OR_GREATER
-    [Obsolete]
+    [Obsolete("MarshalByRefObject.InitializeLifetimeService is obsolete in .NET 5+. This override is required to maintain infinite lifetime service.")]
 #endif
     public override object InitializeLifetimeService() => null!;
 
@@ -63,19 +61,18 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// Enumerates through all types in the assembly in search of valid test methods.
     /// </summary>
     /// <param name="assemblyFileName">The assembly file name.</param>
+    /// <param name="mustSerialize">Flag set to true when parameterized test data must be serialized.</param>
     /// <returns>A collection of Test Elements.</returns>
-    internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName)
+    internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName, bool mustSerialize)
     {
         List<string> warnings = [];
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
         var tests = new List<UnitTestElement>();
-        // Contains list of assembly/class names for which we have already added fixture tests.
-        var fixturesTests = new HashSet<string>();
 
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName);
 
         Type[] types = GetTypes(assembly);
-        bool discoverInternals = ReflectHelper.GetDiscoverInternalsAttribute(assembly) != null;
+        bool discoverInternals = ReflectHelper.HasDiscoverInternalsAttribute(assembly);
 
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = ReflectHelper.GetTestDataSourceOptions(assembly)?.UnfoldingStrategy switch
         {
@@ -94,7 +91,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         foreach (Type type in types)
         {
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, type, warnings, discoverInternals,
-                dataSourcesUnfoldingStrategy, fixturesTests);
+                dataSourcesUnfoldingStrategy, mustSerialize);
             tests.AddRange(testsInType);
         }
 
@@ -125,7 +122,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 // If we have multiple loader exceptions, we log them all as errors, and then throw the original exception.
                 foreach (Exception? loaderEx in ex.LoaderExceptions)
                 {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("{0}", loaderEx);
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error("{0}", loaderEx);
+                    }
                 }
             }
 
@@ -155,7 +155,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         List<string> warningMessages,
         bool discoverInternals,
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy,
-        HashSet<string> fixturesTests)
+        bool mustSerialize)
     {
         string? typeFullName = null;
         var tests = new List<UnitTestElement>();
@@ -172,13 +172,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 {
                     if (_typeCache.GetTestMethodInfoForDiscovery(test.TestMethod) is { } testMethodInfo)
                     {
-                        // Add fixture tests like AssemblyInitialize, AssemblyCleanup, ClassInitialize, ClassCleanup.
-                        if (MSTestSettings.CurrentSettings.ConsiderFixturesAsSpecialTests)
-                        {
-                            AddFixtureTests(testMethodInfo, tests, fixturesTests);
-                        }
-
-                        if (TryUnfoldITestDataSources(test, testMethodInfo, dataSourcesUnfoldingStrategy, tests))
+                        if (TryUnfoldITestDataSources(test, testMethodInfo, dataSourcesUnfoldingStrategy, tests, mustSerialize))
                         {
                             continue;
                         }
@@ -193,96 +187,18 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // If we fail to discover type from a class, then don't abort the discovery
             // Move to the next type.
             string message = string.Format(CultureInfo.CurrentCulture, Resource.CouldNotInspectTypeDuringDiscovery, typeFullName, assemblyFileName, exception.Message);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"AssemblyEnumerator: {message}");
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info($"AssemblyEnumerator: {message}");
+            }
+
             warningMessages.Add(message);
         }
 
         return tests;
     }
 
-    private static void AddFixtureTests(DiscoveryTestMethodInfo testMethodInfo, List<UnitTestElement> tests, HashSet<string> fixtureTests)
-    {
-        string assemblyName = testMethodInfo.Parent.Parent.Assembly.GetName().Name!;
-        string assemblyLocation = testMethodInfo.Parent.Parent.Assembly.Location;
-        string classFullName = testMethodInfo.Parent.ClassType.FullName!;
-
-        // Check if fixtures for this assembly has already been added.
-        if (!fixtureTests.Contains(assemblyLocation))
-        {
-            _ = fixtureTests.Add(assemblyLocation);
-
-            // Add AssemblyInitialize and AssemblyCleanup fixture tests if they exist.
-            if (testMethodInfo.Parent.Parent.AssemblyInitializeMethod is not null)
-            {
-                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, assemblyName,
-                    classFullName, assemblyLocation, EngineConstants.AssemblyInitializeFixtureTrait));
-            }
-
-            if (testMethodInfo.Parent.Parent.AssemblyCleanupMethod is not null)
-            {
-                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, assemblyName,
-                    classFullName, assemblyLocation, EngineConstants.AssemblyCleanupFixtureTrait));
-            }
-        }
-
-        // Check if fixtures for this class has already been added.
-        if (!fixtureTests.Contains(assemblyLocation + classFullName))
-        {
-            _ = fixtureTests.Add(assemblyLocation + classFullName);
-
-            // Add ClassInitialize and ClassCleanup fixture tests if they exist.
-            if (testMethodInfo.Parent.ClassInitializeMethod is not null)
-            {
-                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassInitializeMethod, classFullName,
-                    assemblyLocation, EngineConstants.ClassInitializeFixtureTrait));
-            }
-
-            if (testMethodInfo.Parent.ClassCleanupMethod is not null)
-            {
-                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassCleanupMethod, classFullName,
-                    assemblyLocation, EngineConstants.ClassCleanupFixtureTrait));
-            }
-        }
-
-        static UnitTestElement GetAssemblyFixtureTest(MethodInfo methodInfo, string assemblyName, string classFullName,
-            string assemblyLocation, string fixtureType)
-        {
-            string methodName = GetMethodName(methodInfo);
-            string[] hierarchy = [null!, assemblyName, EngineConstants.AssemblyFixturesHierarchyClassName, methodName];
-            return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy, methodInfo);
-        }
-
-        static UnitTestElement GetClassFixtureTest(MethodInfo methodInfo, string classFullName,
-            string assemblyLocation, string fixtureType)
-        {
-            string methodName = GetMethodName(methodInfo);
-            string[] hierarchy = [null!, classFullName, methodName];
-            return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy, methodInfo);
-        }
-
-        static string GetMethodName(MethodInfo methodInfo)
-        {
-            ParameterInfo[] args = methodInfo.GetParameters();
-            return args.Length > 0
-                ? $"{methodInfo.Name}({string.Join(',', args.Select(a => a.ParameterType.FullName))})"
-                : methodInfo.Name;
-        }
-
-        static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string fixtureType, string methodName, string[] hierarchy, MethodInfo methodInfo)
-        {
-            string displayName = $"[{fixtureType}] {methodName}";
-            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, displayName, null)
-            {
-                MethodInfo = methodInfo,
-            };
-            return new UnitTestElement(method)
-            {
-                Traits = [new Trait(EngineConstants.FixturesTestTrait, fixtureType)],
-            };
-        }
-    }
-
-    private static bool TryUnfoldITestDataSources(UnitTestElement test, DiscoveryTestMethodInfo testMethodInfo, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, List<UnitTestElement> tests)
+    private static bool TryUnfoldITestDataSources(UnitTestElement test, DiscoveryTestMethodInfo testMethodInfo, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, List<UnitTestElement> tests, bool mustSerialize)
     {
         // It should always be `true`, but if any part of the chain is obsolete; it might not contain those.
         // Since we depend on those properties, if they don't exist, we bail out early.
@@ -319,7 +235,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             foreach (ITestDataSource dataSource in testDataSources)
             {
                 isDataDriven = true;
-                if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.TestMethod.DisplayName), tempListOfTests, ref globalTestCaseIndex))
+                if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.TestMethod.DisplayName), tempListOfTests, ref globalTestCaseIndex, mustSerialize))
                 {
                     // TODO: Improve multi-source design!
                     // Ideally we would want to consider each data source separately but when one source cannot be expanded,
@@ -338,7 +254,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
         catch (Exception ex)
         {
             string message = string.Format(CultureInfo.CurrentCulture, Resource.CannotEnumerateIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, ex);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"DynamicDataEnumerator: {message}");
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info($"DynamicDataEnumerator: {message}");
+            }
 
             if (tempListOfTests.Count > 0)
             {
@@ -349,37 +268,21 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests, ref int globalTestCaseIndex)
+    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests, ref int globalTestCaseIndex, bool mustSerialize)
     {
         // Otherwise, unfold the data source and verify it can be serialized.
-        IEnumerable<object?[]>? data;
 
-        // This code is to discover tests. To run the tests code is in TestMethodRunner.ExecuteDataSourceBasedTests.
-        // Any change made here should be reflected in TestMethodRunner.ExecuteDataSourceBasedTests as well.
-        data = dataSource.GetData(methodInfo);
+        // This code is to discover tests. To run the tests code is in TestMethodRunner.TryExecuteFoldedDataDrivenTestsAsync.
+        // Any change made here should be reflected in TestMethodRunner.TryExecuteFoldedDataDrivenTestsAsync as well.
+        IEnumerable<object?[]> dataEnumerable = dataSource.GetData(methodInfo);
         string? testDataSourceIgnoreMessage = (dataSource as ITestDataSourceIgnoreCapability)?.IgnoreMessage;
 
-        if (!data.Any())
-        {
-            if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
-            {
-                throw dataSource.GetExceptionForEmptyDataSource(methodInfo);
-            }
-
-            UnitTestElement discoveredTest = test.Clone();
-            // Make the test not data driven, because it had no data.
-            discoveredTest.TestMethod.DataType = DynamicDataType.None;
-            discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
-            discoveredTest.TestMethod.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.TestMethod.DisplayName;
-            tests.Add(discoveredTest);
-
-            return true;
-        }
-
         var discoveredTests = new List<UnitTestElement>();
+        bool dataSourceHasData = false;
 
-        foreach (object?[] dataOrTestDataRow in data)
+        foreach (object?[] dataOrTestDataRow in dataEnumerable)
         {
+            dataSourceHasData = true;
             object?[] d = dataOrTestDataRow;
             ParameterInfo[] parameters = methodInfo.GetParameters();
             if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out IList<string>? testCategoriesFromTestDataRow))
@@ -423,7 +326,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             try
             {
-                discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
+                if (mustSerialize)
+                {
+                    discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
+                }
+
                 discoveredTest.TestMethod.ActualData = d;
                 discoveredTest.TestMethod.TestCaseIndex = globalTestCaseIndex;
                 discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
@@ -435,7 +342,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 warning += Environment.NewLine;
                 warning += ex.ToString();
                 warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning($"DynamicDataEnumerator: {warning}");
+                }
 
                 // Serialization failed for the type, bail out. Caller will handle adding the original test.
                 return false;
@@ -443,6 +353,23 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             discoveredTests.Add(discoveredTest);
             globalTestCaseIndex++;
+        }
+
+        if (!dataSourceHasData)
+        {
+            if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+            {
+                throw dataSource.GetExceptionForEmptyDataSource(methodInfo);
+            }
+
+            UnitTestElement discoveredTest = test.Clone();
+            // Make the test not data driven, because it had no data.
+            discoveredTest.TestMethod.DataType = DynamicDataType.None;
+            discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
+            discoveredTest.TestMethod.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.TestMethod.DisplayName;
+            tests.Add(discoveredTest);
+
+            return true;
         }
 
         tests.AddRange(discoveredTests);

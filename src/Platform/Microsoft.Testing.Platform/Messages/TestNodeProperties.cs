@@ -255,7 +255,7 @@ public sealed class FailedTestNodeStateProperty : TestNodeStateProperty, IEquata
     /// <param name="exception">Failure exception.</param>
     /// <param name="explanation">Failure explanation.</param>
     public FailedTestNodeStateProperty(Exception exception, string? explanation = null)
-        : base(explanation ?? exception.Message) => Exception = exception;
+        : base(explanation) => Exception = exception;
 
     /// <summary>
     /// Gets the failure exception.
@@ -322,7 +322,7 @@ public sealed class ErrorTestNodeStateProperty : TestNodeStateProperty, IEquatab
     /// <param name="exception">Error exception.</param>
     /// <param name="explanation">Error explanation.</param>
     public ErrorTestNodeStateProperty(Exception exception, string? explanation = null)
-        : base(explanation ?? exception.Message) => Exception = exception;
+        : base(explanation) => Exception = exception;
 
     /// <summary>
     /// Gets the error exception.
@@ -389,7 +389,7 @@ public sealed class TimeoutTestNodeStateProperty : TestNodeStateProperty, IEquat
     /// <param name="exception">Timeout exception.</param>
     /// <param name="explanation">Timeout explanation.</param>
     public TimeoutTestNodeStateProperty(Exception exception, string? explanation = null)
-        : base(explanation ?? exception.Message) => Exception = exception;
+        : base(explanation) => Exception = exception;
 
     /// <summary>
     /// Gets get the timeout exception.
@@ -463,7 +463,7 @@ public sealed class CancelledTestNodeStateProperty : TestNodeStateProperty, IEqu
     /// <param name="exception">Cancellation exception.</param>
     /// <param name="explanation">Cancellation explanation.</param>
     public CancelledTestNodeStateProperty(Exception exception, string? explanation = null)
-        : base(explanation ?? exception.Message) => Exception = exception;
+        : base(explanation) => Exception = exception;
 
     /// <summary>
     /// Gets the cancellation exception.
@@ -681,7 +681,16 @@ public sealed class TimingProperty : IProperty, IEquatable<TimingProperty>
         builder.Append($"{nameof(GlobalTiming)} = ");
         builder.Append(GlobalTiming);
         builder.Append($", {nameof(StepTimings)} = [");
-        builder.AppendJoin(", ", StepTimings.Select(x => x.ToString()));
+
+        for (int i = 0; i < StepTimings.Length; i++)
+        {
+            builder.Append(StepTimings[i].ToString());
+            if (i < StepTimings.Length - 1)
+            {
+                builder.Append(", ");
+            }
+        }
+
         builder.Append(']');
         builder.Append(" }");
         return builder.ToString();
@@ -1013,7 +1022,16 @@ public sealed class TestMethodIdentifierProperty : IProperty, IEquatable<TestMet
         builder.Append($", {nameof(MethodArity)} = ");
         builder.Append(MethodArity);
         builder.Append($", {nameof(ParameterTypeFullNames)} = [");
-        builder.AppendJoin(", ", ParameterTypeFullNames);
+
+        for (int i = 0; i < ParameterTypeFullNames.Length; i++)
+        {
+            builder.Append(ParameterTypeFullNames[i]);
+            if (i < ParameterTypeFullNames.Length - 1)
+            {
+                builder.Append(", ");
+            }
+        }
+
         builder.Append($"], {nameof(ReturnTypeFullName)} = ");
         builder.Append(ReturnTypeFullName);
         builder.Append(" }");
@@ -1098,8 +1116,7 @@ public sealed class TestMetadataProperty : IProperty, IEquatable<TestMetadataPro
 /// <summary>
 /// Property that represents standard output to associate with a test node.
 /// </summary>
-[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public class StandardOutputProperty : IProperty, IEquatable<StandardOutputProperty>
+public sealed class StandardOutputProperty : IProperty, IEquatable<StandardOutputProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="StandardOutputProperty"/> class.
@@ -1141,8 +1158,7 @@ public class StandardOutputProperty : IProperty, IEquatable<StandardOutputProper
 /// <summary>
 /// Property that represents standard error to associate with a test node.
 /// </summary>
-[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public class StandardErrorProperty : IProperty, IEquatable<StandardErrorProperty>
+public sealed class StandardErrorProperty : IProperty, IEquatable<StandardErrorProperty>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="StandardErrorProperty"/> class.

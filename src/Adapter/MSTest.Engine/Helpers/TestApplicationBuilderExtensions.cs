@@ -19,13 +19,23 @@ public static class TestApplicationBuilderExtensions
         TestFrameworkConfiguration? testFrameworkConfiguration = null,
         params ITestNodesBuilder[] testNodesBuilder)
     {
-        Guard.NotNull(testApplicationBuilder);
-        Guard.NotNull(testNodesBuilder);
-        ArgumentGuard.Ensure(testNodesBuilder.Length != 0, nameof(testNodesBuilder),
-            "At least one test node builder must be provided.");
+        if (testApplicationBuilder is null)
+        {
+            throw new ArgumentNullException(nameof(testApplicationBuilder));
+        }
+
+        if (testNodesBuilder is null)
+        {
+            throw new ArgumentNullException(nameof(testNodesBuilder));
+        }
+
+        if (testNodesBuilder.Length == 0)
+        {
+            throw new ArgumentException("At least one test node builder must be provided.", nameof(testNodesBuilder));
+        }
 
         testFrameworkConfiguration ??= new TestFrameworkConfiguration();
-        TestingFrameworkExtension extension = new();
+        var extension = new TestingFrameworkExtension();
         testApplicationBuilder.AddTreeNodeFilterService(extension);
         testApplicationBuilder.RegisterTestFramework(
             serviceProvider => new TestFrameworkCapabilities(testNodesBuilder, new MSTestEngineBannerCapability(serviceProvider.GetRequiredService<IPlatformInformation>())),

@@ -785,7 +785,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
                 {
                     Assert.IsNotNull(GetObject(), "message");
                 }
-            
+
                 private static object GetObject() => new object();
             }
             """;
@@ -807,7 +807,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
                 {
                     Assert.IsNotNull(message: "message", value: GetObject());
                 }
-            
+
                 private static object GetObject() => new object();
             }
             """;
@@ -1481,6 +1481,79 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
                 {
                     int value = 42;
                     Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueIsPassedFalse_MultiLineWithDifferentIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|Assert.IsTrue(
+                        false,
+                        "this will always fail")|];
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail(
+                        "this will always fail");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedNonEqual_MultiLineWithDifferentIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|Assert.AreEqual(
+                        true,
+                        false,
+                        "values will never match")|];
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.Fail(
+                        "values will never match");
                 }
             }
             """;

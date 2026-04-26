@@ -1061,17 +1061,32 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersTitle">
         <source>Avoid using 'out' or 'ref' parameters in test methods</source>
-        <target state="new">Avoid using 'out' or 'ref' parameters in test methods</target>
+        <target state="translated">테스트 메서드에서는 'out'이나 'ref' 매개 변수 사용 피하기</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersMessageFormat">
         <source>Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</source>
-        <target state="new">Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</target>
+        <target state="translated">테스트 메서드 '{0}'에는 앞으로 주요 버전에서 지원이 중단될 'out' 또는 'ref' 매개 변수가 포함되어 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersDescription">
         <source>'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</source>
-        <target state="new">'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</target>
+        <target state="translated">'out'과 'ref' 매개 변수는 테스트 메서드에서 별다른 가치를 제공하지 않으며 일반 매개 변수로 안전하게 대체할 수 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassConstructorShouldBeValidTitle">
+        <source>Test classes should have valid constructors</source>
+        <target state="translated">테스트 클래스에는 유효한 생성자가 있어야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
+        <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
+        <target state="translated">테스트 클래스 '{0}'에 유효한 생성자가 없습니다. 유효한 생성자는 'public'이며 매개 변수가 없거나 'TestContext' 유형의 매개 변수가 하나 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassConstructorShouldBeValidDescription">
+        <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
+        <target state="translated">테스트 클래스에는 매개 변수가 없거나 TestContext 매개 변수 하나를 받는 공용 생성자가 있어야 합니다. 그래야 테스트 프레임워크가 테스트 클래스를 올바르게 생성할 수 있습니다.</target>
         <note />
       </trans-unit>
     </body>

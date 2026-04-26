@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -9,11 +11,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [Serializable]
 public class TestResult
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestResult"/> class.
-    /// </summary>
-    public TestResult() => DatarowIndex = -1;
-
     /// <summary>
     /// Gets or sets the display name of the result. Useful when returning multiple results.
     /// If null then Method name is used as DisplayName.
@@ -70,26 +67,12 @@ public class TestResult
 
             ExceptionMessage = field.Message;
             ExceptionStackTrace = field.StackTrace;
-
-            if (field.Data.Contains("assert.actual"))
-            {
-                ExceptionAssertActual = field.Data["assert.actual"]?.ToString();
-            }
-
-            if (field.Data.Contains("assert.expected"))
-            {
-                ExceptionAssertExpected = field.Data["assert.expected"]?.ToString();
-            }
         }
     }
 
     internal string? ExceptionMessage { get; set; }
 
     internal string? ExceptionStackTrace { get; set; }
-
-    internal string? ExceptionAssertActual { get; set; }
-
-    internal string? ExceptionAssertExpected { get; set; }
 
     /// <summary>
     /// Gets or sets the output of the message logged by test code.
@@ -124,6 +107,8 @@ public class TestResult
     /// <summary>
     /// Gets or sets the inner results count of the result.
     /// </summary>
+    [Obsolete("This API is unused and has no effect.", error: true)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public int InnerResultsCount { get; set; }
 
     /// <summary>
@@ -135,17 +120,25 @@ public class TestResult
     /// Gets or sets the data row index in data source. Set only for results of individual
     /// run of data row of a data driven test.
     /// </summary>
-    public int DatarowIndex { get; set; }
+    [Obsolete("This API is unused and has no effect.", error: true)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public int DatarowIndex { get; set; } = -1;
 
     /// <summary>
     /// Gets or sets the return value of the test method. (Currently null always).
     /// </summary>
+    [Obsolete("This API is unused and has no effect.", error: true)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public object? ReturnValue { get; set; }
 
     /// <summary>
     /// Gets or sets the result files attached by the test.
     /// </summary>
     public IList<string>? ResultFiles { get; set; }
+
+    // UnitTestElement is not part of TestFramework, so we don't have strong typing here and we use object instead.
+    // The value of this property should either be null, or be of type UnitTestElement.
+    internal object? AssociatedUnitTestElement { get; set; }
 
     internal static TestResult CreateIgnoredResult(string? ignoreReason)
         => new()

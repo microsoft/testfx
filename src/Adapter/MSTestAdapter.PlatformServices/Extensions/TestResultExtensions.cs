@@ -4,10 +4,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using VSTestAttachmentSet = Microsoft.VisualStudio.TestPlatform.ObjectModel.AttachmentSet;
 using VSTestTestCase = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase;
@@ -34,6 +31,10 @@ internal static class TestResultExtensions
     internal static VSTestTestResult ToTestResult(this TestResult frameworkTestResult, VSTestTestCase testCase, DateTimeOffset startTime, DateTimeOffset endTime, string computerName, MSTestSettings currentSettings)
     {
         DebugEx.Assert(testCase != null, "testCase");
+        if (frameworkTestResult.AssociatedUnitTestElement is UnitTestElement unitTestElement)
+        {
+            testCase = unitTestElement.ToTestCase();
+        }
 
         var testResult = new VSTestTestResult(testCase)
         {
@@ -49,17 +50,6 @@ internal static class TestResultExtensions
 
         testResult.SetPropertyValue(EngineConstants.ExecutionIdProperty, frameworkTestResult.ExecutionId);
         testResult.SetPropertyValue(EngineConstants.ParentExecIdProperty, frameworkTestResult.ParentExecId);
-        testResult.SetPropertyValue(EngineConstants.InnerResultsCountProperty, frameworkTestResult.InnerResultsCount);
-
-        if (frameworkTestResult.ExceptionAssertActual is not null)
-        {
-            testResult.SetPropertyValue(EngineConstants.AssertActualProperty, frameworkTestResult.ExceptionAssertActual);
-        }
-
-        if (frameworkTestResult.ExceptionAssertExpected is not null)
-        {
-            testResult.SetPropertyValue(EngineConstants.AssertExpectedProperty, frameworkTestResult.ExceptionAssertExpected);
-        }
 
         if (!StringEx.IsNullOrEmpty(frameworkTestResult.LogOutput))
         {
@@ -112,58 +102,6 @@ internal static class TestResultExtensions
             testResult.Attachments.Add(attachmentSet);
         }
 
-        if (frameworkTestResult.DatarowIndex >= 0)
-        {
-            testResult.DisplayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, testCase.DisplayName, frameworkTestResult.DatarowIndex);
-        }
-
         return testResult;
-    }
-
-    /// <summary>
-    /// Converts the test framework's TestResult objects array to a serializable UnitTestResult objects array.
-    /// </summary>
-    /// <param name="testResults">The test framework's TestResult object array.</param>
-    /// <returns>The serializable UnitTestResult object array.</returns>
-    public static UnitTestResult[] ToUnitTestResults(this TestResult[] testResults)
-    {
-        var unitTestResults = new UnitTestResult[testResults.Length];
-
-        int i = 0;
-        foreach (TestResult testResult in testResults)
-        {
-            UTF.UnitTestOutcome outcome = testResult.Outcome;
-
-            UnitTestResult unitTestResult = testResult.TestFailureException is { } testFailureException
-                ? new UnitTestResult(
-                    new TestFailedException(
-                        outcome,
-                        testFailureException.TryGetMessage(),
-                        testFailureException is TestFailedException testException
-                            ? testException.StackTraceInformation
-                            : testFailureException.TryGetStackTraceInformation()))
-                : new UnitTestResult { Outcome = outcome.ToUnitTestOutcome() };
-
-            if (testResult.IgnoreReason is not null)
-            {
-                unitTestResult.ErrorMessage = testResult.IgnoreReason;
-            }
-
-            unitTestResult.StandardOut = testResult.LogOutput;
-            unitTestResult.StandardError = testResult.LogError;
-            unitTestResult.DebugTrace = testResult.DebugTrace;
-            unitTestResult.TestContextMessages = testResult.TestContextMessages;
-            unitTestResult.Duration = testResult.Duration;
-            unitTestResult.DisplayName = testResult.DisplayName;
-            unitTestResult.DatarowIndex = testResult.DatarowIndex;
-            unitTestResult.ResultFiles = testResult.ResultFiles;
-            unitTestResult.ExecutionId = testResult.ExecutionId;
-            unitTestResult.ParentExecId = testResult.ParentExecId;
-            unitTestResult.InnerResultsCount = testResult.InnerResultsCount;
-            unitTestResults[i] = unitTestResult;
-            i++;
-        }
-
-        return unitTestResults;
     }
 }

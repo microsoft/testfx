@@ -8,7 +8,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 using VSTestTestOutcome = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome;
 using VSTestTestResultMessage = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResultMessage;
 
@@ -42,14 +41,13 @@ public class TestResultExtensionsTests : TestContainer
             Duration = timespan,
             LogOutput = "logOutput",
             LogError = "logError",
-            DatarowIndex = 1,
         };
 
         var convertedResult = result.ToTestResult(new() { DisplayName = result.DisplayName }, default, default, string.Empty, new());
         VSTestTestResultMessage[] stdOutMessages = [.. convertedResult.Messages.Where(m => m.Category == VSTestTestResultMessage.StandardOutCategory)];
         stdOutMessages[0].Text.Should().Be("logOutput");
         convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardErrorCategory).Text.Should().Be("logError");
-        convertedResult.DisplayName.Should().Be("displayName (Data Row 1)");
+        convertedResult.DisplayName.Should().Be("displayName");
         stdOutMessages[1].Text.Should().Be("""
 
 
@@ -142,36 +140,21 @@ public class TestResultExtensionsTests : TestContainer
         convertedResult.DisplayName.Should().Be("displayName");
     }
 
-    public void ToUnitTestResultsForTestResultShouldSetDataRowIndex()
-    {
-        var result = new TestResult
-        {
-            DatarowIndex = 1,
-        };
-
-        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
-
-        convertedResult.DisplayName.Should().Be(" (Data Row 1)");
-    }
-
     public void ToUnitTestResultsForTestResultShouldSetParentInfo()
     {
         var executionId = Guid.NewGuid();
         var parentExecId = Guid.NewGuid();
-        int innerResultsCount = 5;
 
         var result = new TestResult
         {
             ExecutionId = executionId,
             ParentExecId = parentExecId,
-            InnerResultsCount = innerResultsCount,
         };
 
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
         ((Guid)convertedResult.GetPropertyValue(EngineConstants.ExecutionIdProperty)!).Should().Be(executionId);
         ((Guid)convertedResult.GetPropertyValue(EngineConstants.ParentExecIdProperty)!).Should().Be(parentExecId);
-        ((int)convertedResult.GetPropertyValue(EngineConstants.InnerResultsCountProperty)!).Should().Be(innerResultsCount);
     }
 
     public void ToUnitTestResultsShouldHaveResultsFileProvidedToTestResult()
@@ -183,60 +166,5 @@ public class TestResultExtensionsTests : TestContainer
         var result = new TestResult { ResultFiles = [resultFile] };
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
         convertedResult.Attachments[0].Attachments[0].Description.Should().Be(resultFile);
-    }
-
-    public void ToUnitTestResultsShouldSetAssertActualWhenProvided()
-    {
-        var exception = new Exception("Test failed");
-        exception.Data["assert.actual"] = "actualValue";
-
-        var result = new TestResult { TestFailureException = exception };
-        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
-
-        ((string)convertedResult.GetPropertyValue(EngineConstants.AssertActualProperty)!).Should().Be("actualValue");
-    }
-
-    public void ToUnitTestResultsShouldSetAssertExpectedWhenProvided()
-    {
-        var exception = new Exception("Test failed");
-        exception.Data["assert.expected"] = "expectedValue";
-
-        var result = new TestResult { TestFailureException = exception };
-        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
-
-        ((string)convertedResult.GetPropertyValue(EngineConstants.AssertExpectedProperty)!).Should().Be("expectedValue");
-    }
-
-    public void ToUnitTestResultsShouldSetBothAssertActualAndExpectedWhenProvided()
-    {
-        var exception = new Exception("Test failed");
-        exception.Data["assert.actual"] = "actualValue";
-        exception.Data["assert.expected"] = "expectedValue";
-
-        var result = new TestResult { TestFailureException = exception };
-        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
-
-        ((string)convertedResult.GetPropertyValue(EngineConstants.AssertActualProperty)!).Should().Be("actualValue");
-        ((string)convertedResult.GetPropertyValue(EngineConstants.AssertExpectedProperty)!).Should().Be("expectedValue");
-    }
-
-    public void ToUnitTestResultsShouldNotSetAssertActualWhenNotProvided()
-    {
-        var exception = new Exception("Test failed");
-
-        var result = new TestResult { TestFailureException = exception };
-        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
-
-        convertedResult.GetPropertyValue(EngineConstants.AssertActualProperty).Should().BeNull();
-    }
-
-    public void ToUnitTestResultsShouldNotSetAssertExpectedWhenNotProvided()
-    {
-        var exception = new Exception("Test failed");
-
-        var result = new TestResult { TestFailureException = exception };
-        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
-
-        convertedResult.GetPropertyValue(EngineConstants.AssertExpectedProperty).Should().BeNull();
     }
 }

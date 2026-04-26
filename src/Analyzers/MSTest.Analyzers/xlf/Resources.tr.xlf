@@ -1063,17 +1063,32 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersTitle">
         <source>Avoid using 'out' or 'ref' parameters in test methods</source>
-        <target state="new">Avoid using 'out' or 'ref' parameters in test methods</target>
+        <target state="translated">Test yöntemlerinde 'out' veya 'ref' parametrelerini kullanmaktan kaçının</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersMessageFormat">
         <source>Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</source>
-        <target state="new">Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</target>
+        <target state="translated">'{0}' test yönteminde, gelecekteki bir ana sürümde desteği kaldırılacak olan 'out' veya 'ref' parametreleri var</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersDescription">
         <source>'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</source>
-        <target state="new">'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</target>
+        <target state="translated">'out' ve 'ref' parametreleri test yöntemlerine değer katmıyor ve güvenli bir şekilde normal parametrelerle değiştirilebilir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassConstructorShouldBeValidTitle">
+        <source>Test classes should have valid constructors</source>
+        <target state="translated">Test sınıfları geçerli oluşturuculara sahip olmalıdır</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
+        <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
+        <target state="translated">‘{0}’ test sınıfının geçerli bir oluşturucusu yok Geçerli oluşturucular 'public' ve parametresiz veya 'TestContext' türünde tek bir parametre içeriyor.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassConstructorShouldBeValidDescription">
+        <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
+        <target state="translated">Test sınıfları, parametresiz olan veya tek bir TestContext parametresini kabul eden bir genel oluşturucuya sahip olmalıdır. Bu, test çerçevesinin test sınıfının örneğini doğru şekilde oluşturmasına olanak tanır.</target>
         <note />
       </trans-unit>
     </body>

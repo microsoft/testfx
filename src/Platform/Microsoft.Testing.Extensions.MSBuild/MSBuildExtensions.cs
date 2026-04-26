@@ -6,6 +6,10 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Services;
 
+#if !NETCOREAPP
+using Polyfills;
+#endif
+
 namespace Microsoft.Testing.Platform.MSBuild;
 
 /// <summary>
@@ -31,7 +35,7 @@ public static class MSBuildExtensions
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetCommandLineOptions()));
 
-        ((TestApplicationBuilder)builder).TestHostOrchestrator.AddTestHostOrchestratorApplicationLifetime(
+        builder.TestHostOrchestrator.AddTestHostOrchestratorApplicationLifetime(
             serviceProvider => new MSBuildOrchestratorLifetime(
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetCommandLineOptions()));
@@ -42,6 +46,6 @@ public static class MSBuildExtensions
                 serviceProvider.GetCommandLineOptions()));
 
         builder.TestHost.AddDataConsumer(compositeExtensionFactory);
-        builder.TestHost.AddTestSessionLifetimeHandle(compositeExtensionFactory);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeExtensionFactory);
     }
 }

@@ -34,11 +34,6 @@ internal sealed class TimeSheet
     public DateTimeOffset StopTime { get; private set; }
 
     /// <summary>
-    /// Gets how long we've spent in queue before being executed. Precise, measured by Stopwatch.
-    /// </summary>
-    public TimeSpan DurationInQueue { get; private set; }
-
-    /// <summary>
     /// Gets how long we've spent executing the test. Precise, measured by Stopwatch.
     /// </summary>
     public TimeSpan Duration { get; private set; }
@@ -49,7 +44,6 @@ internal sealed class TimeSheet
     internal void RecordStart()
     {
         StartTime = _clock.UtcNow;
-        DurationInQueue = _stopwatch.Elapsed;
         _stopwatch.Restart();
     }
 

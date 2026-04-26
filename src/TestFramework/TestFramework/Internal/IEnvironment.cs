@@ -22,6 +22,12 @@ internal interface IEnvironment
 
 internal sealed class EnvironmentWrapper : IEnvironment
 {
+    public static EnvironmentWrapper Instance { get; } = new();
+
+    private EnvironmentWrapper()
+    {
+    }
+
     public string MachineName => Environment.MachineName;
 
     public string? GetEnvironmentVariable(string name) => Environment.GetEnvironmentVariable(name);

@@ -162,4 +162,54 @@ public sealed class UseCancellationTokenPropertyAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenUsingCancellationTokenSourceToken_MultiLineWithDifferentIndentation()
+    {
+        const string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public async Task MyTest()
+                {
+                    await SomeAsyncOperation(
+                        [|TestContext.CancellationTokenSource|].Token);
+                }
+
+                private static Task SomeAsyncOperation(CancellationToken cancellationToken)
+                    => Task.CompletedTask;
+            }
+            """;
+
+        const string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public async Task MyTest()
+                {
+                    await SomeAsyncOperation(
+                        TestContext.CancellationToken);
+                }
+
+                private static Task SomeAsyncOperation(CancellationToken cancellationToken)
+                    => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

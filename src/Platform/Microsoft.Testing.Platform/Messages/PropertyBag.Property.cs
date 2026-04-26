@@ -141,10 +141,7 @@ public sealed partial class PropertyBag
         private readonly Property _property;
 
         public PropertyDebugView(Property property)
-        {
-            Guard.NotNull(property);
-            _property = property;
-        }
+            => _property = property ?? throw new ArgumentNullException(nameof(property));
 
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
         public IProperty[] Items => [.. _property.AsEnumerable()];

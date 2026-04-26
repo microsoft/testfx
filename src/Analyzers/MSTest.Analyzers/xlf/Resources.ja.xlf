@@ -1061,17 +1061,32 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersTitle">
         <source>Avoid using 'out' or 'ref' parameters in test methods</source>
-        <target state="new">Avoid using 'out' or 'ref' parameters in test methods</target>
+        <target state="translated">テスト メソッドで 'out' または 'ref' パラメーターを使用しないでください</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersMessageFormat">
         <source>Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</source>
-        <target state="new">Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</target>
+        <target state="translated">テスト メソッド '{0}' には 'out' または 'ref' パラメーターがあり、サポートは今後のメジャー バージョンで削除される予定です</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersDescription">
         <source>'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</source>
-        <target state="new">'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</target>
+        <target state="translated">'out' パラメーターと 'ref' パラメーターはテスト メソッドに値を追加しないため、安全に通常のパラメーターに置き換えることができます。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassConstructorShouldBeValidTitle">
+        <source>Test classes should have valid constructors</source>
+        <target state="translated">テスト クラスには有効なコンストラクターが必要です</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
+        <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
+        <target state="translated">テスト クラス '{0}' に有効なコンストラクターがありません。有効なコンストラクターは、'public' で、パラメーターがないもの、または 'TestContext' 型のパラメーター 1 個を取るものです。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassConstructorShouldBeValidDescription">
+        <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
+        <target state="translated">テスト クラスには、パラメーターなし、または単一の TestContext パラメーターを受け取るパブリック コンストラクターが必要です。これにより、テスト フレームワークはテスト クラスを適切にインスタンス化できます。</target>
         <note />
       </trans-unit>
     </body>

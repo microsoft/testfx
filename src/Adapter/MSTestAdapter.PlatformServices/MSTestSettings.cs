@@ -52,8 +52,6 @@ internal sealed class MSTestSettings
         MapInconclusiveToFailed = false;
         MapNotRunnableToFailed = true;
         TreatDiscoveryWarningsAsErrors = true;
-        EnableBaseClassTestMethodsFromOtherAssemblies = true;
-        TestSettingsFile = null;
         DisableParallelization = false;
         ConsiderEmptyDataSourceAsInconclusive = false;
         TestTimeout = 0;
@@ -65,6 +63,7 @@ internal sealed class MSTestSettings
         TestCleanupTimeout = 0;
         CooperativeCancellationTimeout = false;
         OrderTestsByNameInClass = false;
+        LaunchDebuggerOnAssertionFailure = DebuggerLaunchMode.Disabled;
     }
 
     /// <summary>
@@ -93,11 +92,6 @@ internal sealed class MSTestSettings
     public bool CaptureDebugTraces { get; private set; }
 
     /// <summary>
-    /// Gets the path to settings file.
-    /// </summary>
-    public string? TestSettingsFile { get; private set; }
-
-    /// <summary>
     /// Gets a value indicating whether an inconclusive result be mapped to failed test.
     /// </summary>
     public bool MapInconclusiveToFailed { get; private set; }
@@ -111,11 +105,6 @@ internal sealed class MSTestSettings
     /// Gets a value indicating whether or not test discovery warnings should be treated as errors.
     /// </summary>
     public bool TreatDiscoveryWarningsAsErrors { get; private set; }
-
-    /// <summary>
-    /// Gets a value indicating whether to enable discovery of test methods from base classes in a different assembly from the inheriting test class.
-    /// </summary>
-    public bool EnableBaseClassTestMethodsFromOtherAssemblies { get; private set; }
 
     /// <summary>
     /// Gets the number of threads/workers to be used for parallelization.
@@ -176,13 +165,6 @@ internal sealed class MSTestSettings
     internal int TestCleanupTimeout { get; private set; }
 
     /// <summary>
-    /// Gets a value indicating whether AssemblyInitialize, AssemblyCleanup, ClassInitialize and ClassCleanup methods are
-    /// reported as special tests (cannot be executed). When this feature is enabled, these methods will be reported as
-    /// separate entries in the TRX reports, in Test Explorer or in CLI.
-    /// </summary>
-    internal bool ConsiderFixturesAsSpecialTests { get; private set; }
-
-    /// <summary>
     /// Gets a value indicating whether all timeouts should be cooperative.
     /// </summary>
     internal bool CooperativeCancellationTimeout { get; private set; }
@@ -193,26 +175,24 @@ internal sealed class MSTestSettings
     internal bool OrderTestsByNameInClass { get; private set; }
 
     /// <summary>
+    /// Gets a value specifying when to launch the debugger on assertion failure.
+    /// </summary>
+    internal DebuggerLaunchMode LaunchDebuggerOnAssertionFailure { get; private set; }
+
+    /// <summary>
     /// Populate settings based on existing settings object.
     /// </summary>
     /// <param name="settings">The existing settings object.</param>
-    public static void PopulateSettings(MSTestSettings? settings)
+    public static void PopulateSettings(MSTestSettings settings)
     {
-        if (settings == null)
-        {
-            return;
-        }
-
         CurrentSettings.AssemblyCleanupTimeout = settings.AssemblyCleanupTimeout;
         CurrentSettings.AssemblyInitializeTimeout = settings.AssemblyInitializeTimeout;
         CurrentSettings.CaptureDebugTraces = settings.CaptureDebugTraces;
         CurrentSettings.ClassCleanupTimeout = settings.ClassCleanupTimeout;
         CurrentSettings.ClassInitializeTimeout = settings.ClassInitializeTimeout;
         CurrentSettings.ConsiderEmptyDataSourceAsInconclusive = settings.ConsiderEmptyDataSourceAsInconclusive;
-        CurrentSettings.ConsiderFixturesAsSpecialTests = settings.ConsiderFixturesAsSpecialTests;
         CurrentSettings.CooperativeCancellationTimeout = settings.CooperativeCancellationTimeout;
         CurrentSettings.DisableParallelization = settings.DisableParallelization;
-        CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
         CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
         CurrentSettings.MapNotRunnableToFailed = settings.MapNotRunnableToFailed;
         CurrentSettings.OrderTestsByNameInClass = settings.OrderTestsByNameInClass;
@@ -220,9 +200,9 @@ internal sealed class MSTestSettings
         CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
         CurrentSettings.TestCleanupTimeout = settings.TestCleanupTimeout;
         CurrentSettings.TestInitializeTimeout = settings.TestInitializeTimeout;
-        CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
         CurrentSettings.TestTimeout = settings.TestTimeout;
         CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
+        CurrentSettings.LaunchDebuggerOnAssertionFailure = settings.LaunchDebuggerOnAssertionFailure;
     }
 
 #if !WINDOWS_UWP
@@ -271,7 +251,7 @@ internal sealed class MSTestSettings
 
         // This will contain default adapter settings
         var settings = new MSTestSettings();
-        var runConfigurationSettings = RunConfigurationSettings.PopulateSettings(context?.RunSettings?.SettingsXml);
+        var runConfigurationSettings = RunConfigurationSettings.GetSettings(context?.RunSettings?.SettingsXml);
 
         // We have runsettings, but we don't have testconfig.
         // Just use runsettings.
@@ -311,22 +291,6 @@ internal sealed class MSTestSettings
     }
 
     /// <summary>
-    /// Get the MSTestV1 adapter settings from the context.
-    /// </summary>
-    /// <param name="logger"> The logger for messages. </param>
-    /// <returns> Returns true if test settings is provided.. </returns>
-    public static bool IsLegacyScenario(IMessageLogger logger)
-    {
-        if (!StringEx.IsNullOrEmpty(CurrentSettings.TestSettingsFile))
-        {
-            logger.SendMessage(TestMessageLevel.Warning, Resource.LegacyScenariosNotSupportedWarning);
-            return true;
-        }
-
-        return false;
-    }
-
-    /// <summary>
     /// Gets the adapter specific settings from the xml.
     /// </summary>
     /// <param name="runSettingsXml"> The xml with the settings passed from the test platform. </param>
@@ -334,7 +298,7 @@ internal sealed class MSTestSettings
     /// <param name="logger"> The logger for messages. </param>
     /// <returns> The settings if found. Null otherwise. </returns>
     internal static MSTestSettings? GetSettings(
-        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
+        string? runSettingsXml,
         string settingName, IMessageLogger? logger)
     {
         if (StringEx.IsNullOrWhiteSpace(runSettingsXml))
@@ -382,7 +346,10 @@ internal sealed class MSTestSettings
     /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
     private static MSTestSettings ToSettings(XmlReader reader, IMessageLogger? logger)
     {
-        Guard.NotNull(reader);
+        if (reader is null)
+        {
+            throw new ArgumentNullException(nameof(reader));
+        }
 
         // Expected format of the xml is: -
         //
@@ -391,7 +358,6 @@ internal sealed class MSTestSettings
         //     <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
         //     <MapNotRunnableToFailed>false</MapNotRunnableToFailed>
         //     <TreatDiscoveryWarningsAsErrors>true</TreatDiscoveryWarningsAsErrors>
-        //     <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
         //     <TestTimeout>5000</TestTimeout>
         //     <Parallelize>
         //        <Workers>4</Workers>
@@ -402,7 +368,6 @@ internal sealed class MSTestSettings
         // (or)
         //
         // <MSTest>
-        //     <SettingsFile>..\..\Local.testsettings</SettingsFile>
         //     <CaptureTraceOutput>true</CaptureTraceOutput>
         // </MSTest>
         MSTestSettings settings = new();
@@ -430,21 +395,6 @@ internal sealed class MSTestSettings
                             else
                             {
                                 logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "CaptureTraceOutput"));
-                            }
-
-                            break;
-                        }
-
-                    case "ENABLEBASECLASSTESTMETHODSFROMOTHERASSEMBLIES":
-                        {
-                            string value = reader.ReadInnerXml();
-                            if (bool.TryParse(value, out result))
-                            {
-                                settings.EnableBaseClassTestMethodsFromOtherAssemblies = result;
-                            }
-                            else
-                            {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "EnableBaseClassTestMethodsFromOtherAssemblies"));
                             }
 
                             break;
@@ -490,22 +440,6 @@ internal sealed class MSTestSettings
                             else
                             {
                                 logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "TreatDiscoveryWarningsAsErrors"));
-                            }
-
-                            break;
-                        }
-
-                    case "SETTINGSFILE":
-                        {
-                            string fileName = reader.ReadInnerXml();
-
-                            if (!StringEx.IsNullOrEmpty(fileName))
-                            {
-                                settings.TestSettingsFile = fileName;
-                            }
-                            else
-                            {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, fileName, "SettingsFile"));
                             }
 
                             break;
@@ -639,21 +573,6 @@ internal sealed class MSTestSettings
                             break;
                         }
 
-                    case "CONSIDERFIXTURESASSPECIALTESTS":
-                        {
-                            string value = reader.ReadInnerXml();
-                            if (bool.TryParse(value, out result))
-                            {
-                                settings.ConsiderFixturesAsSpecialTests = result;
-                            }
-                            else
-                            {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "ConsiderFixturesAsSpecialTests"));
-                            }
-
-                            break;
-                        }
-
                     case "COOPERATIVECANCELLATIONTIMEOUT":
                         {
                             string value = reader.ReadInnerXml();
@@ -679,6 +598,21 @@ internal sealed class MSTestSettings
                             else
                             {
                                 logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "OrderTestsByNameInClass"));
+                            }
+
+                            break;
+                        }
+
+                    case "LAUNCHDEBUGGERONASSERTIONFAILURE":
+                        {
+                            string value = reader.ReadInnerXml();
+                            if (TryParseEnum(value, out DebuggerLaunchMode mode))
+                            {
+                                settings.LaunchDebuggerOnAssertionFailure = mode;
+                            }
+                            else
+                            {
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "LaunchDebuggerOnAssertionFailure"));
                             }
 
                             break;
@@ -742,7 +676,7 @@ internal sealed class MSTestSettings
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidParallelScopeValue,
                                         value,
-                                        string.Join(", ", Enum.GetNames<ExecutionScope>())));
+                                        string.Join(", ", Enum.GetNames(typeof(ExecutionScope)))));
 
                             break;
                         }
@@ -769,10 +703,14 @@ internal sealed class MSTestSettings
     private static bool TryParseEnum<T>(string value, out T result)
         where T : struct, Enum
         => Enum.TryParse(value, true, out result)
+#if NETCOREAPP
         && Enum.IsDefined(result);
+#else
+        && Enum.IsDefined(typeof(T), result);
+#endif
 
     private static void SetGlobalSettings(
-        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runsettingsXml))] string runsettingsXml,
+        string runsettingsXml,
         MSTestSettings settings, IMessageLogger? logger)
     {
         XElement? runConfigElement = XDocument.Parse(runsettingsXml).Element("RunSettings")?.Element("RunConfiguration");
@@ -804,6 +742,23 @@ internal sealed class MSTestSettings
         if (bool.TryParse(value, out bool result))
         {
             setSetting(result);
+        }
+        else
+        {
+            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
+        }
+    }
+
+    private static void ParseDebuggerLaunchModeSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<DebuggerLaunchMode> setSetting)
+    {
+        if (configuration[$"mstest:{key}"] is not string value)
+        {
+            return;
+        }
+
+        if (TryParseEnum(value, out DebuggerLaunchMode mode))
+        {
+            setSetting(mode);
         }
         else
         {
@@ -862,11 +817,10 @@ internal sealed class MSTestSettings
         //      "mapNotRunnableToFailed" : true/false
         //      "treatDiscoveryWarningsAsErrors" : true/false
         //      "considerEmptyDataSourceAsInconclusive" : true/false
-        //      "considerFixturesAsSpecialTests" : true/false
+        //      "launchDebuggerOnAssertionFailure" : "disabled"/"enabled"/"enabledExcludingCI" (or true/false for backward compatibility)
         //  }
         //  ... remaining settings
         // }
-        ParseBooleanSetting(configuration, "enableBaseClassTestMethodsFromOtherAssemblies", logger, value => settings.EnableBaseClassTestMethodsFromOtherAssemblies = value);
         ParseBooleanSetting(configuration, "orderTestsByNameInClass", logger, value => settings.OrderTestsByNameInClass = value);
 
         ParseBooleanSetting(configuration, "output:captureTrace", logger, value => settings.CaptureDebugTraces = value);
@@ -877,7 +831,7 @@ internal sealed class MSTestSettings
         ParseBooleanSetting(configuration, "execution:mapNotRunnableToFailed", logger, value => settings.MapNotRunnableToFailed = value);
         ParseBooleanSetting(configuration, "execution:treatDiscoveryWarningsAsErrors", logger, value => settings.TreatDiscoveryWarningsAsErrors = value);
         ParseBooleanSetting(configuration, "execution:considerEmptyDataSourceAsInconclusive", logger, value => settings.ConsiderEmptyDataSourceAsInconclusive = value);
-        ParseBooleanSetting(configuration, "execution:considerFixturesAsSpecialTests", logger, value => settings.ConsiderFixturesAsSpecialTests = value);
+        ParseDebuggerLaunchModeSetting(configuration, "execution:launchDebuggerOnAssertionFailure", logger, value => settings.LaunchDebuggerOnAssertionFailure = value);
 
         ParseBooleanSetting(configuration, "timeout:useCooperativeCancellation", logger, value => settings.CooperativeCancellationTimeout = value);
         ParseIntegerSetting(configuration, "timeout:test", logger, value => settings.TestTimeout = value);
@@ -915,7 +869,7 @@ internal sealed class MSTestSettings
                     CultureInfo.CurrentCulture,
                     Resource.InvalidParallelScopeValue,
                     value,
-                    string.Join(", ", Enum.GetNames<ExecutionScope>())));
+                    string.Join(", ", Enum.GetNames(typeof(ExecutionScope)))));
             }
 
             settings.ParallelizationScope = scope;

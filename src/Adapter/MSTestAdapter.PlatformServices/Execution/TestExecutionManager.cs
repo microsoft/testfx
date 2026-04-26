@@ -48,7 +48,7 @@ internal class TestExecutionManager
     /// Initializes a new instance of the <see cref="TestExecutionManager"/> class.
     /// </summary>
     public TestExecutionManager()
-        : this(new EnvironmentWrapper())
+        : this(EnvironmentWrapper.Instance)
     {
     }
 
@@ -141,7 +141,7 @@ internal class TestExecutionManager
 #endif
     }
 
-    internal async Task RunTestsAsync(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, ITestSourceHandler testSourceHandler, TestRunCancellationToken cancellationToken)
+    internal async Task RunTestsAsync(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, ITestSourceHandler testSourceHandler, bool isMTP, TestRunCancellationToken cancellationToken)
     {
         _testRunCancellationToken = cancellationToken;
         PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
@@ -158,7 +158,7 @@ internal class TestExecutionManager
             var logger = (IMessageLogger)frameworkHandle;
 
             // discover the tests
-            GetUnitTestDiscoverer(testSourceHandler).DiscoverTestsInSource(source, logger, discoverySink, runContext);
+            GetUnitTestDiscoverer(testSourceHandler).DiscoverTestsInSource(source, logger, discoverySink, runContext, isMTP);
             tests.AddRange(discoverySink.Tests);
 
             // Clear discoverSinksTests so that it just stores test for one source at one point of time
@@ -207,25 +207,33 @@ internal class TestExecutionManager
 
     internal virtual UnitTestDiscoverer GetUnitTestDiscoverer(ITestSourceHandler testSourceHandler) => new(testSourceHandler);
 
-    internal void SendTestResults(TestCase test, TestTools.UnitTesting.TestResult[] unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime,
+    internal void SendTestResults(
+        TestCase test,
+        TestTools.UnitTesting.TestResult[] unitTestResults,
+        DateTimeOffset startTime,
+        DateTimeOffset endTime,
         ITestExecutionRecorder testExecutionRecorder)
     {
         foreach (TestTools.UnitTesting.TestResult unitTestResult in unitTestResults)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
 
-            if (test == null)
-            {
-                continue;
-            }
-
-            var testResult = unitTestResult.ToTestResult(test, startTime, endTime, _environment.MachineName, MSTestSettings.CurrentSettings);
+            var testResult = unitTestResult.ToTestResult(
+                test,
+                startTime,
+                endTime,
+                _environment.MachineName,
+                MSTestSettings.CurrentSettings);
 
             testExecutionRecorder.RecordEnd(test, testResult.Outcome);
 
             if (testResult.Outcome == TestOutcome.Failed)
             {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor:Test {0} failed. ErrorMessage:{1}, ErrorStackTrace:{2}.", testResult.TestCase.FullyQualifiedName, testResult.ErrorMessage, testResult.ErrorStackTrace);
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor:Test {0} failed. ErrorMessage:{1}, ErrorStackTrace:{2}.", testResult.TestCase.FullyQualifiedName, testResult.ErrorMessage, testResult.ErrorStackTrace);
+                }
+
 #if !WINDOWS_UWP && !WIN_UI
                 _hasAnyTestFailed = true;
 #endif
@@ -251,12 +259,6 @@ internal class TestExecutionManager
         if (filterExpression != null
             && !filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)))
         {
-            // If this is a fixture test, return true. Fixture tests are not filtered out and are always available for the status.
-            if (test.Traits.Any(t => t.Name == EngineConstants.FixturesTestTrait))
-            {
-                return true;
-            }
-
             // Skip test if not fitting filter criteria.
             return false;
         }
@@ -283,9 +285,13 @@ internal class TestExecutionManager
         }
 #endif
 
-        using MSTestAdapter.PlatformServices.Interface.ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle);
+        using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings);
         bool usesAppDomains = isolationHost is TestSourceHost { UsesAppDomain: true };
-        PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
+
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+        {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Created unit-test runner {0}", source);
+        }
 
         // Default test set is filtered tests based on user provided filter criteria
         ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, frameworkHandle, out bool filterHasError);
@@ -316,7 +322,10 @@ internal class TestExecutionManager
         }
         catch (Exception ex)
         {
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Could not create TestAssemblySettingsProvider instance in child app-domain", ex);
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Could not create TestAssemblySettingsProvider instance in child app-domain", ex);
+            }
         }
 
         TestAssemblySettings sourceSettings = (sourceSettingsProvider != null)
@@ -410,7 +419,11 @@ internal class TestExecutionManager
                 catch (Exception ex)
                 {
                     string exceptionToString = ex.ToString();
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("Error occurred while executing tests in parallel{0}{1}", Environment.NewLine, exceptionToString);
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error("Error occurred while executing tests in parallel{0}{1}", Environment.NewLine, exceptionToString);
+                    }
+
                     frameworkHandle.SendMessage(TestMessageLevel.Error, exceptionToString);
                     throw;
                 }
@@ -432,7 +445,10 @@ internal class TestExecutionManager
             testRunner.ForceCleanup(sourceLevelParameters!, new RemotingMessageLogger(frameworkHandle));
         }
 
-        PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+        {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Executed tests belonging to source {0}", source);
+        }
     }
 
     private async Task ExecuteTestsWithTestRunnerAsync(
@@ -443,9 +459,6 @@ internal class TestExecutionManager
         UnitTestRunner testRunner,
         bool usesAppDomains)
     {
-        bool hasAnyRunnableTests = false;
-        List<TestCase>? fixtureTests = null;
-
         IEnumerable<TestCase> orderedTests = MSTestSettings.CurrentSettings.OrderTestsByNameInClass
             ? tests.OrderBy(t => t.GetManagedType()).ThenBy(t => t.GetManagedMethod())
             : tests;
@@ -464,26 +477,20 @@ internal class TestExecutionManager
                 break;
             }
 
-            // If it is a fixture test, add it to the list of fixture tests and do not execute it.
-            // It is executed by test itself.
-            if (currentTest.Traits.Any(t => t.Name == EngineConstants.FixturesTestTrait))
-            {
-                (fixtureTests ??= []).Add(currentTest);
-                continue;
-            }
-
-            hasAnyRunnableTests = true;
             UnitTestElement unitTestElement = currentTest.ToUnitTestElementWithUpdatedSource(source);
 
             testExecutionRecorder.RecordStart(currentTest);
 
             DateTimeOffset startTime = DateTimeOffset.Now;
 
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executing test {0}", unitTestElement.TestMethod.Name);
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Executing test {0}", unitTestElement.TestMethod.Name);
+            }
 
             // Run single test passing test context properties to it.
             IDictionary<TestProperty, object?>? tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
-            Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
+            Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters, unitTestElement);
 
             TestTools.UnitTesting.TestResult[] unitTestResult;
             if (usesAppDomains || Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
@@ -495,57 +502,22 @@ internal class TestExecutionManager
                 // Alternatively, if we want to use RunSingleTestAsync for the case of STA, we should have:
                 // 1. A custom single threaded synchronization context that keeps us in STA.
                 // 2. Use ConfigureAwait(true).
-                unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties, remotingMessageLogger);
+                unitTestResult = testRunner.RunSingleTest(unitTestElement, testContextProperties, remotingMessageLogger);
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
             }
             else
             {
-                unitTestResult = await testRunner.RunSingleTestAsync(unitTestElement.TestMethod, testContextProperties, remotingMessageLogger).ConfigureAwait(false);
+                unitTestResult = await testRunner.RunSingleTestAsync(unitTestElement, testContextProperties, remotingMessageLogger).ConfigureAwait(false);
             }
 
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed test {0}", unitTestElement.TestMethod.Name);
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Executed test {0}", unitTestElement.TestMethod.Name);
+            }
 
             DateTimeOffset endTime = DateTimeOffset.Now;
 
             SendTestResults(currentTest, unitTestResult, startTime, endTime, testExecutionRecorder);
-        }
-
-        // Once all tests have been executed, update the status of fixture tests.
-        if (fixtureTests is null)
-        {
-            return;
-        }
-
-        foreach (TestCase currentTest in fixtureTests)
-        {
-            _testRunCancellationToken?.ThrowIfCancellationRequested();
-
-            testExecutionRecorder.RecordStart(currentTest);
-
-            // If there were only fixture tests, send an inconclusive result.
-            if (!hasAnyRunnableTests)
-            {
-                var result = new TestTools.UnitTesting.TestResult
-                {
-                    Outcome = TestTools.UnitTesting.UnitTestOutcome.Inconclusive,
-                };
-
-                SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
-                continue;
-            }
-
-            Trait trait = currentTest.Traits.First(t => t.Name == EngineConstants.FixturesTestTrait);
-            UnitTestElement unitTestElement = currentTest.ToUnitTestElementWithUpdatedSource(source);
-            FixtureTestResult fixtureTestResult = testRunner.GetFixtureTestResult(unitTestElement.TestMethod, trait.Value);
-
-            if (fixtureTestResult.IsExecuted)
-            {
-                var result = new TestTools.UnitTesting.TestResult
-                {
-                    Outcome = fixtureTestResult.Outcome,
-                };
-                SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
-            }
         }
     }
 
@@ -554,33 +526,85 @@ internal class TestExecutionManager
     /// </summary>
     /// <param name="tcmProperties">Tcm properties.</param>
     /// <param name="sourceLevelParameters">Source level parameters.</param>
+    /// <param name="unitTestElement">The unit test element to get properties from.</param>
     /// <returns>Test context properties.</returns>
     private static Dictionary<string, object?> GetTestContextProperties(
         IDictionary<TestProperty, object?>? tcmProperties,
-        IDictionary<string, object> sourceLevelParameters)
+        IDictionary<string, object> sourceLevelParameters,
+        UnitTestElement unitTestElement)
     {
-        if (tcmProperties is null)
+        // If we only have sourceLevelParameters, we create a new dictionary with just those.
+        if (tcmProperties is null &&
+            unitTestElement.Traits is null or { Length: 0 } &&
+            unitTestElement.TestCategory is null or { Length: 0 })
         {
-            return new Dictionary<string, object?>(sourceLevelParameters!);
+            return [with(sourceLevelParameters!)];
         }
 
-        // This dictionary will have *at least* 8 entries. Those are the sourceLevelParameters
-        // which were originally calculated from TestDeployment.GetDeploymentInformation.
-        var testContextProperties = new Dictionary<string, object?>(capacity: 8);
+        // To avoid any resizes and additional overhead, we calculate the capacity beforehand.
+        var testContextProperties = new Dictionary<string, object?>(capacity: sourceLevelParameters.Count + (tcmProperties?.Count ?? 0) + (unitTestElement.Traits?.Length ?? 0) + (unitTestElement.TestCategory?.Length ?? 0));
 
         // Add tcm properties.
-        foreach ((TestProperty key, object? value) in tcmProperties)
+        if (tcmProperties is not null)
         {
-            testContextProperties[key.Id] = value;
+            foreach (KeyValuePair<TestProperty, object?> kvp in tcmProperties)
+            {
+                testContextProperties[kvp.Key.Id] = kvp.Value;
+            }
         }
 
         // Add source level parameters.
-        foreach ((string key, object value) in sourceLevelParameters)
+        foreach (KeyValuePair<string, object> kvp in sourceLevelParameters)
         {
-            testContextProperties[key] = value;
+            testContextProperties[kvp.Key] = kvp.Value;
+        }
+
+        if (unitTestElement.Traits is { Length: > 0 })
+        {
+            foreach (Trait trait in unitTestElement.Traits)
+            {
+                ValidateAndAssignTestProperty(testContextProperties, trait.Name, trait.Value);
+            }
+        }
+
+        if (unitTestElement.TestCategory is { Length: > 0 })
+        {
+            foreach (string category in unitTestElement.TestCategory)
+            {
+                ValidateAndAssignTestProperty(testContextProperties, category, string.Empty);
+            }
         }
 
         return testContextProperties;
+    }
+
+    /// <summary>
+    /// Validates If a Custom test property is valid and then adds it to the TestContext property list.
+    /// </summary>
+    /// <param name="testContextProperties"> The test context properties. </param>
+    /// <param name="propertyName"> The property name. </param>
+    /// <param name="propertyValue"> The property value. </param>
+    private static void ValidateAndAssignTestProperty(
+        Dictionary<string, object?> testContextProperties,
+        string propertyName,
+        string propertyValue)
+    {
+        if (StringEx.IsNullOrEmpty(propertyName))
+        {
+            return;
+        }
+
+        if (testContextProperties.ContainsKey(propertyName))
+        {
+            // Do not add to the test context because it would conflict with an already existing value.
+            // We were at one point reporting a warning here. However with extensibility centered around TestProperty where
+            // users can have multiple WorkItemAttributes(say) we cannot throw a warning here. Users would have multiple of these attributes
+            // so that it shows up in reporting rather than seeing them in TestContext properties.
+        }
+        else
+        {
+            testContextProperties.Add(propertyName, propertyValue);
+        }
     }
 
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle errors in user specified run parameters")]

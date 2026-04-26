@@ -12,8 +12,8 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
     internal const string ActivitySourceName = "Microsoft.Testing.Platform";
     internal const string MeterName = "Microsoft.Testing.Platform";
 
-    private readonly ActivitySource _activitySource = new(ActivitySourceName, PlatformVersion.Version);
-    private readonly Meter _meter = new(MeterName, PlatformVersion.Version);
+    private readonly ActivitySource _activitySource = new(ActivitySourceName, ExtensionVersion.DefaultSemVer);
+    private readonly Meter _meter = new(MeterName, ExtensionVersion.DefaultSemVer);
 
     public IPlatformActivity? TestFrameworkActivity { get; set; }
 
@@ -24,7 +24,7 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
 
     public ICounter<T> CreateCounter<T>(string name, string? unit = null, string? description = null, IEnumerable<KeyValuePair<string, object?>>? tags = null)
         where T : struct
-        => new CounterWrapper<T>(_meter.CreateCounter<T>(name, unit, description, tags!));
+        => new CounterWrapper<T>(_meter.CreateCounter<T>(name, unit, description, tags));
 
     public IHistogram<T> CreateHistogram<T>(string name, string? unit = null, string? description = null, IEnumerable<KeyValuePair<string, object?>>? tags = null)
         where T : struct
