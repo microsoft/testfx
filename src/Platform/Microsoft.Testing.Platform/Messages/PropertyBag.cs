@@ -185,28 +185,9 @@ public sealed partial class PropertyBag
         }
 
         // We don't want to allocate an array if we know that we're looking for a TestNodeStateProperty
-        if (typeof(TestNodeStateProperty).IsAssignableFrom(typeof(TProperty)))
-        {
-            return default;
-        }
-
-        if (_property is null || _property.Count == 0)
-        {
-            return default;
-        }
-
-        IEnumerable<TProperty> matchingValues = _property.OfType<TProperty>();
-
-        using IEnumerator<TProperty> enumerator = matchingValues.GetEnumerator();
-        if (!enumerator.MoveNext())
-        {
-            return default;
-        }
-
-        TProperty property = enumerator.Current;
-        return enumerator.MoveNext()
-            ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
-            : property;
+        return typeof(TestNodeStateProperty).IsAssignableFrom(typeof(TProperty))
+            ? default
+            : _property is null ? default : _property.SingleOrDefault<TProperty>();
     }
 
     /// <summary>

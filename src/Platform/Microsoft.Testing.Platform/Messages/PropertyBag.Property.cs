@@ -76,6 +76,38 @@ public sealed partial class PropertyBag
             return false;
         }
 
+        public TProperty? SingleOrDefault<TProperty>()
+        {
+            bool found = false;
+            TProperty? result = default;
+
+            if (Current is TProperty item)
+            {
+                found = true;
+                result = item;
+            }
+
+            Property current = this;
+
+            while (current.Next is { } next)
+            {
+                current = next;
+
+                if (current.Current is TProperty item2)
+                {
+                    if (found)
+                    {
+                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.");
+                    }
+
+                    found = true;
+                    result = item2;
+                }
+            }
+
+            return result;
+        }
+
         public IEnumerable<TProperty> OfType<TProperty>()
         {
             if (Current is TProperty property)

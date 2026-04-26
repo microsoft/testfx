@@ -26,8 +26,22 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
     internal void FreezeRegistration() => _isRegistrationFrozen = true;
 
     internal static bool IsExpandableTestNode(TestNode testNode)
-        => testNode is IExpandableTestNode
-        && !testNode.Properties.OfType<FrameworkEngineMetadataProperty>().SingleOrDefault().PreventArgumentsExpansion;
+    {
+        if (testNode is not IExpandableTestNode)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < testNode.Properties.Length; i++)
+        {
+            if (testNode.Properties[i] is FrameworkEngineMetadataProperty meta && meta.PreventArgumentsExpansion)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     internal async Task<TestNode> ExpandTestNodeAsync(TestNode currentNode)
     {
