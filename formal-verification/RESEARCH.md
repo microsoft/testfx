@@ -140,6 +140,59 @@ Structural equality over a parse result: tool name, list of options (name + argu
 
 ---
 
+### Target 6 — `ResponseFileHelper.SplitCommandLine` ★★★★☆
+
+**File**: `src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs`
+**Type**: `string → IEnumerable<string>`
+
+A pure function that tokenises a command-line string into whitespace-separated tokens, treating double-quoted substrings as single tokens (with their surrounding quotes stripped).
+
+**Why good for FV**:
+- Pure function; all state is local variables.
+- State machine structure with two orthogonal state dimensions (`seeking` ∈ {TokenStart, WordEnd} × `seekingQuote` ∈ {QuoteStart, QuoteEnd}).
+- Well-defined contract: whitespace → token separator outside quotes; double-quote toggles quoting mode.
+- Termination is obvious (index advances on every iteration).
+
+**Properties to verify**:
+1. Empty input → empty output.
+2. Whitespace-only input → empty output.
+3. Non-whitespace input with no quotes → splits into whitespace-delimited tokens.
+4. Double-quoted string → single token with quotes stripped.
+5. Double-quoted string containing spaces → single token, spaces preserved.
+6. All output tokens have their `"` characters removed.
+7. Two adjacent quoted strings (`"a""b"`) → may produce one or two tokens (document the chosen semantics).
+8. A trailing non-terminated quote (e.g., `"foo`) → yields what remains as a token.
+
+**Approximations**: Lean model uses `List Char`; whitespace is modelled as `Char.isWhitespace`; does not model the `SplitLine` comment-filter layer.
+
+---
+
+### Target 7 — `TreeNodeFilter.MatchFilterPattern` — Boolean Filter Algebra ★★★★★
+
+**File**: `src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs`
+**Type**: `FilterExpression × String × PropertyBag → Bool`
+
+A pure recursive function that evaluates whether a test-node path and property bag match a structured Boolean filter expression built from `And`, `Or`, `Not`, and `Nop` operators.
+
+**Why excellent for FV**:
+- Pure recursive function; ideal for Lean structural induction.
+- The semantics exactly model a propositional Boolean algebra.
+- Classic algebraic laws (De Morgan, double negation, idempotence, absorption) are provable purely by structural induction on the `FilterExpression` type.
+- Abstracting away the `Regex` pattern matcher gives a clean propositional model.
+
+**Properties to verify**:
+1. `NopExpression` always returns `true`.
+2. `Not(Not(A))` is semantically equivalent to `A`.
+3. De Morgan (AND): `Not(And(A, B)) ↔ Or(Not(A), Not(B))`.
+4. De Morgan (OR): `Not(Or(A, B)) ↔ And(Not(A), Not(B))`.
+5. Idempotence: `And([A, A]) ↔ A`, `Or([A, A]) ↔ A`.
+6. Identity: `And([Nop, A]) ↔ A`, `Or([Nop, ...]) ↔ true`.
+7. Commutativity of binary `And`/`Or` (over two-element lists): `And([A, B]) ↔ And([B, A])`.
+
+**Approximations**: The Lean model abstracts `Regex.IsMatch` as an opaque predicate parameter `match : String → Bool`. This captures the Boolean-algebra structure independently of the regex engine semantics. `PropertyBag` matching is similarly abstracted.
+
+---
+
 ## Approach Notes
 
 - We use Lean 4 with Mathlib for all proofs.
@@ -153,3 +206,5 @@ Structural equality over a parse result: tool name, list of options (name + argu
 - Should we model `int.MaxValue` as an explicit Lean constant (e.g., `def maxInt32 : Int := 2^31 - 1`) or leave it as an opaque constant?
 - The `TryUnescape` function handles environment `NewLine` — should we abstract over this or assume `"\n"`?
 - Is the lack of a `Min ≤ Max` invariant in `ArgumentArity` a real bug or an accepted API choice? Worth filing an issue if a "bad" arity causes unexpected validator behaviour.
+- For `SplitCommandLine`, is the two-adjacent-quoted-strings case (`"a""b"`) intended to produce one token `ab` or two tokens? The current state-machine code yields `a` then starts a new token at the opening quote, so it produces two tokens. This is worth documenting in the informal spec.
+- For `TreeNodeFilter.MatchFilterPattern`, should commutativity be stated over _ordered_ lists (which it isn't in general, since `All` and `Any` are order-independent) or only over two-element binary forms? The current implementation uses `List.All` / `List.Any`, which are order-independent, so commutativity holds trivially.
