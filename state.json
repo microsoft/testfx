@@ -1,19 +1,25 @@
 {
-  "last_run": "2026-04-25T04:14:49Z",
-  "last_tasks": ["task3_implementation", "task7_summary"],
+  "last_run": "2026-04-26T04:26:55Z",
+  "last_tasks": ["task3_implementation", "task4_pr_maintenance", "task7_summary"],
   "validated_commands": {
     "build": "export PATH=\"$PWD/.dotnet:$PATH\" && dotnet build <project.csproj> -p:TargetFramework=net8.0 --no-restore",
     "restore": "dotnet restore <project.csproj>",
     "test": "export PATH=\"$PWD/.dotnet:$PATH\" && dotnet test <test.csproj> -p:TargetFramework=net8.0 --no-restore --filter <filter>",
-    "build_notes": "Use .dotnet/dotnet (local SDK). Restore first: dotnet restore. Available targets: net8.0, net9.0, net10.0. net9.0/net8.0 require restore before build."
+    "build_notes": "Use .dotnet/dotnet (local SDK). Restore first: dotnet restore. Available targets: net8.0, net9.0, net10.0. net9.0/net8.0 require restore before first build."
   },
   "completed_prs": [
     {
       "title": "[Efficiency Improver] perf: reduce allocations in BFSTestNodeVisitor path tracking and CreateWrappedName",
       "branch": "efficiency/bfstestnode-string-path-tracking",
+      "pr_number": 7836,
       "date": "2026-04-25",
-      "status": "submitted",
-      "changes": "BFSTestNodeVisitor.cs, TestArgumentsManager.cs"
+      "status": "open_all_ci_green"
+    },
+    {
+      "title": "[Efficiency Improver] perf: eliminate allocations in PropertyBag.SingleOrDefault and IProperty[] FrameworkEngineMetadata lookups",
+      "branch": "efficiency/propertybag-singleordefault-no-alloc",
+      "date": "2026-04-26",
+      "status": "submitted"
     }
   ],
   "backlog": [
@@ -25,11 +31,11 @@
       "notes": "Uses .Any(t => t == ...) with delegate allocation; Array.IndexOf would be more consistent"
     },
     {
-      "id": "propertybag-oftype",
-      "title": "OfType<FrameworkEngineMetadataProperty>() on IProperty[] arrays",
+      "id": "propertybag-single-no-alloc",
+      "title": "PropertyBag.Single<T>(): triple-iterates matchingValues (Any, Skip(1).Any, First) - each allocates state machine",
       "area": "code-level",
       "priority": "medium",
-      "notes": "TestArgumentsManager.IsExpandableTestNode and TestFrameworkEngine use .OfType<struct>().SingleOrDefault() which allocates an enumerator. Manual foreach would avoid enumerator allocation."
+      "notes": "Could use same direct-walk pattern as the new SingleOrDefault<T>(). Three state machines per call vs 0."
     },
     {
       "id": "createpropertybagforfilter",
@@ -39,6 +45,6 @@
       "notes": "Called for every node when TreeNodeFilter is active. Creates a new PropertyBag each time. Could cache or reuse."
     }
   ],
-  "backlog_cursor": "abortmaxfailed-lambda",
-  "monthly_activity_issue": null
+  "backlog_cursor": "propertybag-single-no-alloc",
+  "monthly_activity_issue": 7829
 }
