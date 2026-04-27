@@ -12,7 +12,7 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
     private readonly IClock _clock;
     private readonly IProcessHandler _processHandler;
 
-    private static readonly Regex TemplateFieldRegex = new(@"<([^>]+)>", RegexOptions.Compiled);
+    private static readonly Regex TemplateFieldRegex = new(@"<(.+?)>", RegexOptions.Compiled);
 
     public ArtifactNamingService(
         ITestApplicationModuleInfo testApplicationModuleInfo,
