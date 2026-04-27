@@ -358,6 +358,11 @@ Actual: {2}</source>
         <target state="translated">컬렉션에 &lt;{0}&gt; 요소가 없습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="STATestMethodNonWindowsWarning">
+        <source>Test method '{0}' is marked with [STATestMethod] but STA is a Windows-only COM threading concept. The test was executed without STA context on the current (non-Windows) platform.</source>
+        <target state="new">Test method '{0}' is marked with [STATestMethod] but STA is a Windows-only COM threading concept. The test was executed without STA context on the current (non-Windows) platform.</target>
+        <note>{0} is the test method name.</note>
+      </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">'{0}' 문자열이 '{1}' 문자열로 시작되지 않습니다. {2}</target>

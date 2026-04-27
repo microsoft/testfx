@@ -405,4 +405,8 @@ Actual: {2}</value>
   <data name="AssertScopeNestedNotAllowed" xml:space="preserve">
     <value>Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</value>
   </data>
+  <data name="STATestMethodNonWindowsWarning" xml:space="preserve">
+    <value>Test method '{0}' is marked with [STATestMethod] but STA is a Windows-only COM threading concept. The test was executed without STA context on the current (non-Windows) platform.</value>
+    <comment>{0} is the test method name.</comment>
+  </data>
 </root>

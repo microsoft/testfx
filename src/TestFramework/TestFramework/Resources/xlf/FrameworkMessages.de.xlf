@@ -358,6 +358,11 @@ Tatsächlich: {2}</target>
         <target state="translated">Element(e) &lt;{0}&gt; ist/sind in der Auflistung nicht vorhanden.</target>
         <note />
       </trans-unit>
+      <trans-unit id="STATestMethodNonWindowsWarning">
+        <source>Test method '{0}' is marked with [STATestMethod] but STA is a Windows-only COM threading concept. The test was executed without STA context on the current (non-Windows) platform.</source>
+        <target state="new">Test method '{0}' is marked with [STATestMethod] but STA is a Windows-only COM threading concept. The test was executed without STA context on the current (non-Windows) platform.</target>
+        <note>{0} is the test method name.</note>
+      </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">Die Zeichenfolge „{0}“ beginnt nicht mit der Zeichenfolge „{1}“. {2}</target>
