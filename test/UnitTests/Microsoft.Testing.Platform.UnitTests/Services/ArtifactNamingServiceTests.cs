@@ -139,13 +139,13 @@ public sealed class ArtifactNamingServiceTests
         string template = "<pname>_<pid>";
         var customReplacements = new Dictionary<string, string>
         {
-            ["PNAME"] = "IGNORED",
+            ["PNAME"] = "WRONG_CASE",
             ["pname"] = "custom-process",
         };
 
         string result = service.ResolveTemplate(template, customReplacements);
 
-        // Only exact-case match for "pname" is used; "PNAME" is ignored
+        // Only exact-case match for "pname" is used; "PNAME" (wrong case) is not matched
         Assert.StartsWith("custom-process_", result);
     }
 
