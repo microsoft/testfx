@@ -19,6 +19,8 @@ imports:
   - shared/repo-build-setup.md
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   create-pull-request:
     title-prefix: "[code-simplifier] "
     labels: [refactoring, code-quality, automation]
