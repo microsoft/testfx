@@ -81,7 +81,7 @@ For each merged PR or recent commit:
 
 ### 1.3 Determine Scope
 
-If **no files were changed in the last 24 hours**, exit gracefully without creating a PR:
+If **no files were changed in the last 24 hours**, invoke the `noop` safe output to exit gracefully without creating a PR or an issue:
 
 ```text
 ✅ No code changes detected in the last 24 hours.
@@ -196,7 +196,7 @@ Only create a PR if:
 - ✅ Build succeeds
 - ✅ Changes improve code quality without breaking functionality
 
-If no improvements were made or changes broke tests, exit gracefully:
+If no improvements were made or changes broke tests, invoke the `noop` safe output to exit gracefully without creating a PR or an issue:
 
 ```text
 ✅ Code analyzed from last 24 hours.
@@ -287,8 +287,8 @@ Exit gracefully without creating a PR if:
 
 Your output MUST either:
 
-1. **If no changes in last 24 hours**: Output a brief status message
-2. **If no simplifications beneficial**: Output a brief status message
+1. **If no changes in last 24 hours**: Invoke the `noop` safe output with a brief status message
+2. **If no simplifications beneficial**: Invoke the `noop` safe output with a brief status message
 3. **If simplifications made**: Create a PR with the changes
 
 Begin your code simplification analysis now.
