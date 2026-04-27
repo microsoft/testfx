@@ -50,6 +50,7 @@ Read existing cache-memory files to understand what you already know:
 Use the GitHub tools to fetch PRs merged in the last 7 days:
 
 For each merged PR, record:
+
 - **Files changed** — which files/directories were touched
 - **PR size** — number of files and lines changed
 - **Had review comments requesting changes** — indicates areas where mistakes happen
@@ -65,6 +66,7 @@ git log --since="30 days ago" --pretty=format: --name-only --no-merges | sort | 
 ```
 
 **High-churn** = changed in 3+ PRs within 30 days. These files deserve extra scrutiny because:
+
 - Frequent changes suggest the code is actively evolving and may have incomplete designs
 - More changes = more opportunities for regressions
 - If the file was also reverted, it's doubly risky
@@ -78,6 +80,7 @@ git log --since="30 days ago" --grep="Revert" --pretty=format:"%H %s" --no-merge
 ```
 
 For each revert:
+
 - Record the original commit that was reverted
 - Record the files it touched
 - Flag those files as **high-risk** — a previous change was backed out, meaning the area is tricky
@@ -164,7 +167,7 @@ After writing the cache-memory file, always invoke `noop` to signal completion:
 This workflow does NOT act on the data. The PR reviewers read `repo-history.json` and use it to:
 
 | Consumer | How it uses history |
-|---|---|
+| --- | --- |
 | **Expert Reviewer** | Applies extra scrutiny to high-churn files; checks reverted areas more carefully for the same class of bug |
 | **Nitpick Reviewer** | Prioritizes reviews on high-risk directories; skips deep analysis of stable, low-churn areas |
 | **Test Expert Reviewer** | Cross-references CI failures with test file changes; flags test changes in fragile areas |
