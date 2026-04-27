@@ -27,7 +27,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check for Lean source files
+        id: check-lean-files
+        run: |
+          LEAN_COUNT=$(find formal-verification/lean/FVSquad -name "*.lean" 2>/dev/null | wc -l)
+          echo "lean_count=${LEAN_COUNT}" >> "$GITHUB_OUTPUT"
+          if [ "${LEAN_COUNT}" -eq 0 ]; then
+            echo "No .lean files found in FVSquad/ — skipping Lean build."
+          else
+            echo "Found ${LEAN_COUNT} .lean file(s). Proceeding with build."
+          fi
+
       - name: Install elan (Lean version manager)
+        if: steps.check-lean-files.outputs.lean_count != '0'
         run: |
           ELAN_VERSION="v4.2.1"
           ELAN_TARGET="x86_64-unknown-linux-gnu"
@@ -57,21 +69,30 @@ jobs:
           rm -rf "${ELAN_TMP_DIR}"
 
       - name: Add elan to PATH
+        if: steps.check-lean-files.outputs.lean_count != '0'
         run: echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
 
       - name: Show Lean version
+        if: steps.check-lean-files.outputs.lean_count != '0'
         run: lean --version
 
       - name: Cache Lean / Lake build artifacts
+        if: steps.check-lean-files.outputs.lean_count != '0'
         uses: actions/cache@v4
         with:
           path: |
             formal-verification/lean/.lake
             ~/.elan
-          key: lean-${{ runner.os }}-${{ hashFiles('formal-verification/lean/lakefile.toml', 'formal-verification/lean/lake-manifest.json') }}
+          key: lean-${{ runner.os }}-${{ hashFiles('formal-verification/lean/lean-toolchain', 'formal-verification/lean/lakefile.toml', 'formal-verification/lean/lake-manifest.json') }}
           restore-keys: |
             lean-${{ runner.os }}-
 
+      - name: Resolve Lean dependencies
+        if: steps.check-lean-files.outputs.lean_count != '0'
+        working-directory: formal-verification/lean
+        run: lake update
+
       - name: Build Lean proofs
+        if: steps.check-lean-files.outputs.lean_count != '0'
         working-directory: formal-verification/lean
         run: lake build
