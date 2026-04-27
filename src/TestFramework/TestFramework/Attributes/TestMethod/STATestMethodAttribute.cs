@@ -76,22 +76,7 @@ public class STATestMethodAttribute : TestMethodAttribute
 #if !NETFRAMEWORK
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            // STA (Single Threaded Apartment) is a Windows-only COM threading concept and is not
-            // supported on non-Windows platforms. The test is executed on the current thread without
-            // STA context, which is acceptable because STA has no meaning outside of Windows.
-            TestResult[] nonWindowsResults = await ExecuteCoreAsync(testMethod).ConfigureAwait(false);
-            string warning = string.Format(
-                CultureInfo.InvariantCulture,
-                FrameworkMessages.STATestMethodNonWindowsWarning,
-                testMethod.TestMethodName);
-            foreach (TestResult result in nonWindowsResults)
-            {
-                result.LogOutput = result.LogOutput is null
-                    ? warning
-                    : result.LogOutput + Environment.NewLine + warning;
-            }
-
-            return nonWindowsResults;
+            throw new PlatformNotSupportedException(FrameworkMessages.STATestMethodNonWindowsNotSupported);
         }
 #endif
 

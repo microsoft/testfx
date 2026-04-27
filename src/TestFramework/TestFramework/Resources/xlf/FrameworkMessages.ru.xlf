@@ -358,10 +358,10 @@ Actual: {2}</source>
         <target state="translated">Элементы &lt;{0}&gt; отсутствуют в коллекции.</target>
         <note />
       </trans-unit>
-      <trans-unit id="STATestMethodNonWindowsWarning">
-        <source>Test method '{0}' is marked with [STATestMethod] but STA is a Windows-only COM threading concept. The test was executed without STA context on the current (non-Windows) platform.</source>
-        <target state="new">Test method '{0}' is marked with [STATestMethod] but STA is a Windows-only COM threading concept. The test was executed without STA context on the current (non-Windows) platform.</target>
-        <note>{0} is the test method name.</note>
+      <trans-unit id="STATestMethodNonWindowsNotSupported">
+        <source>[STATestMethod] is not supported on non-Windows platforms. STA (Single Threaded Apartment) is a Windows-only COM threading concept. Use [OSCondition(OperatingSystems.Windows)] to skip this test on non-Windows platforms.</source>
+        <target state="new">[STATestMethod] is not supported on non-Windows platforms. STA (Single Threaded Apartment) is a Windows-only COM threading concept. Use [OSCondition(OperatingSystems.Windows)] to skip this test on non-Windows platforms.</target>
+        <note />
       </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
