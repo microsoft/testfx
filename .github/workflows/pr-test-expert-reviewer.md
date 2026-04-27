@@ -2,14 +2,11 @@
 description: >
   Reviews test code quality in pull requests — isolation, assertions, flakiness
   patterns, data-driven coverage, and test structure. Runs automatically on all
-  opened PRs alongside the other reviewers. Also available via /test-review.
+  opened PRs and when new commits are pushed.
 
 on:
-  slash_command:
-    name: test-review
-    events: [pull_request_comment, pull_request_review_comment]
   pull_request:
-    types: [opened]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
@@ -23,6 +20,7 @@ tools:
     min-integrity: none
 
 safe-outputs:
+  noop: {}
   create-pull-request-review-comment:
     max: 7
     side: "RIGHT"
@@ -131,7 +129,7 @@ Weak assertions pass when they shouldn't and produce unhelpful failure messages:
 - **`Assert.IsNotNull(x); Assert.AreEqual(expected, x.Value)`** → Could use a single assertion with null-safe pattern
 - **Missing assertion messages** on complex assertions where the failure wouldn't be self-explanatory
 - **Asserting on the wrong thing** — e.g., asserting a collection has items instead of asserting it has the *right* items
-- **`Assert.IsTrue(collection.Any())`** → Should be `Assert.IsTrue(collection.Count > 0)` or better, assert on specific contents
+- **`Assert.IsTrue(collection.Any())`** — Acceptable for checking non-emptiness; better yet, assert on specific expected contents when the test should verify more than "has any items"
 - **Over-assertion** — Testing implementation details that could change (e.g., exact exception message text) instead of behavior
 
 #### 4.3 Flakiness Patterns
