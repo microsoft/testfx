@@ -129,16 +129,16 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
 
     public int GetProcessExitCode()
     {
-        int exitCode = ExitCodes.Success;
-        exitCode = exitCode == ExitCodes.Success && _policiesService.IsMaxFailedTestsTriggered ? ExitCodes.TestExecutionStoppedForMaxFailedTests : exitCode;
-        exitCode = exitCode == ExitCodes.Success && _testAdapterTestSessionFailure ? ExitCodes.TestAdapterTestSessionFailure : exitCode;
-        exitCode = exitCode == ExitCodes.Success && _failedTestsCount > 0 ? ExitCodes.AtLeastOneTestFailed : exitCode;
-        exitCode = exitCode == ExitCodes.Success && _policiesService.IsAbortTriggered ? ExitCodes.TestSessionAborted : exitCode;
-        exitCode = exitCode == ExitCodes.Success && _totalRanTests == 0 ? ExitCodes.ZeroTests : exitCode;
+        int exitCode = (int)ExitCodes.Success;
+        exitCode = exitCode == (int)ExitCodes.Success && _policiesService.IsMaxFailedTestsTriggered ? (int)ExitCodes.TestExecutionStoppedForMaxFailedTests : exitCode;
+        exitCode = exitCode == (int)ExitCodes.Success && _testAdapterTestSessionFailure ? (int)ExitCodes.TestAdapterTestSessionFailure : exitCode;
+        exitCode = exitCode == (int)ExitCodes.Success && _failedTestsCount > 0 ? (int)ExitCodes.AtLeastOneTestFailed : exitCode;
+        exitCode = exitCode == (int)ExitCodes.Success && _policiesService.IsAbortTriggered ? (int)ExitCodes.TestSessionAborted : exitCode;
+        exitCode = exitCode == (int)ExitCodes.Success && _totalRanTests == 0 ? (int)ExitCodes.ZeroTests : exitCode;
 
         if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, out string[]? argumentList))
         {
-            exitCode = exitCode == ExitCodes.Success && _totalRanTests < int.Parse(argumentList[0], CultureInfo.InvariantCulture) ? ExitCodes.MinimumExpectedTestsPolicyViolation : exitCode;
+            exitCode = exitCode == (int)ExitCodes.Success && _totalRanTests < int.Parse(argumentList[0], CultureInfo.InvariantCulture) ? (int)ExitCodes.MinimumExpectedTestsPolicyViolation : exitCode;
         }
 
         // If the user has specified the IgnoreExitCode, then we don't want to return a non-zero exit code if the exit code matches the one specified.
@@ -155,7 +155,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         {
             if (exitCodeToIgnore.Split(';').Any(code => int.TryParse(code, out int parsedExitCode) && parsedExitCode == exitCode))
             {
-                exitCode = ExitCodes.Success;
+                exitCode = (int)ExitCodes.Success;
             }
         }
 

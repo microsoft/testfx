@@ -226,7 +226,7 @@ namespace MSTestSdkTest
             testHostResult.AssertOutputContainsSummary(0, 1, 0);
 
             testHostResult = await testHost.ExecuteAsync(command: invalidCommandLineArg, cancellationToken: TestContext.CancellationToken);
-            Assert.AreEqual(ExitCodes.InvalidCommandLine, testHostResult.ExitCode);
+            Assert.AreEqual((int)ExitCodes.InvalidCommandLine, testHostResult.ExitCode);
         }
     }
 
@@ -283,7 +283,7 @@ namespace MSTestSdkTest
             }
             else
             {
-                Assert.AreEqual(ExitCodes.InvalidCommandLine, testHostResult.ExitCode);
+                Assert.AreEqual((int)ExitCodes.InvalidCommandLine, testHostResult.ExitCode);
             }
         }
     }

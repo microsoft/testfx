@@ -433,14 +433,14 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     protected override bool HandleTaskExecutionErrors()
     {
         // This is an unexpected situation we simply print to the console the output and return false.
-        if (string.IsNullOrEmpty(_outputFileName) && ExitCode != ExitCodes.InvalidCommandLine)
+        if (string.IsNullOrEmpty(_outputFileName) && ExitCode != (int)ExitCodes.InvalidCommandLine)
         {
             Log.LogError(null, "run failed", null, TargetPath.ItemSpec.Trim(), 0, 0, 0, 0, Resources.MSBuildResources.TestFailedNoDetail, _output);
         }
         else
         {
             // If the output file name is null and the exit code is invalid command line we create a default one.
-            if (_outputFileName is null && ExitCode == ExitCodes.InvalidCommandLine)
+            if (_outputFileName is null && ExitCode == (int)ExitCodes.InvalidCommandLine)
             {
                 _outputFileName = Path.Combine(Path.GetDirectoryName(TargetPath.ItemSpec.Trim())!, "TestResults");
                 _fileSystem.CreateDirectory(_outputFileName);

@@ -298,16 +298,16 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 catch (OperationCanceledException) when (processExitedCancellationToken.IsCancellationRequested)
                 {
                     await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestHostProcessExitedBeforeRetryCouldConnect, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
-                    return ExitCodes.GenericFailure;
+                    return (int)ExitCodes.GenericFailure;
                 }
             }
 
             await testHostProcess.WaitForExitAsync().ConfigureAwait(false);
 
             exitCodes.Add(testHostProcess.ExitCode);
-            if (testHostProcess.ExitCode != ExitCodes.Success)
+            if (testHostProcess.ExitCode != (int)ExitCodes.Success)
             {
-                if (testHostProcess.ExitCode != ExitCodes.AtLeastOneTestFailed)
+                if (testHostProcess.ExitCode != (int)ExitCodes.AtLeastOneTestFailed)
                 {
                     await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedWithWrongExitCode, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
                     retryInterrupted = true;
@@ -370,7 +370,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
 
         if (!thresholdPolicyKickedIn && !retryInterrupted)
         {
-            if (exitCodes[^1] != ExitCodes.Success)
+            if (exitCodes[^1] != (int)ExitCodes.Success)
             {
                 await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedInAllAttempts, userMaxRetryCount + 1)), cancellationToken).ConfigureAwait(false);
             }

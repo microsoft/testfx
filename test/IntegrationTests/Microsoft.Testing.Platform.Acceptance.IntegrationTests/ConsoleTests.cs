@@ -49,7 +49,7 @@ public class ConsoleTests : AcceptanceTestBase<ConsoleTests.TestAssetFixture>
             $"\"{testHost.FullName}\" --ignore-exit-code 8",
             cancellationToken: TestContext.CancellationToken);
 
-        Assert.AreEqual(ExitCodes.Success, exitCode);
+        Assert.AreEqual((int)ExitCodes.Success, exitCode);
         Assert.Contains("Slowest 10 tests", commandLine.StandardOutput);
     }
 

@@ -170,8 +170,8 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
         // If the global cancellation is called together with the server closing one the server exited gracefully.
         return !cancellationToken.IsCancellationRequested && _serverClosingTokenSource.IsCancellationRequested
-            ? ExitCodes.Success
-            : ExitCodes.TestSessionAborted;
+            ? (int)ExitCodes.Success
+            : (int)ExitCodes.TestSessionAborted;
     }
 
     /// <summary>

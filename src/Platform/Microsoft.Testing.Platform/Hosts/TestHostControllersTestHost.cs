@@ -221,7 +221,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
                     await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(displayErrorMessageBuilder.ToString()), cancellationToken).ConfigureAwait(false);
                     await _logger.LogErrorAsync(logErrorMessageBuilder.ToString()).ConfigureAwait(false);
-                    return ExitCodes.InvalidPlatformSetup;
+                    return (int)ExitCodes.InvalidPlatformSetup;
                 }
 
                 foreach (EnvironmentVariable envVar in environmentVariables.GetAll())
@@ -346,17 +346,17 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
             // If we have a process in the middle between the test host controller and the test host process we need to keep it into account.
             exitCode = testHostProcess.ExitCode;
-            if (exitCode == ExitCodes.Success && cancellationToken.IsCancellationRequested)
+            if (exitCode == (int)ExitCodes.Success && cancellationToken.IsCancellationRequested)
             {
                 // In case of cancellation, only alter exit code if it was success.
                 // If there is another exit code indicating another failure, we prefer it over the cancellation.
-                exitCode = ExitCodes.TestSessionAborted;
+                exitCode = (int)ExitCodes.TestSessionAborted;
             }
             else if (!testHostProcessInformation.HasExitedGracefully ||
                 _testHostExitCodeReceived != testHostProcess.ExitCode)
             {
                 await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
-                exitCode = ExitCodes.TestHostProcessExitedNonGracefully;
+                exitCode = (int)ExitCodes.TestHostProcessExitedNonGracefully;
             }
 
             await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}') in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);

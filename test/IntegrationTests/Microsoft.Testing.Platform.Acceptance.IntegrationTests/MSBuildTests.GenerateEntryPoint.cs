@@ -171,7 +171,7 @@ module MicrosoftTestingPlatformEntryPoint =
 
         testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        Assert.AreEqual(ExitCodes.Success, testHostResult.ExitCode);
+        Assert.AreEqual((int)ExitCodes.Success, testHostResult.ExitCode);
         Assert.Contains("Passed!", testHostResult.StandardOutput);
     }
 

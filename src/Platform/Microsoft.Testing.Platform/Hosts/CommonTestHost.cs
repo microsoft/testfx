@@ -30,7 +30,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
     {
         CancellationToken testApplicationCancellationToken = ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
 
-        int exitCode = ExitCodes.GenericFailure;
+        int exitCode = (int)ExitCodes.GenericFailure;
         IPlatformOpenTelemetryService? platformOTelService = null;
         IPlatformActivity? activity = null;
         try
@@ -45,7 +45,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
                 if (testApplicationCancellationToken.IsCancellationRequested)
                 {
-                    exitCode = ExitCodes.TestSessionAborted;
+                    exitCode = (int)ExitCodes.TestSessionAborted;
                 }
 
                 return exitCode;
@@ -59,7 +59,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
                 exitCode = isValidProtocol
                     ? await RunTestAppAsync(platformOTelService, testApplicationCancellationToken).ConfigureAwait(false)
-                    : ExitCodes.IncompatibleProtocolVersion;
+                    : (int)ExitCodes.IncompatibleProtocolVersion;
             }
             finally
             {
@@ -90,7 +90,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
         if (testApplicationCancellationToken.IsCancellationRequested)
         {
-            exitCode = ExitCodes.TestSessionAborted;
+            exitCode = (int)ExitCodes.TestSessionAborted;
         }
 
         return exitCode;
