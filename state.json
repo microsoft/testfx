@@ -1,10 +1,11 @@
 {
-  "last_run": "2026-04-26",
+  "last_run": "2026-04-27",
   "fv_tool": "Lean 4 + Mathlib",
   "lakefile_format": "toml",
   "lean_dir": "formal-verification/lean",
   "lean_install_blocked": true,
-  "lean_install_blocked_reason": "Runner sandbox blocks execution of arbitrary binaries (e.g. elan-init from /tmp or /home/runner). curl downloads work. elan-init cannot be executed. Task 3 deferred until runner allows binary execution.",
+  "lean_install_blocked_reason": "Runner sandbox blocks execution of arbitrary binaries (e.g. elan-init from /tmp or /home/runner). Python urllib can download archives but executing extracted binaries is blocked. Task 3 deferred until runner allows binary execution.",
+  "lean_elan_sha256_verified": "4e717523217af592fa2d7b9c479410a31816c065d66ccbf0c2149337cfec0f5c (elan v4.2.1 x86_64-linux, re-verified 2026-04-27)",
   "targets": [
     {
       "id": 1,
@@ -88,6 +89,11 @@
       "branch": "lean-squad/task6-correspondence-2026-04-26",
       "title": "[Lean Squad] feat(fv): Task 6 — Lean–C# correspondence review for primary targets",
       "tasks": ["Task 6: Correspondence Review"]
+    },
+    {
+      "branch": "lean-squad/task9-ci-improvements-2026-04-27",
+      "title": "[Lean Squad] feat(ci): Task 9 — skip guard + FVSquad scaffold for lean-proofs workflow",
+      "tasks": ["Task 9: CI skip guard + FVSquad scaffold"]
     }
   ],
   "open_issues": [
@@ -151,5 +157,12 @@
       "TryUnescape": "IEnvironment->newLine:String; option dropped; Except String String; exception bugs excluded",
       "MatchFilterPattern": "FilterExpression->inductive; Regex->String->Bool; PropertyBag->String->String->Bool"
     }
+  },
+  "ci_notes": {
+    "workflow": ".github/workflows/lean-proofs.yml",
+    "elan_version": "v4.2.1",
+    "elan_sha256_x86_64_linux": "4e717523217af592fa2d7b9c479410a31816c065d66ccbf0c2149337cfec0f5c",
+    "skip_guard": "Added 2026-04-27: Check for Lean source files step counts *.lean in FVSquad/; all build steps gated on lean_file_count != '0'",
+    "fvsquad_dir": "formal-verification/lean/FVSquad/ (scaffolded with README 2026-04-27)"
   }
 }
