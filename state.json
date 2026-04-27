@@ -4,7 +4,7 @@
   "lakefile_format": "toml",
   "lean_dir": "formal-verification/lean",
   "lean_install_blocked": true,
-  "lean_install_blocked_reason": "Runner sandbox blocks execution of arbitrary binaries (e.g. elan-init from /tmp or /home/runner). Python urllib can download archives but executing extracted binaries is blocked. Task 3 deferred until runner allows binary execution.",
+  "lean_install_blocked_reason": "Runner sandbox blocks execution of arbitrary binaries (elan-init from /tmp or /home/runner). Python urllib can download archives but executing extracted binaries is blocked. Task 3 deferred until runner allows binary execution.",
   "lean_elan_sha256_verified": "4e717523217af592fa2d7b9c479410a31816c065d66ccbf0c2149337cfec0f5c (elan v4.2.1 x86_64-linux, re-verified 2026-04-27)",
   "targets": [
     {
@@ -75,7 +75,7 @@
   ],
   "open_prs": [
     {
-      "branch": "lean-squad/task2-tryunescape-2026-04-25-19d4666508cf1804",
+      "branch": "lean-squad/task2-tryunescape-2026-04-25",
       "number": 7833,
       "title": "[Lean Squad] feat(fv): Task 2 — informal spec for CommandLineParser.TryUnescape",
       "tasks": ["Task 2: Informal Spec (TryUnescape)"]
@@ -86,14 +86,21 @@
       "tasks": ["Task 1: Research (new targets)"]
     },
     {
-      "branch": "lean-squad/task6-correspondence-2026-04-26",
-      "title": "[Lean Squad] feat(fv): Task 6 — Lean–C# correspondence review for primary targets",
+      "branch": "lean-squad/task6-correspondence-2026-04-26-a8bd16435dd5deb9",
+      "number": 7860,
+      "title": "[Lean Squad] feat(fv): Task 6 — Lean-C# correspondence review for primary targets",
       "tasks": ["Task 6: Correspondence Review"]
     },
     {
-      "branch": "lean-squad/task9-ci-improvements-2026-04-27",
+      "branch": "lean-squad/task9-ci-improvements-2026-04-27-b90542277d8dc525",
+      "number": 7859,
       "title": "[Lean Squad] feat(ci): Task 9 — skip guard + FVSquad scaffold for lean-proofs workflow",
       "tasks": ["Task 9: CI skip guard + FVSquad scaffold"]
+    },
+    {
+      "branch": "lean-squad/task9-fv-docs-ci-2026-04-27",
+      "title": "[Lean Squad] feat(ci): Task 9 — FV docs validation workflow + updated REPORT.md",
+      "tasks": ["Task 9: FV docs validation CI", "Task 10: REPORT.md update"]
     }
   ],
   "open_issues": [
@@ -159,10 +166,12 @@
     }
   },
   "ci_notes": {
-    "workflow": ".github/workflows/lean-proofs.yml",
+    "lean_proofs_workflow": ".github/workflows/lean-proofs.yml",
+    "fv_docs_validation_workflow": ".github/workflows/fv-docs-validation.yml (added 2026-04-27, PR pending)",
     "elan_version": "v4.2.1",
     "elan_sha256_x86_64_linux": "4e717523217af592fa2d7b9c479410a31816c065d66ccbf0c2149337cfec0f5c",
-    "skip_guard": "Added 2026-04-27: Check for Lean source files step counts *.lean in FVSquad/; all build steps gated on lean_file_count != '0'",
-    "fvsquad_dir": "formal-verification/lean/FVSquad/ (scaffolded with README 2026-04-27)"
+    "skip_guard": "Added via PR #7859 (pending): Check for Lean source files step counts *.lean in FVSquad/; all build steps gated on lean_file_count != '0'",
+    "fvsquad_dir": "formal-verification/lean/FVSquad/ (scaffolded with README via PR #7859)",
+    "fv_docs_validation": "New workflow validates: required docs present, lean project files, lean-toolchain non-empty, disclosure markers, specs/ dir, phase-2+ spec coverage"
   }
 }
