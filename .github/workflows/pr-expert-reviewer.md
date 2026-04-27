@@ -236,15 +236,18 @@ Then submit an overall review using `submit-pull-request-review` with:
 After the review, update:
 
 **`/tmp/gh-aw/cache-memory/architecture.json`:**
+
 - Record new architectural patterns observed
 - Note class hierarchies and extension points discovered
 - Track which files belong to which subsystem (Platform, Adapter, Analyzers, TestFramework)
 
 **`/tmp/gh-aw/cache-memory/perf-hotspots.json`:**
+
 - Add files/methods identified as performance-sensitive
 - Note hot paths in test discovery and execution
 
 **`/tmp/gh-aw/cache-memory/expert-findings.json`:**
+
 - Log findings with file, category, and resolution status
 - Track patterns (e.g., "missing ConfigureAwait in Platform/ code") to flag them faster in future runs
 
