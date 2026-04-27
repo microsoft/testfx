@@ -8,6 +8,8 @@ on:
   slash_command:
     name: nit
     events: [pull_request_comment, pull_request_review_comment]
+  pull_request:
+    types: [opened]
 
 permissions:
   contents: read
@@ -69,6 +71,10 @@ Use the cache memory at `/tmp/gh-aw/cache-memory/` to:
 - Read previous nitpick patterns from `/tmp/gh-aw/cache-memory/nitpick-patterns.json`
 - Review user instructions from `/tmp/gh-aw/cache-memory/user-preferences.json`
 - Note team coding conventions from `/tmp/gh-aw/cache-memory/conventions.json`
+- Check repository history insights from `/tmp/gh-aw/cache-memory/repo-history.json` (produced by the Repo Historian workflow). If present, use it to:
+  - Prioritize review effort on high-churn files and high-risk directories
+  - Skip deep analysis of stable, low-churn areas when the PR is large
+  - Be aware of recurring style patterns that were flagged in recent PRs
 
 ### Step 2: Deduplication Check
 
