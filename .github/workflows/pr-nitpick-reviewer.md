@@ -1,8 +1,15 @@
 ---
-description: Provides detailed nitpicky code review focusing on style, best practices, and minor improvements when invoked with the /nit command
+description: >
+  Provides detailed nitpicky code review focusing on style, best practices,
+  and minor improvements. Runs automatically on all opened PRs and can also
+  be invoked on-demand with the /nit command.
 
 on:
-  slash_command: "nit"
+  slash_command:
+    name: nit
+    events: [pull_request_comment, pull_request_review_comment]
+  pull_request:
+    types: [opened]
 
 permissions:
   contents: read
