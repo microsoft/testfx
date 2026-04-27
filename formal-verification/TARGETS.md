@@ -22,7 +22,7 @@
 | 4 | `CommandLineOptionsValidator` arity validation | `src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs` | 1 | Identified | — |
 | 5 | `CommandLineParseResult.Equals` | `src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs` | 1 | Identified | — |
 | 6 | `ResponseFileHelper.SplitCommandLine` | `src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs` | 1 | Identified | — |
-| 7 | `TreeNodeFilter.MatchFilterPattern` | `src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs` | 1 | Identified | — |
+| 7 | `TreeNodeFilter.MatchFilterPattern` | `src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs` | 2 | Informal spec extracted | — |
 
 ## Priority Order
 
