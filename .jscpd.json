@@ -1,0 +1,24 @@
+{
+  "threshold": 100,
+  "minLines": 6,
+  "minTokens": 50,
+  "reporters": ["json", "consoleFull"],
+  "output": "artifacts/jscpd",
+  "ignore": [
+    "**/bin/**",
+    "**/obj/**",
+    "**/artifacts/**",
+    "**/node_modules/**",
+    "**/*.Designer.cs",
+    "**/*.g.cs",
+    "**/*.xlf",
+    "**/*.resx",
+    "**/PublicAPI.Shipped.txt",
+    "**/PublicAPI.Unshipped.txt",
+    "**/test/**",
+    "**/samples/**",
+    "**/formal-verification/**"
+  ],
+  "format": ["csharp"],
+  "absolute": false
+}
