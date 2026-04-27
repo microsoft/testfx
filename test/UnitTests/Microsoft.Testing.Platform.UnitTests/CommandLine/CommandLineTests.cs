@@ -198,6 +198,31 @@ public sealed class CommandLineTests
             new("option3", ["c"]),
             new("option4", ["d"]),
         }.ToArray(), []));
+
+        // Quoted path with spaces split across multiple args (double-quotes)
+        yield return (31, ["--option1", "\"path/with", "spaces/log\""], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["path/with spaces/log"]) }.ToArray(), []));
+
+        // Quoted path with spaces split across three args (double-quotes)
+        yield return (32, ["--option1", "\"/home/user/Example", "Solution/artifacts/build", "bin/Log\""], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["/home/user/Example Solution/artifacts/build bin/Log"]) }.ToArray(), []));
+
+        // Escaped double-quote path with spaces split across multiple args
+        yield return (33, ["--option1", "\\\"/path/with", "spaces/log\\\""], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["/path/with spaces/log"]) }.ToArray(), []));
+
+        // Single-quoted path with spaces split across multiple args
+        yield return (34, ["--option1", "'path/with", "spaces/log'"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["path/with spaces/log"]) }.ToArray(), []));
+
+        // Quoted path with spaces using = delimiter
+        yield return (35, ["--option1=\"path/with", "spaces/log\""], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["path/with spaces/log"]) }.ToArray(), []));
+
+        // Quoted path with spaces using : delimiter
+        yield return (36, ["--option1:\"path/with", "spaces/log\""], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption> { new("option1", ["path/with spaces/log"]) }.ToArray(), []));
+
+        // Quoted path with spaces followed by another option
+        yield return (37, ["--option1", "\"path/with", "spaces\"", "--option2", "value"], null, new CommandLineParseResultWrapper(null, new List<CommandLineParseOption>
+        {
+            new("option1", ["path/with spaces"]),
+            new("option2", ["value"]),
+        }.ToArray(), []));
     }
 
     [TestMethod]

@@ -78,6 +78,10 @@ internal static class CommandLineParser
 
             if (currentArg is not null)
             {
+                // When a quoted value is split across multiple args (e.g. a path with spaces),
+                // reassemble the fragments into a single argument.
+                currentArg = TryMergeQuotedArguments(args, ref i, currentArg);
+
                 if (currentOption is null)
                 {
                     errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedArgument, args[i]));
@@ -114,6 +118,71 @@ internal static class CommandLineParser
             currentOption = currentOption.TrimStart('-');
         }
 
+        // When a quoted argument value is split across multiple args[] entries (e.g. a path
+        // containing spaces like "/path/my dir/log"), reassemble the fragments into a single
+        // string. Handles double-quote, single-quote, and escaped-quote (\") wrapping.
+        static string TryMergeQuotedArguments(List<string> args, ref int i, string currentArg)
+        {
+            string trimmed = currentArg.Trim();
+            if (trimmed.Length == 0)
+            {
+                return currentArg;
+            }
+
+            // Determine the opening quote style and whether it's already closed.
+            string? closingSuffix;
+            if (trimmed.StartsWith("\\\"", StringComparison.Ordinal))
+            {
+                // Escaped double-quote: \"...\"
+                if (trimmed.Length > 4 && trimmed.EndsWith("\\\"", StringComparison.Ordinal))
+                {
+                    return currentArg;
+                }
+
+                closingSuffix = "\\\"";
+            }
+            else if (trimmed[0] == '"')
+            {
+                if (trimmed.Length > 1 && trimmed[trimmed.Length - 1] == '"')
+                {
+                    return currentArg;
+                }
+
+                closingSuffix = "\"";
+            }
+            else if (trimmed[0] == '\'')
+            {
+                if (trimmed.Length > 1 && trimmed[trimmed.Length - 1] == '\'')
+                {
+                    return currentArg;
+                }
+
+                closingSuffix = "'";
+            }
+            else
+            {
+                return currentArg;
+            }
+
+            // Merge subsequent args until the closing quote is found.
+            StringBuilder merged = new(currentArg);
+            while (i + 1 < args.Count)
+            {
+                string nextArg = args[i + 1];
+                i++;
+                merged.Append(' ').Append(nextArg);
+
+                if (nextArg.TrimEnd().EndsWith(closingSuffix, StringComparison.Ordinal))
+                {
+                    return merged.ToString();
+                }
+            }
+
+            // Closing quote was never found — return what we assembled.
+            // TryUnescape / arity validation will report appropriate errors downstream.
+            return merged.ToString();
+        }
+
         static bool TryUnescape(string input, string? option, IEnvironment environment, [NotNullWhen(true)] out string? unescapedArg, [NotNullWhen(false)] out string? error)
         {
             unescapedArg = input;
@@ -132,6 +201,15 @@ internal static class CommandLineParser
                 }
 
                 unescapedArg = input[1..^1];
+                return true;
+            }
+
+            // Handle escaped double-quotes: \"...\"
+            // Some process launchers (e.g. VS Code on Linux) emit escaped quotes that arrive
+            // as literal backslash-quote characters in the args array.
+            if (input.StartsWith("\\\"", StringComparison.Ordinal) && input.EndsWith("\\\"", StringComparison.Ordinal) && input.Length > 4)
+            {
+                unescapedArg = input[2..^2];
                 return true;
             }
 
