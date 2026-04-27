@@ -131,22 +131,6 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
             => CreateWrappedName(testArgumentsEntry.DisplayNameFragment ?? testArgumentsEntry.UidFragment, shouldWrapInParenthesis);
 
         static string CreateWrappedName(string name, bool shouldWrapInParenthesis)
-        {
-            StringBuilder displayNameBuilder = new();
-
-            if (shouldWrapInParenthesis)
-            {
-                displayNameBuilder.Append('(');
-            }
-
-            displayNameBuilder.Append(name);
-
-            if (shouldWrapInParenthesis)
-            {
-                displayNameBuilder.Append(')');
-            }
-
-            return displayNameBuilder.ToString();
-        }
+            => shouldWrapInParenthesis ? string.Concat("(", name, ")") : name;
     }
 }
