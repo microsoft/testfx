@@ -2,14 +2,11 @@
 description: >
   Deep code review focusing on correctness, performance, thread safety,
   security, and API compatibility. Runs automatically on all opened PRs
-  alongside the nitpick reviewer. Can also be invoked on-demand with /review.
+  and when new commits are pushed.
 
 on:
-  slash_command:
-    name: review
-    events: [pull_request_comment, pull_request_review_comment]
   pull_request:
-    types: [opened]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
@@ -23,6 +20,7 @@ tools:
     min-integrity: none
 
 safe-outputs:
+  noop: {}
   create-pull-request-review-comment:
     max: 5
     side: "RIGHT"
