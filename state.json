@@ -4,7 +4,7 @@
   "lakefile_format": "toml",
   "lean_dir": "formal-verification/lean",
   "lean_install_blocked": true,
-  "lean_install_blocked_reason": "Runner sandbox blocks execution of arbitrary binaries (elan-init from /tmp or /home/runner). Python urllib can download archives but executing extracted binaries is blocked. Task 3 deferred until runner allows binary execution.",
+  "lean_install_blocked_reason": "Runner sandbox blocks execution of arbitrary binaries (elan-init). Tried elan v3.1.0 x86_64: 'Permission denied'. Task 3 deferred until runner allows binary execution.",
   "lean_elan_sha256_verified": "4e717523217af592fa2d7b9c479410a31816c065d66ccbf0c2149337cfec0f5c (elan v4.2.1 x86_64-linux, re-verified 2026-04-27)",
   "targets": [
     {
@@ -28,9 +28,10 @@
       "id": 7,
       "name": "TreeNodeFilter.MatchFilterPattern",
       "file": "src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs",
-      "phase": 1,
+      "phase": 2,
       "priority": 3,
-      "notes": "Pure recursive Boolean filter evaluator. Models Boolean algebra (And, Or, Not, Nop). Correspondence documented in CORRESPONDENCE.md (Task 6): FilterExpression->inductive FilterExpr, Regex->String->Bool predicate, PropertyBag->String->String->Bool. 9 Boolean-algebra theorems planned."
+      "notes": "Informal spec extracted (this run, 2026-04-27). 12 Boolean algebra properties documented. 6 open questions. Key insight: NopExpression is always-true identity; evalFilter is pure recursive Boolean evaluator over FilterExpression ADT. Next: Task 3 (Lean 4 formal spec) \u2014 blocked by Lean toolchain.",
+      "spec_file": "formal-verification/specs/treenodefilter_matchfilterpattern_informal.md"
     },
     {
       "id": 6,
@@ -68,39 +69,62 @@
   "merged_prs": [
     {
       "number": 7799,
-      "title": "[Lean Squad] feat: formal verification infrastructure — research & CI automation",
+      "title": "[Lean Squad] feat: formal verification infrastructure \u2014 research & CI automation",
       "merged_at": "2026-04-24T13:47:29Z",
-      "tasks": ["Task 1: Research", "Task 2: Informal Spec (ArgumentArity)", "Task 9: CI Automation"]
+      "tasks": [
+        "Task 1: Research",
+        "Task 2: Informal Spec (ArgumentArity)",
+        "Task 9: CI Automation"
+      ]
     }
   ],
   "open_prs": [
     {
       "branch": "lean-squad/task2-tryunescape-2026-04-25",
       "number": 7833,
-      "title": "[Lean Squad] feat(fv): Task 2 — informal spec for CommandLineParser.TryUnescape",
-      "tasks": ["Task 2: Informal Spec (TryUnescape)"]
+      "title": "[Lean Squad] feat(fv): Task 2 \u2014 informal spec for CommandLineParser.TryUnescape",
+      "tasks": [
+        "Task 2: Informal Spec (TryUnescape)"
+      ]
     },
     {
       "branch": "lean-squad/task1-new-targets-2026-04-26-af98d23215b156cc",
-      "title": "[Lean Squad] feat(fv): Task 1 — expand FV targets (SplitCommandLine + TreeNodeFilter)",
-      "tasks": ["Task 1: Research (new targets)"]
+      "title": "[Lean Squad] feat(fv): Task 1 \u2014 expand FV targets (SplitCommandLine + TreeNodeFilter)",
+      "tasks": [
+        "Task 1: Research (new targets)"
+      ]
     },
     {
       "branch": "lean-squad/task6-correspondence-2026-04-26-a8bd16435dd5deb9",
       "number": 7860,
-      "title": "[Lean Squad] feat(fv): Task 6 — Lean-C# correspondence review for primary targets",
-      "tasks": ["Task 6: Correspondence Review"]
+      "title": "[Lean Squad] feat(fv): Task 6 \u2014 Lean-C# correspondence review for primary targets",
+      "tasks": [
+        "Task 6: Correspondence Review"
+      ]
     },
     {
       "branch": "lean-squad/task9-ci-improvements-2026-04-27-b90542277d8dc525",
       "number": 7859,
-      "title": "[Lean Squad] feat(ci): Task 9 — skip guard + FVSquad scaffold for lean-proofs workflow",
-      "tasks": ["Task 9: CI skip guard + FVSquad scaffold"]
+      "title": "[Lean Squad] feat(ci): Task 9 \u2014 skip guard + FVSquad scaffold for lean-proofs workflow",
+      "tasks": [
+        "Task 9: CI skip guard + FVSquad scaffold"
+      ]
     },
     {
       "branch": "lean-squad/task9-fv-docs-ci-2026-04-27",
-      "title": "[Lean Squad] feat(ci): Task 9 — FV docs validation workflow + updated REPORT.md",
-      "tasks": ["Task 9: FV docs validation CI", "Task 10: REPORT.md update"]
+      "title": "[Lean Squad] feat(ci): Task 9 \u2014 FV docs validation workflow + updated REPORT.md",
+      "tasks": [
+        "Task 9: FV docs validation CI",
+        "Task 10: REPORT.md update"
+      ]
+    },
+    {
+      "branch": "lean-squad/task2-treenodefilter-2026-04-27",
+      "title": "[Lean Squad] feat(fv): Task 2 \u2014 informal spec for TreeNodeFilter.MatchFilterPattern",
+      "tasks": [
+        "Task 2: Informal Spec (TreeNodeFilter.MatchFilterPattern)"
+      ],
+      "run": "25007678153"
     }
   ],
   "open_issues": [
@@ -110,7 +134,7 @@
       "purpose": "status dashboard"
     }
   ],
-  "next_priority": "Task 3: Write Lean 4 formal spec for ArgumentArity (phase 2 -> 3). Blocked by Lean toolchain. If Lean becomes available, start with ArgumentArity.lean using plan in lean_formal_spec_plan.",
+  "next_priority": "Task 3: Write Lean 4 formal spec for ArgumentArity (phase 2 -> 3). Blocked by Lean toolchain unavailability. If Lean becomes available, start with ArgumentArity.lean.",
   "approach": {
     "focus_area": "src/Platform/Microsoft.Testing.Platform/CommandLine/ and Requests/TreeNodeFilter/",
     "rationale": "Pure functions, clear algebraic properties, well-documented POSIX/CLI conventions. TreeNodeFilter added for Boolean algebra richness."
@@ -140,7 +164,13 @@
   "lean_formal_spec_plan": {
     "file": "formal-verification/lean/FVSquad/ArgumentArity.lean",
     "structure": "structure ArgumentArity where min : Int; max : Int",
-    "constants": ["zero", "zeroOrOne", "zeroOrMore", "exactlyOne", "oneOrMore"],
+    "constants": [
+      "zero",
+      "zeroOrOne",
+      "zeroOrMore",
+      "exactlyOne",
+      "oneOrMore"
+    ],
     "int32Max": "2147483647",
     "theorems": [
       "theorem zero_spec : ArgumentArity.zero = { min := 0, max := 0 }",
@@ -158,7 +188,11 @@
   "correspondence_notes": {
     "documented_in": "formal-verification/CORRESPONDENCE.md",
     "last_updated": "2026-04-26",
-    "targets_covered": ["ArgumentArity", "CommandLineParser.TryUnescape", "TreeNodeFilter.MatchFilterPattern"],
+    "targets_covered": [
+      "ArgumentArity",
+      "CommandLineParser.TryUnescape",
+      "TreeNodeFilter.MatchFilterPattern"
+    ],
     "key_decisions": {
       "ArgumentArity": "Int (not Int32); Int32.MaxValue=2147483647 concrete; DecidableEq for Equals; GetHashCode excluded",
       "TryUnescape": "IEnvironment->newLine:String; option dropped; Except String String; exception bugs excluded",
