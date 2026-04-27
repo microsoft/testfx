@@ -1,7 +1,11 @@
 name: Lean Proofs
 
 # 🔬 Lean Squad — CI workflow for formal verification proofs.
-# Runs `lake build` to verify Lean 4 proofs in formal-verification/lean/.
+# Runs `lake build` to verify Lean 4 proofs in formal-verification/lean/FVSquad/.
+#
+# Skip guard: if no .lean source files are present in FVSquad/, the build
+# steps are skipped and the job succeeds immediately. This avoids spurious
+# failures while the FVSquad library is still being bootstrapped.
 
 permissions:
   contents: read
@@ -27,11 +31,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check for Lean source files
+        id: check-lean
+        run: |
+          lean_count=$(find formal-verification/lean/FVSquad -name "*.lean" 2>/dev/null | wc -l)
+          echo "lean_file_count=${lean_count}" >> "$GITHUB_OUTPUT"
+          if [ "${lean_count}" -eq 0 ]; then
+            echo "No .lean source files found in FVSquad/ — lake build will be skipped."
+          else
+            echo "Found ${lean_count} .lean source file(s) — proceeding with lake build."
+          fi
+
       - name: Install elan (Lean version manager)
+        if: steps.check-lean.outputs.lean_file_count != '0'
         run: |
           ELAN_VERSION="v4.2.1"
-          ELAN_TARGET="x86_64-unknown-linux-gnu"
-          ELAN_ARCHIVE="elan-${ELAN_TARGET}.tar.gz"
+          ELAN_ARCHIVE="elan-x86_64-unknown-linux-gnu.tar.gz"
           ELAN_BASE_URL="https://github.com/leanprover/elan/releases/download/${ELAN_VERSION}"
           ELAN_TMP_DIR="$(mktemp -d)"
 
@@ -57,12 +72,15 @@ jobs:
           rm -rf "${ELAN_TMP_DIR}"
 
       - name: Add elan to PATH
+        if: steps.check-lean.outputs.lean_file_count != '0'
         run: echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
 
       - name: Show Lean version
+        if: steps.check-lean.outputs.lean_file_count != '0'
         run: lean --version
 
       - name: Cache Lean / Lake build artifacts
+        if: steps.check-lean.outputs.lean_file_count != '0'
         uses: actions/cache@v4
         with:
           path: |
@@ -73,5 +91,6 @@ jobs:
             lean-${{ runner.os }}-
 
       - name: Build Lean proofs
+        if: steps.check-lean.outputs.lean_file_count != '0'
         working-directory: formal-verification/lean
         run: lake build
