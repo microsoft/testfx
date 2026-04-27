@@ -217,14 +217,17 @@ Then submit an overall review using `submit-pull-request-review` with:
 After the review, update:
 
 **`/tmp/gh-aw/cache-memory/test-patterns.json`:**
+
 - Record testing patterns observed in this repo (assertion style, setup patterns, mock usage)
 - Note which test projects use which frameworks
 
 **`/tmp/gh-aw/cache-memory/flaky-tests.json`:**
+
 - Log flakiness patterns found with file, test name, and pattern type
 - Track whether flagged patterns were fixed in subsequent PRs
 
 **`/tmp/gh-aw/cache-memory/test-conventions.json`:**
+
 - Record naming conventions, directory structure, shared test utilities
 
 ## Decision Framework
