@@ -47,6 +47,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall(string.Concat("Assert.", assertionName));
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
                 ReportAssertCountFailed(assertionName, _expectedCount, _actualCount, _builder.ToString());
             }
@@ -115,6 +116,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
                 ReportAssertIsNotEmptyFailed(_builder.ToString());
             }
@@ -197,6 +199,8 @@ public sealed partial class Assert
     /// </param>
     public static void IsNotEmpty<T>(IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
+
         if (collection.Any())
         {
             return;
@@ -217,6 +221,8 @@ public sealed partial class Assert
     /// </param>
     public static void IsNotEmpty(IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
+
         if (collection.Cast<object>().Any())
         {
             return;
@@ -320,6 +326,8 @@ public sealed partial class Assert
 
     private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, string? message, string collectionExpression)
     {
+        TelemetryCollector.TrackAssertionCall(string.Concat("Assert.", assertionName));
+
         int actualCount = collection.Count();
         if (actualCount == expected)
         {

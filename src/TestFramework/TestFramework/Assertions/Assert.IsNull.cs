@@ -36,6 +36,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.IsNull");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ReportAssertIsNullFailed(_builder.ToString());
             }
@@ -90,6 +91,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.IsNotNull");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ReportAssertIsNotNullFailed(_builder.ToString());
             }
@@ -150,6 +152,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNull(object? value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNull");
+
         if (IsNullFailing(value))
         {
             ReportAssertIsNullFailed(BuildUserMessageForValueExpression(message, valueExpression));
@@ -189,6 +193,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNotNull([NotNull] object? value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotNull");
+
         if (IsNotNullFailing(value))
         {
             ReportAssertIsNotNullFailed(BuildUserMessageForValueExpression(message, valueExpression));

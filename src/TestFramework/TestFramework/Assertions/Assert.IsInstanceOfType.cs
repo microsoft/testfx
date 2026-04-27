@@ -38,6 +38,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.IsInstanceOfType");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ReportAssertIsInstanceOfTypeFailed(_value, _expectedType, _builder.ToString());
             }
@@ -98,6 +99,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.IsInstanceOfType");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ReportAssertIsInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
             }
@@ -160,6 +162,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.IsNotInstanceOfType");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ReportAssertIsNotInstanceOfTypeFailed(_value, _wrongType, _builder.ToString());
             }
@@ -220,6 +223,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.IsNotInstanceOfType");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ReportAssertIsNotInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
             }
@@ -290,6 +294,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsInstanceOfType");
+
         if (IsInstanceOfTypeFailing(value, expectedType))
         {
             ReportAssertIsInstanceOfTypeFailed(value, expectedType, BuildUserMessageForValueExpression(message, valueExpression));
@@ -372,6 +378,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotInstanceOfType");
+
         if (IsNotInstanceOfTypeFailing(value, wrongType))
         {
             ReportAssertIsNotInstanceOfTypeFailed(value, wrongType, BuildUserMessageForValueExpression(message, valueExpression));

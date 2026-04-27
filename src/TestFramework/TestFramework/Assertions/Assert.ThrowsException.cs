@@ -321,6 +321,8 @@ public sealed partial class Assert
     private static TException ThrowsException<TException>(Action action, bool isStrictType, string? message, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
+        TelemetryCollector.TrackAssertionCall(string.Concat("Assert.", assertMethodName));
+
         _ = action ?? throw new ArgumentNullException(nameof(action));
         _ = message ?? throw new ArgumentNullException(nameof(message));
 
@@ -341,6 +343,8 @@ public sealed partial class Assert
     private static TException ThrowsException<TException>(Action action, bool isStrictType, Func<Exception?, string> messageBuilder, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
+        TelemetryCollector.TrackAssertionCall(string.Concat("Assert.", assertMethodName));
+
         _ = action ?? throw new ArgumentNullException(nameof(action));
         _ = messageBuilder ?? throw new ArgumentNullException(nameof(messageBuilder));
 
@@ -477,6 +481,8 @@ public sealed partial class Assert
     private static async Task<TException> ThrowsExceptionAsync<TException>(Func<Task> action, bool isStrictType, string? message, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
+        TelemetryCollector.TrackAssertionCall(string.Concat("Assert.", assertMethodName));
+
         _ = action ?? throw new ArgumentNullException(nameof(action));
         _ = message ?? throw new ArgumentNullException(nameof(message));
 
@@ -497,6 +503,8 @@ public sealed partial class Assert
     private static async Task<TException> ThrowsExceptionAsync<TException>(Func<Task> action, bool isStrictType, Func<Exception?, string> messageBuilder, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
+        TelemetryCollector.TrackAssertionCall(string.Concat("Assert.", assertMethodName));
+
         _ = action ?? throw new ArgumentNullException(nameof(action));
         _ = messageBuilder ?? throw new ArgumentNullException(nameof(messageBuilder));
 

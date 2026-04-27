@@ -20,6 +20,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal sealed class MSTestExecutor : ITestExecutor
 {
     private readonly CancellationToken _cancellationToken;
+#if !WINDOWS_UWP && !WIN_UI
+    private readonly Func<string, IDictionary<string, object>, Task>? _telemetrySender;
+#endif
 
     /// <summary>
     /// Token for canceling the test run.
@@ -35,10 +38,15 @@ internal sealed class MSTestExecutor : ITestExecutor
         _cancellationToken = CancellationToken.None;
     }
 
-    internal MSTestExecutor(CancellationToken cancellationToken)
+    internal MSTestExecutor(CancellationToken cancellationToken, Func<string, IDictionary<string, object>, Task>? telemetrySender = null)
     {
         TestExecutionManager = new TestExecutionManager();
         _cancellationToken = cancellationToken;
+#if !WINDOWS_UWP && !WIN_UI
+        _telemetrySender = telemetrySender;
+#else
+        _ = telemetrySender;
+#endif
     }
 
     /// <summary>
@@ -115,12 +123,27 @@ internal sealed class MSTestExecutor : ITestExecutor
 
         Ensure.NotEmpty(tests);
 
+        // Initialize telemetry collection if not already set
+#if !WINDOWS_UWP && !WIN_UI
+        if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
+        {
+            _ = MSTestTelemetryDataCollector.EnsureInitialized();
+        }
+#endif
+
         if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
         {
             return;
         }
 
-        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(tests, runContext, frameworkHandle, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+        try
+        {
+            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(tests, runContext, frameworkHandle, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+        }
+        finally
+        {
+            await SendTelemetryAsync().ConfigureAwait(false);
+        }
     }
 
     internal async Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration, bool isMTP)
@@ -143,6 +166,14 @@ internal sealed class MSTestExecutor : ITestExecutor
 
         Ensure.NotEmpty(sources);
 
+        // Initialize telemetry collection if not already set
+#if !WINDOWS_UWP && !WIN_UI
+        if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
+        {
+            _ = MSTestTelemetryDataCollector.EnsureInitialized();
+        }
+#endif
+
         TestSourceHandler testSourceHandler = new();
         if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))
         {
@@ -150,7 +181,14 @@ internal sealed class MSTestExecutor : ITestExecutor
         }
 
         sources = testSourceHandler.GetTestSources(sources);
-        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testSourceHandler, isMTP, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+        try
+        {
+            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testSourceHandler, isMTP, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+        }
+        finally
+        {
+            await SendTelemetryAsync().ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -158,6 +196,14 @@ internal sealed class MSTestExecutor : ITestExecutor
     /// </summary>
     public void Cancel()
         => _testRunCancellationToken?.Cancel();
+
+#if !WINDOWS_UWP && !WIN_UI
+    private Task SendTelemetryAsync()
+        => MSTestTelemetryDataCollector.SendTelemetryAndResetAsync(_telemetrySender);
+#else
+    private static Task SendTelemetryAsync()
+        => Task.CompletedTask;
+#endif
 
     private async Task RunTestsFromRightContextAsync(IFrameworkHandle frameworkHandle, Func<TestRunCancellationToken, Task> runTestsAction)
     {

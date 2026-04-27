@@ -288,6 +288,18 @@ internal sealed class MSTestSettings
 
         CurrentSettings = settings;
         RunConfigurationSettings = runConfigurationSettings;
+
+        // Track configuration source for telemetry
+#if !WINDOWS_UWP && !WIN_UI
+        if (MSTestTelemetryDataCollector.Current is { } telemetry)
+        {
+            telemetry.ConfigurationSource = configuration?["mstest"] is not null
+                ? "testconfig.json"
+                : !StringEx.IsNullOrEmpty(context?.RunSettings?.SettingsXml)
+                    ? "runsettings"
+                    : "none";
+        }
+#endif
     }
 
     /// <summary>

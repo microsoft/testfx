@@ -44,6 +44,8 @@ public sealed partial class Assert
     public static void IsGreaterThan<T>(T lowerBound, T value, string? message = "", [CallerArgumentExpression(nameof(lowerBound))] string lowerBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : IComparable<T>
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsGreaterThan");
+
         if (value.CompareTo(lowerBound) > 0)
         {
             return;
@@ -89,6 +91,8 @@ public sealed partial class Assert
     public static void IsGreaterThanOrEqualTo<T>(T lowerBound, T value, string? message = "", [CallerArgumentExpression(nameof(lowerBound))] string lowerBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : IComparable<T>
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsGreaterThanOrEqualTo");
+
         if (value.CompareTo(lowerBound) >= 0)
         {
             return;
@@ -134,6 +138,8 @@ public sealed partial class Assert
     public static void IsLessThan<T>(T upperBound, T value, string? message = "", [CallerArgumentExpression(nameof(upperBound))] string upperBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : IComparable<T>
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsLessThan");
+
         if (value.CompareTo(upperBound) < 0)
         {
             return;
@@ -179,6 +185,8 @@ public sealed partial class Assert
     public static void IsLessThanOrEqualTo<T>(T upperBound, T value, string? message = "", [CallerArgumentExpression(nameof(upperBound))] string upperBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : IComparable<T>
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsLessThanOrEqualTo");
+
         if (value.CompareTo(upperBound) <= 0)
         {
             return;
@@ -216,6 +224,8 @@ public sealed partial class Assert
     public static void IsPositive<T>(T value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsPositive");
+
         var zero = default(T);
 
         // Handle special case for floating point NaN values
@@ -270,6 +280,8 @@ public sealed partial class Assert
     public static void IsNegative<T>(T value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNegative");
+
         var zero = default(T);
 
         // Handle special case for floating point NaN values

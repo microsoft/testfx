@@ -20,14 +20,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal sealed class MSTestDiscoverer : ITestDiscoverer
 {
     private readonly ITestSourceHandler _testSourceHandler;
+#if !WINDOWS_UWP && !WIN_UI
+    private readonly Func<string, IDictionary<string, object>, Task>? _telemetrySender;
+#endif
 
     public MSTestDiscoverer()
         : this(new TestSourceHandler())
     {
     }
 
-    internal /* for testing purposes */ MSTestDiscoverer(ITestSourceHandler testSourceHandler)
-        => _testSourceHandler = testSourceHandler;
+    internal MSTestDiscoverer(ITestSourceHandler testSourceHandler, Func<string, IDictionary<string, object>, Task>? telemetrySender = null)
+    {
+        _testSourceHandler = testSourceHandler;
+#if !WINDOWS_UWP && !WIN_UI
+        _telemetrySender = telemetrySender;
+#else
+        _ = telemetrySender;
+#endif
+    }
 
     /// <summary>
     /// Discovers the tests available from the provided source. Not supported for .xap source.
@@ -58,9 +68,26 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
             throw new ArgumentNullException(nameof(discoverySink));
         }
 
-        if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext, logger, configuration, _testSourceHandler))
+        // Initialize telemetry collection if not already set (e.g. first call in the session)
+#if !WINDOWS_UWP && !WIN_UI
+        if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
         {
-            new UnitTestDiscoverer(_testSourceHandler).DiscoverTests(sources, logger, discoverySink, discoveryContext, isMTP);
+            _ = MSTestTelemetryDataCollector.EnsureInitialized();
+        }
+#endif
+
+        try
+        {
+            if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext, logger, configuration, _testSourceHandler))
+            {
+                new UnitTestDiscoverer(_testSourceHandler).DiscoverTests(sources, logger, discoverySink, discoveryContext, isMTP);
+            }
+        }
+        finally
+        {
+#if !WINDOWS_UWP && !WIN_UI
+            MSTestTelemetryDataCollector.SendTelemetryAndResetAsync(_telemetrySender).GetAwaiter().GetResult();
+#endif
         }
     }
 }

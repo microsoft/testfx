@@ -26,6 +26,8 @@ public static partial class AssertExtensions
         /// <exception cref="AssertFailedException">Thrown if the evaluated condition is <see langword="false"/>.</exception>
         public static void That(Expression<Func<bool>> condition, string? message = null, [CallerArgumentExpression(nameof(condition))] string? conditionExpression = null)
         {
+            TelemetryCollector.TrackAssertionCall("Assert.That");
+
             if (condition == null)
             {
                 throw new ArgumentNullException(nameof(condition));

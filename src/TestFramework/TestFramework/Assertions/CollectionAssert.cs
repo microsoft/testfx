@@ -69,6 +69,8 @@ public sealed class CollectionAssert
     /// </exception>
     public static void Contains([NotNull] ICollection? collection, object? element, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.Contains");
+
         Assert.CheckParameterNotNull(collection, "CollectionAssert.Contains", "collection");
 
         foreach (object? current in collection)
@@ -120,6 +122,8 @@ public sealed class CollectionAssert
     /// </exception>
     public static void DoesNotContain([NotNull] ICollection? collection, object? element, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.DoesNotContain");
+
         Assert.CheckParameterNotNull(collection, "CollectionAssert.DoesNotContain", "collection");
 
         foreach (object? current in collection)
@@ -160,6 +164,8 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AllItemsAreNotNull([NotNull] ICollection? collection, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AllItemsAreNotNull");
+
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreNotNull", "collection");
         foreach (object? current in collection)
         {
@@ -202,6 +208,8 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AllItemsAreUnique([NotNull] ICollection? collection, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AllItemsAreUnique");
+
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreUnique", "collection");
 
         message = Assert.ReplaceNulls(message);
@@ -292,6 +300,8 @@ public sealed class CollectionAssert
     /// </exception>
     public static void IsSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.IsSubsetOf");
+
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsSubsetOf", "subset");
         Assert.CheckParameterNotNull(superset, "CollectionAssert.IsSubsetOf", "superset");
         Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
@@ -352,6 +362,8 @@ public sealed class CollectionAssert
     /// </exception>
     public static void IsNotSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.IsNotSubsetOf");
+
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsNotSubsetOf", "subset");
         Assert.CheckParameterNotNull(superset, "CollectionAssert.IsNotSubsetOf", "superset");
         Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
@@ -471,6 +483,8 @@ public sealed class CollectionAssert
         [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AreEquivalent");
+
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer");
 
         // Check whether one is null while the other is not.
@@ -637,6 +651,8 @@ public sealed class CollectionAssert
         [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? notExpected, [NotNullIfNotNull(nameof(notExpected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AreNotEquivalent");
+
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer");
 
         // Check whether one is null while the other is not.
@@ -740,6 +756,8 @@ public sealed class CollectionAssert
     public static void AllItemsAreInstancesOfType(
         [NotNull] ICollection? collection, [NotNull] Type? expectedType, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AllItemsAreInstancesOfType");
+
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreInstancesOfType", "collection");
         Assert.CheckParameterNotNull(expectedType, "CollectionAssert.AllItemsAreInstancesOfType", "expectedType");
         int i = 0;
@@ -813,6 +831,8 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreEqual(ICollection? expected, ICollection? actual, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AreEqual");
+
         string reason = string.Empty;
         if (!AreCollectionsEqual(expected, actual, new ObjectComparer(), ref reason))
         {
@@ -867,6 +887,8 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreNotEqual(ICollection? notExpected, ICollection? actual, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AreNotEqual");
+
         string reason = string.Empty;
         if (AreCollectionsEqual(notExpected, actual, new ObjectComparer(), ref reason))
         {
@@ -925,6 +947,8 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AreEqual");
+
         string reason = string.Empty;
         if (!AreCollectionsEqual(expected, actual, comparer, ref reason))
         {
@@ -983,6 +1007,8 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [NotNull] IComparer? comparer, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AreNotEqual");
+
         string reason = string.Empty;
         if (AreCollectionsEqual(notExpected, actual, comparer, ref reason))
         {

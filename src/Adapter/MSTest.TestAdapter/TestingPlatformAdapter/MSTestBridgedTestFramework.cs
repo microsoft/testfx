@@ -9,8 +9,10 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -41,7 +43,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
             Debugger.Launch();
         }
 
-        new MSTestDiscoverer().DiscoverTests(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink, _configuration, isMTP: true);
+        new MSTestDiscoverer(new TestSourceHandler(), CreateTelemetrySender()).DiscoverTests(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink, _configuration, isMTP: true);
         return Task.CompletedTask;
     }
 
@@ -55,7 +57,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
             Debugger.Launch();
         }
 
-        MSTestExecutor testExecutor = new(cancellationToken);
+        MSTestExecutor testExecutor = new(cancellationToken, CreateTelemetrySender());
         await testExecutor.RunTestsAsync(request.AssemblyPaths, request.RunContext, request.FrameworkHandle, _configuration, isMTP: true).ConfigureAwait(false);
     }
 
@@ -102,6 +104,20 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
         // TODO: For AssemblyFullName, can we use Assembly.GetEntryAssembly().FullName?
         // Or alternatively, does VSTest object model expose the assembly full name somewhere?
         return new TestMethodIdentifierProperty(assemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypes, returnTypeFullName: string.Empty);
+    }
+
+    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
+    private Func<string, IDictionary<string, object>, Task>? CreateTelemetrySender()
+    {
+        ITelemetryInformation telemetryInformation = ServiceProvider.GetTelemetryInformation();
+        if (!telemetryInformation.IsEnabled)
+        {
+            return null;
+        }
+
+        ITelemetryCollector telemetryCollector = ServiceProvider.GetTelemetryCollector();
+
+        return (eventName, metrics) => telemetryCollector.LogEventAsync(eventName, metrics, CancellationToken.None);
     }
 }
 #endif

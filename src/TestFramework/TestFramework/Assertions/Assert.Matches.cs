@@ -39,6 +39,8 @@ public sealed partial class Assert
     /// </exception>
     public static void MatchesRegex([NotNull] Regex? pattern, [NotNull] string? value, string? message = "", [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.MatchesRegex");
+
         CheckParameterNotNull(value, "Assert.MatchesRegex", "value");
         CheckParameterNotNull(pattern, "Assert.MatchesRegex", "pattern");
 
@@ -115,6 +117,8 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotMatchRegex([NotNull] Regex? pattern, [NotNull] string? value, string? message = "", [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotMatchRegex");
+
         CheckParameterNotNull(value, "Assert.DoesNotMatchRegex", "value");
         CheckParameterNotNull(pattern, "Assert.DoesNotMatchRegex", "pattern");
 

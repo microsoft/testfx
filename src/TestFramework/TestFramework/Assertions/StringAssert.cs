@@ -116,6 +116,8 @@ public sealed class StringAssert
     /// </exception>
     public static void Contains([NotNull] string? value, [NotNull] string? substring, StringComparison comparisonType, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("StringAssert.Contains");
+
         Assert.CheckParameterNotNull(value, "StringAssert.Contains", "value");
         Assert.CheckParameterNotNull(substring, "StringAssert.Contains", "substring");
         if (value.IndexOf(substring, comparisonType) < 0)
@@ -213,6 +215,8 @@ public sealed class StringAssert
     /// </exception>
     public static void StartsWith([NotNull] string? value, [NotNull] string? substring, StringComparison comparisonType, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("StringAssert.StartsWith");
+
         Assert.CheckParameterNotNull(value, "StringAssert.StartsWith", "value");
         Assert.CheckParameterNotNull(substring, "StringAssert.StartsWith", "substring");
         if (!value.StartsWith(substring, comparisonType))
@@ -310,6 +314,8 @@ public sealed class StringAssert
     /// </exception>
     public static void EndsWith([NotNull] string? value, [NotNull] string? substring, StringComparison comparisonType, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("StringAssert.EndsWith");
+
         Assert.CheckParameterNotNull(value, "StringAssert.EndsWith", "value");
         Assert.CheckParameterNotNull(substring, "StringAssert.EndsWith", "substring");
         if (!value.EndsWith(substring, comparisonType))
@@ -364,6 +370,8 @@ public sealed class StringAssert
     /// </exception>
     public static void Matches([NotNull] string? value, [NotNull] Regex? pattern, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("StringAssert.Matches");
+
         Assert.CheckParameterNotNull(value, "StringAssert.Matches", "value");
         Assert.CheckParameterNotNull(pattern, "StringAssert.Matches", "pattern");
 
@@ -415,6 +423,8 @@ public sealed class StringAssert
     /// </exception>
     public static void DoesNotMatch([NotNull] string? value, [NotNull] Regex? pattern, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("StringAssert.DoesNotMatch");
+
         Assert.CheckParameterNotNull(value, "StringAssert.DoesNotMatch", "value");
         Assert.CheckParameterNotNull(pattern, "StringAssert.DoesNotMatch", "pattern");
 
