@@ -36,7 +36,7 @@
 
 ## Notes
 
-- Six of the seven targets are in the command-line and filter infrastructure of Microsoft.Testing.Platform.
+- Six of the seven targets are in the command-line infrastructure of Microsoft.Testing.Platform; one target is in the tree-node filter subsystem.
 - `TreeNodeFilter.MatchFilterPattern` (Target 7) is the highest-complexity target but also the most mathematically rich: proofs of Boolean-algebra laws give immediate, meaningful results.
 - `ResponseFileHelper.SplitCommandLine` (Target 6) is derived from `dotnet/command-line-api` — the upstream source is noted in comments; cross-referencing it may reveal documented invariants.
 - MSTest assertion APIs (e.g., `Assert.AreEqual`, `Assert.IsTrue`) remain interesting but harder to model formally due to generic type constraints and exception-based control flow.
