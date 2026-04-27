@@ -8,8 +8,6 @@ on:
   slash_command:
     name: nit
     events: [pull_request_comment, pull_request_review_comment]
-  pull_request:
-    types: [opened]
 
 permissions:
   contents: read
