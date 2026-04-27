@@ -21,18 +21,23 @@
 | 3 | `CommandLineParser.ParseOptionAndSeparators` | `src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs` | 1 | Identified | — |
 | 4 | `CommandLineOptionsValidator` arity validation | `src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs` | 1 | Identified | — |
 | 5 | `CommandLineParseResult.Equals` | `src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs` | 1 | Identified | — |
+| 6 | `ResponseFileHelper.SplitCommandLine` | `src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs` | 1 | Identified | — |
+| 7 | `TreeNodeFilter.MatchFilterPattern` | `src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs` | 1 | Identified | — |
 
 ## Priority Order
 
-1. **`ArgumentArity`** — highest priority. Smallest self-contained target; decidable properties; good warm-up for setting up the Lean environment.
-2. **`CommandLineParser.TryUnescape`** — second priority. Pure function with clear specification; security-relevant string processing.
-3. **`CommandLineParser.ParseOptionAndSeparators`** — third priority. Small pure function; useful for verifying parser correctness.
-4. **`CommandLineOptionsValidator` arity validation** — fourth priority. Validation logic with clear input/output contract.
-5. **`CommandLineParseResult.Equals`** — fifth priority. Structural equality; good for verifying equivalence-relation laws.
+1. **`ArgumentArity`** — highest priority. Smallest self-contained target; decidable properties; good warm-up for setting up the Lean environment. Informal spec done.
+2. **`CommandLineParser.TryUnescape`** — second priority. Pure function with clear specification; security-relevant string processing. Informal spec extracted (PR open).
+3. **`TreeNodeFilter.MatchFilterPattern`** — **elevated third priority**. Pure recursive Boolean algebra; structural induction proofs; De Morgan and double negation provable by `simp`. Excellent Lean target.
+4. **`ResponseFileHelper.SplitCommandLine`** — fourth priority. Pure tokeniser with state machine; clear grammar-based properties.
+5. **`CommandLineParser.ParseOptionAndSeparators`** — fifth priority. Small pure function; useful for verifying parser correctness.
+6. **`CommandLineOptionsValidator` arity validation** — sixth priority. Validation logic with clear input/output contract.
+7. **`CommandLineParseResult.Equals`** — seventh priority. Structural equality; good for verifying equivalence-relation laws.
 
 ## Notes
 
-- All five targets are in the command-line infrastructure (`src/Platform/Microsoft.Testing.Platform/CommandLine/`).
-- This focus makes sense: command-line parsing is pure and testable, with clear specification from the POSIX/CLI conventions.
-- MSTest assertion APIs (e.g., `Assert.AreEqual`, `Assert.IsTrue`) are interesting but harder to model formally due to generic type constraints and exception-based control flow.
-- Future targets may include the test-filter grammar and the server-mode protocol state machine.
+- Six of the seven targets are in the command-line infrastructure of Microsoft.Testing.Platform; one target is in the tree-node filter subsystem.
+- `TreeNodeFilter.MatchFilterPattern` (Target 7) is the highest-complexity target but also the most mathematically rich: proofs of Boolean-algebra laws give immediate, meaningful results.
+- `ResponseFileHelper.SplitCommandLine` (Target 6) is derived from `dotnet/command-line-api` — the upstream source is noted in comments; cross-referencing it may reveal documented invariants.
+- MSTest assertion APIs (e.g., `Assert.AreEqual`, `Assert.IsTrue`) remain interesting but harder to model formally due to generic type constraints and exception-based control flow.
+- Future targets may include the server-mode protocol state machine and the test-filter tokeniser (`TreeNodeFilter.TokenizeFilter`).
