@@ -45,7 +45,7 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
 
     private Dictionary<string, string> GetDefaultReplacements()
     {
-        var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var replacements = new Dictionary<string, string>(StringComparer.Ordinal);
 
         // Assembly info
         string? assemblyName = _testApplicationModuleInfo.TryGetAssemblyName();
@@ -69,8 +69,8 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
             replacements["tfm"] = tfm;
         }
 
-        // Time info (precision to 1 second)
-        replacements["time"] = _clock.UtcNow.ToString("yyyy-MM-ddTHH-mm-ss", CultureInfo.InvariantCulture);
+        // Time info (sub-second precision)
+        replacements["time"] = _clock.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss.fffffff", CultureInfo.InvariantCulture);
 
         // Random ID for uniqueness
         replacements["id"] = GenerateShortId();
@@ -85,7 +85,7 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
             return defaultReplacements;
         }
 
-        var merged = new Dictionary<string, string>(defaultReplacements, StringComparer.OrdinalIgnoreCase);
+        var merged = new Dictionary<string, string>(defaultReplacements, StringComparer.Ordinal);
         foreach (KeyValuePair<string, string> kvp in customReplacements)
         {
             merged[kvp.Key] = kvp.Value;

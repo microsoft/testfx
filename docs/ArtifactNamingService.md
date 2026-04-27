@@ -22,7 +22,7 @@ Resolves to: `MyTests_12345_a1b2c3d4_hang.dmp`
 | `<os>` | Operating system | `windows`, `linux`, `macos` |
 | `<asm>` | Assembly name | `MyTests` |
 | `<tfm>` | Target framework moniker | `net9.0`, `net8.0` |
-| `<time>` | Timestamp (1-second precision) | `2025-09-22T13-49-34` |
+| `<time>` | Timestamp (sub-second precision) | `2025-09-22_13-49-34.0000000` |
 
 ## Backward Compatibility
 

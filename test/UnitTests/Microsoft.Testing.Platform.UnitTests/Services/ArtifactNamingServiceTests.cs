@@ -53,7 +53,7 @@ public sealed class ArtifactNamingServiceTests
 
         string result = service.ResolveTemplate(template);
 
-        Assert.Contains("2025-09-22T13-49-34", result);
+        Assert.Contains("2025-09-22_13-49-34.0000000", result);
 
         string expectedOs = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows"
             : RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "linux"
@@ -117,23 +117,36 @@ public sealed class ArtifactNamingServiceTests
         Assert.DoesNotContain("<time>", result);
         Assert.StartsWith("TestAssembly/", result);
         Assert.Contains("test-process_12345_", result);
-        Assert.EndsWith("2025-09-22T13-49-34.dmp", result);
+        Assert.EndsWith("2025-09-22_13-49-34.0000000.dmp", result);
     }
 
     [TestMethod]
-    public void ResolveTemplate_CaseInsensitiveReplacements_WorksCorrectly()
+    public void ResolveTemplate_CaseSensitivePlaceholders_UpperCaseNotReplaced()
     {
         var service = new ArtifactNamingService(_testApplicationModuleInfo.Object, _environment.Object, _clock.Object, _processHandler.Object);
         string template = "<PName>_<PID>";
+
+        string result = service.ResolveTemplate(template);
+
+        // Placeholders are case-sensitive, so <PName> and <PID> are not replaced
+        Assert.AreEqual("<PName>_<PID>", result);
+    }
+
+    [TestMethod]
+    public void ResolveTemplate_CaseSensitiveCustomReplacements_ExactMatchRequired()
+    {
+        var service = new ArtifactNamingService(_testApplicationModuleInfo.Object, _environment.Object, _clock.Object, _processHandler.Object);
+        string template = "<pname>_<pid>";
         var customReplacements = new Dictionary<string, string>
         {
-            ["PNAME"] = "CUSTOM",
-            ["pid"] = "777",
+            ["PNAME"] = "IGNORED",
+            ["pname"] = "custom-process",
         };
 
         string result = service.ResolveTemplate(template, customReplacements);
 
-        Assert.AreEqual("CUSTOM_777", result);
+        // Only exact-case match for "pname" is used; "PNAME" is ignored
+        Assert.StartsWith("custom-process_", result);
     }
 
     [TestMethod]
