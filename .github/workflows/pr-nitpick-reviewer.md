@@ -21,6 +21,8 @@ tools:
     min-integrity: none
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   create-pull-request-review-comment:
     max: 10
     side: "RIGHT"

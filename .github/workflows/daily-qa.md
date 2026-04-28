@@ -23,6 +23,8 @@ imports:
   - shared/repo-build-setup.md
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   mentions: false
   allowed-github-references: []
   create-discussion:

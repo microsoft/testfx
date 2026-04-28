@@ -18,6 +18,8 @@ tools:
   bash: [git, grep, sort, uniq, cat, tr, head, date, file]
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   create-code-scanning-alert:
     driver: "Malicious Code Scanner"
   threat-detection: false
