@@ -11,6 +11,8 @@ namespace Microsoft.Testing.Framework;
 internal sealed class BFSTestNodeVisitor
 {
     private static readonly string PathSeparatorString = TreeNodeFilter.PathSeparator.ToString();
+
+    // Read-only; must never be mutated. Shared across all BFS traversals where ContainsPropertyFilters is false.
     private static readonly PropertyBag EmptyPropertyBag = new();
 
     private readonly IEnumerable<TestNode> _rootTestNodes;
