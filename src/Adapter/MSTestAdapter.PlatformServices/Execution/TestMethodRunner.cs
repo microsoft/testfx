@@ -178,14 +178,15 @@ internal sealed class TestMethodRunner
 
     private async Task<bool> TryExecuteDataSourceBasedTestsAsync(List<TestResult> results)
     {
-        DataSourceAttribute[] dataSourceAttribute = _testMethodInfo.GetAttributes<DataSourceAttribute>();
-        if (dataSourceAttribute is { Length: 1 })
+        // PERF: Use IsAttributeDefined instead of GetAttributes<T>() to avoid allocating
+        // a yield iterator state machine + array on every test execution for the common case.
+        if (!ReflectHelper.Instance.IsAttributeDefined<DataSourceAttribute>(_testMethodInfo.MethodInfo))
         {
-            await ExecuteTestFromDataSourceAttributeAsync(results).ConfigureAwait(false);
-            return true;
+            return false;
         }
 
-        return false;
+        await ExecuteTestFromDataSourceAttributeAsync(results).ConfigureAwait(false);
+        return true;
     }
 
     private async Task<bool> TryExecuteFoldedDataDrivenTestsAsync(List<TestResult> results)
