@@ -48,7 +48,7 @@ public sealed class ServerTests
         ITestApplicationCancellationTokenSource stopService = testApplication.ServiceProvider.GetTestApplicationCancellationTokenSource();
 
         stopService.Cancel();
-        Assert.AreEqual((int)ExitCodes.TestSessionAborted, await serverTask);
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, await serverTask);
     }
 
     [TestMethod]

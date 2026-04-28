@@ -73,12 +73,12 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
         if (AreMatchingTrxFiles(baseLineResults, comparedResults, outputBuilder))
         {
             await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData(outputBuilder.ToString()), cancellationToken).ConfigureAwait(false);
-            return (int)ExitCodes.Success;
+            return (int)ExitCode.Success;
         }
         else
         {
             await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData(outputBuilder.ToString()), cancellationToken).ConfigureAwait(false);
-            return (int)ExitCodes.GenericFailure;
+            return (int)ExitCode.GenericFailure;
         }
     }
 

@@ -21,7 +21,7 @@ public class AssemblyResolverTests : AcceptanceTestBase<AssemblyResolverTests.Te
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()

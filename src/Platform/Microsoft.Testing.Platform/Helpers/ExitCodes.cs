@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Platform.Helpers;
 /// On POSIX systems the standard exit code is 0 for success and any number from 1 to 255 for anything else.
 /// </summary>
 [Embedded]
-internal enum ExitCodes
+internal enum ExitCode
 {
     Success = 0,
     GenericFailure = 1,

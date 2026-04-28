@@ -226,7 +226,7 @@ namespace MSTestSdkTest
             testHostResult.AssertOutputContainsSummary(0, 1, 0);
 
             testHostResult = await testHost.ExecuteAsync(command: invalidCommandLineArg, cancellationToken: TestContext.CancellationToken);
-            Assert.AreEqual((int)ExitCodes.InvalidCommandLine, testHostResult.ExitCode);
+            testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
         }
     }
 
@@ -283,7 +283,7 @@ namespace MSTestSdkTest
             }
             else
             {
-                Assert.AreEqual((int)ExitCodes.InvalidCommandLine, testHostResult.ExitCode);
+                testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
             }
         }
     }
@@ -329,7 +329,7 @@ namespace MSTestSdkTest
         var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, verb: Verb.publish);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(0, 1, 0);
     }
 

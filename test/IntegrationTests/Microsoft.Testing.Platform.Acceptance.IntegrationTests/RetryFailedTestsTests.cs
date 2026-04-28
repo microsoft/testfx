@@ -40,7 +40,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 
         if (!failOnly)
         {
-            testHostResult.AssertExitCodeIs(ExitCodes.Success);
+            testHostResult.AssertExitCodeIs(ExitCode.Success);
             testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
             testHostResult.AssertOutputContains("Failed! -");
             testHostResult.AssertOutputContains("Passed! -");
@@ -56,7 +56,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         }
         else
         {
-            testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+            testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
             testHostResult.AssertOutputContains("Tests suite failed in all 4 attempts");
             testHostResult.AssertOutputContains("Tests suite failed, total failed tests: 1, exit code: 2, attempt: 1/4");
             testHostResult.AssertOutputContains("Tests suite failed, total failed tests: 1, exit code: 2, attempt: 2/4");
@@ -96,14 +96,14 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 
         if (fail)
         {
-            testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+            testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
             testHostResult.AssertOutputContains("Failure threshold policy is enabled, failed tests will not be restarted.");
             testHostResult.AssertOutputContains("Percentage failed threshold is 50% and 66.67% tests failed (2/3)");
             testHostResult.AssertOutputContains("Failed! -");
         }
         else
         {
-            testHostResult.AssertExitCodeIs(ExitCodes.Success);
+            testHostResult.AssertExitCodeIs(ExitCode.Success);
             testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
             testHostResult.AssertOutputContains("Failed! -");
             testHostResult.AssertOutputContains("Passed! -");
@@ -128,14 +128,14 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 
         if (fail)
         {
-            testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+            testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
             testHostResult.AssertOutputContains("Failure threshold policy is enabled, failed tests will not be restarted.");
             testHostResult.AssertOutputContains("Maximum failed tests threshold is 1 and 2 tests failed");
             testHostResult.AssertOutputContains("Failed! -");
         }
         else
         {
-            testHostResult.AssertExitCodeIs(ExitCodes.Success);
+            testHostResult.AssertExitCodeIs(ExitCode.Success);
             testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
             testHostResult.AssertOutputContains("Failed! -");
             testHostResult.AssertOutputContains("Passed! -");
@@ -159,7 +159,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
 
         string[] entries = [.. Directory.GetFiles(resultDirectory, "*.*", SearchOption.AllDirectories).Where(x => !x.Contains("Retries", StringComparison.OrdinalIgnoreCase))];
 
@@ -189,7 +189,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             $"build \"{AssetFixture.TargetAssetPath}\" -c Release -t:DispatchToInnerBuildsWithMTPTestTarget -p:TestingPlatformCommandLineArguments=\"--retry-failed-tests 1 --results-directory %22{resultDirectory}%22\"",
             workingDirectory: AssetFixture.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
 
-        result.AssertExitCodeIs(ExitCodes.Success);
+        result.AssertExitCodeIs(ExitCode.Success);
 
         // File names are on the form: RetryFailedTests_tfm_architecture.log
         string[] logFilesFromInvokeTestingPlatformTask = Directory.GetFiles(resultDirectory, "RetryFailedTests_*_*.log");
@@ -223,7 +223,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
         testHostResult.AssertOutputContains("Tests suite failed, total failed tests: 1, exit code: 2, attempt: 1/4");
 

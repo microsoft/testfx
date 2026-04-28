@@ -16,7 +16,7 @@ public sealed class ExecutionRequestCompleteTests : AcceptanceTestBase<Execution
         var stopwatch = Stopwatch.StartNew();
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         stopwatch.Stop();
-        Assert.AreEqual((int)ExitCodes.Success, testHostResult.ExitCode);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         Assert.IsGreaterThan(3, stopwatch.Elapsed.TotalSeconds);
     }
 

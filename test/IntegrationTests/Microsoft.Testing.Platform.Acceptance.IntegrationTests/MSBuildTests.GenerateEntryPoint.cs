@@ -145,7 +145,7 @@ module MicrosoftTestingPlatformEntryPoint =
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         Assert.Contains("Passed!", testHostResult.StandardOutput);
 
         SL.Target[] coreCompileTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "CoreCompile" && t.Children.Count > 0).ToArray();
@@ -171,7 +171,7 @@ module MicrosoftTestingPlatformEntryPoint =
 
         testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        Assert.AreEqual((int)ExitCodes.Success, testHostResult.ExitCode);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         Assert.Contains("Passed!", testHostResult.StandardOutput);
     }
 

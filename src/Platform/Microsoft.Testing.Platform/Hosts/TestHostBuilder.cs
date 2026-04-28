@@ -261,7 +261,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
             builderActivity?.SetTag(BuilderHostTypeOTelKey, nameof(InformativeCommandLineHost));
             builderActivity?.Dispose();
-            return new InformativeCommandLineHost((int)ExitCodes.InvalidCommandLine, serviceProvider);
+            return new InformativeCommandLineHost((int)ExitCode.InvalidCommandLine, serviceProvider);
         }
 
         // Register as ICommandLineOptions.
