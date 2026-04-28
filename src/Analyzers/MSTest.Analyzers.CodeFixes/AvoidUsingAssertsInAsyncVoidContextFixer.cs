@@ -130,10 +130,10 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
 
         UsingDirectiveSyntax usingDirective = SyntaxFactory
             .UsingDirective(SyntaxFactory.ParseName("System.Threading.Tasks").WithLeadingTrivia(SyntaxFactory.Space))
-            .WithTrailingTrivia(SyntaxFactory.ElasticEndOfLine("\r\n"));
+            .WithTrailingTrivia(SyntaxFactory.ElasticCarriageReturnLineFeed);
 
-        // Insert before the first non-System using so System namespaces appear first.
-        int insertionIndex = 0;
+        // Insert after all existing System.* usings but before any non-System usings to maintain conventional ordering.
+        int insertionIndex = compilationUnit.Usings.Count; // default: append after all usings
         for (int i = 0; i < compilationUnit.Usings.Count; i++)
         {
             string? nameText = compilationUnit.Usings[i].Name?.ToString();
@@ -142,8 +142,6 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
                 insertionIndex = i;
                 break;
             }
-
-            insertionIndex = i + 1;
         }
 
         SyntaxList<UsingDirectiveSyntax> newUsings = compilationUnit.Usings.Insert(insertionIndex, usingDirective);
