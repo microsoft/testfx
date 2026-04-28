@@ -213,4 +213,7 @@
   <data name="AvoidOutRefTestMethodParametersFix" xml:space="preserve">
     <value>Remove 'out' and 'ref' modifiers</value>
   </data>
+  <data name="UseTestMethodDisplayNameInsteadOfDescriptionAttributeFix" xml:space="preserve">
+    <value>Use 'DisplayName' property on '[TestMethod]' instead of '[Description]' attribute</value>
+  </data>
 </root>

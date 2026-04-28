@@ -162,6 +162,11 @@
         <target state="translated">Použít atribut [OSCondition]</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseTestMethodDisplayNameInsteadOfDescriptionAttributeFix">
+        <source>Use 'DisplayName' property on '[TestMethod]' instead of '[Description]' attribute</source>
+        <target state="new">Use 'DisplayName' property on '[TestMethod]' instead of '[Description]' attribute</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>
