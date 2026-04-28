@@ -18,6 +18,7 @@ network:
     - defaults
     - "dc.services.visualstudio.com"
     - "pkgs.dev.azure.com"
+    - "x3yvsblobprodcus370.vsblob.vsassets.io"
 
 imports:
   - shared/repo-build-setup.md
