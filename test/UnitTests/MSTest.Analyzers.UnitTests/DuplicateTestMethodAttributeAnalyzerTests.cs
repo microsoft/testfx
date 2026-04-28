@@ -3,7 +3,7 @@
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.DuplicateTestMethodAttributeAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.DuplicateTestMethodAttributeFixer>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -209,5 +209,141 @@ public sealed class DuplicateTestMethodAttributeAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasTestMethodAndDataTestMethod_CodeFix_RemovesDuplicate()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataTestMethod]
+                public void [|TestMethod1|]()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasBothTestMethodAndDerivedAttribute_CodeFix_RemovesDuplicate()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Runtime.CompilerServices;
+
+            public class MyTestMethod : TestMethodAttribute
+            {
+                public MyTestMethod([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [MyTestMethod]
+                public void [|TestMethod1|]()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Runtime.CompilerServices;
+
+            public class MyTestMethod : TestMethodAttribute
+            {
+                public MyTestMethod([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasThreeTestMethodAttributes_CodeFix_RemovesAllDuplicates()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Runtime.CompilerServices;
+
+            public class MyTestMethod : TestMethodAttribute
+            {
+                public MyTestMethod([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataTestMethod]
+                [MyTestMethod]
+                public void [|TestMethod1|]()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Runtime.CompilerServices;
+
+            public class MyTestMethod : TestMethodAttribute
+            {
+                public MyTestMethod([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 }

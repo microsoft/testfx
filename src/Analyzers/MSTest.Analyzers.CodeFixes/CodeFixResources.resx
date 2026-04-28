@@ -213,4 +213,7 @@
   <data name="AvoidOutRefTestMethodParametersFix" xml:space="preserve">
     <value>Remove 'out' and 'ref' modifiers</value>
   </data>
+  <data name="RemoveDuplicateTestMethodAttributeFix" xml:space="preserve">
+    <value>Remove duplicate TestMethod attribute</value>
+  </data>
 </root>
