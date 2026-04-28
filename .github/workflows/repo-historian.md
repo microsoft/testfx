@@ -14,7 +14,9 @@ permissions:
   actions: read
 
 tools:
-  cache-memory: true
+  cache-memory:
+    - id: repo-history
+      key: repo-history
   github:
     toolsets: [pull_requests, repos, issues]
     min-integrity: none
@@ -41,7 +43,7 @@ Analyze the repository's recent activity and update cache-memory files with stru
 
 Read existing cache-memory files to understand what you already know:
 
-- `/tmp/gh-aw/cache-memory/repo-history.json` — previous run's output
+- `/tmp/gh-aw/cache-memory-repo-history/repo-history.json` — previous run's output
 - `/tmp/gh-aw/cache-memory/architecture.json` — architectural notes from expert reviewer
 - `/tmp/gh-aw/cache-memory/flaky-tests.json` — flaky test patterns from test reviewer
 
@@ -54,8 +56,9 @@ For each merged PR, record:
 - **Files changed** — which files/directories were touched
 - **PR size** — number of files and lines changed
 - **Had review comments requesting changes** — indicates areas where mistakes happen
-- **Author** — to track per-author patterns (not for blame — for tailoring review focus)
 - **Labels** — to categorize change types (bug fix, feature, refactoring, dependencies)
+
+Store only non-identifying metadata needed for reviewer prioritization, such as file paths, counts, and aggregate patterns.
 
 ### Step 3: Identify High-Churn Files
 
@@ -65,7 +68,7 @@ Compute file churn from the last 30 days:
 git log --since="30 days ago" --pretty=format: --name-only --no-merges | sort | uniq -c | sort -rn | head -30
 ```
 
-**High-churn** = changed in 3+ PRs within 30 days. These files deserve extra scrutiny because:
+**High-churn** = changed in 3+ non-merge commits within 30 days (matching the `--no-merges` flag above). These files deserve extra scrutiny because:
 
 - Frequent changes suggest the code is actively evolving and may have incomplete designs
 - More changes = more opportunities for regressions
@@ -103,7 +106,7 @@ Analyze merged PRs that had `REQUEST_CHANGES` reviews:
 
 ### Step 7: Write Cache-Memory Output
 
-Write a single structured file: `/tmp/gh-aw/cache-memory/repo-history.json`
+Write a single structured file: `/tmp/gh-aw/cache-memory-repo-history/repo-history.json`
 
 The file should have this structure:
 
@@ -152,7 +155,9 @@ The file should have this structure:
 }
 ```
 
-**Risk score** (1-10) is computed from: `churn_weight * 3 + revert_weight * 4 + ci_failure_weight * 2 + review_feedback_weight * 1`
+**Risk score** (1-10) is computed by first calculating the raw score
+`churn_weight * 3 + revert_weight * 4 + ci_failure_weight * 2 + review_feedback_weight * 1`,
+then clamping the result to the 1-10 range.
 
 ### Step 8: Invoke noop
 
@@ -164,7 +169,7 @@ After writing the cache-memory file, always invoke `noop` to signal completion:
 
 ## What Consumers Do With This Data
 
-This workflow does NOT act on the data. The PR reviewers read `repo-history.json` and use it to:
+This workflow does NOT act on the data. The PR reviewers read `repo-history.json` from the shared `repo-history` cache-memory (at `/tmp/gh-aw/cache-memory-repo-history/repo-history.json`) and use it to:
 
 | Consumer | How it uses history |
 | --- | --- |

@@ -8,6 +8,11 @@ on:
   slash_command:
     name: nit
     events: [pull_request_comment, pull_request_review_comment]
+  # pull_request_target is intentional: this workflow needs write access to post review comments,
+  # which requires pull_request_target (not pull_request) to work on fork PRs.
+  # Security: the agent only posts review comments (no code changes). XPIA risk from adversarial
+  # fork PR content is mitigated by the gh-aw XPIA prompt and locked-down permissions: {} in
+  # the compiled workflow.
   pull_request_target:
     types: [opened]
 
@@ -17,7 +22,10 @@ permissions:
   actions: read
 
 tools:
-  cache-memory: true
+  cache-memory:
+    - true  # default (workflow-private) cache for nitpick-patterns.json, conventions.json, etc.
+    - id: repo-history
+      key: repo-history  # shared cache produced by the repo-historian workflow
   github:
     toolsets: [pull_requests, repos]
     min-integrity: none
@@ -71,7 +79,7 @@ Use the cache memory at `/tmp/gh-aw/cache-memory/` to:
 - Read previous nitpick patterns from `/tmp/gh-aw/cache-memory/nitpick-patterns.json`
 - Review user instructions from `/tmp/gh-aw/cache-memory/user-preferences.json`
 - Note team coding conventions from `/tmp/gh-aw/cache-memory/conventions.json`
-- Check repository history insights from `/tmp/gh-aw/cache-memory/repo-history.json` (produced by the Repo Historian workflow). If present, use it to:
+- Check repository history insights from `/tmp/gh-aw/cache-memory-repo-history/repo-history.json` if it is present in the shared `repo-history` cache. If present, use it to:
   - Prioritize review effort on high-churn files and high-risk directories
   - Skip deep analysis of stable, low-churn areas when the PR is large
   - Be aware of recurring style patterns that were flagged in recent PRs
