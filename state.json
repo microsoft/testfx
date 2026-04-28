@@ -1,211 +1,43 @@
 {
-  "last_run": "2026-04-27",
+  "last_run": "2026-04-28",
   "fv_tool": "Lean 4 + Mathlib",
-  "lakefile_format": "toml",
-  "lean_dir": "formal-verification/lean",
   "lean_install_blocked": true,
-  "lean_install_blocked_reason": "Runner sandbox blocks execution of arbitrary binaries (elan-init). Tried elan v3.1.0 x86_64: 'Permission denied'. Task 3 deferred until runner allows binary execution.",
-  "lean_elan_sha256_verified": "4e717523217af592fa2d7b9c479410a31816c065d66ccbf0c2149337cfec0f5c (elan v4.2.1 x86_64-linux, re-verified 2026-04-27)",
+  "lean_install_blocked_reason": "Runner sandbox blocks elan-init (Permission denied). Tried elan v3.1.0. Task 3+ blocked.",
   "targets": [
-    {
-      "id": 1,
-      "name": "ArgumentArity",
-      "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs",
-      "phase": 2,
-      "priority": 1,
-      "notes": "Informal spec extracted and merged (PR #7799). 14 properties across 4 groups. Open question: constructor does not enforce Min <= Max. Correspondence documented in CORRESPONDENCE.md (Task 6). Next: Task 3 (Lean 4 formal spec). Blocked by Lean toolchain unavailability in CI runner."
-    },
-    {
-      "id": 2,
-      "name": "CommandLineParser.TryUnescape",
-      "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs",
-      "phase": 2,
-      "priority": 2,
-      "notes": "Informal spec extracted (PR #7833, open). 24 properties across 5 groups. Two confirmed bugs: (1) single-char input triggers ArgumentOutOfRangeException; (2) same for double-quote. Correspondence documented in CORRESPONDENCE.md (Task 6). Next: Task 3.",
-      "spec_file": "formal-verification/specs/commandlineparser_tryunescape_informal.md"
-    },
-    {
-      "id": 7,
-      "name": "TreeNodeFilter.MatchFilterPattern",
-      "file": "src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs",
-      "phase": 2,
-      "priority": 3,
-      "notes": "Informal spec extracted (this run, 2026-04-27). 12 Boolean algebra properties documented. 6 open questions. Key insight: NopExpression is always-true identity; evalFilter is pure recursive Boolean evaluator over FilterExpression ADT. Next: Task 3 (Lean 4 formal spec) \u2014 blocked by Lean toolchain.",
-      "spec_file": "formal-verification/specs/treenodefilter_matchfilterpattern_informal.md"
-    },
-    {
-      "id": 6,
-      "name": "ResponseFileHelper.SplitCommandLine",
-      "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs",
-      "phase": 1,
-      "priority": 4,
-      "notes": "Pure tokeniser. State machine: seeking x seekingQuote. Properties: empty->empty, whitespace splits, double-quotes group and strip. Correspondence planned in CORRESPONDENCE.md."
-    },
-    {
-      "id": 3,
-      "name": "CommandLineParser.ParseOptionAndSeparators",
-      "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs",
-      "phase": 1,
-      "priority": 5,
-      "notes": "Pure inner function. Splits --opt=val into name+arg. Strips leading dashes. Correspondence planned."
-    },
-    {
-      "id": 4,
-      "name": "CommandLineOptionsValidator arity validation",
-      "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs",
-      "phase": 1,
-      "priority": 6,
-      "notes": "ValidateOptionsArgumentArity function. Arity bounds checking. Correspondence planned."
-    },
-    {
-      "id": 5,
-      "name": "CommandLineParseResult.Equals",
-      "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs",
-      "phase": 1,
-      "priority": 7,
-      "notes": "Structural equality. Reflexivity, symmetry, transitivity. Correspondence planned."
-    }
+    {"id":1,"name":"ArgumentArity","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs","phase":2,"priority":1,"notes":"Spec merged PR #7799. Next: Task 3 (blocked by Lean)."},
+    {"id":2,"name":"CommandLineParser.TryUnescape","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":2,"priority":2,"notes":"Spec PR #7833 open. 2 confirmed bugs (single-char quote input -> exception). Next: Task 3.","spec_file":"formal-verification/specs/commandlineparser_tryunescape_informal.md"},
+    {"id":7,"name":"TreeNodeFilter.MatchFilterPattern","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":2,"priority":3,"notes":"Spec in open PR (run 2026-04-27). Boolean algebra 12 props. Next: Task 3.","spec_file":"formal-verification/specs/treenodefilter_matchfilterpattern_informal.md"},
+    {"id":6,"name":"ResponseFileHelper.SplitCommandLine","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs","phase":2,"priority":4,"notes":"Spec in open PR branch lean-squad/task2-splitcommandline-2026-04-28 (run 2026-04-28). 23 props, 5 issues. Unclosed quote silently discards. No unit tests exist. Next: Task 3.","spec_file":"formal-verification/specs/responsefilehelper_splitcommandline_informal.md"},
+    {"id":3,"name":"CommandLineParser.ParseOptionAndSeparators","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":1,"priority":5},
+    {"id":4,"name":"CommandLineOptionsValidator arity validation","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs","phase":1,"priority":6},
+    {"id":5,"name":"CommandLineParseResult.Equals","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs","phase":1,"priority":7}
   ],
   "merged_prs": [
-    {
-      "number": 7799,
-      "title": "[Lean Squad] feat: formal verification infrastructure \u2014 research & CI automation",
-      "merged_at": "2026-04-24T13:47:29Z",
-      "tasks": [
-        "Task 1: Research",
-        "Task 2: Informal Spec (ArgumentArity)",
-        "Task 9: CI Automation"
-      ]
-    }
+    {"number":7799,"title":"[Lean Squad] feat: formal verification infrastructure","merged_at":"2026-04-24T13:47:29Z"}
   ],
   "open_prs": [
-    {
-      "branch": "lean-squad/task2-tryunescape-2026-04-25",
-      "number": 7833,
-      "title": "[Lean Squad] feat(fv): Task 2 \u2014 informal spec for CommandLineParser.TryUnescape",
-      "tasks": [
-        "Task 2: Informal Spec (TryUnescape)"
-      ]
-    },
-    {
-      "branch": "lean-squad/task1-new-targets-2026-04-26-af98d23215b156cc",
-      "title": "[Lean Squad] feat(fv): Task 1 \u2014 expand FV targets (SplitCommandLine + TreeNodeFilter)",
-      "tasks": [
-        "Task 1: Research (new targets)"
-      ]
-    },
-    {
-      "branch": "lean-squad/task6-correspondence-2026-04-26-a8bd16435dd5deb9",
-      "number": 7860,
-      "title": "[Lean Squad] feat(fv): Task 6 \u2014 Lean-C# correspondence review for primary targets",
-      "tasks": [
-        "Task 6: Correspondence Review"
-      ]
-    },
-    {
-      "branch": "lean-squad/task9-ci-improvements-2026-04-27-b90542277d8dc525",
-      "number": 7859,
-      "title": "[Lean Squad] feat(ci): Task 9 \u2014 skip guard + FVSquad scaffold for lean-proofs workflow",
-      "tasks": [
-        "Task 9: CI skip guard + FVSquad scaffold"
-      ]
-    },
-    {
-      "branch": "lean-squad/task9-fv-docs-ci-2026-04-27",
-      "title": "[Lean Squad] feat(ci): Task 9 \u2014 FV docs validation workflow + updated REPORT.md",
-      "tasks": [
-        "Task 9: FV docs validation CI",
-        "Task 10: REPORT.md update"
-      ]
-    },
-    {
-      "branch": "lean-squad/task2-treenodefilter-2026-04-27",
-      "title": "[Lean Squad] feat(fv): Task 2 \u2014 informal spec for TreeNodeFilter.MatchFilterPattern",
-      "tasks": [
-        "Task 2: Informal Spec (TreeNodeFilter.MatchFilterPattern)"
-      ],
-      "run": "25007678153"
-    }
+    {"branch":"lean-squad/task2-tryunescape-2026-04-25","number":7833,"title":"[Lean Squad] Task 2 TryUnescape"},
+    {"branch":"lean-squad/task1-new-targets-2026-04-26-af98d23215b156cc","title":"[Lean Squad] Task 1 new targets"},
+    {"branch":"lean-squad/task6-correspondence-2026-04-26-a8bd16435dd5deb9","number":7860,"title":"[Lean Squad] Task 6 Correspondence"},
+    {"branch":"lean-squad/task9-ci-improvements-2026-04-27-b90542277d8dc525","number":7859,"title":"[Lean Squad] Task 9 CI skip guard"},
+    {"branch":"lean-squad/task9-fv-docs-ci-2026-04-27","title":"[Lean Squad] Task 9 FV docs CI + REPORT"},
+    {"branch":"lean-squad/task2-treenodefilter-2026-04-27","title":"[Lean Squad] Task 2 TreeNodeFilter","run":"25007678153"},
+    {"branch":"lean-squad/task2-splitcommandline-2026-04-28","title":"[Lean Squad] Task 2 SplitCommandLine","run":"25028150874"}
   ],
-  "open_issues": [
-    {
-      "number": 7793,
-      "title": "[Lean Squad] Formal Verification Status",
-      "purpose": "status dashboard"
-    }
-  ],
-  "next_priority": "Task 3: Write Lean 4 formal spec for ArgumentArity (phase 2 -> 3). Blocked by Lean toolchain unavailability. If Lean becomes available, start with ArgumentArity.lean.",
-  "approach": {
-    "focus_area": "src/Platform/Microsoft.Testing.Platform/CommandLine/ and Requests/TreeNodeFilter/",
-    "rationale": "Pure functions, clear algebraic properties, well-documented POSIX/CLI conventions. TreeNodeFilter added for Boolean algebra richness."
-  },
+  "open_issues": [{"number":7793,"title":"[Lean Squad] Formal Verification Status"}],
+  "next_priority": "Task 3: ArgumentArity.lean — blocked by Lean toolchain (runner sandbox). Highest-priority once unblocked.",
   "findings": [
-    {
-      "type": "potential-bug",
-      "target": "ArgumentArity",
-      "description": "Constructor does not enforce Min <= Max invariant. Ill-formed arities silently accepted. CommandLineOption constructor acts as the practical guard.",
-      "status": "open-question"
-    },
-    {
-      "type": "confirmed-bug",
-      "target": "CommandLineParser.TryUnescape",
-      "description": "EC-1: Input of exactly one single-quote character triggers ArgumentOutOfRangeException: IndexOf(char, 1, -1) called when input.Length == 1, count = input.Length - 2 = -1.",
-      "status": "open",
-      "fix": "Add length < 2 guard before quoted-mode branching"
-    },
-    {
-      "type": "confirmed-bug",
-      "target": "CommandLineParser.TryUnescape",
-      "description": "EC-2: Input of exactly one double-quote character triggers range exception: input[1..^1] where start=1 > end=0 when input.Length == 1.",
-      "status": "open",
-      "fix": "Add length < 2 guard before quoted-mode branching"
-    }
+    {"type":"confirmed-bug","target":"TryUnescape","desc":"Single-char quote input -> ArgumentOutOfRangeException (EC-1 & EC-2). Fix: add length<2 guard."},
+    {"type":"design-issue","target":"SplitCommandLine","desc":"Unclosed opening quote at start silently discards all input content (Issue 2)."},
+    {"type":"design-issue","target":"SplitCommandLine","desc":"Adjacent quoted strings emit 2 tokens not 1 (Issue 4). Closing quote triggers yield+reset."}
   ],
   "lean_formal_spec_plan": {
     "file": "formal-verification/lean/FVSquad/ArgumentArity.lean",
-    "structure": "structure ArgumentArity where min : Int; max : Int",
-    "constants": [
-      "zero",
-      "zeroOrOne",
-      "zeroOrMore",
-      "exactlyOne",
-      "oneOrMore"
-    ],
-    "int32Max": "2147483647",
-    "theorems": [
-      "theorem zero_spec : ArgumentArity.zero = { min := 0, max := 0 }",
-      "theorem zeroOrOne_spec : ArgumentArity.zeroOrOne = { min := 0, max := 1 }",
-      "theorem zeroOrMore_spec : ArgumentArity.zeroOrMore = { min := 0, max := 2147483647 }",
-      "theorem exactlyOne_spec : ArgumentArity.exactlyOne = { min := 1, max := 1 }",
-      "theorem oneOrMore_spec : ArgumentArity.oneOrMore = { min := 1, max := 2147483647 }",
-      "theorem predefined_nonneg_min",
-      "theorem predefined_wellformed",
-      "theorem eq_extensional",
-      "theorem predefined_distinct"
-    ],
-    "approach": "Use Int for min/max. Model Int32.MaxValue as 2147483647. Use decide for concrete theorems."
-  },
-  "correspondence_notes": {
-    "documented_in": "formal-verification/CORRESPONDENCE.md",
-    "last_updated": "2026-04-26",
-    "targets_covered": [
-      "ArgumentArity",
-      "CommandLineParser.TryUnescape",
-      "TreeNodeFilter.MatchFilterPattern"
-    ],
-    "key_decisions": {
-      "ArgumentArity": "Int (not Int32); Int32.MaxValue=2147483647 concrete; DecidableEq for Equals; GetHashCode excluded",
-      "TryUnescape": "IEnvironment->newLine:String; option dropped; Except String String; exception bugs excluded",
-      "MatchFilterPattern": "FilterExpression->inductive; Regex->String->Bool; PropertyBag->String->String->Bool"
-    }
+    "approach": "structure ArgumentArity {min max : Int}; Int32.MaxValue=2147483647; use decide for concrete theorems"
   },
   "ci_notes": {
-    "lean_proofs_workflow": ".github/workflows/lean-proofs.yml",
-    "fv_docs_validation_workflow": ".github/workflows/fv-docs-validation.yml (added 2026-04-27, PR pending)",
-    "elan_version": "v4.2.1",
-    "elan_sha256_x86_64_linux": "4e717523217af592fa2d7b9c479410a31816c065d66ccbf0c2149337cfec0f5c",
-    "skip_guard": "Added via PR #7859 (pending): Check for Lean source files step counts *.lean in FVSquad/; all build steps gated on lean_file_count != '0'",
-    "fvsquad_dir": "formal-verification/lean/FVSquad/ (scaffolded with README via PR #7859)",
-    "fv_docs_validation": "New workflow validates: required docs present, lean project files, lean-toolchain non-empty, disclosure markers, specs/ dir, phase-2+ spec coverage"
+    "elan_sha256_x86_64": "4e717523217af592fa2d7b9c479410a31816c065d66ccbf0c2149337cfec0f5c",
+    "skip_guard": "PR #7859: gated on lean_file_count != 0",
+    "fvsquad_dir": "formal-verification/lean/FVSquad/"
   }
 }
