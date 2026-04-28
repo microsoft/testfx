@@ -3,7 +3,7 @@
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.AvoidUsingAssertsInAsyncVoidContextAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.AvoidUsingAssertsInAsyncVoidContextFixer>;
 
 namespace MSTest.Analyzers.UnitTests;
 
@@ -77,7 +77,23 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        string fixedCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task TestMethod()
+                {
+                    await Task.Delay(1);
+                    Assert.Fail("");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -129,7 +145,26 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        string fixedCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    async Task d()
+                    {
+                        await Task.Delay(1);
+                        Assert.Fail("");
+                    };
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -151,7 +186,23 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        string fixedCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task TestMethod()
+                {
+                    await Task.Delay(1);
+                    StringAssert.Contains("abc", "a");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -174,7 +225,24 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        string fixedCode = """
+            using System.Collections;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task TestMethod()
+                {
+                    await Task.Delay(1);
+                    CollectionAssert.AreEqual(new[] { 1 }, new[] { 1 });
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -199,7 +267,26 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        string fixedCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    async Task d()
+                    {
+                        await Task.Delay(1);
+                        StringAssert.Contains("abc", "a");
+                    };
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]

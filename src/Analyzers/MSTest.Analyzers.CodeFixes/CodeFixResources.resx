@@ -213,4 +213,7 @@
   <data name="AvoidOutRefTestMethodParametersFix" xml:space="preserve">
     <value>Remove 'out' and 'ref' modifiers</value>
   </data>
+  <data name="AvoidUsingAssertsInAsyncVoidContextFix" xml:space="preserve">
+    <value>Change return type to 'Task'</value>
+  </data>
 </root>
