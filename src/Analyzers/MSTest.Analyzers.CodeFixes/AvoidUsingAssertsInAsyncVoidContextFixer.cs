@@ -94,7 +94,9 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
         MethodDeclarationSyntax newMethodDeclaration = methodDeclaration.WithReturnType(
             SyntaxFactory.IdentifierName("Task").WithTriviaFrom(methodDeclaration.ReturnType));
         editor.ReplaceNode(methodDeclaration, newMethodDeclaration);
-        return editor.GetChangedDocument();
+        Document updatedDocument = editor.GetChangedDocument();
+
+        return await EnsureSystemThreadingTasksImportAsync(updatedDocument, cancellationToken).ConfigureAwait(false);
     }
 
     private static async Task<Document> ChangeReturnTypeToTaskAsync(
@@ -106,6 +108,45 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
         LocalFunctionStatementSyntax newLocalFunction = localFunction.WithReturnType(
             SyntaxFactory.IdentifierName("Task").WithTriviaFrom(localFunction.ReturnType));
         editor.ReplaceNode(localFunction, newLocalFunction);
-        return editor.GetChangedDocument();
+        Document updatedDocument = editor.GetChangedDocument();
+
+        return await EnsureSystemThreadingTasksImportAsync(updatedDocument, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task<Document> EnsureSystemThreadingTasksImportAsync(Document document, CancellationToken cancellationToken)
+    {
+        SyntaxNode root = await document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+        if (root is not CompilationUnitSyntax compilationUnit)
+        {
+            return document;
+        }
+
+        bool hasUsing = compilationUnit.Usings.Any(
+            u => string.Equals(u.Name?.ToString(), "System.Threading.Tasks", StringComparison.Ordinal));
+        if (hasUsing)
+        {
+            return document;
+        }
+
+        UsingDirectiveSyntax usingDirective = SyntaxFactory
+            .UsingDirective(SyntaxFactory.ParseName("System.Threading.Tasks").WithLeadingTrivia(SyntaxFactory.Space))
+            .WithTrailingTrivia(SyntaxFactory.ElasticEndOfLine("\r\n"));
+
+        // Insert before the first non-System using so System namespaces appear first.
+        int insertionIndex = 0;
+        for (int i = 0; i < compilationUnit.Usings.Count; i++)
+        {
+            string? nameText = compilationUnit.Usings[i].Name?.ToString();
+            if (nameText is not null && !nameText.StartsWith("System", StringComparison.Ordinal))
+            {
+                insertionIndex = i;
+                break;
+            }
+
+            insertionIndex = i + 1;
+        }
+
+        SyntaxList<UsingDirectiveSyntax> newUsings = compilationUnit.Usings.Insert(insertionIndex, usingDirective);
+        return document.WithSyntaxRoot(compilationUnit.WithUsings(newUsings));
     }
 }
