@@ -33,40 +33,8 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [TestMethod(DisplayName = "Description")]
-                public void MyTestMethod()
-                {
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
-    }
-
-    [TestMethod]
-    public async Task WhenTestMethodHasExistingDisplayNameAndSystemDescriptionAttribute_RemovesDescriptionAttribute()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod(DisplayName = "Existing")]
-                [System.ComponentModel.Description("Description")]
-                public void [|MyTestMethod|]()
-                {
-                }
-            }
-            """;
-
-        string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod(DisplayName = "Existing")]
+                [TestMethod]
+                [Description("Description")]
                 public void MyTestMethod()
                 {
                 }

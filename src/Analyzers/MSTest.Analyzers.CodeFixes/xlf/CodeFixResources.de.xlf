@@ -152,6 +152,11 @@
         <target state="translated">Verwenden Sie die Eigenschaft „DisplayName“ anstelle eines Zeichenfolgenarguments.</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
+        <source>Use MSTest 'Description' attribute instead</source>
+        <target state="new">Use MSTest 'Description' attribute instead</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">
         <source>Use '{0}'</source>
         <target state="translated">"{0}" verwenden</target>
@@ -160,11 +165,6 @@
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckFix">
         <source>Use '[OSCondition]' attribute</source>
         <target state="translated">Verwenden des Attributs „[OSCondition]“</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseTestMethodDisplayNameInsteadOfDescriptionAttributeFix">
-        <source>Use 'DisplayName' property on '[TestMethod]' instead of '[Description]' attribute</source>
-        <target state="new">Use 'DisplayName' property on '[TestMethod]' instead of '[Description]' attribute</target>
         <note />
       </trans-unit>
     </body>

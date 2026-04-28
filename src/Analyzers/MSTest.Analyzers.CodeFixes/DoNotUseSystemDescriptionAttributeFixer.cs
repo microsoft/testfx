@@ -11,7 +11,6 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Editing;
 
 using MSTest.Analyzers.Helpers;
 
@@ -53,108 +52,57 @@ public sealed class DoNotUseSystemDescriptionAttributeFixer : CodeFixProvider
 
         context.RegisterCodeFix(
             CodeAction.Create(
-                title: CodeFixResources.UseTestMethodDisplayNameInsteadOfDescriptionAttributeFix,
-                createChangedDocument: c => ReplaceDescriptionAttributeAsync(context.Document, methodDeclaration, c),
+                title: CodeFixResources.UseMSTestDescriptionAttributeInsteadFix,
+                createChangedDocument: c => ReplaceWithMSTestDescriptionAttributeAsync(context.Document, methodDeclaration, c),
                 equivalenceKey: nameof(DoNotUseSystemDescriptionAttributeFixer)),
             diagnostic);
     }
 
-    private static async Task<Document> ReplaceDescriptionAttributeAsync(Document document, MethodDeclarationSyntax methodDeclaration, CancellationToken cancellationToken)
+    private static async Task<Document> ReplaceWithMSTestDescriptionAttributeAsync(Document document, MethodDeclarationSyntax methodDeclaration, CancellationToken cancellationToken)
     {
         SemanticModel semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
 
-        INamedTypeSymbol? testMethodAttributeSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute);
-        INamedTypeSymbol? descriptionAttributeSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemDescriptionAttribute);
+        INamedTypeSymbol? systemDescriptionAttributeSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemDescriptionAttribute);
 
-        if (testMethodAttributeSymbol is null || descriptionAttributeSymbol is null)
+        if (systemDescriptionAttributeSymbol is null)
         {
             return document;
         }
 
-        AttributeSyntax? descriptionAttribute = null;
-        AttributeSyntax? testMethodAttribute = null;
+        AttributeSyntax? systemDescriptionAttribute = null;
 
         foreach (AttributeListSyntax attributeList in methodDeclaration.AttributeLists)
         {
             foreach (AttributeSyntax attribute in attributeList.Attributes)
             {
-                if (semanticModel.GetSymbolInfo(attribute, cancellationToken).Symbol is IMethodSymbol { ContainingType: { } containingType })
+                if (semanticModel.GetSymbolInfo(attribute, cancellationToken).Symbol is IMethodSymbol { ContainingType: { } containingType }
+                    && SymbolEqualityComparer.Default.Equals(containingType, systemDescriptionAttributeSymbol))
                 {
-                    if (SymbolEqualityComparer.Default.Equals(containingType, descriptionAttributeSymbol))
-                    {
-                        descriptionAttribute = attribute;
-                    }
-                    else if (IsOrInheritsFrom(containingType, testMethodAttributeSymbol))
-                    {
-                        testMethodAttribute = attribute;
-                    }
+                    systemDescriptionAttribute = attribute;
+                    break;
                 }
+            }
+
+            if (systemDescriptionAttribute is not null)
+            {
+                break;
             }
         }
 
-        if (descriptionAttribute is null || testMethodAttribute is null)
+        if (systemDescriptionAttribute is null)
         {
             return document;
         }
 
-        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        // Replace the System.ComponentModel.Description attribute name with the MSTest Description attribute name.
+        // Since the MSTest namespace (Microsoft.VisualStudio.TestTools.UnitTesting) is already in scope,
+        // we can use just the simple name "Description" which will resolve to MSTest's DescriptionAttribute.
+        AttributeSyntax newAttribute = systemDescriptionAttribute.WithName(
+            SyntaxFactory.IdentifierName("Description")
+                .WithTriviaFrom(systemDescriptionAttribute.Name));
 
-        // Add DisplayName = "text" to the [TestMethod] attribute (only if it doesn't already have DisplayName)
-        bool hasDisplayName = testMethodAttribute.ArgumentList?.Arguments.Any(
-            a => a.NameEquals?.Name.Identifier.ValueText == "DisplayName") == true;
+        SyntaxNode root = await document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 
-        if (!hasDisplayName && descriptionAttribute.ArgumentList?.Arguments.Count > 0)
-        {
-            ExpressionSyntax descriptionExpression = descriptionAttribute.ArgumentList.Arguments[0].Expression;
-
-            AttributeArgumentSyntax displayNameArg = SyntaxFactory.AttributeArgument(
-                SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName("DisplayName")),
-                nameColon: null,
-                descriptionExpression);
-
-            AttributeSyntax newTestMethodAttribute = testMethodAttribute.ArgumentList is null
-                ? testMethodAttribute.WithArgumentList(
-                    SyntaxFactory.AttributeArgumentList(
-                        SyntaxFactory.SingletonSeparatedList(displayNameArg)))
-                : testMethodAttribute.WithArgumentList(
-                    testMethodAttribute.ArgumentList.AddArguments(displayNameArg));
-
-            editor.ReplaceNode(testMethodAttribute, newTestMethodAttribute);
-        }
-
-        // Remove the [Description] attribute
-        if (descriptionAttribute.Parent is AttributeListSyntax containingAttributeList)
-        {
-            if (containingAttributeList.Attributes.Count == 1)
-            {
-                // Remove the entire attribute list
-                editor.RemoveNode(containingAttributeList);
-            }
-            else
-            {
-                // Remove just the attribute from the list
-                editor.ReplaceNode(
-                    containingAttributeList,
-                    containingAttributeList.RemoveNode(descriptionAttribute, SyntaxRemoveOptions.KeepLeadingTrivia)!);
-            }
-        }
-
-        return editor.GetChangedDocument();
-    }
-
-    private static bool IsOrInheritsFrom(INamedTypeSymbol? type, INamedTypeSymbol baseType)
-    {
-        INamedTypeSymbol? current = type;
-        while (current is not null)
-        {
-            if (SymbolEqualityComparer.Default.Equals(current, baseType))
-            {
-                return true;
-            }
-
-            current = current.BaseType;
-        }
-
-        return false;
+        return document.WithSyntaxRoot(root.ReplaceNode(systemDescriptionAttribute, newAttribute));
     }
 }

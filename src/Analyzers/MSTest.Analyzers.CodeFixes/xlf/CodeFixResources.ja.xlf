@@ -152,6 +152,11 @@
         <target state="translated">文字列引数の代わりに 'DisplayName' プロパティを使用する</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
+        <source>Use MSTest 'Description' attribute instead</source>
+        <target state="new">Use MSTest 'Description' attribute instead</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">
         <source>Use '{0}'</source>
         <target state="translated">'{0}' を使用します</target>
@@ -160,11 +165,6 @@
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckFix">
         <source>Use '[OSCondition]' attribute</source>
         <target state="translated">[OSCondition] 属性を使用する</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseTestMethodDisplayNameInsteadOfDescriptionAttributeFix">
-        <source>Use 'DisplayName' property on '[TestMethod]' instead of '[Description]' attribute</source>
-        <target state="new">Use 'DisplayName' property on '[TestMethod]' instead of '[Description]' attribute</target>
         <note />
       </trans-unit>
     </body>
