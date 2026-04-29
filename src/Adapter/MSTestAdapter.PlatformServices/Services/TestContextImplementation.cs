@@ -383,9 +383,30 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     internal string? GetOut()
         => _stdOutStringBuilder?.ToString();
 
+    internal string? GetAndClearOut()
+    {
+        string? result = _stdOutStringBuilder?.ToString();
+        _stdOutStringBuilder?.Clear();
+        return result;
+    }
+
     internal string? GetErr()
         => _stdErrStringBuilder?.ToString();
 
+    internal string? GetAndClearErr()
+    {
+        string? result = _stdErrStringBuilder?.ToString();
+        _stdErrStringBuilder?.Clear();
+        return result;
+    }
+
     internal string? GetTrace()
         => _traceStringBuilder?.ToString();
+
+    internal string? GetAndClearTrace()
+    {
+        string? result = _traceStringBuilder?.ToString();
+        _traceStringBuilder?.Clear();
+        return result;
+    }
 }
