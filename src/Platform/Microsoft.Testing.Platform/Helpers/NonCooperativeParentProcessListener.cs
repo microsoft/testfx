@@ -35,11 +35,11 @@ internal sealed class NonCooperativeParentProcessListener : IDisposable
         {
             // If we fail the process is already gone, so we can just exit.
             // The first check is already done inside the command line parser.
-            _environment.Exit(ExitCodes.DependentProcessExited);
+            _environment.Exit((int)ExitCode.DependentProcessExited);
         }
     }
 
-    private void ParentProcess_Exited(object? sender, EventArgs e) => _environment.Exit(ExitCodes.DependentProcessExited);
+    private void ParentProcess_Exited(object? sender, EventArgs e) => _environment.Exit((int)ExitCode.DependentProcessExited);
 
     public void Dispose() => _parentProcess?.Dispose();
 }

@@ -17,7 +17,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter ClassName!~TestClassWithAssemblyInitialize", cancellationToken: TestContext.CancellationToken);
 
         // Assert
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 11, skipped: 8);
 
         testHostResult.AssertOutputContains("SubClass.Method");
@@ -32,7 +32,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithAssemblyInitialize", cancellationToken: TestContext.CancellationToken);
 
         // Assert
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1);
         testHostResult.AssertOutputDoesNotContain("AssemblyInitialize");
         testHostResult.AssertOutputDoesNotContain("AssemblyCleanup");
@@ -45,7 +45,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithDataSourcesUsingIgnoreMessage", cancellationToken: TestContext.CancellationToken);
 
         // Assert
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContains("TestInitialize: TestMethod1 (0)");
         testHostResult.AssertOutputContains("TestCleanup: TestMethod1 (0)");
 
