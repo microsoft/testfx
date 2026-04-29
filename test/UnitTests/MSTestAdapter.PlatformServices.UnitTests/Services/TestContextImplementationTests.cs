@@ -360,8 +360,8 @@ public class TestContextImplementationTests : TestContainer
         });
 
         t.Start();
-        _ = testContextImplementation.GetOut();
-        _ = testContextImplementation.GetErr();
+        _ = testContextImplementation.GetAndClearOutput();
+        _ = testContextImplementation.GetAndClearError();
         t.Join();
     }
 }
