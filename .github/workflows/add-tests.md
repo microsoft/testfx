@@ -16,6 +16,7 @@ imports:
 tools:
   github:
     toolsets: [pull_requests, repos]
+    min-integrity: none
   edit:
   bash: ["dotnet", "git", "find", "ls", "cat", "grep", "head", "tail", "wc", "mkdir"]
 

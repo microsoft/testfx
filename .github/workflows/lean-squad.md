@@ -50,6 +50,7 @@ tools:
   web-fetch:
   github:
     toolsets: [default]
+    min-integrity: none
   bash:
     - find
     - grep

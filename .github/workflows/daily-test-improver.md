@@ -60,6 +60,7 @@ tools:
   bash: true
   github:
     toolsets: [all]
+    min-integrity: none
   repo-memory: true
 ---
 

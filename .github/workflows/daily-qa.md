@@ -40,6 +40,7 @@ safe-outputs:
 tools:
   github:
     toolsets: [all]
+    min-integrity: none
   web-fetch:
   bash: true
 ---
