@@ -16,8 +16,7 @@ permissions: read-all
 network:
   allowed:
     - defaults
-    - "dc.services.visualstudio.com"
-    - "pkgs.dev.azure.com"
+    - "dotnet"
 
 imports:
   - shared/repo-build-setup.md
