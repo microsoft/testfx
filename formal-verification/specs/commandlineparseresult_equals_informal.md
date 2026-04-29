@@ -49,7 +49,7 @@ public bool Equals(CommandLineParseResult? other)
 
 ## Preconditions
 
-- `this` is a valid, fully-constructed `CommandLineParseResult` (never null, since it is a class).
+- `this` is a valid, fully-constructed `CommandLineParseResult` (non-null when the instance method is executing, because instance methods cannot be invoked on a null reference).
 - `other` may be `null` (nullable parameter).
 - For a valid `CommandLineParseResult` instance, both `Options` and `Errors` are expected to be non-null; passing `null` for either is invalid input and not prevented by the primary constructor at runtime.
 - For a valid `CommandLineParseOption` instance, `Arguments` is expected to be a non-null `string[]`; passing `null` is invalid input and not prevented by the primary constructor at runtime.
