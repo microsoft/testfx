@@ -274,9 +274,38 @@ public sealed partial class PropertyBag
         }
 
         // We don't want to allocate an array if we know that we're looking for a TestNodeStateProperty
-        return typeof(TestNodeStateProperty).IsAssignableFrom(typeof(TProperty))
+        if (typeof(TestNodeStateProperty).IsAssignableFrom(typeof(TProperty)) || _property is null)
+        {
+            return [];
+        }
+
+        // Direct linked-list walk: avoids allocating a yield-iterator state machine
+        // (the original code called _property.OfType<TProperty>() which uses yield return).
+        TProperty? first = default;
+        bool foundAny = false;
+        List<TProperty>? overflow = null;
+        Property? current = _property;
+        while (current is not null)
+        {
+            if (current.Current is TProperty match)
+            {
+                if (!foundAny)
+                {
+                    first = match;
+                    foundAny = true;
+                }
+                else
+                {
+                    (overflow ??= [first!]).Add(match);
+                }
+            }
+
+            current = current.Next;
+        }
+
+        return !foundAny
             ? []
-            : _property is null ? [] : [.. _property.OfType<TProperty>()];
+            : overflow is not null ? [.. overflow] : [first!];
     }
 
     /// <summary>
