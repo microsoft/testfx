@@ -42,6 +42,10 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private readonly IProcessHandler _processHandler;
     private readonly IClock _clock;
     private readonly PipeNameDescription _pipeNameDescription;
+    private readonly bool _traceEnabled;
+    private readonly ILogger<HangDumpProcessLifetimeHandler> _logger;
+    private readonly ManualResetEventSlim _waitConsumerPipeName = new(false);
+    private readonly List<string> _dumpFiles = [];
 
     private TimeSpan? _activityTimerValue;
     private Timer? _activityTimer;
@@ -341,6 +345,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
 
         await _logger.LogInformationAsync($"Creating dump filename {finalDumpFileName}").ConfigureAwait(false);
+
         await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName)), cancellationToken).ConfigureAwait(false);
 
 #if NETCOREAPP
