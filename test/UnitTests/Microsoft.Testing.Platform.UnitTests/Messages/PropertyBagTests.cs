@@ -129,15 +129,15 @@ public sealed class PropertyBagTests
     [TestMethod]
     public void OfType_WithSingleMatch_ReturnsSingleItemArray()
     {
-        PropertyBag bag = new();
-        DummyProperty single = new();
-        bag.Add(single);
-        bag.Add(PassedTestNodeStateProperty.CachedInstance);
+        PropertyBag property = new();
+        DummyProperty singleProperty = new();
+        property.Add(singleProperty);
+        property.Add(PassedTestNodeStateProperty.CachedInstance);
 
-        DummyProperty[] result = bag.OfType<DummyProperty>();
+        DummyProperty[] result = property.OfType<DummyProperty>();
 
         Assert.HasCount(1, result);
-        Assert.AreSame(single, result[0]);
+        Assert.AreSame(singleProperty, result[0]);
     }
 
     [TestMethod]
