@@ -1501,11 +1501,14 @@ public class TestMethodInfoTests : TestContainer
         ((string[])expectedArguments[1]).SequenceEqual((string[])resolvedArguments[1]!).Should().BeTrue();
     }
 
+    // Regression tests for https://github.com/microsoft/testfx/issues/7846
+    // Verify that log output buffers are cleared between invocations to prevent
+    // exponential memory growth with DynamicData tests.
+    // NOTE: The TestClassInfo (class init/cleanup) and UnitTestRunner (assembly init/cleanup)
+    // call sites use the same GetAndClear* methods tested in isolation in
+    // TestContextImplementationTests.GetAndClear{Output,Error,Trace}_ShouldReturnContentThenClearBuffer.
     public async Task InvokeAsync_ShouldNotAccumulateLogOutputAcrossMultipleInvocations()
     {
-        // Regression test for https://github.com/microsoft/testfx/issues/7846
-        // Verify that log output buffers are cleared between invocations to prevent
-        // exponential memory growth with DynamicData tests.
         DummyTestClass.TestMethodBody = _ => _testContextImplementation.WriteConsoleOut("invocation_output");
 
         TestResult result1 = await _testMethodInfo.InvokeAsync(null);
@@ -1517,7 +1520,6 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task InvokeAsync_ShouldNotAccumulateLogErrorAcrossMultipleInvocations()
     {
-        // Regression test for https://github.com/microsoft/testfx/issues/7846
         DummyTestClass.TestMethodBody = _ => _testContextImplementation.WriteConsoleErr("error_output");
 
         TestResult result1 = await _testMethodInfo.InvokeAsync(null);
@@ -1529,7 +1531,6 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task InvokeAsync_ShouldNotAccumulateDebugTraceAcrossMultipleInvocations()
     {
-        // Regression test for https://github.com/microsoft/testfx/issues/7846
         DummyTestClass.TestMethodBody = _ => _testContextImplementation.WriteTrace("trace_output");
 
         TestResult result1 = await _testMethodInfo.InvokeAsync(null);
