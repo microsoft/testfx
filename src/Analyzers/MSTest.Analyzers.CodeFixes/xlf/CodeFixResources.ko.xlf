@@ -67,6 +67,11 @@
         <target state="translated">'ClassCleanupBehavior' 인수 제거</target>
         <note />
       </trans-unit>
+      <trans-unit id="RemoveDuplicateDataRowFix">
+        <source>Remove duplicate 'DataRow'</source>
+        <target state="new">Remove duplicate 'DataRow'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
         <source>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</source>
         <target state="translated">기본 'AutoDetect'를 사용하려면 'DynamicDataSourceType' 매개 변수를 제거합니다.</target>

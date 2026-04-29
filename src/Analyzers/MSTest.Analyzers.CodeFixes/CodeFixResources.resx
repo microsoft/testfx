@@ -213,4 +213,7 @@
   <data name="AvoidOutRefTestMethodParametersFix" xml:space="preserve">
     <value>Remove 'out' and 'ref' modifiers</value>
   </data>
+  <data name="RemoveDuplicateDataRowFix" xml:space="preserve">
+    <value>Remove duplicate 'DataRow'</value>
+  </data>
 </root>
