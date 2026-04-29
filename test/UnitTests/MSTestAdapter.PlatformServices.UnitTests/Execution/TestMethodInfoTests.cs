@@ -1501,6 +1501,44 @@ public class TestMethodInfoTests : TestContainer
         ((string[])expectedArguments[1]).SequenceEqual((string[])resolvedArguments[1]!).Should().BeTrue();
     }
 
+    public async Task InvokeAsync_ShouldNotAccumulateLogOutputAcrossMultipleInvocations()
+    {
+        // Regression test for https://github.com/microsoft/testfx/issues/7846
+        // Verify that log output buffers are cleared between invocations to prevent
+        // exponential memory growth with DynamicData tests.
+        DummyTestClass.TestMethodBody = _ => _testContextImplementation.WriteConsoleOut("invocation_output");
+
+        TestResult result1 = await _testMethodInfo.InvokeAsync(null);
+        TestResult result2 = await _testMethodInfo.InvokeAsync(null);
+
+        result1.LogOutput.Should().Be("invocation_output");
+        result2.LogOutput.Should().Be("invocation_output");
+    }
+
+    public async Task InvokeAsync_ShouldNotAccumulateLogErrorAcrossMultipleInvocations()
+    {
+        // Regression test for https://github.com/microsoft/testfx/issues/7846
+        DummyTestClass.TestMethodBody = _ => _testContextImplementation.WriteConsoleErr("error_output");
+
+        TestResult result1 = await _testMethodInfo.InvokeAsync(null);
+        TestResult result2 = await _testMethodInfo.InvokeAsync(null);
+
+        result1.LogError.Should().Be("error_output");
+        result2.LogError.Should().Be("error_output");
+    }
+
+    public async Task InvokeAsync_ShouldNotAccumulateDebugTraceAcrossMultipleInvocations()
+    {
+        // Regression test for https://github.com/microsoft/testfx/issues/7846
+        DummyTestClass.TestMethodBody = _ => _testContextImplementation.WriteTrace("trace_output");
+
+        TestResult result1 = await _testMethodInfo.InvokeAsync(null);
+        TestResult result2 = await _testMethodInfo.InvokeAsync(null);
+
+        result1.DebugTrace.Should().Be("trace_output");
+        result2.DebugTrace.Should().Be("trace_output");
+    }
+
     #region helper methods
 
     private static async Task RunWithTestablePlatformService(TestablePlatformServiceProvider testablePlatformServiceProvider, Func<Task> action)
