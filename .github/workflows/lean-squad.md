@@ -49,6 +49,7 @@ checkout:
 tools:
   web-fetch:
   github:
+    lockdown: true
     toolsets: [default]
     min-integrity: none
   bash:

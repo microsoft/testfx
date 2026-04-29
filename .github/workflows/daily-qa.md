@@ -39,7 +39,8 @@ safe-outputs:
 
 tools:
   github:
-    toolsets: [all]
+    lockdown: true
+    toolsets: [repos, pull_requests, issues, discussions]
     min-integrity: none
   web-fetch:
   bash: true

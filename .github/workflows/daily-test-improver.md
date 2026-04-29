@@ -59,7 +59,8 @@ tools:
   web-fetch:
   bash: true
   github:
-    toolsets: [all]
+    lockdown: true
+    toolsets: [repos, pull_requests, issues, discussions]
     min-integrity: none
   repo-memory: true
 ---
