@@ -312,7 +312,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ApplicationStateGuard.Ensure(_dumpType is not null);
 
         string processId = process.Id.ToString(CultureInfo.InvariantCulture);
-        var customReplacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        var customReplacements = new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["pname"] = process.Name,
             ["pid"] = processId,

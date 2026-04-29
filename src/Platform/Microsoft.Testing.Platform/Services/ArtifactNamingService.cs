@@ -2,13 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.OutputDevice;
 
 namespace Microsoft.Testing.Platform.Services;
 
 internal sealed class ArtifactNamingService : IArtifactNamingService
 {
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
-    private readonly IEnvironment _environment;
     private readonly IClock _clock;
     private readonly IProcessHandler _processHandler;
 
@@ -21,7 +21,6 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
         IProcessHandler processHandler)
     {
         _testApplicationModuleInfo = testApplicationModuleInfo;
-        _environment = environment;
         _clock = clock;
         _processHandler = processHandler;
     }
@@ -45,7 +44,7 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
 
     private Dictionary<string, string> GetDefaultReplacements()
     {
-        var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var replacements = new Dictionary<string, string>(StringComparer.Ordinal);
 
         // Assembly info
         string? assemblyName = _testApplicationModuleInfo.TryGetAssemblyName();
@@ -62,18 +61,15 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
         // OS info
         replacements["os"] = GetOperatingSystemName();
 
-        // Target framework info
-        string tfm = GetTargetFrameworkMoniker();
+        // Target framework info (best-effort, based on runtime detection)
+        string? tfm = TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
         if (!RoslynString.IsNullOrEmpty(tfm))
         {
             replacements["tfm"] = tfm;
         }
 
-        // Time info (precision to 1 second)
-        replacements["time"] = _clock.UtcNow.ToString("yyyy-MM-ddTHH-mm-ss", CultureInfo.InvariantCulture);
-
-        // Random ID for uniqueness
-        replacements["id"] = GenerateShortId();
+        // Time info (high precision)
+        replacements["time"] = _clock.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss.fffffff", CultureInfo.InvariantCulture);
 
         return replacements;
     }
@@ -85,7 +81,7 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
             return defaultReplacements;
         }
 
-        var merged = new Dictionary<string, string>(defaultReplacements, StringComparer.OrdinalIgnoreCase);
+        var merged = new Dictionary<string, string>(defaultReplacements, StringComparer.Ordinal);
         foreach (KeyValuePair<string, string> kvp in customReplacements)
         {
             merged[kvp.Key] = kvp.Value;
@@ -99,42 +95,4 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
             : RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "linux"
             : RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "macos"
             : "unknown";
-
-    private string GetTargetFrameworkMoniker()
-    {
-        string frameworkDescription = RuntimeInformation.FrameworkDescription;
-
-        // .NET 5+ reports as ".NET X.Y.Z"
-        if (frameworkDescription.StartsWith(".NET ", StringComparison.Ordinal) &&
-            !frameworkDescription.StartsWith(".NET Framework", StringComparison.Ordinal) &&
-            !frameworkDescription.StartsWith(".NET Core", StringComparison.Ordinal))
-        {
-            Match match = Regex.Match(frameworkDescription, @"\.NET (\d+)\.\d+");
-            if (match.Success)
-            {
-                return $"net{match.Groups[1].Value}.0";
-            }
-        }
-        else if (frameworkDescription.StartsWith(".NET Core", StringComparison.Ordinal))
-        {
-            Match match = Regex.Match(frameworkDescription, @"\.NET Core (\d+\.\d+)");
-            if (match.Success)
-            {
-                return $"netcoreapp{match.Groups[1].Value}";
-            }
-        }
-        else if (frameworkDescription.StartsWith(".NET Framework", StringComparison.Ordinal))
-        {
-            Match match = Regex.Match(frameworkDescription, @"\.NET Framework (\d+)\.(\d+)");
-            if (match.Success)
-            {
-                return $"net{match.Groups[1].Value}{match.Groups[2].Value}";
-            }
-        }
-
-        return _environment.Version.ToString();
-    }
-
-    private static string GenerateShortId()
-        => Guid.NewGuid().ToString("N").Substring(0, 8);
 }

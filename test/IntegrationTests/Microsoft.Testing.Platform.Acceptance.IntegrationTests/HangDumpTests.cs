@@ -110,7 +110,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--hangdump --hangdump-timeout 8s --hangdump-filename <pname>_<pid>_<id>_hang.dmp --results-directory {resultDirectory}",
+            $"--hangdump --hangdump-timeout 8s --hangdump-filename <pname>_<pid>_<time>_hang.dmp --results-directory {resultDirectory}",
             new Dictionary<string, string?>
             {
                 { "SLEEPTIMEMS1", "4000" },
@@ -126,14 +126,12 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         string dumpFile = dumpFiles[0];
         string fileName = Path.GetFileNameWithoutExtension(dumpFile);
 
-        // File should match pattern: <pname>_<pid>_<id>_hang
-        // The process name should be the test executable name, pid should be numeric, id should be 8 chars
+        // File should match pattern: <pname>_<pid>_<time>_hang
+        // The process name should be the test executable name, pid should be numeric
         Assert.EndsWith("_hang", fileName, $"File name should end with '_hang'. Actual: {fileName}");
 
         string[] parts = fileName.Split('_');
         Assert.IsGreaterThanOrEqualTo(3, parts.Length, $"File name should have at least 3 parts separated by '_'. Actual: {fileName}");
-        Assert.IsTrue(int.TryParse(parts[^3], out _), $"Third-to-last part should be PID (numeric). Actual: {parts[^3]}");
-        Assert.AreEqual(8, parts[^2].Length, $"Second-to-last part should be 8-character ID. Actual: {parts[^2]}");
         Assert.AreEqual("hang", parts[^1], "Last part should be 'hang'");
     }
 

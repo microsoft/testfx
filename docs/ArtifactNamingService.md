@@ -7,10 +7,10 @@ The artifact naming service provides a standardized way to generate consistent n
 Use placeholders in angle brackets to create dynamic file names:
 
 ```text
-<pname>_<pid>_<id>_hang.dmp
+<pname>_<pid>_<time>_hang.dmp
 ```
 
-Resolves to: `MyTests_12345_a1b2c3d4_hang.dmp`
+Resolves to: `MyTests_12345_2025-09-22_13-49-34.0000000_hang.dmp`
 
 ## Available Placeholders
 
@@ -18,11 +18,10 @@ Resolves to: `MyTests_12345_a1b2c3d4_hang.dmp`
 |-------------|-------------|---------|
 | `<pname>` | Name of the process | `MyTests` |
 | `<pid>` | Process ID | `12345` |
-| `<id>` | Short random identifier (8 chars) | `a1b2c3d4` |
 | `<os>` | Operating system | `windows`, `linux`, `macos` |
 | `<asm>` | Assembly name | `MyTests` |
 | `<tfm>` | Target framework moniker | `net9.0`, `net8.0` |
-| `<time>` | Timestamp (1-second precision) | `2025-09-22T13-49-34` |
+| `<time>` | Timestamp (high precision) | `2025-09-22_13-49-34.0000000` |
 
 ## Backward Compatibility
 
@@ -52,5 +51,5 @@ The hang dump extension uses the artifact naming service and supports both legac
 --hangdump-filename "mydump_%p.dmp"
 
 # New template pattern
---hangdump-filename "<pname>_<pid>_<id>_hang.dmp"
+--hangdump-filename "<pname>_<pid>_<time>_hang.dmp"
 ```

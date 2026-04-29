@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Runtime.InteropServices;
@@ -46,20 +46,18 @@ public sealed class ArtifactNamingServiceTests
     }
 
     [TestMethod]
-    public void ResolveTemplate_WithTimeAndIdPlaceholders_ReplacesCorrectly()
+    public void ResolveTemplate_WithTimeAndOsPlaceholders_ReplacesCorrectly()
     {
         var service = new ArtifactNamingService(_testApplicationModuleInfo.Object, _environment.Object, _clock.Object, _processHandler.Object);
-        string template = "<time>_<id>_<os>";
+        string template = "<time>_<os>";
 
         string result = service.ResolveTemplate(template);
-
-        Assert.Contains("2025-09-22T13-49-34", result);
 
         string expectedOs = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows"
             : RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "linux"
             : RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "macos"
             : "unknown";
-        Assert.EndsWith($"_{expectedOs}", result);
+        Assert.AreEqual($"2025-09-22_13-49-34.0000000_{expectedOs}", result);
     }
 
     [TestMethod]
@@ -117,11 +115,11 @@ public sealed class ArtifactNamingServiceTests
         Assert.DoesNotContain("<time>", result);
         Assert.StartsWith("TestAssembly/", result);
         Assert.Contains("test-process_12345_", result);
-        Assert.EndsWith("2025-09-22T13-49-34.dmp", result);
+        Assert.EndsWith("2025-09-22_13-49-34.0000000.dmp", result);
     }
 
     [TestMethod]
-    public void ResolveTemplate_CaseInsensitiveReplacements_WorksCorrectly()
+    public void ResolveTemplate_CaseSensitiveReplacements_DoesNotMatchDifferentCase()
     {
         var service = new ArtifactNamingService(_testApplicationModuleInfo.Object, _environment.Object, _clock.Object, _processHandler.Object);
         string template = "<PName>_<PID>";
@@ -133,7 +131,8 @@ public sealed class ArtifactNamingServiceTests
 
         string result = service.ResolveTemplate(template, customReplacements);
 
-        Assert.AreEqual("CUSTOM_777", result);
+        // Case-sensitive: <PName> and <PID> don't match any known key, so they are preserved as-is.
+        Assert.AreEqual("<PName>_<PID>", result);
     }
 
     [TestMethod]
