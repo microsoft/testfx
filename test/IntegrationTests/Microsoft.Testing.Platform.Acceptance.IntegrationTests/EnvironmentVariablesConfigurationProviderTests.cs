@@ -14,7 +14,7 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -28,14 +28,14 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
             {
                 ["MESS_UP_TESTHOST_EXIT_CODE"] = "1",
             }, cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
 
         testHostResult = await testHost.ExecuteAsync(
             environmentVariables: new()
             {
                 ["MESS_UP_TESTHOST_EXIT_CODE"] = "100",
             }, cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
 
         testHostResult = await testHost.ExecuteAsync(
             environmentVariables: new()
@@ -43,7 +43,7 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
                 ["MESS_UP_TESTHOST_EXIT_CODE"] = "1",
                 ["ZERO_TESTS"] = "1",
             }, cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
 
         testHostResult = await testHost.ExecuteAsync(
             environmentVariables: new()
@@ -51,7 +51,7 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
                 ["MESS_UP_TESTHOST_EXIT_CODE"] = "100",
                 ["ZERO_TESTS"] = "1",
             }, cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
 
         testHostResult = await testHost.ExecuteAsync(
             environmentVariables: new()
@@ -59,7 +59,7 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
                 ["MESS_UP_TESTHOST_EXIT_CODE"] = "8",
                 ["ZERO_TESTS"] = "1",
             }, cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()

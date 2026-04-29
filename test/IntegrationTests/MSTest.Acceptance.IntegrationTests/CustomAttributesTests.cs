@@ -19,7 +19,7 @@ public sealed class CustomAttributesTests : AcceptanceTestBase<CustomAttributesT
         var testHost = TestHost.LocateFrom(AssetFixture.DuplicateTestMethodProjectPath, TestAssetFixture.DuplicateTestMethodProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputContainsSummary(failed: 1, passed: 1, skipped: 0);
     }
 

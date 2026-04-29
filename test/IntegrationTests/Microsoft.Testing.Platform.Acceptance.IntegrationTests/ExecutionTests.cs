@@ -15,7 +15,7 @@ public class ExecutionTests : AcceptanceTestBase<ExecutionTests.TestAssetFixture
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         const string OutputPattern = """
   Test1
@@ -33,7 +33,7 @@ Test discovery summary: found 2 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
         testHostResult.AssertOutputMatchesRegex($"Passed! - .*\\.(dll|exe) \\(net.+\\|.+\\)");
@@ -46,18 +46,18 @@ Test discovery summary: found 2 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter-uid NonExistingUid", cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
 
         testHostResult = await testHost.ExecuteAsync("--filter-uid 0", cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
 
         testHostResult = await testHost.ExecuteAsync("--filter-uid 1", cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
 
         testHostResult = await testHost.ExecuteAsync("--filter-uid 0 --filter-uid 1", cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
     }
 
@@ -68,24 +68,24 @@ Test discovery summary: found 2 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --filter-uid NonExistingUid", cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
 
         testHostResult = await testHost.ExecuteAsync("--list-tests --filter-uid 0", cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputMatchesRegex("""
               Test1
             Test discovery summary: found 1 test\(s\)
             """);
 
         testHostResult = await testHost.ExecuteAsync("--list-tests --filter-uid 1", cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputMatchesRegex("""
               Test2
             Test discovery summary: found 1 test\(s\)
             """);
 
         testHostResult = await testHost.ExecuteAsync("--list-tests --filter-uid 0 --filter-uid 1", cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputMatchesRegex("""
               Test1
               Test2
@@ -100,7 +100,7 @@ Test discovery summary: found 2 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --treenode-filter \"<whatever>\"", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         const string OutputPattern = """
   Test1
@@ -117,7 +117,7 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--treenode-filter \"<whatever>\"", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
         testHostResult.AssertOutputMatchesRegex($"Passed! - .*\\.(dll|exe) \\(net.+\\|.+\\)");
@@ -130,7 +130,7 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests 2", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
         testHostResult.AssertOutputMatchesRegex($"Passed! - .*\\.(dll|exe) \\(net.+\\|.+\\)");
@@ -143,7 +143,7 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests 3", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.MinimumExpectedTestsPolicyViolation);
+        testHostResult.AssertExitCodeIs(ExitCode.MinimumExpectedTestsPolicyViolation);
 
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0, minimumNumberOfTests: 3);
         testHostResult.AssertOutputMatchesRegex($" - .*\\.(dll|exe) \\(net.+\\|.+\\)");
@@ -156,7 +156,7 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --minimum-expected-tests 2", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
         testHostResult.AssertOutputContains("Error: '--list-tests' and '--minimum-expected-tests' are incompatible options");
     }
 
