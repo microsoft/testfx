@@ -121,6 +121,33 @@ public sealed class PropertyBagTests
 
         Assert.AreEqual(PassedTestNodeStateProperty.CachedInstance, property.OfType<TestNodeStateProperty>().Single());
         Assert.HasCount(2, property.OfType<DummyProperty>());
+
+        // No DummyProperty2 in the bag — exercises the "no match found" path in the while-loop
+        Assert.IsEmpty(property.OfType<DummyProperty2>());
+    }
+
+    [TestMethod]
+    public void OfType_WithSingleMatch_ReturnsSingleItemArray()
+    {
+        PropertyBag property = new();
+        DummyProperty singleProperty = new();
+        property.Add(singleProperty);
+        property.Add(PassedTestNodeStateProperty.CachedInstance);
+
+        DummyProperty[] result = property.OfType<DummyProperty>();
+
+        Assert.HasCount(1, result);
+        Assert.AreSame(singleProperty, result[0]);
+    }
+
+    [TestMethod]
+    public void OfType_WithOnlyTestNodeStateProperty_ReturnsEmpty()
+    {
+        PropertyBag property = new();
+        property.Add(PassedTestNodeStateProperty.CachedInstance);
+
+        // _property is null; _testNodeStateProperty is set — exercises the new early-return path
+        Assert.IsEmpty(property.OfType<DummyProperty>());
     }
 
     [TestMethod]
