@@ -22,32 +22,32 @@
 - GetTestPropertiesAsTraits: already uses allocation-free pattern (no LINQ iterators) - good reference
 - IsAttributeDefined<T> / GetFirstAttributeOrDefault<T> / GetCustomAttributesCached() are allocation-free alternatives to GetAttributes<T>()
 - GitHub Actions cannot create PRs in this repo; changes are pushed to branches and placeholder issues are created
+- IMPORTANT: Maintainers (Youssef1313, Evangelink) noted that hot path detection is not great - many things flagged that don't show in actual profiler traces. Require stronger evidence before submitting new allocations issues.
 
 ## Optimization Backlog
 1. **[In main]** ValidSourceExtensions static cache + ReflectionTestMethodInfo deduplication (branch applied to main by maintainer)
 2. **[In main]** Eliminate LINQ iterator allocations in TryUnfoldITestDataSources (branch applied to main)
-3. **[Issue #7868, branch pending]** GetTestCategories (6 iterators→0) + WorkItemAttribute double-pass + param string LINQ iterator - branch: perf-assist/reduce-linq-iterators-get-test-categories-d392d71fd502f8cc
-4. **[Submitted 2026-04-28]** Avoid yield iterator in TryExecuteDataSourceBasedTestsAsync + GetRetryAttribute - branch: perf-assist/avoid-yield-iterator-in-test-execution-hot-path
-5. TestContextImplementation - SynchronizedStringBuilder uses [MethodImpl(Synchronized)]; TestContext is per-test so uncontended, but monitor lock overhead exists
-6. TypeValidator/TestMethodValidator created per-type in GetTypeEnumerator - constrained by virtual method (testability), minor impact
-7. TreeNodeFilter MatchFilterPattern: string[start..end] substring allocated per path segment per node - could use span but lambda captures prevent it without larger refactor
+3. **[PR #7927 - CI green, ready to merge]** GetTestCategories (6 iterators→0) + WorkItemAttribute double-pass + param string LINQ iterator - fixes issue #7868
+4. **[Deprioritized - no profiler evidence per maintainers]** Avoid yield iterator in TryExecuteDataSourceBasedTestsAsync + GetRetryAttribute (issue #7904 acknowledged, branch perf-assist/avoid-yield-iterator-in-test-execution-hot-path can be discarded)
+5. TestContextImplementation - SynchronizedStringBuilder uses [MethodImpl(Synchronized)]; TestContext is per-test so uncontended, but monitor lock overhead exists - LOW PRIORITY (no profiler evidence)
+6. TypeValidator/TestMethodValidator created per-type in GetTypeEnumerator - constrained by virtual method (testability), minor impact - LOW PRIORITY
+7. TreeNodeFilter MatchFilterPattern: string[start..end] substring allocated per path segment per node - could use span but lambda captures prevent it without larger refactor - COMPLEX/RISKY
 
 ## Completed Work
-- Branch: perf-assist/reduce-allocations-discovery-execution (changes applied to main by maintainer, issue #7815 still open)
+- Branch: perf-assist/reduce-allocations-discovery-execution (changes applied to main by maintainer, issue #7815 still open - suggest closing)
   - ValidSourceExtensions cached as static readonly (TestSourceHandler.cs) - CONFIRMED in main
   - ReflectionTestMethodInfo dedup in ExecuteTestWithDataSourceAsync (TestMethodRunner.cs) - CONFIRMED in main (PERF comment at line 324)
 - Branch: perf-assist/avoid-linq-iterators-data-source-enumeration (changes applied to main, issue for #7831)
   - Replace GetAttributes<Attribute>().OfType<ITestDataSource>() with direct iteration
-- Branch: perf-assist/reduce-linq-iterators-get-test-categories-d392d71fd502f8cc (issue #7868, pending)
+- Branch: perf-assist/reduce-linq-iterators-get-test-categories-d392d71fd502f8cc → PR #7927 (CI green, ready to merge)
   - GetTestCategories: 6 LINQ iterators → 0 (common case)
   - WorkItemAttribute: double-pass OfType/Any/Select → single-pass
   - Param string: LINQ Select iterator → short-circuit for 0-param case
-- Branch: perf-assist/avoid-yield-iterator-in-test-execution-hot-path (submitted 2026-04-28)
-  - TryExecuteDataSourceBasedTestsAsync: GetAttributes<DataSourceAttribute>() → IsAttributeDefined<>()
-  - GetRetryAttribute: yield iterator + IEnumerator<T> → direct cached array iteration
-  - Build: 0W/0E net8.0
+- Branch: perf-assist/avoid-yield-iterator-in-test-execution-hot-path (issue #7904 - DEPRIORITIZED)
+  - Maintainers said allocations not visible in profiler traces
 
 ## Last Run
+- 2026-04-29: Tasks 4 (PR #7927 health - all green), 5 (commented on #7904 re: maintainer feedback), 7 (monthly summary)
 - 2026-04-28: Tasks 3 (new optimization: avoid yield iterators), 7 (monthly summary)
 - 2026-04-27: Tasks 2 (verify merged PRs), 3 (new optimization), 7 (monthly summary)
 - 2026-04-26: Tasks 4 (PR health check - both green), 5 (no perf issues), 7 (monthly summary)
@@ -60,4 +60,5 @@
 - 2026-04-26: Tasks 4, 5, 7 done
 - 2026-04-27: Tasks 2, 3, 7 done
 - 2026-04-28: Tasks 3, 7 done
-- Next run: should focus on Tasks 4 (PR health), 5 (perf issues), 6 (infra), 7
+- 2026-04-29: Tasks 4, 5, 7 done
+- Next run: should focus on Tasks 2 (new opportunities with profiler evidence), 3 (if high-confidence improvement exists), 6 (infra), 7
