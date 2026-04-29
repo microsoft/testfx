@@ -94,14 +94,11 @@ Steps:
 ### Property Group 3 — Structural / Reconstructibility
 
 8. **Option contains no delimiters**: `currentOption` contains no `:` and no `=` character. (Because we split at the first occurrence and then `TrimStart` only removes `-`.)
-9. **Lossless split (with delimiter)**: If `delimiterIndex ≥ 0`, then:
-   ```
-   arg = currentOption + (leading_dashes_stripped_from_option_prefix) + arg[delimiterIndex] + currentArg
-   ```
-   More precisely, let `prefix = arg[..delimiterIndex]`. Then:
+9. **Lossless split (with delimiter)**: If `delimiterIndex ≥ 0`, let `prefix = arg[..delimiterIndex]`. Then:
    - `currentOption = prefix.TrimStart('-')`
+   - `currentArg = arg[(delimiterIndex + 1)..]`
    - `prefix = ('-' × k) + currentOption` for some `k ≥ 0` (exactly the number of leading dashes in `prefix`)
-   - `arg = prefix + delimiter + currentArg`
+   - `arg = prefix + arg[delimiterIndex] + currentArg`
    - Therefore `arg.Length = prefix.Length + 1 + currentArg.Length`
 10. **Lossless split (no delimiter)**: If `delimiterIndex = -1`, then:
     - `currentOption = arg.TrimStart('-')`
