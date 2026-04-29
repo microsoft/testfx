@@ -76,11 +76,16 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
                 break;
             }
 
-            if (ancestor is AnonymousFunctionExpressionSyntax)
+            if (ancestor is AnonymousFunctionExpressionSyntax anonymousFunction)
             {
-                // For lambdas/anonymous functions, we don't provide a fix since changing to Task
-                // would require changing the delegate type as well.
-                break;
+                // Only stop at async lambdas/delegates — they represent the async void context.
+                // For non-async lambdas, keep walking up to find the enclosing async void method/local function.
+                if (anonymousFunction.AsyncKeyword.IsKind(SyntaxKind.AsyncKeyword))
+                {
+                    // For async lambdas/anonymous functions, we don't provide a fix since changing to Task
+                    // would require changing the delegate type as well.
+                    break;
+                }
             }
         }
     }
@@ -122,7 +127,9 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
         }
 
         bool hasUsing = compilationUnit.Usings.Any(
-            u => string.Equals(u.Name?.ToString(), "System.Threading.Tasks", StringComparison.Ordinal));
+            u => u.Alias is null &&
+                 !u.StaticKeyword.IsKind(SyntaxKind.StaticKeyword) &&
+                 string.Equals(u.Name?.ToString(), "System.Threading.Tasks", StringComparison.Ordinal));
         if (hasUsing)
         {
             return document;

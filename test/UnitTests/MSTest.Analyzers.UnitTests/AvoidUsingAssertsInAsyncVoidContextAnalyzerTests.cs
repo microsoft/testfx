@@ -97,6 +97,91 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzerTests
     }
 
     [TestMethod]
+    public async Task UseAssertMethodInAsyncVoidMethod_WithoutTaskUsing_AddsTaskUsingInCorrectPosition()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async void TestMethod()
+                {
+                    await System.Threading.Tasks.Task.Delay(1);
+                    [|Assert.Fail("")|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task TestMethod()
+                {
+                    await System.Threading.Tasks.Task.Delay(1);
+                    Assert.Fail("");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task UseAssertMethodInNonAsyncLambdaInsideAsyncVoidMethod_Diagnostic()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async void TestMethod()
+                {
+                    await Task.Delay(1);
+                    Action action = () =>
+                    {
+                        [|Assert.Fail("")|];
+                    };
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task TestMethod()
+                {
+                    await Task.Delay(1);
+                    Action action = () =>
+                    {
+                        Assert.Fail("");
+                    };
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
     public async Task UseAssertMethodInAsyncVoidDelegate_Diagnostic()
     {
         string code = """
