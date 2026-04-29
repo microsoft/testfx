@@ -16,7 +16,7 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ScopeWithNoFailures", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
@@ -26,7 +26,7 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ScopeWithSingleFailure", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputMatchesRegex(
             """failed ScopeWithSingleFailure \(\d+ms\)[\s\S]+Assert\.AreEqual failed\. Expected:<1>\. Actual:<2>\.[\s\S]+at UnitTest1\.ScopeWithSingleFailure\(\)""");
     }
@@ -37,7 +37,7 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ScopeWithMultipleFailures", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         // Validate the output includes the aggregate message and that inner exception stack traces
         // point to the test method (assertion call site).
         testHostResult.AssertOutputMatchesRegex(
@@ -50,7 +50,7 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter AssertFailIsHardFailure", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         // Assert.Fail is a hard assertion — it throws immediately, even within a scope.
         // The second Assert.Fail should not be reached.
         testHostResult.AssertOutputMatchesRegex(
@@ -64,7 +64,7 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter SoftFailureFollowedByException", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputMatchesRegex(
             """failed SoftFailureFollowedByException \(\d+ms\)[\s\S]+at UnitTest1\.SoftFailureFollowedByException\(\)""");
     }
@@ -75,7 +75,7 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ScopeWithIsNotNullSoftFailure", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputMatchesRegex(
             """failed ScopeWithIsNotNullSoftFailure \(\d+ms\)[\s\S]+Assert\.IsNotNull failed\.[\s\S]+at UnitTest1\.ScopeWithIsNotNullSoftFailure\(\)""");
     }
@@ -86,7 +86,7 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter IndependentTest", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 

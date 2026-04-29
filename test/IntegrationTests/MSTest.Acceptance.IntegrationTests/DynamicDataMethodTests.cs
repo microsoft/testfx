@@ -17,7 +17,7 @@ public sealed class DynamicDataMethodTests : AcceptanceTestBase<DynamicDataMetho
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputContainsSummary(failed: 3, passed: 9, skipped: 0);
 
         // failed TestMethodSingleParameterIntCountMismatchSmaller (0ms)

@@ -61,6 +61,9 @@ name: "PR Nitpick Reviewer 🔍"
     types:
     - created
     - edited
+  pull_request_target:
+    types:
+    - opened
 
 permissions: {}
 
@@ -72,7 +75,7 @@ run-name: "PR Nitpick Reviewer 🔍"
 jobs:
   activation:
     needs: pre_activation
-    if: "needs.pre_activation.outputs.activated == 'true' && (github.event_name == 'issue_comment' && (startsWith(github.event.comment.body, '/nit ') || startsWith(github.event.comment.body, '/nit\n') || github.event.comment.body == '/nit') && github.event.issue.pull_request != null || github.event_name == 'pull_request_review_comment' && (startsWith(github.event.comment.body, '/nit ') || startsWith(github.event.comment.body, '/nit\n') || github.event.comment.body == '/nit'))"
+    if: "needs.pre_activation.outputs.activated == 'true' && ((github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment') && (github.event_name == 'issue_comment' && (startsWith(github.event.comment.body, '/nit ') || startsWith(github.event.comment.body, '/nit\n') || github.event.comment.body == '/nit') && github.event.issue.pull_request != null || github.event_name == 'pull_request_review_comment' && (startsWith(github.event.comment.body, '/nit ') || startsWith(github.event.comment.body, '/nit\n') || github.event.comment.body == '/nit')) || (!(github.event_name == 'issue_comment')) && (!(github.event_name == 'pull_request_review_comment')))"
     runs-on: ubuntu-slim
     permissions:
       actions: read
@@ -1242,7 +1245,7 @@ jobs:
             await main();
 
   pre_activation:
-    if: "github.event_name == 'issue_comment' && (startsWith(github.event.comment.body, '/nit ') || startsWith(github.event.comment.body, '/nit\n') || github.event.comment.body == '/nit') && github.event.issue.pull_request != null || github.event_name == 'pull_request_review_comment' && (startsWith(github.event.comment.body, '/nit ') || startsWith(github.event.comment.body, '/nit\n') || github.event.comment.body == '/nit')"
+    if: "(github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment') && (github.event_name == 'issue_comment' && (startsWith(github.event.comment.body, '/nit ') || startsWith(github.event.comment.body, '/nit\n') || github.event.comment.body == '/nit') && github.event.issue.pull_request != null || github.event_name == 'pull_request_review_comment' && (startsWith(github.event.comment.body, '/nit ') || startsWith(github.event.comment.body, '/nit\n') || github.event.comment.body == '/nit')) || (!(github.event_name == 'issue_comment')) && (!(github.event_name == 'pull_request_review_comment'))"
     runs-on: ubuntu-slim
     outputs:
       activated: ${{ steps.check_membership.outputs.is_team_member == 'true' && steps.check_command_position.outputs.command_position_ok == 'true' }}

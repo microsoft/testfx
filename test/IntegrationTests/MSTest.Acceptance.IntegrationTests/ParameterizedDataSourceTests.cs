@@ -35,7 +35,7 @@ public sealed class ParameterizedDataSourceTests : AcceptanceTestBase<Parameteri
 
         bool isSuccess = isEmptyDataInconclusive.HasValue && isEmptyDataInconclusive.Value;
 
-        testHostResult.AssertExitCodeIs(isSuccess ? ExitCodes.Success : ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(isSuccess ? ExitCode.Success : ExitCode.AtLeastOneTestFailed);
 
         testHostResult.AssertOutputContains(isSuccess ? "skipped Test" : "failed Test");
 
