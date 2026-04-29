@@ -12,6 +12,9 @@ internal sealed class BFSTestNodeVisitor
 {
     private static readonly string PathSeparatorString = TreeNodeFilter.PathSeparator.ToString();
 
+    // Read-only; must never be mutated. Shared across all BFS traversals where ContainsPropertyFilters is false.
+    private static readonly PropertyBag EmptyPropertyBag = new();
+
     private readonly IEnumerable<TestNode> _rootTestNodes;
     private readonly ITestExecutionFilter _testExecutionFilter;
     private readonly TestArgumentsManager _testArgumentsManager;
@@ -72,7 +75,10 @@ internal sealed class BFSTestNodeVisitor
             // When we are filtering as tree filter and the current node does not match the filter, we skip the node and its children.
             if (_testExecutionFilter is TreeNodeFilter treeNodeFilter)
             {
-                if (!treeNodeFilter.MatchesFilter(currentNodeFullPath, CreatePropertyBagForFilter(currentNode.Properties)))
+                PropertyBag filterPropertyBag = treeNodeFilter.ContainsPropertyFilters
+                    ? new PropertyBag(currentNode.Properties)
+                    : EmptyPropertyBag;
+                if (!treeNodeFilter.MatchesFilter(currentNodeFullPath, filterPropertyBag))
                 {
                     continue;
                 }
@@ -98,17 +104,6 @@ internal sealed class BFSTestNodeVisitor
         }
 
         DuplicatedNodes = [.. testNodesByUid.Where(x => x.Value.Count > 1)];
-    }
-
-    private static PropertyBag CreatePropertyBagForFilter(IProperty[] properties)
-    {
-        PropertyBag propertyBag = new();
-        foreach (IProperty property in properties)
-        {
-            propertyBag.Add(property);
-        }
-
-        return propertyBag;
     }
 
     private static string EncodeString(string value)
