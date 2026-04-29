@@ -51,8 +51,8 @@ public bool Equals(CommandLineParseResult? other)
 
 - `this` is a valid, fully-constructed `CommandLineParseResult` (never null, since it is a class).
 - `other` may be `null` (nullable parameter).
-- Both `Options` and `Errors` lists are non-null (enforced by the primary constructor accepting `IReadOnlyList<T>`).
-- `CommandLineParseOption.Arguments` is a non-null `string[]`.
+- For a valid `CommandLineParseResult` instance, both `Options` and `Errors` are expected to be non-null; passing `null` for either is invalid input and not prevented by the primary constructor at runtime.
+- For a valid `CommandLineParseOption` instance, `Arguments` is expected to be a non-null `string[]`; passing `null` is invalid input and not prevented by the primary constructor at runtime.
 
 ---
 
@@ -87,11 +87,12 @@ public bool Equals(CommandLineParseResult? other)
 6. **Full extensionality (→)**: `x.Equals(y) → x.ToolName == y.ToolName ∧ x.Errors.SequenceEqual(y.Errors) ∧ x.Options.Count == y.Options.Count ∧ ∀i. x.Options[i].Name == y.Options[i].Name ∧ x.Options[i].Arguments.SequenceEqual(y.Options[i].Arguments)`
 7. **Full extensionality (←)**: The converse: if all fields match component-wise then `x.Equals(y) == true`.
 
-### Property Group 3 — Object Equality Consistency
+### Property Group 3 — Object Equality Consistency (documented, out-of-scope for Lean)
 
-8. **`object.Equals` agrees**: `x.Equals((object)y) == x.Equals(y)` for `y : CommandLineParseResult`.
-9. **`object.Equals(null)` is false**: `x.Equals((object?)null) == false`.
+These properties describe the expected .NET/runtime relationship between the typed `Equals(CommandLineParseResult?)` method and the inherited `object.Equals(object?)` surface. They are kept here for completeness of the equality contract, but the Lean model for this spec reasons only about the typed overload above and does **not** model or prove obligations about the `object.Equals` overload.
 
+8. **`object.Equals` agrees (runtime expectation, not a Lean proof target)**: `x.Equals((object)y) == x.Equals(y)` for `y : CommandLineParseResult`.
+9. **`object.Equals(null)` is false (runtime expectation, not a Lean proof target)**: `x.Equals((object?)null) == false`.
 ### Property Group 4 — Order Sensitivity
 
 10. **Errors are order-sensitive**: Two results differing only in the order of their errors are NOT equal.
@@ -130,10 +131,10 @@ public bool Equals(CommandLineParseResult? other)
 
 ## Invariants
 
-1. The algorithm is **O(n·m)** where n = option count and m = max argument count per option. For typical command lines this is small.
+1. The algorithm is linear in the number of errors plus the total number of option-arguments compared; in the worst case this is **O(E + n·m)**, where E = error count, n = option count, and m = max argument count per option. For typical command lines this is small.
 2. The method is **side-effect free**.
 3. No exception is thrown for any valid input (null `other` is handled, not thrown).
-4. The implementation is **consistent with `GetHashCode`**: equal objects (by `Equals`) will have equal hash codes because `GetHashCode` iterates through the same fields.
+4. The implementation is **consistent with `GetHashCode`**: equal objects (by `Equals`) will have equal hash codes because equality requires matching `Options` and `Errors`, and `GetHashCode` hashes those values even though it does not include `ToolName`.
 
 ---
 
@@ -180,5 +181,5 @@ This contrasts with `IsOptionSet` and `TryGetOptionArgumentList`, which are look
 - Model `string[]` as `List String`.
 - Ignore `GetHashCode` (not needed for equality proofs).
 - Ignore `object.Equals` overload (adds type-erasure complexity without insight).
-- Ignore `==` operator (it is trivially `left.Equals(right)` per the source).
+- Ignore `==` / `!=` operator semantics; `CommandLineParseResult` does not define custom equality operators in the source.
 - The reference-equality short-circuit is invisible to the Lean model; proofs are about value equality only.
