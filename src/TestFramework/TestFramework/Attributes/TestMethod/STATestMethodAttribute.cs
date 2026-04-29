@@ -73,14 +73,12 @@ public class STATestMethodAttribute : TestMethodAttribute
             return await ExecuteCoreAsync(testMethod).ConfigureAwait(false);
         }
 
-#if NETFRAMEWORK
-        if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-#else
+#if !NETFRAMEWORK
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-#endif
         {
             throw new PlatformNotSupportedException(FrameworkMessages.STATestMethodNonWindowsNotSupported);
         }
+#endif
 
         TestResult[]? results = null;
         var t = new Thread(() => results = ExecuteCoreAsync(testMethod).GetAwaiter().GetResult())
