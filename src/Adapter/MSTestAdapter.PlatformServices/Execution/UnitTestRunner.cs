@@ -258,9 +258,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         finally
         {
             var testContextImpl = testContext.Context as TestContextImplementation;
-            result!.LogOutput = testContextImpl?.GetOut();
-            result.LogError = testContextImpl?.GetErr();
-            result.DebugTrace = testContextImpl?.GetTrace();
+            result!.LogOutput = testContextImpl?.GetAndClearOutput();
+            result.LogError = testContextImpl?.GetAndClearError();
+            result.DebugTrace = testContextImpl?.GetAndClearTrace();
             result.TestContextMessages = testContext.GetAndClearDiagnosticMessages();
         }
 
@@ -281,9 +281,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 {
                     Outcome = UnitTestOutcome.Failed,
                     TestFailureException = ex,
-                    LogOutput = testContextImpl?.GetOut(),
-                    LogError = testContextImpl?.GetErr(),
-                    DebugTrace = testContextImpl?.GetTrace(),
+                    LogOutput = testContextImpl?.GetAndClearOutput(),
+                    LogError = testContextImpl?.GetAndClearError(),
+                    DebugTrace = testContextImpl?.GetAndClearTrace(),
                     TestContextMessages = testContext.GetAndClearDiagnosticMessages(),
                 };
             }
@@ -291,9 +291,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             if (results.Length > 0)
             {
                 TestResult lastResult = results[results.Length - 1];
-                lastResult.LogOutput += testContextImpl?.GetOut();
-                lastResult.LogError += testContextImpl?.GetErr();
-                lastResult.DebugTrace += testContextImpl?.GetTrace();
+                lastResult.LogOutput += testContextImpl?.GetAndClearOutput();
+                lastResult.LogError += testContextImpl?.GetAndClearError();
+                lastResult.DebugTrace += testContextImpl?.GetAndClearTrace();
                 lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
             }
         }

@@ -148,9 +148,9 @@ internal class TestMethodInfo : ITestMethod
             if (result != null)
             {
                 var testContextImpl = TestContext as TestContextImplementation;
-                result.LogOutput = testContextImpl?.GetOut();
-                result.LogError = testContextImpl?.GetErr();
-                result.DebugTrace = testContextImpl?.GetTrace();
+                result.LogOutput = testContextImpl?.GetAndClearOutput();
+                result.LogError = testContextImpl?.GetAndClearError();
+                result.DebugTrace = testContextImpl?.GetAndClearTrace();
                 result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
                 result.ResultFiles = TestContext?.GetResultFiles();
                 result.Duration = watch.Elapsed;
