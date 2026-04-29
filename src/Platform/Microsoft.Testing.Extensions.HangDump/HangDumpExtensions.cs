@@ -50,8 +50,7 @@ public static class HangDumpExtensions
                 serviceProvider.GetLoggerFactory(),
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetProcessHandler(),
-                serviceProvider.GetClock(),
-                serviceProvider.GetArtifactNamingService()));
+                serviceProvider.GetClock()));
 
         builder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider
             => new HangDumpEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), pipeNameDescription.Name));

@@ -42,11 +42,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private readonly IProcessHandler _processHandler;
     private readonly IClock _clock;
     private readonly PipeNameDescription _pipeNameDescription;
-    private readonly bool _traceEnabled;
-    private readonly ILogger<HangDumpProcessLifetimeHandler> _logger;
-    private readonly ManualResetEventSlim _waitConsumerPipeName = new(false);
-    private readonly List<string> _dumpFiles = [];
-    private readonly IArtifactNamingService _artifactNamingService;
 
     private TimeSpan? _activityTimerValue;
     private Timer? _activityTimer;
@@ -68,8 +63,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ILoggerFactory loggerFactory,
         IConfiguration configuration,
         IProcessHandler processHandler,
-        IClock clock,
-        IArtifactNamingService artifactNamingService)
+        IClock clock)
     {
         _logger = loggerFactory.CreateLogger<HangDumpProcessLifetimeHandler>();
         _traceEnabled = _logger.IsEnabled(LogLevel.Trace);
@@ -82,7 +76,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         _configuration = configuration;
         _processHandler = processHandler;
         _clock = clock;
-        _artifactNamingService = artifactNamingService;
     }
 
     public string Uid => nameof(HangDumpProcessLifetimeHandler);
@@ -312,16 +305,19 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ApplicationStateGuard.Ensure(_dumpType is not null);
 
         string processId = process.Id.ToString(CultureInfo.InvariantCulture);
-        var customReplacements = new Dictionary<string, string>(StringComparer.Ordinal)
+        var replacements = new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["pname"] = process.Name,
             ["pid"] = processId,
+            ["os"] = ArtifactNamingHelper.GetOperatingSystemName(),
+            ["tfm"] = TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription) ?? string.Empty,
+            ["time"] = _clock.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss.fffffff", CultureInfo.InvariantCulture),
         };
 
         string pattern = _dumpFileNamePattern ?? $"{process.Name}_%p_hang.dmp";
 
         // First resolve <placeholder> templates, then handle legacy %p pattern for backward compatibility.
-        string finalDumpFileName = _artifactNamingService.ResolveTemplate(pattern, customReplacements)
+        string finalDumpFileName = ArtifactNamingHelper.ResolveTemplate(pattern, replacements)
             .Replace("%p", processId);
         finalDumpFileName = Path.Combine(_configuration.GetTestResultDirectory(), finalDumpFileName);
 

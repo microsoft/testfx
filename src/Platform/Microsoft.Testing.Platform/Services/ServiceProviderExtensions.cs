@@ -209,7 +209,4 @@ public static class ServiceProviderExtensions
 
     internal static IPlatformOpenTelemetryService? GetPlatformOTelService(this IServiceProvider serviceProvider)
         => serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>();
-
-    internal static IArtifactNamingService GetArtifactNamingService(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredServiceInternal<IArtifactNamingService>();
 }

@@ -1,6 +1,6 @@
-# Artifact Naming Service
+# Artifact Naming Helper
 
-The artifact naming service provides a standardized way to generate consistent names and paths for test artifacts across all extensions.
+The `ArtifactNamingHelper` is a shared static helper that provides a standardized way to generate consistent names and paths for test artifacts. It is compiled into each extension that needs it via file linking (no service registration or IVT required).
 
 ## Template-Based Naming
 
@@ -32,19 +32,19 @@ Legacy patterns like `%p` continue to work in the hang dump extension.
 Override default values for specific scenarios:
 
 ```csharp
-var customReplacements = new Dictionary<string, string>
+var replacements = new Dictionary<string, string>
 {
     ["pname"] = "Notepad",
     ["pid"] = "1111"
 };
 
-string result = service.ResolveTemplate("<pname>_<pid>.dmp", customReplacements);
+string result = ArtifactNamingHelper.ResolveTemplate("<pname>_<pid>.dmp", replacements);
 // Result: "Notepad_1111.dmp"
 ```
 
 ## Hang Dump Integration
 
-The hang dump extension uses the artifact naming service and supports both legacy and modern patterns:
+The hang dump extension uses the artifact naming helper and supports both legacy and modern patterns:
 
 ```text
 # Legacy pattern (still works)
