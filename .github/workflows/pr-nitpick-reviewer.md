@@ -27,6 +27,7 @@ tools:
     - id: repo-history
       key: repo-history  # shared cache produced by the repo-historian workflow
   github:
+    lockdown: true
     toolsets: [pull_requests, repos]
     min-integrity: none
 
