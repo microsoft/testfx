@@ -47,6 +47,15 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
             => _builder.Clear();
 
         [MethodImpl(MethodImplOptions.Synchronized)]
+        internal string GetAndClear()
+        {
+            string result = _builder.ToString();
+            _builder.Clear();
+
+            return result;
+        }
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public override string ToString()
             => _builder.ToString();
     }
@@ -381,26 +390,11 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     }
 
     internal string? GetAndClearOutput()
-    {
-        string? output = _stdOutStringBuilder?.ToString();
-        _stdOutStringBuilder?.Clear();
-
-        return output;
-    }
+        => _stdOutStringBuilder?.GetAndClear();
 
     internal string? GetAndClearError()
-    {
-        string? error = _stdErrStringBuilder?.ToString();
-        _stdErrStringBuilder?.Clear();
-
-        return error;
-    }
+        => _stdErrStringBuilder?.GetAndClear();
 
     internal string? GetAndClearTrace()
-    {
-        string? trace = _traceStringBuilder?.ToString();
-        _traceStringBuilder?.Clear();
-
-        return trace;
-    }
+        => _traceStringBuilder?.GetAndClear();
 }
