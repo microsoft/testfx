@@ -169,6 +169,7 @@ internal class TypeEnumerator
 
         if (workItemIds is not null)
         {
+            workItemIds.Reverse();
             testElement.WorkItemIds = [.. workItemIds];
         }
 
