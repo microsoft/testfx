@@ -20,6 +20,8 @@ tools:
   bash: ["dotnet", "git", "find", "ls", "cat", "grep", "head", "tail", "wc", "mkdir"]
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   create-pull-request:
     title-prefix: "[tests] "
     labels: [test, automated]

@@ -3,16 +3,15 @@
 
 using System.Web;
 
-using Microsoft.Testing.Framework.Helpers;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
-
-using PlatformTestNodeUid = Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid;
 
 namespace Microsoft.Testing.Framework;
 
 internal sealed class BFSTestNodeVisitor
 {
+    private static readonly string PathSeparatorString = TreeNodeFilter.PathSeparator.ToString();
+
     private readonly IEnumerable<TestNode> _rootTestNodes;
     private readonly ITestExecutionFilter _testExecutionFilter;
     private readonly TestArgumentsManager _testArgumentsManager;
@@ -34,22 +33,26 @@ internal sealed class BFSTestNodeVisitor
 
     public async Task VisitAsync(Func<TestNode, TestNodeUid?, Task> onIncludedTestNodeAsync)
     {
-        // Precompute a HashSet for O(1) UID lookups when filtering by UID list.
-        HashSet<PlatformTestNodeUid>? uidFilterSet = _testExecutionFilter is TestNodeUidListFilter listFilter
-            ? [.. listFilter.TestNodeUids]
+        // Precompute a HashSet<string> for O(1) UID lookups when filtering by UID list.
+        // Using string values directly avoids allocating a wrapper for each lookup.
+        HashSet<string>? uidFilterSet = _testExecutionFilter is TestNodeUidListFilter listFilter
+            ? new HashSet<string>(listFilter.TestNodeUids.Select(static uid => uid.Value), StringComparer.Ordinal)
             : null;
 
         // This is case sensitive, and culture insensitive, to keep UIDs unique, and comparable between different system.
         Dictionary<TestNodeUid, List<TestNode>> testNodesByUid = [];
-        Queue<(TestNode CurrentNode, TestNodeUid? ParentNodeUid, StringBuilder NodeFullPath)> queue = new();
+
+        // Use string (instead of StringBuilder) in the queue to avoid allocating one StringBuilder per node.
+        // Each node's full path is an immutable string that can be shared as the base for child paths.
+        Queue<(TestNode CurrentNode, TestNodeUid? ParentNodeUid, string NodeFullPath)> queue = new();
         foreach (TestNode node in _rootTestNodes)
         {
-            queue.Enqueue((node, null, new()));
+            queue.Enqueue((node, null, string.Empty));
         }
 
         while (queue.Count > 0)
         {
-            (TestNode currentNode, TestNodeUid? parentNodeUid, StringBuilder nodeFullPath) = queue.Dequeue();
+            (TestNode currentNode, TestNodeUid? parentNodeUid, string nodeFullPath) = queue.Dequeue();
 
             if (!testNodesByUid.TryGetValue(currentNode.StableUid, out List<TestNode>? testNodes))
             {
@@ -59,18 +62,12 @@ internal sealed class BFSTestNodeVisitor
 
             testNodes.Add(currentNode);
 
-            StringBuilder nodeFullPathForChildren = new StringBuilder().Append(nodeFullPath);
-
-            if (nodeFullPathForChildren.Length == 0
-                || nodeFullPathForChildren[^1] != TreeNodeFilter.PathSeparator)
-            {
-                nodeFullPathForChildren.Append(TreeNodeFilter.PathSeparator);
-            }
-
             // We want to encode the path fragment to avoid conflicts with the separator. We are using URL encoding because it is
             // a well-known proven standard encoding that is reversible.
-            nodeFullPathForChildren.Append(EncodeString(currentNode.OverriddenEdgeName ?? currentNode.DisplayName));
-            string currentNodeFullPath = nodeFullPathForChildren.ToString();
+            string encodedName = EncodeString(currentNode.OverriddenEdgeName ?? currentNode.DisplayName);
+            string currentNodeFullPath = nodeFullPath.Length == 0 || nodeFullPath[^1] != TreeNodeFilter.PathSeparator
+                ? string.Concat(nodeFullPath, PathSeparatorString, encodedName)
+                : string.Concat(nodeFullPath, encodedName);
 
             // When we are filtering as tree filter and the current node does not match the filter, we skip the node and its children.
             if (_testExecutionFilter is TreeNodeFilter treeNodeFilter)
@@ -89,14 +86,14 @@ internal sealed class BFSTestNodeVisitor
 
             // If the node is not filtered out by the test execution filter, we call the callback with the node.
             if (uidFilterSet is null
-                || uidFilterSet.Contains(currentNode.StableUid.ToPlatformTestNodeUid()))
+                || uidFilterSet.Contains(currentNode.StableUid.Value))
             {
                 await onIncludedTestNodeAsync(currentNode, parentNodeUid).ConfigureAwait(false);
             }
 
             foreach (TestNode childNode in currentNode.Tests)
             {
-                queue.Enqueue((childNode, currentNode.StableUid, nodeFullPathForChildren));
+                queue.Enqueue((childNode, currentNode.StableUid, currentNodeFullPath));
             }
         }
 

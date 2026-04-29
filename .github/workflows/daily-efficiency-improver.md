@@ -49,6 +49,8 @@ safe-outputs:
   update-issue:
     target: "*"
     max: 1
+  noop:
+    report-as-issue: false
 
 tools:
   web-fetch:

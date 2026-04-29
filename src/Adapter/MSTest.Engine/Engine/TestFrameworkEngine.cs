@@ -89,10 +89,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
                     testNodeRunner.EnqueueTest(testNode, parentTestNodeUid);
                 }
 
-                string[] fixtureIds = testNode.Properties
-                    .OfType<FrameworkEngineMetadataProperty>()
-                    .SingleOrDefault()
-                    .UsedFixtureIds
+                string[] fixtureIds = FrameworkEngineMetadataProperty.GetFromProperties(testNode.Properties).UsedFixtureIds
                     ?? [];
                 fixtureManager.RegisterFixtureUsage(testNode, fixtureIds);
 

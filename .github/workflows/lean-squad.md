@@ -105,6 +105,8 @@ safe-outputs:
   add-comment:
     max: 3
     target: "*"
+  noop:
+    report-as-issue: false
 
 timeout-minutes: 120
 

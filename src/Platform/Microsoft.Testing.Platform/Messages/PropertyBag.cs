@@ -190,23 +190,27 @@ public sealed partial class PropertyBag
             return default;
         }
 
-        if (_property is null || _property.Count == 0)
+        // Direct linked-list walk: avoids allocating a yield-iterator state machine.
+        TProperty? found = default;
+        bool foundAny = false;
+        Property? current = _property;
+        while (current is not null)
         {
-            return default;
+            if (current.Current is TProperty match)
+            {
+                if (foundAny)
+                {
+                    throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.");
+                }
+
+                found = match;
+                foundAny = true;
+            }
+
+            current = current.Next;
         }
 
-        IEnumerable<TProperty> matchingValues = _property.OfType<TProperty>();
-
-        using IEnumerator<TProperty> enumerator = matchingValues.GetEnumerator();
-        if (!enumerator.MoveNext())
-        {
-            return default;
-        }
-
-        TProperty property = enumerator.Current;
-        return enumerator.MoveNext()
-            ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
-            : property;
+        return found;
     }
 
     /// <summary>
@@ -230,13 +234,30 @@ public sealed partial class PropertyBag
             throw new InvalidOperationException($"Could not find a property of type '{typeof(TProperty)}'.");
         }
 
-        IEnumerable<TProperty> matchingValues = _property is null ? [] : _property.OfType<TProperty>();
+        // Direct linked-list walk: avoids allocating three separate yield-iterator state machines
+        // (the original code called Any(), Skip(1).Any(), and First() on the same IEnumerable).
+        TProperty? found = default;
+        bool foundAny = false;
+        Property? current = _property;
+        while (current is not null)
+        {
+            if (current.Current is TProperty match)
+            {
+                if (foundAny)
+                {
+                    throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.");
+                }
 
-        return !matchingValues.Any()
-            ? throw new InvalidOperationException($"Could not find a property of type '{typeof(TProperty)}'.")
-            : matchingValues.Skip(1).Any()
-                ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
-                : matchingValues.First();
+                found = match;
+                foundAny = true;
+            }
+
+            current = current.Next;
+        }
+
+        return foundAny
+            ? found!
+            : throw new InvalidOperationException($"Could not find a property of type '{typeof(TProperty)}'.");
     }
 
     /// <summary>

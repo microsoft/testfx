@@ -358,6 +358,11 @@ Gerçekte olan: {2}</target>
         <target state="translated">Öğe(ler) &lt;{0}&gt; koleksiyonda mevcut değildir.</target>
         <note />
       </trans-unit>
+      <trans-unit id="STATestMethodNonWindowsNotSupported">
+        <source>[STATestMethod] is not supported on non-Windows platforms. STA (Single Threaded Apartment) is a Windows-only COM threading concept. Use [OSCondition(OperatingSystems.Windows)] to skip this test on non-Windows platforms.</source>
+        <target state="new">[STATestMethod] is not supported on non-Windows platforms. STA (Single Threaded Apartment) is a Windows-only COM threading concept. Use [OSCondition(OperatingSystems.Windows)] to skip this test on non-Windows platforms.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">'{0}' dizesi, '{1}' dizesi ile başlamıyor. {2}</target>
