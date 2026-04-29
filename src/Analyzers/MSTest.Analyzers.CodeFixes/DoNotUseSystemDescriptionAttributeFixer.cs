@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Simplification;
 
 using MSTest.Analyzers.Helpers;
 
@@ -94,15 +95,18 @@ public sealed class DoNotUseSystemDescriptionAttributeFixer : CodeFixProvider
             return document;
         }
 
-        // Replace the System.ComponentModel.Description attribute name with the MSTest Description attribute name.
-        // Since the MSTest namespace (Microsoft.VisualStudio.TestTools.UnitTesting) is already in scope,
-        // we can use just the simple name "Description" which will resolve to MSTest's DescriptionAttribute.
-        AttributeSyntax newAttribute = systemDescriptionAttribute.WithName(
-            SyntaxFactory.IdentifierName("Description")
-                .WithTriviaFrom(systemDescriptionAttribute.Name));
+        // Replace the System.ComponentModel.Description attribute name with the fully-qualified MSTest Description
+        // attribute name, annotated for simplification. The Simplifier will reduce it to the simple name if the
+        // MSTest namespace is already in scope and there is no ambiguity; otherwise it keeps the fully-qualified form.
+        NameSyntax msTestDescriptionName = SyntaxFactory.ParseName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDescriptionAttribute)
+            .WithTriviaFrom(systemDescriptionAttribute.Name)
+            .WithAdditionalAnnotations(Simplifier.Annotation);
+
+        AttributeSyntax newAttribute = systemDescriptionAttribute.WithName(msTestDescriptionName);
 
         SyntaxNode root = await document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+        Document updatedDocument = document.WithSyntaxRoot(root.ReplaceNode(systemDescriptionAttribute, newAttribute));
 
-        return document.WithSyntaxRoot(root.ReplaceNode(systemDescriptionAttribute, newAttribute));
+        return await Simplifier.ReduceAsync(updatedDocument, cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 }

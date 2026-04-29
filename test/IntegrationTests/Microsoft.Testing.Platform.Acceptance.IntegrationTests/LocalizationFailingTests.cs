@@ -36,7 +36,7 @@ public sealed class LocalizationFailingTests : AcceptanceTestBase<LocalizationFa
             environmentVariables: new() { ["DOTNET_CLI_UI_LANGUAGE"] = "fr" },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
 
         // Verify failure summary is in French ("Résumé de série de tests : Échec!")
         AssertOutputContainsNormalized(testHostResult, "Résumé de série de tests : Échec!");

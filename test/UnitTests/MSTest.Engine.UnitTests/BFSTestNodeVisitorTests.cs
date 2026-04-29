@@ -245,6 +245,39 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         Assert.AreEqual(typeof(InternalUnsafeActionTestNode), includedTestNodes[6].Node.GetType());
     }
 
+    [TestMethod]
+    public async Task Visit_WhenFilterHasPropertyExpression_OnlyIncludesNodesMatchingProperty()
+    {
+        // Arrange — filter with a property expression (ContainsPropertyFilters == true)
+        var nodeWithMatchingTag = new TestNode
+        {
+            StableUid = "ID1",
+            DisplayName = "A",
+            Properties = [new TestMetadataProperty("Tag", "Fast")],
+        };
+        var nodeWithNonMatchingTag = new TestNode
+        {
+            StableUid = "ID2",
+            DisplayName = "A",
+            Properties = [new TestMetadataProperty("Tag", "Slow")],
+        };
+
+        var filter = new TreeNodeFilter("/A[Tag=Fast]");
+        var visitor = new BFSTestNodeVisitor(new[] { nodeWithMatchingTag, nodeWithNonMatchingTag }, filter, null!);
+
+        // Act
+        List<TestNode> includedTestNodes = [];
+        await visitor.VisitAsync((testNode, _) =>
+        {
+            includedTestNodes.Add(testNode);
+            return Task.CompletedTask;
+        });
+
+        // Assert
+        Assert.HasCount(1, includedTestNodes);
+        Assert.AreEqual("ID1", includedTestNodes[0].StableUid);
+    }
+
     private static TestNode CreateParameterizedTestNode(string parameterizedTestNode, bool? expansionPropertyValue)
     {
         TestNode rootNode = parameterizedTestNode switch
