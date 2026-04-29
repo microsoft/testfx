@@ -20,7 +20,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false, cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
 
         string diagContentsPattern =
 """
@@ -48,7 +48,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
             },
             disableTelemetry: false, TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
 
         string diagContentsPattern =
 """
@@ -76,7 +76,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
             },
             disableTelemetry: false, TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
 
         string diagContentsPattern =
 """
@@ -90,7 +90,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
 
     private static async Task<string> AssertDiagnosticReportAsync(TestHostResult testHostResult, string diagPathPattern, string diagContentsPattern, string level = "Trace", string flushType = "async")
     {
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
 
         string outputPattern = $"""
 Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}

@@ -16,11 +16,13 @@ permissions:
 tools:
   cache-memory: true
   github:
+    lockdown: true
     toolsets: [pull_requests, repos]
     min-integrity: none
 
 safe-outputs:
-  noop: {}
+  noop:
+    report-as-issue: false
   create-pull-request-review-comment:
     max: 5
     side: "RIGHT"

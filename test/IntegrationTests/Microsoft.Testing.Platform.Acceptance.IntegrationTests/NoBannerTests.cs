@@ -16,7 +16,7 @@ public class NoBannerTests : AcceptanceTestBase<NoBannerTests.TestAssetFixture>
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--no-banner", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
         testHostResult.AssertOutputDoesNotMatchRegex(_bannerRegexMatchPattern);
     }
 
@@ -33,7 +33,7 @@ public class NoBannerTests : AcceptanceTestBase<NoBannerTests.TestAssetFixture>
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
         testHostResult.AssertOutputDoesNotMatchRegex(_bannerRegexMatchPattern);
     }
 
@@ -50,7 +50,7 @@ public class NoBannerTests : AcceptanceTestBase<NoBannerTests.TestAssetFixture>
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
         testHostResult.AssertOutputDoesNotMatchRegex(_bannerRegexMatchPattern);
     }
 
@@ -61,7 +61,7 @@ public class NoBannerTests : AcceptanceTestBase<NoBannerTests.TestAssetFixture>
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
         testHostResult.AssertOutputMatchesRegex(_bannerRegexMatchPattern);
     }
 

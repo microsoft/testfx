@@ -20,7 +20,7 @@ public class TestFilterTests : AcceptanceTestBase<TestFilterTests.TestAssetFixtu
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter tree=one", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
@@ -32,7 +32,7 @@ public class TestFilterTests : AcceptanceTestBase<TestFilterTests.TestAssetFixtu
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter tree=one --list-tests", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputMatchesRegex("""
   Test2
 Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
@@ -62,25 +62,25 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         testHostResult.AssertOutputContains("Running test: CategoryAOnly");
         testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
         testHostResult.AssertOutputContains("Running test: CategoryAAndB");
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         testHostResult = await testHost.ExecuteAsync("--settings NoFilter.runsettings", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContains("Running test: CategoryAOnly");
         testHostResult.AssertOutputContains("Running test: CategoryBOnly");
         testHostResult.AssertOutputContains("Running test: CategoryAAndB");
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         testHostResult = await testHost.ExecuteAsync("--settings CategoryA.runsettings --filter TestCategory~CategoryA", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContains("Running test: CategoryAOnly");
         testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
         testHostResult.AssertOutputContains("Running test: CategoryAAndB");
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         testHostResult = await testHost.ExecuteAsync("--settings CategoryA.runsettings --filter TestCategory~CategoryB", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputDoesNotContain("Running test: CategoryAOnly");
         testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
         testHostResult.AssertOutputContains("Running test: CategoryAAndB");
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()

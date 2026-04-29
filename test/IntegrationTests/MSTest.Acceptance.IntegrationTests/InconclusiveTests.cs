@@ -44,12 +44,12 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
 
         if (inconclusiveStep >= Lifecycle.ClassCleanup)
         {
-            testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+            testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
             testHostResult.AssertOutputContainsSummary(failed: 1, passed: 1, skipped: 0);
         }
         else
         {
-            testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+            testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
             testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1);
         }
 
