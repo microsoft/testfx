@@ -18,19 +18,19 @@
 |---|------|------|-------|--------|----------|
 | 1 | `ArgumentArity` | `src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs` | 2 | Informal spec extracted | [PR #7799](https://github.com/microsoft/testfx/pull/7799) |
 | 2 | `CommandLineParser.TryUnescape` | `src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs` | 2 | Informal spec extracted | — |
-| 3 | `CommandLineParser.ParseOptionAndSeparators` | `src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs` | 1 | Identified | — |
+| 3 | `CommandLineParser.ParseOptionAndSeparators` | `src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs` | 2 | Informal spec extracted | — |
 | 4 | `CommandLineOptionsValidator` arity validation | `src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs` | 1 | Identified | — |
 | 5 | `CommandLineParseResult.Equals` | `src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs` | 1 | Identified | — |
-| 6 | `ResponseFileHelper.SplitCommandLine` | `src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs` | 2 | Informal spec extracted | — |
-| 7 | `TreeNodeFilter.MatchFilterPattern` | `src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs` | 1 | Identified | — |
+| 6 | `ResponseFileHelper.SplitCommandLine` | `src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs` | 2 | Informal spec extracted | [PR #7899](https://github.com/microsoft/testfx/pull/7899) |
+| 7 | `TreeNodeFilter.MatchFilterPattern` | `src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs` | 2 | Informal spec extracted | — |
 
 ## Priority Order
 
-1. **`ArgumentArity`** — highest priority. Smallest self-contained target; decidable properties; good warm-up for setting up the Lean environment. Informal spec done.
-2. **`CommandLineParser.TryUnescape`** — second priority. Pure function with clear specification; security-relevant string processing. Informal spec extracted (PR open).
-3. **`TreeNodeFilter.MatchFilterPattern`** — **elevated third priority**. Pure recursive Boolean algebra; structural induction proofs; De Morgan and double negation provable by `simp`. Excellent Lean target.
-4. **`ResponseFileHelper.SplitCommandLine`** — fourth priority. Pure tokeniser with state machine; clear grammar-based properties.
-5. **`CommandLineParser.ParseOptionAndSeparators`** — fifth priority. Small pure function; useful for verifying parser correctness.
+1. **`ArgumentArity`** — highest priority. Smallest self-contained target; decidable properties; good warm-up for setting up the Lean environment. Informal spec done. **Next: Task 3 (blocked by Lean toolchain).**
+2. **`CommandLineParser.TryUnescape`** — second priority. Pure function with clear specification; security-relevant string processing. Informal spec extracted. **Next: Task 3 (blocked by Lean toolchain).**
+3. **`TreeNodeFilter.MatchFilterPattern`** — **elevated third priority**. Pure recursive Boolean algebra; structural induction proofs; De Morgan and double negation provable by `simp`. Informal spec extracted. **Next: Task 3 (blocked by Lean toolchain).**
+4. **`ResponseFileHelper.SplitCommandLine`** — fourth priority. Pure tokeniser with state machine; clear grammar-based properties. Informal spec extracted (PR open). **Next: Task 3 (blocked by Lean toolchain).**
+5. **`CommandLineParser.ParseOptionAndSeparators`** — fifth priority. Small pure function; useful for verifying parser correctness. Informal spec extracted this run. **Next: Task 3 (blocked by Lean toolchain).**
 6. **`CommandLineOptionsValidator` arity validation** — sixth priority. Validation logic with clear input/output contract.
 7. **`CommandLineParseResult.Equals`** — seventh priority. Structural equality; good for verifying equivalence-relation laws.
 
