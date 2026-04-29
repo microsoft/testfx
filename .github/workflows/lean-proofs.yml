@@ -46,7 +46,7 @@ jobs:
           path: |
             formal-verification/lean/.lake
             ~/.elan
-          key: lean-${{ runner.os }}-${{ hashFiles('formal-verification/lean/lean-toolchain', 'formal-verification/lean/lakefile.toml', 'formal-verification/lean/lake-manifest.json') }}
+          key: lean-${{ runner.os }}-${{ hashFiles('formal-verification/lean/lean-toolchain', 'formal-verification/lean/lakefile.toml') }}
           restore-keys: |
             lean-${{ runner.os }}-
 
@@ -107,7 +107,7 @@ jobs:
         run: |
           LEAN_DIR="formal-verification/lean/FVSquad"
           THEOREM_COUNT=$(grep -rEc '^(theorem|lemma) ' "${LEAN_DIR}" --include='*.lean' 2>/dev/null || echo 0)
-          SORRY_COUNT=$(grep -rc '\bsorry\b' "${LEAN_DIR}" --include='*.lean' 2>/dev/null \
+          SORRY_COUNT=$(grep -rc '\<sorry\>' "${LEAN_DIR}" --include='*.lean' 2>/dev/null \
             | awk -F: '{sum += $2} END {print sum+0}')
           {
             echo "## 🔬 Lean Proof Summary"
