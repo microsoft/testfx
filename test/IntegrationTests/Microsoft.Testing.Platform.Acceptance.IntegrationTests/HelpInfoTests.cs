@@ -13,7 +13,7 @@ public class HelpInfoTests : AcceptanceTestBase<HelpInfoTests.TestAssetFixture>
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         const string wildcardMatchPattern = $"""
 Microsoft.Testing.Platform v*
@@ -87,7 +87,7 @@ Extension options:
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--?", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         const string wildcardMatchPattern = $"""
 Microsoft.Testing.Platform v*
@@ -108,7 +108,7 @@ Options:
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"-{UnknownOption}", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
 
         const string wildcardMatchPattern = $"""
 Microsoft.Testing.Platform v*
@@ -128,7 +128,7 @@ Options:
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--info", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string regexMatchPattern = $"""
 Microsoft.Testing.Platform v.+ \[.+\]
@@ -301,7 +301,7 @@ Registered tools:
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         // Verify that TestResults folder was not created
         Assert.IsFalse(Directory.Exists(testResultsPath), "TestResults folder should not be created for help command");
@@ -323,7 +323,7 @@ Registered tools:
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--?", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         // Verify that TestResults folder was not created
         Assert.IsFalse(Directory.Exists(testResultsPath), "TestResults folder should not be created for help short name command");
@@ -345,7 +345,7 @@ Registered tools:
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--info", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         // Verify that TestResults folder was not created
         Assert.IsFalse(Directory.Exists(testResultsPath), "TestResults folder should not be created for info command");

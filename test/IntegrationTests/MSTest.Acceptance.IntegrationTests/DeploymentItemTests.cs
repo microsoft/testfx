@@ -21,7 +21,7 @@ public class DeploymentItemTests : AcceptanceTestBase<DeploymentItemTests.TestAs
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetFramework[0]);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runsettings}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()

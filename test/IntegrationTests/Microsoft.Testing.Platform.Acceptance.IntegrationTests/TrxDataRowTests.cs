@@ -22,7 +22,7 @@ public sealed class TrxDataRowTests : AcceptanceTestBase<TrxDataRowTests.TestAss
 
     private async Task AssertTrxReportWasGeneratedAsync(TestHostResult testHostResult, string trxPathPattern, int numberOfTests)
     {
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string outputPattern = $"""
   In process file artifacts produced:

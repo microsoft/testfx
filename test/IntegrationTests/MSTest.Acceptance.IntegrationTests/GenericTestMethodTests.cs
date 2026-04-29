@@ -17,7 +17,7 @@ public class GenericTestMethodTests : AcceptanceTestBase<GenericTestMethodTests.
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputMatchesRegex(
             """
             failed AMethodWithBadConstraints \(0\) \((\d+s )?\d+ms\)

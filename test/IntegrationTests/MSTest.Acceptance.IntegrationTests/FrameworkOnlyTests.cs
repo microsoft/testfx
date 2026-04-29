@@ -25,7 +25,7 @@ public class FrameworkOnlyTests : AcceptanceTestBase<FrameworkOnlyTests.TestAsse
             3,4
             """);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()

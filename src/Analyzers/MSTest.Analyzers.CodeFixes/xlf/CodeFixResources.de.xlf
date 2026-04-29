@@ -67,6 +67,11 @@
         <target state="translated">Entfernen Sie das Argument „ClassCleanupBehavior“.</target>
         <note />
       </trans-unit>
+      <trans-unit id="RemoveDuplicateDataRowFix">
+        <source>Remove duplicate 'DataRow'</source>
+        <target state="new">Remove duplicate 'DataRow'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RemoveDuplicateTestMethodAttributeFix">
         <source>Remove duplicate TestMethod attribute</source>
         <target state="new">Remove duplicate TestMethod attribute</target>
