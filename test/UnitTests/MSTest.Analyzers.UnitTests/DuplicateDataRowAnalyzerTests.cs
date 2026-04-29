@@ -393,6 +393,13 @@ public sealed class DuplicateDataRowAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        await new VerifyCS.Test
+        {
+            TestCode = code,
+            FixedCode = fixedCode,
+            NumberOfFixAllIterations = 2,
+            NumberOfFixAllInDocumentIterations = 2,
+            NumberOfFixAllInProjectIterations = 2,
+        }.RunAsync();
     }
 }
