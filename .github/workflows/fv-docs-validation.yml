@@ -120,23 +120,30 @@ jobs:
               parts = re.sub(r'([a-z])([A-Z])', r'\1_\2', name)
               return [w.lower() for w in re.split(r'[._\s]+', parts) if len(w) >= 3]
 
-          all_specs = [os.path.basename(p) for p in glob.glob(os.path.join(specs_dir, "*.md"))]
+          all_specs = [os.path.basename(p) for p in glob.glob(os.path.join(specs_dir, "*_informal.md"))]
 
+          failed = False
           for m in row_re.finditer(content):
               name  = m.group(1)
               phase = int(m.group(2))
               if phase < 2:
                   continue
               keywords = name_to_keywords(name)
+              if not keywords:
+                  print(f"::warning::Phase-{phase} target '{name}' produced no keywords — cannot validate spec")
+                  continue
               # A spec matches if it contains ALL keywords derived from the name
               matched = [s for s in all_specs if all(kw in s for kw in keywords)]
               if matched:
                   print(f"✅  Phase-{phase} target '{name}' — spec: {matched}")
               else:
                   # Partial: at least the first keyword
-                  partial = [s for s in all_specs if keywords and keywords[0] in s]
+                  partial = [s for s in all_specs if keywords[0] in s]
                   if partial:
                       print(f"✅  Phase-{phase} target '{name}' — spec found (partial): {partial}")
                   else:
-                      print(f"::warning::Phase-{phase} target '{name}' has no informal spec in specs/ (keywords: {keywords})")
+                      print(f"::error::Phase-{phase} target '{name}' has no informal spec in specs/ (keywords: {keywords})")
+                      failed = True
+          if failed:
+              sys.exit(1)
           EOF
