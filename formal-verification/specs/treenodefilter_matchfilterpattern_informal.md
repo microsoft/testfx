@@ -146,7 +146,7 @@ The public method that calls `MatchFilterPattern` per segment:
 1. Split `testNodeFullPath` by `/` (skipping leading `/`) into segments.
 2. Match segment `i` against filter `i`.
 3. If the path is fully consumed (no more segments remain), return `true` — any remaining filters are not consulted (prefix-match semantics).
-4. If path has more segments than filters, return `true` only if the last filter was `.*.*` (the multi-level wildcard).
+4. If path has more segments than filters, return `true` only if the last filter's value expression is `.*.*` (the multi-level wildcard). If the last filter is a `ValueAndPropertyExpression`, its inner `Value` is inspected.
 5. If any segment fails its filter, return `false` immediately.
 
 **Postcondition**:
@@ -155,7 +155,10 @@ MatchesFilter(path, bag) = true
   ↔ let n = min(|segments(path)|, |_filters|) in
       (∀ i < n. evalFilter(_filters[i], segment(path, i), bag))
     ∧ (|segments(path)| ≤ |_filters|
-       ∨ _filters.Last() is ValueExpression(".*.*"))
+       ∨ unwrapValue(_filters.Last()) is ValueExpression(".*.*"))
+
+where unwrapValue(e) = e.Value   if e is ValueAndPropertyExpression
+                     = e         otherwise
 ```
 
 > **Note**: The path may have *fewer* segments than `_filters`. In that case only the first `|segments(path)|` filters are evaluated and the rest are ignored. This is a deliberate prefix-match design: a more-specific filter (more segments) matches any node whose path is a prefix of the filter path.
