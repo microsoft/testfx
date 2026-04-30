@@ -1,0 +1,149 @@
+name: FV Documentation Validation
+
+# 🔬 Lean Squad — CI workflow for formal-verification documentation consistency.
+# Checks that required FV artifacts exist and are structurally sound.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - "formal-verification/**"
+      - ".github/workflows/fv-docs-validation.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "formal-verification/**"
+  workflow_dispatch:
+
+jobs:
+  validate-fv-docs:
+    name: Validate FV Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check required top-level FV documents
+        run: |
+          MISSING=0
+          for doc in RESEARCH.md TARGETS.md CORRESPONDENCE.md CRITIQUE.md REPORT.md; do
+            if [ ! -f "formal-verification/${doc}" ]; then
+              echo "::error file=formal-verification/${doc}::Required FV document missing: ${doc}"
+              MISSING=1
+            else
+              echo "✅  formal-verification/${doc} present"
+            fi
+          done
+          if [ "$MISSING" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Check Lean project files
+        run: |
+          MISSING=0
+          for f in lean/lakefile.toml lean/lean-toolchain lean/README.md; do
+            if [ ! -f "formal-verification/${f}" ]; then
+              echo "::error file=formal-verification/${f}::Required Lean project file missing: ${f}"
+              MISSING=1
+            else
+              echo "✅  formal-verification/${f} present"
+            fi
+          done
+          if [ "$MISSING" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Verify lean-toolchain is non-empty and well-formed
+        run: |
+          TOOLCHAIN="$(tr -d '\r\n' < formal-verification/lean/lean-toolchain)"
+          if [ -z "$TOOLCHAIN" ]; then
+            echo "::error file=formal-verification/lean/lean-toolchain::lean-toolchain file is empty"
+            exit 1
+          fi
+
+          if [[ "$TOOLCHAIN" =~ [[:space:]] ]]; then
+            echo "::error file=formal-verification/lean/lean-toolchain::lean-toolchain must not contain whitespace"
+            exit 1
+          fi
+
+          if ! printf '%s\n' "$TOOLCHAIN" | grep -Eq '^[^[:space:]/]+/[^[:space:]/]+:[^[:space:]]+$'; then
+            echo "::error file=formal-verification/lean/lean-toolchain::lean-toolchain must match <org>/<repo>:<tag>"
+            exit 1
+          fi
+          echo "✅  lean-toolchain: ${TOOLCHAIN}"
+
+      - name: Check FV 🔬 disclosure in top-level docs
+        run: |
+          FAILED=0
+          for doc in RESEARCH.md TARGETS.md CORRESPONDENCE.md CRITIQUE.md REPORT.md; do
+            if ! grep -q "🔬" "formal-verification/${doc}"; then
+              echo "::error file=formal-verification/${doc}::FV document missing 🔬 Lean Squad disclosure: ${doc}"
+              FAILED=1
+            else
+              echo "✅  formal-verification/${doc} has 🔬 disclosure"
+            fi
+          done
+          if [ "$FAILED" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Check specs/ directory exists
+        run: |
+          if [ ! -d "formal-verification/specs" ]; then
+            echo "::error::formal-verification/specs/ directory is missing"
+            exit 1
+          fi
+          SPEC_COUNT="$(find formal-verification/specs -name '*_informal.md' | wc -l)"
+          echo "✅  formal-verification/specs/ present with ${SPEC_COUNT} informal spec(s)"
+
+      - name: Verify TARGETS.md phase-2+ targets have informal specs
+        run: |
+          python3 - <<'EOF'
+          import re, sys, os, glob
+
+          targets_path = "formal-verification/TARGETS.md"
+          specs_dir    = "formal-verification/specs"
+
+          with open(targets_path) as f:
+              content = f.read()
+
+          row_re = re.compile(
+              r'\|\s*\d+\s*\|\s*`([^`]+)`\s*\|[^|]+\|\s*(\d+)\s*\|'
+          )
+
+          def name_to_keywords(name):
+              # Split on CamelCase, dots, underscores, spaces
+              parts = re.sub(r'([a-z])([A-Z])', r'\1_\2', name)
+              return [w.lower() for w in re.split(r'[._\s]+', parts) if len(w) >= 3]
+
+          all_specs = [os.path.basename(p) for p in glob.glob(os.path.join(specs_dir, "*_informal.md"))]
+
+          failed = False
+          for m in row_re.finditer(content):
+              name  = m.group(1)
+              phase = int(m.group(2))
+              if phase < 2:
+                  continue
+              keywords = name_to_keywords(name)
+              if not keywords:
+                  print(f"::warning::Phase-{phase} target '{name}' produced no keywords — cannot validate spec")
+                  continue
+              # A spec matches if it contains ALL keywords derived from the name
+              matched = [s for s in all_specs if all(kw in s for kw in keywords)]
+              if matched:
+                  print(f"✅  Phase-{phase} target '{name}' — spec: {matched}")
+              else:
+                  # Partial: at least the first keyword
+                  partial = [s for s in all_specs if keywords[0] in s]
+                  if partial:
+                      print(f"✅  Phase-{phase} target '{name}' — spec found (partial): {partial}")
+                  else:
+                      print(f"::error::Phase-{phase} target '{name}' has no informal spec in specs/ (keywords: {keywords})")
+                      failed = True
+          if failed:
+              sys.exit(1)
+          EOF
