@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Helpers;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 internal static class AcceptanceAssert
@@ -8,8 +10,14 @@ internal static class AcceptanceAssert
     public static void AssertExitCodeIs(this TestHostResult testHostResult, int exitCode, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.AreEqual(exitCode, testHostResult.ExitCode, GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
+    public static void AssertExitCodeIs(this TestHostResult testHostResult, ExitCode exitCode, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+        => AssertExitCodeIs(testHostResult, (int)exitCode, callerMemberName, callerFilePath, callerLineNumber);
+
     public static void AssertExitCodeIsNot(this TestHostResult testHostResult, int exitCode, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.AreNotEqual(exitCode, testHostResult.ExitCode, GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
+
+    public static void AssertExitCodeIsNot(this TestHostResult testHostResult, ExitCode exitCode, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+        => AssertExitCodeIsNot(testHostResult, (int)exitCode, callerMemberName, callerFilePath, callerLineNumber);
 
     /// <summary>
     /// Ensure that the output matches the given pattern. The pattern can use `*` to mean any character, it is internally replaced by `.*` and matched as regex.
@@ -90,8 +98,14 @@ internal static class AcceptanceAssert
     public static void AssertExitCodeIs(this DotnetMuxerResult testHostResult, int exitCode, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.AreEqual(exitCode, testHostResult.ExitCode, GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
+    public static void AssertExitCodeIs(this DotnetMuxerResult testHostResult, ExitCode exitCode, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+        => AssertExitCodeIs(testHostResult, (int)exitCode, callerMemberName, callerFilePath, callerLineNumber);
+
     public static void AssertExitCodeIsNot(this DotnetMuxerResult testHostResult, int exitCode, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.AreNotEqual(exitCode, testHostResult.ExitCode, GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
+
+    public static void AssertExitCodeIsNot(this DotnetMuxerResult testHostResult, ExitCode exitCode, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+        => AssertExitCodeIsNot(testHostResult, (int)exitCode, callerMemberName, callerFilePath, callerLineNumber);
 
     public static void AssertOutputContains(this DotnetMuxerResult dotnetMuxerResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.Contains(value, dotnetMuxerResult.StandardOutput, StringComparison.Ordinal, GenerateFailedAssertionMessage(dotnetMuxerResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));

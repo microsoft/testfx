@@ -22,7 +22,7 @@ public sealed class TimeoutCooperativeTestMethodTests : AcceptanceTestBase<Timeo
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
     }
 
@@ -38,7 +38,7 @@ public sealed class TimeoutCooperativeTestMethodTests : AcceptanceTestBase<Timeo
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("Test initialize method 'TimeoutTest.UnitTest1.TestInit' timed out after 1000ms");
     }
 
@@ -54,7 +54,7 @@ public sealed class TimeoutCooperativeTestMethodTests : AcceptanceTestBase<Timeo
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("Test cleanup method 'TimeoutTest.UnitTest1.TestCleanup' timed out after 1000ms");
     }
 
@@ -70,7 +70,7 @@ public sealed class TimeoutCooperativeTestMethodTests : AcceptanceTestBase<Timeo
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
     }
 
