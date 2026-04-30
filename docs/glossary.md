@@ -46,6 +46,10 @@ An MTP extension (`Microsoft.Testing.Extensions.HangDump`) that captures a proce
 
 ## I
 
+### Informal Spec (FV)
+
+An intermediate artifact in the [Formal Verification (FV)](#formal-verification-fv) workflow that documents the behavioural properties of an [FV Target](#fv-target) in plain English (or structured natural language), before writing formal [Lean 4](#lean-4) proofs. An informal spec lists preconditions, postconditions, edge-case expectations, and any confirmed bugs discovered during analysis. It corresponds to Phase 2 of the FV target lifecycle and lives in the `formal-verification/specs/` directory.
+
 ### IsTestingPlatformApplication
 
 An MSBuild property (`<IsTestingPlatformApplication>true</IsTestingPlatformApplication>`) that marks a project as an MTP test application. When set, the project builds into a self-contained test runner executable rather than a class library consumed by a separate test host.
