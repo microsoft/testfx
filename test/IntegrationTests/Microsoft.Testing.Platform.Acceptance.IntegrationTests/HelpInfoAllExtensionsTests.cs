@@ -13,7 +13,7 @@ public sealed class HelpInfoAllExtensionsTests : AcceptanceTestBase<HelpInfoAllE
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string wildcardPattern = $"""
 Microsoft.Testing.Platform v*
@@ -120,7 +120,7 @@ Extension options:
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("-?", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string wildcardPattern = $"""
 Microsoft.Testing.Platform v*
@@ -139,7 +139,7 @@ Options:
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--info", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string wildcardPattern = $"""
 Microsoft.Testing.Platform v* [*]

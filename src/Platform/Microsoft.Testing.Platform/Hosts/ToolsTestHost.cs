@@ -63,20 +63,20 @@ internal sealed class ToolsHost(
                 {
                     await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(unknownOptionsError), cancellationToken).ConfigureAwait(false);
                     console.WriteLine();
-                    return ExitCodes.InvalidCommandLine;
+                    return (int)ExitCode.InvalidCommandLine;
                 }
 
                 if (ExtensionArgumentArityAreInvalid(out string? arityErrors, tool))
                 {
                     await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(arityErrors), cancellationToken).ConfigureAwait(false);
-                    return ExitCodes.InvalidCommandLine;
+                    return (int)ExitCode.InvalidCommandLine;
                 }
 
                 ValidationResult optionsArgumentsValidationResult = await ValidateOptionsArgumentsAsync(tool).ConfigureAwait(false);
                 if (!optionsArgumentsValidationResult.IsValid)
                 {
                     await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(optionsArgumentsValidationResult.ErrorMessage), cancellationToken).ConfigureAwait(false);
-                    return ExitCodes.InvalidCommandLine;
+                    return (int)ExitCode.InvalidCommandLine;
                 }
 
                 return await tool.RunAsync(cancellationToken).ConfigureAwait(false);
@@ -85,7 +85,7 @@ internal sealed class ToolsHost(
 
         await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData($"Tool '{toolNameToRun}' not found in the list of registered tools."), cancellationToken).ConfigureAwait(false);
         await _commandLineHandler.PrintHelpAsync(_outputDevice, null, cancellationToken).ConfigureAwait(false);
-        return ExitCodes.InvalidCommandLine;
+        return (int)ExitCode.InvalidCommandLine;
     }
 
     private bool UnknownOptions([NotNullWhen(true)] out string? error, ITool tool)

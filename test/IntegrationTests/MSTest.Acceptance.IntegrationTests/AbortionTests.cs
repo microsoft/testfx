@@ -31,7 +31,7 @@ public sealed class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFi
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);
+        testHostResult.AssertExitCodeIs(ExitCode.TestSessionAborted);
 
         testHostResult.AssertOutputMatchesRegex("Canceling the test session.*");
     }

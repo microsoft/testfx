@@ -19,7 +19,7 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);
+        testHostResult.AssertExitCodeIs(ExitCode.TestSessionAborted);
 
         // We don't assert "Canceling the test session" message.
         // Cancellation could happen very first that we didn't have the opportunity to write this message.

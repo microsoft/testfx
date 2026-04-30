@@ -19,7 +19,7 @@ public sealed class DuplicateTestClassAttributeTests : AcceptanceTestBase<Duplic
         var testHost = TestHost.LocateFrom(AssetFixture.DuplicateTestClassProjectPath, TestAssetFixture.DuplicateTestClassProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
+        testHostResult.AssertExitCodeIsNot(ExitCode.Success);
         testHostResult.AssertStandardErrorContains("Only one attribute of type 'Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute' is allowed, but multiple were found.");
     }
 

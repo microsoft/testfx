@@ -52,12 +52,16 @@ safe-outputs:
     target: "*"
     title-prefix: "[Test Improver] "
     max: 1
+  noop:
+    report-as-issue: false
 
 tools:
   web-fetch:
   bash: true
   github:
-    toolsets: [all]
+    lockdown: true
+    toolsets: [repos, pull_requests, issues, discussions]
+    min-integrity: none
   repo-memory: true
 ---
 

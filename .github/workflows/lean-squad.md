@@ -49,7 +49,9 @@ checkout:
 tools:
   web-fetch:
   github:
+    lockdown: true
     toolsets: [default]
+    min-integrity: none
   bash:
     - find
     - grep
@@ -105,6 +107,8 @@ safe-outputs:
   add-comment:
     max: 3
     target: "*"
+  noop:
+    report-as-issue: false
 
 timeout-minutes: 120
 

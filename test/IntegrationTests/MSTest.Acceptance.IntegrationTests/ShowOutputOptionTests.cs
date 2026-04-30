@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -72,7 +72,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
             "--show-stdout invalid",
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
+        testHostResult.AssertExitCodeIsNot(ExitCode.Success);
         testHostResult.AssertOutputContains("--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.");
     }
 
@@ -138,7 +138,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
             "--show-stderr invalid",
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
+        testHostResult.AssertExitCodeIsNot(ExitCode.Success);
         testHostResult.AssertOutputContains("--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.");
     }
 

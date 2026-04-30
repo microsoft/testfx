@@ -19,11 +19,11 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// Code fix for <see cref="TestMethodShouldBeValidAnalyzer"/>.
+/// Code fixer for <see cref="TestMethodShouldBeValidAnalyzer"/>.
 /// </summary>
-[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(TestMethodShouldBeValidCodeFixProvider))]
+[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(TestMethodShouldBeValidFixer))]
 [Shared]
-public sealed class TestMethodShouldBeValidCodeFixProvider : CodeFixProvider
+public sealed class TestMethodShouldBeValidFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds
@@ -55,7 +55,7 @@ public sealed class TestMethodShouldBeValidCodeFixProvider : CodeFixProvider
             CodeAction.Create(
                 title: CodeFixResources.TestMethodShouldBeValidFix,
                 createChangedSolution: c => FixTestMethodAsync(context.Document, methodDeclaration, c),
-                equivalenceKey: nameof(TestMethodShouldBeValidCodeFixProvider)),
+                equivalenceKey: nameof(TestMethodShouldBeValidFixer)),
             diagnostic);
     }
 

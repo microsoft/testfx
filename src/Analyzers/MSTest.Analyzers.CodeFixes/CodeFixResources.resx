@@ -216,4 +216,7 @@
   <data name="AvoidUsingAssertsInAsyncVoidContextFix" xml:space="preserve">
     <value>Change return type to 'Task'</value>
   </data>
+  <data name="RemoveDuplicateDataRowFix" xml:space="preserve">
+    <value>Remove duplicate 'DataRow'</value>
+  </data>
 </root>
