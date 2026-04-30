@@ -1,9 +1,9 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.DoNotUseSystemDescriptionAttributeAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.DoNotUseSystemDescriptionAttributeFixer>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -11,7 +11,7 @@ namespace MSTest.Analyzers.Test;
 public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
 {
     [TestMethod]
-    public async Task WhenTestMethodHasSystemDescriptionAttribute_Diagnostic()
+    public async Task WhenTestMethodHasFullyQualifiedSystemDescriptionAttribute_Diagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -27,7 +27,87 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [Description("Description")]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasSystemDescriptionAttributeWithSystemComponentModelUsing_UsesFullyQualifiedMSTestDescription()
+    {
+        string code = """
+            using System.ComponentModel;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [System.ComponentModel.Description("Description")]
+                public void [|MyTestMethod|]()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.ComponentModel;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [Microsoft.VisualStudio.TestTools.UnitTesting.Description("Description")]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasSystemDescriptionAttributeWithoutUnitTestingUsing_UsesFullyQualifiedMSTestDescription()
+    {
+        string code = """
+            [Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
+            public class MyTestClass
+            {
+                [Microsoft.VisualStudio.TestTools.UnitTesting.TestMethod]
+                [System.ComponentModel.Description("Description")]
+                public void [|MyTestMethod|]()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            [Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
+            public class MyTestClass
+            {
+                [Microsoft.VisualStudio.TestTools.UnitTesting.TestMethod]
+                [Microsoft.VisualStudio.TestTools.UnitTesting.Description("Description")]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]

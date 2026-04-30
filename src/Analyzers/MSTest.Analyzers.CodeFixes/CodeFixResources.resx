@@ -216,4 +216,7 @@
   <data name="RemoveDuplicateDataRowFix" xml:space="preserve">
     <value>Remove duplicate 'DataRow'</value>
   </data>
+  <data name="UseMSTestDescriptionAttributeInsteadFix" xml:space="preserve">
+    <value>Use MSTest 'Description' attribute instead</value>
+  </data>
 </root>

@@ -157,6 +157,11 @@
         <target state="translated">Использовать свойство "DisplayName" вместо строкового аргумента</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
+        <source>Use MSTest 'Description' attribute instead</source>
+        <target state="new">Use MSTest 'Description' attribute instead</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">
         <source>Use '{0}'</source>
         <target state="translated">Использовать "{0}"</target>

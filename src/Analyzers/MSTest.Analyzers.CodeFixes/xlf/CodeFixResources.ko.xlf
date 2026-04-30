@@ -157,6 +157,11 @@
         <target state="translated">문자열 인수 대신 'DisplayName' 속성 사용</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
+        <source>Use MSTest 'Description' attribute instead</source>
+        <target state="new">Use MSTest 'Description' attribute instead</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">
         <source>Use '{0}'</source>
         <target state="translated">'{0}' 사용</target>
