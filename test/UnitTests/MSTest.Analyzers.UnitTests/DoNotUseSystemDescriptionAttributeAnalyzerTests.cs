@@ -55,7 +55,7 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
             public class MyTestClass
             {
                 [TestMethod]
-                [Description("Description")]
+                [System.ComponentModel.Description("Description")]
                 public void [|MyTestMethod|]()
                 {
                 }
@@ -70,7 +70,7 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
             public class MyTestClass
             {
                 [TestMethod]
-                [Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute("Description")]
+                [Microsoft.VisualStudio.TestTools.UnitTesting.Description("Description")]
                 public void MyTestMethod()
                 {
                 }
@@ -100,7 +100,7 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
             public class MyTestClass
             {
                 [Microsoft.VisualStudio.TestTools.UnitTesting.TestMethod]
-                [Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute("Description")]
+                [Microsoft.VisualStudio.TestTools.UnitTesting.Description("Description")]
                 public void MyTestMethod()
                 {
                 }
