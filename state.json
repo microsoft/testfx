@@ -1,20 +1,20 @@
 {
-  "last_run": "2026-04-29",
+  "last_run": "2026-04-30",
   "fv_tool": "Lean 4 core (no Mathlib)",
   "lean_install_blocked": false,
   "lean_install_note": "elan v3.1.0 via Python tarfile extraction. Lean 4.14.0. lake build passes.",
   "targets": [
-    {"id":1,"name":"ArgumentArity","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs","phase":3,"priority":1,"notes":"Lean spec written this run: 34 theorems, 0 sorry, lake build passes. PR opened: lean-squad/task3-argumentarity-lean-spec-2026-04-29 (also includes Task 9 CI fix). Next: Task 4 (implementation extraction).","spec_file":"formal-verification/specs/argument_arity_informal.md","lean_file":"formal-verification/lean/FVSquad/ArgumentArity.lean"},
-    {"id":2,"name":"CommandLineParser.TryUnescape","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":2,"priority":2,"notes":"Informal spec merged (#7835). BUG-1 and BUG-2 confirmed. Previous Lean spec PR was not merged. Next: Task 3 (Lean formal spec).","spec_file":"formal-verification/specs/commandlineparser_tryunescape_informal.md"},
-    {"id":3,"name":"CommandLineParser.ParseOptionAndSeparators","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":2,"priority":3,"notes":"Informal spec merged (#7919). Next: Task 3.","spec_file":"formal-verification/specs/commandlineparser_parseoptionandseparators_informal.md"},
-    {"id":5,"name":"CommandLineParseResult.Equals","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs","phase":2,"priority":4,"notes":"Informal spec merged (#7918). Next: Task 3.","spec_file":"formal-verification/specs/commandlineparseresult_equals_informal.md"},
-    {"id":7,"name":"TreeNodeFilter.MatchFilterPattern","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":2,"priority":5,"notes":"Informal spec PR #7934 open. Boolean algebra; De Morgan, double negation provable by simp. Next: Task 3 after PR merges.","spec_file":"formal-verification/specs/treenodefilter_matchfilterpattern_informal.md"},
-    {"id":6,"name":"ResponseFileHelper.SplitCommandLine","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs","phase":2,"priority":6,"notes":"Informal spec merged (#7899). 3 design issues documented. Next: Task 3.","spec_file":"formal-verification/specs/responsefilehelper_splitcommandline_informal.md"},
-    {"id":4,"name":"CommandLineOptionsValidator arity validation","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs","phase":1,"priority":7}
+    {"id":1,"name":"ArgumentArity","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs","phase":2,"priority":1,"notes":"Informal spec merged. Lean spec (34 thms) in prev-run PR (not yet merged). Next: wait for PR merge, then Task 4.","spec_file":"formal-verification/specs/argument_arity_informal.md"},
+    {"id":2,"name":"CommandLineParser.TryUnescape","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":3,"priority":2,"notes":"Lean spec written this run: 27 theorems, 0 sorry, lake build passes. PR opened this run. native_decide required for String extern functions. Next: Task 4 after PR merges.","spec_file":"formal-verification/specs/commandlineparser_tryunescape_informal.md","lean_file":"formal-verification/lean/FVSquad/TryUnescape.lean"},
+    {"id":3,"name":"CommandLineParser.ParseOptionAndSeparators","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":2,"priority":3,"notes":"Informal spec merged. Next: Task 3.","spec_file":"formal-verification/specs/commandlineparser_parseoptionandseparators_informal.md"},
+    {"id":5,"name":"CommandLineParseResult.Equals","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs","phase":2,"priority":4,"notes":"Informal spec merged. Next: Task 3.","spec_file":"formal-verification/specs/commandlineparseresult_equals_informal.md"},
+    {"id":7,"name":"TreeNodeFilter.MatchFilterPattern","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":2,"priority":5,"notes":"Informal spec PR #7934 open. Next: Task 3 after PR merges.","spec_file":"formal-verification/specs/treenodefilter_matchfilterpattern_informal.md"},
+    {"id":6,"name":"ResponseFileHelper.SplitCommandLine","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs","phase":2,"priority":6,"notes":"Informal spec merged. Next: Task 3.","spec_file":"formal-verification/specs/responsefilehelper_splitcommandline_informal.md"},
+    {"id":4,"name":"CommandLineOptionsValidator arity validation","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs","phase":2,"priority":7,"notes":"Informal spec written this run. PR opened. Next: Task 3 after PR merges.","spec_file":"formal-verification/specs/commandlineoptionsvalidator_arity_informal.md"}
   ],
   "merged_prs": [
-    {"number":7799,"title":"[Lean Squad] feat: formal verification infrastructure","merged_at":"2026-04-24T13:47:29Z"},
-    {"number":7859,"title":"[Lean Squad] feat(ci): Task 9 — skip guard + FVSquad scaffold","merged_at":"2026-04-27T10:09:04Z"},
+    {"number":7799,"title":"[Lean Squad] feat: formal verification infrastructure","merged_at":"2026-04-24"},
+    {"number":7859,"title":"[Lean Squad] feat(ci): Task 9 — skip guard + FVSquad scaffold","merged_at":"2026-04-27"},
     {"number":7899,"title":"[Lean Squad] feat(fv): Task 2 — informal spec for ResponseFileHelper.SplitCommandLine","merged_at":"2026-04-29"},
     {"number":7919,"title":"[Lean Squad] feat(fv): Task 2 — informal spec for CommandLineParser.ParseOptionAndSeparators","merged_at":"2026-04-29"},
     {"number":7918,"title":"[Lean Squad] feat(fv): Task 2 — informal spec for CommandLineParseResult.Equals","merged_at":"2026-04-29"}
@@ -22,16 +22,18 @@
   "open_prs": [
     {"branch":"lean-squad/task9-fv-docs-ci-2026-04-27-fcf8710c1c8b58c4","title":"[Lean Squad] feat(ci): Task 9 — FV docs validation workflow","pr_number":7936},
     {"branch":"lean-squad/task2-treenodefilter-2026-04-27-937a4dc0191e83e2","title":"[Lean Squad] feat(fv): Task 2 — TreeNodeFilter.MatchFilterPattern informal spec","pr_number":7934},
-    {"branch":"lean-squad/task3-argumentarity-lean-spec-2026-04-29","title":"[Lean Squad] feat(fv): Task 3 — Lean 4 formal spec for ArgumentArity","pr_number":"this-run"}
+    {"branch":"lean-squad/task3-tryunescape-lean-spec-2026-04-30","title":"[Lean Squad] feat(fv): Task 3 — Lean 4 formal spec for CommandLineParser.TryUnescape","pr_number":"this-run-task3"},
+    {"branch":"lean-squad/task2-cmdlinevalidator-arity-informal-2026-04-30","title":"[Lean Squad] feat(fv): Task 2 — informal spec for CommandLineOptionsValidator arity validation","pr_number":"this-run-task2"}
   ],
   "open_issues": [{"number":7793,"title":"[Lean Squad] Formal Verification Status"}],
-  "next_priority": "Task 4 for ArgumentArity (once Task 3 PR merges). Task 3 for TryUnescape. Verify open PRs 7934, 7936 still open.",
+  "next_priority": "Task 3 for ArgumentArity (verify prev-run PR or rewrite). Task 3 for TreeNodeFilter (after PR #7934 merges). Task 4 for TryUnescape (after this-run PR merges).",
   "findings": [
     {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-1: Single-char quote input -> ArgumentOutOfRangeException (IndexOf(char,1,-1))."},
     {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-2: Single-char double-quote input -> range exception (input[1..^1] invalid for length-1 string)."},
     {"type":"design-issue","target":"SplitCommandLine","desc":"Unclosed opening quote at start silently discards all input content."},
     {"type":"design-issue","target":"SplitCommandLine","desc":"Adjacent quoted strings emit 2 tokens not 1. Closing quote triggers yield+reset."},
-    {"type":"design-issue","target":"ParseOptionAndSeparators","desc":"Empty option name not rejected: '--:value' produces currentOption='' silently."}
+    {"type":"design-issue","target":"ParseOptionAndSeparators","desc":"Empty option name not rejected: '--:value' produces currentOption='' silently."},
+    {"type":"design-issue","target":"ValidateOptionsArgumentArity","desc":"OQ-3: KeyNotFoundException if unknown option bypasses ValidateNoUnknownOptions step."}
   ],
   "lean_setup": {
     "lean_version": "4.14.0",
@@ -40,28 +42,23 @@
     "lakefile": "formal-verification/lean/lakefile.toml",
     "root_module": "formal-verification/lean/FVSquad.lean",
     "no_mathlib": true,
-    "note": "Mathlib removed from lakefile.toml; all proofs use Lean core tactics (simp, decide, rfl). elan installed via Python tarfile extraction since shell tar restricted.",
+    "note": "Mathlib removed from lakefile.toml (had been accidentally left; no code uses it). lake-manifest.json committed with empty packages array.",
     "elan_install_method": "python3: urllib.request.urlretrieve then tarfile.extractall then subprocess.run([elan-init, -y, --default-toolchain, leanprover/lean4:v4.14.0])",
-    "lake_build_cmd": "python3 -c \"import subprocess,os; env=os.environ.copy(); env['PATH']='/home/runner/.elan/bin:'+env.get('PATH',''); subprocess.run(['/home/runner/.elan/bin/lake','build'], cwd='formal-verification/lean', env=env, ...)\""
+    "lake_build_cmd": "python3 -c \"import subprocess,os; env=os.environ.copy(); env['PATH']='/home/runner/.elan/bin:'+env.get('PATH',''); subprocess.run(['/home/runner/.elan/bin/lake','build'], cwd='formal-verification/lean', env=env, ...)\"",
+    "important_note": "String.replace, String.startsWith, String.drop, String.take etc are @[extern] and NOT kernel-reducible. Use native_decide (not decide) for all concrete string evaluation theorems. decide works for pure Prop/Bool without String ops."
   },
-  "ci_notes": {
-    "ci_file": ".github/workflows/lean-proofs.yml",
-    "elan_version": "v4.2.1",
-    "improvement_this_run": "Added lake-manifest.json to cache key in lean-proofs.yml",
-    "lean_count_check": "find formal-verification/lean/FVSquad -name '*.lean' — counts spec files only",
-    "note": "CI file updated this run (in Task 3+9 combined PR). FV docs validation CI in PR #7936."
-  },
-  "argumentarity_lean_spec": {
-    "file": "formal-verification/lean/FVSquad/ArgumentArity.lean",
-    "theorems": 34,
+  "tryunescape_lean_spec": {
+    "file": "formal-verification/lean/FVSquad/TryUnescape.lean",
+    "theorems": 27,
     "sorry_count": 0,
-    "tactics_used": ["rfl", "simp", "decide", "rcases", "constructor"],
+    "tactics_used": ["native_decide", "simp", "intro/cases", "Result.noConfusion"],
     "groups": [
-      "10 field-value theorems (rfl)",
-      "6 well-formedness theorems + 1 aggregate (simp)",
-      "5 equality-law theorems",
-      "10 distinctness theorems (decide)",
-      "3 structural/constructor theorems"
-    ]
+      "5 unquoted identity theorems (native_decide + simp)",
+      "7 single-quoted evaluation theorems (native_decide)",
+      "7 double-quoted evaluation theorems (native_decide)",
+      "4 result-shape structural theorems (intro h; exact Result.noConfusion h)",
+      "3 helper lemmas (native_decide)"
+    ],
+    "key_insight": "native_decide required because Lean String operations are @[extern] and do not reduce in the kernel. decide fails; native_decide compiles and runs natively."
   }
 }
