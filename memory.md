@@ -31,7 +31,8 @@
 4. **[Deprioritized - no profiler evidence per maintainers]** Avoid yield iterator in TryExecuteDataSourceBasedTestsAsync + GetRetryAttribute (issue #7904 acknowledged, branch perf-assist/avoid-yield-iterator-in-test-execution-hot-path can be discarded)
 5. TestContextImplementation - SynchronizedStringBuilder uses [MethodImpl(Synchronized)]; TestContext is per-test so uncontended, but monitor lock overhead exists - LOW PRIORITY (no profiler evidence)
 6. TypeValidator/TestMethodValidator created per-type in GetTypeEnumerator - constrained by virtual method (testability), minor impact - LOW PRIORITY
-7. TreeNodeFilter MatchFilterPattern: string[start..end] substring allocated per path segment per node - could use span but lambda captures prevent it without larger refactor - COMPLEX/RISKY
+7. TreeNodeFilter MatchFilterPattern: string[start..end] substring allocated per path segment per node - Efficiency Improver already working on this (issue #7947 LINQ closures)
+8. **[Proposed - awaiting issue#]** BenchmarkDotNet micro-benchmark project for discovery/execution hot paths - infrastructure issue created 2026-04-30
 
 ## Completed Work
 - Branch: perf-assist/reduce-allocations-discovery-execution (changes applied to main by maintainer, issue #7815 still open - suggest closing)
@@ -47,6 +48,7 @@
   - Maintainers said allocations not visible in profiler traces
 
 ## Last Run
+- 2026-04-30: Tasks 2 (explored new opportunities - found Efficiency Improver covers TreeNodeFilter), 6 (created BenchmarkDotNet infra proposal issue), 7 (monthly summary)
 - 2026-04-29: Tasks 4 (PR #7927 health - all green), 5 (commented on #7904 re: maintainer feedback), 7 (monthly summary)
 - 2026-04-28: Tasks 3 (new optimization: avoid yield iterators), 7 (monthly summary)
 - 2026-04-27: Tasks 2 (verify merged PRs), 3 (new optimization), 7 (monthly summary)
@@ -61,4 +63,5 @@
 - 2026-04-27: Tasks 2, 3, 7 done
 - 2026-04-28: Tasks 3, 7 done
 - 2026-04-29: Tasks 4, 5, 7 done
-- Next run: should focus on Tasks 2 (new opportunities with profiler evidence), 3 (if high-confidence improvement exists), 6 (infra), 7
+- 2026-04-30: Tasks 2, 6, 7 done
+- Next run: should focus on Tasks 3 (if high-confidence improvement), 4 (check PR #7927), 5 (check new perf issues), 7
