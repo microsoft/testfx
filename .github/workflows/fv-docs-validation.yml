@@ -59,9 +59,19 @@ jobs:
 
       - name: Verify lean-toolchain is non-empty and well-formed
         run: |
-          TOOLCHAIN="$(cat formal-verification/lean/lean-toolchain | tr -d '\r\n')"
+          TOOLCHAIN="$(tr -d '\r\n' < formal-verification/lean/lean-toolchain)"
           if [ -z "$TOOLCHAIN" ]; then
             echo "::error file=formal-verification/lean/lean-toolchain::lean-toolchain file is empty"
+            exit 1
+          fi
+
+          if [[ "$TOOLCHAIN" =~ [[:space:]] ]]; then
+            echo "::error file=formal-verification/lean/lean-toolchain::lean-toolchain must not contain whitespace"
+            exit 1
+          fi
+
+          if ! printf '%s\n' "$TOOLCHAIN" | grep -Eq '^[^[:space:]/]+/[^[:space:]/]+:[^[:space:]]+$'; then
+            echo "::error file=formal-verification/lean/lean-toolchain::lean-toolchain must match <org>/<repo>:<tag>"
             exit 1
           fi
           echo "✅  lean-toolchain: ${TOOLCHAIN}"
@@ -71,11 +81,15 @@ jobs:
           FAILED=0
           for doc in RESEARCH.md TARGETS.md CORRESPONDENCE.md CRITIQUE.md REPORT.md; do
             if ! grep -q "🔬" "formal-verification/${doc}"; then
-              echo "::warning file=formal-verification/${doc}::FV document missing 🔬 Lean Squad disclosure: ${doc}"
+              echo "::error file=formal-verification/${doc}::FV document missing 🔬 Lean Squad disclosure: ${doc}"
+              FAILED=1
             else
               echo "✅  formal-verification/${doc} has 🔬 disclosure"
             fi
           done
+          if [ "$FAILED" -ne 0 ]; then
+            exit 1
+          fi
 
       - name: Check specs/ directory exists
         run: |
