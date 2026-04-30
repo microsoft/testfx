@@ -143,11 +143,39 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>Categories defined.</returns>
     internal string[] GetTestCategories(MemberInfo categoryAttributeProvider, Type owningType)
     {
-        IEnumerable<TestCategoryBaseAttribute> methodCategories = GetAttributes<TestCategoryBaseAttribute>(categoryAttributeProvider);
-        IEnumerable<TestCategoryBaseAttribute> typeCategories = GetAttributes<TestCategoryBaseAttribute>(owningType);
-        IEnumerable<TestCategoryBaseAttribute> assemblyCategories = GetAttributes<TestCategoryBaseAttribute>(owningType.Assembly);
+        Attribute[] methodAttributes = GetCustomAttributesCached(categoryAttributeProvider);
+        Attribute[] typeAttributes = GetCustomAttributesCached(owningType);
+        Attribute[] assemblyAttributes = GetCustomAttributesCached(owningType.Assembly);
 
-        return [.. methodCategories.Concat(typeCategories).Concat(assemblyCategories).SelectMany(c => c.TestCategories)];
+        // Avoid LINQ iterator allocations by iterating the cached attribute arrays directly.
+        // This follows the same allocation-free pattern used by GetTestPropertiesAsTraits.
+        List<string>? categories = null;
+
+        foreach (Attribute attribute in methodAttributes)
+        {
+            if (attribute is TestCategoryBaseAttribute categoryAttr)
+            {
+                (categories ??= []).AddRange(categoryAttr.TestCategories);
+            }
+        }
+
+        foreach (Attribute attribute in typeAttributes)
+        {
+            if (attribute is TestCategoryBaseAttribute categoryAttr)
+            {
+                (categories ??= []).AddRange(categoryAttr.TestCategories);
+            }
+        }
+
+        foreach (Attribute attribute in assemblyAttributes)
+        {
+            if (attribute is TestCategoryBaseAttribute categoryAttr)
+            {
+                (categories ??= []).AddRange(categoryAttr.TestCategories);
+            }
+        }
+
+        return categories is null ? [] : [.. categories];
     }
 
     /// <summary>
