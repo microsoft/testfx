@@ -47,7 +47,8 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
             if (ancestor is MethodDeclarationSyntax methodDeclaration)
             {
                 if (methodDeclaration.Modifiers.Any(SyntaxKind.AsyncKeyword) &&
-                    methodDeclaration.ReturnType.IsVoid())
+                    methodDeclaration.ReturnType.IsVoid() &&
+                    !methodDeclaration.Modifiers.Any(SyntaxKind.OverrideKeyword))
                 {
                     context.RegisterCodeFix(
                         CodeAction.Create(
@@ -139,12 +140,19 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
             .UsingDirective(SyntaxFactory.ParseName("System.Threading.Tasks").WithLeadingTrivia(SyntaxFactory.Space))
             .WithTrailingTrivia(SyntaxFactory.ElasticCarriageReturnLineFeed);
 
-        // Insert after all existing System.* usings but before any non-System usings to maintain conventional ordering.
+        // Insert in correct alphabetical position: after System.* usings that sort before "System.Threading.Tasks"
+        // and before any that sort after it or before any non-System usings.
         int insertionIndex = compilationUnit.Usings.Count; // default: append after all usings
         for (int i = 0; i < compilationUnit.Usings.Count; i++)
         {
             string? nameText = compilationUnit.Usings[i].Name?.ToString();
-            if (nameText is not null && !nameText.StartsWith("System", StringComparison.Ordinal))
+            if (nameText is null)
+            {
+                continue;
+            }
+
+            if (!nameText.StartsWith("System", StringComparison.Ordinal) ||
+                string.Compare(nameText, "System.Threading.Tasks", StringComparison.Ordinal) > 0)
             {
                 insertionIndex = i;
                 break;
