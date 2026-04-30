@@ -48,7 +48,9 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
             {
                 if (methodDeclaration.Modifiers.Any(SyntaxKind.AsyncKeyword) &&
                     methodDeclaration.ReturnType.IsVoid() &&
-                    !methodDeclaration.Modifiers.Any(SyntaxKind.OverrideKeyword))
+                    !methodDeclaration.Modifiers.Any(SyntaxKind.OverrideKeyword) &&
+                    !methodDeclaration.Modifiers.Any(SyntaxKind.VirtualKeyword) &&
+                    methodDeclaration.ExplicitInterfaceSpecifier is null)
                 {
                     context.RegisterCodeFix(
                         CodeAction.Create(
@@ -127,13 +129,24 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
             return document;
         }
 
-        bool hasUsing = compilationUnit.Usings.Any(
-            u => u.Alias is null &&
-                 !u.StaticKeyword.IsKind(SyntaxKind.StaticKeyword) &&
-                 string.Equals(u.Name?.ToString(), "System.Threading.Tasks", StringComparison.Ordinal));
-        if (hasUsing)
+        // Check file-level usings and namespace-scoped usings for an existing System.Threading.Tasks import.
+        if (HasSystemThreadingTasksUsing(compilationUnit.Usings))
         {
             return document;
+        }
+
+        foreach (SyntaxNode descendant in compilationUnit.DescendantNodes())
+        {
+            SyntaxList<UsingDirectiveSyntax>? namespaceUsings = descendant switch
+            {
+                NamespaceDeclarationSyntax ns => ns.Usings,
+                _ => null,
+            };
+
+            if (namespaceUsings.HasValue && HasSystemThreadingTasksUsing(namespaceUsings.Value))
+            {
+                return document;
+            }
         }
 
         UsingDirectiveSyntax usingDirective = SyntaxFactory
@@ -145,13 +158,15 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
         int insertionIndex = compilationUnit.Usings.Count; // default: append after all usings
         for (int i = 0; i < compilationUnit.Usings.Count; i++)
         {
-            string? nameText = compilationUnit.Usings[i].Name?.ToString();
+            string? nameText = NormalizeUsingName(compilationUnit.Usings[i].Name?.ToString());
             if (nameText is null)
             {
                 continue;
             }
 
-            if (!nameText.StartsWith("System", StringComparison.Ordinal) ||
+            bool isSystemNamespace = string.Equals(nameText, "System", StringComparison.Ordinal) ||
+                nameText.StartsWith("System.", StringComparison.Ordinal);
+            if (!isSystemNamespace ||
                 string.Compare(nameText, "System.Threading.Tasks", StringComparison.Ordinal) > 0)
             {
                 insertionIndex = i;
@@ -161,5 +176,25 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
 
         SyntaxList<UsingDirectiveSyntax> newUsings = compilationUnit.Usings.Insert(insertionIndex, usingDirective);
         return document.WithSyntaxRoot(compilationUnit.WithUsings(newUsings));
+    }
+
+    private static bool HasSystemThreadingTasksUsing(SyntaxList<UsingDirectiveSyntax> usings)
+        => usings.Any(
+            u => u.Alias is null &&
+                 !u.StaticKeyword.IsKind(SyntaxKind.StaticKeyword) &&
+                 string.Equals(NormalizeUsingName(u.Name?.ToString()), "System.Threading.Tasks", StringComparison.Ordinal));
+
+    private static string? NormalizeUsingName(string? name)
+    {
+        if (name is null)
+        {
+            return null;
+        }
+
+        // Strip the "global::" qualifier if present so that "global::System.Threading.Tasks" is recognized.
+        const string globalPrefix = "global::";
+        return name.StartsWith(globalPrefix, StringComparison.Ordinal)
+            ? name[globalPrefix.Length..]
+            : name;
     }
 }
