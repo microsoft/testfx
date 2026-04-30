@@ -135,15 +135,9 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
             return document;
         }
 
-        foreach (SyntaxNode descendant in compilationUnit.DescendantNodes())
+        foreach (NamespaceDeclarationSyntax ns in compilationUnit.DescendantNodes().OfType<NamespaceDeclarationSyntax>())
         {
-            SyntaxList<UsingDirectiveSyntax>? namespaceUsings = descendant switch
-            {
-                NamespaceDeclarationSyntax ns => ns.Usings,
-                _ => null,
-            };
-
-            if (namespaceUsings.HasValue && HasSystemThreadingTasksUsing(namespaceUsings.Value))
+            if (HasSystemThreadingTasksUsing(ns.Usings))
             {
                 return document;
             }
@@ -164,8 +158,7 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
                 continue;
             }
 
-            bool isSystemNamespace = string.Equals(nameText, "System", StringComparison.Ordinal) ||
-                nameText.StartsWith("System.", StringComparison.Ordinal);
+            bool isSystemNamespace = IsSystemNamespace(nameText);
             if (!isSystemNamespace ||
                 string.Compare(nameText, "System.Threading.Tasks", StringComparison.Ordinal) > 0)
             {
@@ -183,6 +176,10 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
             u => u.Alias is null &&
                  !u.StaticKeyword.IsKind(SyntaxKind.StaticKeyword) &&
                  string.Equals(NormalizeUsingName(u.Name?.ToString()), "System.Threading.Tasks", StringComparison.Ordinal));
+
+    private static bool IsSystemNamespace(string nameText)
+        => string.Equals(nameText, "System", StringComparison.Ordinal) ||
+           nameText.StartsWith("System.", StringComparison.Ordinal);
 
     private static string? NormalizeUsingName(string? name)
     {
