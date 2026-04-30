@@ -216,4 +216,7 @@
   <data name="RemoveDuplicateDataRowFix" xml:space="preserve">
     <value>Remove duplicate 'DataRow'</value>
   </data>
+  <data name="RemoveDuplicateTestMethodAttributeFix" xml:space="preserve">
+    <value>Remove duplicate TestMethod attribute</value>
+  </data>
 </root>
