@@ -118,8 +118,9 @@ public sealed class TrxReportDataDrivenOutputTests : AcceptanceTestBase<TrxRepor
         var results = trxDoc.Descendants(ns + "UnitTestResult").ToList();
 
         // We have 3 data rows, each writing a unique marker like "UNIQUE_ROW_0_MARKER", "UNIQUE_ROW_1_MARKER", "UNIQUE_ROW_2_MARKER"
-        Assert.IsGreaterThanOrEqualTo(results.Count, 3, $"Expected at least 3 test results but found {results.Count}. TRX content:\n{trxContent}");
+        Assert.IsGreaterThanOrEqualTo(3, results.Count, $"Expected at least 3 test results but found {results.Count}. TRX content:\n{trxContent}");
 
+        int resultsWithOutput = 0;
         foreach (XElement result in results)
         {
             string? stdOut = result.Descendants(ns + "StdOut").FirstOrDefault()?.Value;
@@ -127,6 +128,8 @@ public sealed class TrxReportDataDrivenOutputTests : AcceptanceTestBase<TrxRepor
             {
                 continue;
             }
+
+            resultsWithOutput++;
 
             // Count how many unique row markers appear in this single result's StdOut.
             // Each result should contain exactly ONE marker (its own row's output).
@@ -139,12 +142,14 @@ public sealed class TrxReportDataDrivenOutputTests : AcceptanceTestBase<TrxRepor
                 }
             }
 
-            Assert.IsLessThanOrEqualTo(
-                markerCount,
+            Assert.AreEqual(
                 1,
+                markerCount,
                 $"Test result '{result.Attribute("testName")?.Value}' contains output from {markerCount} data rows. " +
                 $"Each row should only contain its own output. StdOut:\n{stdOut}");
         }
+
+        Assert.IsGreaterThanOrEqualTo(3, resultsWithOutput, $"Expected at least 3 test results to have StdOut output but only {resultsWithOutput} did. TRX content:\n{trxContent}");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
