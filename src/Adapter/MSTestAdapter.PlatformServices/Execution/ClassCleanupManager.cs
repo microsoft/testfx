@@ -5,28 +5,57 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+#if NET8_0_OR_GREATER
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+#endif
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 internal sealed class ClassCleanupManager
 {
-    private readonly ConcurrentDictionary<string, int> _remainingTestCountsByClass;
+#if NET9_0_OR_GREATER
+    private readonly Lock _lock = new();
+#else
+    private readonly object _lock = new();
+#endif
+    private readonly Dictionary<string, int> _remainingTestCountsByClass;
 
     public ClassCleanupManager(IEnumerable<UnitTestElement> testsToRun)
     {
         _remainingTestCountsByClass =
-            new(testsToRun.GroupBy(t => t.TestMethod.FullClassName)
+            testsToRun.GroupBy(t => t.TestMethod.FullClassName)
                 .ToDictionary(
                     g => g.Key,
-                    g => g.Count()));
+                    g => g.Count());
     }
 
-    public bool ShouldRunEndOfAssemblyCleanup => _remainingTestCountsByClass.IsEmpty;
+    public bool ShouldRunEndOfAssemblyCleanup
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _remainingTestCountsByClass.Count == 0;
+            }
+        }
+    }
 
     public void MarkTestComplete(TestMethod testMethod, out bool isLastTestInClass)
     {
-        lock (_remainingTestCountsByClass)
+        lock (_lock)
         {
+#if NET8_0_OR_GREATER
+            ref int remainingCount = ref CollectionsMarshal.GetValueRefOrNullRef(
+                _remainingTestCountsByClass, testMethod.FullClassName);
+            if (Unsafe.IsNullRef(ref remainingCount))
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
+
+            remainingCount--;
+            isLastTestInClass = remainingCount == 0;
+#else
             if (!_remainingTestCountsByClass.TryGetValue(testMethod.FullClassName, out int remainingCount))
             {
                 throw ApplicationStateGuard.Unreachable();
@@ -35,20 +64,23 @@ internal sealed class ClassCleanupManager
             remainingCount--;
             _remainingTestCountsByClass[testMethod.FullClassName] = remainingCount;
             isLastTestInClass = remainingCount == 0;
+#endif
         }
     }
 
     public void MarkClassComplete(string fullClassName)
     {
-        lock (_remainingTestCountsByClass)
+        lock (_lock)
         {
-            if (!_remainingTestCountsByClass.TryRemove(fullClassName, out int remainingTests) ||
+            if (!_remainingTestCountsByClass.TryGetValue(fullClassName, out int remainingTests) ||
                 remainingTests != 0)
             {
-                // We failed to remove the class, or we are incorrectly marking the class as complete while there are remaining tests.
+                // We failed to find the class, or we are incorrectly marking the class as complete while there are remaining tests.
                 // This should never happen.
                 throw ApplicationStateGuard.Unreachable();
             }
+
+            _remainingTestCountsByClass.Remove(fullClassName);
         }
     }
 

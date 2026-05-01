@@ -12,6 +12,11 @@ namespace Microsoft.Testing.Extensions;
 internal static class RandomId
 {
     private const string Pool = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+#if NET9_0_OR_GREATER
+    private static readonly Lock s_lock = new();
+#else
+    private static readonly object s_lock = new();
+#endif
     private static readonly RandomNumberGenerator Rng = RandomNumberGenerator.Create();
 
     /// <summary>
@@ -23,7 +28,7 @@ internal static class RandomId
     {
         int poolLength = Pool.Length;
         char[] id = new char[length];
-        lock (Pool)
+        lock (s_lock)
         {
             for (int idIndex = 0; idIndex < length; idIndex++)
             {

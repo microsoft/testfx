@@ -1,10 +1,13 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Note: System.Text.Json is only available in .NET 6.0 and above.
 //       As such, we have two separate implementations for the serialization code.
 #if !NETCOREAPP
 using Jsonite;
+#endif
+#if NET8_0_OR_GREATER
+using System.Collections.Frozen;
 #endif
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
@@ -13,8 +16,13 @@ namespace Microsoft.Testing.Platform.ServerMode;
 
 internal static class SerializerUtilities
 {
+#if NET8_0_OR_GREATER
+    private static readonly FrozenDictionary<Type, IObjectSerializer> Serializers;
+    private static readonly FrozenDictionary<Type, IObjectDeserializer> Deserializers;
+#else
     private static readonly Dictionary<Type, IObjectSerializer> Serializers;
     private static readonly Dictionary<Type, IObjectDeserializer> Deserializers;
+#endif
 
     /// <summary>
     /// Initializes static members of the <see cref="SerializerUtilities"/> class.
@@ -23,11 +31,11 @@ internal static class SerializerUtilities
     /// </summary>
     static SerializerUtilities()
     {
-        Serializers = [];
-        Deserializers = [];
+        var serializers = new Dictionary<Type, IObjectSerializer>();
+        var deserializers = new Dictionary<Type, IObjectDeserializer>();
 
-        Serializers[typeof(object)] = new ObjectSerializer<object>(_ => new Dictionary<string, object?>());
-        Serializers[typeof(KeyValuePair<string, string>)] = new ObjectSerializer<KeyValuePair<string, string>>(o =>
+        serializers[typeof(object)] = new ObjectSerializer<object>(_ => new Dictionary<string, object?>());
+        serializers[typeof(KeyValuePair<string, string>)] = new ObjectSerializer<KeyValuePair<string, string>>(o =>
         {
             Dictionary<string, object?> values = new()
             {
@@ -37,7 +45,7 @@ internal static class SerializerUtilities
         });
 
         // Serialize response types.
-        Serializers[typeof(RequestMessage)] = new ObjectSerializer<RequestMessage>(req =>
+        serializers[typeof(RequestMessage)] = new ObjectSerializer<RequestMessage>(req =>
         {
             Dictionary<string, object?> values = new()
             {
@@ -50,7 +58,7 @@ internal static class SerializerUtilities
             return values;
         });
 
-        Serializers[typeof(ResponseMessage)] = new ObjectSerializer<ResponseMessage>(res =>
+        serializers[typeof(ResponseMessage)] = new ObjectSerializer<ResponseMessage>(res =>
         {
             Dictionary<string, object?> values = new()
             {
@@ -62,7 +70,7 @@ internal static class SerializerUtilities
             return values;
         });
 
-        Serializers[typeof(NotificationMessage)] = new ObjectSerializer<NotificationMessage>(notification =>
+        serializers[typeof(NotificationMessage)] = new ObjectSerializer<NotificationMessage>(notification =>
         {
             Dictionary<string, object?> values = new()
             {
@@ -74,7 +82,7 @@ internal static class SerializerUtilities
             return values;
         });
 
-        Serializers[typeof(ErrorMessage)] = new ObjectSerializer<ErrorMessage>(error =>
+        serializers[typeof(ErrorMessage)] = new ObjectSerializer<ErrorMessage>(error =>
         {
             Dictionary<string, object?> values = new()
             {
@@ -92,7 +100,7 @@ internal static class SerializerUtilities
             return values;
         });
 
-        Serializers[typeof(InitializeResponseArgs)] = new ObjectSerializer<InitializeResponseArgs>(res =>
+        serializers[typeof(InitializeResponseArgs)] = new ObjectSerializer<InitializeResponseArgs>(res =>
         {
             Dictionary<string, object?> values = new()
             {
@@ -104,7 +112,7 @@ internal static class SerializerUtilities
             return values;
         });
 
-        Serializers[typeof(ServerInfo)] = new ObjectSerializer<ServerInfo>(info =>
+        serializers[typeof(ServerInfo)] = new ObjectSerializer<ServerInfo>(info =>
         {
             Dictionary<string, object?> values = new()
             {
@@ -115,12 +123,12 @@ internal static class SerializerUtilities
             return values;
         });
 
-        Serializers[typeof(ServerCapabilities)] = new ObjectSerializer<ServerCapabilities>(capabilities => new Dictionary<string, object?>
+        serializers[typeof(ServerCapabilities)] = new ObjectSerializer<ServerCapabilities>(capabilities => new Dictionary<string, object?>
         {
             [JsonRpcStrings.Testing] = Serialize(capabilities.TestingCapabilities),
         });
 
-        Serializers[typeof(ServerTestingCapabilities)] = new ObjectSerializer<ServerTestingCapabilities>(capabilities => new Dictionary<string, object?>
+        serializers[typeof(ServerTestingCapabilities)] = new ObjectSerializer<ServerTestingCapabilities>(capabilities => new Dictionary<string, object?>
         {
             [JsonRpcStrings.SupportsDiscovery] = capabilities.SupportsDiscovery,
             [JsonRpcStrings.MultiRequestSupport] = capabilities.MultiRequestSupport,
@@ -129,7 +137,7 @@ internal static class SerializerUtilities
             [JsonRpcStrings.MultiConnectionProvider] = capabilities.MultiConnectionProvider,
         });
 
-        Serializers[typeof(Artifact)] = new ObjectSerializer<Artifact>(res => new Dictionary<string, object?>
+        serializers[typeof(Artifact)] = new ObjectSerializer<Artifact>(res => new Dictionary<string, object?>
         {
             [JsonRpcStrings.Uri] = res.Uri,
             [JsonRpcStrings.Producer] = res.Producer,
@@ -138,14 +146,14 @@ internal static class SerializerUtilities
             [JsonRpcStrings.Description] = res.Description,
         });
 
-        Serializers[typeof(DiscoverResponseArgs)] = new ObjectSerializer<DiscoverResponseArgs>(_ => new Dictionary<string, object?>());
+        serializers[typeof(DiscoverResponseArgs)] = new ObjectSerializer<DiscoverResponseArgs>(_ => new Dictionary<string, object?>());
 
-        Serializers[typeof(RunResponseArgs)] = new ObjectSerializer<RunResponseArgs>(res => new Dictionary<string, object?>
+        serializers[typeof(RunResponseArgs)] = new ObjectSerializer<RunResponseArgs>(res => new Dictionary<string, object?>
         {
             [JsonRpcStrings.Attachments] = res.Artifacts.Select(f => Serialize(f)).ToList<object>(),
         });
 
-        Serializers[typeof(TestNodeUpdateMessage)] = new ObjectSerializer<TestNodeUpdateMessage>(ev =>
+        serializers[typeof(TestNodeUpdateMessage)] = new ObjectSerializer<TestNodeUpdateMessage>(ev =>
         {
             // TODO: Fill in the node properties
             Dictionary<string, object?> values = new()
@@ -158,7 +166,7 @@ internal static class SerializerUtilities
         });
 
         // Serialize event types.
-        Serializers[typeof(TestNodeStateChangedEventArgs)] = new ObjectSerializer<TestNodeStateChangedEventArgs>(ev =>
+        serializers[typeof(TestNodeStateChangedEventArgs)] = new ObjectSerializer<TestNodeStateChangedEventArgs>(ev =>
         {
             Dictionary<string, object?> values = new()
             {
@@ -169,7 +177,7 @@ internal static class SerializerUtilities
             return values;
         });
 
-        Serializers[typeof(TestNode)] = new ObjectSerializer<TestNode>(
+        serializers[typeof(TestNode)] = new ObjectSerializer<TestNode>(
             n =>
             {
                 // RECALL TO UPDATE TESTS INSIDE FormatterUtilitiesTests.cs
@@ -366,7 +374,7 @@ internal static class SerializerUtilities
                 return properties;
             });
 
-        Serializers[typeof(LogEventArgs)] = new ObjectSerializer<LogEventArgs>(ev =>
+        serializers[typeof(LogEventArgs)] = new ObjectSerializer<LogEventArgs>(ev =>
         {
             Dictionary<string, object?> values = new()
             {
@@ -377,7 +385,7 @@ internal static class SerializerUtilities
             return values;
         });
 
-        Serializers[typeof(CancelRequestArgs)] = new ObjectSerializer<CancelRequestArgs>(ev =>
+        serializers[typeof(CancelRequestArgs)] = new ObjectSerializer<CancelRequestArgs>(ev =>
         {
             Dictionary<string, object?> values = new()
             {
@@ -387,7 +395,7 @@ internal static class SerializerUtilities
             return values;
         });
 
-        Serializers[typeof(TelemetryEventArgs)] = new ObjectSerializer<TelemetryEventArgs>(ev =>
+        serializers[typeof(TelemetryEventArgs)] = new ObjectSerializer<TelemetryEventArgs>(ev =>
         {
             Dictionary<string, object?> values = new()
             {
@@ -398,7 +406,7 @@ internal static class SerializerUtilities
             return values;
         });
 
-        Serializers[typeof(ProcessInfoArgs)] = new ObjectSerializer<ProcessInfoArgs>(ev =>
+        serializers[typeof(ProcessInfoArgs)] = new ObjectSerializer<ProcessInfoArgs>(ev =>
         {
             Dictionary<string, object?> values = new()
             {
@@ -429,7 +437,7 @@ internal static class SerializerUtilities
             return values;
         });
 
-        Serializers[typeof(AttachDebuggerInfoArgs)] = new ObjectSerializer<AttachDebuggerInfoArgs>(ev =>
+        serializers[typeof(AttachDebuggerInfoArgs)] = new ObjectSerializer<AttachDebuggerInfoArgs>(ev =>
         {
             Dictionary<string, object?> values = new()
             {
@@ -439,7 +447,7 @@ internal static class SerializerUtilities
             return values;
         });
 
-        Serializers[typeof(TestsAttachments)] = new ObjectSerializer<TestsAttachments>(ev =>
+        serializers[typeof(TestsAttachments)] = new ObjectSerializer<TestsAttachments>(ev =>
         {
             Dictionary<string, object?> values = new()
             {
@@ -449,7 +457,7 @@ internal static class SerializerUtilities
             return values;
         });
 
-        Serializers[typeof(RunTestAttachment)] = new ObjectSerializer<RunTestAttachment>(ev =>
+        serializers[typeof(RunTestAttachment)] = new ObjectSerializer<RunTestAttachment>(ev =>
         {
             Dictionary<string, object?> values = new()
             {
@@ -464,7 +472,7 @@ internal static class SerializerUtilities
         });
 
         // Deserialize a generic JSON-RPC message
-        Deserializers[typeof(RpcMessage)] = new ObjectDeserializer<RpcMessage>(properties =>
+        deserializers[typeof(RpcMessage)] = new ObjectDeserializer<RpcMessage>(properties =>
         {
             ValidateJsonRpcHeader(properties);
 
@@ -524,7 +532,7 @@ internal static class SerializerUtilities
         });
 
         // Deserialize requests
-        Deserializers[typeof(InitializeRequestArgs)] = new ObjectDeserializer<InitializeRequestArgs>(properties =>
+        deserializers[typeof(InitializeRequestArgs)] = new ObjectDeserializer<InitializeRequestArgs>(properties =>
         {
             int processId = GetRequiredPropertyFromJson<int>(properties, JsonRpcStrings.ProcessId);
             ClientInfo clientInfo = Deserialize<ClientInfo>(properties);
@@ -533,7 +541,7 @@ internal static class SerializerUtilities
             return new InitializeRequestArgs(processId, clientInfo, capabilities);
         });
 
-        Deserializers[typeof(ClientInfo)] = new ObjectDeserializer<ClientInfo>(properties =>
+        deserializers[typeof(ClientInfo)] = new ObjectDeserializer<ClientInfo>(properties =>
         {
             IDictionary<string, object?> info = GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.ClientInfo);
             string name = GetRequiredPropertyFromJson<string>(info, JsonRpcStrings.Name);
@@ -542,7 +550,7 @@ internal static class SerializerUtilities
             return new ClientInfo(name, protocolVersion);
         });
 
-        Deserializers[typeof(ClientCapabilities)] = new ObjectDeserializer<ClientCapabilities>(properties =>
+        deserializers[typeof(ClientCapabilities)] = new ObjectDeserializer<ClientCapabilities>(properties =>
         {
             IDictionary<string, object?> capabilities = GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.Capabilities);
             IDictionary<string, object?> testingCapabilities = GetRequiredPropertyFromJson<IDictionary<string, object?>>(capabilities, JsonRpcStrings.Testing);
@@ -551,7 +559,7 @@ internal static class SerializerUtilities
             return new ClientCapabilities(debuggerProvider);
         });
 
-        Deserializers[typeof(InitializeResponseArgs)] = new ObjectDeserializer<InitializeResponseArgs>(properties =>
+        deserializers[typeof(InitializeResponseArgs)] = new ObjectDeserializer<InitializeResponseArgs>(properties =>
         {
             int processId = GetRequiredPropertyFromJson<int>(properties, JsonRpcStrings.ProcessId);
             ServerInfo serverInfo = Deserialize<ServerInfo>(GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.ServerInfo));
@@ -560,7 +568,7 @@ internal static class SerializerUtilities
             return new InitializeResponseArgs(processId, serverInfo, capabilities);
         });
 
-        Deserializers[typeof(ServerInfo)] = new ObjectDeserializer<ServerInfo>(properties =>
+        deserializers[typeof(ServerInfo)] = new ObjectDeserializer<ServerInfo>(properties =>
         {
             string name = GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.Name);
             string protocolVersion = GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.Version);
@@ -568,7 +576,7 @@ internal static class SerializerUtilities
             return new ServerInfo(name, protocolVersion);
         });
 
-        Deserializers[typeof(ServerCapabilities)] = new ObjectDeserializer<ServerCapabilities>(properties =>
+        deserializers[typeof(ServerCapabilities)] = new ObjectDeserializer<ServerCapabilities>(properties =>
         {
             IDictionary<string, object?> testingCapabilities = GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.Testing);
             bool supportsDiscovery = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.SupportsDiscovery);
@@ -585,7 +593,7 @@ internal static class SerializerUtilities
                 MultiConnectionProvider: multiConnectionProvider));
         });
 
-        Deserializers[typeof(DiscoverRequestArgs)] = new ObjectDeserializer<DiscoverRequestArgs>(properties =>
+        deserializers[typeof(DiscoverRequestArgs)] = new ObjectDeserializer<DiscoverRequestArgs>(properties =>
         {
             _ = Guid.TryParse(GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.RunId), out Guid runId);
 
@@ -598,7 +606,7 @@ internal static class SerializerUtilities
             return new DiscoverRequestArgs(runId, tests, filter);
         });
 
-        Deserializers[typeof(RunRequestArgs)] = new ObjectDeserializer<RunRequestArgs>(properties =>
+        deserializers[typeof(RunRequestArgs)] = new ObjectDeserializer<RunRequestArgs>(properties =>
         {
             _ = Guid.TryParse(GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.RunId), out Guid runId);
 
@@ -610,7 +618,7 @@ internal static class SerializerUtilities
             return new RunRequestArgs(runId, tests, filter);
         });
 
-        Deserializers[typeof(TestNode)] = new ObjectDeserializer<TestNode>(
+        deserializers[typeof(TestNode)] = new ObjectDeserializer<TestNode>(
             properties =>
             {
                 string uid = string.Empty;
@@ -654,7 +662,7 @@ internal static class SerializerUtilities
                 };
             });
 
-        Deserializers[typeof(CancelRequestArgs)] = new ObjectDeserializer<CancelRequestArgs>(properties =>
+        deserializers[typeof(CancelRequestArgs)] = new ObjectDeserializer<CancelRequestArgs>(properties =>
         {
             object? idObj = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Id);
             int id = GetIdFromJson(idObj) ?? throw new MessageFormatException("id field should be a string or an int");
@@ -662,10 +670,10 @@ internal static class SerializerUtilities
             return new CancelRequestArgs(id);
         });
 
-        Deserializers[typeof(ExitRequestArgs)] = new ObjectDeserializer<ExitRequestArgs>(_ => new ExitRequestArgs());
+        deserializers[typeof(ExitRequestArgs)] = new ObjectDeserializer<ExitRequestArgs>(_ => new ExitRequestArgs());
 
         // Deserialize an error
-        Deserializers[typeof(ErrorMessage)] = new ObjectDeserializer<ErrorMessage>(properties =>
+        deserializers[typeof(ErrorMessage)] = new ObjectDeserializer<ErrorMessage>(properties =>
         {
             ValidateJsonRpcHeader(properties);
             object idObj = GetRequiredPropertyFromJson<object>(properties, JsonRpcStrings.Id);
@@ -704,6 +712,14 @@ internal static class SerializerUtilities
                 Message: errorMessage,
                 Data: data);
         });
+
+#if NET8_0_OR_GREATER
+        Serializers = serializers.ToFrozenDictionary();
+        Deserializers = deserializers.ToFrozenDictionary();
+#else
+        Serializers = serializers;
+        Deserializers = deserializers;
+#endif
     }
 
     public static IEnumerable<Type> SerializerTypes => Serializers.Keys;

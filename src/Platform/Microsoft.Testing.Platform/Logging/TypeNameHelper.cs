@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NET8_0_OR_GREATER
+using System.Collections.Frozen;
+#endif
+
 namespace Microsoft.Testing.Platform.Logging;
 
 /// <summary>
@@ -11,6 +15,27 @@ internal static class TypeNameHelper
 {
     private const char DefaultNestedTypeDelimiter = '+';
 
+#if NET8_0_OR_GREATER
+    private static readonly FrozenDictionary<Type, string> BuiltInTypeNames = new Dictionary<Type, string>
+    {
+        { typeof(void), "void" },
+        { typeof(bool), "bool" },
+        { typeof(byte), "byte" },
+        { typeof(char), "char" },
+        { typeof(decimal), "decimal" },
+        { typeof(double), "double" },
+        { typeof(float), "float" },
+        { typeof(int), "int" },
+        { typeof(long), "long" },
+        { typeof(object), "object" },
+        { typeof(sbyte), "sbyte" },
+        { typeof(short), "short" },
+        { typeof(string), "string" },
+        { typeof(uint), "uint" },
+        { typeof(ulong), "ulong" },
+        { typeof(ushort), "ushort" },
+    }.ToFrozenDictionary();
+#else
     private static readonly Dictionary<Type, string> BuiltInTypeNames = new()
     {
         { typeof(void), "void" },
@@ -30,6 +55,7 @@ internal static class TypeNameHelper
         { typeof(ulong), "ulong" },
         { typeof(ushort), "ushort" },
     };
+#endif
 
     /// <summary>
     /// Pretty print a type name.

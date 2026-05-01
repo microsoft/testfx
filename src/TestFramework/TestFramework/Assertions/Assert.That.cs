@@ -378,7 +378,11 @@ public static partial class AssertExtensions
         while (i < input.Length)
         {
             // Look for anonymous type pattern: new <>f__AnonymousType followed by generic parameters
+#if NET8_0_OR_GREATER
+            if (i <= input.Length - 4 && input.AsSpan(i, 4).SequenceEqual("new ") &&
+#else
             if (i <= input.Length - 4 && input.Substring(i, 4) == "new " &&
+#endif
                 i + 4 < input.Length && input.Substring(i + 4).StartsWith("<>f__AnonymousType", StringComparison.Ordinal))
             {
                 // Find the start of the constructor parameters
@@ -520,7 +524,11 @@ public static partial class AssertExtensions
         patternEnd = startIndex;
 
         // Check for "new " at the start
+#if NET8_0_OR_GREATER
+        if (startIndex + 4 >= input.Length || !input.AsSpan(startIndex, 4).SequenceEqual("new "))
+#else
         if (startIndex + 4 >= input.Length || !input.Substring(startIndex, 4).Equals("new ", StringComparison.Ordinal))
+#endif
         {
             return false;
         }
@@ -540,7 +548,11 @@ public static partial class AssertExtensions
         foreach (string type in collectionTypes)
         {
             if (pos + type.Length < input.Length &&
+#if NET8_0_OR_GREATER
+                input.AsSpan(pos, type.Length).SequenceEqual(type.AsSpan()))
+#else
                 input.Substring(pos, type.Length).Equals(type, StringComparison.Ordinal))
+#endif
             {
                 matchedType = type;
                 pos += type.Length;
@@ -554,7 +566,11 @@ public static partial class AssertExtensions
         }
 
         // Check for "`1()" pattern
+#if NET8_0_OR_GREATER
+        if (pos + 4 >= input.Length || !input.AsSpan(pos, 4).SequenceEqual("`1()"))
+#else
         if (pos + 4 >= input.Length || !input.Substring(pos, 4).Equals("`1()", StringComparison.Ordinal))
+#endif
         {
             return false;
         }
@@ -735,7 +751,11 @@ public static partial class AssertExtensions
         Func<string, string> transform, StringBuilder result)
     {
         if (index > input.Length - pattern.Length ||
+#if NET8_0_OR_GREATER
+            !input.AsSpan(index, pattern.Length).SequenceEqual(pattern.AsSpan()))
+#else
             !string.Equals(input.Substring(index, pattern.Length), pattern, StringComparison.Ordinal))
+#endif
         {
             return false;
         }
