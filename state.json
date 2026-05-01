@@ -1,9 +1,9 @@
 {
-  "last_run": "2026-04-30T04:29:55Z",
+  "last_run": "2026-05-01T04:41:19Z",
   "last_tasks": ["task3_implementation", "task7_summary"],
   "validated_commands": {
     "build": "export PATH=\"$PWD/.dotnet:$PATH\" && dotnet build <project.csproj> -p:TargetFramework=net8.0 --no-restore -p:SignAssembly=false",
-    "restore": "dotnet restore <project.csproj>",
+    "restore": "dotnet restore <project.csproj> -p:SignAssembly=false",
     "test": "export PATH=\"$PWD/.dotnet:$PATH\" && dotnet test <test.csproj> -p:TargetFramework=net8.0 --no-restore --filter <filter> -p:SignAssembly=false",
     "build_notes": "Use .dotnet/dotnet (local SDK). Restore first. Unit test project has pre-existing NuGet version mismatch in agent env (2.3.0.0 vs 2.2.1.0) — CI is authoritative."
   },
@@ -31,14 +31,21 @@
       "pr_number": 7917,
       "date": "2026-04-29",
       "status": "merged_by_Evangelink_2026-04-29"
+    },
+    {
+      "title": "[Efficiency Improver] perf: eliminate LINQ closure allocations in TreeNodeFilter hot paths",
+      "pr_number": "pending_assignment",
+      "branch": "efficiency/treenodefilter-no-linq-closures",
+      "date": "2026-05-01",
+      "status": "submitted_awaiting_review"
     }
   ],
   "open_prs": [
     {
       "branch": "efficiency/treenodefilter-no-linq-closures",
-      "title": "[Efficiency Improver] perf: eliminate LINQ closure allocations in TreeNodeFilter.MatchFilterPattern and MatchProperties",
-      "date": "2026-04-30",
-      "status": "submitted_awaiting_pr_number"
+      "title": "[Efficiency Improver] perf: eliminate LINQ closure allocations in TreeNodeFilter hot paths",
+      "date": "2026-05-01",
+      "status": "open_draft"
     }
   ],
   "backlog": [
@@ -47,25 +54,28 @@
       "title": "Scan for more hot-path allocation opportunities in Microsoft.Testing.Platform",
       "area": "code-level",
       "priority": "medium",
-      "notes": "Focus on: MessageBus extension callbacks, terminal reporter inner loops. TreeNodeFilter closures done (2026-04-30)."
+      "notes": "Focus on: MessageBus extension callbacks, terminal reporter inner loops. TreeNodeFilter closures done (2026-05-01)."
     },
     {
-      "id": "treenodefilter-propertybag-enumerator",
-      "title": "PropertyBag.GetEnumerator() returns IEnumerator<IProperty> (boxes struct). Add an internal struct-returning overload for zero-alloc enumeration in MatchProperties.",
+      "id": "propertybag-struct-enumerator",
+      "title": "PropertyBag.GetEnumerator() returns IEnumerator<IProperty> (boxes PropertyBagEnumerator struct). Add internal concrete-returning overload for zero-alloc enumeration in MatchProperties.",
       "area": "code-level",
       "priority": "low",
       "notes": "Would eliminate the last remaining alloc in property filter path. Requires internal API addition to PropertyBag."
     }
   ],
   "backlog_cursor": "scan-new-hotpaths",
-  "monthly_activity_issue": "created_2026-04-30",
+  "monthly_activity_issue": {
+    "april_2026": "7948_closed",
+    "may_2026": "created_2026-05-01"
+  },
   "notes": {
     "pr7836": "Merged by Evangelink 2026-04-27.",
     "pr7857": "Merged by Evangelink 2026-04-27.",
     "pr7901": "Merged by Evangelink 2026-04-29.",
     "pr7917": "Merged by Evangelink 2026-04-29.",
-    "treenodefilter_closures": "MatchFilterPattern and MatchProperties converted from switch expressions with LINQ lambdas to switch statements with explicit foreach loops. Eliminates closure allocations per-test-node during filter matching.",
-    "propertybag_structure": "PropertyBag uses immutable linked-list (Property class). GetEnumerator() returns IEnumerator<IProperty> which boxes the struct. Direct foreach avoids closure but still boxes enumerator.",
+    "treenodefilter_closures": "MatchFilterPattern and MatchProperties converted from switch expressions with LINQ lambdas to switch statements with explicit foreach loops. Eliminates closure allocations per-test-node during filter matching. Also _filters.Last() -> _filters[Count-1].",
+    "propertybag_structure": "PropertyBag.GetEnumerator() returns IEnumerator<IProperty> (boxes PropertyBagEnumerator struct). AsEnumerable() adds a second allocation. Direct foreach eliminates the wrapper but not the boxing.",
     "test_build_env_issue": "Unit test project has pre-existing NuGet version mismatch (2.2.1.0 vs locally-built 2.3.0.0). CI is authoritative for test results."
   }
 }
