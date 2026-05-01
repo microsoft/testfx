@@ -38,12 +38,14 @@ internal sealed class AssertScope : IDisposable
     /// <param name="error">The assertion failure exception.</param>
     internal void AddError(AssertFailedException error)
     {
-#pragma warning disable CA1513 // Use ObjectDisposedException throw helper - ThrowIf is not available on all target frameworks
+#if NET7_0_OR_GREATER
+        ObjectDisposedException.ThrowIf(_disposed, this);
+#else
+#pragma warning disable CA1513
         if (_disposed)
-        {
             throw new ObjectDisposedException(nameof(AssertScope));
-        }
-#pragma warning restore CA1513 // Use ObjectDisposedException throw helper
+#pragma warning restore CA1513
+#endif
 
         _errors.Enqueue(ExceptionDispatchInfo.Capture(error));
     }

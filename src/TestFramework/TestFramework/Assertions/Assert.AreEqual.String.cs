@@ -338,10 +338,10 @@ internal static class StringPreviewHelper
     }
 
     private static string EllipsisEnd(string text)
-        => $"{text.Substring(0, text.Length - 3)}...";
+        => $"{text[..^3]}...";
 
     private static string EllipsisStart(string text)
-        => $"...{text.Substring(3)}";
+        => $"...{text[3..]}";
 
     private static string MakeControlCharactersVisible(string text)
     {

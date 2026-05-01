@@ -102,6 +102,10 @@ internal sealed class MSTestExecutor : ITestExecutor
             PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor.RunTests: Running tests from testcases.");
         }
 
+#if NET6_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(frameworkHandle);
+        ArgumentNullException.ThrowIfNull(tests);
+#else
         if (frameworkHandle is null)
         {
             throw new ArgumentNullException(nameof(frameworkHandle));
@@ -112,6 +116,7 @@ internal sealed class MSTestExecutor : ITestExecutor
         {
             throw new ArgumentNullException(nameof(tests));
         }
+#endif
 
         Ensure.NotEmpty(tests);
 
@@ -130,6 +135,10 @@ internal sealed class MSTestExecutor : ITestExecutor
             PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor.RunTests: Running tests from sources.");
         }
 
+#if NET6_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(frameworkHandle);
+        ArgumentNullException.ThrowIfNull(sources);
+#else
         if (frameworkHandle is null)
         {
             throw new ArgumentNullException(nameof(frameworkHandle));
@@ -140,6 +149,7 @@ internal sealed class MSTestExecutor : ITestExecutor
         {
             throw new ArgumentNullException(nameof(sources));
         }
+#endif
 
         Ensure.NotEmpty(sources);
 

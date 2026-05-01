@@ -43,6 +43,11 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
 
     internal void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IConfiguration? configuration, bool isMTP)
     {
+#if NET6_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(sources);
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(discoverySink);
+#else
         if (sources is null)
         {
             throw new ArgumentNullException(nameof(sources));
@@ -57,6 +62,7 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
         {
             throw new ArgumentNullException(nameof(discoverySink));
         }
+#endif
 
         if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext, logger, configuration, _testSourceHandler))
         {
