@@ -1,7 +1,7 @@
 # TestFX Test Improver Memory
 
 ## Last Updated
-2026-04-30
+2026-05-01
 
 ## Build/Test Commands
 
@@ -47,7 +47,7 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
   - `AwesomeAssertions` is BANNED — use MSTest `Assert.*` methods
   - Has `InternalsVisibleTo` access to `Microsoft.Testing.Platform` internals
   - Tests run on both net8.0 and net9.0 — total count doubled
-  - Baseline (after 2026-04-30 additions): ~660 tests (net8.0, estimated)
+  - Baseline (after 2026-05-01 additions): ~659 tests per TFM (~1318 total)
   - `PlatformResources.LoggerFactoryNotReady` NOT accessible in test project (only in IS_CORE_MTP mode)
   - For multi-interface mocks (e.g. ILoggerProvider + IExtension), define internal interface combining them and mock that
 
@@ -58,33 +58,36 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 3. ✅ **DONE** `TimeSpanParser` unit tests → PR #7858 merged
 4. ✅ **DONE** `PasteArguments` unit tests → PR #7888 merged
 5. ✅ **DONE** `LoggerFactoryProxy` unit tests → PR #7916 merged
-6. ✅ **DONE** `LoggingManager.BuildAsync` tests → PR created 2026-04-30
-7. Code fix test coverage for MSTEST0031 when `DoNotUseSystemDescriptionAttributeFixer` lands
-8. `TestFramework.UnitTests` assertion edge cases
+6. ✅ **DONE** `LoggingManager.BuildAsync` tests → PR created 2026-05-01
+7. `ExtensionValidationHelper.ValidateUniqueExtension` — null guards + duplicate detection + error message formatting, no tests yet
+8. Code fix test coverage for MSTEST0031 when `DoNotUseSystemDescriptionAttributeFixer` lands
+9. `TestFramework.UnitTests` assertion edge cases
 
 ## Completed Work
 
-### 2026-04-30
-- **Task 3: Created PR for LoggingManager.BuildAsync tests**: 7 new tests
+### 2026-05-01
+- **Task 3: Created PR for LoggingManager.BuildAsync tests**: 8 new tests
   - AddProvider(null) → ArgumentNullException
+  - BuildAsync with no providers → empty LoggerFactory
+  - Factory delegate receives correct LogLevel and IServiceProvider
   - Non-IExtension provider → always included
   - IExtension enabled → included; disabled → excluded
   - IAsyncInitializableExtension → InitializeAsync called
-  - Disabled extension → InitializeAsync NOT called
-  - Factory delegate receives correct LogLevel and IServiceProvider
+  - Disabled IAsyncInitializableExtension → InitializeAsync NOT called
+- **Task 7: Monthly summary**: Closed April 2026 issue, created May 2026 issue
+
+### 2026-04-30
+- **Task 3: Attempted PR for LoggingManager.BuildAsync tests**: PR creation tool returned success but no PR was created in GitHub (tool issue)
+- **Task 4: Maintain PRs**: No open PRs to maintain
 
 ### 2026-04-29
 - **PR #7916 (LoggerFactoryProxy) merged** same day by Evangelink
-- **PR #7888 (PasteArguments) merged** by Evangelink
 
 ### 2026-04-28
 - Created PR #7888 for PasteArguments tests (17 tests)
 
 ### 2026-04-27
 - PR #7858 for TimeSpanParser tests: 116 new tests, merged same day
-
-### 2026-04-28 (run 1)
-- Fixed PR #7838 CI failures: IDE0008/IDE0017 code style violations
 
 ### 2026-04-25
 - PR #7838: `RetryAttribute` tests → merged 2026-04-27
@@ -97,12 +100,12 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 | Task | Last Run |
 |------|----------|
 | Task 1: Discover commands | 2026-04-24 |
-| Task 2: Identify opportunities | 2026-04-24 |
-| Task 3: Implement tests | 2026-04-30 |
+| Task 2: Identify opportunities | 2026-05-01 |
+| Task 3: Implement tests | 2026-05-01 |
 | Task 4: Maintain PRs | 2026-04-30 |
 | Task 5: Comment on issues | 2026-04-29 |
 | Task 6: Test infrastructure | 2026-04-29 |
-| Task 7: Monthly summary | 2026-04-30 |
+| Task 7: Monthly summary | 2026-05-01 |
 
 ## Maintainer Priorities
 - PRs merged quickly by Evangelink — receptive to focused test PRs for MTP and MSTest
@@ -116,3 +119,4 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 - `TestFramework.UnitTests` requires `-p:UseSharedCompilation=false` to build outside the full Arcade SDK build
 - `PlatformResources.cs` in test project compiles WITHOUT `IS_CORE_MTP` — only limited resource string properties are available
 - For multi-interface test doubles in Microsoft.Testing.Platform.UnitTests, define an `internal interface ICombined : IA, IB;` and mock that interface — Moq handles this cleanly
+- LoggingManager tests: IMonitor mock needs `_mockMonitor.Setup(x => x.Lock(It.IsAny<object>())).Returns(new Mock<IDisposable>().Object)` for LoggerFactory to work
