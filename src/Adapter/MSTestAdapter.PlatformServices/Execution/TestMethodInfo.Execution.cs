@@ -210,7 +210,7 @@ internal partial class TestMethodInfo
         if (TestContext is { } testContext)
         {
             testContext.SetOutcome(result.Outcome);
-            // Uwnrap the exception if it's a TestFailedException
+            // Unwrap the exception if it's a TestFailedException
             Exception? realException = result.TestFailureException is TestFailedException
                 ? result.TestFailureException.InnerException
                 : result.TestFailureException;
