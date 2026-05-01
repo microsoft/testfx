@@ -2,10 +2,10 @@
   "last_run": "2026-05-01",
   "fv_tool": "Lean 4 core (no Mathlib)",
   "lean_install_blocked": false,
-  "lean_install_note": "elan v3.1.0 via Python urllib.request. Lean 4.14.0. lake build passes.",
+  "lean_install_note": "elan v3.1.0 and v4.2.1 both 404 on this sandbox (network firewall). Previous run used Python urllib.request with v4.14.0. When available: lake build passes.",
   "targets": [
-    {"id":1,"name":"ArgumentArity","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs","phase":3,"priority":1,"notes":"Lean spec done. 27 theorems proved. Correspondence tests authored. Open PR this run. Next: Task 4 or 5.","spec_file":"formal-verification/specs/argument_arity_informal.md","lean_file":"formal-verification/lean/FVSquad/ArgumentArity.lean","corr_tests":"formal-verification/tests/argument_arity/"},
-    {"id":2,"name":"CommandLineParser.TryUnescape","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":2,"priority":2,"notes":"Informal spec done. BUG-1, BUG-2 confirmed. Next: Task 3.","spec_file":"formal-verification/specs/commandlineparser_tryunescape_informal.md"},
+    {"id":1,"name":"ArgumentArity","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs","phase":3,"priority":1,"notes":"Lean spec done (open PR). 27 theorems proved, 0 sorry. Correspondence tests authored. Next: merge PR, then Task 4 or 5.","spec_file":"formal-verification/specs/argument_arity_informal.md","lean_file":"formal-verification/lean/FVSquad/ArgumentArity.lean","corr_tests":"formal-verification/tests/argument_arity/"},
+    {"id":2,"name":"CommandLineParser.TryUnescape","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":2,"priority":2,"notes":"Informal spec done. BUG-1, BUG-2 confirmed. Next: Task 3. Lean was blocked this run.","spec_file":"formal-verification/specs/commandlineparser_tryunescape_informal.md"},
     {"id":3,"name":"CommandLineParser.ParseOptionAndSeparators","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":2,"priority":3,"notes":"Informal spec merged. Next: Task 3.","spec_file":"formal-verification/specs/commandlineparser_parseoptionandseparators_informal.md"},
     {"id":6,"name":"ResponseFileHelper.SplitCommandLine","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs","phase":2,"priority":4,"notes":"Informal spec merged. Next: Task 3.","spec_file":"formal-verification/specs/responsefilehelper_splitcommandline_informal.md"},
     {"id":7,"name":"TreeNodeFilter.MatchFilterPattern","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":2,"priority":5,"notes":"Informal spec merged. Next: Task 3.","spec_file":"formal-verification/specs/treenodefilter_matchfilterpattern_informal.md"},
@@ -21,13 +21,14 @@
   ],
   "open_prs": [
     {"branch":"lean-squad/task2-commandlineoptionsvalidator-task9-ci-2026-04-30","title":"[Lean Squad] feat(fv): Task 2 — CommandLineOptionsValidator informal spec + Task 9 CI simplification"},
-    {"branch":"lean-squad/task3-task8-argument-arity-2026-05-01","title":"[Lean Squad] feat(fv): Task 3+8+9 — ArgumentArity Lean spec (27 theorems proved), correspondence tests, CI improvements"}
+    {"branch":"lean-squad/task3-task8-argument-arity-2026-05-01","title":"[Lean Squad] feat(fv): Task 3+8+9 — ArgumentArity Lean spec (27 theorems proved), correspondence tests, CI improvements"},
+    {"branch":"lean-squad/task9-ci-improvements-2026-05-01","title":"[Lean Squad] feat(ci): Task 9 — remove Mathlib, add sorry annotations to lean-proofs CI"}
   ],
   "open_issues": [{"number":7793,"title":"[Lean Squad] Formal Verification Status"}],
-  "next_priority": "Task 3 for TryUnescape (priority 2). ArgumentArity at phase 3 — consider Task 4 (impl extraction) or Task 5 (proof assistance) next.",
+  "next_priority": "Task 3 for TryUnescape (priority 2) — requires Lean. If blocked, do Task 2 for remaining targets or Task 6/7. ArgumentArity at phase 3 (open PR) — consider Task 4/5 after PR merges.",
   "findings": [
-    {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-1: Single-char quote input -> ArgumentOutOfRangeException (IndexOf(char,1,-1))."},
-    {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-2: Single-char double-quote input -> range exception (input[1..^1] invalid for length-1 string)."},
+    {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-1: Single-char quote input -> IndexOf(char, 1, -1) throws ArgumentOutOfRangeException."},
+    {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-2: Single-char double-quote input -> input[1..^1] range exception."},
     {"type":"design-issue","target":"SplitCommandLine","desc":"Unclosed opening quote at start silently discards all input content."},
     {"type":"design-issue","target":"SplitCommandLine","desc":"Adjacent quoted strings emit 2 tokens not 1. Closing quote triggers yield+reset."},
     {"type":"design-issue","target":"ParseOptionAndSeparators","desc":"Empty option name not rejected: '--:value' produces currentOption='' silently."},
@@ -39,13 +40,12 @@
     "lake_version": "5.0.0-410fab7",
     "toolchain_file": "formal-verification/lean/lean-toolchain",
     "lakefile": "formal-verification/lean/lakefile.toml",
-    "root_module": "formal-verification/lean/FVSquad.lean",
     "no_mathlib": true,
-    "note": "Mathlib removed from lakefile.toml (both the open PR from 2026-04-30 and this PR remove it). Do NOT add back unless a .lean file actually imports Mathlib.",
-    "elan_install_method": "python3: urllib.request.urlretrieve then tarfile.extractall then subprocess.run([elan-init, -y, --default-toolchain, leanprover/lean4:v4.14.0])",
-    "lake_build_cmd": "python3 -c \"import subprocess,os; env=os.environ.copy(); env['PATH']='/home/runner/.elan/bin:'+env.get('PATH',''); subprocess.run(['/home/runner/.elan/bin/lake','build'], cwd='formal-verification/lean', env=env, ...)\"",
+    "note": "Mathlib removed from lakefile.toml as of this run (PR opened 2026-05-01). Do NOT add back unless a .lean file actually imports Mathlib.",
+    "elan_install_note": "Network blocked in sandbox. Use leanprover/lean4-action or standard elan-init.sh in CI. For local: elan v3.1.0 or v4.2.1 via tarball.",
+    "lake_build_cmd": "cd formal-verification/lean && PATH=$HOME/.elan/bin:$PATH lake update && lake build",
     "important_note": "String.replace, String.startsWith etc are @[extern] and NOT kernel-reducible. Use native_decide for concrete string evaluation. decide works for pure Prop/Bool/Int without String ops. omega for integer arithmetic.",
-    "manifest": "formal-verification/lean/lake-manifest.json (empty packages; generated by lake update)"
+    "manifest": "formal-verification/lean/lake-manifest.json — run 'lake update' after removing mathlib to regenerate"
   },
   "argument_arity_lean": {
     "file": "formal-verification/lean/FVSquad/ArgumentArity.lean",
