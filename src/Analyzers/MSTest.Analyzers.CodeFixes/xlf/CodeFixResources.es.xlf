@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="RemoveDuplicateDataRowFix">
         <source>Remove duplicate 'DataRow'</source>
-        <target state="new">Remove duplicate 'DataRow'</target>
+        <target state="translated">Quitar "DataRow" duplicado</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDuplicateTestMethodAttributeFix">
