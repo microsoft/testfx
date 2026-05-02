@@ -26,27 +26,31 @@
 - SynchronizedStringBuilder in TestContextImplementation uses [MethodImpl(Synchronized)]; safe to skip - TestContext may receive output from background threads spawned by tests
 - TypeValidator/TestMethodValidator created per-type in GetTypeEnumerator - minor impact (2 small objects per type), low priority
 - TreeNodeFilter covered by Efficiency Improver (#7947, #7974) - do not duplicate work
+- IsIgnored() in AttributeHelpers.cs is called 2x per test execution; optimization: use GetCustomAttributesCached() directly to eliminate GetAttributes<T> iterator + GroupBy LINQ operator
 
 ## Optimization Backlog
 1. **[In main]** ValidSourceExtensions static cache + ReflectionTestMethodInfo deduplication
 2. **[In main]** Eliminate LINQ iterator allocations in TryUnfoldITestDataSources
 3. **[Merged PR #7927 - 2026-04-30]** GetTestCategories (6 iterators→0) + WorkItemAttribute double-pass + param string LINQ iterator - fixes issue #7868
 4. **[Deprioritized - no profiler evidence]** Avoid yield iterator in TryExecuteDataSourceBasedTestsAsync + GetRetryAttribute (issue #7904 - branch perf-assist/avoid-yield-iterator-in-test-execution-hot-path can be discarded)
-5. BenchmarkDotNet micro-benchmark project for discovery/execution hot paths - proposed infrastructure, no active issue
-6. TreeNodeFilter MatchFilterPattern: LINQ closure allocations - covered by Efficiency Improver (#7947, #7974)
-7. SynchronizedStringBuilder lock overhead - LOW PRIORITY, requires profiler evidence, may be intentionally thread-safe
+5. **[In progress 🔧]** IsIgnored() LINQ allocation elimination: branch perf-assist/eliminate-linq-allocations-isignored (~4 allocations/test execution in common case → 0)
+6. BenchmarkDotNet micro-benchmark project for discovery/execution hot paths - proposed infrastructure, no active issue
+7. TreeNodeFilter MatchFilterPattern: LINQ closure allocations - covered by Efficiency Improver (#7947, #7974)
+8. SynchronizedStringBuilder lock overhead - LOW PRIORITY, requires profiler evidence, may be intentionally thread-safe
 
 ## Completed Work
 - Branch: perf-assist/reduce-allocations-discovery-execution (changes applied to main by maintainer, issue #7815 still open - suggest closing)
 - Branch: perf-assist/avoid-linq-iterators-data-source-enumeration (changes applied to main, issue for #7831)
 - Branch: perf-assist/reduce-linq-iterators-get-test-categories-d392d71fd502f8cc → PR #7927 MERGED 2026-04-30 by Evangelink
 - Branch: perf-assist/avoid-yield-iterator-in-test-execution-hot-path (issue #7904 - DEPRIORITIZED)
+- Branch: perf-assist/eliminate-linq-allocations-isignored - CREATED 2026-05-02
 
 ## Monthly Activity
 - April 2026 issue #7816: CLOSED 2026-05-01
-- May 2026 issue: Created 2026-05-01 (search for [Perf Improver] Monthly Activity 2026-05)
+- May 2026 issue #7981: OPEN
 
 ## Last Run
+- 2026-05-02: Tasks 3 (IsIgnored optimization, branch perf-assist/eliminate-linq-allocations-isignored), 7 (monthly summary updated)
 - 2026-05-01: Tasks 4 (PR #7927 merged, no open PRs), 2 (explored - SynchronizedStringBuilder skipped, TreeNodeFilter covered by EI), 7 (closed April issue, created May issue)
 - 2026-04-30: Tasks 2 (explored new opportunities), 6 (BenchmarkDotNet infra proposal), 7 (monthly summary)
 - 2026-04-29: Tasks 4 (PR #7927 health), 5 (commented on #7904), 7 (monthly summary)
@@ -60,4 +64,5 @@
 - 2026-04-29: Tasks 4, 5, 7 done
 - 2026-04-30: Tasks 2, 6, 7 done
 - 2026-05-01: Tasks 4, 2, 7 done
-- Next run: should focus on Tasks 3 (if high-confidence improvement found), 5 (new perf issues), 6 (infra follow-up), 7
+- 2026-05-02: Tasks 3, 7 done
+- Next run: should focus on Tasks 4 (check IsIgnored branch status), 5 (perf issues), 6 (infra)
