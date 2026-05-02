@@ -1,16 +1,16 @@
 {
-  "last_run": "2026-05-01",
+  "last_run": "2026-05-02",
   "fv_tool": "Lean 4 core (no Mathlib)",
   "lean_install_blocked": true,
   "lean_install_note": "Network firewall blocks elan and curl in sandbox. Lean has never been successfully installed in this environment. CI uses leanprover/lean4-action.",
   "targets": [
     {"id":1,"name":"ArgumentArity","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs","phase":2,"priority":1,"notes":"Informal spec done. Lean spec PR (27 theorems, 0 sorry) was opened and closed without merge. Next: Task 3 when Lean available.","spec_file":"formal-verification/specs/argument_arity_informal.md"},
     {"id":2,"name":"CommandLineParser.TryUnescape","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":2,"priority":2,"notes":"Informal spec done. BUG-1, BUG-2 confirmed. Next: Task 3 when Lean available.","spec_file":"formal-verification/specs/commandlineparser_tryunescape_informal.md"},
-    {"id":3,"name":"CommandLineParser.ParseOptionAndSeparators","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":2,"priority":5,"notes":"Informal spec merged. Correspondence section expanded this run. Next: Task 3.","spec_file":"formal-verification/specs/commandlineparser_parseoptionandseparators_informal.md"},
-    {"id":4,"name":"CommandLineOptionsValidator arity validation","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs","phase":1,"priority":6,"notes":"Identified; informal spec PR was closed without merge. Phase remains 1. Next: Task 2.","spec_file":null},
-    {"id":5,"name":"CommandLineParseResult.Equals","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs","phase":2,"priority":7,"notes":"Informal spec merged. Correspondence section expanded this run. All theorems are decide-provable. Good Task 3 candidate. Next: Task 3.","spec_file":"formal-verification/specs/commandlineparseresult_equals_informal.md"},
-    {"id":6,"name":"ResponseFileHelper.SplitCommandLine","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs","phase":2,"priority":4,"notes":"Informal spec merged. Correspondence section expanded this run. Next: Task 3.","spec_file":"formal-verification/specs/responsefilehelper_splitcommandline_informal.md"},
-    {"id":7,"name":"TreeNodeFilter.MatchFilterPattern","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":2,"priority":3,"notes":"Informal spec merged (#7934). Correspondence updated to phase 2 this run. Next: Task 3.","spec_file":"formal-verification/specs/treenodefilter_matchfilterpattern_informal.md"}
+    {"id":3,"name":"CommandLineParser.ParseOptionAndSeparators","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":2,"priority":5,"notes":"Informal spec merged. Correspondence section expanded. Next: Task 3.","spec_file":"formal-verification/specs/commandlineparser_parseoptionandseparators_informal.md"},
+    {"id":4,"name":"CommandLineOptionsValidator arity validation","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs","phase":2,"priority":6,"notes":"Informal spec extracted this run. 8 postconditions, 3 invariants, 7 edge cases. Key gap: absent required options not checked here (EC5). Next: Task 3.","spec_file":"formal-verification/specs/commandlineoptionsvalidator_arity_informal.md"},
+    {"id":5,"name":"CommandLineParseResult.Equals","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs","phase":2,"priority":7,"notes":"Informal spec merged. Correspondence section expanded. All theorems are decide-provable. Good Task 3 candidate. Next: Task 3.","spec_file":"formal-verification/specs/commandlineparseresult_equals_informal.md"},
+    {"id":6,"name":"ResponseFileHelper.SplitCommandLine","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs","phase":2,"priority":4,"notes":"Informal spec merged. Correspondence section expanded. Next: Task 3.","spec_file":"formal-verification/specs/responsefilehelper_splitcommandline_informal.md"},
+    {"id":7,"name":"TreeNodeFilter.MatchFilterPattern","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":2,"priority":3,"notes":"Informal spec merged (#7934). Correspondence updated to phase 2. Next: Task 3.","spec_file":"formal-verification/specs/treenodefilter_matchfilterpattern_informal.md"}
   ],
   "merged_prs": [
     {"number":7799,"title":"[Lean Squad] feat: formal verification infrastructure"},
@@ -25,10 +25,11 @@
     {"number":7934,"title":"[Lean Squad] feat(fv): Task 2 — informal spec for TreeNodeFilter.MatchFilterPattern"}
   ],
   "open_prs": [
-    {"branch":"lean-squad/task6-correspondence-review-2026-05-01","title":"[Lean Squad] feat(fv): Task 6 — expand Lean-C# correspondence review to all 7 targets","run":"25222665032"}
+    {"branch":"lean-squad/task6-correspondence-review-2026-05-01","title":"[Lean Squad] feat(fv): Task 6 — expand Lean-C# correspondence review to all 7 targets","run":"25222665032"},
+    {"branch":"lean-squad/task2-task9-arity-spec-ci-2026-05-02","title":"[Lean Squad] feat(fv): Task 2 + Task 9 — arity validator informal spec + sorry regression guard","run":"25239813116"}
   ],
   "open_issues": [{"number":7793,"title":"[Lean Squad] Formal Verification Status"}],
-  "next_priority": "Task 3 for TryUnescape (priority 2) or CommandLineParseResult.Equals (priority 7, simpler) — both require Lean. If blocked again: Task 2 for CommandLineOptionsValidator (its PR was closed; informal spec still needed).",
+  "next_priority": "All 7 targets at phase 2. Task 3 (Lean formal spec) blocked by Lean toolchain in sandbox. Priority order: ArgumentArity > TryUnescape > TreeNodeFilter > SplitCommandLine > ParseOptionAndSeparators > CommandLineOptionsValidator > CommandLineParseResult.Equals.",
   "findings": [
     {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-1: Single-char quote input -> IndexOf(char, 1, -1) throws ArgumentOutOfRangeException."},
     {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-2: Single-char double-quote input -> input[1..^1] range exception."},
@@ -36,7 +37,7 @@
     {"type":"design-issue","target":"SplitCommandLine","desc":"Adjacent quoted strings emit 2 tokens not 1. Closing quote triggers yield+reset."},
     {"type":"design-issue","target":"ParseOptionAndSeparators","desc":"Empty option name not rejected: '--:value' produces currentOption='' silently."},
     {"type":"design-issue","target":"ValidateOptionsArgumentArity","desc":"OQ-3: KeyNotFoundException if unknown option bypasses ValidateNoUnknownOptions step."},
-    {"type":"design-issue","target":"ValidateOptionsArgumentArity","desc":"OQ-3(new): Missing required option (Min>0) not detected here — only detected via ValidateConfigurationAsync."}
+    {"type":"design-issue","target":"ValidateOptionsArgumentArity","desc":"EC5: Absent required options (Min>0 but option not in parseResult) are not caught by arity check; delegated to ValidateConfigurationAsync."}
   ],
   "lean_setup": {
     "lean_version": "4.14.0",
@@ -48,6 +49,8 @@
     "elan_install_note": "Network blocked in sandbox. curl is blocked entirely. Use leanprover/lean4-action in CI. No local lean install possible in this environment.",
     "lake_build_cmd": "cd formal-verification/lean && PATH=$HOME/.elan/bin:$PATH lake build",
     "important_note": "String.replace, String.startsWith etc are @[extern] and NOT kernel-reducible. Use native_decide for concrete string evaluation. decide works for pure Prop/Bool/Int without String ops. omega for integer arithmetic.",
-    "argument_arity_lean_notes": "ArgumentArity.lean was written with 27 theorems, 0 sorry. The PR was closed without merge. When Lean is available, re-create the file — it proved well."
+    "argument_arity_lean_notes": "ArgumentArity.lean was written with 27 theorems, 0 sorry. The PR was closed without merge. When Lean is available, re-create the file — it proved well.",
+    "ci_sorry_threshold": 200,
+    "ci_sorry_guard_added": "2026-05-02 in lean-proofs.yml"
   }
 }
