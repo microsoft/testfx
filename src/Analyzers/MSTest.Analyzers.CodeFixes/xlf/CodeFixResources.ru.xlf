@@ -74,7 +74,7 @@
       </trans-unit>
       <trans-unit id="RemoveDuplicateTestMethodAttributeFix">
         <source>Remove duplicate TestMethod attribute</source>
-        <target state="new">Remove duplicate TestMethod attribute</target>
+        <target state="translated">Удалить дублирующий атрибут TestMethod</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
