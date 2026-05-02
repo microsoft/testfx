@@ -7,10 +7,13 @@
     {"id":1,"name":"ArgumentArity","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs","phase":2,"priority":1,"notes":"Informal spec done. Lean spec PR (27 theorems, 0 sorry) was opened and closed without merge. Next: Task 3 when Lean available.","spec_file":"formal-verification/specs/argument_arity_informal.md"},
     {"id":2,"name":"CommandLineParser.TryUnescape","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":2,"priority":2,"notes":"Informal spec done. BUG-1, BUG-2 confirmed. Next: Task 3 when Lean available.","spec_file":"formal-verification/specs/commandlineparser_tryunescape_informal.md"},
     {"id":3,"name":"CommandLineParser.ParseOptionAndSeparators","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":2,"priority":5,"notes":"Informal spec merged. Correspondence section expanded. Next: Task 3.","spec_file":"formal-verification/specs/commandlineparser_parseoptionandseparators_informal.md"},
-    {"id":4,"name":"CommandLineOptionsValidator arity validation","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs","phase":2,"priority":6,"notes":"Informal spec extracted this run. 8 postconditions, 3 invariants, 7 edge cases. Key gap: absent required options not checked here (EC5). Next: Task 3.","spec_file":"formal-verification/specs/commandlineoptionsvalidator_arity_informal.md"},
+    {"id":4,"name":"CommandLineOptionsValidator arity validation","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs","phase":2,"priority":6,"notes":"Informal spec extracted. 8 postconditions, 3 invariants, 7 edge cases. Key gap: absent required options not checked here (EC5). Next: Task 3.","spec_file":"formal-verification/specs/commandlineoptionsvalidator_arity_informal.md"},
     {"id":5,"name":"CommandLineParseResult.Equals","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs","phase":2,"priority":7,"notes":"Informal spec merged. Correspondence section expanded. All theorems are decide-provable. Good Task 3 candidate. Next: Task 3.","spec_file":"formal-verification/specs/commandlineparseresult_equals_informal.md"},
     {"id":6,"name":"ResponseFileHelper.SplitCommandLine","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs","phase":2,"priority":4,"notes":"Informal spec merged. Correspondence section expanded. Next: Task 3.","spec_file":"formal-verification/specs/responsefilehelper_splitcommandline_informal.md"},
-    {"id":7,"name":"TreeNodeFilter.MatchFilterPattern","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":2,"priority":3,"notes":"Informal spec merged (#7934). Correspondence updated to phase 2. Next: Task 3.","spec_file":"formal-verification/specs/treenodefilter_matchfilterpattern_informal.md"}
+    {"id":7,"name":"TreeNodeFilter.MatchFilterPattern","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":2,"priority":3,"notes":"Informal spec merged (#7934). Correspondence updated to phase 2. Next: Task 3.","spec_file":"formal-verification/specs/treenodefilter_matchfilterpattern_informal.md"},
+    {"id":8,"name":"TreeNodeFilter.TokenizeFilter","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":1,"priority":8,"notes":"Identified this run. Pure lexer; escape, wildcard, != merge properties. Companion to MatchFilterPattern. Next: Task 2 (informal spec)."},
+    {"id":9,"name":"CommandLineOption name validation","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOption.cs","phase":1,"priority":9,"notes":"Identified this run. Pure char predicate; decidable; connects to ArgumentArity. Next: Task 2 (informal spec)."},
+    {"id":10,"name":"CollectionAssert.GetElementCounts","file":"src/TestFramework/TestFramework/Assertions/CollectionAssert.Helpers.cs","phase":1,"priority":10,"notes":"Identified this run. Multiset histogram; completeness invariant sum(values)+nullCount=length. First MSTest target. Next: Task 2 (informal spec)."}
   ],
   "merged_prs": [
     {"number":7799,"title":"[Lean Squad] feat: formal verification infrastructure"},
@@ -25,11 +28,10 @@
     {"number":7934,"title":"[Lean Squad] feat(fv): Task 2 — informal spec for TreeNodeFilter.MatchFilterPattern"}
   ],
   "open_prs": [
-    {"branch":"lean-squad/task6-correspondence-review-2026-05-01","title":"[Lean Squad] feat(fv): Task 6 — expand Lean-C# correspondence review to all 7 targets","run":"25222665032"},
-    {"branch":"lean-squad/task2-task9-arity-spec-ci-2026-05-02","title":"[Lean Squad] feat(fv): Task 2 + Task 9 — arity validator informal spec + sorry regression guard","run":"25239813116"}
+    {"branch":"lean-squad/task1-expand-fv-targets-2026-05-02","title":"[Lean Squad] feat(fv): Task 1 — expand FV targets to 10 (TokenizeFilter, OptionName, GetElementCounts)","run":"25248106771"}
   ],
   "open_issues": [{"number":7793,"title":"[Lean Squad] Formal Verification Status"}],
-  "next_priority": "All 7 targets at phase 2. Task 3 (Lean formal spec) blocked by Lean toolchain in sandbox. Priority order: ArgumentArity > TryUnescape > TreeNodeFilter > SplitCommandLine > ParseOptionAndSeparators > CommandLineOptionsValidator > CommandLineParseResult.Equals.",
+  "next_priority": "All 7 original targets at phase 2. 3 new targets (8,9,10) at phase 1. Task 3 blocked by Lean toolchain. Priority: run Task 2 for Targets 8/9/10, or wait for Task 3 environment fix.",
   "findings": [
     {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-1: Single-char quote input -> IndexOf(char, 1, -1) throws ArgumentOutOfRangeException."},
     {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-2: Single-char double-quote input -> input[1..^1] range exception."},
