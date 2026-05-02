@@ -1,7 +1,7 @@
 # TestFX Test Improver Memory
 
 ## Last Updated
-2026-05-01
+2026-05-02
 
 ## Build/Test Commands
 
@@ -50,6 +50,7 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
   - Baseline (after 2026-05-01 additions): ~659 tests per TFM (~1318 total)
   - `PlatformResources.LoggerFactoryNotReady` NOT accessible in test project (only in IS_CORE_MTP mode)
   - For multi-interface mocks (e.g. ILoggerProvider + IExtension), define internal interface combining them and mock that
+  - **IMPORTANT**: LoggerFactory wraps providers into a composite logger — don't use `Assert.AreSame` to verify a provider was included; instead use `mockProvider.Verify(p => p.CreateLogger(name), Times.Once)` after calling `factory.CreateLogger(name)` with provider's `CreateLogger` mocked to return something
 
 ## Testing Backlog (prioritized)
 
@@ -58,15 +59,19 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 3. ✅ **DONE** `TimeSpanParser` unit tests → PR #7858 merged
 4. ✅ **DONE** `PasteArguments` unit tests → PR #7888 merged
 5. ✅ **DONE** `LoggerFactoryProxy` unit tests → PR #7916 merged
-6. ✅ **DONE** `LoggingManager.BuildAsync` tests → PR created 2026-05-01
+6. 🔄 **IN PROGRESS** `LoggingManager.BuildAsync` tests → 8 tests written and verified, persistent push failure. Patch in workflow artifact for runs 25195476816 and 25238451326. Patch is correct and tests pass.
 7. `ExtensionValidationHelper.ValidateUniqueExtension` — null guards + duplicate detection + error message formatting, no tests yet
 8. Code fix test coverage for MSTEST0031 when `DoNotUseSystemDescriptionAttributeFixer` lands
 9. `TestFramework.UnitTests` assertion edge cases
 
 ## Completed Work
 
+### 2026-05-02
+- **Task 3: Re-attempted LoggingManager.BuildAsync PR**: Fixed bug from 2026-05-01 attempt (Assert.AreSame → Verify for provider inclusion tests). All 8 tests pass. Push failed again.
+- **Task 7: Updated Monthly Summary issue #7969** with new run entry and suggested actions for stale issues
+
 ### 2026-05-01
-- **Task 3: Created PR for LoggingManager.BuildAsync tests**: 8 new tests
+- **Task 3: Attempted PR for LoggingManager.BuildAsync tests**: 8 new tests
   - AddProvider(null) → ArgumentNullException
   - BuildAsync with no providers → empty LoggerFactory
   - Factory delegate receives correct LogLevel and IServiceProvider
@@ -74,11 +79,8 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
   - IExtension enabled → included; disabled → excluded
   - IAsyncInitializableExtension → InitializeAsync called
   - Disabled IAsyncInitializableExtension → InitializeAsync NOT called
-- **Task 7: Monthly summary**: Closed April 2026 issue, created May 2026 issue
-
-### 2026-04-30
-- **Task 3: Attempted PR for LoggingManager.BuildAsync tests**: PR creation tool returned success but no PR was created in GitHub (tool issue)
-- **Task 4: Maintain PRs**: No open PRs to maintain
+  - Push failed, patch in issue #7968
+- **Task 7: Monthly summary**: Created May 2026 issue #7969
 
 ### 2026-04-29
 - **PR #7916 (LoggerFactoryProxy) merged** same day by Evangelink
@@ -93,7 +95,7 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 - PR #7838: `RetryAttribute` tests → merged 2026-04-27
 
 ### 2026-04-24
-- PR #7809 merged: `UseConditionBaseWithTestClassAnalyzer` tests
+- PR #7809 merged: `UseConditionBaseWithTestClass` tests
 
 ## Round-Robin Task Status
 
@@ -101,15 +103,15 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 |------|----------|
 | Task 1: Discover commands | 2026-04-24 |
 | Task 2: Identify opportunities | 2026-05-01 |
-| Task 3: Implement tests | 2026-05-01 |
-| Task 4: Maintain PRs | 2026-04-30 |
+| Task 3: Implement tests | 2026-05-02 |
+| Task 4: Maintain PRs | 2026-05-02 |
 | Task 5: Comment on issues | 2026-04-29 |
 | Task 6: Test infrastructure | 2026-04-29 |
-| Task 7: Monthly summary | 2026-05-01 |
+| Task 7: Monthly summary | 2026-05-02 |
 
 ## Maintainer Priorities
 - PRs merged quickly by Evangelink — receptive to focused test PRs for MTP and MSTest
-- Issue #7790 is stale (workaround issue, MSTEST0041 work already done in PR #7809)
+- Issues #7790, #7942, #7968 are stale (see monthly summary for suggested actions)
 
 ## Notes
 - `PasteArguments` is `internal static partial class` — accessible via InternalsVisibleTo
@@ -120,3 +122,4 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 - `PlatformResources.cs` in test project compiles WITHOUT `IS_CORE_MTP` — only limited resource string properties are available
 - For multi-interface test doubles in Microsoft.Testing.Platform.UnitTests, define an `internal interface ICombined : IA, IB;` and mock that interface — Moq handles this cleanly
 - LoggingManager tests: IMonitor mock needs `_mockMonitor.Setup(x => x.Lock(It.IsAny<object>())).Returns(new Mock<IDisposable>().Object)` for LoggerFactory to work
+- LoggingManager BuildAsync: to verify provider is INCLUDED, call `factory.CreateLogger("name")` and use `Verify(p.CreateLogger("name"), Times.Once)` — NOT `Assert.AreSame` since factory wraps providers
