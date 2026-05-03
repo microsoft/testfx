@@ -33,7 +33,7 @@
 2. **[In main]** Eliminate LINQ iterator allocations in TryUnfoldITestDataSources
 3. **[Merged PR #7927 - 2026-04-30]** GetTestCategories (6 iterators→0) + WorkItemAttribute double-pass + param string LINQ iterator - fixes issue #7868
 4. **[Deprioritized - no profiler evidence]** Avoid yield iterator in TryExecuteDataSourceBasedTestsAsync + GetRetryAttribute (issue #7904 - branch perf-assist/avoid-yield-iterator-in-test-execution-hot-path can be discarded)
-5. **[In progress 🔧]** IsIgnored() LINQ allocation elimination: branch perf-assist/eliminate-linq-allocations-isignored (~4 allocations/test execution in common case → 0)
+5. **[Patch ready 🔧]** IsIgnored() LINQ allocation elimination - patch in run 25280157015 artifact. Closes #7992, #7993
 6. BenchmarkDotNet micro-benchmark project for discovery/execution hot paths - proposed infrastructure, no active issue
 7. TreeNodeFilter MatchFilterPattern: LINQ closure allocations - covered by Efficiency Improver (#7947, #7974)
 8. SynchronizedStringBuilder lock overhead - LOW PRIORITY, requires profiler evidence, may be intentionally thread-safe
@@ -43,26 +43,23 @@
 - Branch: perf-assist/avoid-linq-iterators-data-source-enumeration (changes applied to main, issue for #7831)
 - Branch: perf-assist/reduce-linq-iterators-get-test-categories-d392d71fd502f8cc → PR #7927 MERGED 2026-04-30 by Evangelink
 - Branch: perf-assist/avoid-yield-iterator-in-test-execution-hot-path (issue #7904 - DEPRIORITIZED)
-- Branch: perf-assist/eliminate-linq-allocations-isignored - CREATED 2026-05-02
+- IsIgnored patch: CREATED 2026-05-03 in run 25280157015 artifact (previous branch deleted from remote)
 
 ## Monthly Activity
 - April 2026 issue #7816: CLOSED 2026-05-01
 - May 2026 issue #7981: OPEN
 
 ## Last Run
-- 2026-05-02: Tasks 3 (IsIgnored optimization, branch perf-assist/eliminate-linq-allocations-isignored), 7 (monthly summary updated)
+- 2026-05-03: Tasks 3/4 (re-implemented IsIgnored opt, previous remote branch was deleted; patch in run 25280157015 artifact), 7 (monthly summary updated)
+- 2026-05-02: Tasks 3 (IsIgnored optimization, placeholder issues #7992, #7993), 7 (monthly summary updated)
 - 2026-05-01: Tasks 4 (PR #7927 merged, no open PRs), 2 (explored - SynchronizedStringBuilder skipped, TreeNodeFilter covered by EI), 7 (closed April issue, created May issue)
 - 2026-04-30: Tasks 2 (explored new opportunities), 6 (BenchmarkDotNet infra proposal), 7 (monthly summary)
 - 2026-04-29: Tasks 4 (PR #7927 health), 5 (commented on #7904), 7 (monthly summary)
-- 2026-04-28: Tasks 3 (new optimization: avoid yield iterators), 7 (monthly summary)
-- 2026-04-27: Tasks 2 (verify merged PRs), 3 (new optimization), 7 (monthly summary)
 
 ## Round Robin Status
-- 2026-04-26: Tasks 4, 5, 7 done
-- 2026-04-27: Tasks 2, 3, 7 done
-- 2026-04-28: Tasks 3, 7 done
 - 2026-04-29: Tasks 4, 5, 7 done
 - 2026-04-30: Tasks 2, 6, 7 done
 - 2026-05-01: Tasks 4, 2, 7 done
 - 2026-05-02: Tasks 3, 7 done
-- Next run: should focus on Tasks 4 (check IsIgnored branch status), 5 (perf issues), 6 (infra)
+- 2026-05-03: Tasks 3/4, 7 done
+- Next run: should focus on Tasks 2 (new opportunities), 5 (perf issues), 6 (infra)
