@@ -7,7 +7,7 @@
     {"id":1,"name":"ArgumentArity","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs","phase":2,"priority":1,"notes":"Informal spec done. Next: Task 3 when Lean available.","spec_file":"formal-verification/specs/argument_arity_informal.md"},
     {"id":2,"name":"CommandLineParser.TryUnescape","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":2,"priority":2,"notes":"Informal spec done. BUG-1, BUG-2 confirmed. Next: Task 3 when Lean available.","spec_file":"formal-verification/specs/commandlineparser_tryunescape_informal.md"},
     {"id":3,"name":"CommandLineParser.ParseOptionAndSeparators","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":2,"priority":5,"notes":"Informal spec merged. Next: Task 3.","spec_file":"formal-verification/specs/commandlineparser_parseoptionandseparators_informal.md"},
-    {"id":4,"name":"CommandLineOptionsValidator arity validation","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs","phase":1,"priority":6,"notes":"Identified. No spec file committed. Next: Task 2."},
+    {"id":4,"name":"CommandLineOptionsValidator arity validation","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs","phase":2,"priority":6,"notes":"Informal spec done 2026-05-03. 7 theorem stubs. OQ-1: absent required options not caught. OQ-2: KeyNotFoundException risk. Next: Task 3.","spec_file":"formal-verification/specs/commandlineoptionsvalidator_arity_informal.md"},
     {"id":5,"name":"CommandLineParseResult.Equals","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs","phase":2,"priority":7,"notes":"Informal spec merged (#7918). All theorems are decide-provable. Next: Task 3.","spec_file":"formal-verification/specs/commandlineparseresult_equals_informal.md"},
     {"id":6,"name":"ResponseFileHelper.SplitCommandLine","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs","phase":2,"priority":4,"notes":"Informal spec merged. Next: Task 3.","spec_file":"formal-verification/specs/responsefilehelper_splitcommandline_informal.md"},
     {"id":7,"name":"TreeNodeFilter.MatchFilterPattern","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":2,"priority":3,"notes":"Informal spec merged (#7934). Next: Task 3.","spec_file":"formal-verification/specs/treenodefilter_matchfilterpattern_informal.md"},
@@ -28,18 +28,19 @@
     {"number":7934,"title":"[Lean Squad] feat(fv): Task 2 — informal spec for TreeNodeFilter.MatchFilterPattern"}
   ],
   "open_prs": [
-    {"branch":"lean-squad/task1-research-new-targets-2026-05-03","title":"feat(fv): Task 1 — add 3 new FV targets (PasteArguments, TimeSpanParser, TokenizeFilter)"}
+    {"branch":"lean-squad/task1-research-new-targets-2026-05-03","title":"feat(fv): Task 1 — add 3 new FV targets (PasteArguments, TimeSpanParser, TokenizeFilter)"},
+    {"branch":"lean-squad/task2-informal-spec-arity-validation-2026-05-03","title":"feat(fv): Task 2 — informal spec for CommandLineOptionsValidator arity validation"}
   ],
   "open_issues": [{"number":7793,"title":"[Lean Squad] Formal Verification Status"}],
-  "next_priority": "Task 3 blocked by Lean toolchain every run. Next best: Task 2 for Target 8 (PasteArguments.AppendArgument) — backslash rules well-specified, tests exist. Or Task 2 for Target 4 (CommandLineOptionsValidator). All phase-2 targets await Task 3.",
+  "next_priority": "Task 3 blocked by Lean toolchain every run. Next best: Task 2 for Targets 8/9/10 (PasteArguments, TimeSpanParser, TokenizeFilter) if PR merges. All phase-2 targets (1-7) await Task 3.",
   "findings": [
     {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-1: Single-char quote input -> IndexOf(char, 1, -1) throws ArgumentOutOfRangeException."},
     {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-2: Single-char double-quote input -> input[1..^1] range exception."},
     {"type":"design-issue","target":"SplitCommandLine","desc":"Unclosed opening quote at start silently discards all input content."},
     {"type":"design-issue","target":"SplitCommandLine","desc":"Adjacent quoted strings emit 2 tokens not 1. Closing quote triggers yield+reset."},
     {"type":"design-issue","target":"ParseOptionAndSeparators","desc":"Empty option name not rejected: '--:value' produces currentOption='' silently."},
-    {"type":"design-issue","target":"ValidateOptionsArgumentArity","desc":"OQ-3: KeyNotFoundException if unknown option bypasses ValidateNoUnknownOptions step."},
-    {"type":"design-issue","target":"ValidateOptionsArgumentArity","desc":"EC5: Absent required options (Min>0 but option not in parseResult) are not caught by arity check; delegated to ValidateConfigurationAsync."}
+    {"type":"design-issue","target":"ValidateOptionsArgumentArity","desc":"OQ-2: KeyNotFoundException if unknown option bypasses ValidateNoUnknownOptions step."},
+    {"type":"design-issue","target":"ValidateOptionsArgumentArity","desc":"OQ-1: Absent required options (Min>0 but option not in parseResult) not caught by arity check; delegated to ValidateConfigurationAsync."}
   ],
   "lean_setup": {
     "lean_version": "4.14.0",
