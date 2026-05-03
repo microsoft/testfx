@@ -29,7 +29,8 @@
   ],
   "open_prs": [
     {"branch":"lean-squad/task1-research-new-targets-2026-05-03","title":"feat(fv): Task 1 — add 3 new FV targets (PasteArguments, TimeSpanParser, TokenizeFilter)"},
-    {"branch":"lean-squad/task2-informal-spec-arity-validation-2026-05-03","title":"feat(fv): Task 2 — informal spec for CommandLineOptionsValidator arity validation"}
+    {"branch":"lean-squad/task2-informal-spec-arity-validation-2026-05-03","title":"feat(fv): Task 2 — informal spec for CommandLineOptionsValidator arity validation"},
+    {"branch":"lean-squad/task9-ci-phase3-validation-sorry-guard-2026-05-03","title":"feat(ci): Task 9 — sorry threshold enforcement + phase-3 Lean file check"}
   ],
   "open_issues": [{"number":7793,"title":"[Lean Squad] Formal Verification Status"}],
   "next_priority": "Task 3 blocked by Lean toolchain every run. Next best: Task 2 for Targets 8/9/10 (PasteArguments, TimeSpanParser, TokenizeFilter) if PR merges. All phase-2 targets (1-7) await Task 3.",
@@ -52,7 +53,8 @@
     "important_note": "String.replace, String.startsWith etc are @[extern] and NOT kernel-reducible. Use native_decide for concrete string evaluation. decide works for pure Prop/Bool/Int without String ops. omega for integer arithmetic.",
     "argument_arity_lean_notes": "ArgumentArity.lean was written with 27 theorems, 0 sorry. The PR was closed without merge. When Lean is available, re-create the file — it proved well.",
     "ci_sorry_threshold": 200,
-    "ci_sorry_guard_added": "2026-05-02 in lean-proofs.yml — PR lean-squad/task9-ci-sorry-threshold-2026-05-02",
+    "ci_sorry_guard_added": "2026-05-03 in lean-proofs.yml — PR lean-squad/task9-ci-phase3-validation-sorry-guard-2026-05-03",
+    "ci_phase3_check_added": "2026-05-03 in fv-docs-validation.yml — verifies phase-3+ targets have Lean files",
     "ci_workflow_note": "fv-docs-validation.yml step 'Verify lean-toolchain' now has shell:bash for [[ ]] syntax safety"
   }
 }
