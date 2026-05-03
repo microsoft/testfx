@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-05-02T04:25:33Z",
+  "last_run": "2026-05-03T04:36:11Z",
   "last_tasks": ["task3_implementation", "task7_summary"],
   "validated_commands": {
     "build": "export PATH=\"$PWD/.dotnet:$PATH\" && dotnet build <project.csproj> -p:TargetFramework=net8.0 --no-restore -p:SignAssembly=false",
@@ -34,16 +34,16 @@
     },
     {
       "title": "[Efficiency Improver] perf: eliminate LINQ closure allocations in TreeNodeFilter hot paths",
-      "branch": "efficiency/treenodefilter-no-closure-allocs",
-      "date": "2026-05-02",
+      "branch": "efficiency/treenodefilter-no-linq-closures",
+      "date": "2026-05-03",
       "status": "submitted_awaiting_review"
     }
   ],
   "open_prs": [
     {
-      "branch": "efficiency/treenodefilter-no-closure-allocs",
+      "branch": "efficiency/treenodefilter-no-linq-closures",
       "title": "[Efficiency Improver] perf: eliminate LINQ closure allocations in TreeNodeFilter hot paths",
-      "date": "2026-05-02",
+      "date": "2026-05-03",
       "status": "open_draft"
     }
   ],
@@ -53,7 +53,7 @@
       "title": "Scan for more hot-path allocation opportunities in Microsoft.Testing.Platform",
       "area": "code-level",
       "priority": "medium",
-      "notes": "Focus on: MessageBus extension callbacks, terminal reporter inner loops. TreeNodeFilter closures done (2026-05-02)."
+      "notes": "MessageBus and TerminalOutputDevice ConsumeAsync scan done on 2026-05-03: both look clean. PropertyBag operations already optimized."
     },
     {
       "id": "propertybag-struct-enumerator",
@@ -63,7 +63,7 @@
       "notes": "Would eliminate the last remaining alloc in property filter path. Requires internal API change to PropertyBag."
     }
   ],
-  "backlog_cursor": "scan-new-hotpaths",
+  "backlog_cursor": "propertybag-struct-enumerator",
   "monthly_activity_issue": {
     "april_2026": "7948_closed",
     "may_2026": "7975_open"
@@ -73,8 +73,8 @@
     "pr7857": "Merged by Evangelink 2026-04-27.",
     "pr7901": "Merged by Evangelink 2026-04-29.",
     "pr7917": "Merged by Evangelink 2026-04-29.",
-    "treenodefilter_closures": "MatchFilterPattern and MatchProperties converted from switch expressions with LINQ lambdas to switch statements with explicit foreach loops (2026-05-02). Also _filters.Last() -> _filters[Count-1]. Eliminates closure allocations per-test-node during filter matching.",
-    "propertybag_structure": "PropertyBag.GetEnumerator() returns IEnumerator<IProperty> (boxes PropertyBagEnumerator struct). Direct foreach over PropertyBag eliminates AsEnumerable() wrapper but not boxing.",
-    "test_build_env_issue": "Unit test project has pre-existing NuGet version mismatch (2.2.1.0 vs locally-built 2.3.0.0). CI is authoritative for test results."
+    "treenodefilter_closures_v2": "OperatorExpression.SubExpressions changed IReadOnlyCollection->FilterExpression[]. MatchFilterPattern and MatchProperties converted to switch statements with explicit for loops. MatchProperties walks _property linked list directly. Eliminates 2-4 heap allocs per MatchesFilter call with operators (2026-05-03).",
+    "test_build_env_issue": "Unit test project has pre-existing NuGet version mismatch (2.2.1.0 vs locally-built 2.3.0.0). CI is authoritative for test results.",
+    "hotpath_scan_2026-05-03": "MessageBus (AsynchronousMessageBus) and TerminalOutputDevice/TerminalTestReporter reviewed — both look clean. PropertyBag ops already optimized by previous PRs."
   }
 }
