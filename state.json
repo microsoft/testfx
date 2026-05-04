@@ -11,11 +11,14 @@
     {"id":5,"name":"CommandLineParseResult.Equals","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs","phase":2,"priority":7,"notes":"Informal spec merged (#7918). All theorems are decide-provable. Next: Task 3.","spec_file":"formal-verification/specs/commandlineparseresult_equals_informal.md"},
     {"id":6,"name":"ResponseFileHelper.SplitCommandLine","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs","phase":2,"priority":4,"notes":"Informal spec merged. Next: Task 3.","spec_file":"formal-verification/specs/responsefilehelper_splitcommandline_informal.md"},
     {"id":7,"name":"TreeNodeFilter.MatchFilterPattern","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":2,"priority":3,"notes":"Informal spec merged (#7934). Next: Task 3.","spec_file":"formal-verification/specs/treenodefilter_matchfilterpattern_informal.md"},
-    {"id":8,"name":"PasteArguments.AppendArgument","file":"src/Platform/Microsoft.Testing.Platform/Helpers/PasteArguments.cs","phase":1,"priority":8,"notes":"Added to TARGETS.md and RESEARCH.md 2026-05-04. Windows argv escaping rules. Round-trip correctness. Next: Task 2."},
-    {"id":9,"name":"TimeSpanParser.TryParse","file":"src/Platform/Microsoft.Testing.Platform/Helpers/TimeSpanParser.cs","phase":1,"priority":9,"notes":"Added to TARGETS.md and RESEARCH.md 2026-05-04. Pure suffix-dispatch parser. Next: Task 2."},
-    {"id":10,"name":"TreeNodeFilter.TokenizeFilter","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":1,"priority":10,"notes":"Added to TARGETS.md and RESEARCH.md 2026-05-04. Tokenizer for filter grammar. Trailing-backslash exception. Next: Task 2."},
-    {"id":11,"name":"Sha256Hasher.ToCharsBuffer","file":"src/Platform/Microsoft.Testing.Platform/Helpers/Sha256Hasher.cs","phase":1,"priority":11,"notes":"NEW 2026-05-04. Branchless hex encoding. All 256 inputs decidable by `decide`. Fascinating bit-manipulation proof target."},
-    {"id":12,"name":"ExtensionValidationHelper.ValidateUniqueExtension","file":"src/Platform/Microsoft.Testing.Platform/Helpers/ExtensionValidationHelper.cs","phase":1,"priority":12,"notes":"NEW 2026-05-04. Duplicate-UID detection. Simple predicate: throws iff exists x in list with same uid."}
+    {"id":8,"name":"PasteArguments.AppendArgument","file":"src/Platform/Microsoft.Testing.Platform/Helpers/PasteArguments.cs","phase":1,"priority":8,"notes":"Added to TARGETS.md and RESEARCH.md 2026-05-04 in PR #7849. Windows argv escaping rules. Round-trip correctness. Next: Task 2."},
+    {"id":9,"name":"TimeSpanParser.TryParse","file":"src/Platform/Microsoft.Testing.Platform/Helpers/TimeSpanParser.cs","phase":1,"priority":9,"notes":"Added to TARGETS.md and RESEARCH.md 2026-05-04 in PR #7849. Pure suffix-dispatch parser. Next: Task 2."},
+    {"id":10,"name":"TreeNodeFilter.TokenizeFilter","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":1,"priority":10,"notes":"Added to TARGETS.md and RESEARCH.md 2026-05-04 in PR #7849. Tokenizer for filter grammar. Trailing-backslash exception. Next: Task 2."},
+    {"id":11,"name":"Sha256Hasher.ToCharsBuffer","file":"src/Platform/Microsoft.Testing.Platform/Helpers/Sha256Hasher.cs","phase":1,"priority":11,"notes":"In PR #7849. Branchless hex encoding. All 256 inputs decidable by decide."},
+    {"id":12,"name":"ExtensionValidationHelper.ValidateUniqueExtension","file":"src/Platform/Microsoft.Testing.Platform/Helpers/ExtensionValidationHelper.cs","phase":1,"priority":12,"notes":"In PR #7849. Duplicate-UID detection."},
+    {"id":13,"name":"UnicodeCharacterUtilities.IsIdentifierStartCharacter/IsIdentifierPartCharacter","file":"src/Analyzers/MSTest.SourceGeneration/Helpers/UnicodeCharacterUtilities.cs","phase":1,"priority":13,"notes":"NEW 2026-05-04 run2. Pure char classification, C# Language Spec grounded. ASCII range fully decidable. Key theorem: subsumption. In PR lean-squad/task1-new-targets-2026-05-04-run2."},
+    {"id":14,"name":"TestNodeUid equality and implicit conversion","file":"src/Platform/Microsoft.Testing.Platform/Messages/TestNodeUid.cs","phase":1,"priority":14,"notes":"NEW 2026-05-04 run2. Minimal string-wrapper. Equivalence-relation laws + operator consistency. Ideal warm-up. In PR lean-squad/task1-new-targets-2026-05-04-run2."},
+    {"id":15,"name":"CommandLineOption name-character invariant","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOption.cs","phase":1,"priority":15,"notes":"NEW 2026-05-04 run2. Constructor-enforced char predicate. Security invariant. In PR lean-squad/task1-new-targets-2026-05-04-run2."}
   ],
   "merged_prs": [
     {"number":7799,"title":"[Lean Squad] feat: formal verification infrastructure"},
@@ -30,10 +33,10 @@
     {"number":7934,"title":"[Lean Squad] feat(fv): Task 2 — informal spec for TreeNodeFilter.MatchFilterPattern"}
   ],
   "open_prs": [
-    {"branch":"lean-squad/task1-new-targets-2026-05-04","title":"feat(fv): Task 1 — add 5 new FV targets (PasteArguments, TimeSpanParser, TokenizeFilter, Sha256Hasher, ExtensionValidationHelper)"}
+    {"branch":"lean-squad/task1-new-targets-2026-05-04-run2","title":"feat(fv): Task 1 — add 3 new FV targets (UnicodeCharacterUtilities, TestNodeUid, CommandLineOption)"}
   ],
   "open_issues": [{"number":7793,"title":"[Lean Squad] Formal Verification Status"}],
-  "next_priority": "Task 3 blocked by Lean toolchain every run. Next best: Task 2 for Targets 8-12. All phase-2 targets (1-7) await Task 3.",
+  "next_priority": "Task 3 blocked by Lean toolchain every run. PR #7849 still open with targets 8-12. New PR adds targets 13-15. Next best: Task 2 for Targets 13-15.",
   "findings": [
     {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-1: Single-char quote input -> IndexOf(char, 1, -1) throws ArgumentOutOfRangeException."},
     {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-2: Single-char double-quote input -> input[1..^1] range exception."},
