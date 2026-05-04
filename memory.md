@@ -21,19 +21,20 @@
 - PERF comments in code indicate previously addressed perf issues
 - GetTestPropertiesAsTraits: already uses allocation-free pattern (no LINQ iterators) - good reference
 - IsAttributeDefined<T> / GetFirstAttributeOrDefault<T> / GetCustomAttributesCached() are allocation-free alternatives to GetAttributes<T>()
-- GitHub Actions cannot create PRs in this repo; changes are pushed to branches and placeholder issues are created
+- GitHub Actions cannot push branches directly; create_pull_request tool creates a patch artifact (result: success)
 - IMPORTANT: Maintainers (Youssef1313, Evangelink) noted that hot path detection is not great - many things flagged that don't show in actual profiler traces. Require stronger evidence before submitting new allocations issues.
 - SynchronizedStringBuilder in TestContextImplementation uses [MethodImpl(Synchronized)]; safe to skip - TestContext may receive output from background threads spawned by tests
 - TypeValidator/TestMethodValidator created per-type in GetTypeEnumerator - minor impact (2 small objects per type), low priority
 - TreeNodeFilter covered by Efficiency Improver (#7947, #7974) - do not duplicate work
-- IsIgnored() in AttributeHelpers.cs is called 2x per test execution; optimization: use GetCustomAttributesCached() directly to eliminate GetAttributes<T> iterator + GroupBy LINQ operator
+- TestMethodInfo.GetAttributes<T>() wraps cached array with yield iterator + [..] spread - returns a filtered copy, allocation by design (prevents cache mutation), low priority
+- GetRetryAttribute() in TestMethodInfo uses GetAttributes<RetryBaseAttribute> - called once per test method construction (not per execution), low priority
 
 ## Optimization Backlog
 1. **[In main]** ValidSourceExtensions static cache + ReflectionTestMethodInfo deduplication
 2. **[In main]** Eliminate LINQ iterator allocations in TryUnfoldITestDataSources
 3. **[Merged PR #7927 - 2026-04-30]** GetTestCategories (6 iterators→0) + WorkItemAttribute double-pass + param string LINQ iterator - fixes issue #7868
 4. **[Deprioritized - no profiler evidence]** Avoid yield iterator in TryExecuteDataSourceBasedTestsAsync + GetRetryAttribute (issue #7904 - branch perf-assist/avoid-yield-iterator-in-test-execution-hot-path can be discarded)
-5. **[Patch ready 🔧]** IsIgnored() LINQ allocation elimination - patch in run 25280157015 artifact. Closes #7992, #7993
+5. **[Patch ready 🔧 - run 25321208683]** IsIgnored() LINQ allocation elimination. Closes #7992, #7993, #8000
 6. BenchmarkDotNet micro-benchmark project for discovery/execution hot paths - proposed infrastructure, no active issue
 7. TreeNodeFilter MatchFilterPattern: LINQ closure allocations - covered by Efficiency Improver (#7947, #7974)
 8. SynchronizedStringBuilder lock overhead - LOW PRIORITY, requires profiler evidence, may be intentionally thread-safe
@@ -43,13 +44,14 @@
 - Branch: perf-assist/avoid-linq-iterators-data-source-enumeration (changes applied to main, issue for #7831)
 - Branch: perf-assist/reduce-linq-iterators-get-test-categories-d392d71fd502f8cc → PR #7927 MERGED 2026-04-30 by Evangelink
 - Branch: perf-assist/avoid-yield-iterator-in-test-execution-hot-path (issue #7904 - DEPRIORITIZED)
-- IsIgnored patch: CREATED 2026-05-03 in run 25280157015 artifact (previous branch deleted from remote)
+- IsIgnored patch: CREATED 2026-05-04 in run 25321208683 artifact (branch: perf-assist/eliminate-linq-allocations-isignored)
 
 ## Monthly Activity
 - April 2026 issue #7816: CLOSED 2026-05-01
 - May 2026 issue #7981: OPEN
 
 ## Last Run
+- 2026-05-04: Tasks 3 (IsIgnored re-impl again, patch in run 25321208683), 2 (no new high-confidence targets), 7 (monthly summary updated)
 - 2026-05-03: Tasks 3/4 (re-implemented IsIgnored opt, previous remote branch was deleted; patch in run 25280157015 artifact), 7 (monthly summary updated)
 - 2026-05-02: Tasks 3 (IsIgnored optimization, placeholder issues #7992, #7993), 7 (monthly summary updated)
 - 2026-05-01: Tasks 4 (PR #7927 merged, no open PRs), 2 (explored - SynchronizedStringBuilder skipped, TreeNodeFilter covered by EI), 7 (closed April issue, created May issue)
@@ -62,4 +64,5 @@
 - 2026-05-01: Tasks 4, 2, 7 done
 - 2026-05-02: Tasks 3, 7 done
 - 2026-05-03: Tasks 3/4, 7 done
-- Next run: should focus on Tasks 2 (new opportunities), 5 (perf issues), 6 (infra)
+- 2026-05-04: Tasks 3, 2, 7 done
+- Next run: should focus on Tasks 4 (check PR status), 5 (comment on perf issues), 6 (infra)
