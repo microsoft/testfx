@@ -13,7 +13,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal sealed class TestFrameworkBuilderData(ServiceProvider serviceProvider, ITestExecutionRequestFactory testExecutionRequestFactory,
     ITestFrameworkInvoker testExecutionRequestInvoker, ITestExecutionFilterFactory testExecutionFilterFactory,
-    IPlatformOutputDevice platformOutputDisplayService, IEnumerable<IDataConsumer> serverPerCallConsumers,
+    IPlatformOutputDevice? platformOutputDisplayService, IEnumerable<IDataConsumer> serverPerCallConsumers,
     TestFrameworkManager testFrameworkManager, TestHostManager testSessionManager, MessageBusProxy messageBusProxy,
     bool isForDiscoveryRequest,
     bool isJsonRpcProtocol)
@@ -26,7 +26,7 @@ internal sealed class TestFrameworkBuilderData(ServiceProvider serviceProvider, 
 
     public ITestExecutionFilterFactory TestExecutionFilterFactory { get; } = testExecutionFilterFactory;
 
-    public IPlatformOutputDevice PlatformOutputDisplayService { get; } = platformOutputDisplayService;
+    public IPlatformOutputDevice? PlatformOutputDisplayService { get; } = platformOutputDisplayService;
 
     public IEnumerable<IDataConsumer> ServerPerCallConsumers { get; } = serverPerCallConsumers;
 
