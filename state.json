@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-05-03T04:36:11Z",
+  "last_run": "2026-05-04T04:35:49Z",
   "last_tasks": ["task3_implementation", "task7_summary"],
   "validated_commands": {
     "build": "export PATH=\"$PWD/.dotnet:$PATH\" && dotnet build <project.csproj> -p:TargetFramework=net8.0 --no-restore -p:SignAssembly=false",
@@ -31,19 +31,13 @@
       "pr_number": 7917,
       "date": "2026-04-29",
       "status": "merged_by_Evangelink_2026-04-29"
-    },
-    {
-      "title": "[Efficiency Improver] perf: eliminate LINQ closure allocations in TreeNodeFilter hot paths",
-      "branch": "efficiency/treenodefilter-no-linq-closures",
-      "date": "2026-05-03",
-      "status": "submitted_awaiting_review"
     }
   ],
   "open_prs": [
     {
-      "branch": "efficiency/treenodefilter-no-linq-closures",
+      "branch": "efficiency/eliminate-linq-closures-treenodefilter-v2",
       "title": "[Efficiency Improver] perf: eliminate LINQ closure allocations in TreeNodeFilter hot paths",
-      "date": "2026-05-03",
+      "date": "2026-05-04",
       "status": "open_draft"
     }
   ],
@@ -68,13 +62,17 @@
     "april_2026": "7948_closed",
     "may_2026": "7975_open"
   },
+  "stale_issues_to_note": [
+    "7947, 7974, 7990, 7998 - duplicate open issues from failed PR attempts for LINQ closures. Cannot close programmatically (update_issue limit=1 per run). Consider manual cleanup."
+  ],
   "notes": {
     "pr7836": "Merged by Evangelink 2026-04-27.",
     "pr7857": "Merged by Evangelink 2026-04-27.",
     "pr7901": "Merged by Evangelink 2026-04-29.",
     "pr7917": "Merged by Evangelink 2026-04-29.",
-    "treenodefilter_closures_v2": "OperatorExpression.SubExpressions changed IReadOnlyCollection->FilterExpression[]. MatchFilterPattern and MatchProperties converted to switch statements with explicit for loops. MatchProperties walks _property linked list directly. Eliminates 2-4 heap allocs per MatchesFilter call with operators (2026-05-03).",
+    "treenodefilter_closures_v2": "OperatorExpression.SubExpressions: IReadOnlyCollection->FilterExpression[]. MatchFilterPattern/MatchProperties: switch expressions->switch statements with foreach loops. MatchProperties walks _property linked list directly. _filters.Last()->[Count-1]. Eliminates ~3-5 heap allocs per MatchesFilter call (2026-05-04).",
     "test_build_env_issue": "Unit test project has pre-existing NuGet version mismatch (2.2.1.0 vs locally-built 2.3.0.0). CI is authoritative for test results.",
-    "hotpath_scan_2026-05-03": "MessageBus (AsynchronousMessageBus) and TerminalOutputDevice/TerminalTestReporter reviewed — both look clean. PropertyBag ops already optimized by previous PRs."
+    "hotpath_scan_2026-05-03": "MessageBus (AsynchronousMessageBus) and TerminalOutputDevice/TerminalTestReporter reviewed — both look clean. PropertyBag ops already optimized by previous PRs.",
+    "sa1503_warning": "SA1503: braces must not be omitted — always use braces even for single-statement if bodies in this repo."
   }
 }
