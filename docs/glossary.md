@@ -28,6 +28,10 @@ An MTP extension (`Microsoft.Testing.Extensions.CrashDump`) that automatically c
 
 A public enum in the `Microsoft.VisualStudio.TestTools.UnitTesting` namespace that specifies the delay strategy used between retries by the `[Retry]` attribute. Values: `Constant` (fixed delay between each attempt) and `Exponential` (delay doubles with each attempt: base × 2^(n−1)).
 
+### DynamicData
+
+An MSTest attribute (`[DynamicData]`) for data-driven tests where test data is sourced from a static property, method, or field rather than inline `[DataRow]` values. The data source name is passed as a constructor argument; `DynamicDataSourceType` controls how the source is located (`Property`, `Method`, `Field`, or `AutoDetect`). Unlike `[DataRow]`, a single `[DynamicData]` source can be shared across multiple test methods and can produce any number of test cases at runtime. See `docs/RFCs/006-DynamicData-Attribute.md` for the original design.
+
 ## F
 
 ### FQN (Fully Qualified Name)
@@ -69,6 +73,10 @@ The communication protocol used between a test runner executable (server) and a 
 ### Lean 4
 
 A theorem prover and interactive proof assistant used in this project for [Formal Verification (FV)](#formal-verification-fv). Lean 4 proofs are written in the `formal-verification/lean/FVSquad/` directory and compiled via `lake build`. The CI workflow (`lean-proofs.yml`) automatically builds and checks these proofs.
+
+### Lean–C# Correspondence (FV)
+
+A document (`formal-verification/CORRESPONDENCE.md`) that records how each [Lean 4](#lean-4) formal model corresponds to its C# source counterpart. For every [FV Target](#fv-target) it captures the type/function mappings, deliberate approximations and simplifications, properties explicitly excluded from the model, and open questions for maintainer review. Auto-generated and maintained by the [Lean Squad](#lean-squad) FV agent.
 
 ### Lean Squad
 
@@ -112,6 +120,12 @@ A component in MTP that coordinates multi-process test execution. The orchestrat
 
 An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exports test session telemetry using the [OpenTelemetry](https://opentelemetry.io/) standard, enabling integration with distributed tracing and observability platforms.
 
+## P
+
+### PropertyBag
+
+An MTP class (`Microsoft.Testing.Platform.Extensions.Messages.PropertyBag`) that holds a typed collection of `IProperty` instances attached to a [TestNode](#testnode). Extension authors populate a `PropertyBag` with properties such as `TimingProperty`, `TestFileLocationProperty`, and `TestMetadataProperty` to communicate rich metadata about a test to the platform and to other extensions. A `PropertyBag` enforces that at most one `TestNodeStateProperty` may be present at a time.
+
 ## R
 
 ### Retry
@@ -123,6 +137,10 @@ An MTP extension (`Microsoft.Testing.Extensions.Retry`) that automatically re-ru
 Request for Comments document in the `docs/RFCs/` folder. RFCs describe design decisions, proposed features, and implementation details for MSTest and MTP.
 
 ## T
+
+### TestNode
+
+A core MTP class (`Microsoft.Testing.Platform.Extensions.Messages.TestNode`) that represents a single test item — either discovered or executed. Each `TestNode` carries a unique `Uid` (`TestNodeUid`), a human-readable `DisplayName`, and a [PropertyBag](#propertybag) of typed properties (state, timing, file location, metadata, etc.). `TestNode` instances are published to the `IMessageBus` by test framework adapters during discovery and execution phases.
 
 ### TFM (Target Framework Moniker)
 
