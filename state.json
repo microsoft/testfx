@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-05-03",
+  "last_run": "2026-05-04",
   "fv_tool": "Lean 4 core (no Mathlib)",
   "lean_install_blocked": true,
   "lean_install_note": "Network firewall blocks elan and curl in sandbox. Lean has never been successfully installed in this environment. CI uses leanprover/lean4-action.",
@@ -11,9 +11,11 @@
     {"id":5,"name":"CommandLineParseResult.Equals","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs","phase":2,"priority":7,"notes":"Informal spec merged (#7918). All theorems are decide-provable. Next: Task 3.","spec_file":"formal-verification/specs/commandlineparseresult_equals_informal.md"},
     {"id":6,"name":"ResponseFileHelper.SplitCommandLine","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs","phase":2,"priority":4,"notes":"Informal spec merged. Next: Task 3.","spec_file":"formal-verification/specs/responsefilehelper_splitcommandline_informal.md"},
     {"id":7,"name":"TreeNodeFilter.MatchFilterPattern","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":2,"priority":3,"notes":"Informal spec merged (#7934). Next: Task 3.","spec_file":"formal-verification/specs/treenodefilter_matchfilterpattern_informal.md"},
-    {"id":8,"name":"PasteArguments.AppendArgument","file":"src/Platform/Microsoft.Testing.Platform/Helpers/PasteArguments.cs","phase":1,"priority":8,"notes":"NEW 2026-05-03. Backslash-doubling rules documented in source. Test suite exists. Next: Task 2."},
-    {"id":9,"name":"TimeSpanParser.TryParse","file":"src/Platform/Microsoft.Testing.Platform/Helpers/TimeSpanParser.cs","phase":1,"priority":9,"notes":"NEW 2026-05-03. Pure suffix-dispatch parser. Next: Task 2."},
-    {"id":10,"name":"TreeNodeFilter.TokenizeFilter","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":1,"priority":10,"notes":"NEW 2026-05-03. Tokenizer complementing MatchFilterPattern. Trailing-backslash exception case. Next: Task 2."}
+    {"id":8,"name":"PasteArguments.AppendArgument","file":"src/Platform/Microsoft.Testing.Platform/Helpers/PasteArguments.cs","phase":1,"priority":8,"notes":"Added to TARGETS.md and RESEARCH.md 2026-05-04. Windows argv escaping rules. Round-trip correctness. Next: Task 2."},
+    {"id":9,"name":"TimeSpanParser.TryParse","file":"src/Platform/Microsoft.Testing.Platform/Helpers/TimeSpanParser.cs","phase":1,"priority":9,"notes":"Added to TARGETS.md and RESEARCH.md 2026-05-04. Pure suffix-dispatch parser. Next: Task 2."},
+    {"id":10,"name":"TreeNodeFilter.TokenizeFilter","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":1,"priority":10,"notes":"Added to TARGETS.md and RESEARCH.md 2026-05-04. Tokenizer for filter grammar. Trailing-backslash exception. Next: Task 2."},
+    {"id":11,"name":"Sha256Hasher.ToCharsBuffer","file":"src/Platform/Microsoft.Testing.Platform/Helpers/Sha256Hasher.cs","phase":1,"priority":11,"notes":"NEW 2026-05-04. Branchless hex encoding. All 256 inputs decidable by `decide`. Fascinating bit-manipulation proof target."},
+    {"id":12,"name":"ExtensionValidationHelper.ValidateUniqueExtension","file":"src/Platform/Microsoft.Testing.Platform/Helpers/ExtensionValidationHelper.cs","phase":1,"priority":12,"notes":"NEW 2026-05-04. Duplicate-UID detection. Simple predicate: throws iff exists x in list with same uid."}
   ],
   "merged_prs": [
     {"number":7799,"title":"[Lean Squad] feat: formal verification infrastructure"},
@@ -28,12 +30,10 @@
     {"number":7934,"title":"[Lean Squad] feat(fv): Task 2 — informal spec for TreeNodeFilter.MatchFilterPattern"}
   ],
   "open_prs": [
-    {"branch":"lean-squad/task1-research-new-targets-2026-05-03","title":"feat(fv): Task 1 — add 3 new FV targets (PasteArguments, TimeSpanParser, TokenizeFilter)"},
-    {"branch":"lean-squad/task2-informal-spec-arity-validation-2026-05-03","title":"feat(fv): Task 2 — informal spec for CommandLineOptionsValidator arity validation"},
-    {"branch":"lean-squad/task9-ci-phase3-validation-sorry-guard-2026-05-03","title":"feat(ci): Task 9 — sorry threshold enforcement + phase-3 Lean file check"}
+    {"branch":"lean-squad/task1-new-targets-2026-05-04","title":"feat(fv): Task 1 — add 5 new FV targets (PasteArguments, TimeSpanParser, TokenizeFilter, Sha256Hasher, ExtensionValidationHelper)"}
   ],
   "open_issues": [{"number":7793,"title":"[Lean Squad] Formal Verification Status"}],
-  "next_priority": "Task 3 blocked by Lean toolchain every run. Next best: Task 2 for Targets 8/9/10 (PasteArguments, TimeSpanParser, TokenizeFilter) if PR merges. All phase-2 targets (1-7) await Task 3.",
+  "next_priority": "Task 3 blocked by Lean toolchain every run. Next best: Task 2 for Targets 8-12. All phase-2 targets (1-7) await Task 3.",
   "findings": [
     {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-1: Single-char quote input -> IndexOf(char, 1, -1) throws ArgumentOutOfRangeException."},
     {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-2: Single-char double-quote input -> input[1..^1] range exception."},
@@ -52,9 +52,9 @@
     "lake_build_cmd": "cd formal-verification/lean && PATH=$HOME/.elan/bin:$PATH lake build",
     "important_note": "String.replace, String.startsWith etc are @[extern] and NOT kernel-reducible. Use native_decide for concrete string evaluation. decide works for pure Prop/Bool/Int without String ops. omega for integer arithmetic.",
     "argument_arity_lean_notes": "ArgumentArity.lean was written with 27 theorems, 0 sorry. The PR was closed without merge. When Lean is available, re-create the file — it proved well.",
+    "sha256_lean_notes": "ToCharsBuffer: UInt32 wrapping semantics must match C# uint overflow. All 256 cases provable by decide once model written.",
     "ci_sorry_threshold": 200,
-    "ci_sorry_guard_added": "2026-05-03 in lean-proofs.yml — PR lean-squad/task9-ci-phase3-validation-sorry-guard-2026-05-03",
-    "ci_phase3_check_added": "2026-05-03 in fv-docs-validation.yml — verifies phase-3+ targets have Lean files",
-    "ci_workflow_note": "fv-docs-validation.yml step 'Verify lean-toolchain' now has shell:bash for [[ ]] syntax safety"
+    "ci_sorry_guard_added": "2026-05-03 in lean-proofs.yml",
+    "ci_phase3_check_added": "2026-05-03 in fv-docs-validation.yml"
   }
 }
