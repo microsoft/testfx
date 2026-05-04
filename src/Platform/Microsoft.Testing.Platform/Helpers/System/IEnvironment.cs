@@ -19,6 +19,8 @@ internal interface IEnvironment
     string? ProcessPath { get; }
 #endif
 
+    Version Version { get; }
+
     string[] GetCommandLineArgs();
 
     string? GetEnvironmentVariable(string name);
