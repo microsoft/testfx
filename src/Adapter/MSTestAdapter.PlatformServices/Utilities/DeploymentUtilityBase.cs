@@ -4,7 +4,6 @@
 #if !WINDOWS_UWP && !WIN_UI
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 
@@ -26,7 +25,7 @@ internal abstract class DeploymentUtilityBase
     protected const string DeploymentFolderPrefix = "Deploy";
 
     public DeploymentUtilityBase()
-        : this(new DeploymentItemUtility(ReflectHelper.Instance), new AssemblyUtility(), new FileUtility())
+        : this(new DeploymentItemUtility((ReflectionOperations)PlatformServiceProvider.Instance.ReflectionOperations), new AssemblyUtility(), new FileUtility())
     {
     }
 
