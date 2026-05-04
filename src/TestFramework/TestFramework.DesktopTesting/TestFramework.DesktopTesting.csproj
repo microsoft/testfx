@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">net8.0-windows;net9.0-windows</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' " />
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>MSTest.DesktopTesting</PackageId>
+    <PackageTags>MSTest TestFramework DesktopTesting UIAutomation WinForms WPF E2E EndToEnd Microsoft Test Testing</PackageTags>
+    <PackageDescription>
+      MSTest base classes for end-to-end testing of Windows desktop applications (WinForms, WPF, and other Win32 apps).
+
+      Provides a thin lifecycle adapter (similar to Microsoft.Playwright.MSTest for web) that manages
+      application launch, UI Automation attachment, and teardown through MSTest's TestInitialize/TestCleanup.
+
+      Uses the built-in System.Windows.Automation (UIA) for element discovery. Users can layer additional
+      UI automation libraries (FlaUI, etc.) on top for richer element interaction.
+    </PackageDescription>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RootNamespace>Microsoft.MSTest.DesktopTesting</RootNamespace>
+    <AssemblyName>MSTest.DesktopTesting</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+</Project>

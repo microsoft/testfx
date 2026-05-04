@@ -5,6 +5,7 @@
 
   <Target Name="_MSTestSDKValidateFeatures" BeforeTargets="Build">
     <Error Condition=" '$(EnableAspireTesting)' == 'true' " Text="Aspire MSTest currently doesn't support NativeAOT mode." />
+    <Error Condition=" '$(EnableDesktopTesting)' == 'true' " Text="Desktop Testing MSTest currently doesn't support NativeAOT mode." />
     <Error Condition=" '$(EnablePlaywright)' == 'true' " Text="Playwright MSTest currently doesn't support NativeAOT mode." />
 
     <Warning Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' == 'true' " Text="Crash dump extension might not be working well under Native AOT." />

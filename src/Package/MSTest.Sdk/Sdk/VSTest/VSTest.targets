@@ -46,6 +46,7 @@
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)../Features/Aspire.targets" Condition=" '$(EnableAspireTesting)' == 'true' " />
+  <Import Project="$(MSBuildThisFileDirectory)../Features/DesktopTesting.targets" Condition=" '$(EnableDesktopTesting)' == 'true' " />
   <Import Project="$(MSBuildThisFileDirectory)../Features/Playwright.targets" Condition=" '$(EnablePlaywright)' == 'true' " />
 
 </Project>
