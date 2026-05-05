@@ -28,8 +28,17 @@
       "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs",
       "phase": 2,
       "priority": 5,
-      "notes": "Informal spec merged. Next: Task 3.",
+      "notes": "Informal spec merged (#7919). Next: Task 3.",
       "spec_file": "formal-verification/specs/commandlineparser_parseoptionandseparators_informal.md"
+    },
+    {
+      "id": 4,
+      "name": "CommandLineOptionsValidator.ValidateOptionsArgumentArity",
+      "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs",
+      "phase": 2,
+      "priority": 6,
+      "notes": "Informal spec extracted 2026-05-05 (PR open). OQ-1: absent required options not caught. OQ-2: KeyNotFoundException risk if call order violated. OQ-3: Max==0 message asymmetry. OQ-4: grammar defect '1 arguments'.",
+      "spec_file": "formal-verification/specs/validateoptionsargumentarity_informal.md"
     },
     {
       "id": 5,
@@ -46,7 +55,7 @@
       "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs",
       "phase": 2,
       "priority": 4,
-      "notes": "Informal spec merged. Next: Task 3.",
+      "notes": "Informal spec merged (#7899). Next: Task 3.",
       "spec_file": "formal-verification/specs/responsefilehelper_splitcommandline_informal.md"
     },
     {
@@ -60,100 +69,36 @@
     }
   ],
   "merged_prs": [
-    {
-      "number": 7899,
-      "title": "[Lean Squad] feat(fv): Task 2 \u2014 informal spec for ResponseFileHelper.SplitCommandLine"
-    },
-    {
-      "number": 7919,
-      "title": "[Lean Squad] feat(fv): Task 2 \u2014 informal spec for CommandLineParser.ParseOptionAndSeparators"
-    },
-    {
-      "number": 7918,
-      "title": "[Lean Squad] feat(fv): Task 2 \u2014 informal spec for CommandLineParseResult.Equals"
-    },
-    {
-      "number": 7849,
-      "title": "[Lean Squad] feat(fv): Task 1 \u2014 expand FV targets"
-    },
-    {
-      "number": 7860,
-      "title": "[Lean Squad] feat(fv): Task 6 \u2014 initial correspondence review"
-    },
-    {
-      "number": 7924,
-      "title": "[Lean Squad] feat(ci): Task 9 \u2014 fix elan SHA256, cache ordering"
-    },
-    {
-      "number": 7936,
-      "title": "[Lean Squad] feat(ci): Task 9 \u2014 FV docs validation + REPORT.md"
-    },
-    {
-      "number": 7934,
-      "title": "[Lean Squad] feat(fv): Task 2 \u2014 informal spec for TreeNodeFilter.MatchFilterPattern"
-    }
+    {"number": 7899, "title": "[Lean Squad] feat(fv): Task 2 — informal spec for ResponseFileHelper.SplitCommandLine"},
+    {"number": 7919, "title": "[Lean Squad] feat(fv): Task 2 — informal spec for CommandLineParser.ParseOptionAndSeparators"},
+    {"number": 7918, "title": "[Lean Squad] feat(fv): Task 2 — informal spec for CommandLineParseResult.Equals"},
+    {"number": 7849, "title": "[Lean Squad] feat(fv): Task 1 — expand FV targets"},
+    {"number": 7860, "title": "[Lean Squad] feat(fv): Task 6 — initial correspondence review"},
+    {"number": 7924, "title": "[Lean Squad] feat(ci): Task 9 — fix elan SHA256, cache ordering"},
+    {"number": 7936, "title": "[Lean Squad] feat(ci): Task 9 — FV docs validation + REPORT.md"},
+    {"number": 7934, "title": "[Lean Squad] feat(fv): Task 2 — informal spec for TreeNodeFilter.MatchFilterPattern"}
   ],
   "open_prs": [
-    {
-      "branch": "lean-squad/task1-new-targets-2026-05-04-run2",
-      "title": "feat(fv): Task 1 \u2014 add 3 new FV targets (UnicodeCharacterUtilities, TestNodeUid, CommandLineOption)"
-    },
-    {
-      "branch": "lean-squad/task1-new-targets-2026-05-04-run3",
-      "title": "feat(fv): Task 1 \u2014 add 3 new FV targets and sync TARGETS.md phases (ValidationResult, ValidateNoUnknownOptions, ValidateOptionsAreNotDuplicated)"
-    },
-    {
-      "branch": "lean-squad/task9-ci-improvements-2026-05-05",
-      "title": "feat(ci): Task 9 \u2014 sorry threshold guard, phase-3 .lean validation, FVSquad README update"
-    },
-    {
-      "branch": "lean-squad/task9-spec-validation-2026-05-05-run4",
-      "title": "feat(ci): Task 9 \u2014 add spec-file quality checks to fv-docs-validation"
-    }
+    {"branch": "lean-squad/task1-new-targets-2026-05-04-run2", "title": "feat(fv): Task 1 — add 3 new FV targets (UnicodeCharacterUtilities, TestNodeUid, CommandLineOption)"},
+    {"branch": "lean-squad/task1-new-targets-2026-05-04-run3", "title": "feat(fv): Task 1 — add 3 new FV targets and sync TARGETS.md phases (ValidationResult, ValidateNoUnknownOptions, ValidateOptionsAreNotDuplicated)"},
+    {"branch": "lean-squad/task9-ci-improvements-2026-05-05", "title": "feat(ci): Task 9 — sorry threshold guard, phase-3 .lean validation, FVSquad README update"},
+    {"branch": "lean-squad/task9-spec-validation-2026-05-05-run4", "title": "feat(ci): Task 9 — add spec-file quality checks to fv-docs-validation"},
+    {"branch": "lean-squad/task2-validateoptionsargumentarity-2026-05-05", "title": "feat(fv): Task 2 — informal spec for ValidateOptionsArgumentArity"}
   ],
   "open_issues": [
-    {
-      "number": 7793,
-      "title": "[Lean Squad] Formal Verification Status"
-    }
+    {"number": 7793, "title": "[Lean Squad] Formal Verification Status"}
   ],
-  "next_priority": "Task 3 still blocked by Lean toolchain. Multiple open PRs for CI improvements. Priority: close/merge stale PRs, Task 2 for targets 8-12 when ready.",
+  "next_priority": "Task 3 still blocked by Lean toolchain (network firewall blocks elan). All 7 original targets now at phase 2. Multiple open PRs for CI improvements and new targets. Priority: merge open PRs, then Task 3 for ArgumentArity when Lean becomes available.",
   "findings": [
-    {
-      "type": "confirmed-bug",
-      "target": "TryUnescape",
-      "desc": "BUG-1: Single-char quote input -> IndexOf(char, 1, -1) throws ArgumentOutOfRangeException."
-    },
-    {
-      "type": "confirmed-bug",
-      "target": "TryUnescape",
-      "desc": "BUG-2: Single-char double-quote input -> input[1..^1] range exception."
-    },
-    {
-      "type": "design-issue",
-      "target": "SplitCommandLine",
-      "desc": "Unclosed opening quote at start silently discards all input content."
-    },
-    {
-      "type": "design-issue",
-      "target": "SplitCommandLine",
-      "desc": "Adjacent quoted strings emit 2 tokens not 1. Closing quote triggers yield+reset."
-    },
-    {
-      "type": "design-issue",
-      "target": "ParseOptionAndSeparators",
-      "desc": "Empty option name not rejected: '--:value' produces currentOption='' silently."
-    },
-    {
-      "type": "design-issue",
-      "target": "ValidateOptionsArgumentArity",
-      "desc": "OQ-2: KeyNotFoundException if unknown option bypasses ValidateNoUnknownOptions step."
-    },
-    {
-      "type": "design-issue",
-      "target": "ValidateOptionsArgumentArity",
-      "desc": "OQ-1: Absent required options (Min>0 but option not in parseResult) not caught by arity check; delegated to ValidateConfigurationAsync."
-    }
+    {"type": "confirmed-bug", "target": "TryUnescape", "desc": "BUG-1: Single-char quote input -> IndexOf(char, 1, -1) throws ArgumentOutOfRangeException."},
+    {"type": "confirmed-bug", "target": "TryUnescape", "desc": "BUG-2: Single-char double-quote input -> input[1..^1] range exception."},
+    {"type": "design-issue", "target": "SplitCommandLine", "desc": "Unclosed opening quote at start silently discards all input content."},
+    {"type": "design-issue", "target": "SplitCommandLine", "desc": "Adjacent quoted strings emit 2 tokens not 1. Closing quote triggers yield+reset."},
+    {"type": "design-issue", "target": "ParseOptionAndSeparators", "desc": "Empty option name not rejected: '--:value' produces currentOption='' silently."},
+    {"type": "design-issue", "target": "ValidateOptionsArgumentArity", "desc": "OQ-1: Absent required options (Min>0, option missing) not caught; delegated to extension-defined ValidateConfigurationAsync."},
+    {"type": "design-issue", "target": "ValidateOptionsArgumentArity", "desc": "OQ-2: KeyNotFoundException if called before ValidateNoUnknownOptions filters unknown option names."},
+    {"type": "design-issue", "target": "ValidateOptionsArgumentArity", "desc": "OQ-3: Max==0 case emits 'expects no arguments' instead of general 'at most 0 arguments' — message asymmetry."},
+    {"type": "grammar-defect", "target": "ValidateOptionsArgumentArity", "desc": "OQ-4: Error message says 'expects at least 1 arguments' (incorrect plural)."}
   ],
   "lean_setup": {
     "lean_version": "4.14.0",
