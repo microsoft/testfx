@@ -1,7 +1,7 @@
 # TestFX Test Improver Memory
 
 ## Last Updated
-2026-05-04
+2026-05-05
 
 ## Build/Test Commands
 
@@ -63,12 +63,17 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 3. ✅ **DONE** `TimeSpanParser` unit tests → PR #7858 merged
 4. ✅ **DONE** `PasteArguments` unit tests → PR #7888 merged
 5. ✅ **DONE** `LoggerFactoryProxy` unit tests → PR #7916 merged
-6. 🔄 **PATCH READY** `LoggingManager.BuildAsync` tests → 9 tests written and verified. Persistent push failure (4 attempts). Latest patch in comment on #7986.
-7. 🔄 **PATCH READY** `ExtensionValidationHelper.ValidateUniqueExtension` → 15 tests written and verified (2026-05-04). Patch in comment on #7969.
+6. 🔄 **PATCH READY** `LoggingManager.BuildAsync` tests → 9 tests written and verified (5th attempt). Latest patch in run 25350394357 artifacts.
+7. 🔄 **PATCH READY** `ExtensionValidationHelper.ValidateUniqueExtension` → 15 tests written and verified (2026-05-05, 2nd attempt). Patch in run 25350394357 artifacts.
 8. Code fix test coverage for MSTEST0031 when `DoNotUseSystemDescriptionAttributeFixer` lands
 9. `TestFramework.UnitTests` assertion edge cases
 
 ## Completed Work
+
+### 2026-05-05
+- **Task 3: Re-implemented LoggingManager.BuildAsync tests**: 9 tests (all 18 pass net8.0+net9.0). Patch in run 25350394357 artifacts.
+- **Task 3: Re-implemented ExtensionValidationHelper.ValidateUniqueExtension tests**: 15 tests (all 30 pass net8.0+net9.0). Fixed SA1512 and MSTEST0037 errors vs previous attempt. Patch in run 25350394357 artifacts.
+- **Task 7: Updated Monthly Summary issue #7969** with new run entry and updated patch references.
 
 ### 2026-05-04
 - **Task 3: Implemented ExtensionValidationHelper.ValidateUniqueExtension tests**: 15 tests
@@ -115,16 +120,16 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 |------|----------|
 | Task 1: Discover commands | 2026-04-24 |
 | Task 2: Identify opportunities | 2026-05-01 |
-| Task 3: Implement tests | 2026-05-04 |
+| Task 3: Implement tests | 2026-05-05 |
 | Task 4: Maintain PRs | 2026-05-02 |
 | Task 5: Comment on issues | 2026-04-29 |
 | Task 6: Test infrastructure | 2026-04-29 |
-| Task 7: Monthly summary | 2026-05-04 |
+| Task 7: Monthly summary | 2026-05-05 |
 
 ## Maintainer Priorities
 - PRs merged quickly by Evangelink — receptive to focused test PRs for MTP and MSTest
 - Issues #7790, #7942, #7968, #7995 are stale (see monthly summary for suggested actions)
-- **PERSISTENT PUSH FAILURE**: `safeoutputs-create_pull_request` consistently creates a patch file but fails to push branches to GitHub. Has happened for every test PR attempt (5+ runs). Patches are being posted as comments on issue #7969. Next step: find an alternative approach or wait for infrastructure fix.
+- **PERSISTENT PUSH FAILURE**: `safeoutputs-create_pull_request` consistently returns `{"result":"success","patch":{...}}` but does NOT push branches to GitHub. Has happened for every test PR attempt (5+ runs). The tool creates a `.patch` file in `/tmp/gh-aw/` which gets included in the workflow run artifacts. Patches are referenced in monthly summary #7969.
 
 ## Notes
 - `PasteArguments` is `internal static partial class` — accessible via InternalsVisibleTo
@@ -134,5 +139,4 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 - `TestFramework.UnitTests` requires `-p:UseSharedCompilation=false` to build outside the full Arcade SDK build
 - `PlatformResources.cs` in test project compiles WITHOUT `IS_CORE_MTP` — only limited resource string properties are available
 - For multi-interface test doubles in Microsoft.Testing.Platform.UnitTests, define an `internal interface ICombined : IA, IB;` and mock that interface — Moq handles this cleanly
-- LoggingManager tests: IMonitor mock needs `_mockMonitor.Setup(x => x.Lock(It.IsAny<object>())).Returns(new Mock<IDisposable>().Object)` for LoggerFactory to work
-- LoggingManager BuildAsync: to verify provider is INCLUDED, call `factory.CreateLogger("name")` and use `Verify(p.CreateLogger("name"), Times.Once)` — NOT `Assert.AreSame` since factory wraps providers
+  - `Assert.IsGreaterThan(lowerBound, value)` asserts `value > lowerBound` — NOT the other way around. So to check `x > 0`, write `Assert.IsGreaterThan(0, x)`.
