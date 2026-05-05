@@ -512,7 +512,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
             {
                 if (_filters.Count == 0)
                 {
-                    throw new InvalidOperationException();
+                    throw new InvalidOperationException("Filter parsed to zero segments.");
                 }
 
                 // Note: The regex for ** is .*.*, so we match against such a value expression.
