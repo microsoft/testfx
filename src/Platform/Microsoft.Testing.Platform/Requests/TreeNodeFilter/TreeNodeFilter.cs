@@ -1,6 +1,5 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
@@ -26,7 +25,15 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     {
         Filter = filter ?? throw new ArgumentNullException(nameof(filter));
         _filters = ParseFilter(filter);
-        ContainsPropertyFilters = _filters.Any(HasPropertyFilterExpression);
+        ContainsPropertyFilters = false;
+        for (int i = 0; i < _filters.Count; i++)
+        {
+            if (HasPropertyFilterExpression(_filters[i]))
+            {
+                ContainsPropertyFilters = true;
+                break;
+            }
+        }
     }
 
     /// <summary>
@@ -290,9 +297,9 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     {
         switch (expr)
         {
-            case OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subexprsNot } when subexprsNot.Count != 1:
-            case OperatorExpression { Op: FilterOperator.And, SubExpressions.Count: < 2 }:
-            case OperatorExpression { Op: FilterOperator.Or, SubExpressions.Count: < 2 }:
+            case OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subexprsNot } when subexprsNot.Length != 1:
+            case OperatorExpression { Op: FilterOperator.And, SubExpressions.Length: < 2 }:
+            case OperatorExpression { Op: FilterOperator.Or, SubExpressions.Length: < 2 }:
                 throw ApplicationStateGuard.Unreachable();
 
             case OperatorExpression opExpr:
@@ -503,7 +510,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
             if (currentFragmentIndex >= _filters.Count)
             {
                 // Note: The regex for ** is .*.*, so we match against such a value expression.
-                FilterExpression lastFilter = _filters.Last();
+                FilterExpression lastFilter = _filters[_filters.Count - 1];
                 if (lastFilter is ValueAndPropertyExpression valueAndPropertyExpression)
                 {
                     lastFilter = valueAndPropertyExpression.Value;
@@ -542,45 +549,103 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         int endFragmentIndex,
         PropertyBag properties)
     {
-        string str = testNodeFullPath[startFragmentIndex..endFragmentIndex];
-        return MatchFilterPattern(filterExpression, str, properties);
+        ReadOnlySpan<char> fragment = testNodeFullPath.AsSpan(startFragmentIndex, endFragmentIndex - startFragmentIndex);
+        return MatchFilterPattern(filterExpression, fragment, properties);
     }
 
     private static bool MatchFilterPattern(
         FilterExpression filterExpression,
-        string testNodeFragment,
+        ReadOnlySpan<char> testNodeFragment,
         PropertyBag properties)
-        => filterExpression switch
+    {
+        switch (filterExpression)
         {
-            ValueExpression vExpr => vExpr.Regex.IsMatch(testNodeFragment),
-            OperatorExpression { Op: FilterOperator.Or, SubExpressions: var subexprs }
-                => subexprs.Any(expr => MatchFilterPattern(expr, testNodeFragment, properties)),
-            OperatorExpression { Op: FilterOperator.And, SubExpressions: var subexprs }
-                => subexprs.All(expr => MatchFilterPattern(expr, testNodeFragment, properties)),
-            OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subexprs }
-                => !MatchFilterPattern(subexprs.Single(), testNodeFragment, properties),
-            ValueAndPropertyExpression { Value: var valueExpr, Properties: var propExpr }
-                => MatchFilterPattern(valueExpr, testNodeFragment, properties)
-                    && MatchProperties(propExpr, properties),
-            NopExpression => true,
-            _ => throw ApplicationStateGuard.Unreachable(),
-        };
+            case ValueExpression vExpr:
+                return vExpr.Regex.IsMatch(testNodeFragment);
+
+            case OperatorExpression { Op: FilterOperator.Or, SubExpressions: var subexprs }:
+                for (int i = 0; i < subexprs.Length; i++)
+                {
+                    if (MatchFilterPattern(subexprs[i], testNodeFragment, properties))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+
+            case OperatorExpression { Op: FilterOperator.And, SubExpressions: var subexprs }:
+                for (int i = 0; i < subexprs.Length; i++)
+                {
+                    if (!MatchFilterPattern(subexprs[i], testNodeFragment, properties))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+
+            case OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subexprs }:
+                return !MatchFilterPattern(subexprs[0], testNodeFragment, properties);
+
+            case ValueAndPropertyExpression { Value: var valueExpr, Properties: var propExpr }:
+                return MatchFilterPattern(valueExpr, testNodeFragment, properties)
+                    && MatchProperties(propExpr, properties);
+
+            case NopExpression:
+                return true;
+
+            default:
+                throw ApplicationStateGuard.Unreachable();
+        }
+    }
 
     private static bool MatchProperties(
         FilterExpression propertyExpr,
         PropertyBag properties)
-        => propertyExpr switch
+    {
+        switch (propertyExpr)
         {
-            PropertyExpression { PropertyName: var propExpr, Value: var valueExpr }
-                => properties.AsEnumerable().Any(prop => IsMatchingProperty(prop, propExpr, valueExpr)),
-            OperatorExpression { Op: FilterOperator.Or, SubExpressions: var subExprs }
-                => subExprs.Any(expr => MatchProperties(expr, properties)),
-            OperatorExpression { Op: FilterOperator.And, SubExpressions: var subExprs }
-                => subExprs.All(expr => MatchProperties(expr, properties)),
-            OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subExprs }
-                => !MatchProperties(subExprs.Single(), properties),
-            _ => throw ApplicationStateGuard.Unreachable(),
-        };
+            case PropertyExpression { PropertyName: var propExpr, Value: var valueExpr }:
+                foreach (IProperty prop in properties)
+                {
+                    if (IsMatchingProperty(prop, propExpr, valueExpr))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+
+            case OperatorExpression { Op: FilterOperator.Or, SubExpressions: var subExprs }:
+                for (int i = 0; i < subExprs.Length; i++)
+                {
+                    if (MatchProperties(subExprs[i], properties))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+
+            case OperatorExpression { Op: FilterOperator.And, SubExpressions: var subExprs }:
+                for (int i = 0; i < subExprs.Length; i++)
+                {
+                    if (!MatchProperties(subExprs[i], properties))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+
+            case OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subExprs }:
+                return !MatchProperties(subExprs[0], properties);
+
+            default:
+                throw ApplicationStateGuard.Unreachable();
+        }
+    }
 
     private static bool IsMatchingProperty(IProperty prop, ValueExpression propExpr, ValueExpression valueExpr)
         => prop is TestMetadataProperty testMetadataProperty &&
@@ -588,6 +653,23 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
             valueExpr.Regex.IsMatch(testMetadataProperty.Value);
 
     private static bool HasPropertyFilterExpression(FilterExpression expression)
-        => expression is ValueAndPropertyExpression ||
-           (expression is OperatorExpression op && op.SubExpressions.Any(HasPropertyFilterExpression));
+    {
+        if (expression is ValueAndPropertyExpression)
+        {
+            return true;
+        }
+
+        if (expression is OperatorExpression op)
+        {
+            for (int i = 0; i < op.SubExpressions.Length; i++)
+            {
+                if (HasPropertyFilterExpression(op.SubExpressions[i]))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }
