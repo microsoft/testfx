@@ -512,7 +512,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
             {
                 if (_filters.Count == 0)
                 {
-                    return false;
+                    throw new InvalidOperationException();
                 }
 
                 // Note: The regex for ** is .*.*, so we match against such a value expression.
