@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
@@ -297,9 +298,9 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     {
         switch (expr)
         {
-            case OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subexprsNot } when subexprsNot.Length != 1:
-            case OperatorExpression { Op: FilterOperator.And, SubExpressions.Length: < 2 }:
-            case OperatorExpression { Op: FilterOperator.Or, SubExpressions.Length: < 2 }:
+            case OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subexprsNot } when subexprsNot.Count != 1:
+            case OperatorExpression { Op: FilterOperator.And, SubExpressions.Count: < 2 }:
+            case OperatorExpression { Op: FilterOperator.Or, SubExpressions.Count: < 2 }:
                 throw ApplicationStateGuard.Unreachable();
 
             case OperatorExpression opExpr:
@@ -509,6 +510,11 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
 
             if (currentFragmentIndex >= _filters.Count)
             {
+                if (_filters.Count == 0)
+                {
+                    return false;
+                }
+
                 // Note: The regex for ** is .*.*, so we match against such a value expression.
                 FilterExpression lastFilter = _filters[_filters.Count - 1];
                 if (lastFilter is ValueAndPropertyExpression valueAndPropertyExpression)
@@ -561,10 +567,15 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         switch (filterExpression)
         {
             case ValueExpression vExpr:
+#if NETSTANDARD2_0
+                // Fallback for netstandard2.0 which doesn't support Span in Regex
+                return vExpr.Regex.IsMatch(testNodeFragment.ToString());
+#else
                 return vExpr.Regex.IsMatch(testNodeFragment);
+#endif
 
             case OperatorExpression { Op: FilterOperator.Or, SubExpressions: var subexprs }:
-                for (int i = 0; i < subexprs.Length; i++)
+                for (int i = 0; i < subexprs.Count; i++)
                 {
                     if (MatchFilterPattern(subexprs[i], testNodeFragment, properties))
                     {
@@ -575,7 +586,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                 return false;
 
             case OperatorExpression { Op: FilterOperator.And, SubExpressions: var subexprs }:
-                for (int i = 0; i < subexprs.Length; i++)
+                for (int i = 0; i < subexprs.Count; i++)
                 {
                     if (!MatchFilterPattern(subexprs[i], testNodeFragment, properties))
                     {
@@ -618,7 +629,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                 return false;
 
             case OperatorExpression { Op: FilterOperator.Or, SubExpressions: var subExprs }:
-                for (int i = 0; i < subExprs.Length; i++)
+                for (int i = 0; i < subExprs.Count; i++)
                 {
                     if (MatchProperties(subExprs[i], properties))
                     {
@@ -629,7 +640,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                 return false;
 
             case OperatorExpression { Op: FilterOperator.And, SubExpressions: var subExprs }:
-                for (int i = 0; i < subExprs.Length; i++)
+                for (int i = 0; i < subExprs.Count; i++)
                 {
                     if (!MatchProperties(subExprs[i], properties))
                     {
@@ -661,7 +672,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
 
         if (expression is OperatorExpression op)
         {
-            for (int i = 0; i < op.SubExpressions.Length; i++)
+            for (int i = 0; i < op.SubExpressions.Count; i++)
             {
                 if (HasPropertyFilterExpression(op.SubExpressions[i]))
                 {
