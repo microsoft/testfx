@@ -14,7 +14,7 @@
   <PropertyGroup Label="Product dependencies">
     <AspireHostingTestingVersion>13.2.1</AspireHostingTestingVersion>
     <MicrosoftBuildVersion>17.11.48</MicrosoftBuildVersion>
-    <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersion>5.3.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisVersionForTests>4.10.0</MicrosoftCodeAnalysisVersionForTests>
     <MicrosoftCodeAnalysisVersionForSourceGen>4.8.0</MicrosoftCodeAnalysisVersionForSourceGen>
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.5.0-2.26109.101</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
