@@ -69,12 +69,12 @@
       </trans-unit>
       <trans-unit id="RemoveDuplicateDataRowFix">
         <source>Remove duplicate 'DataRow'</source>
-        <target state="new">Remove duplicate 'DataRow'</target>
+        <target state="translated">移除重複的 'DataRow'</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDuplicateTestMethodAttributeFix">
         <source>Remove duplicate TestMethod attribute</source>
-        <target state="new">Remove duplicate TestMethod attribute</target>
+        <target state="translated">移除重複的 TestMethod 屬性</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
