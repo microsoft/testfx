@@ -164,6 +164,12 @@ Moving last attempt asset files to the default result directory
   <data name="RetryFailedTestsNotSupportedInServerModeErrorMessage" xml:space="preserve">
     <value>Retry failed tests feature is not supported in server mode</value>
   </data>
+  <data name="RetryFailedTestsDelayOptionDescription" xml:space="preserve">
+    <value>Add a delay between retries. The delay is expressed as a time value, e.g. 1s, 2.5m, 1h. Default unit is milliseconds.</value>
+  </data>
+  <data name="RetryFailedTestsDelayOptionInvalidArgument" xml:space="preserve">
+    <value>Option '--retry-failed-tests-delay' requires a valid time span value (e.g. 200, 1s, 2.5m, 1h)</value>
+  </data>
   <data name="RetryFailedTestsOptionDescription" xml:space="preserve">
     <value>Retry failed tests the given number of times</value>
   </data>

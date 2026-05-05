@@ -110,4 +110,59 @@ public class RetryTests
         Assert.IsTrue(validateOptionsResult.IsValid);
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
+
+    [DataRow("200")]
+    [DataRow("1s")]
+    [DataRow("2.5m")]
+    [DataRow("1h")]
+    [TestMethod]
+    public async Task IsValid_If_CorrectTimeSpan_Is_Provided_For_DelayOption(string delay)
+    {
+        var provider = new RetryCommandLineOptionsProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [delay]).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_If_InvalidTimeSpan_Is_Provided_For_DelayOption()
+    {
+        var provider = new RetryCommandLineOptionsProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, ["invalid"]).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(Policy.Resources.ExtensionResources.RetryFailedTestsDelayOptionInvalidArgument, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_When_DelayOption_Provided_But_RetryOption_Missing()
+    {
+        var provider = new RetryCommandLineOptionsProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName, ["1s"] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, Policy.Resources.ExtensionResources.RetryFailedTestsOptionIsMissingErrorMessage, RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName, RetryCommandLineOptionsProvider.RetryFailedTestsOptionName), validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsValid_When_DelayOption_Provided_With_RetryOption()
+    {
+        var provider = new RetryCommandLineOptionsProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, ["3"] },
+            { RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName, ["1s"] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
 }

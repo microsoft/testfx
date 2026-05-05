@@ -50,6 +50,16 @@ Déplacement des fichiers de ressources de la dernière tentative vers le réper
         <target state="translated">Échec de démarrage du processus « {0} »</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryFailedTestsDelayOptionDescription">
+        <source>Add a delay between retries. The delay is expressed as a time value, e.g. 1s, 2.5m, 1h. Default unit is milliseconds.</source>
+        <target state="new">Add a delay between retries. The delay is expressed as a time value, e.g. 1s, 2.5m, 1h. Default unit is milliseconds.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
+        <source>Option '--retry-failed-tests-delay' requires a valid time span value (e.g. 200, 1s, 2.5m, 1h)</source>
+        <target state="new">Option '--retry-failed-tests-delay' requires a valid time span value (e.g. 200, 1s, 2.5m, 1h)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">
         <source>Retry failed tests feature allows to restart test execution upon failure.</source>
         <target state="translated">La fonctionnalité de nouvelles tentatives de tests ayant échoué permet de redémarrer l’exécution des tests en cas d’échec.</target>
