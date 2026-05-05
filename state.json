@@ -4,52 +4,156 @@
   "lean_install_blocked": true,
   "lean_install_note": "Network firewall blocks elan and curl in sandbox. Lean has never been successfully installed in this environment. CI uses leanprover/lean4-action.",
   "targets": [
-    {"id":1,"name":"ArgumentArity","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs","phase":2,"priority":1,"notes":"Informal spec done. Next: Task 3 when Lean available.","spec_file":"formal-verification/specs/argument_arity_informal.md"},
-    {"id":2,"name":"CommandLineParser.TryUnescape","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":2,"priority":2,"notes":"Informal spec done. BUG-1, BUG-2 confirmed. Next: Task 3 when Lean available.","spec_file":"formal-verification/specs/commandlineparser_tryunescape_informal.md"},
-    {"id":3,"name":"CommandLineParser.ParseOptionAndSeparators","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs","phase":2,"priority":5,"notes":"Informal spec merged. Next: Task 3.","spec_file":"formal-verification/specs/commandlineparser_parseoptionandseparators_informal.md"},
-    {"id":4,"name":"CommandLineOptionsValidator arity validation","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs","phase":1,"priority":6,"notes":"Phase 1 only (no spec file in repo). Next: Task 2."},
-    {"id":5,"name":"CommandLineParseResult.Equals","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs","phase":2,"priority":7,"notes":"Informal spec merged (#7918). All theorems are decide-provable. Next: Task 3.","spec_file":"formal-verification/specs/commandlineparseresult_equals_informal.md"},
-    {"id":6,"name":"ResponseFileHelper.SplitCommandLine","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs","phase":2,"priority":4,"notes":"Informal spec merged. Next: Task 3.","spec_file":"formal-verification/specs/responsefilehelper_splitcommandline_informal.md"},
-    {"id":7,"name":"TreeNodeFilter.MatchFilterPattern","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":2,"priority":3,"notes":"Informal spec merged (#7934). Next: Task 3.","spec_file":"formal-verification/specs/treenodefilter_matchfilterpattern_informal.md"},
-    {"id":8,"name":"PasteArguments.AppendArgument","file":"src/Platform/Microsoft.Testing.Platform/Helpers/PasteArguments.cs","phase":1,"priority":8,"notes":"Added in PR #7849 (merged). Windows argv escaping rules. Round-trip correctness. Next: Task 2."},
-    {"id":9,"name":"TimeSpanParser.TryParse","file":"src/Platform/Microsoft.Testing.Platform/Helpers/TimeSpanParser.cs","phase":1,"priority":9,"notes":"Added in PR #7849 (merged). Pure suffix-dispatch parser. Next: Task 2."},
-    {"id":10,"name":"TreeNodeFilter.TokenizeFilter","file":"src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs","phase":1,"priority":10,"notes":"Added in PR #7849 (merged). Tokenizer for filter grammar. Trailing-backslash exception. Next: Task 2."},
-    {"id":11,"name":"Sha256Hasher.ToCharsBuffer","file":"src/Platform/Microsoft.Testing.Platform/Helpers/Sha256Hasher.cs","phase":1,"priority":11,"notes":"PR #7849 (merged). Branchless hex encoding. All 256 inputs decidable by decide."},
-    {"id":12,"name":"ExtensionValidationHelper.ValidateUniqueExtension","file":"src/Platform/Microsoft.Testing.Platform/Helpers/ExtensionValidationHelper.cs","phase":1,"priority":12,"notes":"PR #7849 (merged). Duplicate-UID detection."},
-    {"id":13,"name":"ValidationResult algebraic properties","file":"src/Platform/Microsoft.Testing.Platform/Extensions/ValidationResult.cs","phase":1,"priority":13,"notes":"NEW 2026-05-04 run3. Tiny discriminated-union struct. Valid/Invalid factory methods. All properties decide-provable. MemberNotNullWhen invariant machine-checkable. In open PR lean-squad/task1-new-targets-2026-05-04-run3."},
-    {"id":14,"name":"CommandLineOptionsValidator.ValidateNoUnknownOptions","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs","phase":1,"priority":14,"notes":"NEW 2026-05-04 run3. Pure function. Set-membership property. In open PR lean-squad/task1-new-targets-2026-05-04-run3."},
-    {"id":15,"name":"CommandLineOptionsValidator.ValidateOptionsAreNotDuplicated","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.cs","phase":1,"priority":15,"notes":"NEW 2026-05-04 run3. Uniqueness property. In open PR lean-squad/task1-new-targets-2026-05-04-run3."},
-    {"id":16,"name":"UnicodeCharacterUtilities.IsIdentifierStartCharacter/IsIdentifierPartCharacter","file":"src/Analyzers/MSTest.SourceGeneration/Helpers/UnicodeCharacterUtilities.cs","phase":1,"priority":16,"notes":"Run2 prior. In open PR lean-squad/task1-new-targets-2026-05-04-run2."},
-    {"id":17,"name":"TestNodeUid equality and implicit conversion","file":"src/Platform/Microsoft.Testing.Platform/Messages/TestNodeUid.cs","phase":1,"priority":17,"notes":"Run2 prior. In open PR lean-squad/task1-new-targets-2026-05-04-run2."},
-    {"id":18,"name":"CommandLineOption name-character invariant","file":"src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOption.cs","phase":1,"priority":18,"notes":"Run2 prior. In open PR lean-squad/task1-new-targets-2026-05-04-run2."}
+    {
+      "id": 1,
+      "name": "ArgumentArity",
+      "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/ArgumentArity.cs",
+      "phase": 2,
+      "priority": 1,
+      "notes": "Informal spec done. Next: Task 3 when Lean available.",
+      "spec_file": "formal-verification/specs/argument_arity_informal.md"
+    },
+    {
+      "id": 2,
+      "name": "CommandLineParser.TryUnescape",
+      "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs",
+      "phase": 2,
+      "priority": 2,
+      "notes": "Informal spec done. BUG-1, BUG-2 confirmed. Next: Task 3 when Lean available.",
+      "spec_file": "formal-verification/specs/commandlineparser_tryunescape_informal.md"
+    },
+    {
+      "id": 3,
+      "name": "CommandLineParser.ParseOptionAndSeparators",
+      "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs",
+      "phase": 2,
+      "priority": 5,
+      "notes": "Informal spec merged. Next: Task 3.",
+      "spec_file": "formal-verification/specs/commandlineparser_parseoptionandseparators_informal.md"
+    },
+    {
+      "id": 5,
+      "name": "CommandLineParseResult.Equals",
+      "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs",
+      "phase": 2,
+      "priority": 7,
+      "notes": "Informal spec merged (#7918). All theorems are decide-provable. Next: Task 3.",
+      "spec_file": "formal-verification/specs/commandlineparseresult_equals_informal.md"
+    },
+    {
+      "id": 6,
+      "name": "ResponseFileHelper.SplitCommandLine",
+      "file": "src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs",
+      "phase": 2,
+      "priority": 4,
+      "notes": "Informal spec merged. Next: Task 3.",
+      "spec_file": "formal-verification/specs/responsefilehelper_splitcommandline_informal.md"
+    },
+    {
+      "id": 7,
+      "name": "TreeNodeFilter.MatchFilterPattern",
+      "file": "src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs",
+      "phase": 2,
+      "priority": 3,
+      "notes": "Informal spec merged (#7934). Next: Task 3.",
+      "spec_file": "formal-verification/specs/treenodefilter_matchfilterpattern_informal.md"
+    }
   ],
   "merged_prs": [
-    {"number":7799,"title":"[Lean Squad] feat: formal verification infrastructure"},
-    {"number":7859,"title":"[Lean Squad] feat(ci): Task 9 — skip guard + FVSquad scaffold"},
-    {"number":7899,"title":"[Lean Squad] feat(fv): Task 2 — informal spec for ResponseFileHelper.SplitCommandLine"},
-    {"number":7919,"title":"[Lean Squad] feat(fv): Task 2 — informal spec for CommandLineParser.ParseOptionAndSeparators"},
-    {"number":7918,"title":"[Lean Squad] feat(fv): Task 2 — informal spec for CommandLineParseResult.Equals"},
-    {"number":7849,"title":"[Lean Squad] feat(fv): Task 1 — expand FV targets"},
-    {"number":7860,"title":"[Lean Squad] feat(fv): Task 6 — initial correspondence review"},
-    {"number":7924,"title":"[Lean Squad] feat(ci): Task 9 — fix elan SHA256, cache ordering"},
-    {"number":7936,"title":"[Lean Squad] feat(ci): Task 9 — FV docs validation + REPORT.md"},
-    {"number":7934,"title":"[Lean Squad] feat(fv): Task 2 — informal spec for TreeNodeFilter.MatchFilterPattern"}
+    {
+      "number": 7899,
+      "title": "[Lean Squad] feat(fv): Task 2 \u2014 informal spec for ResponseFileHelper.SplitCommandLine"
+    },
+    {
+      "number": 7919,
+      "title": "[Lean Squad] feat(fv): Task 2 \u2014 informal spec for CommandLineParser.ParseOptionAndSeparators"
+    },
+    {
+      "number": 7918,
+      "title": "[Lean Squad] feat(fv): Task 2 \u2014 informal spec for CommandLineParseResult.Equals"
+    },
+    {
+      "number": 7849,
+      "title": "[Lean Squad] feat(fv): Task 1 \u2014 expand FV targets"
+    },
+    {
+      "number": 7860,
+      "title": "[Lean Squad] feat(fv): Task 6 \u2014 initial correspondence review"
+    },
+    {
+      "number": 7924,
+      "title": "[Lean Squad] feat(ci): Task 9 \u2014 fix elan SHA256, cache ordering"
+    },
+    {
+      "number": 7936,
+      "title": "[Lean Squad] feat(ci): Task 9 \u2014 FV docs validation + REPORT.md"
+    },
+    {
+      "number": 7934,
+      "title": "[Lean Squad] feat(fv): Task 2 \u2014 informal spec for TreeNodeFilter.MatchFilterPattern"
+    }
   ],
   "open_prs": [
-    {"branch":"lean-squad/task1-new-targets-2026-05-04-run2","title":"feat(fv): Task 1 — add 3 new FV targets (UnicodeCharacterUtilities, TestNodeUid, CommandLineOption)"},
-    {"branch":"lean-squad/task1-new-targets-2026-05-04-run3","title":"feat(fv): Task 1 — add 3 new FV targets and sync TARGETS.md phases (ValidationResult, ValidateNoUnknownOptions, ValidateOptionsAreNotDuplicated)"},
-    {"branch":"lean-squad/task9-ci-improvements-2026-05-05","title":"feat(ci): Task 9 — sorry threshold guard, phase-3 .lean validation, FVSquad README update"}
+    {
+      "branch": "lean-squad/task1-new-targets-2026-05-04-run2",
+      "title": "feat(fv): Task 1 \u2014 add 3 new FV targets (UnicodeCharacterUtilities, TestNodeUid, CommandLineOption)"
+    },
+    {
+      "branch": "lean-squad/task1-new-targets-2026-05-04-run3",
+      "title": "feat(fv): Task 1 \u2014 add 3 new FV targets and sync TARGETS.md phases (ValidationResult, ValidateNoUnknownOptions, ValidateOptionsAreNotDuplicated)"
+    },
+    {
+      "branch": "lean-squad/task9-ci-improvements-2026-05-05",
+      "title": "feat(ci): Task 9 \u2014 sorry threshold guard, phase-3 .lean validation, FVSquad README update"
+    },
+    {
+      "branch": "lean-squad/task9-spec-validation-2026-05-05-run4",
+      "title": "feat(ci): Task 9 \u2014 add spec-file quality checks to fv-docs-validation"
+    }
   ],
-  "open_issues": [{"number":7793,"title":"[Lean Squad] Formal Verification Status"}],
-  "next_priority": "Task 3 still blocked by Lean toolchain every run. Two open PRs with new targets (run2 and run3). CI PR opened this run. Priority: Task 2 for targets 8, 9 once capacity allows.",
+  "open_issues": [
+    {
+      "number": 7793,
+      "title": "[Lean Squad] Formal Verification Status"
+    }
+  ],
+  "next_priority": "Task 3 still blocked by Lean toolchain. Multiple open PRs for CI improvements. Priority: close/merge stale PRs, Task 2 for targets 8-12 when ready.",
   "findings": [
-    {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-1: Single-char quote input -> IndexOf(char, 1, -1) throws ArgumentOutOfRangeException."},
-    {"type":"confirmed-bug","target":"TryUnescape","desc":"BUG-2: Single-char double-quote input -> input[1..^1] range exception."},
-    {"type":"design-issue","target":"SplitCommandLine","desc":"Unclosed opening quote at start silently discards all input content."},
-    {"type":"design-issue","target":"SplitCommandLine","desc":"Adjacent quoted strings emit 2 tokens not 1. Closing quote triggers yield+reset."},
-    {"type":"design-issue","target":"ParseOptionAndSeparators","desc":"Empty option name not rejected: '--:value' produces currentOption='' silently."},
-    {"type":"design-issue","target":"ValidateOptionsArgumentArity","desc":"OQ-2: KeyNotFoundException if unknown option bypasses ValidateNoUnknownOptions step."},
-    {"type":"design-issue","target":"ValidateOptionsArgumentArity","desc":"OQ-1: Absent required options (Min>0 but option not in parseResult) not caught by arity check; delegated to ValidateConfigurationAsync."}
+    {
+      "type": "confirmed-bug",
+      "target": "TryUnescape",
+      "desc": "BUG-1: Single-char quote input -> IndexOf(char, 1, -1) throws ArgumentOutOfRangeException."
+    },
+    {
+      "type": "confirmed-bug",
+      "target": "TryUnescape",
+      "desc": "BUG-2: Single-char double-quote input -> input[1..^1] range exception."
+    },
+    {
+      "type": "design-issue",
+      "target": "SplitCommandLine",
+      "desc": "Unclosed opening quote at start silently discards all input content."
+    },
+    {
+      "type": "design-issue",
+      "target": "SplitCommandLine",
+      "desc": "Adjacent quoted strings emit 2 tokens not 1. Closing quote triggers yield+reset."
+    },
+    {
+      "type": "design-issue",
+      "target": "ParseOptionAndSeparators",
+      "desc": "Empty option name not rejected: '--:value' produces currentOption='' silently."
+    },
+    {
+      "type": "design-issue",
+      "target": "ValidateOptionsArgumentArity",
+      "desc": "OQ-2: KeyNotFoundException if unknown option bypasses ValidateNoUnknownOptions step."
+    },
+    {
+      "type": "design-issue",
+      "target": "ValidateOptionsArgumentArity",
+      "desc": "OQ-1: Absent required options (Min>0 but option not in parseResult) not caught by arity check; delegated to ValidateConfigurationAsync."
+    }
   ],
   "lean_setup": {
     "lean_version": "4.14.0",
@@ -57,10 +161,7 @@
     "toolchain_file": "formal-verification/lean/lean-toolchain",
     "lakefile": "formal-verification/lean/lakefile.toml",
     "elan_install_note": "Network blocked in sandbox. curl is blocked entirely. Use leanprover/lean4-action in CI. No local lean install possible in this environment.",
-    "lake_build_cmd": "cd formal-verification/lean && PATH=$HOME/.elan/bin:$PATH lake build",
     "important_note": "String.replace, String.startsWith etc are @[extern] and NOT kernel-reducible. Use native_decide for concrete string evaluation. decide works for pure Prop/Bool/Int without String ops. omega for integer arithmetic.",
-    "argument_arity_lean_notes": "ArgumentArity.lean was written with 27 theorems, 0 sorry. The PR was closed without merge. When Lean is available, re-create the file — it proved well.",
-    "sha256_lean_notes": "ToCharsBuffer: UInt32 wrapping semantics must match C# uint overflow. All 256 cases provable by decide once model written.",
     "ci_sorry_threshold": 200,
     "ci_sorry_guard_added": "2026-05-05 in lean-proofs.yml (PR lean-squad/task9-ci-improvements-2026-05-05)",
     "ci_phase3_check_added": "2026-05-03 in fv-docs-validation.yml; enhanced 2026-05-05 to check .lean files for phase-3+ targets"
