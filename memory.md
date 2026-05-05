@@ -28,13 +28,14 @@
 - TreeNodeFilter covered by Efficiency Improver (#7947, #7974) - do not duplicate work
 - TestMethodInfo.GetAttributes<T>() wraps cached array with yield iterator + [..] spread - returns a filtered copy, allocation by design (prevents cache mutation), low priority
 - GetRetryAttribute() in TestMethodInfo uses GetAttributes<RetryBaseAttribute> - called once per test method construction (not per execution), low priority
+- BenchmarkDotNet external benchmark repo: https://github.com/Youssef1313/MSTestBench - shows impressive results (3.10→3.11: 90% reduction in time/alloc for SingleClass10KTests)
 
 ## Optimization Backlog
 1. **[In main]** ValidSourceExtensions static cache + ReflectionTestMethodInfo deduplication
 2. **[In main]** Eliminate LINQ iterator allocations in TryUnfoldITestDataSources
 3. **[Merged PR #7927 - 2026-04-30]** GetTestCategories (6 iterators→0) + WorkItemAttribute double-pass + param string LINQ iterator - fixes issue #7868
 4. **[Deprioritized - no profiler evidence]** Avoid yield iterator in TryExecuteDataSourceBasedTestsAsync + GetRetryAttribute (issue #7904 - branch perf-assist/avoid-yield-iterator-in-test-execution-hot-path can be discarded)
-5. **[Patch ready 🔧 - run 25321208683]** IsIgnored() LINQ allocation elimination. Closes #7992, #7993, #8000
+5. **[Patch ready 🔧 - run 25378671157]** IsIgnored() LINQ allocation elimination. Closes #7992, #7993, #8000, #8016
 6. BenchmarkDotNet micro-benchmark project for discovery/execution hot paths - proposed infrastructure, no active issue
 7. TreeNodeFilter MatchFilterPattern: LINQ closure allocations - covered by Efficiency Improver (#7947, #7974)
 8. SynchronizedStringBuilder lock overhead - LOW PRIORITY, requires profiler evidence, may be intentionally thread-safe
@@ -44,13 +45,15 @@
 - Branch: perf-assist/avoid-linq-iterators-data-source-enumeration (changes applied to main, issue for #7831)
 - Branch: perf-assist/reduce-linq-iterators-get-test-categories-d392d71fd502f8cc → PR #7927 MERGED 2026-04-30 by Evangelink
 - Branch: perf-assist/avoid-yield-iterator-in-test-execution-hot-path (issue #7904 - DEPRIORITIZED)
-- IsIgnored patch: CREATED 2026-05-04 in run 25321208683 artifact (branch: perf-assist/eliminate-linq-allocations-isignored)
+- IsIgnored patch: RECREATED 2026-05-05 in run 25378671157 artifact (branch: perf-assist/eliminate-linq-allocations-isignored)
+- Commented on #6326 (Track perf over time) - suggested allocation scenarios + BDN thresholds
 
 ## Monthly Activity
 - April 2026 issue #7816: CLOSED 2026-05-01
 - May 2026 issue #7981: OPEN
 
 ## Last Run
+- 2026-05-05: Tasks 3 (IsIgnored re-impl, 4th attempt), 5 (commented #6326), 7 (monthly summary updated)
 - 2026-05-04: Tasks 3 (IsIgnored re-impl again, patch in run 25321208683), 2 (no new high-confidence targets), 7 (monthly summary updated)
 - 2026-05-03: Tasks 3/4 (re-implemented IsIgnored opt, previous remote branch was deleted; patch in run 25280157015 artifact), 7 (monthly summary updated)
 - 2026-05-02: Tasks 3 (IsIgnored optimization, placeholder issues #7992, #7993), 7 (monthly summary updated)
@@ -65,4 +68,5 @@
 - 2026-05-02: Tasks 3, 7 done
 - 2026-05-03: Tasks 3/4, 7 done
 - 2026-05-04: Tasks 3, 2, 7 done
-- Next run: should focus on Tasks 4 (check PR status), 5 (comment on perf issues), 6 (infra)
+- 2026-05-05: Tasks 3, 5, 7 done
+- Next run: should focus on Tasks 1 (validate commands), 6 (infra), 7
