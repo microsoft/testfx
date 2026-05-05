@@ -71,6 +71,34 @@ public sealed class TreeNodeFilterTests
     }
 
     [TestMethod]
+    public void OrExpression_WorksForSinglePathSegmentInsideParentheses()
+    {
+        TreeNodeFilter filter = new("/*/*/*/(MyTest1|MyTest2)");
+
+        Assert.IsTrue(filter.MatchesFilter("/A/B/C/MyTest1", new PropertyBag()));
+        Assert.IsTrue(filter.MatchesFilter("/A/B/C/MyTest2", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/A/B/C/MyTest3", new PropertyBag()));
+    }
+
+    [TestMethod]
+    public void ExactMatch_DoesNotMatchAdditionalSuffixUnlessWildcardIsUsed()
+    {
+        TreeNodeFilter filter = new("/*/*/*/(MyTest1|MyTest2)");
+
+        Assert.IsFalse(filter.MatchesFilter("/A/B/C/MyTest1()", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/A/B/C/MyTest2()", new PropertyBag()));
+    }
+
+    [TestMethod]
+    public void FullPathOrInsideParenthesizedExpressions_IsNotSupported_ThrowsActionableMessage()
+    {
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => _ = new TreeNodeFilter("(/*/*/*/MyTest1)|(/*/*/*/MyTest2)"));
+
+        Assert.IsTrue(exception.Message.Contains("/A/B/C/(X|Y)", StringComparison.Ordinal));
+    }
+
+    [TestMethod]
     public void AndExpression()
     {
         TreeNodeFilter filter = new("/(*.UnitTests)&(*ProjectB*)");
