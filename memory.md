@@ -25,27 +25,31 @@
 - IMPORTANT: Maintainers (Youssef1313, Evangelink) noted that hot path detection is not great - many things flagged that don't show in actual profiler traces. Require stronger evidence before submitting new allocations issues.
 - SynchronizedStringBuilder in TestContextImplementation uses [MethodImpl(Synchronized)]; safe to skip - TestContext may receive output from background threads spawned by tests
 - TypeValidator/TestMethodValidator created per-type in GetTypeEnumerator - minor impact (2 small objects per type), low priority
-- TreeNodeFilter covered by Efficiency Improver (#7947, #7974) - do not duplicate work
+- TreeNodeFilter covered by Efficiency Improver (#7947, #7974, #8035) - do not duplicate work
 - TestMethodInfo.GetAttributes<T>() wraps cached array with yield iterator + [..] spread - returns a filtered copy, allocation by design (prevents cache mutation), low priority
 - GetRetryAttribute() in TestMethodInfo uses GetAttributes<RetryBaseAttribute> - called once per test method construction (not per execution), low priority
 - BenchmarkDotNet external benchmark repo: https://github.com/Youssef1313/MSTestBench - shows impressive results (3.10→3.11: 90% reduction in time/alloc for SingleClass10KTests)
+- IDE0028 error: use collection expression syntax (`[]`) instead of `new()` for collections - enforced by -warnaserror
 
 ## Optimization Backlog
 1. **[In main]** ValidSourceExtensions static cache + ReflectionTestMethodInfo deduplication
 2. **[In main]** Eliminate LINQ iterator allocations in TryUnfoldITestDataSources
 3. **[Merged PR #7927 - 2026-04-30]** GetTestCategories (6 iterators→0) + WorkItemAttribute double-pass + param string LINQ iterator - fixes issue #7868
 4. **[Deprioritized - no profiler evidence]** Avoid yield iterator in TryExecuteDataSourceBasedTestsAsync + GetRetryAttribute (issue #7904 - branch perf-assist/avoid-yield-iterator-in-test-execution-hot-path can be discarded)
-5. **[Patch ready 🔧 - run 25378671157]** IsIgnored() LINQ allocation elimination. Closes #7992, #7993, #8000, #8016
+5. **[Patch ready 🔧 - run 25437832278]** IsIgnored() LINQ allocation elimination. See issue #8028 for apply instructions. Closes #7992, #7993, #8000, #8016, #8028
 6. BenchmarkDotNet micro-benchmark project for discovery/execution hot paths - proposed infrastructure, no active issue
-7. TreeNodeFilter MatchFilterPattern: LINQ closure allocations - covered by Efficiency Improver (#7947, #7974)
+7. TreeNodeFilter MatchFilterPattern: LINQ closure allocations - covered by Efficiency Improver (#7947, #7974, #8035)
 8. SynchronizedStringBuilder lock overhead - LOW PRIORITY, requires profiler evidence, may be intentionally thread-safe
+9. Scanned Execution/, Discovery/, Helpers/ on 2026-05-06 - no new high-confidence targets beyond backlog items
 
 ## Completed Work
 - Branch: perf-assist/reduce-allocations-discovery-execution (changes applied to main by maintainer, issue #7815 still open - suggest closing)
 - Branch: perf-assist/avoid-linq-iterators-data-source-enumeration (changes applied to main, issue for #7831)
 - Branch: perf-assist/reduce-linq-iterators-get-test-categories-d392d71fd502f8cc → PR #7927 MERGED 2026-04-30 by Evangelink
 - Branch: perf-assist/avoid-yield-iterator-in-test-execution-hot-path (issue #7904 - DEPRIORITIZED)
-- IsIgnored patch: RECREATED 2026-05-05 in run 25378671157 artifact (branch: perf-assist/eliminate-linq-allocations-isignored)
+- IsIgnored patches: 6 attempts across runs 25252726962, 25280157015, 25321208683, 25378671157, 25437832278
+  - Most recent: branch perf-assist/eliminate-linq-allocations-isignored-may6 (run 25437832278)
+  - See issue #8028 for apply instructions (most current, others #7992/7993/8000/8016 are duplicates to close)
 - Commented on #6326 (Track perf over time) - suggested allocation scenarios + BDN thresholds
 
 ## Monthly Activity
@@ -53,7 +57,8 @@
 - May 2026 issue #7981: OPEN
 
 ## Last Run
-- 2026-05-05: Tasks 3 (IsIgnored re-impl, 4th attempt), 5 (commented #6326), 7 (monthly summary updated)
+- 2026-05-06: Tasks 3 (IsIgnored 6th attempt, patch in run 25437832278, NO new issue created), 2 (scanned - no new targets), 7 (monthly summary updated)
+- 2026-05-05: Tasks 3 (IsIgnored re-impl, 5th attempt, issue #8028), 5 (commented #6326), 7 (monthly summary updated)
 - 2026-05-04: Tasks 3 (IsIgnored re-impl again, patch in run 25321208683), 2 (no new high-confidence targets), 7 (monthly summary updated)
 - 2026-05-03: Tasks 3/4 (re-implemented IsIgnored opt, previous remote branch was deleted; patch in run 25280157015 artifact), 7 (monthly summary updated)
 - 2026-05-02: Tasks 3 (IsIgnored optimization, placeholder issues #7992, #7993), 7 (monthly summary updated)
@@ -69,4 +74,5 @@
 - 2026-05-03: Tasks 3/4, 7 done
 - 2026-05-04: Tasks 3, 2, 7 done
 - 2026-05-05: Tasks 3, 5, 7 done
-- Next run: should focus on Tasks 1 (validate commands), 6 (infra), 7
+- 2026-05-06: Tasks 3, 2, 7 done
+- Next run: should focus on Tasks 1 (validate commands), 5 (comment on perf issues), 6 (infra), 7
