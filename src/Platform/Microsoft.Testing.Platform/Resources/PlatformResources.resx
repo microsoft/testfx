@@ -192,6 +192,9 @@
   <data name="TestHostAdapterInvokerFailedTestSessionErrorMessage" xml:space="preserve">
     <value>Test adapter test session failure</value>
   </data>
+  <data name="TreeNodeFilterCannotBeEmptyErrorMessage" xml:space="preserve">
+    <value>The filter parsed to zero segments and cannot be empty.</value>
+  </data>
   <data name="TreeNodeFilterCannotContainSlashCharacterErrorMessage" xml:space="preserve">
     <value>A filter '{0}' should not contain a '/' character</value>
   </data>

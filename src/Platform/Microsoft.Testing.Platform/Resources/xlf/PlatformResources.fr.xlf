@@ -934,6 +934,11 @@ Les valeurs valides sont « All », « Failed » et « None ». La valeur 
         <target state="translated">Total</target>
         <note />
       </trans-unit>
+      <trans-unit id="TreeNodeFilterCannotBeEmptyErrorMessage">
+        <source>The filter parsed to zero segments and cannot be empty.</source>
+        <target state="new">The filter parsed to zero segments and cannot be empty.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
         <source>A filter '{0}' should not contain a '/' character</source>
         <target state="translated">Un filtre « {0} » ne doit pas contenir de caractère '/'</target>

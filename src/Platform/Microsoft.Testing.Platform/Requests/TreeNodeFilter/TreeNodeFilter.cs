@@ -26,6 +26,12 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     {
         Filter = filter ?? throw new ArgumentNullException(nameof(filter));
         _filters = ParseFilter(filter);
+
+        if (_filters.Count == 0)
+        {
+            throw new ArgumentException(PlatformResources.TreeNodeFilterCannotBeEmptyErrorMessage, nameof(filter));
+        }
+
         ContainsPropertyFilters = false;
         for (int i = 0; i < _filters.Count; i++)
         {
@@ -510,11 +516,6 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
 
             if (currentFragmentIndex >= _filters.Count)
             {
-                if (_filters.Count == 0)
-                {
-                    throw new InvalidOperationException("Filter parsed to zero segments.");
-                }
-
                 // Note: The regex for ** is .*.*, so we match against such a value expression.
                 FilterExpression lastFilter = _filters[_filters.Count - 1];
                 if (lastFilter is ValueAndPropertyExpression valueAndPropertyExpression)
@@ -555,14 +556,26 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         int endFragmentIndex,
         PropertyBag properties)
     {
+#if NETSTANDARD2_0
+        string fragment = testNodeFullPath.Substring(startFragmentIndex, endFragmentIndex - startFragmentIndex);
+        return MatchFilterPattern(filterExpression, fragment, properties);
+#else
         ReadOnlySpan<char> fragment = testNodeFullPath.AsSpan(startFragmentIndex, endFragmentIndex - startFragmentIndex);
         return MatchFilterPattern(filterExpression, fragment, properties);
+#endif
     }
 
+#if NETSTANDARD2_0
+    private static bool MatchFilterPattern(
+        FilterExpression filterExpression,
+        string testNodeFragment,
+        PropertyBag properties)
+#else
     private static bool MatchFilterPattern(
         FilterExpression filterExpression,
         ReadOnlySpan<char> testNodeFragment,
         PropertyBag properties)
+#endif
     {
         switch (filterExpression)
         {
@@ -618,12 +631,21 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         switch (propertyExpr)
         {
             case PropertyExpression { PropertyName: var propExpr, Value: var valueExpr }:
-                foreach (IProperty prop in properties)
+                if (properties._testNodeStateProperty is not null &&
+                    IsMatchingProperty(properties._testNodeStateProperty, propExpr, valueExpr))
                 {
-                    if (IsMatchingProperty(prop, propExpr, valueExpr))
+                    return true;
+                }
+
+                PropertyBag.Property? currentProp = properties._property;
+                while (currentProp is not null)
+                {
+                    if (IsMatchingProperty(currentProp.Current, propExpr, valueExpr))
                     {
                         return true;
                     }
+
+                    currentProp = currentProp.Next;
                 }
 
                 return false;

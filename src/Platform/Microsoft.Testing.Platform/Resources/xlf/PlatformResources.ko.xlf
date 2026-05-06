@@ -934,6 +934,11 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
         <target state="translated">합계</target>
         <note />
       </trans-unit>
+      <trans-unit id="TreeNodeFilterCannotBeEmptyErrorMessage">
+        <source>The filter parsed to zero segments and cannot be empty.</source>
+        <target state="new">The filter parsed to zero segments and cannot be empty.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
         <source>A filter '{0}' should not contain a '/' character</source>
         <target state="translated">'{0}' 필터는 '/' 문자를 포함하면 안 됨</target>

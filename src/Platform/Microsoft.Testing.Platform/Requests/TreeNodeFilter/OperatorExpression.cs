@@ -8,7 +8,8 @@ internal sealed class OperatorExpression(FilterOperator op, IReadOnlyCollection<
 {
     public FilterOperator Op { get; } = op;
 
-    public IReadOnlyList<FilterExpression> SubExpressions { get; } = subExpressions is IReadOnlyList<FilterExpression> readOnlyList
-        ? readOnlyList
-        : [.. subExpressions];
+    public IReadOnlyList<FilterExpression> SubExpressions { get; } =
+        subExpressions is IReadOnlyList<FilterExpression> readOnlyList
+            ? readOnlyList
+            : [.. subExpressions];
 }

@@ -934,6 +934,11 @@ I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All
         <target state="translated">Totale</target>
         <note />
       </trans-unit>
+      <trans-unit id="TreeNodeFilterCannotBeEmptyErrorMessage">
+        <source>The filter parsed to zero segments and cannot be empty.</source>
+        <target state="new">The filter parsed to zero segments and cannot be empty.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
         <source>A filter '{0}' should not contain a '/' character</source>
         <target state="translated">Un filtro '{0}' non dovrebbe contenere un carattere '/'</target>

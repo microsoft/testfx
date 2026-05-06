@@ -935,6 +935,11 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
         <target state="translated">合計</target>
         <note />
       </trans-unit>
+      <trans-unit id="TreeNodeFilterCannotBeEmptyErrorMessage">
+        <source>The filter parsed to zero segments and cannot be empty.</source>
+        <target state="new">The filter parsed to zero segments and cannot be empty.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
         <source>A filter '{0}' should not contain a '/' character</source>
         <target state="translated">フィルター '{0}' に '/' 文字を含めることはできません</target>

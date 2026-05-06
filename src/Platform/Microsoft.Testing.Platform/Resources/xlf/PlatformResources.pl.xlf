@@ -934,6 +934,11 @@ Prawidłowe wartości to „All”, „Failed”, „None”. Wartość domyśln
         <target state="translated">Łącznie</target>
         <note />
       </trans-unit>
+      <trans-unit id="TreeNodeFilterCannotBeEmptyErrorMessage">
+        <source>The filter parsed to zero segments and cannot be empty.</source>
+        <target state="new">The filter parsed to zero segments and cannot be empty.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
         <source>A filter '{0}' should not contain a '/' character</source>
         <target state="translated">Filtr „{0}” nie powinien zawierać znaku „/”</target>
