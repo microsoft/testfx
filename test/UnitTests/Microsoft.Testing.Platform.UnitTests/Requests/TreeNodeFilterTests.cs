@@ -32,6 +32,9 @@ public sealed class TreeNodeFilterTests
     public void MatchAllFilter_DoNotAllowInMiddleOfFilter() => Assert.ThrowsExactly<ArgumentException>(() => _ = new TreeNodeFilter("/**/Path"));
 
     [TestMethod]
+    public void EmptyFilter_Invalid() => Assert.ThrowsExactly<ArgumentException>(() => _ = new TreeNodeFilter(string.Empty));
+
+    [TestMethod]
     public void MatchWildcard_MatchesSubstrings()
     {
         TreeNodeFilter filter = new("/*.UnitTests");

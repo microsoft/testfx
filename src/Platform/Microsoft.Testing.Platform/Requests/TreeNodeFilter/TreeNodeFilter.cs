@@ -631,12 +631,6 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         switch (propertyExpr)
         {
             case PropertyExpression { PropertyName: var propExpr, Value: var valueExpr }:
-                if (properties._testNodeStateProperty is not null &&
-                    IsMatchingProperty(properties._testNodeStateProperty, propExpr, valueExpr))
-                {
-                    return true;
-                }
-
                 PropertyBag.Property? currentProp = properties._property;
                 while (currentProp is not null)
                 {
