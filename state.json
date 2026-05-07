@@ -1,23 +1,24 @@
 {
-  "last_run": "2026-05-06",
-  "fv_tool": "Lean 4 + Mathlib",
+  "last_run": "2026-05-07",
+  "fv_tool": "Lean 4 (no Mathlib in CI)",
   "lean_available": true,
-  "lean_install_note": "elan v3.1.0 via python subprocess (shell blocks direct exec). lean/lake at ~/.elan/bin. lake build VERIFIED.",
+  "lean_install_note": "elan v3.1.0, lean v4.29.1 stable. lake build VERIFIED. No Mathlib cache (blocked by firewall); lakefile.toml has no Mathlib require for now.",
   "targets": [
     {
       "id": 1,
       "name": "ArgumentArity",
       "phase": 3,
       "priority": 1,
-      "notes": "Phase 3 done. All 20+ theorems proved. No sorry. Next: Task 4.",
+      "notes": "Phase 3 done. All 20+ theorems. No sorry. PR open. Next: Task 4.",
       "lean_file": "formal-verification/lean/FVSquad/ArgumentArity.lean"
     },
     {
       "id": 2,
       "name": "CommandLineParser.TryUnescape",
-      "phase": 2,
+      "phase": 3,
       "priority": 2,
-      "notes": "BUG-1 BUG-2 confirmed. Next: Task 3."
+      "notes": "Phase 3 done this run. 15+ theorems, some proved by simp. BUG-1/BUG-2 documented. Next: Task 4.",
+      "lean_file": "formal-verification/lean/FVSquad/TryUnescape.lean"
     },
     {
       "id": 3,
@@ -95,6 +96,13 @@
       "phase": 1,
       "priority": 12,
       "notes": "Identified. Next: Task 2."
+    },
+    {
+      "id": 14,
+      "name": "Sha256Hasher.HashWithNormalizedCasing",
+      "phase": 1,
+      "priority": 14,
+      "notes": "NEW: identified this run. Pure: normalise to upper + SHA256 hex. Key prop: Hash(s)=Hash(s.ToUpperInvariant()). Next: Task 2."
     }
   ],
   "merged_prs": [
@@ -116,7 +124,8 @@
     "lean-squad/task1-new-targets-2026-05-06",
     "lean-squad/task1-new-targets-2026-05-06-run2",
     "lean-squad/task2-validationresult-2026-05-06",
-    "lean-squad/task3-argumentarity-lean-spec-2026-05-06"
+    "lean-squad/task3-argumentarity-lean-spec-2026-05-06",
+    "lean-squad/task3-tryunescape-lean-spec-2026-05-07"
   ],
   "open_issues": [
     {
@@ -124,7 +133,7 @@
       "title": "[Lean Squad] Formal Verification Status"
     }
   ],
-  "next_priority": "Task 4 for ArgumentArity. Task 3 for TryUnescape or TreeNodeFilter. Task 2 for PasteArguments or ExitCode.",
+  "next_priority": "Task 4 for ArgumentArity or TryUnescape. Task 3 for TreeNodeFilter or SplitCommandLine. Task 2 for PasteArguments, TimeSpanParser, or Sha256Hasher.",
   "findings": [
     "BUG-1 TryUnescape: single-char quote -> IndexOf(char,1,-1) throws.",
     "BUG-2 TryUnescape: single-char double-quote -> input[1..^1] range exception.",
@@ -137,12 +146,14 @@
     "ValidateOptionsArgumentArity OQ-4: grammar defect (at least 1 arguments)."
   ],
   "lean_setup": {
-    "lean_version": "4.14.0",
-    "lake_version": "5.0.0-410fab7",
-    "toolchain": "formal-verification/lean/lean-toolchain",
+    "lean_version": "4.29.1",
+    "lake_version": "5.0.0 (approx)",
+    "toolchain": "formal-verification/lean/lean-toolchain (leanprover/lean4:v4.29.1)",
     "lakefile": "formal-verification/lean/lakefile.toml",
     "root_module": "formal-verification/lean/FVSquad.lean",
-    "notes": "String.replace etc are @[extern] not kernel-reducible. Use native_decide for string eval. decide for Bool/Int. omega for arithmetic.",
-    "lake_build_verified": true
+    "notes": "No Mathlib in lakefile (firewall blocks cache). Use partial for replaceAll. String.drop returns String.Slice in v4.29; use .toString. String.dropRight still returns String but deprecated. Use simp not simp only for conditional rewrites.",
+    "lake_build_verified": true,
+    "mathlib_available": false,
+    "mathlib_note": "Mathlib v4.29.1 exists and lake-manifest.json resolved it, but lake exe cache get blocked by firewall (403). Full compilation would take hours."
   }
 }
