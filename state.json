@@ -51,9 +51,9 @@
     {
       "id": 7,
       "name": "TreeNodeFilter.MatchFilterPattern",
-      "phase": 2,
+      "phase": 3,
       "priority": 3,
-      "notes": "Spec merged #7934. Next: Task 3."
+      "notes": "Lean spec written, 21 theorems 0 sorry. PR: lean-squad/task3-treenodefilter-lean-spec-2026-05-07"
     },
     {
       "id": 8,
@@ -125,7 +125,8 @@
     "lean-squad/task1-new-targets-2026-05-06-run2",
     "lean-squad/task2-validationresult-2026-05-06",
     "lean-squad/task3-argumentarity-lean-spec-2026-05-06",
-    "lean-squad/task3-tryunescape-lean-spec-2026-05-07"
+    "lean-squad/task3-tryunescape-lean-spec-2026-05-07",
+    "lean-squad/task3-treenodefilter-lean-spec-2026-05-07"
   ],
   "open_issues": [
     {
@@ -155,5 +156,6 @@
     "lake_build_verified": true,
     "mathlib_available": false,
     "mathlib_note": "Mathlib v4.29.1 exists and lake-manifest.json resolved it, but lake exe cache get blocked by firewall (403). Full compilation would take hours."
-  }
+  },
+  "last_run_tasks": "Task 3 (TreeNodeFilter.MatchFilterPattern Lean spec), Task 9 (CI elan fix)"
 }
