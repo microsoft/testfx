@@ -38,6 +38,16 @@ jobs:
             echo "Found ${LEAN_COUNT} .lean file(s). Proceeding with build."
           fi
 
+          # Check for lake-manifest.json (committed manifest enables reproducible builds
+          # and avoids requiring network access for 'lake update' in CI).
+          if [ -f "formal-verification/lean/lake-manifest.json" ]; then
+            echo "has_manifest=true" >> "$GITHUB_OUTPUT"
+            echo "✅ lake-manifest.json present — reproducible build (no network needed)"
+          else
+            echo "has_manifest=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️  lake-manifest.json missing — 'lake update' will run and requires network access"
+          fi
+
       - name: Restore elan + Lake cache
         id: restore-cache
         if: steps.check-lean-files.outputs.lean_count != '0'
@@ -45,8 +55,9 @@ jobs:
         with:
           path: |
             formal-verification/lean/.lake
+            formal-verification/lean/lake-manifest.json
             ~/.elan
-          key: lean-${{ runner.os }}-${{ hashFiles('formal-verification/lean/lean-toolchain', 'formal-verification/lean/lakefile.toml') }}
+          key: lean-${{ runner.os }}-${{ hashFiles('formal-verification/lean/lean-toolchain', 'formal-verification/lean/lakefile.toml', 'formal-verification/lean/lake-manifest.json') }}
           restore-keys: |
             lean-${{ runner.os }}-
 
@@ -93,7 +104,7 @@ jobs:
         run: lean --version
 
       - name: Resolve Lean dependencies
-        if: steps.check-lean-files.outputs.lean_count != '0' && steps.restore-cache.outputs.cache-hit != 'true'
+        if: steps.check-lean-files.outputs.lean_count != '0' && steps.restore-cache.outputs.cache-hit != 'true' && steps.check-lean-files.outputs.has_manifest != 'true'
         working-directory: formal-verification/lean
         run: lake update
 
@@ -101,6 +112,20 @@ jobs:
         if: steps.check-lean-files.outputs.lean_count != '0'
         working-directory: formal-verification/lean
         run: lake build
+
+      - name: Annotate sorry occurrences
+        if: steps.check-lean-files.outputs.lean_count != '0'
+        run: |
+          LEAN_DIR="formal-verification/lean/FVSquad"
+          # Emit a GitHub Actions warning annotation for each line containing sorry,
+          # so reviewers see them inline in the Files Changed tab.
+          grep -rn '\bsorry\b' "${LEAN_DIR}" --include='*.lean' 2>/dev/null \
+          | while IFS= read -r match; do
+              FILE="${match%%:*}"
+              REST="${match#*:}"
+              LINENUM="${REST%%:*}"
+              echo "::warning file=${FILE},line=${LINENUM}::sorry — proof stub pending"
+            done || true
 
       - name: Proof summary
         if: steps.check-lean-files.outputs.lean_count != '0'
@@ -116,4 +141,15 @@ jobs:
             echo "|--------|-------|"
             echo "| Theorems / Lemmas declared | ${THEOREM_COUNT} |"
             echo "| Lines containing \`sorry\` (stubs) | ${SORRY_COUNT} |"
+            echo ""
+            echo "### Per-file breakdown"
+            echo ""
+            echo "| File | Theorems | sorry lines |"
+            echo "|------|----------|-------------|"
+            while IFS= read -r f; do
+              FNAME="$(basename "$f")"
+              FTHEOREMS=$(grep -Ec '^(theorem|lemma) ' "$f" 2>/dev/null || echo 0)
+              FSORRY=$(grep -c '\bsorry\b' "$f" 2>/dev/null || echo 0)
+              echo "| \`${FNAME}\` | ${FTHEOREMS} | ${FSORRY} |"
+            done < <(find "${LEAN_DIR}" -maxdepth 1 -name "*.lean" 2>/dev/null | sort)
           } >> "$GITHUB_STEP_SUMMARY"

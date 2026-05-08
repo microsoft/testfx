@@ -147,3 +147,32 @@ jobs:
           if failed:
               sys.exit(1)
           EOF
+
+      - name: Check FVSquad root module consistency
+        run: |
+          LEAN_DIR="formal-verification/lean/FVSquad"
+          ROOT_MODULE="formal-verification/lean/FVSquad.lean"
+
+          LEAN_COUNT=$(find "${LEAN_DIR}" -maxdepth 1 -name "*.lean" 2>/dev/null | wc -l)
+
+          if [ "${LEAN_COUNT}" -eq 0 ]; then
+            echo "ℹ️  No .lean files in FVSquad/ yet — skipping root module check"
+            exit 0
+          fi
+
+          # When .lean source files exist, the root module must be present so lake build works.
+          if [ ! -f "${ROOT_MODULE}" ]; then
+            echo "::error file=${ROOT_MODULE}::FVSquad.lean root module is missing but ${LEAN_COUNT} .lean source file(s) exist in FVSquad/"
+            exit 1
+          fi
+          echo "✅  ${ROOT_MODULE} present"
+
+          # Each source file in FVSquad/ should be imported by the root module.
+          while IFS= read -r lean_file; do
+            MODULE_NAME="FVSquad.$(basename "${lean_file%.lean}")"
+            if grep -qF "import ${MODULE_NAME}" "${ROOT_MODULE}"; then
+              echo "✅  ${MODULE_NAME} imported"
+            else
+              echo "::warning file=${ROOT_MODULE}::Root module does not import ${MODULE_NAME} (from ${lean_file}); lake build may miss this file"
+            fi
+          done < <(find "${LEAN_DIR}" -maxdepth 1 -name "*.lean" 2>/dev/null | sort)
