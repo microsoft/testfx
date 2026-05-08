@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-05-07T04:31:32Z",
+  "last_run": "2026-05-08T04:24:42Z",
   "last_tasks": ["task3_implementation", "task7_summary"],
   "validated_commands": {
     "build": "export PATH=\"$PWD/.dotnet:$PATH\" && dotnet build <project.csproj> -p:TargetFramework=net8.0 --no-restore -p:SignAssembly=false",
@@ -14,9 +14,10 @@
     {"title": "[Efficiency Improver] perf: eliminate yield-iterator state machine in PropertyBag.OfType<T>()", "pr_number": 7917, "date": "2026-04-29", "status": "merged_by_Evangelink_2026-04-29"}
   ],
   "open_prs": [
-    {"branch": "efficiency/avoid-iterator-alloc-getretryattribute", "title": "[Efficiency Improver] perf: avoid iterator allocation in GetRetryAttribute()", "date": "2026-05-07", "status": "open_draft"},
+    {"branch": "efficiency/avoid-iterator-alloc-getretryattribute-v2", "title": "[Efficiency Improver] perf: avoid iterator allocation in GetRetryAttribute()", "date": "2026-05-08", "status": "open_draft", "closes_issue": 8040},
     {"pr_number": 8035, "title": "[Efficiency Improver] perf: eliminate LINQ closure allocations in TreeNodeFilter", "author": "abdelghani-moussaid", "status": "open"}
   ],
+  "stale_issues_to_close": [7947, 7974, 7990, 8006, 8023, 7998],
   "backlog": [
     {
       "id": "propertybag-struct-enumerator",
@@ -26,30 +27,23 @@
       "notes": "Would eliminate last alloc in property filter path. Requires breaking public API change — not allowed by repo rules."
     },
     {
-      "id": "testmethodinfo-caching",
-      "title": "TestMethodInfo constructed fresh per test-run (no cache). Holds mutable state so can't be cached as-is.",
-      "area": "code-level",
-      "priority": "low",
-      "notes": "Constructor calls GetRetryAttribute/GetTestTimeout/GetTestMethodAttribute — now all use direct array iteration after 2026-05-07 fix. Already well-optimized."
-    },
-    {
-      "id": "discovery-testmethodvalidator",
+      "id": "testmethodvalidator-any-lambda",
       "title": "TestMethodValidator.IsValid: parameters.Any(p => p.IsOut || p.ParameterType.IsByRef) lambda — discovery path only, low impact",
       "area": "code-level",
       "priority": "low",
       "notes": "Compile captures nothing so delegate is likely cached by JIT. Low impact — only called during test discovery."
     }
   ],
-  "backlog_cursor": "discovery-testmethodvalidator",
+  "backlog_cursor": "testmethodvalidator-any-lambda",
   "monthly_activity_issue": {
     "april_2026": "7948_closed",
     "may_2026": "7975_open"
   },
   "notes": {
-    "scan_2026-05-07": "GetRetryAttribute() fix implemented: replaces GetAttributes<RetryBaseAttribute>() yield iterator with direct GetCustomAttributesCached() foreach. All major hot-path allocs now addressed. Backlog is low-priority only.",
+    "scan_2026-05-08": "GetRetryAttribute fix finally pushed as branch efficiency/avoid-iterator-alloc-getretryattribute-v2. Issue #8040 should be closed once PR merges. Backlog is low-priority only. Many stale duplicate TreeNodeFilter issues exist (#7947, #7974, #7990, #8006, #8023, #7998).",
     "treenodefilter_closures": "Covered by community PR #8035 (abdelghani-moussaid). Open and awaiting review.",
-    "getretryattribute_fix": "GetAttributes<RetryBaseAttribute>() yield iterator -> direct GetCustomAttributesCached() foreach. Saves ~48 bytes/test. Same pattern as GetFirstAttributeOrDefault and GetSingleAttributeOrDefault in ReflectHelper.",
     "sa1503_warning": "SA1503: braces must not be omitted — always use braces even for single-statement if bodies.",
-    "test_build_env": "Local build fails NETSDK1127 (net8/net9 targeting packs not installed). Only net11-preview SDK available. CI is authoritative."
+    "test_build_env": "Local build fails NETSDK1127 (net8/net9 targeting packs not installed). Only net11-preview SDK available. CI is authoritative.",
+    "branch_persistence": "Previous runs failed to push branches. This run (2026-05-08) uses the safeoutputs create_pull_request tool which handles push automatically."
   }
 }
