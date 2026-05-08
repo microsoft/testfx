@@ -12,6 +12,7 @@
 - Private static fields: `_camelCase`
 - Private static readonly fields: `PascalCase` (SA1311 enforced)
 - Not `s_` prefix for static readonly fields
+- SA1312: local variables (including deconstruction) must start with lower-case
 
 ## Performance Notes
 - ReflectHelper uses ConcurrentDictionary to cache attribute lookups - already well-optimized
@@ -36,7 +37,7 @@
 2. **[In main]** Eliminate LINQ iterator allocations in TryUnfoldITestDataSources
 3. **[Merged PR #7927 - 2026-04-30]** GetTestCategories (6 iterators→0) + WorkItemAttribute double-pass + param string LINQ iterator - fixes issue #7868
 4. **[Deprioritized - no profiler evidence]** Avoid yield iterator in TryExecuteDataSourceBasedTestsAsync + GetRetryAttribute (issue #7904 - branch perf-assist/avoid-yield-iterator-in-test-execution-hot-path can be discarded)
-5. **[Patch ready 🔧 - run 25498381330]** IsIgnored() LINQ allocation elimination. Branch perf-assist/eliminate-linq-allocations-isignored, patch aw-perf-assist-eliminate-linq-allocations-isignored.patch. Closes #7992, #7993, #8000, #8016, #8028, #8044. SA1316 fixed (PascalCase tuple elements).
+5. **[Patch ready 🔧 - run 25557658324]** IsIgnored() LINQ allocation elimination. Branch perf-assist/isignored-linq-elimination, patch aw-perf-assist-isignored-linq-elimination.patch. Closes #7992, #7993, #8000, #8016, #8028, #8044, #8055. SA1312 fixed (lowercase deconstruction vars).
 6. BenchmarkDotNet micro-benchmark project for discovery/execution hot paths - proposed infrastructure, no active issue
 7. TreeNodeFilter MatchFilterPattern: LINQ closure allocations - covered by Efficiency Improver (#7947, #7974, #8035)
 8. SynchronizedStringBuilder lock overhead - LOW PRIORITY, requires profiler evidence, may be intentionally thread-safe
@@ -47,9 +48,9 @@
 - Branch: perf-assist/avoid-linq-iterators-data-source-enumeration (changes applied to main, issue for #7831)
 - Branch: perf-assist/reduce-linq-iterators-get-test-categories-d392d71fd502f8cc → PR #7927 MERGED 2026-04-30 by Evangelink
 - Branch: perf-assist/avoid-yield-iterator-in-test-execution-hot-path (issue #7904 - DEPRIORITIZED)
-- IsIgnored patches: 7 attempts across runs 25252726962, 25280157015, 25321208683, 25378671157, 25437832278, 25498381330
-  - Most recent: branch perf-assist/eliminate-linq-allocations-isignored (run 25498381330), SA1316 fixed
-  - Duplicate issues to close: #7992, #7993, #8000, #8016, #8028, #8044
+- IsIgnored patches: 8 attempts across runs 25252726962, 25280157015, 25321208683, 25378671157, 25437832278, 25498381330, 25557658324
+  - Most recent: branch perf-assist/isignored-linq-elimination (run 25557658324), SA1312 fixed
+  - Duplicate issues to close: #7992, #7993, #8000, #8016, #8028, #8044, #8055
 - Commented on #6326 (Track perf over time) - suggested allocation scenarios + BDN thresholds
 
 ## Monthly Activity
@@ -57,6 +58,7 @@
 - May 2026 issue #7981: OPEN
 
 ## Last Run
+- 2026-05-08: Tasks 3 (IsIgnored 8th attempt, SA1312 fixed, patch in run 25557658324, closes #7992/7993/8000/8016/8028/8044/8055), 7 (monthly summary updated)
 - 2026-05-07: Tasks 3 (IsIgnored 7th attempt, SA1316 fixed, patch in run 25498381330, closes #7992/7993/8000/8016/8028/8044), 7 (monthly summary updated)
 - 2026-05-06: Tasks 3 (IsIgnored 6th attempt, patch in run 25437832278, NO new issue created), 2 (scanned - no new targets), 7 (monthly summary updated)
 - 2026-05-05: Tasks 3 (IsIgnored re-impl, 5th attempt, issue #8028), 5 (commented #6326), 7 (monthly summary updated)
@@ -77,4 +79,5 @@
 - 2026-05-05: Tasks 3, 5, 7 done
 - 2026-05-06: Tasks 3, 2, 7 done
 - 2026-05-07: Tasks 3, 7 done
-- Next run: should focus on Tasks 1 (validate commands), 5 (comment on perf issues), 6 (infra), 7
+- 2026-05-08: Tasks 3, 7 done
+- Next run: should focus on Tasks 1, 5, 6 (least recently done)
