@@ -193,13 +193,79 @@ A pure recursive function that evaluates whether a test-node path and property b
 
 ---
 
+### Target 8 — `UnitTestOutcomeHelper.ToTestOutcome` ★★★★★  *(new — 2026-05-08)*
+
+**File**: `src/Adapter/MSTestAdapter.PlatformServices/Helpers/UnitTestOutcomeHelper.cs`
+**Type**: pure static method — `(UnitTestOutcome, MSTestSettings) → TestOutcome`
+
+Maps the MSTest-internal `UnitTestOutcome` enum to the VSTest-platform `TestOutcome` enum.
+
+**Why ideal for FV**:
+- Completely pure: no I/O, no mutation, no exceptions.
+- Finite input domain: 11-value enum × 2 Boolean flags = 44 cases.
+- All 44 cases are decidable with `decide`.
+- Clear mapping table; postconditions are straightforward equalities.
+- Found 5 untested paths in existing test suite.
+
+**Properties to verify**: see `formal-verification/specs/unittestoutcomehelper_totestoutcome_informal.md`.
+
+**Approximations**: Model the two Boolean settings flags as independent `Bool` values; `UnitTestOutcome` as a 11-case inductive type. Out-of-range values modelled as a catch-all `other` constructor.
+
+---
+
+### Target 14 — `EnvironmentVariableParser.ParseBool` ★★★☆☆  *(new — 2026-05-08)*
+
+**File**: `src/Platform/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs`
+**Type**: pure static method — `(string? × bool) → bool`
+
+Parses a string environment-variable value to a Boolean, with explicit truthy (`"1"`, `"true"`, `"yes"`, `"on"`) and falsy (`"0"`, `"false"`, `"no"`, `"off"`) sets, and a caller-supplied default for unrecognised values.
+
+**Why good for FV**:
+- Completely pure.
+- Small, explicit finite set of recognised inputs.
+- `decide` can verify every named case exhaustively.
+- Clearly documented intent (no ambiguity).
+- Symmetry property: a string is in the truthy set if and only if it is not in the falsy set (for named strings).
+
+**Properties to verify**:
+1. Each of `{"1", "true", "yes", "on"}` always returns `true`.
+2. Each of `{"0", "false", "no", "off"}` always returns `false`.
+3. Case-insensitivity: `"TRUE"`, `"True"`, `"yes"`, `"YES"` all return `true`.
+4. Unrecognised strings return the supplied default.
+5. `null` returns the supplied default.
+
+---
+
+### Target 15 — `PasteArguments.ContainsNoWhitespaceOrQuotes` ★★★☆☆  *(new — 2026-05-08)*
+
+**File**: `src/Platform/Microsoft.Testing.Platform/Helpers/PasteArguments.cs`
+**Type**: pure static method — `string → bool`
+
+Returns `true` if and only if the string contains no whitespace characters and no double-quote characters.
+
+**Why good for FV**:
+- Pure, deterministic, total.
+- Simple inductive definition over a string's characters.
+- Direct correspondence between Lean `List.all` over characters and the C# `for` loop.
+- Verifiable properties: empty string → `true`; any whitespace or `"` → `false`.
+- Round-trip property with `AppendArgument`: if `ContainsNoWhitespaceOrQuotes(s) = true`, then `AppendArgument` appends `s` unchanged.
+
+**Properties to verify**:
+1. `ContainsNoWhitespaceOrQuotes "" = true`
+2. `ContainsNoWhitespaceOrQuotes (s ++ " " ++ t) = false` for all `s`, `t`.
+3. `ContainsNoWhitespaceOrQuotes (s ++ "\"" ++ t) = false` for all `s`, `t`.
+4. If `ContainsNoWhitespaceOrQuotes s = true`, then for all `i < s.length`, `s[i] ≠ ' '` and `s[i] ≠ '"'`.
+
+---
+
 ## Approach Notes
 
 - We use Lean 4 with Mathlib for all proofs.
 - We translate C# business logic into **pure functional Lean models**, explicitly noting what is abstracted away.
 - `sorry` is used liberally early on; the goal is to get theorems stated correctly, then fill proofs.
-- For simple finite types (like `ArgumentArity` constants), we rely on `decide` for closed proofs.
+- For simple finite types (like `ArgumentArity` constants or `UnitTestOutcome`), we rely on `decide` for closed proofs.
 - We track which theorems are `sorry`-guarded vs. fully proved in `TARGETS.md`.
+- **Lean toolchain blocker**: `elan` download is blocked by the network firewall in the CI environment. All Task 3+ work awaits toolchain availability.
 
 ## Open Questions
 
