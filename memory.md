@@ -1,7 +1,7 @@
 # TestFX Test Improver Memory
 
 ## Last Updated
-2026-05-07
+2026-05-08
 
 ## Build/Test Commands
 
@@ -47,7 +47,7 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
   - `AwesomeAssertions` is BANNED — use MSTest `Assert.*` methods
   - Has `InternalsVisibleTo` access to `Microsoft.Testing.Platform` internals
   - Tests run on both net8.0 and net9.0 — total count doubled
-  - Baseline (after 2026-05-07 additions): ~677 tests per TFM (~1354 total, 1350 pass + 4 skip)
+  - Baseline (after 2026-05-08 run): ~1354 tests per TFM (~2708 total, 1352 pass + 4 skip per TFM)
   - `PlatformResources.LoggerFactoryNotReady` NOT accessible in test project (only in IS_CORE_MTP mode)
   - For multi-interface mocks (e.g. ILoggerProvider + IExtension), define internal interface combining them and mock that
   - **IMPORTANT**: LoggerFactory wraps providers into a composite logger — don't use `Assert.AreSame` to verify a provider was included; instead use `mockProvider.Verify(p => p.CreateLogger(name), Times.Once)` after calling `factory.CreateLogger(name)` with provider's `CreateLogger` mocked to return something
@@ -63,38 +63,29 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 3. ✅ **DONE** `TimeSpanParser` unit tests → PR #7858 merged
 4. ✅ **DONE** `PasteArguments` unit tests → PR #7888 merged
 5. ✅ **DONE** `LoggerFactoryProxy` unit tests → PR #7916 merged
-6. 🔄 **PATCH READY** `LoggingManager.BuildAsync` tests → 10 tests written and verified (7th attempt). Latest patch in run 25468039174 artifacts.
-7. 🔄 **PATCH READY** `ExtensionValidationHelper.ValidateUniqueExtension` → 16 tests written and verified (4th attempt). Patch in run 25468039174 artifacts.
+6. 🔄 **PATCH READY** `LoggingManager.BuildAsync` tests → 10 tests written and verified (8th attempt). Latest patch in run 25528841871 artifacts as `aw-test-assist-logging-manager-extension-validation-v8.patch`.
+7. 🔄 **PATCH READY** `ExtensionValidationHelper.ValidateUniqueExtension` → 16 tests written and verified (8th attempt). Same patch above.
 8. Code fix test coverage for MSTEST0031 when `DoNotUseSystemDescriptionAttributeFixer` lands
-9. `TestFramework.UnitTests` assertion edge cases
+9. Code fix test coverage for MSTEST0040 when `AvoidUsingAssertsInAsyncVoidContextFixer` lands (#7891)
+10. `TestFramework.UnitTests` assertion edge cases
 
 ## Completed Work
+
+### 2026-05-08
+- **Task 3: Re-implemented LoggingManager.BuildAsync tests (10) + ExtensionValidationHelper tests (16)**: combined into single PR attempt (v8). All 1352 pass (net8.0+net9.0, TreatWarningsAsErrors=true). Patch in run 25528841871 artifacts as `aw-test-assist-logging-manager-extension-validation-v8.patch`.
+- **Task 5: Commented on #7891**: testing approach for AvoidUsingAssertsInAsyncVoidContextFixer code fix tests
+- **Task 7: Updated Monthly Summary issue #7969** with new run entry.
 
 ### 2026-05-07
 - **Task 3: Re-implemented LoggingManager.BuildAsync tests (10) + ExtensionValidationHelper tests (16)**: combined into single PR attempt. All 1350 pass (net8.0+net9.0, TreatWarningsAsErrors=true). Patch in run 25468039174 artifacts as `aw-test-assist-logging-manager-and-extension-validation-tests-v7.patch`.
 - **Task 7: Updated Monthly Summary issue #7969** with new run entry.
 
 ### 2026-05-06
-- **Task 3: Re-implemented LoggingManager.BuildAsync tests + ExtensionValidationHelper tests**: combined into single PR attempt. 9+15=24 tests (all 1356 pass net8.0+net9.0, TreatWarningsAsErrors=true). Patch in run 25409056186 artifacts as `aw-test-assist-logging-manager-and-extension-validation-tests.patch`.
-- **Task 7: Updated Monthly Summary issue #7969** with new run entry.
+- **Task 3: Re-implemented LoggingManager.BuildAsync tests + ExtensionValidationHelper tests**: combined into single PR attempt. 9+15=24 tests (all 1356 pass net8.0+net9.0, TreatWarningsAsErrors=true). Patch in run 25409056186 artifacts.
 
 ### 2026-05-05
 - **Task 3: Re-implemented LoggingManager.BuildAsync tests**: 9 tests (all 18 pass net8.0+net9.0). Patch in run 25350394357 artifacts.
-- **Task 3: Re-implemented ExtensionValidationHelper.ValidateUniqueExtension tests**: 15 tests (all 30 pass net8.0+net9.0). Fixed SA1512 and MSTEST0037 errors vs previous attempt. Patch in run 25350394357 artifacts.
-- **Task 7: Updated Monthly Summary issue #7969** with new run entry and updated patch references.
-
-### 2026-05-04
-- **Task 3: Implemented ExtensionValidationHelper.ValidateUniqueExtension tests**: 15 tests
-
-### 2026-05-03
-- **Task 3: Re-attempted LoggingManager.BuildAsync PR (4th attempt)**: 9 tests written.
-
-### 2026-05-02
-- **Task 3: Re-attempted LoggingManager.BuildAsync PR**: Fixed bug from 2026-05-01 attempt.
-
-### 2026-05-01
-- **Task 3: Attempted PR for LoggingManager.BuildAsync tests**: 8 new tests. Push failed, patch in issue #7968
-- **Task 7: Monthly summary**: Created May 2026 issue #7969
+- **Task 3: Re-implemented ExtensionValidationHelper.ValidateUniqueExtension tests**: 15 tests (all 30 pass net8.0+net9.0). Fixed SA1512 and MSTEST0037 errors vs previous attempt.
 
 ### 2026-04-29
 - **PR #7916 (LoggerFactoryProxy) merged** same day by Evangelink
@@ -117,16 +108,16 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 |------|----------|
 | Task 1: Discover commands | 2026-04-24 |
 | Task 2: Identify opportunities | 2026-05-01 |
-| Task 3: Implement tests | 2026-05-07 |
+| Task 3: Implement tests | 2026-05-08 |
 | Task 4: Maintain PRs | 2026-05-02 |
-| Task 5: Comment on issues | 2026-04-29 |
+| Task 5: Comment on issues | 2026-05-08 |
 | Task 6: Test infrastructure | 2026-04-29 |
-| Task 7: Monthly summary | 2026-05-07 |
+| Task 7: Monthly summary | 2026-05-08 |
 
 ## Maintainer Priorities
 - PRs merged quickly by Evangelink — receptive to focused test PRs for MTP and MSTest
-- Issues #7790, #7942, #7968, #7986, #7995, #8003, #8019, #8020, #8036 are stale (see monthly summary for suggested actions)
-- **PERSISTENT PUSH FAILURE**: `safeoutputs-create_pull_request` consistently returns `{"result":"success","patch":{...}}` but does NOT push branches to GitHub. Has happened for every test PR attempt (7+ runs). The tool creates a `.patch` file in `/tmp/gh-aw/` which gets included in the workflow run artifacts. Patches are referenced in monthly summary #7969.
+- Issues #7790, #7942, #7968, #7986, #7995, #8003, #8019, #8020, #8036, #8047 are stale (see monthly summary for suggested actions)
+- **PERSISTENT PUSH FAILURE**: `safeoutputs-create_pull_request` consistently returns `{"result":"success","patch":{...}}` but does NOT push branches to GitHub. Has happened for every test PR attempt (8+ runs). The tool creates a `.patch` file in `/tmp/gh-aw/` which gets included in the workflow run artifacts. Patches are referenced in monthly summary #7969.
 
 ## Notes
 - `PasteArguments` is `internal static partial class` — accessible via InternalsVisibleTo
@@ -136,4 +127,5 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 - `TestFramework.UnitTests` requires `-p:UseSharedCompilation=false` to build outside the full Arcade SDK build
 - `PlatformResources.cs` in test project compiles WITHOUT `IS_CORE_MTP` — only limited resource string properties are available
 - For multi-interface test doubles in Microsoft.Testing.Platform.UnitTests, define an `internal interface ICombined : IA, IB;` and mock that interface — Moq handles this cleanly
-  - `Assert.IsGreaterThan(lowerBound, value)` asserts `value > lowerBound` — NOT the other way around. So to check `x > 0`, write `Assert.IsGreaterThan(0, x)`.
+- `Assert.IsGreaterThan(lowerBound, value)` asserts `value > lowerBound` — NOT the other way around. So to check `x > 0`, write `Assert.IsGreaterThan(0, x)`.
+- SA1512: No blank line after single-line comments — section dividers like `// ---- Section ----` must immediately be followed by `[TestMethod]` without a blank line
