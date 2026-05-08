@@ -9,27 +9,58 @@ internal static class AttributeExtensions
 {
     public static bool IsIgnored(this ICustomAttributeProvider type, out string? ignoreMessage)
     {
-        IEnumerable<ConditionBaseAttribute> attributes = ReflectHelper.Instance.GetAttributes<ConditionBaseAttribute>(type);
-        IEnumerable<IGrouping<string, ConditionBaseAttribute>> groups = attributes.GroupBy(attr => attr.GroupName);
-        foreach (IGrouping<string, ConditionBaseAttribute>? group in groups)
-        {
-            bool atLeastOneInGroupIsSatisfied = false;
-            string? firstNonSatisfiedMatch = null;
-            foreach (ConditionBaseAttribute attribute in group)
-            {
-                bool shouldRun = attribute.Mode == ConditionMode.Include ? attribute.IsConditionMet : !attribute.IsConditionMet;
-                if (shouldRun)
-                {
-                    atLeastOneInGroupIsSatisfied = true;
-                    break;
-                }
+        Attribute[] allAttributes = ReflectHelper.Instance.GetCustomAttributesCached(type);
 
-                firstNonSatisfiedMatch ??= attribute.IgnoreMessage;
+        // Fast path: no ConditionBaseAttribute present (common case) → zero allocations
+        bool hasConditionAttribute = false;
+        foreach (Attribute attr in allAttributes)
+        {
+            if (attr is ConditionBaseAttribute)
+            {
+                hasConditionAttribute = true;
+                break;
+            }
+        }
+
+        if (!hasConditionAttribute)
+        {
+            ignoreMessage = null;
+            return false;
+        }
+
+        // Slow path: manual grouping instead of LINQ GroupBy to avoid iterator/Lookup allocations
+        Dictionary<string, (bool Satisfied, string? FirstMessage)> groups = [];
+        foreach (Attribute attr in allAttributes)
+        {
+            if (attr is not ConditionBaseAttribute conditionAttr)
+            {
+                continue;
             }
 
-            if (!atLeastOneInGroupIsSatisfied)
+            bool shouldRun = conditionAttr.Mode == ConditionMode.Include ? conditionAttr.IsConditionMet : !conditionAttr.IsConditionMet;
+
+            if (!groups.TryGetValue(conditionAttr.GroupName, out (bool Satisfied, string? FirstMessage) groupState))
             {
-                ignoreMessage = firstNonSatisfiedMatch;
+                groups[conditionAttr.GroupName] = (shouldRun, shouldRun ? null : conditionAttr.IgnoreMessage);
+            }
+            else if (!groupState.Satisfied)
+            {
+                if (shouldRun)
+                {
+                    groups[conditionAttr.GroupName] = (true, groupState.FirstMessage);
+                }
+                else if (groupState.FirstMessage is null)
+                {
+                    groups[conditionAttr.GroupName] = (false, conditionAttr.IgnoreMessage);
+                }
+            }
+        }
+
+        foreach ((bool satisfied, string? firstMessage) in groups.Values)
+        {
+            if (!satisfied)
+            {
+                ignoreMessage = firstMessage;
                 return true;
             }
         }
