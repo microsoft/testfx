@@ -8,3 +8,4 @@ name = "FVSquad"
 # Mathlib will be re-added here when the first .lean file imports it.
 # Keeping the dependency absent avoids heavy network fetches in CI
 # while the FVSquad directory contains no .lean source files.
+# See: https://github.com/leanprover-community/mathlib4
