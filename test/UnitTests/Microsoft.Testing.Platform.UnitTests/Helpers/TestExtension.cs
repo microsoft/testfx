@@ -5,7 +5,9 @@ namespace Microsoft.Testing.Platform.UnitTests.Helpers;
 
 internal class TestExtension : IExtension
 {
-    public string Uid => "Uid";
+    public string UidOverride { get; set; } = "Uid";
+
+    public string Uid => UidOverride;
 
     public string Version => "Version";
 
