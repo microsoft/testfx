@@ -1,9 +1,9 @@
 {
-  "last_run": "2026-05-08",
-  "run_id": "25567529542",
-  "fv_tool": "Lean 4 (no Mathlib in CI)",
+  "last_run": "2026-05-09",
+  "run_id": "25587173015",
+  "fv_tool": "Lean 4",
   "lean_available": false,
-  "lean_install_note": "elan v3.1.0 install blocked by network firewall. LEAN_AVAILABLE=false (confirmed runs 1–3 on 2026-05-08).",
+  "lean_install_note": "elan v3.1.0 download succeeds but executing the binary is blocked by agent security policy. LEAN_AVAILABLE=false (confirmed runs 1-4 on 2026-05-08 and run 9 on 2026-05-09).",
   "targets": [
     {
       "id": 1,
@@ -66,7 +66,7 @@
       "name": "UnitTestOutcomeHelper.ToTestOutcome",
       "phase": 2,
       "priority": 1,
-      "notes": "Informal spec extracted run 2026-05-08 (PR lean-squad/task1-research-task2-spec-2026-05-08). Pure 2-param switch with 14 decidable cases. 5 untested paths found. TOP priority for Task 3.",
+      "notes": "Informal spec extracted. Pure 2-param switch with 14 decidable cases. 5 untested paths found. TOP priority for Task 3.",
       "spec_file": "formal-verification/specs/unittestoutcomehelper_totestoutcome_informal.md",
       "file": "src/Adapter/MSTestAdapter.PlatformServices/Helpers/UnitTestOutcomeHelper.cs"
     },
@@ -110,7 +110,7 @@
       "name": "EnvironmentVariableParser.ParseBool",
       "phase": 1,
       "priority": 3,
-      "notes": "NEW this run. Pure string?->bool with explicit truthy/falsy sets. Trivially decidable. Very small. Next: Task 2.",
+      "notes": "Pure string?->bool with explicit truthy/falsy sets. Trivially decidable. Very small. Next: Task 2.",
       "file": "src/Platform/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs"
     },
     {
@@ -118,19 +118,19 @@
       "name": "PasteArguments.ContainsNoWhitespaceOrQuotes",
       "phase": 1,
       "priority": 8,
-      "notes": "NEW this run. Pure string predicate; simple inductive proof. Next: Task 2.",
+      "notes": "Pure string predicate; simple inductive proof. Next: Task 2.",
       "file": "src/Platform/Microsoft.Testing.Platform/Helpers/PasteArguments.cs"
     }
   ],
   "merged_prs": [7849, 7860, 7899, 7918, 7919, 7924, 7934, 7936],
-  "open_prs": ["lean-squad/task1-research-task2-spec-2026-05-08"],
+  "open_prs": ["lean-squad/task9-ci-automation-2026-05-09"],
   "open_issues": [
     {
       "number": 7793,
       "title": "[Lean Squad] Formal Verification Status"
     }
   ],
-  "next_priority": "Task 3 for UnitTestOutcomeHelper.ToTestOutcome (id=8, top priority - pure switch, 14 decidable cases). Task 2 for EnvironmentVariableParser.ParseBool (id=14) - tiny pure function, great second spec.",
+  "next_priority": "Task 3 for UnitTestOutcomeHelper.ToTestOutcome (id=8, top priority - pure switch, 14 decidable cases). Task 2 for EnvironmentVariableParser.ParseBool (id=14) - tiny pure function.",
   "findings": [
     "BUG-1 TryUnescape: single-char quote -> IndexOf(char,1,-1) throws.",
     "BUG-2 TryUnescape: single-char double-quote -> input[1..^1] range exception.",
@@ -147,14 +147,18 @@
     "GAP-4 UnitTestOutcomeHelper: out-of-range UnitTestOutcome values have no unit test."
   ],
   "lean_setup": {
-    "lean_version": "4.29.1",
-    "toolchain": "formal-verification/lean/lean-toolchain (leanprover/lean4:v4.29.1)",
+    "lean_version": "4.14.0",
+    "toolchain": "formal-verification/lean/lean-toolchain (leanprover/lean4:v4.14.0)",
     "lakefile": "formal-verification/lean/lakefile.toml",
-    "notes": "No Mathlib in lakefile (firewall blocks cache). Use partial for replaceAll.",
-    "lake_build_verified": true,
+    "notes": "Mathlib removed from lakefile (no .lean files yet). Add it back when first .lean file needs it.",
+    "lake_build_verified": false,
     "mathlib_available": false,
-    "installation_status": "BLOCKED - curl/network firewall prevents elan download from GitHub."
+    "installation_status": "BLOCKED - elan binary download succeeds but execution blocked by agent security policy."
   },
-  "last_run_tasks": "Task 1 (Research - TARGETS.md expanded to 15 targets, 2 new targets added) + Task 2 (informal spec for UnitTestOutcomeHelper.ToTestOutcome). Task 3 BLOCKED by Lean unavailable.",
-  "note_on_prior_phase3_prs": "All phase-3 PRs opened in prior runs (ArgumentArity, TryUnescape, TreeNodeFilter) were closed. No .lean files in main branch. All these targets effectively at phase 2 still."
+  "last_run_tasks": "Task 3 BLOCKED (Lean unavailable). Task 9 done: TARGETS.md expanded to 15 targets, lakefile.toml Mathlib removed, lean-proofs.yml improved with weekly schedule, elan version fix, POSIX-compatible grep.",
+  "note_on_prior_phase3_prs": "All phase-3 PRs opened in prior runs (ArgumentArity, TryUnescape, TreeNodeFilter) were closed. No .lean files in main branch. All these targets effectively at phase 2 still.",
+  "ci_workflows": {
+    "lean-proofs": ".github/workflows/lean-proofs.yml - builds Lean proofs, weekly schedule added",
+    "fv-docs-validation": ".github/workflows/fv-docs-validation.yml - validates FV documentation consistency"
+  }
 }
