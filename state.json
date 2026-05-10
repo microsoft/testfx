@@ -1,9 +1,9 @@
 {
-  "last_run": "2026-05-09",
-  "run_id": "25605962330",
+  "last_run": "2026-05-10",
+  "run_id": "25616283581",
   "fv_tool": "Lean 4",
   "lean_available": false,
-  "lean_install_note": "elan v3.1.0 download succeeds but executing the binary is blocked by agent security policy. LEAN_AVAILABLE=false (confirmed runs 1-10).",
+  "lean_install_note": "elan v3.1.0 download blocked by agent security policy (permission denied executing binary). LEAN_AVAILABLE=false (confirmed runs 1-11).",
   "targets": [
     {
       "id": 1,
@@ -55,21 +55,29 @@
     },
     {
       "id": 7,
-      "name": "EnvironmentVariableParser.ParseBool",
-      "phase": 1,
+      "name": "CommandLineOptionsValidator.ValidateOptionsArgumentArity",
+      "phase": 2,
       "priority": 7,
-      "notes": "Identified. Pure function, 8 recognised values. All theorems by decide. Informal spec drafted but unmerged.",
-      "file": "src/Platform/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs"
+      "notes": "Informal spec extracted this run (PR pending). OQ-1 through OQ-4 documented. Ready for Task 3.",
+      "spec_file": "formal-verification/specs/commandlineoptionsvalidator_validateoptionsargumentarity_informal.md"
     },
     {
       "id": 8,
-      "name": "CommandLineOptionsValidator.ValidateOptionsArgumentArity",
+      "name": "EnvironmentVariableParser.ParseBool",
       "phase": 1,
       "priority": 8,
-      "notes": "Identified. 4 open questions (OQ-1 through OQ-4). Next: Task 2."
+      "notes": "Identified. Pure function, 8 recognised values. All theorems by decide. Next: Task 2.",
+      "file": "src/Platform/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs"
     },
     {
       "id": 9,
+      "name": "CommandLineOptionsValidator.ValidateOptionsAreNotDuplicated",
+      "phase": 1,
+      "priority": 9,
+      "notes": "Identified. 4 open questions (OQ-1 through OQ-4). Next: Task 2."
+    },
+    {
+      "id": 10,
       "name": "PasteArguments.AppendArgument",
       "phase": 1,
       "priority": 11,
@@ -77,7 +85,7 @@
       "file": "src/Platform/Microsoft.Testing.Platform/Helpers/PasteArguments.cs"
     },
     {
-      "id": 10,
+      "id": 11,
       "name": "ValidationResult",
       "phase": 1,
       "priority": 10,
@@ -85,14 +93,14 @@
       "file": "src/Platform/Microsoft.Testing.Platform/Extensions/ValidationResult.cs"
     },
     {
-      "id": 11,
+      "id": 12,
       "name": "TreeNodeFilter.TokenizeFilter",
       "phase": 1,
       "priority": 13,
       "notes": "Lexer; richer than MatchFilterPattern. Next: Task 2."
     },
     {
-      "id": 12,
+      "id": 13,
       "name": "TimeSpanParser.TryParse",
       "phase": 1,
       "priority": 12,
@@ -100,14 +108,14 @@
       "file": "src/Platform/Microsoft.Testing.Platform/Helpers/TimeSpanParser.cs"
     },
     {
-      "id": 13,
+      "id": 14,
       "name": "CommandLineOption name validation",
       "phase": 1,
       "priority": 9,
       "notes": "Character predicate: IsLetterOrDigit || hyphen || ?. Next: Task 2."
     },
     {
-      "id": 14,
+      "id": 15,
       "name": "PasteArguments.ContainsNoWhitespaceOrQuotes",
       "phase": 1,
       "priority": 8,
@@ -116,14 +124,17 @@
     }
   ],
   "merged_prs": [7849, 7860, 7899, 7918, 7919, 7924, 7934, 7936],
-  "open_prs": ["lean-squad/task1-expand-targets-2026-05-09"],
+  "open_prs": [
+    "lean-squad/task1-expand-targets-2026-05-09",
+    "lean-squad/task2-validateoptionsargumentarity-informal-2026-05-10"
+  ],
   "open_issues": [
     {
       "number": 7793,
       "title": "[Lean Squad] Formal Verification Status"
     }
   ],
-  "next_priority": "Task 3 for ArgumentArity (id=1, top priority) when Lean available. Task 2 for ParseBool (id=7) or ValidateOptionsArgumentArity (id=8).",
+  "next_priority": "Task 3 for ArgumentArity (id=1, top priority) when Lean available. Task 2 for EnvironmentVariableParser.ParseBool (id=8) next.",
   "findings": [
     "BUG-1 TryUnescape: single-char quote -> IndexOf(char,1,-1) throws.",
     "BUG-2 TryUnescape: single-char double-quote -> input[1..^1] range exception.",
@@ -146,9 +157,9 @@
     "notes": "Mathlib removed from lakefile (no .lean files yet). Add it back when first .lean file needs it.",
     "lake_build_verified": false,
     "mathlib_available": false,
-    "installation_status": "BLOCKED - elan binary download succeeds but execution blocked by agent security policy."
+    "installation_status": "BLOCKED - elan binary download succeeds but execution blocked by agent security policy (permission denied)."
   },
-  "last_run_tasks": "Task 1: expanded TARGETS.md from 7 to 14 targets; fixed CommandLineParseResult.Equals to phase 2; added RESEARCH.md sections for 6 new targets (Targets 8-13). Task 3: BLOCKED (Lean unavailable).",
+  "last_run_tasks": "Task 2: informal spec for ValidateOptionsArgumentArity (id=7). OQ-1..OQ-4 documented. TARGETS.md updated (Target 4 phase 2, Target 5 corrected to phase 2). Task 4: BLOCKED (Lean unavailable).",
   "ci_workflows": {
     "lean-proofs": ".github/workflows/lean-proofs.yml - builds Lean proofs, weekly schedule",
     "fv-docs-validation": ".github/workflows/fv-docs-validation.yml - validates FV documentation consistency"
