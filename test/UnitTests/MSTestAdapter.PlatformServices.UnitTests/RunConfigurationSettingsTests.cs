@@ -157,7 +157,6 @@ public class RunConfigurationSettingsTests : TestContainer
 
     #region GetSettings error path tests
 
-    [TestMethod]
     public void GetSettingsShouldThrowFormatExceptionWhenRootElementIsNotRunSettings()
     {
         string runSettingsXml =
