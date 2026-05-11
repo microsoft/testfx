@@ -86,7 +86,7 @@ public sealed class ExtensionValidationHelperTests
             existingExtensions.ValidateUniqueExtension(newExtension.Object, x => x));
         string typeName = existing.Object.GetType().ToString();
         Assert.Contains(typeName, ex.Message);
-        int occurrenceCount = ex.Message.Split(typeName, StringSplitOptions.None).Length - 1;
+        int occurrenceCount = ex.Message.Split([typeName], StringSplitOptions.None).Length - 1;
         Assert.IsGreaterThanOrEqualTo(2, occurrenceCount);
     }
 
@@ -101,7 +101,7 @@ public sealed class ExtensionValidationHelperTests
             existingExtensions.ValidateUniqueExtension(newExtension.Object, x => x));
         string typeName = ext1.Object.GetType().ToString();
         Assert.Contains(typeName, ex.Message);
-        int occurrenceCount = ex.Message.Split(typeName, StringSplitOptions.None).Length - 1;
+        int occurrenceCount = ex.Message.Split([typeName], StringSplitOptions.None).Length - 1;
         Assert.IsGreaterThanOrEqualTo(3, occurrenceCount);
     }
 
