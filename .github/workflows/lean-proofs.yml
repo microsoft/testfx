@@ -124,13 +124,12 @@ jobs:
           LEAN_DIR="formal-verification/lean/FVSquad"
           # Emit a GitHub Actions warning annotation for each line containing sorry,
           # so reviewers see them inline in the Files Changed tab.
-          grep -rn '\<sorry\>' "${LEAN_DIR}" --include='*.lean' 2>/dev/null \
-          | while IFS= read -r match; do
+          while IFS= read -r match; do
               FILE="${match%%:*}"
               REST="${match#*:}"
               LINENUM="${REST%%:*}"
               echo "::warning file=${FILE},line=${LINENUM}::sorry — proof stub pending"
-            done
+            done < <(grep -rn '\<sorry\>' "${LEAN_DIR}" --include='*.lean' 2>/dev/null || true)
 
       - name: Proof summary
         if: steps.check-lean-files.outputs.lean_count != '0'
@@ -152,7 +151,7 @@ jobs:
             echo "| Lines containing \`sorry\` (stubs) | ${SORRY_COUNT} |"
             echo "| Proof status | ${SORRY_STATUS} |"
             echo ""
-            echo "### Per-file breakdown"
+            echo "### Per-file breakdown (recursive)"
             echo ""
             echo "| File | Theorems | sorry lines |"
             echo "|------|----------|-------------|"
