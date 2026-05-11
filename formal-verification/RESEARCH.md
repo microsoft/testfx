@@ -205,7 +205,7 @@ Maps the MSTest-internal `UnitTestOutcome` enum to the VSTest-platform `TestOutc
 - Finite input domain: 11-value enum × 2 Boolean flags = 44 cases.
 - All 44 cases are decidable with `decide`.
 - Clear mapping table; postconditions are straightforward equalities.
-- Found 5 untested paths in existing test suite.
+- Found 3 remaining untested paths in the existing test suite: `Aborted`, `Unknown`, and out-of-range values.
 
 **Properties to verify**: see `formal-verification/specs/unittestoutcomehelper_totestoutcome_informal.md`.
 

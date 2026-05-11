@@ -6,7 +6,7 @@ This glossary defines key terms and concepts used throughout the MSTest and Micr
 
 ### AwesomeAssertions
 
-A .NET fluent-assertion library ([NuGet: AwesomeAssertions](https://www.nuget.org/packages/AwesomeAssertions)) used in the unit and integration test suites of this project. It provides a human-readable, chainable assertion API (e.g., `result.Should().Be(42)`). AwesomeAssertions is the community-maintained fork of `FluentAssertions` created after FluentAssertions changed its license from Apache 2.0 to a commercial model; the two libraries share the same API surface. Within this project, `BannedSymbols.txt` files ban the built-in MSTest `Assert`, `CollectionAssert`, and `StringAssert` types and require `AwesomeAssertions` instead.
+A .NET fluent-assertion library ([NuGet: AwesomeAssertions](https://www.nuget.org/packages/AwesomeAssertions)) used in the unit and integration test suites of this project. It provides a human-readable, chainable assertion API (e.g., `result.Should().Be(42)`). AwesomeAssertions is the community-maintained fork of `FluentAssertions` created after FluentAssertions changed its license from Apache 2.0 to a commercial model; the two libraries share the same API surface. In this project, assertion-library enforcement varies by test project: some `BannedSymbols.txt` files (for example, in adapter unit tests) ban the built-in MSTest `Assert`, `CollectionAssert`, and `StringAssert` types and require `AwesomeAssertions`, while others ban `AwesomeAssertions` and enforce MSTest assertions.
 
 ### ArgumentArity
 

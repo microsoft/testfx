@@ -23,20 +23,20 @@
 | 5 | `CommandLineParseResult.Equals` | `src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs` | 2 | Informal spec merged | [PR #7918](https://github.com/microsoft/testfx/pull/7918). Ready for Task 3. |
 | 6 | `ResponseFileHelper.SplitCommandLine` | `src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs` | 2 | Informal spec merged | [PR #7899](https://github.com/microsoft/testfx/pull/7899). Unclosed-quote discard bug documented. |
 | 7 | `TreeNodeFilter.MatchFilterPattern` | `src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs` | 2 | Informal spec merged | [PR #7934](https://github.com/microsoft/testfx/pull/7934). Ready for Task 3. |
-| 8 | `UnitTestOutcomeHelper.ToTestOutcome` | `src/Adapter/MSTestAdapter.PlatformServices/Helpers/UnitTestOutcomeHelper.cs` | 2 | **Informal spec extracted this run** | Pure 2-param switch, 14 decidable cases. 5 untested paths found. Highest-priority next Lean spec target. |
+| 8 | `UnitTestOutcomeHelper.ToTestOutcome` | `src/Adapter/MSTestAdapter.PlatformServices/Helpers/UnitTestOutcomeHelper.cs` | 2 | **Informal spec extracted this run** | Pure 2-param switch, 14 decidable cases. 3 untested paths found. Highest-priority next Lean spec target. |
 | 9 | `PasteArguments.AppendArgument` | `src/Platform/Microsoft.Testing.Platform/Helpers/PasteArguments.cs` | 1 | Identified | Windows CL quoting 2N/2N+1 backslash rules. |
 | 10 | `ValidationResult` | `src/Platform/Microsoft.Testing.Platform/CommandLine/ValidationResult.cs` | 1 | Identified | Discriminated union; two cases (Success/Failure). |
 | 11 | `TreeNodeFilter.TokenizeFilter` | `src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs` | 1 | Identified | Lexer for filter grammar. |
-| 12 | `TimeSpanParser.TryParse` | `src/Platform/Microsoft.Testing.Platform/` | 1 | Identified | Parsing with format fallback. |
+| 12 | `TimeSpanParser.TryParse` | `src/Platform/Microsoft.Testing.Platform/Helpers/TimeSpanParser.cs` | 1 | Identified | Parsing with format fallback. |
 | 13 | `CommandLineOption` name validation | `src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOption.cs` | 1 | Identified | Character-class predicate: `IsLetterOrDigit \|\| hyphen \|\| ?`. |
-| 14 | `EnvironmentVariableParser.ParseBool` | `src/Platform/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs` | 1 | **New this run** | Pure `string? → bool` with explicit truthy/falsy sets. Trivially decidable. |
+| 14 | `EnvironmentVariableParser.ParseBool` | `src/Platform/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs` | 1 | **New this run** | Pure `(string?, bool) → bool` with explicit truthy/falsy sets and default-value fallback. Trivially decidable. |
 | 15 | `PasteArguments.ContainsNoWhitespaceOrQuotes` | `src/Platform/Microsoft.Testing.Platform/Helpers/PasteArguments.cs` | 1 | **New this run** | Pure string predicate: no whitespace and no `"`. Simple inductive proof. |
 
 ## Priority Order (next-up targets)
 
 1. **`UnitTestOutcomeHelper.ToTestOutcome`** (Target 8) — **highest priority for Task 3**. Pure 2-parameter switch over a 11-value enum with two Boolean flags. All 14 cases are decidable. Informal spec extracted this run. Smallest possible Lean spec once toolchain available.
 2. **`ArgumentArity`** (Target 1) — second priority. Smallest self-contained struct; decidable constant-value properties; good Lean warm-up once toolchain unblocked.
-3. **`EnvironmentVariableParser.ParseBool`** (Target 14) — third priority. Pure function over a few string literals; `decide` can verify all named cases exhaustively.
+3. **`EnvironmentVariableParser.ParseBool`** (Target 14) — third priority. Pure `(string?, bool) → bool` function over a few string literals plus a default-value parameter; `decide` can verify all named cases exhaustively.
 4. **`CommandLineParseResult.Equals`** (Target 5) — fourth priority. Structural equality; equivalence-relation laws straightforward to state and prove.
 5. **`TreeNodeFilter.MatchFilterPattern`** (Target 7) — fifth priority. Richest mathematical content; De Morgan and double-negation laws; structural induction proofs.
 6. **`CommandLineParser.TryUnescape`** (Target 2) — sixth priority. Security-relevant; bugs BUG-1 and BUG-2 documented.
