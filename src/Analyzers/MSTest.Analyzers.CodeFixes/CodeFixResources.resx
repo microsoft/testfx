@@ -219,4 +219,7 @@
   <data name="UseMSTestDescriptionAttributeInsteadFix" xml:space="preserve">
     <value>Use MSTest 'Description' attribute instead</value>
   </data>
+  <data name="RemoveDuplicateTestMethodAttributeFix" xml:space="preserve">
+    <value>Remove duplicate TestMethod attribute</value>
+  </data>
 </root>

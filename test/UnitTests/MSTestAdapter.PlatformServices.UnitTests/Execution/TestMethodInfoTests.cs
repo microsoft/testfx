@@ -314,6 +314,72 @@ public class TestMethodInfoTests : TestContainer
         result.TestContextMessages!.Contains("SeaShore").Should().BeTrue();
     }
 
+    public async Task TestMethodInfoInvokeShouldClearStdOutAfterReporting()
+    {
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteConsoleOut("output1");
+
+        var method = new TestMethodInfo(
+            _methodInfo,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result1 = await method.InvokeAsync(null);
+        result1.LogOutput.Should().Contain("output1");
+
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteConsoleOut("output2");
+        TestResult result2 = await method.InvokeAsync(null);
+
+        result2.LogOutput.Should().Contain("output2");
+        result2.LogOutput.Should().NotContain("output1", "StdOut should be cleared between invocations to prevent O(n^2) output accumulation in data-driven tests");
+    }
+
+    public async Task TestMethodInfoInvokeShouldClearStdErrAfterReporting()
+    {
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteConsoleErr("error1");
+
+        var method = new TestMethodInfo(
+            _methodInfo,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result1 = await method.InvokeAsync(null);
+        result1.LogError.Should().Contain("error1");
+
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteConsoleErr("error2");
+        TestResult result2 = await method.InvokeAsync(null);
+
+        result2.LogError.Should().Contain("error2");
+        result2.LogError.Should().NotContain("error1", "StdErr should be cleared between invocations to prevent O(n^2) output accumulation in data-driven tests");
+    }
+
+    public async Task TestMethodInfoInvokeShouldClearDebugTraceAfterReporting()
+    {
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteTrace("trace1");
+
+        var method = new TestMethodInfo(
+            _methodInfo,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result1 = await method.InvokeAsync(null);
+        result1.DebugTrace.Should().Contain("trace1");
+
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteTrace("trace2");
+        TestResult result2 = await method.InvokeAsync(null);
+
+        result2.DebugTrace.Should().Contain("trace2");
+        result2.DebugTrace.Should().NotContain("trace1", "DebugTrace should be cleared between invocations to prevent O(n^2) output accumulation in data-driven tests");
+    }
+
     public async Task Invoke_WhenTestMethodThrowsMissingMethodException_TestOutcomeIsFailedAndExceptionIsPreserved()
     {
         DummyTestClass.TestMethodBody = _ =>

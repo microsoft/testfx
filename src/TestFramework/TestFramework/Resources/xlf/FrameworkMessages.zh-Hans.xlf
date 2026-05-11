@@ -360,7 +360,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="STATestMethodNonWindowsNotSupported">
         <source>[STATestMethod] is not supported on non-Windows platforms. STA (Single Threaded Apartment) is a Windows-only COM threading concept. Use [OSCondition(OperatingSystems.Windows)] to skip this test on non-Windows platforms.</source>
-        <target state="new">[STATestMethod] is not supported on non-Windows platforms. STA (Single Threaded Apartment) is a Windows-only COM threading concept. Use [OSCondition(OperatingSystems.Windows)] to skip this test on non-Windows platforms.</target>
+        <target state="translated">非 Windows 平台不支持[STATestMethod]。STA (单线程单元)是 Windows 独有的 COM 线程模型。请使用 [OSCondition(OperatingSystems.Windows)]在非 Windows 平台上跳过此测试。</target>
         <note />
       </trans-unit>
       <trans-unit id="StartsWithFail">

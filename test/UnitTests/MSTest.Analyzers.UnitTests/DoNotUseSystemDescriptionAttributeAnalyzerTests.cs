@@ -111,6 +111,42 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestMethodHasShortFormDescriptionAttributeWithSystemComponentModelUsing_UsesFullyQualifiedMSTestDescription()
+    {
+        string code = """
+            using System.ComponentModel;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [Description("Description")]
+                public void [|MyTestMethod|]()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.ComponentModel;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [Microsoft.VisualStudio.TestTools.UnitTesting.Description("Description")]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenMethodWithoutTestMethodAttribute_HasSystemDescriptionAttribute_NoDiagnostic()
     {
         string code = """
