@@ -1,7 +1,7 @@
 # TestFX Test Improver Memory
 
 ## Last Updated
-2026-05-10
+2026-05-11
 
 ## Build/Test Commands
 
@@ -47,15 +47,16 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
   - `AwesomeAssertions` is BANNED — use MSTest `Assert.*` methods
   - Has `InternalsVisibleTo` access to `Microsoft.Testing.Platform` internals
   - Tests run on both net8.0 and net9.0 — total count doubled
-  - Baseline (after 2026-05-10 run): 674 tests pass + 2 skip (net8.0) including new LoggingManager/ExtensionValidationHelper tests
+  - Baseline (after 2026-05-11 run): 675 tests pass + 2 skip (net8.0)
   - `PlatformResources.LoggerFactoryNotReady` NOT accessible in test project (only in IS_CORE_MTP mode)
   - For multi-interface mocks (e.g. ILoggerProvider + IExtension), define internal interface combining them and mock that
-  - **IMPORTANT**: LoggerFactory wraps providers into a composite logger — don't use `Assert.AreSame` to verify a provider was included; instead use `mockProvider.Verify(p => p.CreateLogger(name), Times.Once)` after calling `factory.CreateLogger(name)` with provider's `CreateLogger` mocked to return something
+  - **IMPORTANT**: LoggerFactory wraps providers into a composite Logger — Logger.IsEnabled uses `logLevel >= _logLevel` directly, does NOT delegate to mock logger. Test IsEnabled on the factory-created logger directly.
   - Use `Assert.Contains(string, string)` NOT `StringAssert.Contains` (MSTEST0046 analyzer rule)
   - SA1512: No blank line after single-line comments in test files
   - `PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage` is NOT available in test project — use `Assert.Contains(uid, ex.Message)` instead
   - `ExtensionValidationHelper` in `Microsoft.Testing.Platform.Helpers` namespace — accessible via InternalsVisibleTo in test project
-  - `TestExtension` in `Helpers/TestExtension.cs` now accepts optional `uid` constructor parameter (default "Uid") for configurable UIDs in tests
+  - `TestExtension` in `Helpers/TestExtension.cs` accepts optional `uid` constructor parameter (default "Uid") for configurable UIDs in tests
+  - SA1516: Internal interface declarations at file scope need blank lines between them
 
 ## Testing Backlog (prioritized)
 
@@ -64,30 +65,27 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 3. ✅ **DONE** `TimeSpanParser` unit tests → PR #7858 merged
 4. ✅ **DONE** `PasteArguments` unit tests → PR #7888 merged
 5. ✅ **DONE** `LoggerFactoryProxy` unit tests → PR #7916 merged
-6. 🔄 **PATCH READY** `LoggingManager.BuildAsync` tests → 10 tests written and verified (10th attempt). Latest patch in run 25615077058 artifacts as `aw-test-assist-logging-manager-extension-validation-tests.patch`.
-7. 🔄 **PATCH READY** `ExtensionValidationHelper.ValidateUniqueExtension` → 15 tests written and verified (10th attempt). Same patch above.
+6. 🔄 **PATCH READY** `LoggingManager.BuildAsync` tests → 10 tests written and verified (11th attempt). Latest patch in run 25643470756 artifacts as `aw-test-assist-logging-manager-extension-validation-v11.patch`.
+7. 🔄 **PATCH READY** `ExtensionValidationHelper.ValidateUniqueExtension` → 15 tests written and verified (11th attempt). Same patch above.
 8. Code fix test coverage for MSTEST0031 when `DoNotUseSystemDescriptionAttributeFixer` lands
 9. Code fix test coverage for MSTEST0040 when `AvoidUsingAssertsInAsyncVoidContextFixer` lands (#7891)
 10. `TestFramework.UnitTests` assertion edge cases
 
 ## Completed Work
 
+### 2026-05-11
+- **Task 3: Re-implemented LoggingManager.BuildAsync tests (10) + ExtensionValidationHelper tests (15) + TestExtension uid parameter**: combined into single PR attempt (v11). All 675 pass (net8.0, TreatWarningsAsErrors=true). Patch in run 25643470756 artifacts as `aw-test-assist-logging-manager-extension-validation-v11.patch`.
+- **Task 7: Updated Monthly Summary issue #7969** with new run entry.
+
 ### 2026-05-10
 - **Task 3: Re-implemented LoggingManager.BuildAsync tests (10) + ExtensionValidationHelper tests (15) + TestExtension uid parameter**: combined into single PR attempt (v10). All 674 pass (net8.0, TreatWarningsAsErrors=true). Patch in run 25615077058 artifacts as `aw-test-assist-logging-manager-extension-validation-tests.patch`.
 - **Task 7: Updated Monthly Summary issue #7969** with new run entry.
 
 ### 2026-05-09
-- **Task 3: Re-implemented LoggingManager.BuildAsync tests (10) + ExtensionValidationHelper tests (16) + TestExtension.UidOverride**: combined into single PR attempt (v9). All 678 pass (net8.0, TreatWarningsAsErrors=true). Patch in run 25585631156 artifacts as `aw-test-assist-logging-manager-and-extension-validation-tests-v9.patch`.
-- **Task 7: Updated Monthly Summary issue #7969** with new run entry.
+- **Task 3: Re-implemented LoggingManager.BuildAsync tests (10) + ExtensionValidationHelper tests (16) + TestExtension.UidOverride**: combined into single PR attempt (v9). All 678 pass (net8.0, TreatWarningsAsErrors=true). Patch in run 25585631156.
 
 ### 2026-05-08
-- **Task 3: Re-implemented LoggingManager.BuildAsync tests (10) + ExtensionValidationHelper tests (16)**: combined into single PR attempt (v8). All 1352 pass (net8.0+net9.0, TreatWarningsAsErrors=true). Patch in run 25528841871 artifacts as `aw-test-assist-logging-manager-extension-validation-v8.patch`.
-- **Task 5: Commented on #7891**: testing approach for AvoidUsingAssertsInAsyncVoidContextFixer code fix tests
-- **Task 7: Updated Monthly Summary issue #7969** with new run entry.
-
-### 2026-05-07
-- **Task 3: Re-implemented LoggingManager.BuildAsync tests (10) + ExtensionValidationHelper tests (16)**: combined into single PR attempt. All 1350 pass (net8.0+net9.0, TreatWarningsAsErrors=true). Patch in run 25468039174 artifacts as `aw-test-assist-logging-manager-and-extension-validation-tests-v7.patch`.
-- **Task 7: Updated Monthly Summary issue #7969** with new run entry.
+- **Task 3 + Task 5**: implemented tests (v8), commented on #7891.
 
 ### 2026-04-29
 - **PR #7916 (LoggerFactoryProxy) merged** same day by Evangelink
@@ -110,16 +108,16 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 |------|----------|
 | Task 1: Discover commands | 2026-04-24 |
 | Task 2: Identify opportunities | 2026-05-01 |
-| Task 3: Implement tests | 2026-05-10 |
-| Task 4: Maintain PRs | 2026-05-02 |
+| Task 3: Implement tests | 2026-05-11 |
+| Task 4: Maintain PRs | 2026-05-11 (no PRs open) |
 | Task 5: Comment on issues | 2026-05-08 |
 | Task 6: Test infrastructure | 2026-04-29 |
-| Task 7: Monthly summary | 2026-05-10 |
+| Task 7: Monthly summary | 2026-05-11 |
 
 ## Maintainer Priorities
 - PRs merged quickly by Evangelink — receptive to focused test PRs for MTP and MSTest
 - Issues #7790, #7942, #7968, #7986, #7995, #8003, #8019, #8020, #8036, #8047, #8059, #8070 are stale duplicates (see monthly summary for suggested actions)
-- **PERSISTENT PUSH FAILURE**: `safeoutputs-create_pull_request` consistently returns `{"result":"success","patch":{...}}` but does NOT push branches to GitHub. Has happened for every test PR attempt (10+ runs). The tool creates a `.patch` file in `/tmp/gh-aw/` which gets included in the workflow run artifacts. Patches are referenced in monthly summary #7969.
+- **PERSISTENT PUSH FAILURE**: `safeoutputs-create_pull_request` consistently returns `{"result":"success","patch":{...}}` but does NOT push branches to GitHub. Has happened for every test PR attempt (11+ runs). The tool creates a `.patch` file in `/tmp/gh-aw/` which gets included in the workflow run artifacts. Patches are referenced in monthly summary #7969.
 
 ## Notes
 - `PasteArguments` is `internal static partial class` — accessible via InternalsVisibleTo
@@ -131,3 +129,4 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 - For multi-interface test doubles in Microsoft.Testing.Platform.UnitTests, define an `internal interface ICombined : IA, IB;` and mock that interface — Moq handles this cleanly
 - `Assert.IsGreaterThan(lowerBound, value)` asserts `value > lowerBound` — NOT the other way around. So to check `x > 0`, write `Assert.IsGreaterThan(0, x)`.
 - SA1512: No blank line after single-line comments — section dividers like `// ---- Section ----` must immediately be followed by `[TestMethod]` without a blank line
+- SA1516: Internal interface declarations at file scope need blank lines between them
