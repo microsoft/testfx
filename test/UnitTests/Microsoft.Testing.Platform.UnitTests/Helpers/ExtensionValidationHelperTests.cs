@@ -9,7 +9,7 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class ExtensionValidationHelperTests
 {
-    // ---- ValidateUniqueExtension<T>(IEnumerable<T>, IExtension, Func<T, IExtension>) ----
+    // ValidateUniqueExtension<T>(IEnumerable<T>, IExtension, Func<T, IExtension>) overload
     [TestMethod]
     public void ValidateUniqueExtension_NullExistingExtensions_ThrowsArgumentNullException()
     {
@@ -84,10 +84,10 @@ public sealed class ExtensionValidationHelperTests
     [TestMethod]
     public void ValidateUniqueExtension_WithWrapper_ExtractsSelectorCorrectly()
     {
-        var existing = new List<(string Name, IExtension Ext)>
-        {
+        List<(string Name, IExtension Ext)> existing =
+        [
             ("first", new TestExtension("UniqueA")),
-        };
+        ];
         IExtension newExtension = new TestExtension("UniqueB");
 
         existing.ValidateUniqueExtension(newExtension, item => item.Ext);
@@ -97,10 +97,10 @@ public sealed class ExtensionValidationHelperTests
     public void ValidateUniqueExtension_WithWrapper_DuplicateSelectorUid_Throws()
     {
         const string uid = "ConflictUid";
-        var existing = new List<(string Name, IExtension Ext)>
-        {
+        List<(string Name, IExtension Ext)> existing =
+        [
             ("first", new TestExtension(uid)),
-        };
+        ];
         IExtension newExtension = new TestExtension(uid);
 
         Assert.ThrowsExactly<InvalidOperationException>(() =>
@@ -122,10 +122,10 @@ public sealed class ExtensionValidationHelperTests
             existing.ValidateUniqueExtension(newExtension, x => x));
 
         Assert.Contains(uid, ex.Message);
-        Assert.Contains(nameof(TestExtension), ex.Message);
+        Assert.Contains(typeof(TestExtension).ToString(), ex.Message);
     }
 
-    // ---- ValidateUniqueExtension(IEnumerable<IExtension>, IExtension) simple overload ----
+    // ValidateUniqueExtension(IEnumerable<IExtension>, IExtension) simple overload
     [TestMethod]
     public void ValidateUniqueExtension_SimpleOverload_EmptyCollection_DoesNotThrow()
     {
