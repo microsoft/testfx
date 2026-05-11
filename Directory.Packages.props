@@ -75,7 +75,7 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeRefactoring.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.4" />
     <PackageVersion Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
-    <!-- Pinned to 4.18.4 for security -->
+    <!-- Previously pinned to 4.18.4 to avoid SponsorLink (4.20.0–4.20.x); resolved in 4.20.72 -->
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="MSBuild.StructuredLogger" Version="2.3.178" />
     <PackageVersion Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
