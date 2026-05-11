@@ -69,12 +69,12 @@
       </trans-unit>
       <trans-unit id="RemoveDuplicateDataRowFix">
         <source>Remove duplicate 'DataRow'</source>
-        <target state="new">Remove duplicate 'DataRow'</target>
+        <target state="translated">Yinelenen 'DataRow' öğelerini kaldır</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDuplicateTestMethodAttributeFix">
         <source>Remove duplicate TestMethod attribute</source>
-        <target state="new">Remove duplicate TestMethod attribute</target>
+        <target state="translated">Yinelenen TestMethod özniteliğini kaldırın</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
