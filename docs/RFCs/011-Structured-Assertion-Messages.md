@@ -1136,13 +1136,13 @@ Additional configuration mechanisms (MSBuild properties, environment variables) 
 
 ## Structured Exception Data
 
-`AssertFailedException` exposes structured `Expected` and `Actual` properties as `string?` in addition to the formatted `Message`:
+`AssertFailedException` exposes structured `ExpectedText` and `ActualText` properties as `string?` in addition to the formatted `Message`:
 
 ```csharp
 public class AssertFailedException : UnitTestAssertException
 {
-    public string? Expected { get; }
-    public string? Actual { get; }
+    public string? ExpectedText { get; }
+    public string? ActualText { get; }
 }
 ```
 
@@ -1150,7 +1150,7 @@ These carry the pre-formatted string representations (the same text that appears
 
 Note: The engine's `AssertFailedException` already stores these values via `ex.Data["assert.expected"]` and `ex.Data["assert.actual"]`. The TestFramework's `AssertFailedException` will expose them as proper typed properties.
 
-When an assertion has no natural expected/actual pair (e.g. `Assert.Fail`, `Assert.Inconclusive`), both properties are `null`. For assertions with only an `actual` value (e.g. `Assert.IsNull`), `Expected` is `null`.
+When an assertion has no natural expected/actual pair (e.g. `Assert.Fail`, `Assert.Inconclusive`), both properties are `null`. For assertions with only an `actual` value (e.g. `Assert.IsNull`), `ExpectedText` is `null`.
 
 ## Evidence Block Internal API
 
@@ -1195,7 +1195,7 @@ This section summarizes the design decisions made for the questions that were ra
 | 2 | Maximum truncation length | **1024 characters** for strings, configurable. See [Value Truncation](#value-truncation). |
 | 3 | Diff rendering for strings | **Deferred.** No inline caret/arrow markers in v1. The structured format allows adding them later. See [String Diff Rules](#string-diff-rules). |
 | 4 | Collection rendering limits | **32 elements** with context-windowing around the diff point. Configurable. See [Collection Truncation](#collection-truncation). |
-| 5 | Structured data for tooling | **Yes.** `AssertFailedException` exposes `Expected` and `Actual` as `string?` properties. See [Structured Exception Data](#structured-exception-data). |
+| 5 | Structured data for tooling | **Yes.** `AssertFailedException` exposes `ExpectedText` and `ActualText` as `string?` properties. See [Structured Exception Data](#structured-exception-data). |
 | 6 | "Substantially different" threshold | **50%** via edit distance ratio. Short strings (<20 chars) always show per-index detail. See [String Diff Rules](#string-diff-rules). |
 | 7 | Custom comparer display | **Yes.** Show comparer type name when non-default. See [Assertion-Specific Details](#assertion-specific-details). |
 | 8 | Framework diagnostic vs user message ambiguity | **No visual distinction needed.** Framework diagnostics follow a predictable sentence pattern; user messages are freeform. See [User Message Placement](#user-message-placement). |
