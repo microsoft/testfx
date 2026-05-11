@@ -298,9 +298,11 @@ internal sealed class TestMethodRunner
         }
     }
 
-    private async Task<TestResult[]> ExecuteTestWithDataSourceAsync(UTF.ITestDataSource? testDataSource, object?[]? data, bool actualDataAlreadyHandledDuringDiscovery, ITestContext? testContext = null)
+    private Task<TestResult[]> ExecuteTestWithDataSourceAsync(UTF.ITestDataSource? testDataSource, object?[]? data, bool actualDataAlreadyHandledDuringDiscovery)
+        => ExecuteTestWithDataSourceAsync(testDataSource, data, actualDataAlreadyHandledDuringDiscovery, _testContext);
+
+    private async Task<TestResult[]> ExecuteTestWithDataSourceAsync(UTF.ITestDataSource? testDataSource, object?[]? data, bool actualDataAlreadyHandledDuringDiscovery, ITestContext testContext)
     {
-        testContext ??= _testContext;
         string? displayName = StringEx.IsNullOrWhiteSpace(_test.DisplayName)
             ? _test.Name
             : _test.DisplayName;
@@ -398,9 +400,11 @@ internal sealed class TestMethodRunner
         return testResults;
     }
 
-    private async Task<TestResult[]> ExecuteTestAsync(TestMethodInfo testMethodInfo, ITestContext? testContext = null)
+    private Task<TestResult[]> ExecuteTestAsync(TestMethodInfo testMethodInfo)
+        => ExecuteTestAsync(testMethodInfo, _testContext);
+
+    private async Task<TestResult[]> ExecuteTestAsync(TestMethodInfo testMethodInfo, ITestContext testContext)
     {
-        testContext ??= _testContext;
         try
         {
             var tcs = new TaskCompletionSource<TestResult[]>();
