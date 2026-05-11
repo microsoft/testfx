@@ -84,7 +84,10 @@ public sealed class ExtensionValidationHelperTests
         Mock<IExtension> newExtension = CreateExtension("uid1");
         InvalidOperationException ex = Assert.ThrowsExactly<InvalidOperationException>(() =>
             existingExtensions.ValidateUniqueExtension(newExtension.Object, x => x));
-        Assert.IsGreaterThan(0, ex.Message.Length);
+        string typeName = existing.Object.GetType().ToString();
+        Assert.Contains(typeName, ex.Message);
+        int occurrenceCount = ex.Message.Split(typeName, StringSplitOptions.None).Length - 1;
+        Assert.IsGreaterThanOrEqualTo(2, occurrenceCount);
     }
 
     [TestMethod]
@@ -96,7 +99,10 @@ public sealed class ExtensionValidationHelperTests
         Mock<IExtension> newExtension = CreateExtension("uid1");
         InvalidOperationException ex = Assert.ThrowsExactly<InvalidOperationException>(() =>
             existingExtensions.ValidateUniqueExtension(newExtension.Object, x => x));
-        Assert.Contains("uid1", ex.Message);
+        string typeName = ext1.Object.GetType().ToString();
+        Assert.Contains(typeName, ex.Message);
+        int occurrenceCount = ex.Message.Split(typeName, StringSplitOptions.None).Length - 1;
+        Assert.IsGreaterThanOrEqualTo(3, occurrenceCount);
     }
 
     [TestMethod]
@@ -122,7 +128,7 @@ public sealed class ExtensionValidationHelperTests
 
     // Simple overload: ValidateUniqueExtension(IEnumerable<IExtension>, IExtension)
     [TestMethod]
-    public void ValidateUniqueExtension_SimpleOverload_NullExistingExtensions_ThrowsArgumentNullException()
+    public void ValidateUniqueExtension_SimpleOverload_WhenExistingExtensionsIsNull_ThrowsArgumentNullException()
     {
         IEnumerable<IExtension> existingExtensions = null!;
         Mock<IExtension> newExtension = CreateExtension("uid1");
@@ -131,7 +137,7 @@ public sealed class ExtensionValidationHelperTests
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_SimpleOverload_NullNewExtension_ThrowsArgumentNullException()
+    public void ValidateUniqueExtension_SimpleOverload_WhenNewExtensionIsNull_ThrowsArgumentNullException()
     {
         IEnumerable<IExtension> existingExtensions = [];
         Assert.ThrowsExactly<ArgumentNullException>(() =>
@@ -139,7 +145,7 @@ public sealed class ExtensionValidationHelperTests
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_SimpleOverload_NoDuplicate_DoesNotThrow()
+    public void ValidateUniqueExtension_SimpleOverload_WhenNoDuplicate_DoesNotThrow()
     {
         Mock<IExtension> existing = CreateExtension("uid1");
         IEnumerable<IExtension> existingExtensions = [existing.Object];
@@ -148,7 +154,7 @@ public sealed class ExtensionValidationHelperTests
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_SimpleOverload_DuplicateUid_ThrowsInvalidOperationException()
+    public void ValidateUniqueExtension_SimpleOverload_WhenDuplicateUid_ThrowsInvalidOperationException()
     {
         Mock<IExtension> existing = CreateExtension("uid1");
         IEnumerable<IExtension> existingExtensions = [existing.Object];
@@ -161,8 +167,8 @@ public sealed class ExtensionValidationHelperTests
     {
         Mock<IExtension> mock = new();
         mock.Setup(e => e.Uid).Returns(uid);
-        mock.Setup(e => e.DisplayName).Returns(uid);
-        mock.Setup(e => e.Description).Returns(uid);
+        mock.Setup(e => e.DisplayName).Returns($"display-{uid}");
+        mock.Setup(e => e.Description).Returns($"description-{uid}");
         mock.Setup(e => e.Version).Returns("1.0");
         return mock;
     }
