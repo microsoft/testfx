@@ -117,14 +117,21 @@ internal partial class TestMethodInfo
                     // For any failure after this point, we must run TestCleanup
                     _isTestContextSet = true;
 
-                    if (await RunTestInitializeMethodAsync(_classInstance!, result, timeoutTokenSource).ConfigureAwait(false))
+                    // Intentionally not using ConfigureAwait(false) here to preserve SynchronizationContext.
+                    // This ensures that the test method and TestCleanup run on the same thread as the SynchronizationContext
+                    // that was active when the test started (e.g., the UI thread for WinUI tests).
+                    // Without this, an async TestInitialize would cause the test method to be invoked on a
+                    // thread pool thread instead of the UI thread.
+                    if (await RunTestInitializeMethodAsync(_classInstance!, result, timeoutTokenSource))
                     {
                         if (_executionContext is null)
                         {
                             Task? invokeResult = MethodInfo.GetInvokeResultAsync(_classInstance, arguments);
                             if (invokeResult is not null)
                             {
-                                await invokeResult.ConfigureAwait(false);
+#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task - Intentionally not using ConfigureAwait(false) to preserve SynchronizationContext
+                                await invokeResult;
+#pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
                             }
                         }
                         else
