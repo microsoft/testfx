@@ -178,8 +178,8 @@ internal sealed class TestMethodRunner
 
     private async Task<bool> TryExecuteDataSourceBasedTestsAsync(List<TestResult> results)
     {
-        // Iterate cached attributes directly to avoid the GetAttributes<DataSourceAttribute>() allocation,
-        // while preserving previous semantics: execute only when there is exactly one DataSourceAttribute.
+        // Iterate cached attributes directly to preserve the previous semantics:
+        // execute only when there is exactly one DataSourceAttribute.
         bool hasSingleDataSource = false;
         foreach (Attribute attribute in ReflectHelper.Instance.GetCustomAttributesCached(_testMethodInfo.MethodInfo))
         {
