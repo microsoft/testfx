@@ -65,6 +65,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// </summary>
     private readonly Dictionary<string, object?> _properties;
     private readonly IMessageLogger? _messageLogger;
+    private readonly TestRunCancellationToken? _testRunCancellationToken;
 
     private CancellationTokenRegistration? _cancellationTokenRegistration;
 
@@ -135,6 +136,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         }
 
         _messageLogger = messageLogger;
+        _testRunCancellationToken = testRunCancellationToken;
         _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
     }
 
@@ -397,4 +399,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
     internal string? GetAndClearTrace()
         => _traceStringBuilder?.GetAndClear();
+
+    internal TestContextImplementation CreateIsolatedCopyForDataDrivenIteration()
+        => new(testMethod: null, testClassFullName: null, _properties, _messageLogger, _testRunCancellationToken);
 }

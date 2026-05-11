@@ -211,14 +211,20 @@ internal sealed class TestMethodRunner
             foreach (object?[] data in testDataSource.GetData(_testMethodInfo.MethodInfo))
             {
                 dataSourceHasData = true;
+                ITestContext testContext = GetTestContextForFoldedDataDrivenIteration();
                 try
                 {
-                    TestResult[] testResults = await ExecuteTestWithDataSourceAsync(testDataSource, data, actualDataAlreadyHandledDuringDiscovery: false).ConfigureAwait(false);
+                    TestResult[] testResults = await ExecuteTestWithDataSourceAsync(testDataSource, data, actualDataAlreadyHandledDuringDiscovery: false, testContext).ConfigureAwait(false);
 
                     results.AddRange(testResults);
                 }
                 finally
                 {
+                    if (!ReferenceEquals(testContext, _testContext) && testContext is IDisposable disposableTestContext)
+                    {
+                        disposableTestContext.Dispose();
+                    }
+
                     _testMethodInfo.SetArguments(null);
                 }
             }
@@ -240,6 +246,11 @@ internal sealed class TestMethodRunner
 
         return hasTestDataSource;
     }
+
+    private ITestContext GetTestContextForFoldedDataDrivenIteration()
+        => _testContext is TestContextImplementation testContextImplementation
+            ? testContextImplementation.CreateIsolatedCopyForDataDrivenIteration()
+            : _testContext;
 
     private async Task ExecuteTestFromDataSourceAttributeAsync(List<TestResult> results)
     {
@@ -287,8 +298,9 @@ internal sealed class TestMethodRunner
         }
     }
 
-    private async Task<TestResult[]> ExecuteTestWithDataSourceAsync(UTF.ITestDataSource? testDataSource, object?[]? data, bool actualDataAlreadyHandledDuringDiscovery)
+    private async Task<TestResult[]> ExecuteTestWithDataSourceAsync(UTF.ITestDataSource? testDataSource, object?[]? data, bool actualDataAlreadyHandledDuringDiscovery, ITestContext? testContext = null)
     {
+        testContext ??= _testContext;
         string? displayName = StringEx.IsNullOrWhiteSpace(_test.DisplayName)
             ? _test.Name
             : _test.DisplayName;
@@ -337,12 +349,12 @@ internal sealed class TestMethodRunner
 
         var stopwatch = Stopwatch.StartNew();
         _testMethodInfo.SetArguments(data);
-        _testContext.SetTestData(data);
-        _testContext.SetDisplayName(displayName);
+        testContext.SetTestData(data);
+        testContext.SetDisplayName(displayName);
 
         TestResult[] testResults = ignoreFromTestDataRow is not null
             ? [TestResult.CreateIgnoredResult(ignoreFromTestDataRow)]
-            : await ExecuteTestAsync(_testMethodInfo).ConfigureAwait(false);
+            : await ExecuteTestAsync(_testMethodInfo, testContext).ConfigureAwait(false);
 
         stopwatch.Stop();
 
@@ -386,8 +398,9 @@ internal sealed class TestMethodRunner
         return testResults;
     }
 
-    private async Task<TestResult[]> ExecuteTestAsync(TestMethodInfo testMethodInfo)
+    private async Task<TestResult[]> ExecuteTestAsync(TestMethodInfo testMethodInfo, ITestContext? testContext = null)
     {
+        testContext ??= _testContext;
         try
         {
             var tcs = new TaskCompletionSource<TestResult[]>();
@@ -399,9 +412,9 @@ internal sealed class TestMethodRunner
                 {
                     try
                     {
-                        using (TestContextImplementation.SetCurrentTestContext(_testContext as TestContext))
+                        using (TestContextImplementation.SetCurrentTestContext(testContext as TestContext))
                         {
-                            testMethodInfo.TestContext = _testContext;
+                            testMethodInfo.TestContext = testContext;
                             tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false));
                         }
                     }

@@ -368,6 +368,33 @@ public class TestMethodRunnerTests : TestContainer
         results[1].ResultFiles!.Should().Contain("C:\\temp.txt");
     }
 
+    public async Task RunTestMethodShouldUseFreshTestContextForEachFoldedDataDrivenIteration()
+    {
+        MethodInfo methodInfo = typeof(DummyFoldedDataDrivenTestClass).GetMethod(nameof(DummyFoldedDataDrivenTestClass.TestMethod))!;
+        var testClassInfo = GetTestClassInfo<DummyFoldedDataDrivenTestClass>();
+        var capturedTestContexts = new List<ITestContext>();
+
+        TestableTestMethodInfo? testMethodInfo = null;
+        testMethodInfo = new TestableTestMethodInfo(
+            methodInfo,
+            testClassInfo,
+            _testMethodOptions,
+            () =>
+            {
+                capturedTestContexts.Add(testMethodInfo!.TestContext!);
+                return new TestResult { Outcome = UnitTestOutcome.Passed };
+            });
+
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        TestResult[] results = await testMethodRunner.RunTestMethodAsync();
+
+        results.Should().HaveCount(2);
+        capturedTestContexts.Should().HaveCount(2);
+        capturedTestContexts[0].Should().NotBeSameAs(capturedTestContexts[1]);
+        capturedTestContexts.Should().OnlyContain(testContext => !ReferenceEquals(testContext, _testContextImplementation));
+    }
+
     public async Task RunTestMethodWithEmptyDataSourceShouldFailBecauseConsiderEmptyDataSourceAsInconclusiveIsFalse()
         => await RunTestMethodWithEmptyDataSourceShouldFailIfConsiderEmptyDataSourceAsInconclusiveIsNotTrueHelper(false);
 
@@ -578,6 +605,23 @@ public class TestMethodRunnerTests : TestContainer
         public void TestMethod(int x)
         {
         }
+    }
+
+    public class DummyFoldedDataDrivenTestClass
+    {
+        [FoldedDataDrivenTestDataSource]
+        public void TestMethod(int x)
+        {
+        }
+    }
+
+    private sealed class FoldedDataDrivenTestDataSourceAttribute : Attribute, ITestDataSource
+    {
+        public IEnumerable<object?[]> GetData(MethodInfo methodInfo)
+            => [[1], [2]];
+
+        public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
+            => null;
     }
 
     #endregion
