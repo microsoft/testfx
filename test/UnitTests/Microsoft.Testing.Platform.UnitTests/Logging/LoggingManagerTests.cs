@@ -38,8 +38,7 @@ public sealed class LoggingManagerTests
     public async Task BuildAsync_NonExtensionProvider_IsAlwaysIncluded()
     {
         Mock<ILoggerProvider> mockProvider = new();
-        Mock<ILogger> mockLogger = new();
-        mockProvider.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(mockLogger.Object);
+        mockProvider.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
 
         LoggingManager manager = new();
         manager.AddProvider((_, _) => mockProvider.Object);
@@ -53,9 +52,8 @@ public sealed class LoggingManagerTests
     public async Task BuildAsync_EnabledExtensionProvider_IsIncluded()
     {
         Mock<IEnabledLoggerProvider> mockProvider = new();
-        Mock<ILogger> mockLogger = new();
         mockProvider.Setup(p => p.IsEnabledAsync()).ReturnsAsync(true);
-        mockProvider.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(mockLogger.Object);
+        mockProvider.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
 
         LoggingManager manager = new();
         manager.AddProvider((_, _) => mockProvider.Object);
@@ -166,9 +164,9 @@ public sealed class LoggingManagerTests
         manager.AddProvider((level, _) =>
         {
             capturedLogLevel = level;
-            Mock<ILoggerProvider> p = new();
-            p.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
-            return p.Object;
+            Mock<ILoggerProvider> mockProvider = new();
+            mockProvider.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+            return mockProvider.Object;
         });
 
         _ = await manager.BuildAsync(Mock.Of<IServiceProvider>(), LogLevel.Warning, _mockMonitor.Object);
@@ -186,9 +184,9 @@ public sealed class LoggingManagerTests
         manager.AddProvider((_, sp) =>
         {
             capturedServiceProvider = sp;
-            Mock<ILoggerProvider> p = new();
-            p.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
-            return p.Object;
+            Mock<ILoggerProvider> mockProvider = new();
+            mockProvider.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+            return mockProvider.Object;
         });
 
         _ = await manager.BuildAsync(mockServiceProvider.Object, LogLevel.Trace, _mockMonitor.Object);
