@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -46,7 +46,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().HaveCount(2);
 
         string[] expectedAttributes = ["TestCategory : base", "Owner : base"];
-        GetAttributeValuePairs(attributes!).Should().BeEquivalentTo(expectedAttributes);
+        GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
     }
 
     public void GetCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
@@ -60,7 +60,7 @@ public class ReflectionUtilityTests : TestContainer
 
         // Notice that the Owner on the base method does not show up since it can only be defined once.
         string[] expectedAttributes = ["TestCategory : derived", "TestCategory : base", "Owner : derived"];
-        GetAttributeValuePairs(attributes!).Should().BeEquivalentTo(expectedAttributes);
+        GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
     }
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributes()
@@ -126,7 +126,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().HaveCount(3);
 
         string[] expectedAttributes = ["Duration : superfast", "TestCategory : base", "Owner : base"];
-        GetAttributeValuePairs(attributes!).Should().BeEquivalentTo(expectedAttributes);
+        GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
     }
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributesIncludingUserDefinedAttributes()

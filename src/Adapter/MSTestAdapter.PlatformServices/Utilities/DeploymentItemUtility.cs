@@ -25,7 +25,7 @@ internal sealed class DeploymentItemUtility
     /// <summary>
     /// Initializes a new instance of the <see cref="DeploymentItemUtility"/> class.
     /// </summary>
-    /// <param name="reflectionOperation"> The reflect helper. </param>
+    /// <param name="reflectionOperation"> The reflection operations. </param>
     internal DeploymentItemUtility(IReflectionOperations reflectionOperation)
     {
         _reflectionOperation = reflectionOperation;

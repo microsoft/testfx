@@ -274,17 +274,20 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
         public static object[]? GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider)
         {
             IReflectionOperations reflectionOperations = PlatformServiceProvider.Instance.ReflectionOperations;
-            object[] attributesArray = attributeProvider is MemberInfo memberInfo
-                ? reflectionOperations.GetCustomAttributes(memberInfo)
-                : reflectionOperations.GetCustomAttributes((Assembly)attributeProvider, typeof(Attribute));
+            object[] attributesArray = attributeProvider switch
+            {
+                MemberInfo memberInfo => reflectionOperations.GetCustomAttributes(memberInfo),
+                Assembly assembly => reflectionOperations.GetCustomAttributes(assembly, typeof(Attribute)),
+                _ => throw new ArgumentException($"Unsupported attribute provider type: {attributeProvider.GetType()}", nameof(attributeProvider)),
+            };
 
-            return attributesArray; // TODO: Investigate if we rely on NRE
+            return attributesArray;
         }
     }
 
     /// <inheritdoc />
     public bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type)
-        => method.DeclaringType!.Assembly.Equals(type.Assembly);
+        => method.DeclaringType?.Assembly.Equals(type.Assembly) ?? false;
 
     internal /* for tests */ void ClearCache()
         // Tests manipulate the platform reflection provider, and we end up caching different attributes than the class / method actually has.

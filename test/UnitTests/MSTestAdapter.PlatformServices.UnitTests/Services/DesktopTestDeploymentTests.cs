@@ -118,21 +118,6 @@ public class DesktopTestDeploymentTests : TestContainer
 
     #region private methods
 
-#pragma warning disable IDE0051 // Remove unused private members
-    private void SetupDeploymentItems(ICustomAttributeProvider attributeProvider, KeyValuePair<string, string>[] deploymentItems)
-#pragma warning restore IDE0051 // Remove unused private members
-    {
-        var deploymentItemAttributes = new List<DeploymentItemAttribute>();
-
-        foreach (KeyValuePair<string, string> deploymentItem in deploymentItems)
-        {
-            deploymentItemAttributes.Add(new DeploymentItemAttribute(deploymentItem.Key, deploymentItem.Value));
-        }
-
-        _mockReflectionOperations.Setup(
-            ru => ru.GetAttributes<DeploymentItemAttribute>(attributeProvider)).Returns(deploymentItemAttributes);
-    }
-
     private TestCase GetTestCase(string source)
     {
         var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), source);

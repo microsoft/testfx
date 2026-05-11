@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -56,7 +56,7 @@ public class ReflectionOperationsTests : TestContainer
         attributes.Length.Should().Be(2);
 
         string[] expectedAttributes = ["DummyA : base", "DummySingleA : base"];
-        GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
@@ -70,7 +70,7 @@ public class ReflectionOperationsTests : TestContainer
 
         // Notice that the DummySingleA on the base method does not show up since it can only be defined once.
         string[] expectedAttributes = ["DummyA : derived", "DummySingleA : derived", "DummyA : base"];
-        GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributes()
@@ -83,7 +83,7 @@ public class ReflectionOperationsTests : TestContainer
         attributes.Length.Should().Be(1);
 
         string[] expectedAttributes = ["DummyA : ba"];
-        GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     private object[] GetMemberAttributes(Type type)
@@ -99,7 +99,7 @@ public class ReflectionOperationsTests : TestContainer
         attributes.Should().HaveCount(2);
 
         string[] expectedAttributes = ["DummyA : a", "DummyA : ba"];
-        GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()
@@ -112,7 +112,7 @@ public class ReflectionOperationsTests : TestContainer
         attributes.Length.Should().Be(2);
 
         string[] expectedAttributes = ["DummyA : a1", "DummyA : a2"];
-        GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     #endregion
@@ -129,7 +129,7 @@ public class ReflectionOperationsTests : TestContainer
         string[] expected = ["ClassLevel"];
         string[] actual = [.. _reflectionOperations.GetTestCategories(_method.Object, typeof(ReflectionOperationsTests))];
 
-        expected.SequenceEqual(actual).Should().BeTrue();
+        actual.Should().Equal(expected);
     }
 
     /// <summary>
@@ -145,7 +145,7 @@ public class ReflectionOperationsTests : TestContainer
         string[] actual = [.. _reflectionOperations.GetTestCategories(_method.Object, typeof(ReflectionOperationsTests))];
         string[] expected = ["MethodLevel", "ClassLevel", "AsmLevel1", "AsmLevel2", "AsmLevel3"];
 
-        expected.SequenceEqual(actual).Should().BeTrue();
+        actual.Should().Equal(expected);
     }
 
     /// <summary>
@@ -163,7 +163,7 @@ public class ReflectionOperationsTests : TestContainer
         string[] actual = [.. _reflectionOperations.GetTestCategories(_method.Object, typeof(ReflectionOperationsTests))];
         string[] expected = ["MethodLevel1", "MethodLevel2", "ClassLevel1", "ClassLevel2", "AsmLevel1", "AsmLevel2"];
 
-        expected.SequenceEqual(actual).Should().BeTrue();
+        actual.Should().Equal(expected);
     }
 
     /// <summary>
@@ -177,7 +177,7 @@ public class ReflectionOperationsTests : TestContainer
 
         string[] actual = [.. _reflectionOperations.GetTestCategories(_method.Object, typeof(ReflectionOperationsTests))];
 
-        expected.SequenceEqual(actual).Should().BeTrue();
+        actual.Should().Equal(expected);
     }
 
     /// <summary>
@@ -190,7 +190,7 @@ public class ReflectionOperationsTests : TestContainer
         string[] expected = ["ClassLevel", "ClassLevel1"];
         string[] actual = [.. _reflectionOperations.GetTestCategories(_method.Object, typeof(ReflectionOperationsTests))];
 
-        expected.SequenceEqual(actual).Should().BeTrue();
+        actual.Should().Equal(expected);
     }
 
     /// <summary>
@@ -202,7 +202,7 @@ public class ReflectionOperationsTests : TestContainer
 
         string[] expected = ["AsmLevel", "AsmLevel1"];
         string[] actual = [.. _reflectionOperations.GetTestCategories(_method.Object, typeof(ReflectionOperationsTests))];
-        expected.SequenceEqual(actual).Should().BeTrue();
+        actual.Should().Equal(expected);
     }
 
     /// <summary>
@@ -215,7 +215,7 @@ public class ReflectionOperationsTests : TestContainer
         string[] expected = ["MethodLevel"];
         string[] actual = [.. _reflectionOperations.GetTestCategories(_method.Object, typeof(ReflectionOperationsTests))];
 
-        expected.SequenceEqual(actual).Should().BeTrue();
+        actual.Should().Equal(expected);
     }
 
     #endregion

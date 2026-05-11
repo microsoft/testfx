@@ -72,7 +72,7 @@ internal sealed class MockableReflectionOperations(Mock<IReflectionOperations> m
         => attributeProvider switch
         {
             MemberInfo memberInfo => mock.Object.GetCustomAttributes(memberInfo)?.OfType<Attribute>().ToArray() ?? [],
-            Assembly assembly => mock.Object.GetCustomAttributes(assembly, typeof(Attribute)).OfType<Attribute>().ToArray(),
+            Assembly assembly => mock.Object.GetCustomAttributes(assembly, typeof(Attribute))?.OfType<Attribute>().ToArray() ?? [],
             _ => attributeProvider.GetCustomAttributes(true).OfType<Attribute>().ToArray(),
         };
 
