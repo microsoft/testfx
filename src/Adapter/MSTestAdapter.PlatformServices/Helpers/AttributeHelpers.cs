@@ -47,7 +47,7 @@ internal static class AttributeExtensions
             {
                 if (shouldRun)
                 {
-                    groups[conditionAttr.GroupName] = (true, groupState.FirstMessage);
+                    groups[conditionAttr.GroupName] = (true, null);
                 }
                 else if (groupState.FirstMessage is null)
                 {
