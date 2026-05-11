@@ -38,14 +38,13 @@ jobs:
             echo "Found ${LEAN_COUNT} .lean file(s). Proceeding with build."
           fi
 
-          # Check for lake-manifest.json (committed manifest enables reproducible builds
-          # and avoids requiring network access for 'lake update' in CI).
+          # Check for lake-manifest.json (committed manifest pins Lean dependencies).
           if [ -f "formal-verification/lean/lake-manifest.json" ]; then
             echo "has_manifest=true" >> "$GITHUB_OUTPUT"
-            echo "✅ lake-manifest.json present — reproducible build (no network needed)"
+            echo "✅ lake-manifest.json present — dependencies are pinned"
           else
             echo "has_manifest=false" >> "$GITHUB_OUTPUT"
-            echo "⚠️  lake-manifest.json missing — 'lake update' will run and requires network access"
+            echo "⚠️ lake-manifest.json missing — 'lake update' will run and requires network access"
           fi
 
       - name: Restore elan + Lake cache
@@ -109,7 +108,8 @@ jobs:
         run: lean --version
 
       - name: Resolve Lean dependencies
-        if: steps.check-lean-files.outputs.lean_count != '0' && steps.restore-cache.outputs.cache-hit != 'true' && steps.check-lean-files.outputs.has_manifest != 'true'
+        # Run on cache miss; a committed lake-manifest.json still keeps dependency versions pinned.
+        if: steps.check-lean-files.outputs.lean_count != '0' && steps.restore-cache.outputs.cache-hit != 'true'
         working-directory: formal-verification/lean
         run: lake update
 
@@ -124,20 +124,20 @@ jobs:
           LEAN_DIR="formal-verification/lean/FVSquad"
           # Emit a GitHub Actions warning annotation for each line containing sorry,
           # so reviewers see them inline in the Files Changed tab.
-          grep -rn '\bsorry\b' "${LEAN_DIR}" --include='*.lean' 2>/dev/null \
+          grep -rnw 'sorry' "${LEAN_DIR}" --include='*.lean' 2>/dev/null \
           | while IFS= read -r match; do
               FILE="${match%%:*}"
               REST="${match#*:}"
               LINENUM="${REST%%:*}"
               echo "::warning file=${FILE},line=${LINENUM}::sorry — proof stub pending"
-            done || true
+            done
 
       - name: Proof summary
         if: steps.check-lean-files.outputs.lean_count != '0'
         run: |
           LEAN_DIR="formal-verification/lean/FVSquad"
           THEOREM_COUNT=$(grep -rEc '^(theorem|lemma) ' "${LEAN_DIR}" --include='*.lean' 2>/dev/null || echo 0)
-          SORRY_COUNT=$(grep -rc '\bsorry\b' "${LEAN_DIR}" --include='*.lean' 2>/dev/null \
+          SORRY_COUNT=$(grep -rEc '\<sorry\>' "${LEAN_DIR}" --include='*.lean' 2>/dev/null \
             | awk -F: '{sum += $2} END {print sum+0}')
           SORRY_STATUS="✅ All proofs complete"
           if [ "${SORRY_COUNT}" -gt 0 ]; then
@@ -150,6 +150,7 @@ jobs:
             echo "|--------|-------|"
             echo "| Theorems / Lemmas declared | ${THEOREM_COUNT} |"
             echo "| Lines containing \`sorry\` (stubs) | ${SORRY_COUNT} |"
+            echo "| Proof status | ${SORRY_STATUS} |"
             echo ""
             echo "### Per-file breakdown"
             echo ""
@@ -158,8 +159,7 @@ jobs:
             while IFS= read -r f; do
               FNAME="$(basename "$f")"
               FTHEOREMS=$(grep -Ec '^(theorem|lemma) ' "$f" 2>/dev/null || echo 0)
-              FSORRY=$(grep -c '\bsorry\b' "$f" 2>/dev/null || echo 0)
+              FSORRY=$(grep -Ec '\<sorry\>' "$f" 2>/dev/null || echo 0)
               echo "| \`${FNAME}\` | ${FTHEOREMS} | ${FSORRY} |"
-            done < <(find "${LEAN_DIR}" -maxdepth 1 -name "*.lean" 2>/dev/null | sort)
-            echo "| Proof status | ${SORRY_STATUS} |"
+            done < <(find "${LEAN_DIR}" -name "*.lean" 2>/dev/null | sort)
           } >> "$GITHUB_STEP_SUMMARY"
