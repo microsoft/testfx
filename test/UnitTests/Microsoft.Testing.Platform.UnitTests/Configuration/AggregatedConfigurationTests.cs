@@ -38,7 +38,7 @@ public sealed class AggregatedConfigurationTests
     }
 
     [TestMethod]
-    public void IndexerTest_DotnetCliTestCommandWorkingDirectorySet_UsedAsResultDirectoryBase()
+    public void IndexerTest_DotnetCliTestCommandWorkingDirectorySet_UsedAsWorkingDirectoryBase()
     {
         const string dotnetTestWorkingDir = "DotnetTestWorkingDir";
         _environmentMock.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY))
@@ -46,6 +46,23 @@ public sealed class AggregatedConfigurationTests
 
         AggregatedConfiguration aggregatedConfiguration = new([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object, _environmentMock.Object, new(null, [], []));
         Assert.AreEqual(Path.Combine(dotnetTestWorkingDir, "TestResults"), aggregatedConfiguration[PlatformConfigurationConstants.PlatformResultDirectory]);
+        Assert.AreEqual(dotnetTestWorkingDir, aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
+        Assert.AreEqual(dotnetTestWorkingDir, aggregatedConfiguration[PlatformConfigurationConstants.PlatformTestHostWorkingDirectory]);
+    }
+
+    [TestMethod]
+    public void IndexerTest_ResultsDirectoryCliArgTakesPrecedenceOverDotnetCliTestCommandWorkingDirectory()
+    {
+        const string dotnetTestWorkingDir = "DotnetTestWorkingDir";
+        _environmentMock.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY))
+            .Returns(dotnetTestWorkingDir);
+
+        AggregatedConfiguration aggregatedConfiguration = new([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object, _environmentMock.Object, new(null, [new CommandLineParseOption("results-directory", [ExpectedPath])], []));
+
+        // --results-directory CLI arg should win over DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY
+        Assert.AreEqual(ExpectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformResultDirectory]);
+        // Current working directory still comes from env var
+        Assert.AreEqual(dotnetTestWorkingDir, aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
     }
 
     [TestMethod]
@@ -120,13 +137,15 @@ public sealed class AggregatedConfigurationTests
         Mock<IFileLoggerProvider> mockFileLogger = new();
         mockFileLogger.Setup(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(It.IsAny<string>())).Callback(() => { });
 
-        AggregatedConfiguration aggregatedConfiguration = new([], mockTestApplicationModuleInfo.Object, mockFileSystem.Object, _environmentMock.Object, new(null, [new CommandLineParseOption("results-directory", [ExpectedPath])], []));
+        // Results directory comes from configuration provider (store), not CLI args
+        AggregatedConfiguration aggregatedConfiguration = new([new FakeConfigurationProvider(ExpectedPath)], mockTestApplicationModuleInfo.Object, mockFileSystem.Object, _environmentMock.Object, new(null, [], []));
         await aggregatedConfiguration.CheckTestResultsDirectoryOverrideAndCreateItAsync(mockFileLogger.Object);
 
         mockFileSystem.Verify(x => x.CreateDirectory(ExpectedPath), Times.Once);
         mockFileLogger.Verify(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(ExpectedPath), Times.Once);
         Assert.AreEqual(ExpectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformResultDirectory]);
-        Assert.AreEqual("a" + Path.DirectorySeparatorChar + "b", aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
+        // PlatformCurrentWorkingDirectory also comes from the configuration provider
+        Assert.AreEqual(ExpectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
     }
 
     [TestMethod]
@@ -159,6 +178,29 @@ public sealed class AggregatedConfigurationTests
         _environmentMock.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY))
             .Returns(dotnetTestWorkingDir);
 
+        Mock<IFileSystem> mockFileSystem = new();
+        mockFileSystem.Setup(x => x.CreateDirectory(It.IsAny<string>())).Returns((string path) => path);
+
+        Mock<IFileLoggerProvider> mockFileLogger = new();
+        mockFileLogger.Setup(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(It.IsAny<string>())).Callback(() => { });
+
+        AggregatedConfiguration aggregatedConfiguration = new([], _testApplicationModuleInfoMock.Object, mockFileSystem.Object, _environmentMock.Object, new(null, [], []));
+        await aggregatedConfiguration.CheckTestResultsDirectoryOverrideAndCreateItAsync(mockFileLogger.Object);
+
+        string expectedPath = Path.Combine(dotnetTestWorkingDir, "TestResults");
+        mockFileSystem.Verify(x => x.CreateDirectory(expectedPath), Times.Once);
+        mockFileLogger.Verify(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(expectedPath), Times.Once);
+        Assert.AreEqual(expectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformResultDirectory]);
+        Assert.AreEqual(dotnetTestWorkingDir, aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
+    }
+
+    [TestMethod]
+    public async ValueTask CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryCliArgTakesPrecedenceOverDotnetCliTestCommandWorkingDirectory()
+    {
+        const string dotnetTestWorkingDir = "DotnetTestWorkingDir";
+        _environmentMock.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY))
+            .Returns(dotnetTestWorkingDir);
+
         Mock<ITestApplicationModuleInfo> mockTestApplicationModuleInfo = new();
         mockTestApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns(ExpectedPath);
         mockTestApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationDirectory()).Returns(Path.GetDirectoryName(ExpectedPath) ?? AppContext.BaseDirectory);
@@ -169,13 +211,15 @@ public sealed class AggregatedConfigurationTests
         Mock<IFileLoggerProvider> mockFileLogger = new();
         mockFileLogger.Setup(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(It.IsAny<string>())).Callback(() => { });
 
-        AggregatedConfiguration aggregatedConfiguration = new([], mockTestApplicationModuleInfo.Object, mockFileSystem.Object, _environmentMock.Object, new(null, [], []));
+        // --results-directory CLI arg takes precedence over DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY
+        AggregatedConfiguration aggregatedConfiguration = new([], mockTestApplicationModuleInfo.Object, mockFileSystem.Object, _environmentMock.Object, new(null, [new CommandLineParseOption("results-directory", [ExpectedPath])], []));
         await aggregatedConfiguration.CheckTestResultsDirectoryOverrideAndCreateItAsync(mockFileLogger.Object);
 
-        string expectedPath = Path.Combine(dotnetTestWorkingDir, "TestResults");
-        mockFileSystem.Verify(x => x.CreateDirectory(expectedPath), Times.Once);
-        mockFileLogger.Verify(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(expectedPath), Times.Once);
-        Assert.AreEqual(expectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformResultDirectory]);
+        mockFileSystem.Verify(x => x.CreateDirectory(ExpectedPath), Times.Once);
+        mockFileLogger.Verify(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(ExpectedPath), Times.Once);
+        Assert.AreEqual(ExpectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformResultDirectory]);
+        // Current working directory still comes from env var
+        Assert.AreEqual(dotnetTestWorkingDir, aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
     }
 }
 

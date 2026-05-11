@@ -104,6 +104,9 @@ internal sealed class AggregatedConfiguration(
          => _currentWorkingDirectory
             // If first time calculating it, prefer the value from configuration,
             ?? CalculateFromConfigurationProviders(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)
+            // then check if dotnet test working directory is set (to keep PlatformCurrentWorkingDirectory and
+            // PlatformResultDirectory consistent when running under 'dotnet test'),
+            ?? _environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY)
             // then fallback to the actual working directory.
             ?? _testApplicationModuleInfo.GetCurrentTestApplicationDirectory();
 }
