@@ -150,6 +150,16 @@ In this example, `expected:` and `actual:` are the core value labels, while `ign
 
 Note: Alignment is applied **within each evidence block as a whole**. All labels in the block (value labels like `expected:` / `actual:` and detail labels like `ignore case:` / `culture:`) are padded to match the longest label in the block. This means values and details share a single alignment column.
 
+When an assertion accepts `IEqualityComparer<T>` or `IComparer` and a non-default comparer is provided, the comparer type name is shown in the evidence block to help diagnose unexpected comparison results:
+
+```text
+expected: "Straße"
+actual:   "STRASSE"
+comparer: CaseInsensitiveComparer
+```
+
+The comparer line uses the short type name (`GetType().Name`) since comparer types are typically user-defined with meaningful names. The comparer line is omitted when the default comparer is used (e.g. `EqualityComparer<T>.Default`).
+
 ### Call-Site Expression
 
 The call-site expression is reconstructed from `CallerArgumentExpression` attributes and displayed after the evidence block, separated by a blank line. It helps the developer locate the exact assertion call in source.
@@ -276,8 +286,7 @@ Assert.AreEqual(expected, actual)
 ```text
 Assertion failed. Expected condition to be true.
 
-expected: true
-actual:   false
+actual: false
 
 Assert.IsTrue(order.IsValid)
    at MyTests.OrderTests.ValidOrder_ShouldBeValid() in OrderTests.cs:line 30
@@ -419,6 +428,8 @@ expected: 42
 actual:   37
 ```
 
+Note: When the generic `AreEqual<T>` overload is called with `T = string` (without `ignoreCase`/`culture` parameters), the message **auto-detects the string type** and uses the string-specific format (`"Expected strings to be equal (case-sensitive)."`) with full string diff diagnostics. The generic overload defaults to case-sensitive ordinal comparison, which is exactly what the string-specific format conveys. Developers writing `Assert.AreEqual("expected", actual)` get string diagnostics without needing to know about the string-specific overload.
+
 #### Assert.AreEqual (with delta)
 
 ```text
@@ -544,8 +555,7 @@ Both variables refer to the same object.
 ```text
 Assertion failed. Expected condition to be true.
 
-expected: true
-actual:   false
+actual: false
 ```
 
 #### Assert.IsTrue (condition is null)
@@ -553,8 +563,7 @@ actual:   false
 ```text
 Assertion failed. Expected condition to be true.
 
-expected: true
-actual:   (null)
+actual: (null)
 ```
 
 #### Assert.IsFalse
@@ -562,8 +571,7 @@ actual:   (null)
 ```text
 Assertion failed. Expected condition to be false.
 
-expected: false
-actual:   true
+actual: true
 ```
 
 #### Assert.IsFalse (condition is null)
@@ -571,9 +579,10 @@ actual:   true
 ```text
 Assertion failed. Expected condition to be false.
 
-expected: false
-actual:   (null)
+actual: (null)
 ```
+
+Note: `IsTrue` and `IsFalse` omit the `expected:` line because the expected value is inherent in the assertion name. The same convention applies to all assertions whose name fully implies the expected value (`IsNull`, `IsNotNull`, `IsEmpty`, `IsNotEmpty`, `IsPositive`, `IsNegative`).
 
 ### Assert — Null
 
@@ -589,9 +598,9 @@ actual: "some value"
 
 ```text
 Assertion failed. Expected value to not be null.
-
-actual: (null)
 ```
+
+Note: `IsNotNull` omits the evidence block entirely because when this assertion fails, `actual` is always `(null)` — the evidence block provides no new information beyond what the summary already conveys. The same reasoning applies to `Assert.AreNotSame`.
 
 ### Assert — Type Checking
 
@@ -854,9 +863,8 @@ actual:         ["apple", "cherry", "date"]
 ```text
 Assertion failed. Expected collection to be empty but found 3 element(s).
 
-expected count: 0
-actual count:   3
-actual:         ["apple", "cherry", "date"]
+actual count: 3
+actual:       ["apple", "cherry", "date"]
 ```
 
 #### Assert.IsNotEmpty
@@ -975,77 +983,27 @@ Note: `Assert.That` is an extension method on the `Assert` type, added via C# 14
 
 The `CollectionAssert` and `StringAssert` classes are considered legacy. All `StringAssert` operations already have modern `Assert` equivalents (`Assert.Contains`, `Assert.StartsWith`, `Assert.EndsWith`, `Assert.MatchesRegex`, `Assert.DoesNotMatchRegex`) whose messages are documented above. Several `CollectionAssert` operations (`AllItemsAreNotNull`, `AllItemsAreUnique`, `AllItemsAreInstancesOfType`, `IsSubsetOf`, `IsNotSubsetOf`, `AreEquivalent`, `AreNotEquivalent`, ordered `AreEqual`/`AreNotEqual`) do not yet have modern `Assert` equivalents. When those `Assert` methods are introduced, their message catalog entries will be added to this RFC following the same structured format. Until then, `CollectionAssert` and `StringAssert` are out of scope — their messages will be updated to the structured format opportunistically but are not specified here.
 
-## Open Question: User Message Placement
+## User Message Placement
 
-There is an inherent tension in where the user-provided message should appear. This is the **primary open question** of this RFC and should be resolved before implementation.
-
-### Option A — User message after summary (proposed above)
+The user-provided message appears **after the summary line but before the evidence block** (values and details):
 
 ```text
 Assertion failed. Expected values to be equal.
-Discount should be applied after tax        ← user message
+Discount should be applied after tax
 
 expected: 42
 actual:   37
 ```
 
-**Arguments for:**
+This placement was chosen because:
 
+- The user message carries *intent* — it explains *why* the developer wrote the assertion, which is more important than the framework's description of *what* went wrong.
 - ~20 internal developers polled preferred user message before framework details.
-- The user message carries *intent* — it explains *why* the developer wrote the assertion, which is arguably more important than the framework's description of *what* went wrong.
-- Other assertion libraries (NUnit) put user messages prominently.
+- Preserves the grep-friendly `Assertion failed.` prefix on line 1.
+- Avoids burying the user message after long values (the original problem this RFC aims to solve).
+- Other assertion libraries (NUnit, pytest, Rust) that support user messages also place them prominently.
 
-**Arguments against:**
-
-- In CI logs with many failures, the user message line has no stable prefix, making it harder to visually find where each assertion starts and ends.
-- Developers who don't use custom messages (common) would see no difference — but those who do may find the extra line between the "what" and "evidence" sections disruptive.
-
-### Option B — User message after values
-
-```text
-Assertion failed. Expected values to be equal.
-
-expected: 42
-actual:   37
-
-Discount should be applied after tax        ← user message
-```
-
-**Arguments for:**
-
-- The core technical information (summary + values) is together, uninterrupted.
-- The user message serves as *commentary* on the evidence, which reads naturally after the evidence.
-- The visual flow is: *what failed* → *the proof* → *the developer's context* → *where in code*.
-
-**Arguments against:**
-
-- User message is further from the top, which can feel like it's deprioritized.
-- If values are very long, the user message may be pushed far down and be easy to miss.
-
-### Option C — User message on line 1 (before the prefix)
-
-```text
-Discount should be applied after tax        ← user message
-Assertion failed. Expected values to be equal.
-
-expected: 42
-actual:   37
-```
-
-**Arguments for:**
-
-- Gives user message maximum visual priority — it's the very first thing you read.
-- Mirrors how some developers think: "what was I checking?" before "what went wrong?".
-
-**Arguments against:**
-
-- Breaks the grep anchor — `Assertion failed.` is no longer always on line 1.
-- Makes it harder to visually scan where assertion boundaries are in a multi-failure log.
-- When no user message is provided, line 1 changes identity, which is inconsistent.
-
-### Recommendation
-
-This RFC proposes **Option A** as the default. The user message appears after the summary but before the values, giving it high prominence while preserving the grep-friendly prefix on line 1. However, this is explicitly an open question and feedback is welcome.
+No visual distinction (label, indentation, or quotation marks) is applied to the user message. The framework's summary diagnostics follow a predictable `"Expected [subject] to [verb]."` sentence pattern, while user messages are freeform — ambiguity between the two is rare in practice.
 
 ## Diff Diagnostics
 
@@ -1061,6 +1019,10 @@ When comparing strings or collections, the summary line provides a concise diff 
 | Substantially different (>50% chars differ) | `Strings are substantially different (expected length: N, actual length: M).` |
 
 The diff count tells the developer whether this is a typo (1 location) or a fundamentally different string (many locations) — avoiding the fix-and-rerun loop for multi-location diffs, while not listing every index when the strings are completely different.
+
+The "substantially different" threshold is **50%**, measured by edit distance ratio (`editDistance / max(len1, len2) > 0.5`). For strings shorter than 20 characters, the per-index detail is always shown regardless of percentage — short strings are cheap to diff visually.
+
+Note: Inline diff markers (e.g. `^` caret under the first differing character, or xUnit-style `↓`/`↑` arrows) are intentionally **deferred** to a future enhancement. The first-difference-index in the summary line provides location information, and adding caret markers introduces rendering complexity (alignment with tabs, Unicode, control characters) that is fragile across terminal environments. The structured format makes it straightforward to add diff markers later as an additional line between `expected:` and `actual:` without breaking the format.
 
 ### Collection Diff Rules
 
@@ -1105,23 +1067,107 @@ To ensure consistency across all assertions, values displayed in the evidence bl
 Values should be displayed in full whenever practical. Truncation should be a last resort, not a layout workaround. When truncation *is* necessary (e.g. a 10 MB string), the following rules apply:
 
 1. Truncation is indicated by `...` at the point of truncation.
-2. The maximum displayed length is configurable (default TBD, suggested: 1024 characters).
+2. The maximum displayed length defaults to **1024 characters**. This fits ~20 lines of 50-character-wide terminal output — enough to show meaningful context around a diff point without flooding CI logs. Configurable via `.runsettings` or `testconfig.json` (see [Configuration](#configuration)).
 3. For strings, truncation preserves context around the first point of difference when applicable.
 4. The full value length is noted in the summary line (e.g. `Strings have different lengths (expected: 50000, actual: 50001)`).
+5. When the diff diagnostic indicates strings are "substantially different" (>50%), truncation is more aggressive since showing 1024 characters of two completely different strings is low-value.
 
 ### Collection Truncation
 
 Collections follow similar truncation rules:
 
-1. A maximum number of displayed elements is configurable (default TBD, suggested: 32 elements).
+1. A maximum of **32 elements** are displayed by default. Configurable via `.runsettings` or `testconfig.json` (see [Configuration](#configuration)).
 2. Truncation is indicated by `... (N more)` at the end: `["a", "b", "c", ... (97 more)]`.
-3. For ordered collection comparisons, elements around the first point of difference are prioritized when truncating.
+3. For ordered collection comparisons, elements around the first point of difference are prioritized when truncating (e.g. 5 elements before and 5 after the diff point, plus head/tail preview).
 4. For equivalence comparisons (`AreEquivalent`), the `missing:` and `unexpected:` lists are each independently truncated.
 5. Nested collections are rendered recursively but capped at a total character budget to prevent unbounded output.
+
+### Collection Multi-Line Rendering
+
+When the total rendered length of a collection exceeds **120 characters** (a standard terminal width), the collection switches to multi-line rendering with one element per line:
+
+```text
+actual:
+[
+  "a very long element name that takes up space",
+  "another lengthy element value here",
+  "and a third one"
+]
+```
+
+Both `expected:` and `actual:` collections use the same rendering style (inline or multi-line) for visual comparison. The rendering style is determined by the longer of the two collections — if either exceeds the 120-character threshold, both are rendered multi-line.
 
 ## Newline Handling
 
 All newlines within the message (between the assertion prefix and the stack trace) use `Environment.NewLine` to ensure consistent rendering across platforms. The test runner is responsible for the stack trace formatting.
+
+## Configuration
+
+Truncation limits are configurable via `.runsettings` or `testconfig.json`. Both settings are optional — when omitted, the defaults apply.
+
+### .runsettings
+
+```xml
+<RunSettings>
+  <MSTest>
+    <AssertMessageMaxValueLength>1024</AssertMessageMaxValueLength>
+    <AssertMessageMaxCollectionElements>32</AssertMessageMaxCollectionElements>
+  </MSTest>
+</RunSettings>
+```
+
+### testconfig.json
+
+```json
+{
+  "mstest": {
+    "assertMessageMaxValueLength": 1024,
+    "assertMessageMaxCollectionElements": 32
+  }
+}
+```
+
+| Setting | Default | Description |
+| ------- | ------- | ----------- |
+| `AssertMessageMaxValueLength` | 1024 | Maximum number of characters to display for a single value before truncating. |
+| `AssertMessageMaxCollectionElements` | 32 | Maximum number of collection elements to display before truncating. |
+
+Additional configuration mechanisms (MSBuild properties, environment variables) can be added based on user feedback.
+
+## Structured Exception Data
+
+`AssertFailedException` exposes structured `Expected` and `Actual` properties as `string?` in addition to the formatted `Message`:
+
+```csharp
+public class AssertFailedException : UnitTestAssertException
+{
+    public string? Expected { get; }
+    public string? Actual { get; }
+}
+```
+
+These carry the pre-formatted string representations (the same text that appears in the `expected:` / `actual:` lines of the evidence block). This enables IDEs and tooling to present structured diff views without parsing the `Message` property.
+
+Note: The engine's `AssertFailedException` already stores these values via `ex.Data["assert.expected"]` and `ex.Data["assert.actual"]`. The TestFramework's `AssertFailedException` will expose them as proper typed properties.
+
+When an assertion has no natural expected/actual pair (e.g. `Assert.Fail`, `Assert.Inconclusive`), both properties are `null`. For assertions with only an `actual` value (e.g. `Assert.IsNull`), `Expected` is `null`.
+
+## Evidence Block Internal API
+
+Assertions pass labeled evidence to the message formatter via a structured `EvidenceBlock` type:
+
+```csharp
+internal record struct EvidenceLine(string Label, string Value);
+internal record struct EvidenceBlock(IReadOnlyList<EvidenceLine> Lines);
+```
+
+This gives:
+
+- **Type-safe construction** — assertions build evidence as label/value pairs, not pre-formatted strings.
+- **Automatic label alignment** — the formatter computes alignment from the longest label in the block.
+- **Extensibility** — third-party assertion authors (when the API is promoted to public) get a clean contract.
+
+The `EvidenceBlock` type is initially `internal`. It will be promoted to `public` when third-party extensibility demand is proven. The formatted `Message` string remains the only public contract for assertion failure output.
 
 ## Backward Compatibility
 
@@ -1134,22 +1180,28 @@ Specific breaking changes:
 
 Mitigation:
 
-- These changes are part of MSTest v4, which already includes other breaking changes. Message format changes are treated as output changes within the major version — they do not require a new major version for each evolution.
-- The assertion prefix line (`Assertion failed.`) is preserved and can still serve as a parsing anchor.
+- **Assertion messages are not part of the public API contract.** The `Message` property of `AssertFailedException` and `AssertInconclusiveException` is intended for human consumption (test output, logs, IDE display) — not for programmatic parsing. We do not consider assertion message format to be a stable API surface, and changes to message wording, structure, or layout are not treated as breaking changes in the semantic versioning sense. Code that relies on parsing assertion messages is inherently fragile and unsupported.
+- As a consequence, these message format changes **do not require a new major version**. They can ship in any MSTest v4.x release.
+- These changes happen to coincide with MSTest v4, which already includes other breaking changes, but the message format changes are independent of the major version boundary.
+- The assertion prefix line (`Assertion failed.`) is preserved and can still serve as a parsing anchor for consumers that choose to parse messages despite the above.
 
-## Unresolved questions
+## Resolved Design Decisions
 
-1. **User message placement** — See the "Open Question" section above. Needs broader feedback.
-2. **Maximum truncation length** — What should the default be? 512? 1024? 4096?
-3. **Diff rendering for strings** — Should we include an inline diff (e.g. `^` caret under the first differing character, or a reserved marker character for highlighting)? This would be valuable for spotting differences in long strings but adds complexity. Consider reserving a character or escape for inline diff highlighting to enable future diff-aware rendering.
-4. **Collection rendering limits** — How many elements of a collection should be shown before truncating? Should we show elements around the point of failure? Proposed: 32 elements.
-5. **Structured data for tooling** — Should `AssertFailedException` carry structured properties (e.g. `Expected`, `Actual`) in addition to the formatted message, to enable richer IDE/tooling integration without parsing?
-6. **"Substantially different" threshold** — At what percentage of differing characters should strings be considered "substantially different" and the per-index summary be dropped? Proposed: 50%.
-7. **Custom comparer display** — Several assertions accept `IEqualityComparer<T>` or `IComparer`. Should the comparer type name be shown in the evidence block (e.g. `comparer: MyCustomComparer`) to help diagnose unexpected comparison results?
-8. **Framework diagnostic vs user message ambiguity** — The framework’s multi-line summary diagnostics and the developer’s user message are both displayed as plain text on consecutive lines with no distinguishing prefix. Should user messages be visually distinguished (e.g. with a label, indentation, or quotation marks) to avoid confusion?
-9. **`AreEqual<T>` where `T` is `string`** — When the generic `AreEqual<T>` overload is called with `T = string` (without `ignoreCase`/`culture` parameters), should the message use the generic format (`"Expected values to be equal."`) or auto-detect the string type and use the string-specific format (`"Expected strings to be equal (case-sensitive)."`)? Proposed: use the generic format, since the caller chose the generic overload.
-10. **Control character rendering strategy** — Should control characters be rendered as C#-style escape sequences (`\n`, `\t`) or as Unicode printable replacement characters (e.g. `␊` for newline, `␉` for tab)? Printable replacements preserve single-character width alignment, which is useful for visual comparison. An alternative is to keep actual newlines to preserve the user's text formatting while escaping other non-printable characters with their printable equivalents. The current proposal uses C#-style escapes but this needs validation.
-11. **Evidence block internal API** — How should assertions pass labeled evidence to the message formatter? Options include: (a) arrays of label/value pairs, (b) a single formatted string split on the first `:` per line, or (c) a structured `EvidenceBlock` type. This affects extensibility and third-party assertion authors.
-12. **Collection multi-line rendering** — When collection elements are long (e.g. 30+ characters each, or total rendered length exceeds 200+ characters), should the collection be rendered with one element per line instead of inline? Both `expected` and `actual` collections should use the same rendering style for visual comparison.
-13. **`expected:` line consistency for implied-value assertions** — `Assert.IsTrue` / `Assert.IsFalse` include both `expected:` and `actual:` lines (e.g. `expected: true` / `actual: false`), but `Assert.IsNull` and `Assert.IsNotNull` show only `actual:` (omitting `expected:` since the expected value is implied by the assertion name). Both approaches are reasonable — should the convention be to always include `expected:` for completeness, or to omit it when the expected value is inherent in the assertion name? The catalog currently uses a mix.
-14. **`Assert.IsNotNull` evidence block utility** — When `IsNotNull` fails, the actual value is always `(null)` — the evidence block provides no new information beyond what the summary already conveys. Should `IsNotNull` omit the evidence block entirely (like `Assert.AreNotSame`), or include `actual: (null)` for structural consistency with other assertions?
+This section summarizes the design decisions made for the questions that were raised during RFC review.
+
+| # | Question | Decision |
+| - | -------- | -------- |
+| 1 | User message placement | **After summary, before values** (Option A). See [User Message Placement](#user-message-placement). |
+| 2 | Maximum truncation length | **1024 characters** for strings, configurable. See [Value Truncation](#value-truncation). |
+| 3 | Diff rendering for strings | **Deferred.** No inline caret/arrow markers in v1. The structured format allows adding them later. See [String Diff Rules](#string-diff-rules). |
+| 4 | Collection rendering limits | **32 elements** with context-windowing around the diff point. Configurable. See [Collection Truncation](#collection-truncation). |
+| 5 | Structured data for tooling | **Yes.** `AssertFailedException` exposes `Expected` and `Actual` as `string?` properties. See [Structured Exception Data](#structured-exception-data). |
+| 6 | "Substantially different" threshold | **50%** via edit distance ratio. Short strings (<20 chars) always show per-index detail. See [String Diff Rules](#string-diff-rules). |
+| 7 | Custom comparer display | **Yes.** Show comparer type name when non-default. See [Assertion-Specific Details](#assertion-specific-details). |
+| 8 | Framework diagnostic vs user message ambiguity | **No visual distinction needed.** Framework diagnostics follow a predictable sentence pattern; user messages are freeform. See [User Message Placement](#user-message-placement). |
+| 9 | `AreEqual<T>` where `T` is `string` | **Auto-detect.** Use string-specific format with diff diagnostics. See [Assert.AreEqual (generic)](#assert--equality). |
+| 10 | Control character rendering | **C#-style escape sequences** (`\n`, `\t`, `\uXXXX`). Familiar to C# developers and supports zero-friction copy-paste into source code. See [Value Rendering Rules](#value-rendering-rules). |
+| 11 | Evidence block internal API | **Structured `EvidenceBlock` type**, initially `internal`. See [Evidence Block Internal API](#evidence-block-internal-api). |
+| 12 | Collection multi-line rendering | **Switch to multi-line when total rendered length exceeds 120 characters.** Both expected/actual use the same style. See [Collection Multi-Line Rendering](#collection-multi-line-rendering). |
+| 13 | `expected:` line for implied-value assertions | **Omit** when the expected value is inherent in the assertion name (`IsNull`, `IsNotNull`, `IsTrue`, `IsFalse`, `IsEmpty`, `IsNotEmpty`, `IsPositive`, `IsNegative`). See the catalog entries. |
+| 14 | `Assert.IsNotNull` evidence block | **Omit entirely.** The summary conveys all information; `actual: (null)` adds no value. See [Assert.IsNotNull](#assert--null). |
