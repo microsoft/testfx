@@ -1,11 +1,11 @@
 {
-  "last_run": "2026-05-10T04:38:44Z",
-  "last_tasks": ["task2_scan", "task3_patch", "task4_pr_check", "task7_summary"],
+  "last_run": "2026-05-11T04:44:43Z",
+  "last_tasks": ["task3_implement", "task7_summary"],
   "validated_commands": {
-    "build": "export PATH=\"$PWD/.dotnet:$PATH\" && dotnet build <project.csproj> -p:TargetFramework=net8.0 --no-restore -p:SignAssembly=false",
+    "build": "export PATH=\"$PWD/.dotnet:$PATH\" && dotnet build <project.csproj> -p:SignAssembly=false --nologo",
     "restore": "dotnet restore <project.csproj> -p:SignAssembly=false",
-    "test": "export PATH=\"$PWD/.dotnet:$PATH\" && dotnet test <test.csproj> -p:TargetFramework=net8.0 --no-restore --filter <filter> -p:SignAssembly=false",
-    "build_notes": "Use .dotnet/dotnet (local SDK, currently .NET 11 preview). Only net8.0/net9.0 restored. Local build needs targeting packs — CI is authoritative."
+    "test": "export PATH=\"$PWD/.dotnet:$PATH\" && dotnet test <test.csproj> --no-restore --filter <filter> -p:SignAssembly=false",
+    "build_notes": "Use .dotnet/dotnet (local SDK, .NET 11 preview). net8.0/net9.0 targeting packs ARE available and build succeeds. CI is authoritative for full tests."
   },
   "completed_prs": [
     {"title": "[Efficiency Improver] perf: reduce allocations in BFSTestNodeVisitor path tracking and CreateWrappedName", "pr_number": 7836, "date": "2026-04-25", "status": "merged_by_Evangelink_2026-04-27"},
@@ -14,17 +14,19 @@
     {"title": "[Efficiency Improver] perf: eliminate yield-iterator state machine in PropertyBag.OfType<T>()", "pr_number": 7917, "date": "2026-04-29", "status": "merged_by_Evangelink_2026-04-29"}
   ],
   "open_tracking_issues": [
-    {"number": 8040, "title": "GetRetryAttribute yield-iterator fix - v1 patch", "run": "25416409916"},
-    {"number": 8063, "title": "GetRetryAttribute yield-iterator fix - v2 patch", "run": "25536495961"},
-    {"number": 8073, "title": "GetRetryAttribute yield-iterator fix - v3 patch", "run": "25591566390"}
+    {"number": 8040, "title": "GetRetryAttribute yield-iterator fix - v1 patch", "status": "stale_superseded"},
+    {"number": 8063, "title": "GetRetryAttribute yield-iterator fix - v2 patch", "status": "stale_superseded"},
+    {"number": 8073, "title": "GetRetryAttribute yield-iterator fix - v3 patch", "status": "stale_superseded"},
+    {"number": 8080, "title": "GetRetryAttribute yield-iterator fix - v4 patch", "status": "stale_superseded"}
   ],
   "existing_branches": [
-    {"branch": "perf-assist/avoid-yield-iterator-in-test-execution-hot-path-6eef29844b69afc9", "description": "GetRetryAttribute + TryExecuteDataSourceBasedTestsAsync yield-iterator fixes (already pushed, no PR created)"}
+    {"branch": "perf-assist/avoid-yield-iterator-in-test-execution-hot-path-6eef29844b69afc9", "description": "GetRetryAttribute + TryExecuteDataSourceBasedTestsAsync yield-iterator fixes (pushed, old base, no PR)"},
+    {"branch": "efficiency/avoid-yield-iterator-get-retry-attribute", "description": "GetRetryAttribute + TryExecuteDataSourceBasedTestsAsync yield-iterator fixes, rebased on current main 2026-05-11, PR creation attempted"}
   ],
   "open_prs": [
     {"pr_number": 8035, "title": "[Efficiency Improver] perf: eliminate LINQ closure allocations in TreeNodeFilter", "author": "abdelghani-moussaid", "status": "open"}
   ],
-  "stale_issues_to_close": [7947, 7974, 7990, 8006, 8023, 7998, 8040, 8063, 8073],
+  "stale_issues_to_close": [7947, 7974, 7990, 8006, 8023, 7998, 8040, 8063, 8073, 8080],
   "backlog": [
     {
       "id": "propertybag-struct-enumerator",
@@ -47,11 +49,11 @@
     "may_2026": "7975_open"
   },
   "notes": {
-    "create_pr_tool_behavior": "create_pull_request tool consistently fails to push branches directly. Returns 'success' with patch file path. Sometimes creates a tracking GitHub issue, sometimes does not. The branch itself must be pre-existing on remote or the tool must push — neither works reliably. The perf-assist/* branch naming scheme from a different workflow seems to persist properly.",
-    "existing_branch_with_fix": "perf-assist/avoid-yield-iterator-in-test-execution-hot-path-6eef29844b69afc9 has the GetRetryAttribute + DataSourceAttribute fixes already committed. A maintainer can open a PR from this branch directly.",
-    "scan_2026-05-10": "Fresh scan found no new high-priority opportunities. All major hot-path allocation issues addressed. Backlog is low-priority only. Perf Improver #8075 covers IsIgnored LINQ fix.",
+    "create_pr_tool_behavior": "create_pull_request tool returns 'success' with patch file path. May or may not push branch to remote. The branch must be pre-committed locally before calling. PR creation is unreliable — check GitHub after run to verify.",
+    "build_env_2026-05-11": "Local build succeeds for net8.0 + net9.0 with .NET 11 preview SDK. Both MSTestAdapter.PlatformServices and MSTest.TestAdapter build with 0 warnings/errors.",
+    "yield_iterator_fix_branch": "efficiency/avoid-yield-iterator-get-retry-attribute committed 2026-05-11. Changes: GetRetryAttribute uses GetCustomAttributesCached directly; TryExecuteDataSourceBasedTestsAsync uses IsAttributeDefined<DataSourceAttribute>.",
     "sa1503_warning": "SA1503: braces must not be omitted — always use braces even for single-statement if bodies.",
-    "test_build_env": "Local build fails NETSDK1127 (net8/net9 targeting packs not installed). Only net11-preview SDK available. CI is authoritative.",
-    "treenodefilter_closures": "Covered by community PR #8035 (abdelghani-moussaid). Open and awaiting review."
+    "treenodefilter_closures": "Covered by community PR #8035 (abdelghani-moussaid). Open and awaiting review.",
+    "scan_status": "All major hot-path allocation issues addressed. Backlog is low-priority only. Fresh scan needed in future runs to find new opportunities after merges."
   }
 }
