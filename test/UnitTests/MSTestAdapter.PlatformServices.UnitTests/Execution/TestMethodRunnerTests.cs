@@ -395,6 +395,46 @@ public class TestMethodRunnerTests : TestContainer
         capturedTestContexts.Should().OnlyContain(testContext => !ReferenceEquals(testContext, _testContextImplementation));
     }
 
+    public async Task RunTestMethodShouldCaptureOutputInMatchingFoldedDataDrivenIteration()
+    {
+        MethodInfo methodInfo = typeof(DummyFoldedDataDrivenTestClass).GetMethod(nameof(DummyFoldedDataDrivenTestClass.TestMethod))!;
+        var testClassInfo = GetTestClassInfo<DummyFoldedDataDrivenTestClass>();
+
+        TestableTestMethodInfo? testMethodInfo = null;
+        testMethodInfo = new TestableTestMethodInfo(
+            methodInfo,
+            testClassInfo,
+            _testMethodOptions,
+            () =>
+            {
+                int dataValue = (int)testMethodInfo!.Arguments![0]!;
+                var testContext = (TestContextImplementation)testMethodInfo.TestContext!;
+
+                testContext.WriteConsoleOut($"out-{dataValue}");
+                testContext.WriteConsoleErr($"err-{dataValue}");
+                testContext.WriteTrace($"trace-{dataValue}");
+                testContext.WriteLine($"ctx-{dataValue}");
+
+                return new TestResult { Outcome = UnitTestOutcome.Passed };
+            });
+
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        TestResult[] results = await testMethodRunner.RunTestMethodAsync();
+
+        results.Should().HaveCount(2);
+
+        results[0].LogOutput.Should().Be("out-1");
+        results[0].LogError.Should().Be("err-1");
+        results[0].DebugTrace.Should().Be("trace-1");
+        results[0].TestContextMessages.Should().Contain("ctx-1").And.NotContain("ctx-2");
+
+        results[1].LogOutput.Should().Be("out-2");
+        results[1].LogError.Should().Be("err-2");
+        results[1].DebugTrace.Should().Be("trace-2");
+        results[1].TestContextMessages.Should().Contain("ctx-2").And.NotContain("ctx-1");
+    }
+
     public async Task RunTestMethodWithEmptyDataSourceShouldFailBecauseConsiderEmptyDataSourceAsInconclusiveIsFalse()
         => await RunTestMethodWithEmptyDataSourceShouldFailIfConsiderEmptyDataSourceAsInconclusiveIsNotTrueHelper(false);
 
@@ -615,7 +655,7 @@ public class TestMethodRunnerTests : TestContainer
         }
     }
 
-    private sealed class FoldedDataDrivenTestDataSourceAttribute : Attribute, Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource
+    private sealed class FoldedDataDrivenTestDataSourceAttribute : Attribute, UTF.ITestDataSource
     {
         public IEnumerable<object?[]> GetData(MethodInfo methodInfo)
             => [[1], [2]];
