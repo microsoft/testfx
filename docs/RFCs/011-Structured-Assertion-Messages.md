@@ -563,7 +563,7 @@ actual: false
 ```text
 Assertion failed. Expected condition to be true.
 
-actual: (null)
+actual: null
 ```
 
 #### Assert.IsFalse
@@ -579,7 +579,7 @@ actual: true
 ```text
 Assertion failed. Expected condition to be false.
 
-actual: (null)
+actual: null
 ```
 
 Note: `IsTrue` and `IsFalse` omit the `expected:` line because the expected value is inherent in the assertion name. The same convention applies to all assertions whose name fully implies the expected value (`IsNull`, `IsNotNull`, `IsEmpty`, `IsNotEmpty`, `IsPositive`, `IsNegative`).
@@ -600,7 +600,7 @@ actual: "some value"
 Assertion failed. Expected value to not be null.
 ```
 
-Note: `IsNotNull` omits the evidence block entirely because when this assertion fails, `actual` is always `(null)` — the evidence block provides no new information beyond what the summary already conveys. The same reasoning applies to `Assert.AreNotSame`.
+Note: `IsNotNull` omits the evidence block entirely because when this assertion fails, `actual` is always `null` — the evidence block provides no new information beyond what the summary already conveys. The same reasoning applies to `Assert.AreNotSame`.
 
 ### Assert — Type Checking
 
@@ -620,7 +620,7 @@ actual value:  42
 Assertion failed. Expected value to be of type String (or derived).
 
 expected type: System.String (or derived)
-actual:        (null)
+actual:        null
 ```
 
 #### Assert.IsNotInstanceOfType
@@ -648,7 +648,7 @@ actual value:  System.ArgumentNullException: Value cannot be null.
 Assertion failed. Expected value to be exactly of type ArgumentException.
 
 expected type: System.ArgumentException
-actual:        (null)
+actual:        null
 ```
 
 #### Assert.IsNotExactInstanceOfType
@@ -1048,7 +1048,7 @@ To ensure consistency across all assertions, values displayed in the evidence bl
 
 | Value | Rendering | Notes |
 | ----- | --------- | ----- |
-| `null` | `(null)` | Parenthesized to distinguish from the literal string `"null"`. |
+| `null` | `null` | Unquoted. Unambiguous because strings are always rendered with double quotes (the literal string `"null"` renders as `"null"`). |
 | Empty string `""` | `""` | Shown as quoted empty string. |
 | Whitespace-only string | `"   "` | Quoted, so whitespace is visible. |
 | Strings | `"value"` | Always quoted with double quotes to delimit boundaries. |
@@ -1204,4 +1204,4 @@ This section summarizes the design decisions made for the questions that were ra
 | 11 | Evidence block internal API | **Structured `EvidenceBlock` type**, initially `internal`. See [Evidence Block Internal API](#evidence-block-internal-api). |
 | 12 | Collection multi-line rendering | **Switch to multi-line when total rendered length exceeds 120 characters.** Both expected/actual use the same style. See [Collection Multi-Line Rendering](#collection-multi-line-rendering). |
 | 13 | `expected:` line for implied-value assertions | **Omit** when the expected value is inherent in the assertion name (`IsNull`, `IsNotNull`, `IsTrue`, `IsFalse`, `IsEmpty`, `IsNotEmpty`, `IsPositive`, `IsNegative`). See the catalog entries. |
-| 14 | `Assert.IsNotNull` evidence block | **Omit entirely.** The summary conveys all information; `actual: (null)` adds no value. See [Assert.IsNotNull](#assert--null). |
+| 14 | `Assert.IsNotNull` evidence block | **Omit entirely.** The summary conveys all information; `actual: null` adds no value. See [Assert.IsNotNull](#assert--null). |
