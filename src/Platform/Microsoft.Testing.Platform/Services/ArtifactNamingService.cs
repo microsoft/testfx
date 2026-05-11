@@ -17,9 +17,9 @@ internal static class ArtifactNamingHelper
     /// </summary>
     public static string ResolveTemplate(string template, IDictionary<string, string>? replacements = null)
     {
-        if (RoslynString.IsNullOrEmpty(template))
+        if (RoslynString.IsNullOrWhiteSpace(template))
         {
-            throw new ArgumentException("Template cannot be null or empty.", nameof(template));
+            throw new ArgumentException("Template cannot be null, empty, or whitespace.", nameof(template));
         }
 
         if (replacements is null || replacements.Count == 0)

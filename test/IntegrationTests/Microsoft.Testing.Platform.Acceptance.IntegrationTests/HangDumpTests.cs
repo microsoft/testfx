@@ -127,12 +127,10 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         string fileName = Path.GetFileNameWithoutExtension(dumpFile);
 
         // File should match pattern: <pname>_<pid>_<time>_hang
-        // The process name should be the test executable name, pid should be numeric
-        Assert.EndsWith("_hang", fileName, $"File name should end with '_hang'. Actual: {fileName}");
-
-        string[] parts = fileName.Split('_');
-        Assert.IsGreaterThanOrEqualTo(3, parts.Length, $"File name should have at least 3 parts separated by '_'. Actual: {fileName}");
-        Assert.AreEqual("hang", parts[^1], "Last part should be 'hang'");
+        // where <time> is yyyy-MM-dd_HH-mm-ss.fffffff
+        // The process name should be the test executable name, pid should be numeric, time should be a timestamp.
+        Assert.MatchesRegex(@"^.+_\d+_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.\d{7}_hang$", fileName,
+            $"File name should match '<pname>_<pid>_<time>_hang' pattern. Actual: {fileName}");
     }
 
     [DataRow("Mini")]

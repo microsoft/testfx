@@ -123,6 +123,12 @@ public sealed class ArtifactNamingHelperTests
     }
 
     [TestMethod]
+    public void ResolveTemplate_WhitespaceOnlyTemplate_ThrowsArgumentException()
+    {
+        Assert.ThrowsExactly<ArgumentException>(() => ArtifactNamingHelper.ResolveTemplate("   "));
+    }
+
+    [TestMethod]
     public void GetOperatingSystemName_ReturnsKnownValue()
     {
         string os = ArtifactNamingHelper.GetOperatingSystemName();
