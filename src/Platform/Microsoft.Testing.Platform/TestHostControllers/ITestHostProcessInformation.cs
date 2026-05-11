@@ -26,7 +26,7 @@ public interface ITestHostProcessInformation
     /// The test host process might still crash or be killed after sending this message, in which
     /// case this flag will be true but the process hasn't truly exited gracefully.
     /// </remarks>
-    // TODO: As a follow-up, obsolete this property as error, and rename it to ReceivedTestHostCompletedEvent or TestHostCompletedEventReceived.
+    // TODO: As a follow-up, obsolete this property as error, and rename it to ReceivedTestHostCompletedEvent or TestHostCompletedEventReceived (tracked by https://github.com/microsoft/testfx/issues/8086).
     // Note that this is a public API
     bool HasExitedGracefully { get; }
 }

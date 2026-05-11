@@ -55,7 +55,8 @@ safe-outputs:
     group: true
   link-sub-issue:
     max: 50
-  noop: {}
+  noop:
+    report-as-issue: false
 
 timeout-minutes: 15
 ---

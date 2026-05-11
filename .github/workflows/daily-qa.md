@@ -16,13 +16,14 @@ permissions: read-all
 network:
   allowed:
     - defaults
-    - "dc.services.visualstudio.com"
-    - "pkgs.dev.azure.com"
+    - "dotnet"
 
 imports:
   - shared/repo-build-setup.md
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   mentions: false
   allowed-github-references: []
   create-discussion:
@@ -38,7 +39,9 @@ safe-outputs:
 
 tools:
   github:
-    toolsets: [all]
+    lockdown: true
+    toolsets: [repos, pull_requests, issues, discussions]
+    min-integrity: none
   web-fetch:
   bash: true
 ---

@@ -4,6 +4,14 @@ This glossary defines key terms and concepts used throughout the MSTest and Micr
 
 ## A
 
+### AwesomeAssertions
+
+A .NET fluent-assertion library ([NuGet: AwesomeAssertions](https://www.nuget.org/packages/AwesomeAssertions)) used in the unit and integration test suites of this project. It provides a human-readable, chainable assertion API (e.g., `result.Should().Be(42)`). AwesomeAssertions is the community-maintained fork of `FluentAssertions` created after FluentAssertions changed its license from Apache 2.0 to a commercial model; the two libraries share the same API surface. Within this project, `BannedSymbols.txt` files ban the built-in MSTest `Assert`, `CollectionAssert`, and `StringAssert` types and require `AwesomeAssertions` instead.
+
+### ArgumentArity
+
+An MTP struct (`ArgumentArity.cs`) that defines the minimum and maximum number of values a command-line option accepts. Provides five predefined constants: `Zero` (0,0), `ZeroOrOne` (0,1), `ZeroOrMore` (0,∞), `ExactlyOne` (1,1), and `OneOrMore` (1,∞). Used by `ICommandLineOptionsProvider` implementations to declare option shapes.
+
 ### AzureDevOpsReport
 
 An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats and reports test results to Azure DevOps pipelines. It generates pipeline-compatible output including TFM and test name details for richer CI reporting.
@@ -14,11 +22,29 @@ An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats
 
 An MTP extension (`Microsoft.Testing.Extensions.CrashDump`) that automatically captures a process memory dump when the test host crashes. Useful for diagnosing unexpected process termination during test runs.
 
+## D
+
+### DelayBackoffType
+
+A public enum in the `Microsoft.VisualStudio.TestTools.UnitTesting` namespace that specifies the delay strategy used between retries by the `[Retry]` attribute. Values: `Constant` (fixed delay between each attempt) and `Exponential` (delay doubles with each attempt: base × 2^(n−1)).
+
+### DynamicData
+
+An MSTest attribute (`[DynamicData]`) for data-driven tests where test data is sourced from a static property, method, or field rather than inline `[DataRow]` values. The data source name is passed as a constructor argument; `DynamicDataSourceType` controls how the source is located (`Property`, `Method`, `Field`, or `AutoDetect`). Unlike `[DataRow]`, a single `[DynamicData]` source can be shared across multiple test methods and can produce any number of test cases at runtime. See `docs/RFCs/006-DynamicData-Attribute.md` for the original design.
+
 ## F
 
 ### FQN (Fully Qualified Name)
 
 A unique string that identifies a test by its complete namespace, class, and method path (e.g., `MyNamespace.MyClass.MyTestMethod`). Used in IDE integration and JSON-RPC protocol messages to unambiguously reference individual tests.
+
+### Formal Verification (FV)
+
+The practice of using formal mathematical proofs to establish correctness properties of code. In this project, FV uses [Lean 4](#lean-4) to prove properties about selected MTP components (see [FV Target](#fv-target)). FV artifacts live in the `formal-verification/` directory.
+
+### FV Target
+
+A specific code component (function, struct, or class) selected for formal verification. Each FV target progresses through defined phases: (1) identified, (2) informal spec extracted, (3) Lean 4 formal spec written, (4) implementation model extracted, (5) proofs completed. Current targets are listed in `formal-verification/TARGETS.md`.
 
 ## H
 
@@ -27,6 +53,10 @@ A unique string that identifies a test by its complete namespace, class, and met
 An MTP extension (`Microsoft.Testing.Extensions.HangDump`) that captures a process memory dump when a test exceeds a configured timeout. Helps diagnose deadlocks, infinite loops, or unexpectedly slow tests.
 
 ## I
+
+### Informal Spec (FV)
+
+An intermediate artifact in the [Formal Verification (FV)](#formal-verification-fv) workflow that documents the behavioural properties of an [FV Target](#fv-target) in plain English (or structured natural language), before writing formal [Lean 4](#lean-4) proofs. An informal spec lists preconditions, postconditions, edge-case expectations, and any confirmed bugs discovered during analysis. It corresponds to Phase 2 of the FV target lifecycle and lives in the `formal-verification/specs/` directory.
 
 ### IsTestingPlatformApplication
 
@@ -37,6 +67,20 @@ An MSBuild property (`<IsTestingPlatformApplication>true</IsTestingPlatformAppli
 ### JSON-RPC Protocol
 
 The communication protocol used between a test runner executable (server) and a client (IDE, CLI, or CI tool). Based on [JSON-RPC 2.0](https://www.jsonrpc.org/specification), it defines messages for test discovery (`testing/discoverTests`), test execution (`testing/runTests`), result reporting, debugger attachment, and telemetry.
+
+## L
+
+### Lean 4
+
+A theorem prover and interactive proof assistant used in this project for [Formal Verification (FV)](#formal-verification-fv). Lean 4 proofs are written in the `formal-verification/lean/FVSquad/` directory and compiled via `lake build`. The CI workflow (`lean-proofs.yml`) automatically builds and checks these proofs.
+
+### Lean–C# Correspondence (FV)
+
+A document (`formal-verification/CORRESPONDENCE.md`) that records how each [Lean 4](#lean-4) formal model corresponds to its C# source counterpart. For every [FV Target](#fv-target) it captures the type/function mappings, deliberate approximations and simplifications, properties explicitly excluded from the model, and open questions for maintainer review. Auto-generated and maintained by the [Lean Squad](#lean-squad) FV agent.
+
+### Lean Squad
+
+An automated agentic workflow (`.github/workflows/lean-squad.md`) that manages the formal verification lifecycle for this project. It identifies [FV Targets](#fv-target), extracts informal specs, writes [Lean 4](#lean-4) formal models, and maintains the Lean–C# correspondence documentation.
 
 ## M
 
@@ -76,6 +120,12 @@ A component in MTP that coordinates multi-process test execution. The orchestrat
 
 An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exports test session telemetry using the [OpenTelemetry](https://opentelemetry.io/) standard, enabling integration with distributed tracing and observability platforms.
 
+## P
+
+### PropertyBag
+
+An MTP class (`Microsoft.Testing.Platform.Extensions.Messages.PropertyBag`) that holds a typed collection of `IProperty` instances attached to a [TestNode](#testnode). Extension authors populate a `PropertyBag` with properties such as `TimingProperty`, `TestFileLocationProperty`, and `TestMetadataProperty` to communicate rich metadata about a test to the platform and to other extensions. A `PropertyBag` enforces that at most one `TestNodeStateProperty` may be present at a time.
+
 ## R
 
 ### Retry
@@ -88,6 +138,10 @@ Request for Comments document in the `docs/RFCs/` folder. RFCs describe design d
 
 ## T
 
+### TestNode
+
+A core MTP class (`Microsoft.Testing.Platform.Extensions.Messages.TestNode`) that represents a single test item — either discovered or executed. Each `TestNode` carries a unique `Uid` (`TestNodeUid`), a human-readable `DisplayName`, and a [PropertyBag](#propertybag) of typed properties (state, timing, file location, metadata, etc.). `TestNode` instances are published to the `IMessageBus` by test framework adapters during discovery and execution phases.
+
 ### TFM (Target Framework Moniker)
 
 A short string that identifies a specific .NET target framework (e.g., `net9.0`, `net48`, `netstandard2.0`). Used to distinguish test runs across multiple frameworks in multi-targeted projects.
@@ -99,6 +153,10 @@ An MTP extension (`Microsoft.Testing.Extensions.TrxReport`) that generates a `.t
 ### TRX (Test Results XML)
 
 The XML-based test result file format used by Visual Studio, Azure DevOps, and `vstest.console`. Contains test run metadata, individual test outcomes, error messages, and stack traces. Generated by the **TrxReport** extension.
+
+### TreeNodeFilter
+
+An MTP component (`TreeNodeFilter.cs`) that evaluates filter expressions against test node properties to select which tests to run. Filter expressions support Boolean algebra: `&` (AND), `|` (OR), `!` (NOT), and property comparisons (e.g., `FullyQualifiedName~MyTest`). Internally, filter expressions are parsed into a `FilterExpression` tree and evaluated recursively.
 
 ## V
 

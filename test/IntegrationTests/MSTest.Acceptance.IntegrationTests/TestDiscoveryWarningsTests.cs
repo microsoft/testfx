@@ -27,7 +27,7 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
             // We check for appdomain directly in the test, so if tests fail we did not run in appdomain.
             TestHostResult testHostSuccessResult = await testHost.ExecuteAsync("--settings AppDomainEnabled.runsettings", cancellationToken: TestContext.CancellationToken);
 
-            testHostSuccessResult.AssertExitCodeIs(ExitCodes.Success);
+            testHostSuccessResult.AssertExitCodeIs(ExitCode.Success);
         }
 
         // Delete the TestDiscoveryWarningsBaseClass.dll from the test bin folder on purpose, to break discovering
@@ -36,7 +36,7 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
+        testHostResult.AssertExitCodeIsNot(ExitCode.Success);
         if (isNetFx)
         {
             testHostResult.AssertStandardErrorContains("Could not load file or assembly 'TestDiscoveryWarningsBaseClass, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null' or one of its dependencies. The system cannot find the file specified.");

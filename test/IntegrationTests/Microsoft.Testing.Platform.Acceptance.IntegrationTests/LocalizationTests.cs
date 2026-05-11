@@ -45,7 +45,7 @@ public class LocalizationTests : AcceptanceTestBase<LocalizationTests.TestAssetF
             environmentVariables: new() { ["DOTNET_CLI_UI_LANGUAGE"] = "fr" },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         // Verify the summary line is in French ("Résumé de série de tests : Réussite!")
         AssertOutputContainsNormalized(testHostResult, "Résumé de série de tests : Réussite!");
@@ -70,7 +70,7 @@ public class LocalizationTests : AcceptanceTestBase<LocalizationTests.TestAssetF
             environmentVariables: new() { ["DOTNET_CLI_UI_LANGUAGE"] = "es" },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         // Verify the summary line is in Spanish ("Resumen de la serie de pruebas: Correcta!")
         testHostResult.AssertOutputContains("Resumen de la serie de pruebas: Correcta!");
@@ -99,7 +99,7 @@ public class LocalizationTests : AcceptanceTestBase<LocalizationTests.TestAssetF
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         // French should win because TESTINGPLATFORM_UI_LANGUAGE has higher precedence
         AssertOutputContainsNormalized(testHostResult, "Résumé de série de tests : Réussite!");

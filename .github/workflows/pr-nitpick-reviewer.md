@@ -1,8 +1,20 @@
 ---
-description: Provides detailed nitpicky code review focusing on style, best practices, and minor improvements when invoked with the /nit command
+description: >
+  Provides detailed nitpicky code review focusing on style, best practices,
+  and minor improvements. Runs automatically on all opened PRs and can also
+  be invoked on-demand with the /nit command.
 
 on:
-  slash_command: "nit"
+  slash_command:
+    name: nit
+    events: [pull_request_comment, pull_request_review_comment]
+  # pull_request_target is intentional: this workflow needs write access to post review comments,
+  # which requires pull_request_target (not pull_request) to work on fork PRs.
+  # Security: the agent only posts review comments (no code changes). XPIA risk from adversarial
+  # fork PR content is mitigated by the gh-aw XPIA prompt and locked-down permissions: {} in
+  # the compiled workflow.
+  pull_request_target:
+    types: [opened]
 
 permissions:
   contents: read
@@ -10,12 +22,17 @@ permissions:
   actions: read
 
 tools:
-  cache-memory: true
+  cache-memory:
+    - id: repo-history
+      key: repo-history  # shared cache produced by the repo-historian workflow
   github:
+    lockdown: true
     toolsets: [pull_requests, repos]
     min-integrity: none
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   create-pull-request-review-comment:
     max: 10
     side: "RIGHT"
@@ -64,6 +81,10 @@ Use the cache memory at `/tmp/gh-aw/cache-memory/` to:
 - Read previous nitpick patterns from `/tmp/gh-aw/cache-memory/nitpick-patterns.json`
 - Review user instructions from `/tmp/gh-aw/cache-memory/user-preferences.json`
 - Note team coding conventions from `/tmp/gh-aw/cache-memory/conventions.json`
+- Check repository history insights from `/tmp/gh-aw/cache-memory-repo-history/repo-history.json` if it is present in the shared `repo-history` cache. If present, use it to:
+  - Prioritize review effort on high-churn files and high-risk directories
+  - Skip deep analysis of stable, low-churn areas when the PR is large
+  - Be aware of recurring style patterns that were flagged in recent PRs
 
 ### Step 2: Deduplication Check
 

@@ -220,10 +220,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return false;
         }
 
-        // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
-        // attributes and filter them. We don't have to care if there is one, because this method is only entered when
-        // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
-        IEnumerable<ITestDataSource> testDataSources = ReflectHelper.Instance.GetAttributes<Attribute>(testMethodInfo.MethodInfo).OfType<ITestDataSource>();
+        // PERF: Access the cached attribute array directly to avoid allocating two iterator state machines
+        // for GetAttributes<Attribute>().OfType<ITestDataSource>() on every data-driven test during discovery.
+        Attribute[] allAttributes = ReflectHelper.Instance.GetCustomAttributesCached(testMethodInfo.MethodInfo);
 
         // We need to use a temporary list to avoid adding tests to the main list if we fail to expand any data source.
         List<UnitTestElement> tempListOfTests = [];
@@ -232,8 +231,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             bool isDataDriven = false;
             int globalTestCaseIndex = 0;
-            foreach (ITestDataSource dataSource in testDataSources)
+            foreach (Attribute attribute in allAttributes)
             {
+                if (attribute is not ITestDataSource dataSource)
+                {
+                    continue;
+                }
+
                 isDataDriven = true;
                 if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.TestMethod.DisplayName), tempListOfTests, ref globalTestCaseIndex, mustSerialize))
                 {

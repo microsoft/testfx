@@ -405,4 +405,7 @@ Actual: {2}</value>
   <data name="AssertScopeNestedNotAllowed" xml:space="preserve">
     <value>Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</value>
   </data>
+  <data name="STATestMethodNonWindowsNotSupported" xml:space="preserve">
+    <value>[STATestMethod] is not supported on non-Windows platforms. STA (Single Threaded Apartment) is a Windows-only COM threading concept. Use [OSCondition(OperatingSystems.Windows)] to skip this test on non-Windows platforms.</value>
+  </data>
 </root>
