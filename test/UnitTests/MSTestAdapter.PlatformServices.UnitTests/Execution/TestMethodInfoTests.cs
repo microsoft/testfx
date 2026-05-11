@@ -613,36 +613,7 @@ public class TestMethodInfoTests : TestContainer
         };
 
         using var syncContext = new SingleThreadedSynchronizationContextForTesting();
-        var tcs = new TaskCompletionSource<TestResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        // Act: run InvokeAsync on the synchronization context's dedicated thread, simulating UITestMethodAttribute
-        // dispatching the test to the UI thread.
-        syncContext.Post(
-            state => _ = testMethodInfo.InvokeAsync(null).ContinueWith(
-                t =>
-                {
-                    if (t.IsFaulted)
-                    {
-                        tcs.SetException(t.Exception!);
-                    }
-                    else if (t.IsCanceled)
-                    {
-                        tcs.SetCanceled();
-                    }
-                    else
-                    {
-                        tcs.SetResult(t.Result);
-                    }
-                },
-                CancellationToken.None,
-                TaskContinuationOptions.None,
-                TaskScheduler.Default),
-            null);
-
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        Task completed = await Task.WhenAny(tcs.Task, Task.Delay(Timeout.Infinite, cts.Token));
-        completed.Should().BeSameAs(tcs.Task, "Timed out waiting for InvokeAsync to complete.");
-        TestResult result = await tcs.Task;
+        TestResult result = await RunInvokeAsyncOnContextAsync(testMethodInfo, syncContext);
 
         // Assert: the SynchronizationContext should be preserved in the test method even after async TestInitialize
         result.Outcome.Should().Be(UnitTestOutcome.Passed);
@@ -654,12 +625,14 @@ public class TestMethodInfoTests : TestContainer
         // Arrange
         SynchronizationContext? capturedContextInTestCleanup = null;
 
+        DummyTestClass.TestInitializeMethodBodyAsync = async _ => await Task.Delay(1);
         DummyTestClass.TestCleanupMethodBodyAsync = async _ =>
         {
             capturedContextInTestCleanup = SynchronizationContext.Current;
             await Task.Delay(1);
         };
         DummyTestClass.TestMethodBody = _ => { };
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethodAsync")!;
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethodAsync")!;
 
         // Create a TestMethodInfo without a timeout so we go through ExecuteInternalAsync directly
@@ -670,36 +643,7 @@ public class TestMethodInfoTests : TestContainer
         };
 
         using var syncContext = new SingleThreadedSynchronizationContextForTesting();
-        var tcs = new TaskCompletionSource<TestResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        // Act: run InvokeAsync on the synchronization context's dedicated thread, simulating UITestMethodAttribute
-        // dispatching the test to the UI thread.
-        syncContext.Post(
-            state => _ = testMethodInfo.InvokeAsync(null).ContinueWith(
-                t =>
-                {
-                    if (t.IsFaulted)
-                    {
-                        tcs.SetException(t.Exception!);
-                    }
-                    else if (t.IsCanceled)
-                    {
-                        tcs.SetCanceled();
-                    }
-                    else
-                    {
-                        tcs.SetResult(t.Result);
-                    }
-                },
-                CancellationToken.None,
-                TaskContinuationOptions.None,
-                TaskScheduler.Default),
-            null);
-
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        Task completed = await Task.WhenAny(tcs.Task, Task.Delay(Timeout.Infinite, cts.Token));
-        completed.Should().BeSameAs(tcs.Task, "Timed out waiting for InvokeAsync to complete.");
-        TestResult result = await tcs.Task;
+        TestResult result = await RunInvokeAsyncOnContextAsync(testMethodInfo, syncContext);
 
         // Assert: the SynchronizationContext should be preserved at the start of TestCleanup
         result.Outcome.Should().Be(UnitTestOutcome.Passed);
@@ -1671,6 +1615,40 @@ public class TestMethodInfoTests : TestContainer
 
     #endregion
 
+    private static async Task<TestResult> RunInvokeAsyncOnContextAsync(
+        TestMethodInfo info,
+        SingleThreadedSynchronizationContextForTesting ctx)
+    {
+        var tcs = new TaskCompletionSource<TestResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        ctx.Post(
+            _ => _ = info.InvokeAsync(null).ContinueWith(
+                t =>
+                {
+                    if (t.IsFaulted)
+                    {
+                        tcs.SetException(t.Exception!);
+                    }
+                    else if (t.IsCanceled)
+                    {
+                        tcs.SetCanceled();
+                    }
+                    else
+                    {
+                        tcs.SetResult(t.Result);
+                    }
+                },
+                CancellationToken.None,
+                TaskContinuationOptions.None,
+                TaskScheduler.Default),
+            null);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        Task completed = await Task.WhenAny(tcs.Task, Task.Delay(Timeout.Infinite, cts.Token));
+        completed.Should().BeSameAs(tcs.Task, "Timed out waiting for InvokeAsync to complete.");
+
+        return await tcs.Task;
+    }
+
     #region Test data
 
     private sealed class SingleThreadedSynchronizationContextForTesting : SynchronizationContext, IDisposable
@@ -1702,18 +1680,19 @@ public class TestMethodInfoTests : TestContainer
             }
             catch (InvalidOperationException)
             {
-                // Collection completed (after Dispose called CompleteAdding)
-            }
-            catch (ObjectDisposedException)
-            {
-                // Collection disposed
+                // Collection completed (after Dispose called CompleteAdding) or disposed
             }
         }
 
         public void Dispose()
         {
             _queue.CompleteAdding();
-            _thread.Join();
+            if (!_thread.Join(TimeSpan.FromSeconds(5)))
+            {
+                // Thread is background, so it will be killed on process exit.
+                // Avoid hanging the test run indefinitely.
+            }
+
             _queue.Dispose();
         }
     }
