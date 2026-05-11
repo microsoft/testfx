@@ -92,11 +92,6 @@ jobs:
         if: steps.check-lean-files.outputs.lean_count != '0'
         run: lean --version
 
-      - name: Resolve Lean dependencies
-        if: steps.check-lean-files.outputs.lean_count != '0' && steps.restore-cache.outputs.cache-hit != 'true'
-        working-directory: formal-verification/lean
-        run: lake update
-
       - name: Build Lean proofs
         if: steps.check-lean-files.outputs.lean_count != '0'
         working-directory: formal-verification/lean
