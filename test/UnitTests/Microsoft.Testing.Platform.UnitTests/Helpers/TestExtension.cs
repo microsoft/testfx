@@ -3,9 +3,9 @@
 
 namespace Microsoft.Testing.Platform.UnitTests.Helpers;
 
-internal class TestExtension : IExtension
+internal class TestExtension(string uid = "Uid") : IExtension
 {
-    public string Uid => "Uid";
+    public string Uid { get; } = uid;
 
     public string Version => "Version";
 
