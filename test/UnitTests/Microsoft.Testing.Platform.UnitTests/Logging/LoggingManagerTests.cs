@@ -16,7 +16,7 @@ public sealed class LoggingManagerTests
     private readonly Mock<IServiceProvider> _mockServiceProvider = new();
 
     public LoggingManagerTests()
-        => _mockMonitor.Setup(x => x.Lock(It.IsAny<object>())).Returns(new Mock<IDisposable>().Object);
+        => _mockMonitor.Setup(p => p.Lock(It.IsAny<object>())).Returns(new Mock<IDisposable>().Object);
 
     [TestMethod]
     public void AddProvider_NullFactory_ThrowsArgumentNullException()
@@ -65,7 +65,7 @@ public sealed class LoggingManagerTests
         manager.AddProvider((_, _) => mockProvider.Object);
 
         ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
-        factory.CreateLogger("test");
+        _ = factory.CreateLogger("test");
 
         mockProvider.Verify(p => p.CreateLogger("test"), Times.Once);
     }
@@ -80,7 +80,7 @@ public sealed class LoggingManagerTests
         manager.AddProvider((_, _) => mockProvider.Object);
 
         ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
-        factory.CreateLogger("test");
+        _ = factory.CreateLogger("test");
 
         mockProvider.Verify(p => p.CreateLogger("test"), Times.Once);
     }
@@ -94,7 +94,7 @@ public sealed class LoggingManagerTests
         manager.AddProvider((_, _) => mockProvider.Object);
 
         ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
-        factory.CreateLogger("test");
+        _ = factory.CreateLogger("test");
 
         mockProvider.Verify(p => p.CreateLogger(It.IsAny<string>()), Times.Never);
     }
@@ -109,9 +109,11 @@ public sealed class LoggingManagerTests
         mockProvider.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
         manager.AddProvider((_, _) => mockProvider.Object);
 
-        await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
+        ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
+        _ = factory.CreateLogger("test");
 
         mockProvider.Verify(p => p.InitializeAsync(), Times.Once);
+        mockProvider.Verify(p => p.CreateLogger("test"), Times.Once);
     }
 
     [TestMethod]
@@ -136,9 +138,32 @@ public sealed class LoggingManagerTests
         mockProvider.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
         manager.AddProvider((_, _) => mockProvider.Object);
 
-        await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
+        ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
+        _ = factory.CreateLogger("test");
 
         mockProvider.Verify(p => p.InitializeAsync(), Times.Once);
+        mockProvider.Verify(p => p.CreateLogger("test"), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task BuildAsync_MultipleProviders_OnlyIncludesEnabledOnes()
+    {
+        LoggingManager manager = new();
+
+        Mock<IExtensionLoggerProvider> disabledProvider = new();
+        disabledProvider.Setup(p => p.IsEnabledAsync()).ReturnsAsync(false);
+
+        Mock<ILoggerProvider> enabledProvider = new();
+        enabledProvider.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+
+        manager.AddProvider((_, _) => disabledProvider.Object);
+        manager.AddProvider((_, _) => enabledProvider.Object);
+
+        ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
+        _ = factory.CreateLogger("test");
+
+        disabledProvider.Verify(p => p.CreateLogger(It.IsAny<string>()), Times.Never);
+        enabledProvider.Verify(p => p.CreateLogger("test"), Times.Once);
     }
 }
 
