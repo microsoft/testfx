@@ -398,7 +398,7 @@ internal sealed class DotnetMuxerLocator
             }
         }
 
-        return archType ?? throw new InvalidOperationException("Invalid image");
+        return archType ?? throw new InvalidOperationException($"Could not determine the CPU architecture from the PE image at '{path}'. The image may be corrupt or of an unsupported format.");
     }
 
     // See https://opensource.apple.com/source/xnu/xnu-2050.18.24/EXTERNAL_HEADERS/mach-o/loader.h
