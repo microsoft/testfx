@@ -154,12 +154,23 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         bool retryInterrupted = false;
 
         // Parse the delay once before the loop since command-line options don't change.
-        TimeSpan? retryDelay = _commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName, out string[]? retryDelayArgs)
-            ? TimeSpanParser.Parse(retryDelayArgs[0])
-            : null;
+        TimeSpan? retryDelay = null;
+        if (_commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName, out string[]? retryDelayArgs)
+            && retryDelayArgs is { Length: > 0 }
+            && TimeSpanParser.TryParse(retryDelayArgs[0], out TimeSpan parsedDelay))
+        {
+            retryDelay = parsedDelay;
+        }
+
         while (attemptCount < userMaxRetryCount + 1)
         {
             attemptCount++;
+
+            if (attemptCount > 1 && retryDelay is { } delay)
+            {
+                await logger.LogDebugAsync($"Waiting {delay:c} before retry attempt {attemptCount}").ConfigureAwait(false);
+                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+            }
 
             // Cleanup the arguments
             for (int i = 0; i < executableArguments.Length; i++)
@@ -277,13 +288,6 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             {
                 UseShellExecute = false,
             };
-
-            // Apply delay between retries if configured (skip first attempt)
-            if (attemptCount > 1 && retryDelay is { } delay)
-            {
-                await logger.LogDebugAsync($"Waiting {delay:c} before retry attempt {attemptCount}").ConfigureAwait(false);
-                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
-            }
 
             await logger.LogDebugAsync($"Starting test host process, attempt {attemptCount}/{userMaxRetryCount}").ConfigureAwait(false);
             IProcess testHostProcess = _serviceProvider.GetProcessHandler().Start(processStartInfo)
