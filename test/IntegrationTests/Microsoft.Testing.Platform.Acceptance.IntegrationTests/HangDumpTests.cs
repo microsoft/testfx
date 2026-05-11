@@ -122,9 +122,9 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
 
         // Verify the dump file uses the template format
         string[] dumpFiles = Directory.GetFiles(resultDirectory, "*_hang.dmp", SearchOption.AllDirectories);
-        Assert.IsNotEmpty(dumpFiles, $"No dump files found in '{resultDirectory}'\n{testHostResult}'");
-
-        string dumpFile = dumpFiles[0];
+        string dumpFile = Assert.ContainsSingle(
+            dumpFiles,
+            $"Expected single dump file in '{resultDirectory}'\n{testHostResult}'");
         string fileName = Path.GetFileNameWithoutExtension(dumpFile);
 
         // File should match pattern: <pname>_<pid>_<tfm>_<time>_hang

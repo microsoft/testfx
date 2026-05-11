@@ -42,6 +42,21 @@ public sealed class ArtifactNamingHelperTests
     }
 
     [TestMethod]
+    public void ResolveTemplate_EmptyReplacementValue_ReplacesWithEmptyString()
+    {
+        string template = "<asm>_<pname>.dmp";
+        var replacements = new Dictionary<string, string>
+        {
+            ["asm"] = string.Empty,
+            ["pname"] = "test-process",
+        };
+
+        string result = ArtifactNamingHelper.ResolveTemplate(template, replacements);
+
+        Assert.AreEqual("_test-process.dmp", result);
+    }
+
+    [TestMethod]
     public void ResolveTemplate_WithUnknownPlaceholder_KeepsPlaceholderAsIs()
     {
         string template = "<unknown-field>_<pname>";
