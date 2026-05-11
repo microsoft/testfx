@@ -145,8 +145,8 @@ public sealed class JsonTests
         InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(() => serializer.GetProperties(new object()));
 
         // Assert
-        Assert.Contains(exception.Message, nameof(JsonObjectSerializer.Properties));
-        Assert.Contains(exception.Message, nameof(TestJsonObjectSerializer));
+        Assert.Contains(nameof(JsonObjectSerializer.Properties), exception.Message);
+        Assert.Contains(nameof(TestJsonObjectSerializer), exception.Message);
     }
 
     private sealed class TestJsonObjectSerializer : JsonObjectSerializer;
