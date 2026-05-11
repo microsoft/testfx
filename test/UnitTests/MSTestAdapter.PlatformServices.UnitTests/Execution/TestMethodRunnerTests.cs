@@ -615,7 +615,7 @@ public class TestMethodRunnerTests : TestContainer
         }
     }
 
-    private sealed class FoldedDataDrivenTestDataSourceAttribute : Attribute, ITestDataSource
+    private sealed class FoldedDataDrivenTestDataSourceAttribute : Attribute, Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource
     {
         public IEnumerable<object?[]> GetData(MethodInfo methodInfo)
             => [[1], [2]];
