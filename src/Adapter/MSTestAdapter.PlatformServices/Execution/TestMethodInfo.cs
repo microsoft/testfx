@@ -1,7 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -107,4 +109,94 @@ internal partial class TestMethodInfo : ITestMethod
     public TAttributeType[] GetAttributes<TAttributeType>()
         where TAttributeType : Attribute
         => [.. ReflectHelper.Instance.GetAttributes<TAttributeType>(MethodInfo)];
+
+    /// <summary>
+    /// Execute test method. Capture failures, handle async and return result.
+    /// </summary>
+    /// <param name="arguments">
+    ///  Arguments to pass to test method. (E.g. For data driven).
+    /// </param>
+    /// <returns>Result of test method invocation.</returns>
+    public virtual async Task<TestResult> InvokeAsync(object?[]? arguments)
+    {
+        Stopwatch watch = new();
+        TestResult? result = null;
+
+        // check if arguments are set for data driven tests
+        arguments ??= Arguments;
+
+        watch.Start();
+
+        try
+        {
+            result = IsTimeoutSet
+                ? await ExecuteInternalWithTimeoutAsync(arguments).ConfigureAwait(false)
+                : await ExecuteInternalAsync(arguments, null).ConfigureAwait(false);
+        }
+        finally
+        {
+            // Handle logs & debug traces.
+            watch.Stop();
+
+            if (result != null)
+            {
+                var testContextImpl = TestContext as TestContextImplementation;
+                result.LogOutput = testContextImpl?.GetAndClearOutput();
+                result.LogError = testContextImpl?.GetAndClearError();
+                result.DebugTrace = testContextImpl?.GetAndClearTrace();
+                result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
+                result.ResultFiles = TestContext?.GetResultFiles();
+                result.Duration = watch.Elapsed;
+            }
+
+            _executionContext?.Dispose();
+            _executionContext = null;
+#if NETFRAMEWORK
+            _hostContext = null;
+#endif
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Provides the Test Method Extension Attribute of the TestClass.
+    /// </summary>
+    /// <returns>Test Method Attribute.</returns>
+    private TestMethodAttribute GetTestMethodAttribute()
+    {
+        // Get the derived TestMethod attribute from reflection.
+        // It should be non-null as it was already validated by IsValidTestMethod.
+        TestMethodAttribute testMethodAttribute = ReflectHelper.Instance.GetSingleAttributeOrDefault<TestMethodAttribute>(MethodInfo)!;
+
+        // Get the derived TestMethod attribute from Extended TestClass Attribute
+        // If the extended TestClass Attribute doesn't have extended TestMethod attribute then base class returns back the original testMethod Attribute
+        return Parent.ClassAttribute.GetTestMethodAttribute(testMethodAttribute) ?? testMethodAttribute;
+    }
+
+    /// <summary>
+    /// Gets the number of retries this test method should make in case of failure.
+    /// </summary>
+    /// <returns>
+    /// The number of retries, which is always greater than or equal to 1.
+    /// If RetryAttribute is not present, returns 1.
+    /// </returns>
+    private RetryBaseAttribute? GetRetryAttribute()
+    {
+        IEnumerable<RetryBaseAttribute> attributes = ReflectHelper.Instance.GetAttributes<RetryBaseAttribute>(MethodInfo);
+        using IEnumerator<RetryBaseAttribute> enumerator = attributes.GetEnumerator();
+        if (!enumerator.MoveNext())
+        {
+            return null;
+        }
+
+        RetryBaseAttribute attribute = enumerator.Current;
+
+        if (enumerator.MoveNext())
+        {
+            ThrowMultipleAttributesException(nameof(RetryBaseAttribute));
+        }
+
+        return attribute;
+    }
 }

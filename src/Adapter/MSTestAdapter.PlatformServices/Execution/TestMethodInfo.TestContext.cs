@@ -53,14 +53,4 @@ internal partial class TestMethodInfo
 
         return false;
     }
-
-    /// <summary>
-    /// Creates an instance of TestClass. The TestMethod is invoked on this instance.
-    /// </summary>
-    /// <returns>
-    /// An instance of the TestClass.
-    /// </returns>
-    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private object? CreateTestClassInstance()
-        => Parent.Constructor.Invoke(Parent.IsParameterlessConstructor ? null : [TestContext]);
 }

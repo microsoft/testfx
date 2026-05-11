@@ -8,7 +8,6 @@ using System.Runtime.Remoting.Messaging;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -18,52 +17,39 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 internal partial class TestMethodInfo
 {
     /// <summary>
-    /// Execute test method. Capture failures, handle async and return result.
+    /// Gets the test timeout for the test method.
     /// </summary>
-    /// <param name="arguments">
-    ///  Arguments to pass to test method. (E.g. For data driven).
-    /// </param>
-    /// <returns>Result of test method invocation.</returns>
-    public virtual async Task<TestResult> InvokeAsync(object?[]? arguments)
+    /// <returns> The timeout value if defined in milliseconds. 0 if not defined. </returns>
+    private TimeoutInfo GetTestTimeout()
     {
-        Stopwatch watch = new();
-        TestResult? result = null;
-
-        // check if arguments are set for data driven tests
-        arguments ??= Arguments;
-
-        watch.Start();
-
-        try
+        DebugEx.Assert(MethodInfo != null, "TestMethod should be non-null");
+        TimeoutAttribute? timeoutAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TimeoutAttribute>(MethodInfo);
+        if (timeoutAttribute is null)
         {
-            result = IsTimeoutSet
-                ? await ExecuteInternalWithTimeoutAsync(arguments).ConfigureAwait(false)
-                : await ExecuteInternalAsync(arguments, null).ConfigureAwait(false);
-        }
-        finally
-        {
-            // Handle logs & debug traces.
-            watch.Stop();
-
-            if (result != null)
-            {
-                var testContextImpl = TestContext as TestContextImplementation;
-                result.LogOutput = testContextImpl?.GetAndClearOutput();
-                result.LogError = testContextImpl?.GetAndClearError();
-                result.DebugTrace = testContextImpl?.GetAndClearTrace();
-                result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
-                result.ResultFiles = TestContext?.GetResultFiles();
-                result.Duration = watch.Elapsed;
-            }
-
-            _executionContext?.Dispose();
-            _executionContext = null;
-#if NETFRAMEWORK
-            _hostContext = null;
-#endif
+            return TimeoutInfo.FromTestTimeoutSettings();
         }
 
-        return result;
+        if (!timeoutAttribute.HasCorrectTimeout)
+        {
+            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, MethodInfo.DeclaringType!.FullName, MethodInfo.Name);
+            throw new TypeInspectionException(message);
+        }
+
+        return TimeoutInfo.FromTimeoutAttribute(timeoutAttribute);
+    }
+
+    [DoesNotReturn]
+    private void ThrowMultipleAttributesException(string attributeName)
+    {
+        // Note: even if the given attribute has AllowMultiple = false, we can
+        // still reach here if a derived attribute authored by the user re-defines AttributeUsage
+        string errorMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_MultipleAttributesOnTestMethod,
+            Parent.ClassType.FullName,
+            MethodInfo.Name,
+            attributeName);
+        throw new TypeInspectionException(errorMessage);
     }
 
     /// <summary>
@@ -224,7 +210,7 @@ internal partial class TestMethodInfo
         if (TestContext is { } testContext)
         {
             testContext.SetOutcome(result.Outcome);
-            // Uwnrap the exception if it's a TestFailedException
+            // Unwrap the exception if it's a TestFailedException
             Exception? realException = result.TestFailureException is TestFailedException
                 ? result.TestFailureException.InnerException
                 : result.TestFailureException;
@@ -257,83 +243,14 @@ internal partial class TestMethodInfo
     }
 
     /// <summary>
-    /// Handles the exception that is thrown by a test method. The exception can either
-    /// be expected or not expected.
+    /// Creates an instance of TestClass. The TestMethod is invoked on this instance.
     /// </summary>
-    /// <param name="ex">Exception that was thrown.</param>
-    /// <param name="realException">Real exception thrown by the test method.</param>
-    /// <param name="className">The class name.</param>
-    /// <param name="methodName">The method name.</param>
-    /// <returns>Test framework exception with details.</returns>
-    private TestFailedException HandleMethodException(Exception ex, Exception realException, string className, string methodName)
-    {
-        DebugEx.Assert(ex != null, "exception should not be null.");
-
-        string errorMessage;
-        if (ex is TargetInvocationException && ex.InnerException == null)
-        {
-            errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_FailedToGetTestMethodException, className, methodName);
-            return new TestFailedException(UnitTestOutcome.Error, errorMessage);
-        }
-
-        if (ex is TestFailedException testFailedException)
-        {
-            return testFailedException;
-        }
-
-        // If we are in hot reload context and the exception is a MissingMethodException and the first line of the stack
-        // trace contains the method name then it's likely that the current method was removed and the test is failing.
-        // For cases where the content of the test would throw a MissingMethodException, the first line of the stack trace
-        // would not be the test method name, so we can safely assume this is a proper test failure.
-        if (ex is MissingMethodException missingMethodException
-            && RuntimeContext.IsHotReloadEnabled
-            && missingMethodException.StackTrace?.IndexOf(Environment.NewLine, StringComparison.Ordinal) is { } lineReturnIndex
-            && lineReturnIndex >= 0
-#pragma warning disable IDE0057 // Use range operator
-            && missingMethodException.StackTrace.Substring(0, lineReturnIndex).Contains($"{className}.{methodName}"))
-#pragma warning restore IDE0057 // Use range operator
-        {
-            return new TestFailedException(UnitTestOutcome.NotFound, missingMethodException.Message, missingMethodException);
-        }
-
-        // Get the real exception thrown by the test method
-        if (realException.TryGetUnitTestAssertException(out UnitTestOutcome outcome, out string? exceptionMessage, out StackTraceInformation? exceptionStackTraceInfo))
-        {
-            return new TestFailedException(outcome, exceptionMessage, exceptionStackTraceInfo, realException);
-        }
-
-        errorMessage = _classInstance is null
-            ? string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_InstanceCreationError,
-                TestClassName,
-                realException.GetFormattedExceptionMessage())
-            : string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_TestMethodThrows,
-                className,
-                methodName,
-                realException.GetFormattedExceptionMessage());
-
-        // Handle special case of UI objects in TestMethod to suggest UITestMethod
-        if (realException.HResult == -2147417842)
-        {
-            errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_WrongThread, errorMessage);
-        }
-
-        StackTraceInformation? stackTrace = null;
-
-        // For ThreadAbortException (that can be thrown only by aborting a thread as there's no public constructor)
-        // there's no inner exception and exception itself contains reflection-related stack trace
-        // (_RuntimeMethodHandle.InvokeMethodFast <- _RuntimeMethodHandle.Invoke <- UnitTestExecuter.RunTestMethod)
-        // which has no meaningful info for the user. Thus, we do not show call stack for ThreadAbortException.
-        if (realException.GetType().Name != "ThreadAbortException")
-        {
-            stackTrace = realException.GetStackTraceInformation();
-        }
-
-        return new TestFailedException(UnitTestOutcome.Failed, errorMessage, stackTrace, realException);
-    }
+    /// <returns>
+    /// An instance of the TestClass.
+    /// </returns>
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    private object? CreateTestClassInstance()
+        => Parent.Constructor.Invoke(Parent.IsParameterlessConstructor ? null : [TestContext]);
 
     /// <summary>
     /// Execute test with a timeout.
