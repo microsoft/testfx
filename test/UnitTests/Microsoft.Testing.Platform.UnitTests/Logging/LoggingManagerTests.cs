@@ -73,7 +73,7 @@ public sealed class LoggingManagerTests
     }
 
     [TestMethod]
-    public async Task BuildAsync_WithInitializableProvider_CallsInitializeAsync()
+    public async Task BuildAsync_WithNonExtensionInitializableProvider_CallsInitializeAsync()
     {
         Mock<IInitializableLoggerProvider> mockProvider = new();
         mockProvider.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
@@ -82,9 +82,11 @@ public sealed class LoggingManagerTests
         LoggingManager manager = new();
         manager.AddProvider((_, _) => mockProvider.Object);
 
-        await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Debug, _mockMonitor.Object);
+        ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Debug, _mockMonitor.Object);
+        factory.CreateLogger("test");
 
         mockProvider.Verify(p => p.InitializeAsync(), Times.Once);
+        mockProvider.Verify(p => p.CreateLogger("test"), Times.Once);
     }
 
     [TestMethod]
@@ -99,6 +101,24 @@ public sealed class LoggingManagerTests
         await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Debug, _mockMonitor.Object);
 
         mockProvider.Verify(p => p.InitializeAsync(), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task BuildAsync_WithEnabledExtensionAndInitializableProvider_CallsInitializeAsync()
+    {
+        Mock<IExtensionAndInitializableLoggerProvider> mockProvider = new();
+        mockProvider.Setup(p => p.IsEnabledAsync()).ReturnsAsync(true);
+        mockProvider.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+        mockProvider.Setup(p => p.InitializeAsync()).Returns(Task.CompletedTask);
+
+        LoggingManager manager = new();
+        manager.AddProvider((_, _) => mockProvider.Object);
+
+        ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Debug, _mockMonitor.Object);
+        factory.CreateLogger("test");
+
+        mockProvider.Verify(p => p.InitializeAsync(), Times.Once);
+        mockProvider.Verify(p => p.CreateLogger("test"), Times.Once);
     }
 
     [TestMethod]
