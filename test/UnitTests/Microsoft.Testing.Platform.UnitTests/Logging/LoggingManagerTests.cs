@@ -80,6 +80,7 @@ public sealed class LoggingManagerTests
     {
         Mock<IExtensionInitializableLoggerProvider> mockProvider = new();
         mockProvider.Setup(p => p.IsEnabledAsync()).ReturnsAsync(false);
+        mockProvider.Setup(p => p.InitializeAsync()).Returns(Task.CompletedTask);
 
         LoggingManager manager = new();
         manager.AddProvider((_, _) => mockProvider.Object);
