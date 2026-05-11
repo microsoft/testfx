@@ -1,15 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(SupportedNetFrameworks);netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
     <Nullable>enable</Nullable>
     <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
+    <GenerateBuildInfo>true</GenerateBuildInfo>
+    <BuildInfoTemplateFile>$(RepoRoot)src\Platform\SharedExtensionHelpers\BuildInfo.cs.template</BuildInfoTemplateFile>
+    <!-- Override VersionPrefix so that ExtensionVersion.DefaultSemVer matches the Testing Platform version, not the MSTest version. -->
+    <VersionPrefix>$(TestingPlatformVersionPrefix)</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Polly" />
     <PackageReference Include="Polly.Contrib.WaitAndRetry" />
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

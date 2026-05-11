@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -22,7 +23,7 @@ internal sealed class AssemblyEnumeratorWrapper
     /// Gets test elements from an assembly.
     /// </summary>
     /// <returns> A collection of test elements. </returns>
-    internal static ICollection<UnitTestElement>? GetTests(string? assemblyFileName, IRunSettings? runSettings, ITestSourceHandler testSourceHandler, out List<string> warnings)
+    internal static ICollection<UnitTestElement>? GetTests(string? assemblyFileName, IRunSettings? runSettings, ITestSourceHandler testSourceHandler, bool isMTP, out List<string> warnings)
     {
         warnings = [];
 
@@ -47,7 +48,7 @@ internal sealed class AssemblyEnumeratorWrapper
         try
         {
             // Load the assembly in isolation if required.
-            AssemblyEnumerationResult result = GetTestsInIsolation(fullFilePath, runSettings);
+            AssemblyEnumerationResult result = GetTestsInIsolation(fullFilePath, runSettings, isMTP);
             warnings.AddRange(result.Warnings);
             return result.TestElements;
         }
@@ -64,7 +65,10 @@ internal sealed class AssemblyEnumeratorWrapper
                 // If we have multiple loader exceptions, we log them all as errors, and then throw the original exception.
                 foreach (Exception? loaderEx in ex.LoaderExceptions)
                 {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("{0}", loaderEx);
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error("{0}", loaderEx);
+                    }
                 }
             }
 
@@ -82,30 +86,19 @@ internal sealed class AssemblyEnumeratorWrapper
         }
     }
 
-    private static AssemblyEnumerationResult GetTestsInIsolation(string fullFilePath, IRunSettings? runSettings)
+    private static AssemblyEnumerationResult GetTestsInIsolation(string fullFilePath, IRunSettings? runSettings, bool isMTP)
     {
-        using MSTestAdapter.PlatformServices.Interface.ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings, frameworkHandle: null);
+        using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings);
 
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var assemblyEnumerator = (AssemblyEnumerator)isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), [MSTestSettings.CurrentSettings])!;
-
-        // This might not be supported if an older version of Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
-        // assembly is already loaded into the App Domain.
-        string? xml = null;
-        try
-        {
-            xml = runSettings?.SettingsXml;
-        }
-        catch
-        {
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.OlderTFMVersionFound);
-        }
 
         // This method runs inside of appdomain, when appdomains are available and enabled.
         // Be careful how you pass data from the method. We were previously passing in a collection
         // of strings normally (by reference), and we were mutating that collection in the appdomain.
         // But this does not mutate the collection outside of appdomain, so we lost all warnings that happened inside.
-        return assemblyEnumerator.EnumerateAssembly(fullFilePath);
+        bool mustSerialize = !isMTP || isolationHost is TestSourceHost { UsesAppDomain: true };
+        return assemblyEnumerator.EnumerateAssembly(fullFilePath, mustSerialize);
     }
 
     private static bool IsManagedAssembly(string fileName)

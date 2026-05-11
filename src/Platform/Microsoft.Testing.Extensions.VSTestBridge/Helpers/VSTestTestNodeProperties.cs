@@ -5,11 +5,5 @@ namespace Microsoft.Testing.Extensions.VSTestBridge;
 
 internal static class VSTestTestNodeProperties
 {
-    internal const string Prefix = "vstest.";
     public const string OriginalExecutorUriPropertyName = "vstest.original-executor-uri";
-
-    public static class TestNode
-    {
-        public const string UidPropertyName = "vstest.testnode.uid";
-    }
 }

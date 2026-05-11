@@ -80,7 +80,7 @@ public class UnitTestDiscovererTests : TestContainer
                 .Returns(false);
         }
 
-        Action act = () => _unitTestDiscoverer.DiscoverTests(sources, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
+        Action act = () => _unitTestDiscoverer.DiscoverTests(sources, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, false);
         act.Should().Throw<FileNotFoundException>()
             .WithMessage(string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, sources[0]));
     }
@@ -93,7 +93,7 @@ public class UnitTestDiscovererTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(Source))
             .Returns(false);
 
-        Action act = () => _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
+        Action act = () => _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, false);
         act.Should().Throw<FileNotFoundException>()
             .WithMessage(string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, Source));
     }
@@ -125,7 +125,7 @@ public class UnitTestDiscovererTests : TestContainer
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         // Act
-        _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
+        _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, false);
 
         // Assert.
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.AtLeastOnce);
@@ -160,7 +160,7 @@ public class UnitTestDiscovererTests : TestContainer
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         // Act
-        Action action = () => _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
+        Action action = () => _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, false);
 
         // Assert
         action.Should().Throw<MSTestException>()
@@ -199,7 +199,7 @@ public class UnitTestDiscovererTests : TestContainer
 
         // Act & Assert
         // Should not throw an exception
-        _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
+        _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, false);
 
         // Verify warning message was sent to logger (not error)
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.AtLeastOnce);
@@ -327,7 +327,8 @@ internal class TestableUnitTestDiscoverer(ITestSourceHandler? testSourceHandler 
         string source,
         IMessageLogger logger,
         ITestCaseDiscoverySink discoverySink,
-        IDiscoveryContext? discoveryContext)
+        IDiscoveryContext? discoveryContext,
+        bool isMTP)
     {
         var testCase1 = new TestCase("A", new Uri("executor://testExecutor"), source);
         var testCase2 = new TestCase("B", new Uri("executor://testExecutor"), source);

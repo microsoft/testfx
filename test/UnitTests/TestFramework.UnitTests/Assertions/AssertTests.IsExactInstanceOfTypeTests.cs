@@ -12,7 +12,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsExactInstanceOfType(null, typeof(AssertTests));
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'null'.");
+            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'null'. Expected exact type:<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>. Actual type:<null>.");
     }
 
     public void ExactInstanceOfTypeShouldFailWhenTypeIsNull()
@@ -56,7 +56,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsExactInstanceOfType(null, typeof(AssertTests), "User-provided message");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'null'. User-provided message");
+            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'null'. User-provided message Expected exact type:<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>. Actual type:<null>.");
     }
 
     public void ExactInstanceOfType_WithStringMessage_ShouldFailWhenTypeIsNull()
@@ -82,7 +82,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsExactInstanceOfType(null, typeof(AssertTests), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<AssertFailedException>())
-            .WithMessage($"Assert.IsExactInstanceOfType failed. 'value' expression: 'null'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage($"Assert.IsExactInstanceOfType failed. 'value' expression: 'null'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)} Expected exact type:<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>. Actual type:<null>.");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -141,7 +141,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsExactInstanceOfType<AssertTests>(null);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'null'.");
+            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'null'. Expected exact type:<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>. Actual type:<null>.");
     }
 
     public void IsExactInstanceOfTypeUsingGenericType_WhenTypeMismatch_Fails()

@@ -31,7 +31,10 @@ internal class ReflectHelper : MarshalByRefObject
     public virtual /* for testing */ bool IsAttributeDefined<TAttribute>(MemberInfo memberInfo)
         where TAttribute : Attribute
     {
-        Ensure.NotNull(memberInfo);
+        if (memberInfo is null)
+        {
+            throw new ArgumentNullException(nameof(memberInfo));
+        }
 
         // Get all attributes on the member.
         Attribute[] attributes = GetCustomAttributesCached(memberInfo);
@@ -58,7 +61,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// </returns>
     [SecurityCritical]
 #if NET5_0_OR_GREATER
-    [Obsolete]
+    [Obsolete("MarshalByRefObject.InitializeLifetimeService is obsolete in .NET 5+. This override is required to maintain infinite lifetime service.")]
 #endif
     public override object InitializeLifetimeService() => null!;
 
@@ -130,20 +133,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="returnType">The return type to match.</param>
     /// <returns>True if there is a match.</returns>
     internal static bool MatchReturnType(MethodInfo method, Type returnType)
-    {
-        Ensure.NotNull(method);
-        Ensure.NotNull(returnType);
-        return method.ReturnType.Equals(returnType);
-    }
-
-    /// <summary>
-    /// Returns true when the method is declared in the assembly where the type is declared.
-    /// </summary>
-    /// <param name="method">The method to check for.</param>
-    /// <param name="type">The type declared in the assembly to check.</param>
-    /// <returns>True if the method is declared in the assembly where the type is declared.</returns>
-    internal virtual bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type)
-        => method.DeclaringType!.Assembly.Equals(type.Assembly); // TODO: Investigate if we rely on NRE
+        => method.ReturnType.Equals(returnType);
 
     /// <summary>
     /// Get categories applied to the test method.
@@ -151,13 +141,41 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="categoryAttributeProvider">The member to inspect.</param>
     /// <param name="owningType">The reflected type that owns <paramref name="categoryAttributeProvider"/>.</param>
     /// <returns>Categories defined.</returns>
-    internal virtual /* for tests, we are mocking this */ string[] GetTestCategories(MemberInfo categoryAttributeProvider, Type owningType)
+    internal string[] GetTestCategories(MemberInfo categoryAttributeProvider, Type owningType)
     {
-        IEnumerable<TestCategoryBaseAttribute> methodCategories = GetAttributes<TestCategoryBaseAttribute>(categoryAttributeProvider);
-        IEnumerable<TestCategoryBaseAttribute> typeCategories = GetAttributes<TestCategoryBaseAttribute>(owningType);
-        IEnumerable<TestCategoryBaseAttribute> assemblyCategories = GetAttributes<TestCategoryBaseAttribute>(owningType.Assembly);
+        Attribute[] methodAttributes = GetCustomAttributesCached(categoryAttributeProvider);
+        Attribute[] typeAttributes = GetCustomAttributesCached(owningType);
+        Attribute[] assemblyAttributes = GetCustomAttributesCached(owningType.Assembly);
 
-        return [.. methodCategories.Concat(typeCategories).Concat(assemblyCategories).SelectMany(c => c.TestCategories)];
+        // Avoid LINQ iterator allocations by iterating the cached attribute arrays directly.
+        // This follows the same allocation-free pattern used by GetTestPropertiesAsTraits.
+        List<string>? categories = null;
+
+        foreach (Attribute attribute in methodAttributes)
+        {
+            if (attribute is TestCategoryBaseAttribute categoryAttr)
+            {
+                (categories ??= []).AddRange(categoryAttr.TestCategories);
+            }
+        }
+
+        foreach (Attribute attribute in typeAttributes)
+        {
+            if (attribute is TestCategoryBaseAttribute categoryAttr)
+            {
+                (categories ??= []).AddRange(categoryAttr.TestCategories);
+            }
+        }
+
+        foreach (Attribute attribute in assemblyAttributes)
+        {
+            if (attribute is TestCategoryBaseAttribute categoryAttr)
+            {
+                (categories ??= []).AddRange(categoryAttr.TestCategories);
+            }
+        }
+
+        return categories is null ? [] : [.. categories];
     }
 
     /// <summary>
@@ -171,13 +189,11 @@ internal class ReflectHelper : MarshalByRefObject
             .FirstOrDefault();
 
     /// <summary>
-    /// Gets discover internals assembly level attribute.
+    /// Returns whether the assembly has discover internals attribute.
     /// </summary>
     /// <param name="assembly"> The test assembly. </param>
-    internal static DiscoverInternalsAttribute? GetDiscoverInternalsAttribute(Assembly assembly)
-        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DiscoverInternalsAttribute))
-            .OfType<DiscoverInternalsAttribute>()
-            .FirstOrDefault();
+    internal static bool HasDiscoverInternalsAttribute(Assembly assembly)
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DiscoverInternalsAttribute)).Length > 0;
 
     /// <summary>
     /// Gets TestDataSourceDiscovery assembly level attribute.
@@ -199,16 +215,6 @@ internal class ReflectHelper : MarshalByRefObject
             .FirstOrDefault();
 
     /// <summary>
-    /// Get the parallelization behavior for a test method.
-    /// </summary>
-    /// <param name="testMethod">Test method.</param>
-    /// <param name="owningType">The type that owns <paramref name="testMethod"/>.</param>
-    /// <returns>True if test method should not run in parallel.</returns>
-    internal bool IsDoNotParallelizeSet(MemberInfo testMethod, Type owningType)
-        => IsAttributeDefined<DoNotParallelizeAttribute>(testMethod)
-        || IsAttributeDefined<DoNotParallelizeAttribute>(owningType);
-
-    /// <summary>
     /// Get the parallelization behavior for a test assembly.
     /// </summary>
     /// <param name="assembly">The test assembly.</param>
@@ -216,15 +222,6 @@ internal class ReflectHelper : MarshalByRefObject
     internal static bool IsDoNotParallelizeSet(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DoNotParallelizeAttribute))
             .Length != 0;
-
-    /// <summary>
-    /// Priority if any set for test method. Will return priority if attribute is applied to TestMethod
-    /// else null.
-    /// </summary>
-    /// <param name="priorityAttributeProvider">The member to inspect.</param>
-    /// <returns>Priority value if defined. Null otherwise.</returns>
-    internal virtual int? GetPriority(MemberInfo priorityAttributeProvider) =>
-        GetFirstAttributeOrDefault<PriorityAttribute>(priorityAttributeProvider)?.Priority;
 
     /// <summary>
     /// KeyValue pairs that are provided by TestPropertyAttributes of the given test method.
@@ -359,7 +356,10 @@ internal class ReflectHelper : MarshalByRefObject
                     description = string.Format(CultureInfo.CurrentCulture, Resource.ExceptionOccuredWhileGettingTheExceptionDescription, ex.GetType().FullName, ex2.GetType().FullName);                               // ex.GetType().FullName +
                 }
 
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.FailedToGetCustomAttribute, attributeProvider.GetType().FullName!, description);
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(Resource.FailedToGetCustomAttribute, attributeProvider.GetType().FullName!, description);
+                }
 
                 return [];
             }

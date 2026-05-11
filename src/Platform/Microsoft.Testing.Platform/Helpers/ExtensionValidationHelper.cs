@@ -18,9 +18,9 @@ internal static class ExtensionValidationHelper
     /// <param name="extensionSelector">Function to extract the IExtension from the collection item.</param>
     public static void ValidateUniqueExtension<T>(this IEnumerable<T> existingExtensions, IExtension newExtension, Func<T, IExtension> extensionSelector)
     {
-        Ensure.NotNull(existingExtensions);
-        Ensure.NotNull(newExtension);
-        Ensure.NotNull(extensionSelector);
+        _ = existingExtensions ?? throw new ArgumentNullException(nameof(existingExtensions));
+        _ = newExtension ?? throw new ArgumentNullException(nameof(newExtension));
+        _ = extensionSelector ?? throw new ArgumentNullException(nameof(extensionSelector));
 
         T[] duplicates = [.. existingExtensions.Where(x => extensionSelector(x).Uid == newExtension.Uid)];
         if (duplicates.Length > 0)

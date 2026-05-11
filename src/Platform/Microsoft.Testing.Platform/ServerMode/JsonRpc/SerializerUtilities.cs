@@ -224,7 +224,7 @@ internal static class SerializerUtilities
                             : $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}";
 
                         properties["location.method"] = testMethodIdentifierProperty.ParameterTypeFullNames.Length > 0
-                            ? $"{testMethodIdentifierProperty.MethodName}({string.Join(',', testMethodIdentifierProperty.ParameterTypeFullNames)})"
+                            ? $"{testMethodIdentifierProperty.MethodName}({string.Join(",", testMethodIdentifierProperty.ParameterTypeFullNames)})"
                             : testMethodIdentifierProperty.MethodName;
 
                         properties["location.method-arity"] = testMethodIdentifierProperty.MethodArity;
@@ -354,7 +354,14 @@ internal static class SerializerUtilities
                     }
                 }
 
-                properties.TryAdd("node-type", "group");
+#if NETCOREAPP
+                properties.Add("node-type", "group");
+#else
+                if (!properties.ContainsKey("node-type"))
+                {
+                    properties.Add("node-type", "group");
+                }
+#endif
 
                 return properties;
             });
@@ -406,11 +413,11 @@ internal static class SerializerUtilities
                 values[JsonRpcStrings.EnvironmentVariables] = ev.EnvironmentVariables;
 #else
                 JsonArray collection = [];
-                foreach ((string? key, string? value) in ev.EnvironmentVariables)
+                foreach (KeyValuePair<string, string?> kvp in ev.EnvironmentVariables)
                 {
                     JsonObject o = new()
                     {
-                        { key, value },
+                        { kvp.Key, kvp.Value },
                     };
                     collection.Add(o);
                 }
@@ -610,17 +617,17 @@ internal static class SerializerUtilities
                 string displayName = string.Empty;
                 PropertyBag propertyBag = new();
 
-                foreach ((string? key, object? value) in properties)
+                foreach (KeyValuePair<string, object?> kvp in properties)
                 {
-                    if (key == JsonRpcStrings.Uid)
+                    if (kvp.Key == JsonRpcStrings.Uid)
                     {
-                        uid = value as string ?? string.Empty;
+                        uid = kvp.Value as string ?? string.Empty;
                         continue;
                     }
 
-                    if (key == JsonRpcStrings.DisplayName)
+                    if (kvp.Key == JsonRpcStrings.DisplayName)
                     {
-                        displayName = value as string ?? string.Empty;
+                        displayName = kvp.Value as string ?? string.Empty;
                         continue;
                     }
                 }

@@ -82,7 +82,7 @@ internal sealed class TestDataSource : ITestDataSource
         {
             string message = ex.GetExceptionMessage();
 
-            // TODO: Change exception type to more specific one.
+            // TODO: Change exception type to more specific one (tracked by https://github.com/microsoft/testfx/issues/8086).
 #pragma warning disable CA2201 // Do not raise reserved exception types
             throw new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorDataConnectionFailed, message), ex);
 #pragma warning restore CA2201 // Do not raise reserved exception types
@@ -142,7 +142,11 @@ internal sealed class TestDataSource : ITestDataSource
         providerNameInvariant = ConfigurationManager.ConnectionStrings[element.ConnectionString].ProviderName;
         connectionString = ConfigurationManager.ConnectionStrings[element.ConnectionString].ConnectionString;
         tableName = element.DataTableName;
+#if NETCOREAPP
         dataAccessMethod = Enum.Parse<DataAccessMethod>(element.DataAccessMethod);
+#else
+        dataAccessMethod = (DataAccessMethod)Enum.Parse(typeof(DataAccessMethod), element.DataAccessMethod);
+#endif
     }
 #endif
 }

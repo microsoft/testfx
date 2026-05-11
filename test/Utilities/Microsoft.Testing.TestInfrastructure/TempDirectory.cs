@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Helpers;
-
 namespace Microsoft.Testing.TestInfrastructure;
 
 public class TempDirectory : IDisposable
@@ -123,7 +121,7 @@ public class TempDirectory : IDisposable
     /// </summary>
     public string[] CopyFile(params string[] filePaths)
     {
-        List<string> paths = new(filePaths.Length);
+        List<string> paths = [with(filePaths.Length)];
         foreach (string filePath in filePaths)
         {
             string destination = System.IO.Path.Combine(Path, System.IO.Path.GetFileName(filePath));
@@ -202,7 +200,7 @@ public class TempDirectory : IDisposable
             we end up with a -dev or -ci version which will lose resolution over -preview dependency of code coverage. Because we want to
             ensure we are testing with locally built version, we force adding the platform dependency.
         -->
-        <PackageReference Include="Microsoft.Testing.Platform" Version="{AppVersion.DefaultSemVer}" Condition="'$(UsingMSTestSdk)' != 'true' AND '$(EnableMicrosoftTestingPlatform)' == 'true'" />
+        <PackageReference Include="Microsoft.Testing.Platform" Version="{ExtensionVersion.DefaultSemVer}" Condition="'$(UsingMSTestSdk)' != 'true' AND '$(EnableMicrosoftTestingPlatform)' == 'true'" />
     </ItemGroup>
 
     <!-- Note: Generally, RunCommand should never be dotnet if UseAppHost is not false. However, because VSTest sets OutputType late in its targets, it breaks assumptions in SDK. So we special case that here. -->

@@ -89,7 +89,7 @@ public class RunConfigurationSettingsTests : TestContainer
             """
             <RunSettings>
               <FooUnit>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <TestTimeout>12</TestTimeout>
               </FooUnit>
             </RunSettings>
             """;

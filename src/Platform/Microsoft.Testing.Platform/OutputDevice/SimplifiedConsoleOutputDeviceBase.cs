@@ -99,7 +99,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
     public string Uid => GetType().Name;
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     /// <inheritdoc />
     public abstract string DisplayName { get; }
@@ -233,10 +233,8 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
 
     public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
-        if (testSessionContext.CancellationToken.IsCancellationRequested)
-        {
-            return Task.CompletedTask;
-        }
+        CancellationToken cancellationToken = testSessionContext.CancellationToken;
+        cancellationToken.ThrowIfCancellationRequested();
 
         // We implement IDataConsumerService and IOutputDisplayService.
         // So the engine is calling us before as IDataConsumerService and after as IOutputDisplayService.
@@ -359,21 +357,21 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
                         break;
                 }
 
-                // TODO:
-                // foreach (FileArtifactProperty testFileArtifact in testNodeStateChanged.TestNode.Properties.OfType<FileArtifactProperty>())
-                // {
-                // }
+                // Tracked by https://github.com/microsoft/testfx/issues/8086:
+                // surface per-test file artifacts in the simplified console output once the format is defined.
                 break;
 
             case SessionFileArtifact:
                 {
-                    // TODO
+                    // Tracked by https://github.com/microsoft/testfx/issues/8086:
+                    // session-level artifacts are currently ignored by this output device.
                 }
 
                 break;
             case FileArtifact:
                 {
-                    // TODO
+                    // Tracked by https://github.com/microsoft/testfx/issues/8086:
+                    // file artifacts are currently ignored by this output device.
                 }
 
                 break;

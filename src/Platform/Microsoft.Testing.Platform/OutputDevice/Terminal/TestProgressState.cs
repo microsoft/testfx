@@ -10,15 +10,12 @@ internal sealed class TestProgressState
     public TestProgressState(long id, string assembly, string? targetFramework, string? architecture, IStopwatch stopwatch, bool isDiscovery)
     {
         Id = id;
-        Assembly = assembly;
         TargetFramework = targetFramework;
         Architecture = architecture;
         Stopwatch = stopwatch;
         AssemblyName = Path.GetFileName(assembly);
         IsDiscovery = isDiscovery;
     }
-
-    public string Assembly { get; }
 
     public string AssemblyName { get; }
 
@@ -29,8 +26,6 @@ internal sealed class TestProgressState
     public IStopwatch Stopwatch { get; }
 
     public int DiscoveredTests { get; internal set; }
-
-    public List<IProgressMessage> Messages { get; } = [];
 
     public int FailedTests { get; internal set; }
 
@@ -51,10 +46,4 @@ internal sealed class TestProgressState
     public List<string> DiscoveredTestDisplayNames { get; internal set; } = [];
 
     public bool IsDiscovery { get; }
-
-    internal void AddError(string text)
-        => Messages.Add(new ErrorMessage(text));
-
-    internal void AddWarning(string text)
-        => Messages.Add(new WarningMessage(text));
 }

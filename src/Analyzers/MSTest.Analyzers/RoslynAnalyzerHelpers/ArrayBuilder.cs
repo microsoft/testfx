@@ -48,7 +48,9 @@ internal sealed partial class ArrayBuilder<T> : IReadOnlyList<T>, IDisposable
         : this(8)
     { }
 
+#pragma warning disable IDE0051 // Remove unused private members
     private ArrayBuilder(ObjectPool<ArrayBuilder<T>>? pool)
+#pragma warning restore IDE0051 // Remove unused private members
         : this() => _pool = pool;
 
     /// <summary>
@@ -275,7 +277,7 @@ internal sealed partial class ArrayBuilder<T> : IReadOnlyList<T>, IDisposable
     internal static ObjectPool<ArrayBuilder<T>> CreatePool(int size)
     {
         ObjectPool<ArrayBuilder<T>>? pool = null;
-        pool = new ObjectPool<ArrayBuilder<T>>(() => new ArrayBuilder<T>(pool), size);
+        pool = new ObjectPool<ArrayBuilder<T>>(() => [with(pool)], size);
         return pool;
     }
 
@@ -300,7 +302,7 @@ internal sealed partial class ArrayBuilder<T> : IReadOnlyList<T>, IDisposable
 
         if (Count == 0)
         {
-            return new Dictionary<K, ImmutableArray<T>>(comparer);
+            return [with(comparer)];
         }
 
         // bucketize
@@ -322,9 +324,9 @@ internal sealed partial class ArrayBuilder<T> : IReadOnlyList<T>, IDisposable
         var dictionary = new Dictionary<K, ImmutableArray<T>>(accumulator.Count, comparer);
 
         // freeze
-        foreach ((K? key, ArrayBuilder<T>? value) in accumulator)
+        foreach (KeyValuePair<K, ArrayBuilder<T>> kvp in accumulator)
         {
-            dictionary.Add(key, value.ToImmutableAndFree());
+            dictionary.Add(kvp.Key, kvp.Value.ToImmutableAndFree());
         }
 
         return dictionary;

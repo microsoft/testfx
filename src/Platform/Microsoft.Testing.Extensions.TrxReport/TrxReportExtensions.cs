@@ -11,6 +11,10 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 
+#if !NETCOREAPP
+using Polyfills;
+#endif
+
 namespace Microsoft.Testing.Extensions;
 
 /// <summary>
@@ -36,6 +40,7 @@ public static class TrxReportExtensions
                 new TrxReportGenerator(
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetRequiredService<IFileSystem>(),
                 serviceProvider.GetTestApplicationModuleInfo(),
                 serviceProvider.GetMessageBus(),
                 serviceProvider.GetSystemClock(),
@@ -47,11 +52,7 @@ public static class TrxReportExtensions
                 serviceProvider.GetService<TrxTestApplicationLifecycleCallbacks>(),
                 serviceProvider.GetLoggerFactory().CreateLogger<TrxReportGenerator>()));
 
-#if NETCOREAPP
         if (!OperatingSystem.IsBrowser())
-#else
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER")))
-#endif
         {
             NonBrowserRegistrations(builder);
         }
@@ -79,7 +80,7 @@ public static class TrxReportExtensions
                 serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetEnvironment()));
 
-        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), new SystemEnvironment());
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
         var compositeLifeTimeHandler =
             new CompositeExtensionFactory<TrxProcessLifetimeHandler>(serviceProvider =>
             {
@@ -90,6 +91,7 @@ public static class TrxReportExtensions
                     serviceProvider.GetEnvironment(),
                     loggerFactory,
                     serviceProvider.GetMessageBus(),
+                    serviceProvider.GetRequiredService<IFileSystem>(),
                     serviceProvider.GetTestApplicationModuleInfo(),
                     serviceProvider.GetConfiguration(),
                     serviceProvider.GetSystemClock(),

@@ -20,7 +20,7 @@ public class TestDiscoveryTests : AcceptanceTestBase<TestDiscoveryTests.TestAsse
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContains("Test1");
         testHostResult.AssertOutputContains("Test2");
         testHostResult.AssertOutputContains("Display name: 1, one");
@@ -35,22 +35,19 @@ public class TestDiscoveryTests : AcceptanceTestBase<TestDiscoveryTests.TestAsse
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --filter Name=Test1", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContains("Test1");
         testHostResult.AssertOutputDoesNotContain("Test2");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file TestDiscovery.csproj

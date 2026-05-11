@@ -60,11 +60,6 @@ Son deneme varlık dosyaları, varsayılan sonuç dizinine taşınıyor
         <target state="translated">Başarısız testleri yeniden deneyin</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
-        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Başarısız testleri yeniden deneme yalnızca 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' türündeki oluşturucularla çalışır</target>
-        <note />
-      </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
         <target state="translated">Başarısız testlerin yüzdesi belirtilen değerden büyükse yeniden deneme mekanizmasını devre dışı bırak</target>

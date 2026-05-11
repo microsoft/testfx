@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -30,6 +31,10 @@ internal static class TestResultExtensions
     internal static VSTestTestResult ToTestResult(this TestResult frameworkTestResult, VSTestTestCase testCase, DateTimeOffset startTime, DateTimeOffset endTime, string computerName, MSTestSettings currentSettings)
     {
         DebugEx.Assert(testCase != null, "testCase");
+        if (frameworkTestResult.AssociatedUnitTestElement is UnitTestElement unitTestElement)
+        {
+            testCase = unitTestElement.ToTestCase();
+        }
 
         var testResult = new VSTestTestResult(testCase)
         {
@@ -45,7 +50,6 @@ internal static class TestResultExtensions
 
         testResult.SetPropertyValue(EngineConstants.ExecutionIdProperty, frameworkTestResult.ExecutionId);
         testResult.SetPropertyValue(EngineConstants.ParentExecIdProperty, frameworkTestResult.ParentExecId);
-        testResult.SetPropertyValue(EngineConstants.InnerResultsCountProperty, frameworkTestResult.InnerResultsCount);
 
         if (!StringEx.IsNullOrEmpty(frameworkTestResult.LogOutput))
         {
@@ -96,11 +100,6 @@ internal static class TestResultExtensions
             }
 
             testResult.Attachments.Add(attachmentSet);
-        }
-
-        if (frameworkTestResult.DatarowIndex >= 0)
-        {
-            testResult.DisplayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, testCase.DisplayName, frameworkTestResult.DatarowIndex);
         }
 
         return testResult;

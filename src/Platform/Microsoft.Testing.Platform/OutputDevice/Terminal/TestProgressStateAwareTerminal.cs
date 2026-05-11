@@ -17,7 +17,11 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     /// <summary>
     /// Protects access to state shared between the logger callbacks and the rendering thread.
     /// </summary>
+#if NET9_0_OR_GREATER
     private readonly Lock _lock = new();
+#else
+    private readonly object _lock = new();
+#endif
 
     private readonly ITerminal _terminal;
     private readonly Func<bool?> _showProgress;
@@ -47,9 +51,12 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
             const int AnsiUpdateCadenceInMs = 500;
             while (!_cts.Token.WaitHandle.WaitOne(AnsiUpdateCadenceInMs))
             {
+                // Note: OnProgressStartUpdate is invoked outside the lock to avoid a deadlock where
+                // a test subscriber blocks the event handler (e.g. with WaitOne) while the lock is held,
+                // preventing other callers (e.g. WriteToTerminal) from acquiring the lock.
+                OnProgressStartUpdate?.Invoke(this, EventArgs.Empty);
                 lock (_lock)
                 {
-                    OnProgressStartUpdate?.Invoke(this, EventArgs.Empty);
                     _terminal.StartUpdate();
                     try
                     {

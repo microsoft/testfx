@@ -19,6 +19,7 @@
     <TestCaptureOutput Condition=" '$(ContinuousIntegrationBuild)' == 'true' ">false</TestCaptureOutput>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);SA0001;EnableGenerateDocumentationFile</NoWarn>
+    <UseAppHost Condition="$([MSBuild]::IsOSPlatform('OSX'))">false</UseAppHost>
   </PropertyGroup>
 
 </Project>

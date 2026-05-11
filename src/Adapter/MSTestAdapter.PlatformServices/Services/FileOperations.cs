@@ -4,9 +4,11 @@
 #if WIN_UI
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer;
 #endif
+#if NETFRAMEWORK
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+#endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #if NETFRAMEWORK
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 
@@ -119,7 +121,10 @@ internal sealed class FileOperations : IFileOperations
                 messageFormatOnException = "{0}";
             }
 
-            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, messageFormatOnException, exception.Message);
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error(messageFormatOnException, exception.Message);
+            }
         }
 
         return null;

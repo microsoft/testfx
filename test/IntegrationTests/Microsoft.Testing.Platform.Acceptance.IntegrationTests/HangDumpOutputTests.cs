@@ -25,23 +25,20 @@ public sealed class HangDumpOutputTests : AcceptanceTestBase<HangDumpOutputTests
                 { "SLEEPTIMEMS2", "600000" },
             },
             cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
         testHostResult.AssertOutputContains("Test1");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string AssetName = "AssetFixture";
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
 
         private const string Sources = """
 #file HangDump.csproj

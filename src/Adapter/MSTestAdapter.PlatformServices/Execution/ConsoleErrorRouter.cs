@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
@@ -16,7 +17,7 @@ internal sealed class ConsoleErrorRouter : TextWriter
 
     public override void Write(char value)
     {
-        if (TestContextImplementation.CurrentTestContext is { } testContext)
+        if (TestContext.Current is TestContextImplementation testContext)
         {
             testContext.WriteConsoleErr(value);
         }
@@ -28,7 +29,7 @@ internal sealed class ConsoleErrorRouter : TextWriter
 
     public override void Write(string? value)
     {
-        if (TestContextImplementation.CurrentTestContext is { } testContext)
+        if (TestContext.Current is TestContextImplementation testContext)
         {
             testContext.WriteConsoleErr(value);
         }
@@ -40,7 +41,7 @@ internal sealed class ConsoleErrorRouter : TextWriter
 
     public override void Write(char[] buffer, int index, int count)
     {
-        if (TestContextImplementation.CurrentTestContext is { } testContext)
+        if (TestContext.Current is TestContextImplementation testContext)
         {
             testContext.WriteConsoleErr(buffer, index, count);
         }

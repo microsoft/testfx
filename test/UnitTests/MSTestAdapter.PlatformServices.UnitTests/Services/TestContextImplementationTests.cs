@@ -17,7 +17,6 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
-using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
@@ -348,6 +347,42 @@ public class TestContextImplementationTests : TestContainer
         messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Error, "ErrorMessage"), Times.Once);
     }
 
+    public void GetAndClearOutput_ShouldReturnContentThenClearBuffer()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.WriteConsoleOut("hello");
+
+        string? first = _testContextImplementation.GetAndClearOutput();
+        string? second = _testContextImplementation.GetAndClearOutput();
+
+        first.Should().Be("hello");
+        second.Should().BeEmpty();
+    }
+
+    public void GetAndClearError_ShouldReturnContentThenClearBuffer()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.WriteConsoleErr("hello");
+
+        string? first = _testContextImplementation.GetAndClearError();
+        string? second = _testContextImplementation.GetAndClearError();
+
+        first.Should().Be("hello");
+        second.Should().BeEmpty();
+    }
+
+    public void GetAndClearTrace_ShouldReturnContentThenClearBuffer()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.WriteTrace("hello");
+
+        string? first = _testContextImplementation.GetAndClearTrace();
+        string? second = _testContextImplementation.GetAndClearTrace();
+
+        first.Should().Be("hello");
+        second.Should().BeEmpty();
+    }
+
     public void WritesFromBackgroundThreadShouldNotThrow()
     {
         TestContextImplementation testContextImplementation = CreateTestContextImplementation(new Mock<IMessageLogger>().Object);
@@ -361,8 +396,9 @@ public class TestContextImplementationTests : TestContainer
         });
 
         t.Start();
-        _ = testContextImplementation.GetOut();
-        _ = testContextImplementation.GetErr();
+        _ = testContextImplementation.GetAndClearOutput();
+        _ = testContextImplementation.GetAndClearError();
+        _ = testContextImplementation.GetAndClearTrace();
         t.Join();
     }
 }

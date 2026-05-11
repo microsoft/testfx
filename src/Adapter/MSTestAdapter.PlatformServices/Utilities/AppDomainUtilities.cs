@@ -3,7 +3,9 @@
 
 #if NETFRAMEWORK
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -79,7 +81,7 @@ internal static class AppDomainUtilities
             appDomain = AppDomain.CreateDomain("Framework Version String Domain", null, appDomainSetup);
 
             // Wire the eqttrace logs in this domain to the current domain.
-            EqtTrace.SetupRemoteEqtTraceListeners(appDomain);
+            PlatformServiceProvider.Instance.AdapterTraceLogger.SetupRemoteEqtTraceListeners(appDomain);
 
             // Add an assembly resolver to resolve ObjectModel or any Test Platform dependencies.
             // Not moving to IMetaDataImport APIs because the time taken for this operation is <20 ms and
@@ -107,16 +109,16 @@ internal static class AppDomainUtilities
 
             if (errorMessage is not null)
             {
-                EqtTrace.Error(errorMessage);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error(errorMessage);
             }
 
             return targetFramework;
         }
         catch (Exception exception)
         {
-            if (EqtTrace.IsErrorEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
             {
-                EqtTrace.Error(exception);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error(exception);
             }
         }
         finally
@@ -145,9 +147,9 @@ internal static class AppDomainUtilities
             return;
         }
 
-        if (EqtTrace.IsInfoEnabled)
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
-            EqtTrace.Info("UnitTestAdapter: Using configuration file {0} to setup appdomain for test source {1}.", testSourceConfigFile, Path.GetFileNameWithoutExtension(testSourceConfigFile));
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("UnitTestAdapter: Using configuration file {0} to setup appdomain for test source {1}.", testSourceConfigFile, Path.GetFileNameWithoutExtension(testSourceConfigFile));
         }
 
         appDomainSetup.ConfigurationFile = Path.GetFullPath(testSourceConfigFile);
@@ -170,9 +172,9 @@ internal static class AppDomainUtilities
         }
         catch (Exception ex)
         {
-            if (EqtTrace.IsErrorEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
             {
-                EqtTrace.Error("Exception hit while adding binding redirects to test source config file. Exception : {0}", ex);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error("Exception hit while adding binding redirects to test source config file. Exception : {0}", ex);
             }
         }
     }
@@ -236,7 +238,7 @@ internal static class AppDomainUtilities
         catch (FormatException ex)
         {
             // if the version is ".NETPortable,Version=v4.5,Profile=Profile259", then above code will throw exception.
-            EqtTrace.Warning($"AppDomainUtilities.GetTargetFrameworkVersionFromVersionString: Could not create version object from version string '{version}' due to error '{ex.Message}':");
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Warning($"AppDomainUtilities.GetTargetFrameworkVersionFromVersionString: Could not create version object from version string '{version}' due to error '{ex.Message}':");
         }
 
         return DefaultVersion;
@@ -249,6 +251,25 @@ internal static class AppDomainUtilities
         Type staticStateHelperType = typeof(StaticStateHelper);
         var staticStateHelper = appDomain.CreateInstanceFromAndUnwrap(staticStateHelperType.Assembly.Location, staticStateHelperType.FullName) as StaticStateHelper;
         staticStateHelper?.SetUICulture(CultureInfo.DefaultThreadCurrentUICulture);
+
+        try
+        {
+            staticStateHelper?.SetTrace(PlatformServiceProvider.Instance.AdapterTraceLogger);
+        }
+        catch (Exception ex)
+        {
+            // Extremely bad to catch exception this way, but this happens with MTP when deployment items are used.
+            // This is likely because child app domain has a different directory and the assembly identity is considered different.
+            // This then causes:
+            // System.ArgumentException: Object type cannot be converted to target type.
+            // Historically, we never moved the logger instance to the inner appdomain for MTP.
+            // So ignoring for the niche scenario of MTP with deployment items is a better behavior than before.
+            // Ideally, we should find a way to always propagate the logger correctly.
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning($"Failed to set trace logger '{PlatformServiceProvider.Instance.AdapterTraceLogger}' in app domain '{appDomain.FriendlyName}'. Error: {ex.Message}");
+            }
+        }
     }
 
     private sealed class StaticStateHelper : MarshalByRefObject
@@ -259,6 +280,8 @@ internal static class AppDomainUtilities
         // For the problem reported by vendors, we would only need to set the DefaultThreadCurrentUICulture as it's
         // the culture we want to use for the resx.
         public void SetUICulture(CultureInfo uiCulture) => CultureInfo.DefaultThreadCurrentUICulture = uiCulture;
+
+        public void SetTrace(ITraceLogger traceLogger) => PlatformServiceProvider.Instance.AdapterTraceLogger = traceLogger;
     }
 }
 

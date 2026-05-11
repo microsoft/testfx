@@ -154,7 +154,7 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
-        Assert.AreEqual(2, _serviceProvider.GetServicesInternal<ITestHostApplicationLifetime>().Count());
+        Assert.HasCount(2, _serviceProvider.GetServicesInternal<ITestHostApplicationLifetime>());
     }
 
     [TestMethod]
@@ -163,7 +163,7 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
-        Assert.AreEqual(0, _serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: false, skipInternalOnlyExtensions: true).Count());
+        Assert.IsEmpty(_serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: false, skipInternalOnlyExtensions: true));
     }
 
     [TestMethod]
@@ -172,7 +172,7 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
-        Assert.AreEqual(2, _serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: false, skipInternalOnlyExtensions: false).Count());
+        Assert.HasCount(2, _serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: false, skipInternalOnlyExtensions: false));
     }
 
     [TestMethod]
@@ -181,7 +181,7 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
-        Assert.AreEqual(1, _serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: true, skipInternalOnlyExtensions: false).Count());
+        Assert.HasCount(1, _serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: true, skipInternalOnlyExtensions: false));
     }
 
     [TestMethod]
@@ -237,9 +237,9 @@ public sealed class ServiceProviderTests
 
         public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
 
-        public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
 
-        public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
     }
 
     private sealed class TestHostEnvironmentVariableProvider : ITestHostEnvironmentVariableProvider
@@ -303,7 +303,7 @@ public sealed class ServiceProviderTests
 
         public string Description => throw new NotImplementedException();
 
-        public Task AfterRunAsync(int exitCode, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task AfterRunAsync(int exitCode, CancellationToken cancellationToken) => throw new NotImplementedException();
 
         public Task BeforeRunAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
 

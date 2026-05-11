@@ -17,15 +17,6 @@ internal interface IReflectionOperations
     object[]? GetCustomAttributes(MemberInfo memberInfo);
 
     /// <summary>
-    /// Gets all the custom attributes of a given type adorned on a member.
-    /// </summary>
-    /// <param name="memberInfo"> The member info. </param>
-    /// <param name="type"> The attribute type. </param>
-    /// <returns> The list of attributes on the member. Empty list if none found. </returns>
-    [return: NotNullIfNotNull(nameof(memberInfo))]
-    object[]? GetCustomAttributes(MemberInfo memberInfo, Type type);
-
-    /// <summary>
     /// Gets all the custom attributes of a given type on an assembly.
     /// </summary>
     /// <param name="assembly"> The assembly. </param>

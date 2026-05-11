@@ -42,16 +42,20 @@
 
   </Target>
 
+  <PropertyGroup Condition=" '$(GenerateBuildInfo)' == 'true' ">
+    <BuildInfoTemplateFile Condition=" '$(BuildInfoTemplateFile)' == '' ">$(MSBuildProjectDirectory)/BuildInfo.cs.template</BuildInfoTemplateFile>
+  </PropertyGroup>
+
   <!-- See https://github.com/dotnet/arcade/issues/16019 -->
   <!-- This can be simplified if Arcade implemented WriteOnlyWhenDifferent -->
   <Target Name="GenerateVersionSourceFile"
           AfterTargets="PrepareForBuild"
           DependsOnTargets="_GenerateVersionSourceFileCache"
-          Inputs="$(_TemplatePropertiesCacheFile)"
+          Inputs="$(_TemplatePropertiesCacheFile);$(BuildInfoTemplateFile)"
           Outputs="$(IntermediateOutputPath)BuildInfo.cs"
           Condition=" '$(GenerateBuildInfo)' == 'true' ">
     <ItemGroup>
-      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/BuildInfo.cs.template" Destination="$(IntermediateOutputPath)BuildInfo.cs" />
+      <_TemplateCsproj Include="$(BuildInfoTemplateFile)" Destination="$(IntermediateOutputPath)BuildInfo.cs" />
     </ItemGroup>
     <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
       <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />

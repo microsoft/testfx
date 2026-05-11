@@ -12,10 +12,12 @@ using Moq;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
-public sealed class TestApplicationResultTests
+public sealed class TestApplicationResultTests : IDisposable
 {
     private readonly TestApplicationResult _testApplicationResult
         = new(new Mock<IOutputDevice>().Object, new Mock<ICommandLineOptions>().Object, new Mock<IEnvironment>().Object, new Mock<IStopPoliciesService>().Object, null);
+
+    public void Dispose() => _testApplicationResult.Dispose();
 
     [TestMethod]
     public async Task GetProcessExitCodeAsync_If_All_Skipped_Returns_ZeroTestsRan()
@@ -29,7 +31,7 @@ public sealed class TestApplicationResultTests
                 Properties = new PropertyBag(SkippedTestNodeStateProperty.CachedInstance),
             }), CancellationToken.None);
 
-        Assert.AreEqual(ExitCodes.ZeroTests, _testApplicationResult.GetProcessExitCode());
+        Assert.AreEqual((int)ExitCode.ZeroTests, _testApplicationResult.GetProcessExitCode());
     }
 
     [TestMethod]
@@ -44,7 +46,7 @@ public sealed class TestApplicationResultTests
                 Properties = new PropertyBag(),
             }), CancellationToken.None);
 
-        Assert.AreEqual(ExitCodes.ZeroTests, _testApplicationResult.GetProcessExitCode());
+        Assert.AreEqual((int)ExitCode.ZeroTests, _testApplicationResult.GetProcessExitCode());
     }
 
     [TestMethod]
@@ -60,7 +62,7 @@ public sealed class TestApplicationResultTests
                 Properties = new PropertyBag(testNodeStateProperty),
             }), CancellationToken.None);
 
-        Assert.AreEqual(ExitCodes.AtLeastOneTestFailed, _testApplicationResult.GetProcessExitCode());
+        Assert.AreEqual((int)ExitCode.AtLeastOneTestFailed, _testApplicationResult.GetProcessExitCode());
     }
 
     [TestMethod]
@@ -89,7 +91,7 @@ public sealed class TestApplicationResultTests
                 Properties = new PropertyBag(),
             }), CancellationToken.None);
 
-        Assert.AreEqual(ExitCodes.TestSessionAborted, testApplicationResult.GetProcessExitCode());
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, testApplicationResult.GetProcessExitCode());
     }
 
     [TestMethod]
@@ -105,7 +107,7 @@ public sealed class TestApplicationResultTests
                 Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
             }), CancellationToken.None);
 
-        Assert.AreEqual(ExitCodes.TestAdapterTestSessionFailure, _testApplicationResult.GetProcessExitCode());
+        Assert.AreEqual((int)ExitCode.TestAdapterTestSessionFailure, _testApplicationResult.GetProcessExitCode());
     }
 
     [TestMethod]
@@ -137,7 +139,7 @@ public sealed class TestApplicationResultTests
                 Properties = new PropertyBag(InProgressTestNodeStateProperty.CachedInstance),
             }), CancellationToken.None);
 
-        Assert.AreEqual(ExitCodes.MinimumExpectedTestsPolicyViolation, testApplicationResult.GetProcessExitCode());
+        Assert.AreEqual((int)ExitCode.MinimumExpectedTestsPolicyViolation, testApplicationResult.GetProcessExitCode());
     }
 
     [TestMethod]
@@ -157,7 +159,7 @@ public sealed class TestApplicationResultTests
                 DisplayName = "DisplayName",
             }), CancellationToken.None);
 
-        Assert.AreEqual(ExitCodes.ZeroTests, testApplicationResult.GetProcessExitCode());
+        Assert.AreEqual((int)ExitCode.ZeroTests, testApplicationResult.GetProcessExitCode());
     }
 
     [TestMethod]
@@ -178,20 +180,20 @@ public sealed class TestApplicationResultTests
                 Properties = new PropertyBag(DiscoveredTestNodeStateProperty.CachedInstance),
             }), CancellationToken.None);
 
-        Assert.AreEqual(ExitCodes.Success, testApplicationResult.GetProcessExitCode());
+        Assert.AreEqual((int)ExitCode.Success, testApplicationResult.GetProcessExitCode());
     }
 
-    [DataRow("8", ExitCodes.Success)]
-    [DataRow("8;2", ExitCodes.Success)]
-    [DataRow("8;", ExitCodes.Success)]
-    [DataRow("8;2;", ExitCodes.Success)]
-    [DataRow("5", ExitCodes.ZeroTests)]
-    [DataRow("5;7", ExitCodes.ZeroTests)]
-    [DataRow("5;", ExitCodes.ZeroTests)]
-    [DataRow("5;7;", ExitCodes.ZeroTests)]
-    [DataRow(";", ExitCodes.ZeroTests)]
-    [DataRow(null, ExitCodes.ZeroTests)]
-    [DataRow("", ExitCodes.ZeroTests)]
+    [DataRow("8", (int)ExitCode.Success)]
+    [DataRow("8;2", (int)ExitCode.Success)]
+    [DataRow("8;", (int)ExitCode.Success)]
+    [DataRow("8;2;", (int)ExitCode.Success)]
+    [DataRow("5", (int)ExitCode.ZeroTests)]
+    [DataRow("5;7", (int)ExitCode.ZeroTests)]
+    [DataRow("5;", (int)ExitCode.ZeroTests)]
+    [DataRow("5;7;", (int)ExitCode.ZeroTests)]
+    [DataRow(";", (int)ExitCode.ZeroTests)]
+    [DataRow(null, (int)ExitCode.ZeroTests)]
+    [DataRow("", (int)ExitCode.ZeroTests)]
     [TestMethod]
     public void GetProcessExitCodeAsync_IgnoreExitCodes(string? argument, int expectedExitCode)
     {

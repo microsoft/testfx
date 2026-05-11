@@ -60,11 +60,6 @@ Moving last attempt asset files to the default result directory
         <target state="translated">Включить повтор неудачных тестов</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
-        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Повтор неудачных тестов работает только с построителями типа "Microsoft.Testing.Platform.Builder.TestApplicationBuilder"</target>
-        <note />
-      </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
         <target state="translated">Отключить механизм повторных попыток, если процент неудачных тестов превышает указанное значение</target>

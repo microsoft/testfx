@@ -60,11 +60,6 @@ Moviendo los archivos de recursos del último intento al directorio de resultado
         <target state="translated">Reintentar pruebas con errores</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
-        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Reintentar pruebas con errores solo funciona con generadores de tipo "Microsoft.Testing.Platform.Builder.TestApplicationBuilder"</target>
-        <note />
-      </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
         <target state="translated">Deshabilitar el mecanismo de reintento si el porcentaje de pruebas con errores es mayor que el valor especificado</target>

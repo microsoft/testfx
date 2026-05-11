@@ -32,19 +32,8 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
         }
     }
 
-    public bool IsCurrentTestApplicationModuleExecutable
-    {
-        get
-        {
-            string? processPath = GetProcessPath(_environment, _process, true);
-            return processPath != ".dll";
-        }
-    }
-
     public bool IsAppHostOrSingleFileOrNativeAot
-        => IsCurrentTestApplicationModuleExecutable
-        && !IsCurrentTestApplicationHostDotnetMuxer
-        && !IsCurrentTestApplicationHostMonoMuxer;
+        => !IsCurrentTestApplicationHostDotnetMuxer && !IsCurrentTestApplicationHostMonoMuxer;
 
     public string GetCurrentTestApplicationFullPath()
     {
@@ -113,20 +102,17 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
     {
         bool isDotnetMuxer = IsCurrentTestApplicationHostDotnetMuxer;
         bool isAppHost = IsAppHostOrSingleFileOrNativeAot;
-        bool isMonoMuxer = IsCurrentTestApplicationHostMonoMuxer;
         string[] commandLineArguments = _environment.GetCommandLineArgs();
-        IEnumerable<string> arguments = (isAppHost, isDotnetMuxer, isMonoMuxer) switch
+        IEnumerable<string> arguments = (isAppHost, isDotnetMuxer) switch
         {
             // When executable
-            (true, _, _) => commandLineArguments.Skip(1),
+            (true, _) => commandLineArguments.Skip(1),
             // When dotnet
-            (_, true, _) => MuxerExec.Concat(commandLineArguments),
-            // When mono
-            (_, _, true) => commandLineArguments,
+            (_, true) => MuxerExec.Concat(commandLineArguments),
             // Otherwise
             _ => commandLineArguments,
         };
 
-        return new ExecutableInfo(GetProcessPath(), arguments);
+        return new ExecutableInfo(GetProcessPath(), arguments, GetCurrentTestApplicationDirectory());
     }
 }

@@ -4,6 +4,114 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="4.2.1" />[4.2.1] - 2026-04-07
+
+See full log [of v4.1.0...v4.2.1](https://github.com/microsoft/testfx/compare/v4.1.0...v4.2.1)
+
+### Added
+
+* \[Experimental] Add TestContext.Current by @Evangelink in [#7315](https://github.com/microsoft/testfx/pull/7315)
+* Add settings to launch debugger on test failure by @Evangelink in [#7318](https://github.com/microsoft/testfx/pull/7318)
+* Include categories in test context properties by @Youssef1313 in [#7349](https://github.com/microsoft/testfx/pull/7349)
+* Produce separate result for class/assembly cleanup failures and report on last unignored test by @Youssef1313 in [#7390](https://github.com/microsoft/testfx/pull/7390)
+* Extend MSTEST0037 to cover array.Length, enumerable.Count(), Any(), and Contains with comparer by @Copilot in [#7540](https://github.com/microsoft/testfx/pull/7540)
+
+### Fixed
+
+* Fix false positive with proper assert analyzer and IComparable by @Evangelink in [#7405](https://github.com/microsoft/testfx/pull/7405)
+* Add missing cases to UseProperAssertMethod analyzer by @Evangelink in [#7406](https://github.com/microsoft/testfx/pull/7406)
+* Fix issue with exception flattener by @Evangelink in [#7414](https://github.com/microsoft/testfx/pull/7414)
+* Fix MSTEST0037 to detect LINQ Enumerable.Contains on interface types by @Evangelink in [#7487](https://github.com/microsoft/testfx/pull/7487)
+* Fix MSTEST0049 false positives inside expression trees by @Evangelink in [#7592](https://github.com/microsoft/testfx/pull/7592)
+* Avoid serialization for parameterized tests when running MTP+DisableAppDomain by @Youssef1313 in [#7602](https://github.com/microsoft/testfx/pull/7602)
+* Fix MSTEST0037 false positive for non-int count argument by @Copilot in [#7624](https://github.com/microsoft/testfx/pull/7624)
+* Fix MSTEST0017 false positive with user-defined conversion operators by @Copilot in [#7626](https://github.com/microsoft/testfx/pull/7626)
+
+### Removed
+
+* Remove unneeded setting `EnableBaseClassTestMethodsFromOtherAssemblies` by @Youssef1313 in [#7404](https://github.com/microsoft/testfx/pull/7404)
+
+### Artifacts
+
+* MSTest: [4.2.1](https://www.nuget.org/packages/MSTest/4.2.1)
+* MSTest.TestFramework: [4.2.1](https://www.nuget.org/packages/MSTest.TestFramework/4.2.1)
+* MSTest.TestAdapter: [4.2.1](https://www.nuget.org/packages/MSTest.TestAdapter/4.2.1)
+* MSTest.Analyzers: [4.2.1](https://www.nuget.org/packages/MSTest.Analyzers/4.2.1)
+* MSTest.Sdk: [4.2.1](https://www.nuget.org/packages/MSTest.Sdk/4.2.1)
+* MSTest.SourceGeneration: [2.0.0-alpha.26202.7](https://www.nuget.org/packages/MSTest.SourceGeneration/2.0.0-alpha.26202.7)
+* MSTest.Engine: [2.0.0-alpha.26202.7](https://www.nuget.org/packages/MSTest.Engine/2.0.0-alpha.26202.7)
+
+## <a name="4.1.0" />[4.1.0] - 2026-02-03
+
+See full log [of v4.0.2...v4.1.0](https://github.com/microsoft/testfx/compare/v4.0.2...v4.1.0)
+
+### Added
+
+* Add analyzer to detect assertions in catch blocks (MSTEST0058) by @Copilot in [#6801](https://github.com/microsoft/testfx/pull/6801)
+* Analyzer implementation to enhance assertions by @AtolagbeMuiz in [#6720](https://github.com/microsoft/testfx/pull/6720)
+* implemented non-generic overload for Assert.ContainsSingle by @AtolagbeMuiz in [#6736](https://github.com/microsoft/testfx/pull/6736)
+* Codefix for MSTEST0023 by @AtolagbeMuiz in [#6796](https://github.com/microsoft/testfx/pull/6796)
+* Add MSTEST0059: Detect conflicting Parallelize and DoNotParallelize attributes by @Copilot in [#6823](https://github.com/microsoft/testfx/pull/6823)
+* Add IsExactInstanceOfType assertion methods by @Copilot in [#7077](https://github.com/microsoft/testfx/pull/7077)
+* MSTEST0061: Add analyzer for OSCondition by @Copilot in [#7015](https://github.com/microsoft/testfx/pull/7015)
+* MSTEST0060: Add analyzer for duplicate test method attributes by @Copilot in [#7076](https://github.com/microsoft/testfx/pull/7076)
+* Add analyzer and code fix for test methods with out/ref parameters by @Copilot in [#7108](https://github.com/microsoft/testfx/pull/7108)
+* Add UseSTASynchronizationContext to STATestMethod by @Youssef1313 in [#7192](https://github.com/microsoft/testfx/pull/7192)
+* Add analyzer for invalid test class constructors (MSTEST0063) by @Copilot in [#7276](https://github.com/microsoft/testfx/pull/7276)
+
+### Fixed
+
+* Ensure TestContext.WriteLine is writing to the given TestContext by @Youssef1313 in [#6731](https://github.com/microsoft/testfx/pull/6731)
+* Fix deployment regression by @Youssef1313 in [#6718](https://github.com/microsoft/testfx/pull/6718)
+* Fix DeploymentItem when appdomain is disabled or not available by @Youssef1313 in [#6772](https://github.com/microsoft/testfx/pull/6772)
+* Fix diff marker in Assert.AreEqual when strings are compared to not point at '...' by @nohwnd in [#6794](https://github.com/microsoft/testfx/pull/6794)
+* Remove InvokeAsSynchronousTask and switch to async by @Youssef1313 in [#6832](https://github.com/microsoft/testfx/pull/6832)
+* Use .. range indicator for IsInRange by @nohwnd in [#6875](https://github.com/microsoft/testfx/pull/6875)
+* Fix DisableAppDomain default value when not running in isolation under VSTest by @Copilot in [#6900](https://github.com/microsoft/testfx/pull/6900)
+* Fix MSTEST0057 false positive on static constructors by @Copilot in [#6937](https://github.com/microsoft/testfx/pull/6937)
+* Allow minValue and maxValue to equal in Assert.IsInRange by @Youssef1313 in [#6976](https://github.com/microsoft/testfx/pull/6976)
+* Fix typo in Assert.Throws doc by @Youssef1313 in [#7016](https://github.com/microsoft/testfx/pull/7016)
+* Cleanup and fix FixtureMethodFixture by @Youssef1313 in [#7020](https://github.com/microsoft/testfx/pull/7020)
+* Fix OSConditionAttribute to detect OS via reflection for .NET Framework on Mono by @Copilot in [#7001](https://github.com/microsoft/testfx/pull/7001)
+* MSTEST0037: Report diagnostics for user-defined operators when they originate from BCL by @Youssef1313 in [#7037](https://github.com/microsoft/testfx/pull/7037)
+* Fix MSTEST0037 ContainsSingle codefix removing wrong arguments by @Copilot in [#7091](https://github.com/microsoft/testfx/pull/7091)
+* Fix MSTEST0056 when wrapping TestMethodAttribute by @Evangelink in [#7142](https://github.com/microsoft/testfx/pull/7142)
+* Fix IsTestApplication default for .NET Standard by @Youssef1313 in [#7199](https://github.com/microsoft/testfx/pull/7199)
+* MSTEST0037: Fix false positive with enums by @Youssef1313 in [#7206](https://github.com/microsoft/testfx/pull/7206)
+* Fix AssemblyCleanup running when not all class cleanups might have finished by @Youssef1313 in [#7173](https://github.com/microsoft/testfx/pull/7173)
+* Fix TypeCache to throw on duplicate attributes when necessary by @Youssef1313 in [#7223](https://github.com/microsoft/testfx/pull/7223)
+* Downgrade some analyzers back to info by @Youssef1313 in [#7233](https://github.com/microsoft/testfx/pull/7233)
+* Avoid using init for TestMethod attribute properties by @Youssef1313 in [#7241](https://github.com/microsoft/testfx/pull/7241)
+* Ensure code fixers are handling indentation/newlines correctly by @Evangelink in [#7235](https://github.com/microsoft/testfx/pull/7235)
+* Fix SynchronizationContext which is set in TestInitialize not preserved in test method by @Copilot in [#7202](https://github.com/microsoft/testfx/pull/7202)
+* Fix MSTEST0037 false positive for char overloads by @Youssef1313 in [#7263](https://github.com/microsoft/testfx/pull/7263)
+* Fix Assert.Inconclusive in constructor to behave consistently with TestInitialize by @Copilot in [#7304](https://github.com/microsoft/testfx/pull/7304)
+
+### Removed
+
+* Remove ConsiderFixturesAsSpecialTests by @Youssef1313 in [#7189](https://github.com/microsoft/testfx/pull/7189)
+
+### Housekeeping
+
+* Update polyfill and use EmbeddedAttribute by @Youssef1313 in [#6701](https://github.com/microsoft/testfx/pull/6701)
+* Cleanup MSTestSettings in adapter by @Youssef1313 in [#6722](https://github.com/microsoft/testfx/pull/6722)
+* Cleanup deployment item for UWP/WinUI by @Youssef1313 in [#6851](https://github.com/microsoft/testfx/pull/6851)
+* Update WinAppSDK by @Youssef1313 in [#6940](https://github.com/microsoft/testfx/pull/6940)
+
+### New Contributors
+
+* @mmitche made their first contribution in [#6944](https://github.com/microsoft/testfx/pull/6944)
+
+### Artifacts
+
+* MSTest: [4.1.0](https://www.nuget.org/packages/MSTest/4.1.0)
+* MSTest.TestFramework: [4.1.0](https://www.nuget.org/packages/MSTest.TestFramework/4.1.0)
+* MSTest.TestAdapter: [4.1.0](https://www.nuget.org/packages/MSTest.TestAdapter/4.1.0)
+* MSTest.Analyzers: [4.1.0](https://www.nuget.org/packages/MSTest.Analyzers/4.1.0)
+* MSTest.Sdk: [4.1.0](https://www.nuget.org/packages/MSTest.Sdk/4.1.0)
+* MSTest.SourceGeneration: [2.0.0-alpha.26103.11](https://www.nuget.org/packages/MSTest.SourceGeneration/2.0.0-alpha.26103.11)
+* MSTest.Engine: [2.0.0-alpha.26103.11](https://www.nuget.org/packages/MSTest.Engine/2.0.0-alpha.26103.11)
+
 ## <a name="4.0.2" />[4.0.2] - 2025-11-11
 
 See full log [of v4.0.1...v4.0.2](https://github.com/microsoft/testfx/compare/v4.0.1...v4.0.2)

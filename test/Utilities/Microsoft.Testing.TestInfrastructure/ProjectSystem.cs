@@ -79,12 +79,16 @@ public class CSharpProject : Project
     private readonly string _projectFileName;
     private XElement _projectContent = new("Project", new XAttribute("Sdk", "Microsoft.NET.Sdk"), new XElement("PropertyGroup"), new XElement("ItemGroup"));
 
-    public CSharpProject(string solutionFolder, string projectName, params string[]? tfms)
+    public CSharpProject(string solutionFolder, string projectName, params string[] tfms)
        : base(Path.Combine(solutionFolder, projectName))
     {
         Ensure.NotNullOrWhiteSpace(solutionFolder);
         Ensure.NotNullOrWhiteSpace(projectName);
-        Ensure.NotNullOrEmpty(tfms);
+
+        if (tfms is null || tfms.Length == 0)
+        {
+            throw new InvalidOperationException("tfms must have at least one element.");
+        }
 
         _projectFileName = $"{projectName}.csproj";
         ProjectFile = Path.Combine(FolderPath, _projectFileName);

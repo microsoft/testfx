@@ -14,7 +14,7 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0047: <inheritdoc cref="Resources.TestContextPropertyUsageTitle"/>.
+/// MSTEST0048: <inheritdoc cref="Resources.TestContextPropertyUsageTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class TestContextPropertyUsageAnalyzer : DiagnosticAnalyzer

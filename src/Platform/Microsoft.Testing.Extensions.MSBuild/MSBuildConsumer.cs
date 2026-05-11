@@ -38,7 +38,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
     public string Uid => nameof(MSBuildConsumer);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => nameof(MSBuildConsumer);
 
@@ -62,10 +62,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         // Avoid processing messages if the session has ended.
         if (_sessionEnded)

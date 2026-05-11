@@ -1,0 +1,5 @@
+{
+    "dotnet.automaticallyCreateSolutionInWorkspace": false,
+    "dotnet.enableWorkspaceBasedDevelopment": false,
+    "dotnet.solution.autoOpen": "TestFx.slnx",
+}

@@ -131,7 +131,13 @@ internal sealed class TestFrameworkEngine : IDataProducer
 
                 try
                 {
-                    (object? testClassInstance, StepTimingInfo? setupTiming) = await TryRunSetupMethodAsync(testContainerType, setupMethod, testNode, PublishNodeUpdateAsync);
+                    // It's important to keep TryRunSetupMethod synchronous so that async locals set in the test class constructor are available when executing the test method.
+                    (object? testClassInstance, StepTimingInfo? setupTiming, TestNode? errorNode) = TryRunSetupMethod(testContainerType, setupMethod, testNode);
+                    if (errorNode is not null)
+                    {
+                        await PublishNodeUpdateAsync(errorNode);
+                    }
+
                     if (setupTiming is not null)
                     {
                         stepTimings.Add(setupTiming);
@@ -253,8 +259,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         return false;
     }
 
-    private async Task<(object? TestClassInstance, StepTimingInfo? SetupTiming)> TryRunSetupMethodAsync(TypeInfo testContainerType, ConstructorInfo setupMethod, TestNode testNode,
-        Func<TestNode, Task> publishNodeUpdateAsync)
+    private (object? TestClassInstance, StepTimingInfo? SetupTiming, TestNode? ErrorNode) TryRunSetupMethod(TypeInfo testContainerType, ConstructorInfo setupMethod, TestNode testNode)
     {
         DateTimeOffset stepStartTime = DateTimeOffset.UtcNow;
         try
@@ -262,7 +267,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
             _logger.LogDebug($"Executing test '{testNode.DisplayName}' setup (ctor for '{testContainerType.FullName}')");
             object? instance = setupMethod.Invoke(null);
             DateTimeOffset stepEndTime = DateTimeOffset.UtcNow;
-            return (instance, new StepTimingInfo("init", "Test initialization", new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime)));
+            return (instance, new StepTimingInfo("init", "Test initialization", new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime)), null);
         }
         catch (Exception ex)
         {
@@ -275,8 +280,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
                 [new StepTimingInfo("init", "Test initialization", new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime))]));
             errorNode.Properties.Add(new ErrorTestNodeStateProperty(ex));
             errorNode.Properties.Add(new TrxExceptionProperty(ex.Message, ex.StackTrace));
-            await publishNodeUpdateAsync(errorNode);
-            return (null, null);
+            return (null, null, errorNode);
         }
     }
 

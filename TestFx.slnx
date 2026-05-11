@@ -2,6 +2,7 @@
   <Folder Name="/samples/">
     <Project Path="samples/FSharpPlayground/FSharpPlayground.fsproj" />
     <Project Path="samples/FxExtensibility/FxExtensibility.csproj" />
+    <Project Path="samples/NUnitPlayground/NUnitPlayground.csproj" />
     <Project Path="samples/Playground/Playground.csproj" />
     <Project Path="samples/WasiPlayground/WasiPlayground.csproj" />
   </Folder>

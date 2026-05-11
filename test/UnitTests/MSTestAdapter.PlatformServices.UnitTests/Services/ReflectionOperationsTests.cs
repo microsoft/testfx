@@ -71,58 +71,6 @@ public class ReflectionOperationsTests : TestContainer
         GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
     }
 
-    public void GetSpecificCustomAttributesShouldReturnAllAttributes()
-    {
-        MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1")!;
-
-        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute));
-
-        attributes.Should().NotBeNull();
-        attributes.Length.Should().Be(1);
-
-        string[] expectedAttributes = ["DummyA : base"];
-        GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
-    }
-
-    public void GetSpecificCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
-    {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
-
-        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute));
-
-        attributes.Should().NotBeNull();
-        attributes.Length.Should().Be(2);
-
-        string[] expectedAttributes = ["DummyA : derived", "DummyA : base"];
-        GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
-    }
-
-    public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributes()
-    {
-        Type type = typeof(DummyBaseTestClass);
-
-        object[] attributes = _reflectionOperations.GetCustomAttributes(type, typeof(DummyAAttribute));
-
-        attributes.Should().NotBeNull();
-        attributes.Length.Should().Be(1);
-
-        string[] expectedAttributes = ["DummyA : ba"];
-        GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
-    }
-
-    public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
-    {
-        Type type = typeof(DummyTestClass);
-
-        object[] attributes = _reflectionOperations.GetCustomAttributes(type, typeof(DummyAAttribute));
-
-        attributes.Should().NotBeNull();
-        attributes.Length.Should().Be(2);
-
-        string[] expectedAttributes = ["DummyA : a", "DummyA : ba"];
-        GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
-    }
-
     public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()
     {
         Assembly asm = typeof(DummyTestClass).Assembly;

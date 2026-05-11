@@ -19,6 +19,9 @@ namespace Microsoft.Testing.Extensions.VSTestBridge;
 /// </summary>
 public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProducer
 {
+    private readonly ITrxReportCapability? _trxReportCapability;
+    private bool? _isTrxEnabled;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="VSTestBridgedTestFrameworkBase"/> class.
     /// </summary>
@@ -26,12 +29,10 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
     /// <param name="capabilities">The test framework capabilities.</param>
     protected VSTestBridgedTestFrameworkBase(IServiceProvider serviceProvider, ITestFrameworkCapabilities capabilities)
     {
-        Ensure.NotNull(serviceProvider);
-        ServiceProvider = serviceProvider;
-        ITrxReportCapability? capability = capabilities.GetCapability<ITrxReportCapability>();
-        IsTrxEnabled = capability is IInternalVSTestBridgeTrxReportCapability internalCapability
-            ? internalCapability.IsTrxEnabled
-            : capability is ITrxReportCapability { IsSupported: true };
+        ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        // NOTE: It's too early to determine from the capability at this point whether or not trx is enabled.
+        // We store the capability and check it later when IsTrxEnabled is accessed.
+        _trxReportCapability = capabilities.GetCapability<ITrxReportCapability>();
     }
 
     /// <inheritdoc />
@@ -64,9 +65,21 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
     protected internal virtual bool UseFullyQualifiedNameAsTestNodeUid { get; }
 
     /// <summary>
+    /// Allows test frameworks built with the VSTestBridge to add additional properties to the TestNode, for example, TestMethodIdentifierProperty.
+    /// </summary>
+    /// <param name="testNode">The MTP test node being constructed.</param>
+    /// <param name="testCase">The VSTest test case for the current test node.</param>
+    protected internal virtual void AddAdditionalProperties(TestNode testNode, TestCase testCase)
+    {
+    }
+
+    /// <summary>
     /// Gets a value indicating whether the TRX report is enabled.
     /// </summary>
-    protected internal bool IsTrxEnabled { get; }
+    protected internal bool IsTrxEnabled
+        => _isTrxEnabled ??= _trxReportCapability is IInternalVSTestBridgeTrxReportCapability internalCapability
+            ? internalCapability.IsTrxEnabled
+            : _trxReportCapability is ITrxReportCapability { IsSupported: true };
 
     /// <inheritdoc />
     public abstract Task<bool> IsEnabledAsync();

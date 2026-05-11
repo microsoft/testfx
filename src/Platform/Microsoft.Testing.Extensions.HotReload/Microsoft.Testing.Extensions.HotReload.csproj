@@ -8,6 +8,11 @@
     <PackageLicenseFile>License.txt</PackageLicenseFile>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Embedded helpers from Microsoft.Testing.Platform -->
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\EnvironmentVariableConstants.cs" Link="Helpers\EnvironmentVariableConstants.cs" />
+  </ItemGroup>
+
   <!-- NuGet properties -->
   <PropertyGroup>
     <PackageDescription>
@@ -24,7 +29,7 @@ This package extends Microsoft Testing Platform to provide Hot Reload support.]]
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
+    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <!-- NuGet package layout -->

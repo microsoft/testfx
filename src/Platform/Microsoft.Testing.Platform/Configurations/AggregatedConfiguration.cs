@@ -59,7 +59,7 @@ internal sealed class AggregatedConfiguration(
     }
 
     public /* for testing */ void SetCurrentWorkingDirectory(string workingDirectory) =>
-        _currentWorkingDirectory = Ensure.NotNull(workingDirectory);
+        _currentWorkingDirectory = workingDirectory;
 
     public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(IFileLoggerProvider? fileLoggerProvider)
     {

@@ -22,9 +22,6 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
     private readonly Dictionary<Type, List<IAsyncConsumerDataProcessor>> _dataTypeConsumers = [];
     private readonly IDataConsumer[] _dataConsumers;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
-#if !NETCOREAPP
-    private readonly bool _forceBlockingCollection;
-#endif
     private bool _disabled;
 
     public AsynchronousMessageBus(
@@ -40,12 +37,6 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
         _environment = environment;
         _logger = loggerFactory.CreateLogger<AsynchronousMessageBus>();
         _isTraceLoggingEnabled = _logger.IsEnabled(LogLevel.Trace);
-#if !NETCOREAPP
-        // Note: This env variable is only present temporarily.
-        // Please, don't use it except for working around an issue that was reported to microsoft/testfx repo **and** a team member instructs you to do so.
-        // This env variable is undocumented and we will remove it in a soon release.
-        _forceBlockingCollection = _environment.GetEnvironmentVariable("MicrosoftTestingPlatform.MessageBus.UseBlockingCollection") == "1";
-#endif
     }
 
     public override IDataConsumer[] DataConsumerServices
@@ -75,13 +66,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
                 if (!_consumerProcessor.TryGetValue(consumer, out IAsyncConsumerDataProcessor? asyncMultiProducerMultiConsumerDataProcessor))
                 {
-#if !NETCOREAPP
-                    asyncMultiProducerMultiConsumerDataProcessor = _forceBlockingCollection
-                        ? new BlockingCollectionConsumerDataProcessor(consumer, _task, _testApplicationCancellationTokenSource.CancellationToken)
-                        : new AsyncConsumerDataProcessor(consumer, _task, _testApplicationCancellationTokenSource.CancellationToken);
-#else
                     asyncMultiProducerMultiConsumerDataProcessor = new AsyncConsumerDataProcessor(consumer, _task, _testApplicationCancellationTokenSource.CancellationToken);
-#endif
                     _consumerProcessor.Add(consumer, asyncMultiProducerMultiConsumerDataProcessor);
                 }
 
@@ -164,9 +149,9 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
                 StringBuilder builder = new();
                 builder.Append(CultureInfo.InvariantCulture, $"Publisher/Consumer loop detected during the drain after {stopwatch.Elapsed}.\n{builder}");
 
-                foreach ((IAsyncConsumerDataProcessor key, long value) in consumerToDrain)
+                foreach (KeyValuePair<IAsyncConsumerDataProcessor, long> kvp in consumerToDrain)
                 {
-                    builder.AppendLine(CultureInfo.InvariantCulture, $"Consumer '{key.DataConsumer}' payload received {value}.");
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"Consumer '{kvp.Key.DataConsumer}' payload received {kvp.Value}.");
                 }
 
                 throw new InvalidOperationException(builder.ToString());
@@ -178,8 +163,16 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
             {
                 foreach (IAsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
                 {
+#if NETCOREAPP
                     consumerToDrain.TryAdd(asyncMultiProducerMultiConsumerDataProcessor, 0);
-
+#else
+#pragma warning disable CA1854 // Prefer the 'IDictionary.TryGetValue(TKey, out TValue)' method
+                    if (!consumerToDrain.ContainsKey(asyncMultiProducerMultiConsumerDataProcessor))
+                    {
+                        consumerToDrain.Add(asyncMultiProducerMultiConsumerDataProcessor, 0);
+                    }
+#pragma warning restore CA1854 // Prefer the 'IDictionary.TryGetValue(TKey, out TValue)' method
+#endif
                     long totalPayloadReceived = await asyncMultiProducerMultiConsumerDataProcessor.DrainDataAsync().ConfigureAwait(false);
                     if (consumerToDrain[asyncMultiProducerMultiConsumerDataProcessor] != totalPayloadReceived)
                     {

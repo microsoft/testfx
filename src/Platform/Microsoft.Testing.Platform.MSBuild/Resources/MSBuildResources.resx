@@ -164,4 +164,10 @@ You can resolve the problem by installing the '{1}' .NET.
 The specified framework can be found at:
   - https://aka.ms/dotnet-download</value>
   </data>
+  <data name="DidNotReceiveModuleInfo" xml:space="preserve">
+    <value>MSBuild extension failed to receive test application information from '{0}'</value>
+  </data>
+  <data name="DidNotReceiveRunSummaryInfo" xml:space="preserve">
+    <value>MSBuild extension failed to receive test run summary from '{0}'</value>
+  </data>
 </root>

@@ -4,10 +4,8 @@
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 
 using Moq;
@@ -18,11 +16,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public class TestPropertyAttributeTests : TestContainer
 {
-    private readonly TypeCache _typeCache;
-
     public TestPropertyAttributeTests()
     {
-        _typeCache = new TypeCache(new ReflectHelper());
         var testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         testablePlatformServiceProvider.MockFileOperations.Setup(x => x.LoadAssembly(It.IsAny<string>())).Returns(GetType().Assembly);
         PlatformServiceProvider.Instance = testablePlatformServiceProvider;
@@ -42,32 +37,8 @@ public class TestPropertyAttributeTests : TestContainer
 
     #region GetTestMethodInfo tests
 
-    private static TestContextImplementation CreateTestContextImplementationForMethod(TestMethod testMethod)
-        => new(testMethod, null, new Dictionary<string, object?>(), null, null);
-
-    private static TestMethod CreateTestMethod(string methodName, string className, string assemblyName, string? displayName)
-        => new(className, methodName, null, methodName, className, assemblyName, displayName, null);
-
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassCorrectly()
     {
-        string className = typeof(DummyTestClassBase).FullName!;
-        TestMethod testMethod = CreateTestMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, displayName: null);
-
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        _ = _typeCache.GetTestMethodInfo(
-            testMethod,
-            testContext);
-
-        testContext.TryGetPropertyValue("TestMethodKeyFromBase", out object? value1).Should().BeTrue();
-        value1.Should().Be("TestMethodValueFromBase");
-
-        testContext.TryGetPropertyValue("DummyTestClassBaseKey1", out object? value2).Should().BeTrue();
-        value2.Should().Be("DummyTestClassBaseValue1");
-
-        testContext.TryGetPropertyValue("DummyTestClassBaseKey2", out object? value3).Should().BeTrue();
-        value3.Should().Be("DummyTestClassBaseValue2");
-
         TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassBase).GetMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived))!)];
         traits.Length.Should().Be(3);
         traits[0].Name.Should().Be("TestMethodKeyFromBase");
@@ -80,33 +51,6 @@ public class TestPropertyAttributeTests : TestContainer
 
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassAndBaseClassesAndOverriddenMethodsCorrectly_OverriddenIsTestMethod()
     {
-        string className = typeof(DummyTestClassDerived).FullName!;
-        TestMethod testMethod = CreateTestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, displayName: null);
-
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        _ = _typeCache.GetTestMethodInfo(
-            testMethod,
-            testContext);
-
-        testContext.TryGetPropertyValue("DerivedMethod1Key", out object? value1).Should().BeTrue();
-        value1.Should().Be("DerivedMethod1Value");
-
-        testContext.TryGetPropertyValue("TestMethodKeyFromBase", out object? value2).Should().BeTrue();
-        value2.Should().Be("TestMethodValueFromBase");
-
-        testContext.TryGetPropertyValue("DummyTestClassDerivedKey1", out object? value3).Should().BeTrue();
-        value3.Should().Be("DummyTestClassValue1");
-
-        testContext.TryGetPropertyValue("DummyTestClassDerivedKey2", out object? value4).Should().BeTrue();
-        value4.Should().Be("DummyTestClassValue2");
-
-        testContext.TryGetPropertyValue("DummyTestClassBaseKey1", out object? value5).Should().BeTrue();
-        value5.Should().Be("DummyTestClassBaseValue1");
-
-        testContext.TryGetPropertyValue("DummyTestClassBaseKey2", out object? value6).Should().BeTrue();
-        value6.Should().Be("DummyTestClassBaseValue2");
-
         TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived))!)];
         traits.Length.Should().Be(6);
         traits[0].Name.Should().Be("DerivedMethod1Key");
@@ -125,33 +69,6 @@ public class TestPropertyAttributeTests : TestContainer
 
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassAndBaseClassesAndOverriddenMethodsCorrectly_OverriddenIsNotTestMethod()
     {
-        string className = typeof(DummyTestClassDerived).FullName!;
-        TestMethod testMethod = CreateTestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, displayName: null);
-
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        _ = _typeCache.GetTestMethodInfo(
-            testMethod,
-            testContext);
-
-        testContext.TryGetPropertyValue("DerivedMethod2Key", out object? value1).Should().BeTrue();
-        value1.Should().Be("DerivedMethod2Value");
-
-        testContext.TryGetPropertyValue("NonTestMethodKeyFromBase", out object? value2).Should().BeTrue();
-        value2.Should().Be("NonTestMethodValueFromBase");
-
-        testContext.TryGetPropertyValue("DummyTestClassDerivedKey1", out object? value3).Should().BeTrue();
-        value3.Should().Be("DummyTestClassValue1");
-
-        testContext.TryGetPropertyValue("DummyTestClassDerivedKey2", out object? value4).Should().BeTrue();
-        value4.Should().Be("DummyTestClassValue2");
-
-        testContext.TryGetPropertyValue("DummyTestClassBaseKey1", out object? value5).Should().BeTrue();
-        value5.Should().Be("DummyTestClassBaseValue1");
-
-        testContext.TryGetPropertyValue("DummyTestClassBaseKey2", out object? value6).Should().BeTrue();
-        value6.Should().Be("DummyTestClassBaseValue2");
-
         TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase))!)];
         traits.Length.Should().Be(6);
         traits[0].Name.Should().Be("DerivedMethod2Key");

@@ -57,6 +57,6 @@ internal sealed class SystemTask : ITask
     public Task Delay(int millisecondDelay)
         => Task.Delay(millisecondDelay);
 
-    public Task Delay(TimeSpan timeSpan, CancellationToken cancellation)
-        => Task.Delay(timeSpan, cancellation);
+    public Task Delay(TimeSpan timeSpan, CancellationToken cancellationToken)
+        => Task.Delay(timeSpan, cancellationToken);
 }
