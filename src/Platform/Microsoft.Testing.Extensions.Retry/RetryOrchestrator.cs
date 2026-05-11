@@ -152,6 +152,11 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         bool thresholdPolicyKickedIn = false;
         string retryRootFolder = CreateRetriesDirectory(resultDirectory);
         bool retryInterrupted = false;
+
+        // Parse the delay once before the loop since command-line options don't change.
+        TimeSpan? retryDelay = _commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName, out string[]? retryDelayArgs)
+            ? TimeSpanParser.Parse(retryDelayArgs[0])
+            : null;
         while (attemptCount < userMaxRetryCount + 1)
         {
             attemptCount++;
@@ -273,6 +278,13 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 UseShellExecute = false,
             };
 
+            // Apply delay between retries if configured (skip first attempt)
+            if (attemptCount > 1 && retryDelay is { } delay)
+            {
+                await logger.LogDebugAsync($"Waiting {delay:c} before retry attempt {attemptCount}").ConfigureAwait(false);
+                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+            }
+
             await logger.LogDebugAsync($"Starting test host process, attempt {attemptCount}/{userMaxRetryCount}").ConfigureAwait(false);
             IProcess testHostProcess = _serviceProvider.GetProcessHandler().Start(processStartInfo)
                 ?? throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsCannotStartProcessErrorMessage, processStartInfo.FileName));
@@ -368,15 +380,6 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
 
                 finalArguments.Clear();
                 lastListOfFailedId = retryFailedTestsPipeServer.FailedUID?.ToArray();
-
-                // Apply delay between retries if configured
-                if (_commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName, out string[]? retryDelay)
-                    && attemptCount < userMaxRetryCount + 1)
-                {
-                    TimeSpan delay = TimeSpanParser.Parse(retryDelay[0]);
-                    await logger.LogDebugAsync($"Waiting {delay} before next retry attempt").ConfigureAwait(false);
-                    await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
-                }
             }
             else
             {

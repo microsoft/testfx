@@ -111,6 +111,8 @@ public class RetryTests
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
 
+    [DataRow("0")]
+    [DataRow("0s")]
     [DataRow("200")]
     [DataRow("1s")]
     [DataRow("2.5m")]
@@ -126,13 +128,15 @@ public class RetryTests
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
 
+    [DataRow("invalid")]
+    [DataRow("")]
     [TestMethod]
-    public async Task IsInvalid_If_InvalidTimeSpan_Is_Provided_For_DelayOption()
+    public async Task IsInvalid_If_InvalidTimeSpan_Is_Provided_For_DelayOption(string delay)
     {
         var provider = new RetryCommandLineOptionsProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName);
 
-        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, ["invalid"]).ConfigureAwait(false);
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [delay]).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
         Assert.AreEqual(Policy.Resources.ExtensionResources.RetryFailedTestsDelayOptionInvalidArgument, validateOptionsResult.ErrorMessage);
     }
