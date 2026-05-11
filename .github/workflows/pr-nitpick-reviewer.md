@@ -23,7 +23,6 @@ permissions:
 
 tools:
   cache-memory:
-    - true  # default (workflow-private) cache for nitpick-patterns.json, conventions.json, etc.
     - id: repo-history
       key: repo-history  # shared cache produced by the repo-historian workflow
   github:
