@@ -1685,16 +1685,7 @@ public class TestMethodInfoTests : TestContainer
                 SynchronizationContext.SetSynchronizationContext(this);
                 foreach ((SendOrPostCallback d, object? state) in _queue.GetConsumingEnumerable())
                 {
-                    try
-                    {
-                        d(state);
-                    }
-                    catch
-                    {
-                        // Swallow exceptions to keep the thread alive for subsequent queue items.
-                        // Note: only async exceptions inside InvokeAsync propagate to the TCS;
-                        // synchronous throws here leave the TCS unset and will cause the test to time out.
-                    }
+                    d(state);
                 }
             })
             {
@@ -1704,7 +1695,20 @@ public class TestMethodInfoTests : TestContainer
         }
 
         public override void Post(SendOrPostCallback d, object? state)
-            => _queue.TryAdd((d, state));
+        {
+            try
+            {
+                _queue.TryAdd((d, state));
+            }
+            catch (InvalidOperationException)
+            {
+                // Collection completed (after Dispose called CompleteAdding)
+            }
+            catch (ObjectDisposedException)
+            {
+                // Collection disposed
+            }
+        }
 
         public void Dispose()
         {
