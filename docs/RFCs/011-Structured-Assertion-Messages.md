@@ -52,7 +52,7 @@ actual:   <actual>                                        ← labeled value (col
 
 ### Line 1 — Assertion Prefix + Summary
 
-The first line always starts with the universal prefix `Assertion failed.` followed by a human-readable summary of the failure on the same line:
+The first line starts with the universal prefix `Assertion failed.` followed by a human-readable summary of the failure on the same line:
 
 ```text
 Assertion failed. Expected values to be equal.
@@ -76,7 +76,7 @@ Examples:
 | `IsTrue` | `Assertion failed. Expected condition to be true.` |
 | `IsNull` | `Assertion failed. Expected value to be null.` |
 | `IsInstanceOfType` | `Assertion failed. Expected value to be of type String (or derived).` |
-| `ThrowsExactly` | `Assertion failed. Expected exception of type ArgumentException but no exception was thrown.` |
+| `ThrowsExactly` | `Assertion failed. Expected exception of exact type ArgumentException but no exception was thrown.` |
 | `Contains` (collection) | `Assertion failed. Expected collection to contain the specified element.` |
 
 The summary follows the verbal form **"Expected [subject] to [verb phrase]."** for consistency. Short values like type names or small counts can be inlined when they improve clarity without bloating the line.
@@ -286,7 +286,7 @@ Assert.IsTrue(order.IsValid)
 ### Assert.ThrowsExactly (no exception thrown)
 
 ```text
-Assertion failed. Expected exception of type ArgumentException but no exception was thrown.
+Assertion failed. Expected exception of exact type ArgumentException but no exception was thrown.
 
 Assert.ThrowsExactly<ArgumentException>(() => Validate(input))
    at MyTests.ValidationTests.InvalidInput_ShouldThrow() in ValidationTests.cs:line 18
@@ -295,7 +295,7 @@ Assert.ThrowsExactly<ArgumentException>(() => Validate(input))
 ### Assert.ThrowsExactly (wrong exception type)
 
 ```text
-Assertion failed. Expected exception of exactly type ArgumentException but caught InvalidOperationException.
+Assertion failed. Expected exception of exact type ArgumentException but caught InvalidOperationException.
 
 expected type: System.ArgumentException
 actual type:   System.InvalidOperationException
@@ -308,7 +308,7 @@ Assert.ThrowsExactly<ArgumentException>(() => Validate(input))
 
 ```text
 Assertion failed. Expected strings to be equal (case-sensitive).
-Strings differ at 1 location(s). First difference at index 1042.
+Strings have different lengths (expected: 50000, actual: 49997) and differ at 1 location(s). First difference at index 1042.
 
 expected:
 "...configuration that spans many lines and contains the production database
@@ -329,7 +329,7 @@ Assertion failed. Expected collection to contain the specified element.
 expected to contain: "banana"
 actual:              ["apple", "cherry", "date"]
 
-Assert.Contains(fruits, "banana")
+Assert.Contains("banana", fruits)
    at MyTests.FruitTests.ShouldIncludeBanana() in FruitTests.cs:line 12
 ```
 
@@ -671,13 +671,13 @@ actual type:   System.InvalidOperationException
 #### Assert.ThrowsExactly (no exception thrown)
 
 ```text
-Assertion failed. Expected exception of exactly type ArgumentException but no exception was thrown.
+Assertion failed. Expected exception of exact type ArgumentException but no exception was thrown.
 ```
 
 #### Assert.ThrowsExactly (wrong exception type)
 
 ```text
-Assertion failed. Expected exception of exactly type ArgumentException but caught ArgumentNullException.
+Assertion failed. Expected exception of exact type ArgumentException but caught ArgumentNullException.
 
 expected type: System.ArgumentException
 actual type:   System.ArgumentNullException
@@ -879,6 +879,8 @@ max value: 10
 actual:    3
 ```
 
+Note: The labels `min value:` and `max value:` map directly to the API parameter names `minValue` and `maxValue`. This differs from `IsGreaterThan` / `IsLessThan` which use `lower bound:` / `upper bound:` because those assertions have `lowerBound` / `upperBound` parameters. All IComparable assertion labels follow their respective parameter names for consistency with the API.
+
 #### Assert.IsGreaterThan
 
 ```text
@@ -967,168 +969,11 @@ order.Total: -5
 Assert.That(() => order.Total > 0)
 ```
 
-Note: `Assert.That` is the singleton property on `Assert`, and the `That(Expression<Func<bool>>)` method is a C# extension method on the `Assert` type. The call-site expression captured by `CallerArgumentExpression` is the lambda argument (e.g. `() => order.Total > 0`), not the full invocation. The `Assert.That.That(...)` form shown above reflects the actual call syntax. `Assert.That` uses expression tree analysis to provide a detailed breakdown of the evaluated sub-expressions.
+Note: `Assert.That` is an extension method on the `Assert` type, added via C# 14's `extension(Assert _)` syntax. The call syntax is `Assert.That(() => order.Total > 0)`. The call-site expression captured by `CallerArgumentExpression` is the lambda argument (e.g. `() => order.Total > 0`), not the full invocation. `Assert.That` uses expression tree analysis to provide a detailed breakdown of the evaluated sub-expressions.
 
-### CollectionAssert (legacy)
+### Scope: Legacy Assertion Classes
 
-The `CollectionAssert` class predates the modern `Assert.Contains`/`Assert.HasCount` APIs and does **not** use `CallerArgumentExpression`. Its messages follow the same structured format but without a call-site expression line.
-
-#### CollectionAssert.Contains
-
-```text
-Assertion failed. Expected collection to contain the specified element.
-
-expected to contain: "banana"
-actual:              ["apple", "cherry", "date"]
-```
-
-#### CollectionAssert.DoesNotContain
-
-```text
-Assertion failed. Expected collection to not contain the specified element.
-
-element: "apple"
-actual:  ["apple", "cherry", "date"]
-```
-
-#### CollectionAssert.AllItemsAreNotNull
-
-```text
-Assertion failed. Expected all items in the collection to be non-null.
-Found null element at index 2.
-
-actual: ["apple", "cherry", (null), "date"]
-```
-
-#### CollectionAssert.AllItemsAreUnique
-
-```text
-Assertion failed. Expected all items in the collection to be unique.
-Duplicate element found: "apple".
-
-actual: ["apple", "cherry", "apple", "date"]
-```
-
-#### CollectionAssert.AllItemsAreInstancesOfType
-
-```text
-Assertion failed. Expected all items in the collection to be of type String (or derived).
-Element at index 2 is of type Int32.
-
-expected type: System.String (or derived)
-actual type:   System.Int32 (at index 2)
-actual:        ["apple", "cherry", 42, "date"]
-```
-
-#### CollectionAssert.IsSubsetOf
-
-```text
-Assertion failed. Expected collection to be a subset of the specified collection.
-
-actual:    ["apple", "banana", "cherry"]
-expected:  ["apple", "cherry", "date"]
-not found: ["banana"]
-```
-
-#### CollectionAssert.IsNotSubsetOf
-
-```text
-Assertion failed. Expected collection to not be a subset of the specified collection.
-
-actual:   ["apple", "cherry"]
-expected: ["apple", "cherry", "date"]
-```
-
-#### CollectionAssert.AreEquivalent
-
-```text
-Assertion failed. Expected collections to contain the same elements regardless of order.
-Missing 2 element(s) from actual. Found 1 unexpected element(s).
-
-missing:    ["cherry", "date"]
-unexpected: ["fig"]
-```
-
-#### CollectionAssert.AreNotEquivalent
-
-```text
-Assertion failed. Expected collections to not contain the same elements.
-
-actual:   ["apple", "cherry", "date"]
-expected: ["date", "apple", "cherry"]
-```
-
-#### CollectionAssert.AreEqual
-
-```text
-Assertion failed. Expected collections to be equal (same elements in same order).
-Collections have 5 element(s). 2 element(s) differ. First difference at index 2.
-
-expected[2]: "cherry"
-actual[2]:   "date"
-```
-
-#### CollectionAssert.AreNotEqual
-
-```text
-Assertion failed. Expected collections to differ.
-
-actual:   ["apple", "cherry", "date"]
-expected: ["apple", "cherry", "date"]
-```
-
-### StringAssert (legacy)
-
-The `StringAssert` class predates the modern `Assert.Contains`/`Assert.StartsWith` APIs and does **not** use `CallerArgumentExpression`. Its messages follow the same structured format but without a call-site expression line.
-
-#### StringAssert.Contains
-
-```text
-Assertion failed. Expected string to contain the specified substring.
-
-expected to contain: "world"
-actual:              "hello earth"
-```
-
-#### StringAssert.StartsWith
-
-```text
-Assertion failed. Expected string to start with the specified substring.
-
-expected prefix: "Hello"
-actual:          "Goodbye world"
-```
-
-Note: `StringAssert.StartsWith` uses the parameter name `substring` in its API, but the label uses `expected prefix:` for clarity since the semantic role is a prefix check. This matches the label convention in the modern `Assert.StartsWith`.
-
-#### StringAssert.EndsWith
-
-```text
-Assertion failed. Expected string to end with the specified substring.
-
-expected suffix: "world"
-actual:          "hello earth"
-```
-
-Note: Same convention as `StringAssert.StartsWith` — the API parameter is `substring` but the label uses `expected suffix:` for clarity.
-
-#### StringAssert.Matches
-
-```text
-Assertion failed. Expected string to match the specified pattern.
-
-pattern: ^\d{3}-\d{4}$
-actual:  "12-3456"
-```
-
-#### StringAssert.DoesNotMatch
-
-```text
-Assertion failed. Expected string to not match the specified pattern.
-
-pattern: ^\d{3}-\d{4}$
-actual:  "123-4567"
-```
+The `CollectionAssert` and `StringAssert` classes are considered legacy. All `StringAssert` operations already have modern `Assert` equivalents (`Assert.Contains`, `Assert.StartsWith`, `Assert.EndsWith`, `Assert.MatchesRegex`, `Assert.DoesNotMatchRegex`) whose messages are documented above. Several `CollectionAssert` operations (`AllItemsAreNotNull`, `AllItemsAreUnique`, `AllItemsAreInstancesOfType`, `IsSubsetOf`, `IsNotSubsetOf`, `AreEquivalent`, `AreNotEquivalent`, ordered `AreEqual`/`AreNotEqual`) do not yet have modern `Assert` equivalents. When those `Assert` methods are introduced, their message catalog entries will be added to this RFC following the same structured format. Until then, `CollectionAssert` and `StringAssert` are out of scope — their messages will be updated to the structured format opportunistically but are not specified here.
 
 ## Open Question: User Message Placement
 
@@ -1226,14 +1071,14 @@ The diff count tells the developer whether this is a typo (1 location) or a fund
 | Different lengths + diffs | `Collections have different lengths (expected: N, actual: M). First difference at index I.` |
 | Equivalence (unordered, missing/extra) | `Missing K element(s) from actual. Found J unexpected element(s).` |
 
-For **CollectionAssert.AreEquivalent**, all missing and unexpected elements are listed in the evidence block because the developer needs the full picture to fix set-difference issues:
+For **unordered equivalence comparisons**, all missing and unexpected elements are listed in the evidence block because the developer needs the full picture to fix set-difference issues:
 
 ```text
 missing:    ["cherry", "date"]
 unexpected: ["fig"]
 ```
 
-For **ordered collection equality** (`CollectionAssert.AreEqual`), only the first differing element is shown in the evidence block (with its index). The total diff count in the summary signals whether more fixes are needed.
+For **ordered collection equality**, only the first differing element is shown in the evidence block (with its index). The total diff count in the summary signals whether more fixes are needed.
 
 ## Value Rendering Rules
 
@@ -1252,6 +1097,7 @@ To ensure consistency across all assertions, values displayed in the evidence bl
 | Types | `System.String` | Fully qualified type name in evidence blocks. Short name (`String`) in summary lines for readability. No quotes. |
 | Collections | `["a", "b", "c"]` | JSON-style array notation. Elements follow the same rendering rules recursively. |
 | Empty collections | `[]` | Empty brackets. |
+| Regex patterns | `^\d{3}-\d{4}$` | Pattern text without quotes, regardless of whether the source was a `string` or `Regex` object. Patterns are structural descriptors (like type names), not arbitrary string values. |
 | Objects | `ToString()` result | If `ToString()` is not overridden, the fully qualified type name is shown. |
 
 ## Value Truncation
@@ -1305,3 +1151,5 @@ Mitigation:
 10. **Control character rendering strategy** — Should control characters be rendered as C#-style escape sequences (`\n`, `\t`) or as Unicode printable replacement characters (e.g. `␊` for newline, `␉` for tab)? Printable replacements preserve single-character width alignment, which is useful for visual comparison. An alternative is to keep actual newlines to preserve the user's text formatting while escaping other non-printable characters with their printable equivalents. The current proposal uses C#-style escapes but this needs validation.
 11. **Evidence block internal API** — How should assertions pass labeled evidence to the message formatter? Options include: (a) arrays of label/value pairs, (b) a single formatted string split on the first `:` per line, or (c) a structured `EvidenceBlock` type. This affects extensibility and third-party assertion authors.
 12. **Collection multi-line rendering** — When collection elements are long (e.g. 30+ characters each, or total rendered length exceeds 200+ characters), should the collection be rendered with one element per line instead of inline? Both `expected` and `actual` collections should use the same rendering style for visual comparison.
+13. **`expected:` line consistency for implied-value assertions** — `Assert.IsTrue` / `Assert.IsFalse` include both `expected:` and `actual:` lines (e.g. `expected: true` / `actual: false`), but `Assert.IsNull` and `Assert.IsNotNull` show only `actual:` (omitting `expected:` since the expected value is implied by the assertion name). Both approaches are reasonable — should the convention be to always include `expected:` for completeness, or to omit it when the expected value is inherent in the assertion name? The catalog currently uses a mix.
+14. **`Assert.IsNotNull` evidence block utility** — When `IsNotNull` fails, the actual value is always `(null)` — the evidence block provides no new information beyond what the summary already conveys. Should `IsNotNull` omit the evidence block entirely (like `Assert.AreNotSame`), or include `actual: (null)` for structural consistency with other assertions?
