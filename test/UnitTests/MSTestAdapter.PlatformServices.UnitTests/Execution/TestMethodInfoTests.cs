@@ -679,7 +679,7 @@ public class TestMethodInfoTests : TestContainer
         };
 
         using var syncContext = new SingleThreadedSynchronizationContextForTesting();
-        var tcs = new TaskCompletionSource<TestResult>();
+        var tcs = new TaskCompletionSource<TestResult>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         // Act: run InvokeAsync on the synchronization context's dedicated thread, simulating UITestMethodAttribute
         // dispatching the test to the UI thread.
@@ -705,7 +705,10 @@ public class TestMethodInfoTests : TestContainer
                 TaskScheduler.Default),
             null);
 
-        TestResult result = await tcs.Task.WaitAsync(TimeSpan.FromSeconds(30));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        Task completed = await Task.WhenAny(tcs.Task, Task.Delay(Timeout.Infinite, cts.Token));
+        Assert.AreEqual(tcs.Task, completed, "Timed out waiting for InvokeAsync to complete.");
+        TestResult result = await tcs.Task;
 
         // Assert: the SynchronizationContext should be preserved in the test method even after async TestInitialize
         result.Outcome.Should().Be(UnitTestOutcome.Passed);
@@ -733,7 +736,7 @@ public class TestMethodInfoTests : TestContainer
         };
 
         using var syncContext = new SingleThreadedSynchronizationContextForTesting();
-        var tcs = new TaskCompletionSource<TestResult>();
+        var tcs = new TaskCompletionSource<TestResult>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         // Act: run InvokeAsync on the synchronization context's dedicated thread, simulating UITestMethodAttribute
         // dispatching the test to the UI thread.
@@ -759,7 +762,10 @@ public class TestMethodInfoTests : TestContainer
                 TaskScheduler.Default),
             null);
 
-        TestResult result = await tcs.Task.WaitAsync(TimeSpan.FromSeconds(30));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        Task completed = await Task.WhenAny(tcs.Task, Task.Delay(Timeout.Infinite, cts.Token));
+        Assert.AreEqual(tcs.Task, completed, "Timed out waiting for InvokeAsync to complete.");
+        TestResult result = await tcs.Task;
 
         // Assert: the SynchronizationContext should be preserved at the start of TestCleanup
         result.Outcome.Should().Be(UnitTestOutcome.Passed);
