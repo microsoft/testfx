@@ -137,6 +137,34 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         Assert.Contains($"_{tfm}_", fileName, $"File name should contain the TFM '{tfm}'. Actual: {fileName}");
     }
 
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task HangDump_TemplateFileNameWithSubdirectory_CreateDump(string tfm)
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--hangdump --hangdump-timeout 8s --hangdump-filename <asm>/<pname>_<pid>_hang.dmp --results-directory {resultDirectory}",
+            new Dictionary<string, string?>
+            {
+                ["SLEEPTIMEMS1"] = "4000",
+                ["SLEEPTIMEMS2"] = "20000",
+            },
+            cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+
+        // Verify the dump file was created inside a subdirectory named after the assembly
+        string[] dumpFiles = Directory.GetFiles(resultDirectory, "*_hang.dmp", SearchOption.AllDirectories);
+        string dumpFile = Assert.ContainsSingle(
+            dumpFiles,
+            $"Expected single dump file in '{resultDirectory}'\n{testHostResult}'");
+
+        // The dump file should be in a subdirectory (not directly under resultDirectory)
+        string? parentDir = Path.GetDirectoryName(dumpFile);
+        Assert.IsNotNull(parentDir);
+        Assert.AreNotEqual(resultDirectory, parentDir, "Dump file should be in a subdirectory created from the <asm> placeholder");
+    }
+
     [DataRow("Mini")]
     [DataRow("Heap")]
     [DataRow("Triage")]

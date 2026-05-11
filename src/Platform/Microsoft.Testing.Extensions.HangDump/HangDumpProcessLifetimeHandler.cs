@@ -325,7 +325,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         // First resolve <placeholder> templates, then handle legacy %p pattern for backward compatibility.
         string finalDumpFileName = ArtifactNamingHelper.ResolveTemplate(pattern, replacements)
             .Replace("%p", processId);
-        finalDumpFileName = Path.Combine(_configuration.GetTestResultDirectory(), finalDumpFileName);
+        finalDumpFileName = Path.GetFullPath(Path.Combine(_configuration.GetTestResultDirectory(), finalDumpFileName));
 
         // Ensure the destination directory exists (templates may include directory separators, e.g. <asm>/<pname>).
         Directory.CreateDirectory(Path.GetDirectoryName(finalDumpFileName)!);
