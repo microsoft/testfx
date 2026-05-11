@@ -596,6 +596,49 @@ public class TestMethodInfoTests : TestContainer
         result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
+    public async Task TestMethodInfo_AsyncTestInitialize_PreservesSynchronizationContextForTestMethod()
+    {
+        // Arrange
+        SynchronizationContext? capturedContextInTestMethod = null;
+
+        DummyTestClass.TestInitializeMethodBodyAsync = async _ =>
+        {
+            // Simulate async work (like Task.Delay in WinUI scenarios)
+            await Task.Delay(1);
+        };
+        DummyTestClass.TestMethodBody = _ => capturedContextInTestMethod = SynchronizationContext.Current;
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethodAsync")!;
+
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        var tcs = new TaskCompletionSource<TestResult>();
+
+        // Act: run InvokeAsync on the synchronization context's dedicated thread, simulating UITestMethodAttribute
+        // dispatching the test to the UI thread.
+        syncContext.Post(
+            _ => _testMethodInfo.InvokeAsync(null).ContinueWith(
+                t =>
+                {
+                    if (t.IsFaulted)
+                    {
+                        tcs.SetException(t.Exception!);
+                    }
+                    else
+                    {
+                        tcs.SetResult(t.Result);
+                    }
+                },
+                CancellationToken.None,
+                TaskContinuationOptions.None,
+                TaskScheduler.Default),
+            null);
+
+        TestResult result = await tcs.Task;
+
+        // Assert: the SynchronizationContext should be preserved in the test method even after async TestInitialize
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        capturedContextInTestMethod.Should().BeSameAs(syncContext);
+    }
+
     public async Task TestMethodInfoInvokeShouldCallTestInitializeOfAllBaseClasses()
     {
         var callOrder = new List<string>();
@@ -1562,6 +1605,39 @@ public class TestMethodInfoTests : TestContainer
     #endregion
 
     #region Test data
+
+    private sealed class SingleThreadedSynchronizationContextForTesting : SynchronizationContext, IDisposable
+    {
+        private readonly BlockingCollection<(SendOrPostCallback d, object? state)> _queue = [];
+        private readonly Thread _thread;
+
+        public SingleThreadedSynchronizationContextForTesting()
+        {
+            _thread = new Thread(() =>
+            {
+                SynchronizationContext.SetSynchronizationContext(this);
+                foreach ((SendOrPostCallback d, object? state) in _queue.GetConsumingEnumerable())
+                {
+                    d(state);
+                }
+            })
+            {
+                IsBackground = true,
+            };
+            _thread.Start();
+        }
+
+        public override void Post(SendOrPostCallback d, object? state)
+            => _queue.Add((d, state));
+
+        public void Dispose()
+        {
+            _queue.CompleteAdding();
+            _thread.Join();
+            _queue.Dispose();
+        }
+    }
+
     public class DummyTestClassBase
     {
         public static Action<DummyTestClassBase> BaseTestClassMethodBody { get; set; } = null!;
