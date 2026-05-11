@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Requests;
@@ -10,7 +9,7 @@ internal sealed class ServerTestExecutionFilterFactory : ITestExecutionFilterFac
 {
     public string Uid => nameof(ServerTestExecutionFilterFactory);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => PlatformResources.ServerTestExecutionFilterFactoryDisplayName;
 

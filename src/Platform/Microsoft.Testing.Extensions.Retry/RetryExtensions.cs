@@ -5,7 +5,6 @@ using Microsoft.Testing.Extensions.Policy;
 using Microsoft.Testing.Extensions.Policy.Resources;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.TestHost;
 
 #if !NETCOREAPP
 using Polyfills;
@@ -42,14 +41,5 @@ public static class RetryExtensions
 
         builder.TestHostOrchestrator
             .AddTestHostOrchestrator(serviceProvider => new RetryOrchestrator(serviceProvider));
-
-        if (builder.TestHost is not TestHostManager testHostManager)
-        {
-            throw new InvalidOperationException(
-                ExtensionResources.RetryProviderRequiresDefaultTestHostManagerErrorMessage);
-        }
-
-        testHostManager
-            .AddTestExecutionFilterFactory(serviceProvider => new RetryExecutionFilterFactory(serviceProvider));
     }
 }

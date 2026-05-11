@@ -27,7 +27,7 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
 
     internal static bool IsExpandableTestNode(TestNode testNode)
         => testNode is IExpandableTestNode
-        && !testNode.Properties.OfType<FrameworkEngineMetadataProperty>().SingleOrDefault().PreventArgumentsExpansion;
+        && !FrameworkEngineMetadataProperty.GetFromProperties(testNode.Properties).PreventArgumentsExpansion;
 
     internal async Task<TestNode> ExpandTestNodeAsync(TestNode currentNode)
     {
@@ -131,22 +131,6 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
             => CreateWrappedName(testArgumentsEntry.DisplayNameFragment ?? testArgumentsEntry.UidFragment, shouldWrapInParenthesis);
 
         static string CreateWrappedName(string name, bool shouldWrapInParenthesis)
-        {
-            StringBuilder displayNameBuilder = new();
-
-            if (shouldWrapInParenthesis)
-            {
-                displayNameBuilder.Append('(');
-            }
-
-            displayNameBuilder.Append(name);
-
-            if (shouldWrapInParenthesis)
-            {
-                displayNameBuilder.Append(')');
-            }
-
-            return displayNameBuilder.ToString();
-        }
+            => shouldWrapInParenthesis ? string.Concat("(", name, ")") : name;
     }
 }

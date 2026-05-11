@@ -26,12 +26,20 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     {
         Filter = filter ?? throw new ArgumentNullException(nameof(filter));
         _filters = ParseFilter(filter);
+        ContainsPropertyFilters = _filters.Any(HasPropertyFilterExpression);
     }
 
     /// <summary>
     /// Gets the filter string.
     /// </summary>
     public string Filter { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether any filter segment contains a property expression (e.g., <c>Method[Trait=Foo]</c>).
+    /// When <see langword="false"/>, the <see cref="PropertyBag"/> argument to <see cref="MatchesFilter"/> is never
+    /// inspected, and callers may safely pass an empty bag to avoid per-node allocation.
+    /// </summary>
+    internal bool ContainsPropertyFilters { get; }
 
     /// <remarks>
     /// The current grammar for the filter looks as follows:
@@ -578,4 +586,8 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         => prop is TestMetadataProperty testMetadataProperty &&
             propExpr.Regex.IsMatch(testMetadataProperty.Key) &&
             valueExpr.Regex.IsMatch(testMetadataProperty.Value);
+
+    private static bool HasPropertyFilterExpression(FilterExpression expression)
+        => expression is ValueAndPropertyExpression ||
+           (expression is OperatorExpression op && op.SubExpressions.Any(HasPropertyFilterExpression));
 }

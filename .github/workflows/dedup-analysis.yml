@@ -1,0 +1,86 @@
+name: Code Duplication Analysis
+
+on:
+  workflow_dispatch:
+    inputs:
+      path:
+        description: 'Source path to scan (relative to repo root)'
+        required: false
+        default: 'src'
+      min_lines:
+        description: 'Minimum duplicated lines to report'
+        required: false
+        default: '6'
+      min_tokens:
+        description: 'Minimum duplicated tokens to report'
+        required: false
+        default: '50'
+      top_n:
+        description: 'Number of top findings to analyze with LLM'
+        required: false
+        default: '20'
+      model:
+        description: 'GitHub Models model to use for analysis'
+        required: false
+        default: 'openai/gpt-4.1-mini'
+  schedule:
+    # Run weekly on Monday at 8:00 UTC
+    - cron: '0 8 * * 1'
+
+permissions:
+  contents: read
+  issues: write
+  models: read
+
+jobs:
+  scan-and-analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          npm install -g jscpd
+          pip install openai
+
+      - name: Run jscpd scan
+        run: |
+          mkdir -p artifacts/jscpd
+          jscpd ${{ inputs.path || 'src' }} \
+            --min-lines ${{ inputs.min_lines || '6' }} \
+            --min-tokens ${{ inputs.min_tokens || '50' }} \
+            --reporters json \
+            --output artifacts/jscpd \
+            --format csharp \
+            --threshold 100 \
+            --ignore "**/bin/**,**/obj/**,**/artifacts/**,**/*.Designer.cs,**/*.g.cs,**/*.xlf,**/*.resx,**/PublicAPI.*.txt,**/test/**,**/samples/**,**/formal-verification/**"
+
+      - name: Analyze duplicates with GitHub Models
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TOP_N: ${{ inputs.top_n || '20' }}
+          MODEL: ${{ inputs.model || 'openai/gpt-4.1-mini' }}
+        run: python .github/scripts/analyze-duplicates.py
+
+      - name: Upload jscpd report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jscpd-report
+          path: artifacts/jscpd/
+
+      - name: Upload analysis report
+        uses: actions/upload-artifact@v4
+        with:
+          name: duplication-analysis
+          path: artifacts/jscpd/analysis-report.md

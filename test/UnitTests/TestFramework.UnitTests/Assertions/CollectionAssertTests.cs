@@ -187,6 +187,17 @@ public class CollectionAssertTests : TestContainer
         action.Should().Throw<Exception>();
     }
 
+    public void CollectionAssertAreEqual_WithMismatchedElements_CallsComparerOncePerElement()
+    {
+        int[] expected = [1];
+        int[] actual = [2];
+        var comparer = new CountingComparer();
+
+        Action action = () => CollectionAssert.AreEqual(expected, actual, comparer);
+        action.Should().Throw<AssertFailedException>();
+        comparer.CompareCallCount.Should().Be(1);
+    }
+
     public void CollectionAssertAreEqualComparerMessageNullabilityPostConditions()
     {
         ICollection? collection1 = GetCollection();
@@ -484,6 +495,17 @@ public class CollectionAssertTests : TestContainer
     private class ObjectComparer : IComparer
     {
         int IComparer.Compare(object? x, object? y) => Equals(x, y) ? 0 : -1;
+    }
+
+    private sealed class CountingComparer : IComparer
+    {
+        public int CompareCallCount { get; private set; }
+
+        int IComparer.Compare(object? x, object? y)
+        {
+            CompareCallCount++;
+            return Equals(x, y) ? 0 : -1;
+        }
     }
 
     private class CaseInsensitiveEqualityComparer : IEqualityComparer<string>

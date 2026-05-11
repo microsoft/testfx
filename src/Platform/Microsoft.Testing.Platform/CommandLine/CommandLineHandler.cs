@@ -34,7 +34,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
 
     public string Uid => nameof(CommandLineHandler);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => string.Empty;
 

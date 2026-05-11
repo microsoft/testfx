@@ -149,6 +149,7 @@
     "artifacts/tmp/**/*.md",
     "eng/**/*.md",
     "tools/**/*.md",
+    "formal-verification/**/*.md",
     ".dotnet/**/*.md",
     ".github/ISSUE_TEMPLATE/**/*.md",
     ".github/skills/**/*.md",

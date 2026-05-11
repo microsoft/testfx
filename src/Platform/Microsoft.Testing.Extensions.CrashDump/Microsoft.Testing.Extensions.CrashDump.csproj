@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
     <RootNamespace>Microsoft.Testing.Extensions.Diagnostics</RootNamespace>
+    <GenerateBuildInfo>true</GenerateBuildInfo>
+    <BuildInfoTemplateFile>$(RepoRoot)src\Platform\SharedExtensionHelpers\BuildInfo.cs.template</BuildInfoTemplateFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -52,7 +54,6 @@ This package extends Microsoft Testing Platform to provide a crash dump function
 
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.HangDump" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -46,7 +46,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForPatternExpressionAndValueExpression(message, patternExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsMatchFail, value, pattern, userMessage);
-            ThrowAssertFailed("Assert.MatchesRegex", finalMessage);
+            ReportAssertFailed("Assert.MatchesRegex", finalMessage);
         }
     }
 
@@ -122,7 +122,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForPatternExpressionAndValueExpression(message, patternExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsNotMatchFail, value, pattern, userMessage);
-            ThrowAssertFailed("Assert.DoesNotMatchRegex", finalMessage);
+            ReportAssertFailed("Assert.DoesNotMatchRegex", finalMessage);
         }
     }
 

@@ -26,7 +26,7 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
     public string Uid => nameof(TerminalTestReporterCommandLineOptionsProvider);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     /// <inheritdoc />
     public string DisplayName { get; } = PlatformResources.TerminalTestReporterDisplayName;

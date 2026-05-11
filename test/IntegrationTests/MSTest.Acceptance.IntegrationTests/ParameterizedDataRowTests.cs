@@ -28,7 +28,7 @@ public sealed class ParameterizedDataRowTests : AcceptanceTestBase<Parameterized
 
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettings}.runsettings --filter ClassName=ParameterizedTestSerializationIssue2390");
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 3, skipped: 0);
     }
 

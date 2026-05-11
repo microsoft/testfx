@@ -67,6 +67,16 @@
         <target state="translated">Удалить аргумент "ClassCleanupBehavior"</target>
         <note />
       </trans-unit>
+      <trans-unit id="RemoveDuplicateDataRowFix">
+        <source>Remove duplicate 'DataRow'</source>
+        <target state="translated">Удалить дубликат DataRow</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveDuplicateTestMethodAttributeFix">
+        <source>Remove duplicate TestMethod attribute</source>
+        <target state="translated">Удалить дублирующий атрибут TestMethod</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
         <source>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</source>
         <target state="translated">Удалите параметр "DynamicDataSourceType", чтобы использовать значение по умолчанию "AutoDetect"</target>

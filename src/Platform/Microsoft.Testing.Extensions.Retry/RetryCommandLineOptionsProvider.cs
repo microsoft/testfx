@@ -5,7 +5,6 @@ using Microsoft.Testing.Extensions.Policy.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
@@ -18,7 +17,7 @@ internal sealed class RetryCommandLineOptionsProvider : ICommandLineOptionsProvi
 
     public string Uid => nameof(RetryCommandLineOptionsProvider);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => ExtensionResources.RetryFailedTestsExtensionDisplayName;
 

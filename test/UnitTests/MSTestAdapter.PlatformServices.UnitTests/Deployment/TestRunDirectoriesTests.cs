@@ -21,4 +21,19 @@ public class TestRunDirectoriesTests : TestContainer
 
     public void InMachineNameDirectoryShouldReturnMachineSpecificDeploymentDirectory()
         => _testRunDirectories.InMachineNameDirectory.Should().Be(Path.Combine(@"C:\temp\In", Environment.MachineName));
+
+    public void OutDirectoryShouldFallBackWhenFirstTestSourceIsEmpty()
+    {
+        // Simulates Android CoreCLR where Assembly.Location returns "" (before synthetic path).
+        var directories = new TestRunDirectories(@"C:\temp", firstTestSource: string.Empty, isAppDomainCreationDisabled: true);
+        directories.OutDirectory.Should().Be(@"C:\temp\Out");
+    }
+
+    public void OutDirectoryShouldFallBackWhenFirstTestSourceIsRelativePath()
+    {
+        // Simulates Android MonoVM / CoreCLR after PR #7772 where Assembly.Location
+        // is a relative filename like "MyTests.dll" with no directory component.
+        var directories = new TestRunDirectories(@"C:\temp", firstTestSource: "MyTests.dll", isAppDomainCreationDisabled: true);
+        directories.OutDirectory.Should().Be(@"C:\temp\Out");
+    }
 }

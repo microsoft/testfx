@@ -458,9 +458,9 @@ internal sealed class TestClassInfo
             {
                 // Assembly initialize and class initialize logs are pre-pended to the first result.
                 var testContextImpl = testContext as TestContextImplementation;
-                result.LogOutput = initializationLogs + testContextImpl?.GetOut();
-                result.LogError = initializationErrorLogs + testContextImpl?.GetErr();
-                result.DebugTrace = initializationTrace + testContextImpl?.GetTrace();
+                result.LogOutput = initializationLogs + testContextImpl?.GetAndClearOutput();
+                result.LogError = initializationErrorLogs + testContextImpl?.GetAndClearError();
+                result.DebugTrace = initializationTrace + testContextImpl?.GetAndClearTrace();
                 result.TestContextMessages = initializationTestContextMessages + testContext.GetAndClearDiagnosticMessages();
             }
 
@@ -680,9 +680,9 @@ internal sealed class TestClassInfo
                     Outcome = UnitTestOutcome.Failed,
                     DisplayName = $"[{ClassType.FullName} ClassCleanup]",
                     TestFailureException = ex,
-                    LogOutput = testContextImpl?.GetOut(),
-                    LogError = testContextImpl?.GetErr(),
-                    DebugTrace = testContextImpl?.GetTrace(),
+                    LogOutput = testContextImpl?.GetAndClearOutput(),
+                    LogError = testContextImpl?.GetAndClearError(),
+                    DebugTrace = testContextImpl?.GetAndClearTrace(),
                     TestContextMessages = testContext.GetAndClearDiagnosticMessages(),
                 };
             }
@@ -690,9 +690,9 @@ internal sealed class TestClassInfo
             if (results.Length > 0)
             {
                 TestResult lastResult = results[results.Length - 1];
-                lastResult.LogOutput += testContextImpl?.GetOut();
-                lastResult.LogError += testContextImpl?.GetErr();
-                lastResult.DebugTrace += testContextImpl?.GetTrace();
+                lastResult.LogOutput += testContextImpl?.GetAndClearOutput();
+                lastResult.LogError += testContextImpl?.GetAndClearError();
+                lastResult.DebugTrace += testContextImpl?.GetAndClearTrace();
                 lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
             }
 

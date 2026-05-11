@@ -6,6 +6,8 @@
     <!-- Cancel default license (MIT) and set license as packaged license file -->
     <PackageLicenseExpression />
     <PackageLicenseFile>License.txt</PackageLicenseFile>
+    <GenerateBuildInfo>true</GenerateBuildInfo>
+    <BuildInfoTemplateFile>$(RepoRoot)src\Platform\SharedExtensionHelpers\BuildInfo.cs.template</BuildInfoTemplateFile>
   </PropertyGroup>
 
   <ItemGroup>
