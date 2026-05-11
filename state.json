@@ -1,9 +1,9 @@
 {
-  "last_run": "2026-05-10",
-  "run_id": "25633818177",
+  "last_run": "2026-05-11",
+  "run_id": "25645127282",
   "fv_tool": "Lean 4",
   "lean_available": false,
-  "lean_install_note": "elan v3.1.0 download blocked by agent security policy (permission denied executing binary). LEAN_AVAILABLE=false (confirmed runs 1-13).",
+  "lean_install_note": "elan v3.1.0 download succeeds but binary execution blocked by agent security policy (permission denied). LEAN_AVAILABLE=false (confirmed runs 1-14).",
   "targets": [
     {
       "id": 1,
@@ -74,7 +74,7 @@
       "name": "PasteArguments.ContainsNoWhitespaceOrQuotes",
       "phase": 2,
       "priority": 9,
-      "notes": "Informal spec extracted this run (PR open - lean-squad/task2-containsnowhitespaceorquotes-informal-2026-05-10). 14 theorems: 8 decidable ground instances, concatenation split via List.all_append. char.IsWhiteSpace approximated as common 4-char set. OQ-1..OQ-3 documented. Ready for Task 3.",
+      "notes": "Informal spec extracted (open PR). 14 theorems. Ready for Task 3.",
       "spec_file": "formal-verification/specs/pastearguments_containsnowhitespaceorquotes_informal.md"
     },
     {
@@ -89,7 +89,7 @@
       "name": "ValidationResult",
       "phase": 1,
       "priority": 11,
-      "notes": "Discriminated union; invariant IsValid <-> ErrorMessage is null. MemberNotNullWhen annotation. Next: Task 2.",
+      "notes": "Discriminated union; invariant IsValid <-> ErrorMessage is null. Next: Task 2.",
       "file": "src/Platform/Microsoft.Testing.Platform/Extensions/ValidationResult.cs"
     },
     {
@@ -97,7 +97,7 @@
       "name": "PasteArguments.AppendArgument",
       "phase": 1,
       "priority": 13,
-      "notes": "Windows CL quoting; 2N/2N+1 rules. Deferred until ContainsNoWhitespaceOrQuotes (id=9) is proved. Next: Task 2 (deferred).",
+      "notes": "Windows CL quoting; deferred until ContainsNoWhitespaceOrQuotes (id=9) is proved.",
       "file": "src/Platform/Microsoft.Testing.Platform/Helpers/PasteArguments.cs"
     },
     {
@@ -105,14 +105,14 @@
       "name": "TreeNodeFilter.TokenizeFilter",
       "phase": 1,
       "priority": 14,
-      "notes": "Lexer; richer than MatchFilterPattern. Deferred. Next: Task 2."
+      "notes": "Lexer; deferred."
     },
     {
       "id": 14,
       "name": "TimeSpanParser.TryParse",
       "phase": 1,
       "priority": 15,
-      "notes": "Regex-driven parsing with suffix dispatch. Hard to model in Lean. Deferred. Next: Task 2.",
+      "notes": "Regex-driven parsing with suffix dispatch. Hard to model. Deferred.",
       "file": "src/Platform/Microsoft.Testing.Platform/Helpers/TimeSpanParser.cs"
     },
     {
@@ -120,20 +120,29 @@
       "name": "CommandLineOption name validation",
       "phase": 1,
       "priority": 16,
-      "notes": "Character predicate: IsLetterOrDigit || hyphen || ?. Tractable but low value. Deferred."
+      "notes": "Character predicate. Low value. Deferred."
     },
     {
       "id": 16,
       "name": "DotnetTestConnection.IsVersionCompatible",
       "phase": 1,
       "priority": 10,
-      "notes": "NEW this run. One-liner: supportedProtocolVersions.Split(';').Contains(protocolVersion). Ideal for complete proof - smallest possible target. Next: Task 2.",
+      "notes": "One-liner: supportedProtocolVersions.Split(';').Contains(protocolVersion). Ideal smallest Task-2 target.",
       "file": "src/Platform/Microsoft.Testing.Platform/ServerMode/DotnetTest/DotnetTestConnection.cs"
+    },
+    {
+      "id": 17,
+      "name": "LLMEnvironmentDetector rule composition",
+      "phase": 1,
+      "priority": 17,
+      "notes": "NEW run 14. Rule-based DSL for AI tool detection. AnyMatchEnvironmentRule composition laws. ParseBool reuses id=8 model. Next: Task 2.",
+      "file": "src/Platform/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs"
     }
   ],
   "merged_prs": [7849, 7860, 7899, 7918, 7919, 7924, 7934, 7936],
   "open_prs": [
-    "lean-squad/task2-containsnowhitespaceorquotes-informal-2026-05-10"
+    "lean-squad/task2-containsnowhitespaceorquotes-informal-2026-05-10",
+    "lean-squad/run14-task1-targets-update-2026-05-11"
   ],
   "open_issues": [
     {
@@ -141,7 +150,7 @@
       "title": "[Lean Squad] Formal Verification Status"
     }
   ],
-  "next_priority": "Task 3 for ArgumentArity (id=1, top priority) when Lean available. Task 2 for DotnetTestConnection.IsVersionCompatible (id=16) - ideal next informal spec.",
+  "next_priority": "Task 3 for ArgumentArity (id=1) when Lean available. Task 2 for DotnetTestConnection.IsVersionCompatible (id=16) next run.",
   "findings": [
     "BUG-1 TryUnescape: single-char quote -> IndexOf(char,1,-1) throws.",
     "BUG-2 TryUnescape: single-char double-quote -> input[1..^1] range exception.",
@@ -164,9 +173,9 @@
     "notes": "Mathlib removed from lakefile (no .lean files yet). Add it back when first .lean file needs it.",
     "lake_build_verified": false,
     "mathlib_available": false,
-    "installation_status": "BLOCKED - elan binary download succeeds but execution blocked by agent security policy (permission denied). Confirmed blocked runs 1-13."
+    "installation_status": "BLOCKED - elan binary download succeeds but execution blocked by agent security policy (permission denied). Confirmed blocked runs 1-14."
   },
-  "last_run_tasks": "Task 3 BLOCKED (Lean unavailable, run 13). Task 1 executed: updated TARGETS.md from 7->16 targets. Task 2 executed: informal spec for PasteArguments.ContainsNoWhitespaceOrQuotes (id=9, phase 1->2). PR submitted.",
+  "last_run_tasks": "Task 3 BLOCKED (Lean unavailable, run 14). Task 1 executed: updated TARGETS.md from 7 to 17 targets (added all 16 memory-tracked + new id=17 LLMEnvironmentDetector). Added LLMEnvironmentDetector research to RESEARCH.md. PR submitted.",
   "ci_workflows": {
     "lean-proofs": ".github/workflows/lean-proofs.yml - builds Lean proofs, weekly schedule",
     "fv-docs-validation": ".github/workflows/fv-docs-validation.yml - validates FV documentation consistency"
