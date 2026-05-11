@@ -128,7 +128,10 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         if (argIndex > -1)
         {
             indexToCleanup.Add(argIndex);
-            indexToCleanup.Add(argIndex + 1);
+            if (argIndex + 1 < executableArguments.Length)
+            {
+                indexToCleanup.Add(argIndex + 1);
+            }
         }
 
         argIndex = GetOptionArgumentIndex(PlatformCommandLineProvider.ResultDirectoryOptionKey, executableArguments);

@@ -51,8 +51,8 @@ Movendo arquivos de ativo da última tentativa para o diretório de resultados p
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
-        <source>Add a delay between retries. The delay is expressed as a time value, e.g. 1s, 2.5m, 1h. Default unit is milliseconds.</source>
-        <target state="new">Add a delay between retries. The delay is expressed as a time value, e.g. 1s, 2.5m, 1h. Default unit is milliseconds.</target>
+        <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</source>
+        <target state="new">Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">

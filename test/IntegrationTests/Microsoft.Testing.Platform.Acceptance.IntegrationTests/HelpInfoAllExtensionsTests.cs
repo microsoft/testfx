@@ -61,7 +61,7 @@ Options:
     --retry-failed-tests
         Retry failed tests the given number of times
     --retry-failed-tests-delay
-        Add a delay between retries. The delay is expressed as a time value, e.g. 1s, 2.5m, 1h. Default unit is milliseconds.
+        Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.
     --retry-failed-tests-max-percentage
         Disable retry mechanism if the percentage of failed tests is greater than the specified value
     --retry-failed-tests-max-tests
@@ -343,7 +343,7 @@ Registered command line providers:
       --retry-failed-tests-delay
         Arity: 1
         Hidden: False
-        Description: Add a delay between retries. The delay is expressed as a time value, e.g. 1s, 2.5m, 1h. Default unit is milliseconds.
+        Description: Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.
   TerminalTestReporterCommandLineOptionsProvider
     Name: Terminal test reporter
     Version: *

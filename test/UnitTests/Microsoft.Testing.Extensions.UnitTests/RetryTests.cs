@@ -131,6 +131,7 @@ public class RetryTests
     [DataRow("invalid")]
     [DataRow("")]
     [DataRow("   ")]
+    [DataRow("25d")]
     [TestMethod]
     public async Task IsInvalid_If_InvalidTimeSpan_Is_Provided_For_DelayOption(string delay)
     {

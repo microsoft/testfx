@@ -83,7 +83,10 @@ internal sealed class RetryCommandLineOptionsProvider : ICommandLineOptionsProvi
             return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionSingleIntegerArgumentErrorMessage, RetryFailedTestsMaxTestsOptionName));
         }
 
-        if (commandOption.Name == RetryFailedTestsDelayOptionName && !TimeSpanParser.TryParse(arguments[0], out TimeSpan _))
+        if (commandOption.Name == RetryFailedTestsDelayOptionName
+            && (!TimeSpanParser.TryParse(arguments[0], out TimeSpan delay)
+                || delay < TimeSpan.Zero
+                || delay.TotalMilliseconds > int.MaxValue))
         {
             return ValidationResult.InvalidTask(ExtensionResources.RetryFailedTestsDelayOptionInvalidArgument);
         }
