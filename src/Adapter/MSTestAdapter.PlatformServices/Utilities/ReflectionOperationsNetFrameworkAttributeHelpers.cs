@@ -212,6 +212,11 @@ internal static class ReflectionOperationsNetFrameworkAttributeHelpers
     {
         foreach (CustomAttributeData attribute in customAttributes)
         {
+            if (shouldGetAllAttributes && IsCompilerGeneratedNullableAttribute(attribute.Constructor.DeclaringType))
+            {
+                continue;
+            }
+
             if (!shouldGetAllAttributes
                 && !IsTypeInheriting(attribute.Constructor.DeclaringType, type)
                     && !attribute.Constructor.DeclaringType.AssemblyQualifiedName.Equals(
@@ -244,6 +249,10 @@ internal static class ReflectionOperationsNetFrameworkAttributeHelpers
             }
         }
     }
+
+    private static bool IsCompilerGeneratedNullableAttribute(Type? attributeType)
+        => string.Equals(attributeType?.FullName, "System.Runtime.CompilerServices.NullableAttribute", StringComparison.Ordinal)
+            || string.Equals(attributeType?.FullName, "System.Runtime.CompilerServices.NullableContextAttribute", StringComparison.Ordinal);
 
     /// <summary>
     /// Check whether the member is loaded in a reflection only context.
