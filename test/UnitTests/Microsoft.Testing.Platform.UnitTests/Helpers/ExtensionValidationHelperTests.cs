@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class ExtensionValidationHelperTests
 {
-    // ---- ValidateUniqueExtension<T> overload (with extensionSelector) ----
+    // ValidateUniqueExtension<T> overload (with extensionSelector)
     [TestMethod]
     public void ValidateUniqueExtension_WithSelector_NullExistingExtensions_ThrowsArgumentNullException()
     {
@@ -86,6 +86,20 @@ public sealed class ExtensionValidationHelperTests
     }
 
     [TestMethod]
+    public void ValidateUniqueExtension_WithSelector_MultipleDuplicates_ThrowsInvalidOperationException()
+    {
+        TestExtension existing1 = new() { UidOverride = "same-uid" };
+        TestExtension existing2 = new() { UidOverride = "same-uid" };
+        TestExtension newExtension = new() { UidOverride = "same-uid" };
+        List<IExtension> existing = [existing1, existing2];
+
+        InvalidOperationException ex = Assert.ThrowsExactly<InvalidOperationException>(() =>
+            existing.ValidateUniqueExtension(newExtension, x => x));
+
+        Assert.Contains("same-uid", ex.Message);
+    }
+
+    [TestMethod]
     public void ValidateUniqueExtension_WithSelector_UidIsCaseSensitive_DifferentCaseDoesNotThrow()
     {
         TestExtension existingExtension = new() { UidOverride = "uid-lowercase" };
@@ -116,7 +130,7 @@ public sealed class ExtensionValidationHelperTests
         wrappers.ValidateUniqueExtension(newExtension, w => w.Extension);
     }
 
-    // ---- ValidateUniqueExtension simple overload (IEnumerable<IExtension>) ----
+    // ValidateUniqueExtension simple overload (IEnumerable<IExtension>)
     [TestMethod]
     public void ValidateUniqueExtension_SimpleOverload_NullExistingExtensions_ThrowsArgumentNullException()
     {
@@ -177,6 +191,16 @@ public sealed class ExtensionValidationHelperTests
             existing.ValidateUniqueExtension(newExtension));
 
         Assert.Contains("duplicate-uid", ex.Message);
+    }
+
+    [TestMethod]
+    public void ValidateUniqueExtension_SimpleOverload_UidIsCaseSensitive_DifferentCaseDoesNotThrow()
+    {
+        TestExtension existingExtension = new() { UidOverride = "uid-lowercase" };
+        TestExtension newExtension = new() { UidOverride = "UID-LOWERCASE" };
+        List<IExtension> existing = [existingExtension];
+
+        existing.ValidateUniqueExtension(newExtension);
     }
 
     private sealed class Wrapper(TestExtension extension)
