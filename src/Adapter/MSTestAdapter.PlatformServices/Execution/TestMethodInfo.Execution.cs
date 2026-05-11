@@ -118,8 +118,8 @@ internal partial class TestMethodInfo
                     _isTestContextSet = true;
 
                     // Intentionally not using ConfigureAwait(false) here to preserve SynchronizationContext.
-                    // This ensures that the test method and TestCleanup run on the same thread as the SynchronizationContext
-                    // that was active when the test started (e.g., the UI thread for WinUI tests).
+                    // This ensures that the test method starts running on the same thread as the SynchronizationContext
+                    // that was active when ExecuteInternalAsync was called (e.g., the UI thread for WinUI tests).
                     // Without this, an async TestInitialize would cause the test method to be invoked on a
                     // thread pool thread instead of the UI thread.
                     if (await RunTestInitializeMethodAsync(_classInstance!, result, timeoutTokenSource))
