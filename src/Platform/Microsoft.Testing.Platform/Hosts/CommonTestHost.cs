@@ -231,7 +231,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         TestSessionLifetimeHandlersContainer? testSessionLifetimeHandlersContainer = serviceProvider.GetService<TestSessionLifetimeHandlersContainer>();
         if (testSessionLifetimeHandlersContainer is null)
         {
-            // TODO: Is this reachable? If so, are we missing await baseMessageBus.DisableAsync() here?
+            // TODO: Is this reachable? If so, are we missing await baseMessageBus.DisableAsync() here? Tracked by https://github.com/microsoft/testfx/issues/8086.
             return;
         }
 
