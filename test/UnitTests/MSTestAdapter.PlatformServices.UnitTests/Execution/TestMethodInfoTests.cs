@@ -691,6 +691,10 @@ public class TestMethodInfoTests : TestContainer
                     {
                         tcs.SetException(t.Exception!);
                     }
+                    else if (t.IsCanceled)
+                    {
+                        tcs.SetCanceled();
+                    }
                     else
                     {
                         tcs.SetResult(t.Result);
@@ -701,11 +705,65 @@ public class TestMethodInfoTests : TestContainer
                 TaskScheduler.Default),
             null);
 
-        TestResult result = await tcs.Task;
+        TestResult result = await tcs.Task.WaitAsync(TimeSpan.FromSeconds(30));
 
         // Assert: the SynchronizationContext should be preserved in the test method even after async TestInitialize
         result.Outcome.Should().Be(UnitTestOutcome.Passed);
         capturedContextInTestMethod.Should().BeSameAs(syncContext);
+    }
+
+    public async Task TestMethodInfo_AsyncTestCleanup_PreservesSynchronizationContextForTestCleanup()
+    {
+        // Arrange
+        SynchronizationContext? capturedContextInTestCleanup = null;
+
+        DummyTestClass.TestCleanupMethodBodyAsync = async _ =>
+        {
+            capturedContextInTestCleanup = SynchronizationContext.Current;
+            await Task.Delay(1);
+        };
+        DummyTestClass.TestMethodBody = _ => { };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethodAsync")!;
+
+        // Create a TestMethodInfo without a timeout so we go through ExecuteInternalAsync directly
+        // (not the non-cooperative timeout path which runs on a separate thread pool thread).
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            Executor = _testMethodAttribute,
+        };
+
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        var tcs = new TaskCompletionSource<TestResult>();
+
+        // Act: run InvokeAsync on the synchronization context's dedicated thread, simulating UITestMethodAttribute
+        // dispatching the test to the UI thread.
+        syncContext.Post(
+            state => _ = testMethodInfo.InvokeAsync(null).ContinueWith(
+                t =>
+                {
+                    if (t.IsFaulted)
+                    {
+                        tcs.SetException(t.Exception!);
+                    }
+                    else if (t.IsCanceled)
+                    {
+                        tcs.SetCanceled();
+                    }
+                    else
+                    {
+                        tcs.SetResult(t.Result);
+                    }
+                },
+                CancellationToken.None,
+                TaskContinuationOptions.None,
+                TaskScheduler.Default),
+            null);
+
+        TestResult result = await tcs.Task.WaitAsync(TimeSpan.FromSeconds(30));
+
+        // Assert: the SynchronizationContext should be preserved at the start of TestCleanup
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        capturedContextInTestCleanup.Should().BeSameAs(syncContext);
     }
 
     public async Task TestMethodInfoInvokeShouldCallTestInitializeOfAllBaseClasses()
@@ -1687,7 +1745,15 @@ public class TestMethodInfoTests : TestContainer
                 SynchronizationContext.SetSynchronizationContext(this);
                 foreach ((SendOrPostCallback d, object? state) in _queue.GetConsumingEnumerable())
                 {
-                    d(state);
+                    try
+                    {
+                        d(state);
+                    }
+                    catch
+                    {
+                        // Swallow exceptions to keep the thread alive. The caller's TCS will handle
+                        // any exceptions that occur during test execution.
+                    }
                 }
             })
             {
