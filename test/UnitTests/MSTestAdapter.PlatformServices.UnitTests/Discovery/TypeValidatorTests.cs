@@ -4,8 +4,7 @@
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 
 using Moq;
@@ -19,7 +18,7 @@ public class TypeValidatorTests : TestContainer
     #region private variables
 
     private readonly TypeValidator _typeValidator;
-    private readonly Mock<IReflectionOperations> _mockReflectionOperations;
+    private readonly Mock<ReflectHelper> _mockReflectHelper;
     private readonly List<string> _warnings;
 
     #endregion
@@ -28,8 +27,8 @@ public class TypeValidatorTests : TestContainer
 
     public TypeValidatorTests()
     {
-        _mockReflectionOperations = new Mock<IReflectionOperations>();
-        _typeValidator = new TypeValidator(_mockReflectionOperations.Object);
+        _mockReflectHelper = new Mock<ReflectHelper>();
+        _typeValidator = new TypeValidator(_mockReflectHelper.Object);
         _warnings = [];
     }
 
@@ -41,14 +40,14 @@ public class TypeValidatorTests : TestContainer
 
     public void IsValidTestClassShouldReturnFalseForClassesNotHavingTestClassAttributeOrDerivedAttributeTypes()
     {
-        _mockReflectionOperations.Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<Type>())).Returns(false);
+        _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<Type>())).Returns(false);
         _typeValidator.IsValidTestClass(typeof(TypeValidatorTests), _warnings).Should().BeFalse();
     }
 
     public void IsValidTestClassShouldReturnTrueForClassesMarkedByAnAttributeDerivedFromTestClass()
     {
-        _mockReflectionOperations.Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<TypeInfo>())).Returns(false);
-        _mockReflectionOperations.Setup(
+        _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<TypeInfo>())).Returns(false);
+        _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<TypeInfo>())).Returns(true);
         _typeValidator.IsValidTestClass(typeof(TypeValidatorTests), _warnings).Should().BeTrue();
     }
@@ -103,7 +102,7 @@ public class TypeValidatorTests : TestContainer
 
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldReturnTrueForInternalTestClasses()
     {
-        var typeValidator = new TypeValidator(_mockReflectionOperations.Object, true);
+        var typeValidator = new TypeValidator(_mockReflectHelper.Object, true);
 
         SetupTestClass();
         typeValidator.IsValidTestClass(typeof(InternalTestClass), _warnings).Should().BeTrue();
@@ -111,7 +110,7 @@ public class TypeValidatorTests : TestContainer
 
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldNotReportWarningForInternalTestClasses()
     {
-        var typeValidator = new TypeValidator(_mockReflectionOperations.Object, true);
+        var typeValidator = new TypeValidator(_mockReflectHelper.Object, true);
 
         SetupTestClass();
         typeValidator.IsValidTestClass(typeof(InternalTestClass), _warnings);
@@ -120,7 +119,7 @@ public class TypeValidatorTests : TestContainer
 
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldReturnTrueForNestedInternalTestClasses()
     {
-        var typeValidator = new TypeValidator(_mockReflectionOperations.Object, true);
+        var typeValidator = new TypeValidator(_mockReflectHelper.Object, true);
 
         SetupTestClass();
         typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), _warnings).Should().BeTrue();
@@ -128,7 +127,7 @@ public class TypeValidatorTests : TestContainer
 
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldReturnFalseForPrivateTestClasses()
     {
-        var typeValidator = new TypeValidator(_mockReflectionOperations.Object, true);
+        var typeValidator = new TypeValidator(_mockReflectHelper.Object, true);
 
         Type nestedPrivateClassType = Assembly.GetExecutingAssembly().GetTypes().First(t => t.Name == "NestedPrivateClass");
 
@@ -138,7 +137,7 @@ public class TypeValidatorTests : TestContainer
 
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldReturnFalseForInaccessibleTestClasses()
     {
-        var typeValidator = new TypeValidator(_mockReflectionOperations.Object, true);
+        var typeValidator = new TypeValidator(_mockReflectHelper.Object, true);
 
         Type inaccessibleClassType = Assembly.GetExecutingAssembly().GetTypes().First(t => t.Name == "InaccessiblePublicClass");
 
@@ -148,7 +147,7 @@ public class TypeValidatorTests : TestContainer
 
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldNotReportWarningsForNestedInternalTestClasses()
     {
-        var typeValidator = new TypeValidator(_mockReflectionOperations.Object, true);
+        var typeValidator = new TypeValidator(_mockReflectHelper.Object, true);
 
         SetupTestClass();
         typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), _warnings);
@@ -393,7 +392,7 @@ public class TypeValidatorTests : TestContainer
 
     #region private methods
 
-    private void SetupTestClass() => _mockReflectionOperations.Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<TypeInfo>())).Returns(true);
+    private void SetupTestClass() => _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<TypeInfo>())).Returns(true);
 
     #endregion
 }

@@ -99,7 +99,10 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
     public bool IsAttributeDefined<TAttribute>(MemberInfo memberInfo)
         where TAttribute : Attribute
     {
-        ArgumentNullException.ThrowIfNull(memberInfo);
+        if (memberInfo is null)
+        {
+            throw new ArgumentNullException(nameof(memberInfo));
+        }
 
         // Get all attributes on the member.
         Attribute[] attributes = GetCustomAttributesCached(memberInfo);
