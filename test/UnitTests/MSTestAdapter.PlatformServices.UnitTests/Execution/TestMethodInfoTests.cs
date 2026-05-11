@@ -641,7 +641,7 @@ public class TestMethodInfoTests : TestContainer
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         Task completed = await Task.WhenAny(tcs.Task, Task.Delay(Timeout.Infinite, cts.Token));
-        Assert.AreEqual(tcs.Task, completed, "Timed out waiting for InvokeAsync to complete.");
+        completed.Should().BeSameAs(tcs.Task, "Timed out waiting for InvokeAsync to complete.");
         TestResult result = await tcs.Task;
 
         // Assert: the SynchronizationContext should be preserved in the test method even after async TestInitialize
@@ -698,7 +698,7 @@ public class TestMethodInfoTests : TestContainer
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         Task completed = await Task.WhenAny(tcs.Task, Task.Delay(Timeout.Infinite, cts.Token));
-        Assert.AreEqual(tcs.Task, completed, "Timed out waiting for InvokeAsync to complete.");
+        completed.Should().BeSameAs(tcs.Task, "Timed out waiting for InvokeAsync to complete.");
         TestResult result = await tcs.Task;
 
         // Assert: the SynchronizationContext should be preserved at the start of TestCleanup
@@ -1691,8 +1691,9 @@ public class TestMethodInfoTests : TestContainer
                     }
                     catch
                     {
-                        // Swallow exceptions to keep the thread alive. The caller's TCS will handle
-                        // any exceptions that occur during test execution.
+                        // Swallow exceptions to keep the thread alive for subsequent queue items.
+                        // Note: only async exceptions inside InvokeAsync propagate to the TCS;
+                        // synchronous throws here leave the TCS unset and will cause the test to time out.
                     }
                 }
             })
@@ -1703,7 +1704,7 @@ public class TestMethodInfoTests : TestContainer
         }
 
         public override void Post(SendOrPostCallback d, object? state)
-            => _queue.Add((d, state));
+            => _queue.TryAdd((d, state));
 
         public void Dispose()
         {
