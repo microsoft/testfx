@@ -11,6 +11,6 @@ internal abstract class JsonObjectSerializer : JsonSerializer
 
     public (string Key, object? Value)[]? GetProperties(object o)
         => Properties == null
-            ? throw new InvalidOperationException($"The '{nameof(Properties)}' delegate on '{GetType().Name}' has not been initialized. Ensure all serializer instances are fully configured before use.")
+            ? throw new InvalidOperationException($"The '{nameof(Properties)}' delegate on '{GetType().Name}' has not been initialized. Assign the '{nameof(Properties)}' delegate before calling '{nameof(GetProperties)}'.")
             : Properties(o);
 }
