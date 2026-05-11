@@ -122,7 +122,9 @@ internal partial class TestMethodInfo
                     // that was active when ExecuteInternalAsync was called (e.g., the UI thread for WinUI tests).
                     // Without this, an async TestInitialize would cause the test method to be invoked on a
                     // thread pool thread instead of the UI thread.
+#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task - Intentionally not using ConfigureAwait(false) to preserve SynchronizationContext
                     if (await RunTestInitializeMethodAsync(_classInstance!, result, timeoutTokenSource))
+#pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
                     {
                         if (_executionContext is null)
                         {
