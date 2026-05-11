@@ -24,7 +24,7 @@
     <!-- Test Platform, .NET Test SDK and Object Model  -->
     <MicrosoftNETTestSdkVersion>18.4.0</MicrosoftNETTestSdkVersion>
     <MicrosoftPlaywrightVersion>1.58.0</MicrosoftPlaywrightVersion>
-    <MSTestDesktopTestingVersion>4.3.0</MSTestDesktopTestingVersion>
+    <MSTestWindowsAppTestingVersion>4.3.0</MSTestWindowsAppTestingVersion>
     <MicrosoftTestingExtensionsFakesVersion>18.1.1</MicrosoftTestingExtensionsFakesVersion>
     <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24577.4</MicrosoftTestingInternalFrameworkVersion>
     <SystemThreadingTasksExtensionsVersion>4.5.4</SystemThreadingTasksExtensionsVersion>
@@ -96,7 +96,7 @@
     This allows dependabot to suggest updates.
     -->
   <ItemGroup Label="Declared by MSTest.Sdk but not used directly">
-    <PackageVersion Include="MSTest.DesktopTesting" Version="$(MSTestDesktopTestingVersion)" />
+    <PackageVersion Include="MSTest.Windows.AppTesting" Version="$(MSTestWindowsAppTestingVersion)" />
     <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="$(MicrosoftPlaywrightVersion)" />
   </ItemGroup>
 </Project>

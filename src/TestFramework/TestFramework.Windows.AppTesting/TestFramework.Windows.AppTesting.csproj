@@ -8,10 +8,10 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <PackageId>MSTest.DesktopTesting</PackageId>
-    <PackageTags>MSTest TestFramework DesktopTesting UIAutomation WinForms WPF E2E EndToEnd Microsoft Test Testing</PackageTags>
+    <PackageId>MSTest.Windows.AppTesting</PackageId>
+    <PackageTags>MSTest TestFramework Windows AppTesting UIAutomation WinForms WPF E2E EndToEnd Microsoft Test Testing</PackageTags>
     <PackageDescription>
-      MSTest base classes for end-to-end testing of Windows desktop applications (WinForms, WPF, and other Win32 apps).
+      MSTest base classes for end-to-end testing of Windows applications (WinForms, WPF, and other Win32 apps).
 
       Provides a thin lifecycle adapter (similar to Microsoft.Playwright.MSTest for web) that manages
       application launch, UI Automation attachment, and teardown through MSTest's TestInitialize/TestCleanup.
@@ -22,8 +22,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <RootNamespace>Microsoft.MSTest.DesktopTesting</RootNamespace>
-    <AssemblyName>MSTest.DesktopTesting</AssemblyName>
+    <RootNamespace>Microsoft.MSTest.Windows.AppTesting</RootNamespace>
+    <AssemblyName>MSTest.Windows.AppTesting</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

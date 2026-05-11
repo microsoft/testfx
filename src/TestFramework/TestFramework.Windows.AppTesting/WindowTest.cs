@@ -3,7 +3,7 @@
 
 using System.Windows.Automation;
 
-namespace Microsoft.MSTest.DesktopTesting;
+namespace Microsoft.MSTest.Windows.AppTesting;
 
 /// <summary>
 /// Base test class that provides access to the application's main window as an <see cref="AutomationElement"/>.

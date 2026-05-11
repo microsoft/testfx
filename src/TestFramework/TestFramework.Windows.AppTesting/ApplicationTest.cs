@@ -3,7 +3,7 @@
 
 using System.Diagnostics;
 
-namespace Microsoft.MSTest.DesktopTesting;
+namespace Microsoft.MSTest.Windows.AppTesting;
 
 /// <summary>
 /// Base test class that manages the lifecycle of a desktop application process.

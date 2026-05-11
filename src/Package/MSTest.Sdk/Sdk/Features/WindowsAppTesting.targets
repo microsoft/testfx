@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <_IsWindowsTfm>false</_IsWindowsTfm>
+    <_IsWindowsTfm Condition="$(TargetFramework.Contains('-windows'))">true</_IsWindowsTfm>
+  </PropertyGroup>
+
+  <Target Name="_ValidateWindowsAppTestingPlatform" BeforeTargets="Restore;Build"
+          Condition=" '$(_IsWindowsTfm)' != 'true' ">
+    <Error Text="MSTest.Windows.AppTesting requires a Windows target framework (e.g. net8.0-windows). Current TargetFramework: '$(TargetFramework)'." />
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.Windows.AppTesting" Sdk="MSTest">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestWindowsAppTestingVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="MSTest.Windows.AppTesting" Version="$(MSTestWindowsAppTestingVersion)"
+                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
+  </ItemGroup>
+
+  <!--
+    Implicit imports
+    Ensure feature is available and user hasn't opted-out from it.
+    See https://github.com/dotnet/sdk/blob/f9fdf2c7d94bc86dc443e5a9ffecbd1962b1d85d/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.CSharp.props#L26-L34
+    -->
+  <ItemGroup Condition=" '$(ImplicitUsings)' == 'true' OR '$(ImplicitUsings)' == 'enable' ">
+    <Using Include="Microsoft.MSTest.Windows.AppTesting" />
+  </ItemGroup>
+
+</Project>

@@ -3,7 +3,7 @@
 
 using System.Windows.Automation;
 
-namespace ProjectUsingDesktopTesting;
+namespace ProjectUsingWindowsAppTesting;
 
 /// <summary>
 /// Sample end-to-end tests for the Windows Calculator application.

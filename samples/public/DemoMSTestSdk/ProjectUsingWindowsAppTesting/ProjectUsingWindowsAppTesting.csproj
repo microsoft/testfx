@@ -4,8 +4,8 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <!-- Enables the MSTest Desktop Testing feature -->
-    <EnableDesktopTesting>true</EnableDesktopTesting>
+    <!-- Enables the MSTest Windows App Testing feature -->
+    <EnableWindowsAppTesting>true</EnableWindowsAppTesting>
   </PropertyGroup>
 
 </Project>
@@ -28,7 +28,7 @@ Below is the equivalent project configuration when not using MSTest.Sdk
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest.DesktopTesting" Version="$(MSTestDesktopTestingVersion)" />
+    <PackageReference Include="MSTest.Windows.AppTesting" Version="$(MSTestWindowsAppTestingVersion)" />
     <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
@@ -36,7 +36,7 @@ Below is the equivalent project configuration when not using MSTest.Sdk
 
   <ItemGroup>
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
-    <Using Include="Microsoft.MSTest.DesktopTesting" />
+    <Using Include="Microsoft.MSTest.Windows.AppTesting" />
   </ItemGroup>
 
 </Project>

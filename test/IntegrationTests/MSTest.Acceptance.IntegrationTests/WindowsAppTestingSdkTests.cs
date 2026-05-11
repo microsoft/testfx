@@ -8,14 +8,14 @@ using Microsoft.Testing.Platform.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class DesktopTestingSdkTests : AcceptanceTestBase<NopAssetFixture>
+public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<NopAssetFixture>
 {
-    private const string AssetName = "DesktopTestingSdk";
+    private const string AssetName = "WindowsAppTestingSdk";
 
     private static readonly string DesktopTargetFramework = $"{TargetFrameworks.NetCurrent}-windows";
 
     private const string SourceCode = """
-#file DesktopTestingSdk.csproj
+#file WindowsAppTestingSdk.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$">
   <PropertyGroup>
     <TargetFrameworks>$TargetFramework$</TargetFrameworks>
@@ -23,7 +23,7 @@ public sealed class DesktopTestingSdkTests : AcceptanceTestBase<NopAssetFixture>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TestingExtensionsProfile>None</TestingExtensionsProfile>
-    <EnableDesktopTesting>true</EnableDesktopTesting>
+    <EnableWindowsAppTesting>true</EnableWindowsAppTesting>
     $ExtraProperties$
   </PropertyGroup>
 
@@ -34,7 +34,7 @@ public sealed class DesktopTestingSdkTests : AcceptanceTestBase<NopAssetFixture>
 
 #file NotepadTests.cs
 using System.Windows.Automation;
-using Microsoft.MSTest.DesktopTesting;
+using Microsoft.MSTest.Windows.AppTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -62,8 +62,8 @@ public class NotepadTests : WindowTest
     public TestContext TestContext { get; set; }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Desktop testing is Windows-only")]
-    public async Task EnableDesktopTesting_WhenUsingMSTestRunner_RunsDesktopTests()
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
+    public async Task EnableWindowsAppTesting_WhenUsingMSTestRunner_RunsDesktopTests()
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
@@ -81,8 +81,8 @@ public class NotepadTests : WindowTest
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Desktop testing is Windows-only")]
-    public async Task EnableDesktopTesting_WhenUsingVSTest_RunsDesktopTests()
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
+    public async Task EnableWindowsAppTesting_WhenUsingVSTest_RunsDesktopTests()
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,

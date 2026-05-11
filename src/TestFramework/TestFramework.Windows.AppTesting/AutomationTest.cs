@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.MSTest.DesktopTesting;
+namespace Microsoft.MSTest.Windows.AppTesting;
 
 /// <summary>
 /// Base test class for desktop UI automation tests.
