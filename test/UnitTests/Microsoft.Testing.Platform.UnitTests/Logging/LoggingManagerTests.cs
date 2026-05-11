@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions;
@@ -16,7 +16,7 @@ public sealed class LoggingManagerTests
     private readonly Mock<IServiceProvider> _mockServiceProvider = new();
 
     public LoggingManagerTests()
-        => _mockMonitor.Setup(p => p.Lock(It.IsAny<object>())).Returns(new Mock<IDisposable>().Object);
+        => _mockMonitor.Setup(m => m.Lock(It.IsAny<object>())).Returns(new Mock<IDisposable>().Object);
 
     [TestMethod]
     public void AddProvider_NullFactory_ThrowsArgumentNullException()
@@ -31,10 +31,14 @@ public sealed class LoggingManagerTests
         LoggingManager manager = new();
         ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
         Assert.IsNotNull(factory);
+        factory.CreateLogger("smoke");
     }
 
     [TestMethod]
-    public async Task BuildAsync_PassesCorrectLogLevelAndServiceProviderToFactory()
+    [DataRow(LogLevel.Trace)]
+    [DataRow(LogLevel.Warning)]
+    [DataRow(LogLevel.Critical)]
+    public async Task BuildAsync_PassesCorrectLogLevelAndServiceProviderToFactory(LogLevel level)
     {
         LogLevel capturedLevel = default;
         IServiceProvider? capturedServiceProvider = null;
@@ -50,9 +54,10 @@ public sealed class LoggingManagerTests
             return mockProvider.Object;
         });
 
-        await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Warning, _mockMonitor.Object);
+        await manager.BuildAsync(_mockServiceProvider.Object, level, _mockMonitor.Object);
 
-        Assert.AreEqual(LogLevel.Warning, capturedLevel);
+        Assert.AreEqual(level, capturedLevel);
+        Assert.IsNotNull(capturedServiceProvider, "Factory was not invoked");
         Assert.AreSame(_mockServiceProvider.Object, capturedServiceProvider);
     }
 
