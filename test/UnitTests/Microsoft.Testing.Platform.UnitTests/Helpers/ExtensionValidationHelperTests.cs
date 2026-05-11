@@ -58,16 +58,6 @@ public sealed class ExtensionValidationHelperTests
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_WhenDuplicateUidExists_ThrowsInvalidOperationException()
-    {
-        IExtension[] existingExtensions = [CreateExtension("uid-dup")];
-        IExtension newExtension = CreateExtension("uid-dup");
-
-        Assert.ThrowsExactly<InvalidOperationException>(
-            () => existingExtensions.ValidateUniqueExtension(newExtension, x => x));
-    }
-
-    [TestMethod]
     public void ValidateUniqueExtension_WhenDuplicateUidExists_ErrorMessageContainsUid()
     {
         const string duplicateUid = "my-duplicate-uid";
@@ -84,13 +74,14 @@ public sealed class ExtensionValidationHelperTests
     public void ValidateUniqueExtension_WhenDuplicateUidExists_ErrorMessageContainsTypeNames()
     {
         const string duplicateUid = "my-duplicate-uid";
-        IExtension existing = CreateExtension(duplicateUid);
-        IExtension newExtension = CreateExtension(duplicateUid);
+        FakeExtensionA existing = new(duplicateUid);
+        FakeExtensionB newExtension = new(duplicateUid);
 
         InvalidOperationException ex = Assert.ThrowsExactly<InvalidOperationException>(
-            () => new[] { existing }.ValidateUniqueExtension(newExtension, x => x));
+            () => ((IExtension[])[existing]).ValidateUniqueExtension(newExtension, x => x));
 
-        Assert.Contains(existing.GetType().ToString(), ex.Message);
+        Assert.Contains(typeof(FakeExtensionA).ToString(), ex.Message);
+        Assert.Contains(typeof(FakeExtensionB).ToString(), ex.Message);
     }
 
     [TestMethod]
@@ -102,7 +93,7 @@ public sealed class ExtensionValidationHelperTests
         FakeExtensionC newExtension = new(duplicateUid);
 
         InvalidOperationException ex = Assert.ThrowsExactly<InvalidOperationException>(
-            () => new IExtension[] { existing1, existing2 }.ValidateUniqueExtension(newExtension, x => x));
+            () => ((IExtension[])[existing1, existing2]).ValidateUniqueExtension(newExtension, x => x));
 
         Assert.Contains(typeof(FakeExtensionA).ToString(), ex.Message);
         Assert.Contains(typeof(FakeExtensionB).ToString(), ex.Message);
@@ -117,7 +108,7 @@ public sealed class ExtensionValidationHelperTests
         IExtension newExtension = CreateExtension(duplicateUid);
 
         Assert.ThrowsExactly<InvalidOperationException>(
-            () => new[] { existing }.ValidateUniqueExtension(newExtension, w => w.Extension));
+            () => ((ExtensionWrapper[])[existing]).ValidateUniqueExtension(newExtension, w => w.Extension));
     }
 
     [TestMethod]
@@ -126,7 +117,16 @@ public sealed class ExtensionValidationHelperTests
         ExtensionWrapper existing = new(CreateExtension("uid-X"));
         IExtension newExtension = CreateExtension("uid-Y");
 
-        new[] { existing }.ValidateUniqueExtension(newExtension, w => w.Extension);
+        ((ExtensionWrapper[])[existing]).ValidateUniqueExtension(newExtension, w => w.Extension);
+    }
+
+    [TestMethod]
+    public void ValidateUniqueExtension_WhenUidsDifferOnlyByCase_DoesNotThrow()
+    {
+        IExtension[] existingExtensions = [CreateExtension("uid-A")];
+        IExtension newExtension = CreateExtension("uid-a");
+
+        existingExtensions.ValidateUniqueExtension(newExtension, x => x);
     }
 
     // Simple overload: ValidateUniqueExtension(IEnumerable<IExtension>, IExtension)
@@ -161,7 +161,7 @@ public sealed class ExtensionValidationHelperTests
     [TestMethod]
     public void ValidateUniqueExtension_SimpleOverload_WhenDuplicateUidExists_ThrowsInvalidOperationException()
     {
-        const string duplicateUid = "duplicated";
+        const string duplicateUid = "my-duplicate-uid";
         IExtension[] existingExtensions = [CreateExtension(duplicateUid)];
         IExtension newExtension = CreateExtension(duplicateUid);
 
@@ -173,7 +173,7 @@ public sealed class ExtensionValidationHelperTests
 
     private static IExtension CreateExtension(string uid) => new FakeExtension(uid);
 
-    private sealed class FakeExtension(string uid) : IExtension
+    private abstract class FakeExtensionBase(string uid) : IExtension
     {
         public string Uid => uid;
 
@@ -186,44 +186,13 @@ public sealed class ExtensionValidationHelperTests
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
     }
 
-    private sealed class FakeExtensionA(string uid) : IExtension
-    {
-        public string Uid => uid;
+    private sealed class FakeExtension(string uid) : FakeExtensionBase(uid);
 
-        public string Version => "1.0";
+    private sealed class FakeExtensionA(string uid) : FakeExtensionBase(uid);
 
-        public string DisplayName => uid;
+    private sealed class FakeExtensionB(string uid) : FakeExtensionBase(uid);
 
-        public string Description => uid;
-
-        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-    }
-
-    private sealed class FakeExtensionB(string uid) : IExtension
-    {
-        public string Uid => uid;
-
-        public string Version => "1.0";
-
-        public string DisplayName => uid;
-
-        public string Description => uid;
-
-        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-    }
-
-    private sealed class FakeExtensionC(string uid) : IExtension
-    {
-        public string Uid => uid;
-
-        public string Version => "1.0";
-
-        public string DisplayName => uid;
-
-        public string Description => uid;
-
-        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-    }
+    private sealed class FakeExtensionC(string uid) : FakeExtensionBase(uid);
 
     private sealed record ExtensionWrapper(IExtension Extension);
 }
