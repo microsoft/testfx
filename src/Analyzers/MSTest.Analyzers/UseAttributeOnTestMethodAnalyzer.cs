@@ -197,7 +197,14 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         {
             if (attribute.AttributeData.ApplicationSyntaxReference?.GetSyntax() is { } syntax)
             {
-                context.ReportDiagnostic(syntax.CreateDiagnostic(attribute.Rule));
+                if (ReferenceEquals(attribute.Rule, ConditionBaseRule) && attribute.AttributeData.AttributeClass is { Name: { } attributeName })
+                {
+                    context.ReportDiagnostic(syntax.CreateDiagnostic(attribute.Rule, attributeName));
+                }
+                else
+                {
+                    context.ReportDiagnostic(syntax.CreateDiagnostic(attribute.Rule));
+                }
             }
         }
     }
