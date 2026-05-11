@@ -290,9 +290,9 @@ internal class TestMethodInfo : ITestMethod
     private RetryBaseAttribute? GetRetryAttribute()
     {
         // Direct iteration avoids allocating a yield iterator state machine via GetAttributes<RetryBaseAttribute>().
-        Attribute[] cachedAttributes = ReflectHelper.Instance.GetCustomAttributesCached(MethodInfo);
+        Attribute[] methodAttributes = ReflectHelper.Instance.GetCustomAttributesCached(MethodInfo);
         RetryBaseAttribute? found = null;
-        foreach (Attribute attr in cachedAttributes)
+        foreach (Attribute attr in methodAttributes)
         {
             if (attr is RetryBaseAttribute retryAttr)
             {

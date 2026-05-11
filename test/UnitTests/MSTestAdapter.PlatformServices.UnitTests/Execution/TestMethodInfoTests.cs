@@ -1540,6 +1540,22 @@ public class TestMethodInfoTests : TestContainer
         result2.DebugTrace.Should().Be("trace_output");
     }
 
+    public void Ctor_WhenMethodHasMultipleRetryBaseAttributes_ThrowsTypeInspectionException()
+    {
+        MethodInfo methodInfo = typeof(DummyTestClassWithMultipleRetryAttributes).GetMethod(nameof(DummyTestClassWithMultipleRetryAttributes.TestMethodWithMultipleRetryAttributes))!;
+        ConstructorInfo constructorInfo = typeof(DummyTestClassWithMultipleRetryAttributes).GetConstructor([])!;
+        var testClassInfo = new TestClassInfo(typeof(DummyTestClassWithMultipleRetryAttributes), constructorInfo, isParameterlessConstructor: true, new TestClassAttribute(), _testAssemblyInfo);
+
+        Action action = () => _ = new TestMethodInfo(methodInfo, testClassInfo);
+        string expectedMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_MultipleAttributesOnTestMethod,
+            typeof(DummyTestClassWithMultipleRetryAttributes).FullName,
+            methodInfo.Name,
+            nameof(RetryBaseAttribute));
+        action.Should().Throw<TypeInspectionException>().WithMessage(expectedMessage);
+    }
+
     #region helper methods
 
     private static async Task RunWithTestablePlatformService(TestablePlatformServiceProvider testablePlatformServiceProvider, Func<Task> action)
@@ -1641,6 +1657,26 @@ public class TestMethodInfoTests : TestContainer
         public DummyTestClassWithParameterizedCtor(int x)
         {
         }
+    }
+
+    public class DummyTestClassWithMultipleRetryAttributes
+    {
+        [TestMethod]
+        [DummyRetryAttribute1]
+        [DummyRetryAttribute2]
+        public void TestMethodWithMultipleRetryAttributes()
+        {
+        }
+    }
+
+    private sealed class DummyRetryAttribute1 : RetryBaseAttribute
+    {
+        protected internal override Task<RetryResult> ExecuteAsync(RetryContext retryContext) => throw new NotSupportedException();
+    }
+
+    private sealed class DummyRetryAttribute2 : RetryBaseAttribute
+    {
+        protected internal override Task<RetryResult> ExecuteAsync(RetryContext retryContext) => throw new NotSupportedException();
     }
 
     public class DummyTestClassWithTestContextWithoutSetter
