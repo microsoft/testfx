@@ -113,14 +113,16 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
     [TestMethod]
     public async Task WhenTestMethodHasShortFormDescriptionAttributeWithSystemComponentModelUsing_UsesFullyQualifiedMSTestDescription()
     {
+        // When only System.ComponentModel is imported, the short form [Description] unambiguously
+        // resolves to System.ComponentModel.DescriptionAttribute. The fixer must produce the
+        // fully-qualified MSTest form since no MSTest using is present.
         string code = """
             using System.ComponentModel;
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            [TestClass]
+            [Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
             public class MyTestClass
             {
-                [TestMethod]
+                [Microsoft.VisualStudio.TestTools.UnitTesting.TestMethod]
                 [Description("Description")]
                 public void [|MyTestMethod|]()
                 {
@@ -130,12 +132,11 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
 
         string fixedCode = """
             using System.ComponentModel;
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            [TestClass]
+            [Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
             public class MyTestClass
             {
-                [TestMethod]
+                [Microsoft.VisualStudio.TestTools.UnitTesting.TestMethod]
                 [Microsoft.VisualStudio.TestTools.UnitTesting.Description("Description")]
                 public void MyTestMethod()
                 {
