@@ -22,7 +22,7 @@ internal static class ArtifactNamingHelper
                 : TemplateFieldRegex.Replace(template, match =>
                 {
                     string fieldName = match.Groups[1].Value;
-                    return replacements.TryGetValue(fieldName, out string? value) ? value : match.Value;
+                    return replacements.TryGetValue(fieldName, out string? value) && value is not null ? value : match.Value;
                 });
 
     public static string GetOperatingSystemName()

@@ -18,7 +18,7 @@ Resolves to: `MyTests_12345_2025-09-22_13-49-34.0000000_hang.dmp`
 |-------------|-------------|---------|
 | `<pname>` | Name of the process | `MyTests` |
 | `<pid>` | Process ID | `12345` |
-| `<os>` | Operating system | `windows`, `linux`, `macos` |
+| `<os>` | Operating system | `windows`, `linux`, `macos`, `unknown` |
 | `<asm>` | Assembly name | `MyTests` |
 | `<tfm>` | Target framework moniker | `net9.0`, `net8.0` |
 | `<time>` | Timestamp (high precision) | `2025-09-22_13-49-34.0000000` |
