@@ -14,7 +14,7 @@ public sealed class ExtensionValidationHelperTests
     [TestMethod]
     public void ValidateUniqueExtension_NullExistingExtensions_ThrowsArgumentNullException()
     {
-        Mock<IExtension> newExtension = new();
+        Mock<IExtension> newExtension = CreateExtension("uid1");
         IEnumerable<IExtension> nullExtensions = null!;
 
         Assert.ThrowsExactly<ArgumentNullException>(() =>
@@ -34,7 +34,7 @@ public sealed class ExtensionValidationHelperTests
     public void ValidateUniqueExtension_NullExtensionSelector_ThrowsArgumentNullException()
     {
         List<IExtension> existing = [];
-        Mock<IExtension> newExtension = new();
+        Mock<IExtension> newExtension = CreateExtension("uid1");
 
         Assert.ThrowsExactly<ArgumentNullException>(() =>
             existing.ValidateUniqueExtension<IExtension>(newExtension.Object, null!));
@@ -89,15 +89,15 @@ public sealed class ExtensionValidationHelperTests
     [TestMethod]
     public void ValidateUniqueExtension_OneDuplicate_ErrorMessageContainsBothTypeNames()
     {
-        Mock<IExtension> existing = CreateExtension("uid1");
-        Mock<IExtension> newExtension = CreateExtension("uid1");
-        string existingTypeName = existing.Object.GetType().ToString();
-        string newTypeName = newExtension.Object.GetType().ToString();
+        IExtension existing = new ExtensionStubA("uid1");
+        IExtension newExtension = new ExtensionStubB("uid1");
+        string existingTypeName = existing.GetType().ToString();
+        string newTypeName = newExtension.GetType().ToString();
 
-        List<IExtension> extensions = [existing.Object];
+        List<IExtension> extensions = [existing];
 
         InvalidOperationException ex = Assert.ThrowsExactly<InvalidOperationException>(() =>
-            extensions.ValidateUniqueExtension(newExtension.Object, x => x));
+            extensions.ValidateUniqueExtension(newExtension, x => x));
 
         Assert.Contains(existingTypeName, ex.Message);
         Assert.Contains(newTypeName, ex.Message);
@@ -202,5 +202,31 @@ public sealed class ExtensionValidationHelperTests
         mock.SetupGet(e => e.DisplayName).Returns("Test Extension");
         mock.SetupGet(e => e.Description).Returns("Test Extension Description");
         return mock;
+    }
+
+    private sealed class ExtensionStubA(string uid) : IExtension
+    {
+        public string Uid => uid;
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => "Stub A";
+
+        public string Description => "Stub A Description";
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    }
+
+    private sealed class ExtensionStubB(string uid) : IExtension
+    {
+        public string Uid => uid;
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => "Stub B";
+
+        public string Description => "Stub B Description";
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
     }
 }

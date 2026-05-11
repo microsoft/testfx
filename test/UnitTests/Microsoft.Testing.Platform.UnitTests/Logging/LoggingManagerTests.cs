@@ -9,6 +9,12 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
+internal interface IEnabledLoggerProvider : ILoggerProvider, IExtension;
+
+internal interface IInitializableLoggerProvider : ILoggerProvider, IAsyncInitializableExtension;
+
+internal interface IEnabledInitializableLoggerProvider : ILoggerProvider, IExtension, IAsyncInitializableExtension;
+
 [TestClass]
 public sealed class LoggingManagerTests
 {
@@ -21,7 +27,7 @@ public sealed class LoggingManagerTests
     }
 
     [TestMethod]
-    public async Task BuildAsync_NoProviders_ReturnsEmptyLoggerFactory()
+    public async Task BuildAsync_NoProviders_ReturnsNonNullFactory()
     {
         LoggingManager manager = new();
 
@@ -67,9 +73,7 @@ public sealed class LoggingManagerTests
     public async Task BuildAsync_ExtensionProviderDisabled_IsExcluded()
     {
         Mock<IEnabledLoggerProvider> mockProvider = new();
-        Mock<ILogger> mockLogger = new();
         mockProvider.Setup(p => p.IsEnabledAsync()).ReturnsAsync(false);
-        mockProvider.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(mockLogger.Object);
 
         LoggingManager manager = new();
         manager.AddProvider((_, _) => mockProvider.Object);
@@ -107,7 +111,24 @@ public sealed class LoggingManagerTests
 
         await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
 
+        mockProvider.Verify(p => p.IsEnabledAsync(), Times.Once);
         mockProvider.Verify(p => p.InitializeAsync(), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task BuildAsync_ExtensionEnabled_IsInitialized()
+    {
+        Mock<IEnabledInitializableLoggerProvider> mockProvider = new();
+        mockProvider.Setup(p => p.IsEnabledAsync()).ReturnsAsync(true);
+        mockProvider.Setup(p => p.InitializeAsync()).Returns(Task.CompletedTask);
+        mockProvider.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+
+        LoggingManager manager = new();
+        manager.AddProvider((_, _) => mockProvider.Object);
+
+        await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
+
+        mockProvider.Verify(p => p.InitializeAsync(), Times.Once);
     }
 
     [TestMethod]
@@ -133,22 +154,22 @@ public sealed class LoggingManagerTests
     [TestMethod]
     public async Task BuildAsync_MixedEnabledAndDisabledExtensions_OnlyEnabledIncluded()
     {
-        Mock<IEnabledLoggerProvider> mockEnabled = new();
-        Mock<IEnabledLoggerProvider> mockDisabled = new();
+        Mock<IEnabledLoggerProvider> mockEnabledProvider = new();
+        Mock<IEnabledLoggerProvider> mockDisabledProvider = new();
         Mock<ILogger> mockLogger = new();
-        mockEnabled.Setup(p => p.IsEnabledAsync()).ReturnsAsync(true);
-        mockEnabled.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(mockLogger.Object);
-        mockDisabled.Setup(p => p.IsEnabledAsync()).ReturnsAsync(false);
+        mockEnabledProvider.Setup(p => p.IsEnabledAsync()).ReturnsAsync(true);
+        mockEnabledProvider.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(mockLogger.Object);
+        mockDisabledProvider.Setup(p => p.IsEnabledAsync()).ReturnsAsync(false);
 
         LoggingManager manager = new();
-        manager.AddProvider((_, _) => mockEnabled.Object);
-        manager.AddProvider((_, _) => mockDisabled.Object);
+        manager.AddProvider((_, _) => mockEnabledProvider.Object);
+        manager.AddProvider((_, _) => mockDisabledProvider.Object);
 
         ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
         factory.CreateLogger("cat");
 
-        mockEnabled.Verify(p => p.CreateLogger("cat"), Times.Once);
-        mockDisabled.Verify(p => p.CreateLogger("cat"), Times.Never);
+        mockEnabledProvider.Verify(p => p.CreateLogger("cat"), Times.Once);
+        mockDisabledProvider.Verify(p => p.CreateLogger("cat"), Times.Never);
     }
 
     [TestMethod]
@@ -182,9 +203,3 @@ public sealed class LoggingManagerTests
         Assert.ThrowsExactly<ArgumentNullException>(() => manager.AddProvider(null!));
     }
 }
-
-internal interface IEnabledLoggerProvider : ILoggerProvider, IExtension;
-
-internal interface IInitializableLoggerProvider : ILoggerProvider, IAsyncInitializableExtension;
-
-internal interface IEnabledInitializableLoggerProvider : ILoggerProvider, IExtension, IAsyncInitializableExtension;
