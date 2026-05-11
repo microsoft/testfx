@@ -114,8 +114,8 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             $"--hangdump --hangdump-timeout 8s --hangdump-filename <pname>_<pid>_<tfm>_<time>_hang.dmp --results-directory {resultDirectory}",
             new Dictionary<string, string?>
             {
-                { "SLEEPTIMEMS1", "4000" },
-                { "SLEEPTIMEMS2", "20000" },
+                ["SLEEPTIMEMS1"] = "4000",
+                ["SLEEPTIMEMS2"] = "20000",
             },
             cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
