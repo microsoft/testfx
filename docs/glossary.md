@@ -4,6 +4,10 @@ This glossary defines key terms and concepts used throughout the MSTest and Micr
 
 ## A
 
+### AwesomeAssertions
+
+A .NET fluent-assertion library ([NuGet: AwesomeAssertions](https://www.nuget.org/packages/AwesomeAssertions)) used in the unit and integration test suites of this project. It provides a human-readable, chainable assertion API (e.g., `result.Should().Be(42)`). AwesomeAssertions is the community-maintained fork of `FluentAssertions` created after FluentAssertions changed its license from Apache 2.0 to a commercial model; the two libraries share the same API surface. Within this project, `BannedSymbols.txt` files ban the built-in MSTest `Assert`, `CollectionAssert`, and `StringAssert` types and require `AwesomeAssertions` instead.
+
 ### ArgumentArity
 
 An MTP struct (`ArgumentArity.cs`) that defines the minimum and maximum number of values a command-line option accepts. Provides five predefined constants: `Zero` (0,0), `ZeroOrOne` (0,1), `ZeroOrMore` (0,∞), `ExactlyOne` (1,1), and `OneOrMore` (1,∞). Used by `ICommandLineOptionsProvider` implementations to declare option shapes.
