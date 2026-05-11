@@ -667,11 +667,7 @@ public class TestMethodInfoTests : TestContainer
         // Arrange
         SynchronizationContext? capturedContextInTestMethod = null;
 
-        DummyTestClass.TestInitializeMethodBodyAsync = async _ =>
-        {
-            // Simulate async work (like Task.Delay in WinUI scenarios)
-            await Task.Delay(1);
-        };
+        DummyTestClass.TestInitializeMethodBodyAsync = async _ => await Task.Delay(1);
         DummyTestClass.TestMethodBody = _ => capturedContextInTestMethod = SynchronizationContext.Current;
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethodAsync")!;
 
@@ -681,7 +677,7 @@ public class TestMethodInfoTests : TestContainer
         // Act: run InvokeAsync on the synchronization context's dedicated thread, simulating UITestMethodAttribute
         // dispatching the test to the UI thread.
         syncContext.Post(
-            _ => _testMethodInfo.InvokeAsync(null).ContinueWith(
+            state => _ = _testMethodInfo.InvokeAsync(null).ContinueWith(
                 t =>
                 {
                     if (t.IsFaulted)
@@ -1674,7 +1670,7 @@ public class TestMethodInfoTests : TestContainer
 
     private sealed class SingleThreadedSynchronizationContextForTesting : SynchronizationContext, IDisposable
     {
-        private readonly BlockingCollection<(SendOrPostCallback d, object? state)> _queue = [];
+        private readonly BlockingCollection<(SendOrPostCallback D, object? State)> _queue = [];
         private readonly Thread _thread;
 
         public SingleThreadedSynchronizationContextForTesting()
