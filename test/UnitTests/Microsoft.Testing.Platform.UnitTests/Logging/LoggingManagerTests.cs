@@ -25,7 +25,7 @@ public sealed class LoggingManagerTests
 
         ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
 
-        Assert.IsNotNull(factory.CreateLogger("test"));
+        Assert.IsNotNull(factory.CreateLogger("category"));
     }
 
     [TestMethod]
@@ -162,10 +162,10 @@ public sealed class LoggingManagerTests
         manager.AddProvider((_, _) => disabledExtProvider.Object);
 
         ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
-        _ = factory.CreateLogger("cat");
+        _ = factory.CreateLogger("category");
 
-        nonExtProvider.Verify(p => p.CreateLogger("cat"), Times.Once);
-        enabledExtProvider.Verify(p => p.CreateLogger("cat"), Times.Once);
+        nonExtProvider.Verify(p => p.CreateLogger("category"), Times.Once);
+        enabledExtProvider.Verify(p => p.CreateLogger("category"), Times.Once);
         disabledExtProvider.Verify(p => p.CreateLogger(It.IsAny<string>()), Times.Never);
     }
 
@@ -176,10 +176,10 @@ public sealed class LoggingManagerTests
 
         Assert.ThrowsExactly<ArgumentNullException>(() => manager.AddProvider(null!));
     }
+
+    internal interface IExtensionLoggerProvider : ILoggerProvider, IExtension;
+
+    internal interface IExtensionInitializableLoggerProvider : ILoggerProvider, IExtension, IAsyncInitializableExtension;
+
+    internal interface IInitializableLoggerProvider : ILoggerProvider, IAsyncInitializableExtension;
 }
-
-internal interface IExtensionLoggerProvider : ILoggerProvider, IExtension;
-
-internal interface IExtensionInitializableLoggerProvider : ILoggerProvider, IExtension, IAsyncInitializableExtension;
-
-internal interface IInitializableLoggerProvider : ILoggerProvider, IAsyncInitializableExtension;

@@ -67,7 +67,7 @@ public sealed class ExtensionValidationHelperTests
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_WithDuplicateUid_ErrorMessageContainsBothTypeNames()
+    public void ValidateUniqueExtension_WithDuplicateUid_ErrorMessageContainsTypeName()
     {
         List<IExtension> existing = [new TestExtension("uid1")];
         TestExtension newExtension = new("uid1");
