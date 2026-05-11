@@ -16,6 +16,9 @@ on:
       - main
     paths:
       - "formal-verification/lean/**"
+  schedule:
+    # Weekly run on Mondays at 07:00 UTC to catch toolchain drift.
+    - cron: "0 7 * * 1"
   workflow_dispatch:
 
 jobs:
@@ -34,6 +37,12 @@ jobs:
           echo "lean_count=${LEAN_COUNT}" >> "$GITHUB_OUTPUT"
           if [ "${LEAN_COUNT}" -eq 0 ]; then
             echo "No .lean files found in FVSquad/ — skipping Lean build."
+            {
+              echo "## 🔬 Lean Proof Summary"
+              echo ""
+              echo "> No \`.lean\` source files in \`FVSquad/\` yet — build skipped."
+              echo "> Lean Squad is actively working on adding formal specs (Task 3 pending toolchain availability)."
+            } >> "$GITHUB_STEP_SUMMARY"
           else
             echo "Found ${LEAN_COUNT} .lean file(s). Proceeding with build."
           fi
@@ -53,9 +62,6 @@ jobs:
       - name: Install elan (Lean version manager)
         if: steps.check-lean-files.outputs.lean_count != '0' && steps.restore-cache.outputs.cache-hit != 'true'
         run: |
-          # elan v3.1.0 is the latest stable release with verified binaries.
-          # Note: the elan GitHub release page does NOT ship *.sha256 files for
-          # v3.1.0, so we do a file-size sanity check instead of sha256sum.
           ELAN_VERSION="v3.1.0"
           ELAN_TARGET="x86_64-unknown-linux-gnu"
           ELAN_ARCHIVE="elan-${ELAN_TARGET}.tar.gz"
@@ -86,7 +92,7 @@ jobs:
           fi
           cd "${ELAN_TMP_DIR}"
           tar -xzf "${ELAN_ARCHIVE}"
-          ./elan-init -y --default-toolchain "${LEAN_TOOLCHAIN}"
+          ./elan-init -y --no-modify-path --default-toolchain "${LEAN_TOOLCHAIN}"
           rm -rf "${ELAN_TMP_DIR}"
 
       - name: Add elan to PATH
@@ -125,6 +131,7 @@ jobs:
           THEOREM_COUNT=$(grep -rEc '^(theorem|lemma) ' "${LEAN_DIR}" --include='*.lean' 2>/dev/null || echo 0)
           SORRY_COUNT=$(grep -rc '\bsorry\b' "${LEAN_DIR}" --include='*.lean' 2>/dev/null \
             | awk -F: '{sum += $2} END {print sum+0}')
+          FILE_COUNT=$(find "${LEAN_DIR}" -name '*.lean' | wc -l)
           SORRY_STATUS="✅ All proofs complete"
           if [ "${SORRY_COUNT}" -gt 0 ]; then
             SORRY_STATUS="⚠️ ${SORRY_COUNT} sorry (stub) lines remain"
@@ -134,6 +141,7 @@ jobs:
             echo ""
             echo "| Metric | Value |"
             echo "|--------|-------|"
+            echo "| Lean source files | ${FILE_COUNT} |"
             echo "| Theorems / Lemmas declared | ${THEOREM_COUNT} |"
             echo "| Lines containing \`sorry\` (stubs) | ${SORRY_COUNT} |"
             echo "| Proof status | ${SORRY_STATUS} |"
