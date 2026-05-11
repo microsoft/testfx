@@ -124,7 +124,7 @@ jobs:
           LEAN_DIR="formal-verification/lean/FVSquad"
           # Emit a GitHub Actions warning annotation for each line containing sorry,
           # so reviewers see them inline in the Files Changed tab.
-          grep -rnw 'sorry' "${LEAN_DIR}" --include='*.lean' 2>/dev/null \
+          grep -rn '\<sorry\>' "${LEAN_DIR}" --include='*.lean' 2>/dev/null \
           | while IFS= read -r match; do
               FILE="${match%%:*}"
               REST="${match#*:}"
