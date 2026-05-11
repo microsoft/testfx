@@ -107,6 +107,21 @@ public sealed class LoggingManagerTests
     }
 
     [TestMethod]
+    public async Task BuildAsync_EnabledExtensionAndInitializable_InitializeAsyncIsCalled()
+    {
+        Mock<IEnabledInitializableLoggerProvider> mockProvider = new();
+        mockProvider.Setup(p => p.IsEnabledAsync()).ReturnsAsync(true);
+        mockProvider.Setup(p => p.InitializeAsync()).Returns(Task.CompletedTask);
+        mockProvider.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+
+        LoggingManager manager = new();
+        manager.AddProvider((_, _) => mockProvider.Object);
+        _ = await manager.BuildAsync(Mock.Of<IServiceProvider>(), LogLevel.Trace, _mockMonitor.Object);
+
+        mockProvider.Verify(p => p.InitializeAsync(), Times.Once);
+    }
+
+    [TestMethod]
     public async Task BuildAsync_MultipleProviders_AllIncluded()
     {
         Mock<ILoggerProvider> mockProvider1 = new();
