@@ -37,6 +37,7 @@ public sealed class LoggingManagerTests
         ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
 
         Assert.IsNotNull(factory);
+        DisposeFactory(factory);
     }
 
     [TestMethod]
@@ -53,6 +54,7 @@ public sealed class LoggingManagerTests
 
         _ = factory.CreateLogger("test");
         mockProvider.Verify(p => p.CreateLogger("test"), Times.Once);
+        DisposeFactory(factory);
     }
 
     [TestMethod]
@@ -70,6 +72,7 @@ public sealed class LoggingManagerTests
 
         _ = factory.CreateLogger("test");
         mockProvider.Verify(p => p.CreateLogger("test"), Times.Once);
+        DisposeFactory(factory);
     }
 
     [TestMethod]
@@ -85,6 +88,7 @@ public sealed class LoggingManagerTests
 
         _ = factory.CreateLogger("test");
         mockProvider.Verify(p => p.CreateLogger(It.IsAny<string>()), Times.Never);
+        DisposeFactory(factory);
     }
 
     [TestMethod]
@@ -98,9 +102,10 @@ public sealed class LoggingManagerTests
         LoggingManager manager = new();
         manager.AddProvider((_, _) => mockProvider.Object);
 
-        _ = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
+        ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
 
         mockProvider.Verify(p => p.InitializeAsync(), Times.Once);
+        DisposeFactory(factory);
     }
 
     [TestMethod]
@@ -112,9 +117,10 @@ public sealed class LoggingManagerTests
         LoggingManager manager = new();
         manager.AddProvider((_, _) => mockProvider.Object);
 
-        _ = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
+        ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
 
         mockProvider.Verify(p => p.InitializeAsync(), Times.Never);
+        DisposeFactory(factory);
     }
 
     [TestMethod]
@@ -127,9 +133,10 @@ public sealed class LoggingManagerTests
         LoggingManager manager = new();
         manager.AddProvider((_, _) => mockProvider.Object);
 
-        _ = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
+        ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
 
         mockProvider.Verify(p => p.InitializeAsync(), Times.Once);
+        DisposeFactory(factory);
     }
 
     [TestMethod]
@@ -145,9 +152,10 @@ public sealed class LoggingManagerTests
             return mockProvider.Object;
         });
 
-        _ = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Warning, _mockMonitor.Object);
+        ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Warning, _mockMonitor.Object);
 
         Assert.AreEqual(LogLevel.Warning, capturedLogLevel);
+        DisposeFactory(factory);
     }
 
     [TestMethod]
@@ -163,9 +171,10 @@ public sealed class LoggingManagerTests
             return mockProvider.Object;
         });
 
-        _ = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
+        ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
 
         Assert.AreSame(_mockServiceProvider.Object, capturedServiceProvider);
+        DisposeFactory(factory);
     }
 
     [TestMethod]
@@ -188,6 +197,7 @@ public sealed class LoggingManagerTests
         _ = factory.CreateLogger("test");
         mockProvider1.Verify(p => p.CreateLogger("test"), Times.Once);
         mockProvider2.Verify(p => p.CreateLogger("test"), Times.Once);
+        DisposeFactory(factory);
     }
 
     [TestMethod]
@@ -211,7 +221,11 @@ public sealed class LoggingManagerTests
         _ = factory.CreateLogger("test");
         enabledProvider.Verify(p => p.CreateLogger("test"), Times.Once);
         disabledProvider.Verify(p => p.CreateLogger(It.IsAny<string>()), Times.Never);
+        DisposeFactory(factory);
     }
+
+    private static void DisposeFactory(ILoggerFactory factory)
+        => (factory as IDisposable)?.Dispose();
 }
 
 internal interface ILoggerProviderAndExtension : ILoggerProvider, IExtension;
