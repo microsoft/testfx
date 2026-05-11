@@ -327,6 +327,9 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             .Replace("%p", processId);
         finalDumpFileName = Path.Combine(_configuration.GetTestResultDirectory(), finalDumpFileName);
 
+        // Ensure the destination directory exists (templates may include directory separators, e.g. <asm>/<pname>).
+        Directory.CreateDirectory(Path.GetDirectoryName(finalDumpFileName)!);
+
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
         GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), cancellationToken).ConfigureAwait(false);
         if (tests.Tests.Length > 0)
