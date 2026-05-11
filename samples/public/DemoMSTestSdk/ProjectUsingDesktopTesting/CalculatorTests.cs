@@ -27,24 +27,24 @@ public class CalculatorTests : WindowTest
         Assert.IsNotNull(MainWindow);
 
         string title = MainWindow.Current.Name;
-        Assert.IsTrue(
-            title.Contains("Calculator", StringComparison.OrdinalIgnoreCase),
-            $"Expected window title to contain 'Calculator', but was '{title}'.");
+        Assert.IsFalse(
+            string.IsNullOrWhiteSpace(title),
+            "Expected the main window to have a non-empty title.");
     }
 
     [TestMethod]
     public void Calculator_NumberButtons_AreVisible()
     {
-        // Use System.Windows.Automation to locate UI elements
+        // Use non-localized AutomationId values to locate UI elements.
         AutomationElement? button1 = MainWindow.FindFirst(
             TreeScope.Descendants,
-            new PropertyCondition(AutomationElement.NameProperty, "One"));
+            new PropertyCondition(AutomationElement.AutomationIdProperty, "num1Button"));
 
         AutomationElement? button2 = MainWindow.FindFirst(
             TreeScope.Descendants,
-            new PropertyCondition(AutomationElement.NameProperty, "Two"));
+            new PropertyCondition(AutomationElement.AutomationIdProperty, "num2Button"));
 
-        Assert.IsNotNull(button1, "Could not find the 'One' button.");
-        Assert.IsNotNull(button2, "Could not find the 'Two' button.");
+        Assert.IsNotNull(button1, "Could not find the button with AutomationId 'num1Button'.");
+        Assert.IsNotNull(button2, "Could not find the button with AutomationId 'num2Button'.");
     }
 }

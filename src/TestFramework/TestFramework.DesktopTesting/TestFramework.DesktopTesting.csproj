@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">net8.0-windows;net9.0-windows</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' " />
+    <TargetFrameworks>net8.0-windows;net9.0-windows</TargetFrameworks>
+    <EnableWindowsTargeting Condition=" '$(OS)' != 'Windows_NT' ">true</EnableWindowsTargeting>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 

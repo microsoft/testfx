@@ -68,7 +68,14 @@ public class ApplicationTest : AutomationTest
         while (AppProcess.MainWindowHandle == IntPtr.Zero && sw.Elapsed < ApplicationStartTimeout)
         {
             AppProcess.Refresh();
-            Thread.Yield();
+
+            TimeSpan remainingTime = ApplicationStartTimeout - sw.Elapsed;
+            if (remainingTime > TimeSpan.Zero)
+            {
+                Thread.Sleep(remainingTime < TimeSpan.FromMilliseconds(50)
+                    ? remainingTime
+                    : TimeSpan.FromMilliseconds(50));
+            }
         }
 
         if (AppProcess.MainWindowHandle == IntPtr.Zero)
@@ -84,16 +91,31 @@ public class ApplicationTest : AutomationTest
     [TestCleanup]
     public void ApplicationTearDown()
     {
-        if (AppProcess is not null && !AppProcess.HasExited)
+        Process? appProcess = AppProcess;
+
+        try
         {
-            AppProcess.CloseMainWindow();
-            if (!AppProcess.WaitForExit(5000))
+            if (appProcess is not null && !appProcess.HasExited)
             {
-                AppProcess.Kill();
+                try
+                {
+                    _ = appProcess.CloseMainWindow();
+                    if (!appProcess.WaitForExit(5000))
+                    {
+                        appProcess.Kill();
+                        _ = appProcess.WaitForExit(5000);
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    // The process exited between state checks and shutdown operations.
+                }
             }
         }
-
-        AppProcess?.Dispose();
-        AppProcess = null!;
+        finally
+        {
+            appProcess?.Dispose();
+            AppProcess = null!;
+        }
     }
 }

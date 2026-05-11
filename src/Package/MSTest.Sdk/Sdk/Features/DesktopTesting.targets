@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <Target Name="_CheckDesktopTestingPlatform" BeforeTargets="CollectPackageReferences;Restore" Condition=" '$(TargetFramework)' != '' AND !$(TargetFramework.Contains('-windows')) ">
+    <Error Text="MSTest.DesktopTesting requires a Windows target framework (e.g. net8.0-windows). Current TargetFramework: '$(TargetFramework)'." />
+  </Target>
+
   <ItemGroup>
     <PackageReference Include="MSTest.DesktopTesting" Sdk="MSTest">
       <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestDesktopTestingVersion)</Version>
