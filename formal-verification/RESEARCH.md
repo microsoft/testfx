@@ -193,6 +193,41 @@ A pure recursive function that evaluates whether a test-node path and property b
 
 ---
 
+### Target 17 — `LLMEnvironmentDetector` rule composition ★★★☆☆
+
+**File**: `src/Platform/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs`
+**Type**: Internal rule-based DSL for AI coding-tool detection
+
+This recently-added helper detects whether the process is running inside an LLM-powered coding agent (Claude Code, GitHub Copilot, Cursor, Gemini, Codex, etc.). It models detection as a composition of four rule types over environment variables.
+
+**Rule types**:
+- `BooleanEnvironmentRule(vars)`: any var in `vars` parses as `true` via `ParseBool`
+- `AnyPresentEnvironmentRule(vars)`: any var in `vars` is non-null/non-empty
+- `EnvironmentVariableValueRule(var, expected)`: `var` == `expected` (case-insensitive)
+- `AnyMatchEnvironmentRule(rules)`: logical OR over a list of sub-rules
+
+**Why interesting for FV**:
+- Pure algebraic structure: `Rule → (String → Option String) → Bool`
+- `AnyMatchEnvironmentRule []` → always `false` (empty OR = false identity)
+- `AnyMatchEnvironmentRule [r]` is extensionally equal to `r.IsMatch()` (singleton identity)
+- Monotonicity: adding a rule can only increase detection (inductive)
+- `EnvironmentVariableParser.ParseBool` inside this file is the same logic as target id=8 — the Lean model can be reused
+- All detection rules are closed (finite known environment var names) → decidable for any given env snapshot
+
+**Properties to verify**:
+1. `AnyMatchEnvironmentRule []` never matches (∀ env, false) — decidable
+2. `AnyMatchEnvironmentRule [r]` same as `r.IsMatch()` — provable by unfolding
+3. Monotonicity: `rules₁ ⊆ rules₂ → (rules₁.any match → rules₂.any match)` — inductive
+4. `ParseBool null default = default` — decidable
+5. `ParseBool "1" _ = true`, `ParseBool "0" _ = false` — decidable
+6. `ParseBool` range: result ∈ {true, false} — trivially true
+
+**Approximations**: Environment modelled as `String → Option String`. `RoslynString.IsNullOrEmpty` approximated as `Option.isNone ∨ (Option.get = "")`.
+
+**Priority**: Medium (phase 1 → candidate for Task 2 next run).
+
+---
+
 ## Approach Notes
 
 - We use Lean 4 with Mathlib for all proofs.
