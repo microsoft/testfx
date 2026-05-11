@@ -605,13 +605,20 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClass.TestMethodBody = _ => capturedContextInTestMethod = SynchronizationContext.Current;
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethodAsync")!;
 
+        // Create a TestMethodInfo without a timeout so we go through ExecuteInternalAsync directly
+        // (not the non-cooperative timeout path which runs on a separate thread pool thread).
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            Executor = _testMethodAttribute,
+        };
+
         using var syncContext = new SingleThreadedSynchronizationContextForTesting();
         var tcs = new TaskCompletionSource<TestResult>();
 
         // Act: run InvokeAsync on the synchronization context's dedicated thread, simulating UITestMethodAttribute
         // dispatching the test to the UI thread.
         syncContext.Post(
-            state => _ = _testMethodInfo.InvokeAsync(null).ContinueWith(
+            state => _ = testMethodInfo.InvokeAsync(null).ContinueWith(
                 t =>
                 {
                     if (t.IsFaulted)
