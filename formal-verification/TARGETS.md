@@ -23,6 +23,7 @@
 | 5 | `CommandLineParseResult.Equals` | `src/Platform/Microsoft.Testing.Platform/CommandLine/ParseResult.cs` | 1 | Identified | — |
 | 6 | `ResponseFileHelper.SplitCommandLine` | `src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs` | 2 | Informal spec extracted | [PR #7899](https://github.com/microsoft/testfx/pull/7899) |
 | 7 | `TreeNodeFilter.MatchFilterPattern` | `src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.cs` | 2 | Informal spec extracted | — |
+| 8 | `EnvironmentVariableParser.ParseBool` | `src/Platform/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs` | 2 | Informal spec extracted | — |
 
 ## Priority Order
 
@@ -33,6 +34,7 @@
 5. **`CommandLineParser.ParseOptionAndSeparators`** — fifth priority. Small pure function; useful for verifying parser correctness. Informal spec extracted this run. **Next: Task 3 (blocked by Lean toolchain).**
 6. **`CommandLineOptionsValidator` arity validation** — sixth priority. Validation logic with clear input/output contract.
 7. **`CommandLineParseResult.Equals`** — seventh priority. Structural equality; good for verifying equivalence-relation laws.
+8. **`EnvironmentVariableParser.ParseBool`** — eighth priority. Pure total function; all 8 theorems of interest provable by `decide`. Informal spec extracted this run. **Next: Task 3 (blocked by Lean toolchain).**
 
 ## Notes
 
