@@ -162,11 +162,6 @@
         <target state="translated">Utilisez la propriété « DisplayName » au lieu d’un argument de type chaîne</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
-        <source>Use MSTest 'Description' attribute instead</source>
-        <target state="new">Use MSTest 'Description' attribute instead</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">
         <source>Use '{0}'</source>
         <target state="translated">Utiliser « {0} »</target>
