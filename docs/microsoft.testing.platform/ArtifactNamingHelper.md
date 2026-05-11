@@ -4,7 +4,7 @@ The `ArtifactNamingHelper` is a shared static helper that provides a standardize
 
 ## Template-Based Naming
 
-Use placeholders in angle brackets to create dynamic file names:
+Use placeholders in angle brackets to create dynamic file names. Placeholder matching is **case-sensitive** — use lowercase placeholder names (e.g., `<pname>`, not `<PName>`).
 
 ```text
 <pname>_<pid>_<time>_hang.dmp

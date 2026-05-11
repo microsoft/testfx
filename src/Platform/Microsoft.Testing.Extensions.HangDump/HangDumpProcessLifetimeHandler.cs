@@ -314,8 +314,8 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             ["pname"] = process.Name,
             ["pid"] = processId,
             ["os"] = ArtifactNamingHelper.GetOperatingSystemName(),
-            ["tfm"] = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
-                ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription)
+            ["asm"] = Assembly.GetEntryAssembly()?.GetName().Name ?? string.Empty,
+            ["tfm"] = TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription)
                 ?? string.Empty,
             ["time"] = _clock.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss.fffffff", CultureInfo.InvariantCulture),
         };

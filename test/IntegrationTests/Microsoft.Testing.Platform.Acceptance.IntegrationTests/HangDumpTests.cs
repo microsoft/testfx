@@ -130,7 +130,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         // File should match pattern: <pname>_<pid>_<tfm>_<time>_hang
         // where <tfm> is e.g. net10.0, net8.0, net462
         // and <time> is yyyy-MM-dd_HH-mm-ss.fffffff
-        Assert.MatchesRegex(@"^.+_\d+_net\w+_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.\d{7}_hang$", fileName,
+        Assert.MatchesRegex(@"^.+_\d+_net[\w.]+_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.\d{7}_hang$", fileName,
             $"File name should match '<pname>_<pid>_<tfm>_<time>_hang' pattern. Actual: {fileName}");
 
         // Verify the TFM segment matches the expected target framework

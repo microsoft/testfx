@@ -112,31 +112,36 @@ public sealed class ArtifactNamingHelperTests
 
     [TestMethod]
     public void ResolveTemplate_NullTemplate_ThrowsArgumentException()
-    {
-        Assert.ThrowsExactly<ArgumentException>(() => ArtifactNamingHelper.ResolveTemplate(null!));
-    }
+        => Assert.ThrowsExactly<ArgumentException>(() => ArtifactNamingHelper.ResolveTemplate(null!));
 
     [TestMethod]
     public void ResolveTemplate_EmptyTemplate_ThrowsArgumentException()
-    {
-        Assert.ThrowsExactly<ArgumentException>(() => ArtifactNamingHelper.ResolveTemplate(string.Empty));
-    }
+        => Assert.ThrowsExactly<ArgumentException>(() => ArtifactNamingHelper.ResolveTemplate(string.Empty));
 
     [TestMethod]
     public void ResolveTemplate_WhitespaceOnlyTemplate_ThrowsArgumentException()
-    {
-        Assert.ThrowsExactly<ArgumentException>(() => ArtifactNamingHelper.ResolveTemplate("   "));
-    }
+        => Assert.ThrowsExactly<ArgumentException>(() => ArtifactNamingHelper.ResolveTemplate("   "));
 
     [TestMethod]
     public void GetOperatingSystemName_ReturnsKnownValue()
     {
         string os = ArtifactNamingHelper.GetOperatingSystemName();
 
-        string expectedOs = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows"
-            : RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "linux"
-            : RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "macos"
-            : "unknown";
-        Assert.AreEqual(expectedOs, os);
+        string[] validValues = ["windows", "linux", "macos", "unknown"];
+        Assert.Contains(os, validValues, $"Unexpected OS name: '{os}'");
+
+        // Anchor the current-platform value explicitly.
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Assert.AreEqual("windows", os);
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            Assert.AreEqual("linux", os);
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            Assert.AreEqual("macos", os);
+        }
     }
 }
