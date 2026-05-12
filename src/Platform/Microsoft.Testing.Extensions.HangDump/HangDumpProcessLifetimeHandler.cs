@@ -314,11 +314,21 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             ["pname"] = process.Name,
             ["pid"] = processId,
             ["os"] = ArtifactNamingHelper.GetOperatingSystemName(),
-            ["asm"] = Assembly.GetEntryAssembly()?.GetName().Name ?? string.Empty,
-            ["tfm"] = TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription)
-                ?? string.Empty,
             ["time"] = _clock.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss.fffffff", CultureInfo.InvariantCulture),
         };
+
+        string? asmName = Assembly.GetEntryAssembly()?.GetName().Name;
+        if (asmName is not null)
+        {
+            replacements["asm"] = asmName;
+        }
+
+        string? tfm = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
+            ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
+        if (tfm is not null)
+        {
+            replacements["tfm"] = tfm;
+        }
 
         string pattern = _dumpFileNamePattern ?? $"{process.Name}_%p_hang.dmp";
 

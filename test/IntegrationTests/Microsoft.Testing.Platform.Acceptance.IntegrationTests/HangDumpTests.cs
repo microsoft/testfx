@@ -159,10 +159,12 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             dumpFiles,
             $"Expected single dump file in '{resultDirectory}'\n{testHostResult}'");
 
-        // The dump file should be in a subdirectory (not directly under resultDirectory)
+        // The dump file should be in a subdirectory named after the assembly
         string? parentDir = Path.GetDirectoryName(dumpFile);
         Assert.IsNotNull(parentDir);
         Assert.AreNotEqual(resultDirectory, parentDir, "Dump file should be in a subdirectory created from the <asm> placeholder");
+        Assert.AreEqual("HangDump", Path.GetFileName(parentDir),
+            $"Subdirectory should be named after the assembly ('HangDump'). Actual: {Path.GetFileName(parentDir)}");
     }
 
     [DataRow("Mini")]
