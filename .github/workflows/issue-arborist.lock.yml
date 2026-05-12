@@ -346,8 +346,55 @@ jobs:
       - env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Keep a stable API base URL for curl fallback even when proxy tooling mutates GITHUB_API_URL.
+          GH_AW_ORIGINAL_GITHUB_API_URL: ${{ github.api_url }}
         name: Fetch issues data
-        run: "# Create output directory\nmkdir -p /tmp/gh-aw/issues-data\n\necho \"⬇ Downloading the last 100 open issues (excluding sub-issues)...\"\n\n# Fetch the last 100 open issues that don't have a parent issue\ngh issue list --repo ${{ github.repository }} \\\n  --search \"-parent-issue:*\" \\\n  --state open \\\n  --json number,title,author,createdAt,state,url,body,labels,updatedAt,closedAt,milestone,assignees \\\n  --limit 100 \\\n  > /tmp/gh-aw/issues-data/issues.json\n\necho \"✓ Issues data saved to /tmp/gh-aw/issues-data/issues.json\"\necho \"Total issues fetched: $(jq 'length' /tmp/gh-aw/issues-data/issues.json)\"\n"
+        run: |
+          # Create output directory
+          mkdir -p /tmp/gh-aw/issues-data
+
+          echo "⬇ Downloading the last 100 open issues (excluding sub-issues)..."
+
+          # Fetch the last 100 open issues excluding sub-issues.
+          # If gh fails behind the proxy (for example due to /meta restrictions), fallback to REST.
+          if ! gh issue list --repo ${{ github.repository }} \
+            --search "-is:sub-issue" \
+            --state open \
+            --json number,title,author,createdAt,state,url,body,labels,updatedAt,closedAt,milestone,assignees \
+            --limit 100 \
+            > /tmp/gh-aw/issues-data/issues.json; then
+            echo "::warning::gh issue list failed, using REST API fallback."
+            if curl -fsSL \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              "${GH_AW_ORIGINAL_GITHUB_API_URL:-${GITHUB_API_URL}}/search/issues?q=repo:${GITHUB_REPOSITORY}+is:issue+is:open+-is%3Asub-issue&sort=created&order=desc&per_page=100" \
+              > /tmp/gh-aw/issues-data/issues-rest.json; then
+              if ! jq '[.items[] | {
+                  number,
+                  title,
+                  author: {login: .user.login},
+                  createdAt: .created_at,
+                  state,
+                  url: .html_url,
+                  body,
+                  labels: (.labels | map(if type == "object" then {name: .name} else {name: .} end)),
+                  updatedAt: .updated_at,
+                  closedAt: .closed_at,
+                  milestone: (if .milestone then {number: .milestone.number, title: .milestone.title} else null end),
+                  assignees: (.assignees | map({login}))
+                }]' /tmp/gh-aw/issues-data/issues-rest.json \
+                > /tmp/gh-aw/issues-data/issues.json; then
+                echo "::warning::REST API fallback JSON transformation failed, continuing with empty issues dataset."
+                echo '[]' > /tmp/gh-aw/issues-data/issues.json
+              fi
+            else
+              echo "::warning::REST API fallback request failed, continuing with empty issues dataset."
+              echo '[]' > /tmp/gh-aw/issues-data/issues.json
+            fi
+          fi
+
+          echo "✓ Issues data saved to /tmp/gh-aw/issues-data/issues.json"
+          echo "Total issues fetched: $(jq 'length' /tmp/gh-aw/issues-data/issues.json)"
 
       - name: Configure Git credentials
         env:
@@ -1242,4 +1289,3 @@ jobs:
             /tmp/gh-aw/safe-output-items.jsonl
             /tmp/gh-aw/temporary-id-map.json
           if-no-files-found: ignore
-
