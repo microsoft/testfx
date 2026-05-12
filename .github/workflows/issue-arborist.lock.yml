@@ -369,6 +369,7 @@ jobs:
               > /tmp/gh-aw/issues-data/issues-rest.json \
               || ! jq '[.[] | select(.pull_request | not)]' /tmp/gh-aw/issues-data/issues-rest.json \
               > /tmp/gh-aw/issues-data/issues.json; then
+              echo "::warning::REST API fallback failed, continuing with empty issues dataset."
               echo '[]' > /tmp/gh-aw/issues-data/issues.json
             fi
           fi
