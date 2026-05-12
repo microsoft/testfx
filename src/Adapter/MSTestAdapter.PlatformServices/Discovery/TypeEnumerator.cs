@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
@@ -134,17 +135,18 @@ internal class TypeEnumerator
 
         // TODO: For every test method in a class, we are asking reflect helper multiple times for the same
         // information (like test categories, traits, deployment items) which is not optimal.
+        IReflectionOperations reflectionOperations = PlatformServiceProvider.Instance.ReflectionOperations;
         var testElement = new UnitTestElement(testMethod)
         {
-            TestCategory = ReflectHelper.GetTestCategories(method, _type),
+            TestCategory = reflectionOperations.GetTestCategories(method, _type),
             DoNotParallelize = classDisablesParallelization || _reflectHelper.IsAttributeDefined<DoNotParallelizeAttribute>(method),
 #if !WINDOWS_UWP && !WIN_UI
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
 #endif
-            Traits = [.. ReflectHelper.GetTestPropertiesAsTraits(method)],
+            Traits = [.. reflectionOperations.GetTestPropertiesAsTraits(method)],
         };
 
-        Attribute[] attributes = ReflectHelper.GetCustomAttributesCached(method);
+        Attribute[] attributes = reflectionOperations.GetCustomAttributesCached(method);
         TestMethodAttribute? testMethodAttribute = null;
         List<string>? workItemIds = null;
 

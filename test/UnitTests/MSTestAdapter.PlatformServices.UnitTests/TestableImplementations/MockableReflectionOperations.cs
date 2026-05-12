@@ -91,12 +91,15 @@ internal sealed class MockableReflectionOperations(Mock<IReflectionOperations> m
     // Note: no caching by design — each call re-queries the mock so that test setups
     // can change the returned attributes between calls without needing to clear a cache.
     public Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider)
-        => attributeProvider switch
+    {
+        ArgumentNullException.ThrowIfNull(attributeProvider);
+        return attributeProvider switch
         {
             MemberInfo memberInfo => mock.Object.GetCustomAttributes(memberInfo)?.OfType<Attribute>().ToArray() ?? [],
             Assembly assembly => mock.Object.GetCustomAttributes(assembly, typeof(Attribute))?.OfType<Attribute>().ToArray() ?? [],
             _ => throw new NotSupportedException($"Unsupported attribute provider type: {attributeProvider.GetType()}. Only MemberInfo and Assembly are supported."),
         };
+    }
 
     public bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type)
         => mock.Object.IsMethodDeclaredInSameAssemblyAsType(method, type);

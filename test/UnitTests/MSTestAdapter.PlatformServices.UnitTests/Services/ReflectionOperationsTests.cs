@@ -519,6 +519,71 @@ public class ReflectionOperationsTests : TestContainer
 
     #endregion
 
+    #region GetAttributes Tests
+
+    public void GetAttributesShouldReturnMatchingAttributes()
+    {
+        var rh = new ReflectionOperations();
+        var mockMemberInfo = new Mock<MemberInfo>();
+        var expected = new DummyAAttribute("x");
+
+        _testablePlatformServiceProvider.MockReflectionOperations
+            .Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object))
+            .Returns(new Attribute[] { expected, new DummySingleAAttribute("y") });
+
+        rh.GetAttributes<DummyAAttribute>(mockMemberInfo.Object).Should().ContainSingle().Which.Should().BeSameAs(expected);
+    }
+
+    public void GetAttributesShouldReturnEmptyWhenNoMatchingAttribute()
+    {
+        var rh = new ReflectionOperations();
+        var mockMemberInfo = new Mock<MemberInfo>();
+
+        _testablePlatformServiceProvider.MockReflectionOperations
+            .Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object))
+            .Returns(new Attribute[] { new DummySingleAAttribute("y") });
+
+        rh.GetAttributes<DummyAAttribute>(mockMemberInfo.Object).Should().BeEmpty();
+    }
+
+    public void GetAttributesShouldReturnDerivedAttributes()
+    {
+        var rh = new ReflectionOperations();
+        var mockMemberInfo = new Mock<MemberInfo>();
+        var derivedAttr = new DummySingleAAttribute("derived");
+
+        _testablePlatformServiceProvider.MockReflectionOperations
+            .Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object))
+            .Returns(new Attribute[] { derivedAttr });
+
+        // DummySingleAAttribute does NOT derive from DummyAAttribute, so this should be empty.
+        rh.GetAttributes<DummyAAttribute>(mockMemberInfo.Object).Should().BeEmpty();
+
+        // But should match its own type.
+        rh.GetAttributes<DummySingleAAttribute>(mockMemberInfo.Object).Should().ContainSingle().Which.Should().BeSameAs(derivedAttr);
+    }
+
+    #endregion
+
+    #region GetTestPropertiesAsTraits Additional Tests
+
+    public void GetTestPropertiesAsTraitsShouldNotIncludeClassLevelAttributesWhenReflectedTypeIsNull()
+    {
+        var methodWithNullReflectedType = new Mock<MethodInfo>();
+        methodWithNullReflectedType.Setup(x => x.MemberType).Returns(MemberTypes.Method);
+        methodWithNullReflectedType.Setup(x => x.ReflectedType).Returns((Type?)null);
+        _attributeMockingHelper.AddCustomAttribute(
+            typeof(TestPropertyAttribute),
+            [new TestPropertyAttribute("ClassKey", "ClassValue")],
+            MemberTypes.TypeInfo);
+
+        Trait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(methodWithNullReflectedType.Object);
+
+        actual.Should().BeEmpty();
+    }
+
+    #endregion
+
     #region MockableReflectionOperations Tests
 
     public void MockableReflectionOperationsGetCustomAttributesCachedShouldThrowForUnsupportedProvider()
@@ -529,6 +594,15 @@ public class ReflectionOperationsTests : TestContainer
 
         Action action = () => mockable.GetCustomAttributesCached(mockProvider.Object);
         action.Should().Throw<NotSupportedException>();
+    }
+
+    public void MockableReflectionOperationsGetCustomAttributesCachedShouldThrowForNullProvider()
+    {
+        var mockReflectionOps = new Mock<IReflectionOperations>();
+        var mockable = MockableReflectionOperations.Create(mockReflectionOps);
+
+        Action action = () => mockable.GetCustomAttributesCached(null!);
+        action.Should().Throw<ArgumentNullException>().WithParameterName("attributeProvider");
     }
 
     #endregion
