@@ -45,15 +45,15 @@
       "version": "v4.35.4",
       "sha": "3ce22a6e336a7fcc318bc58ae1986395bdc83ba7"
     },
-    "github/gh-aw-actions/setup-cli@v0.68.3": {
+    "github/gh-aw-actions/setup-cli@v0.72.1": {
       "repo": "github/gh-aw-actions/setup-cli",
-      "version": "v0.68.3",
-      "sha": "ba90f2186d7ad780ec640f364005fa24e797b360"
+      "version": "v0.72.1",
+      "sha": "bc56a0cad2f450c562810785ef38649c04db812a"
     },
-    "github/gh-aw-actions/setup@v0.68.3": {
+    "github/gh-aw-actions/setup@v0.72.1": {
       "repo": "github/gh-aw-actions/setup",
-      "version": "v0.68.3",
-      "sha": "ba90f2186d7ad780ec640f364005fa24e797b360"
+      "version": "v0.72.1",
+      "sha": "bc56a0cad2f450c562810785ef38649c04db812a"
     },
     "super-linter/super-linter@v8.6.0": {
       "repo": "super-linter/super-linter",
