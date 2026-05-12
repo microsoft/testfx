@@ -44,7 +44,7 @@ Out of process file artifacts produced:
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--crashdump --report-trx --report-trx-filename {fileName}.trx",
-            new() { { "CRASHPROCESS", "1" } }, cancellationToken: TestContext.CancellationToken);
+            new() { ["CRASHPROCESS"] = "1" }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
 
@@ -66,7 +66,7 @@ Out of process file artifacts produced:
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"test --project \"{AssetFixture.TargetAssetPath}\" --no-build -c Release -f {tfm} --crashdump --report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
             workingDirectory: AssetFixture.TargetAssetPath,
-            environmentVariables: new() { { "CRASHPROCESS", "1" } },
+            environmentVariables: new() { ["CRASHPROCESS"] = "1" },
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 

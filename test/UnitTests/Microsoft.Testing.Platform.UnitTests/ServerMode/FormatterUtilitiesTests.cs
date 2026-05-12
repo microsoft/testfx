@@ -303,7 +303,7 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(ProcessInfoArgs))
         {
-            return new ProcessInfoArgs("program", "arts", "workingDir", new Dictionary<string, string?> { { "key", "value" } });
+            return new ProcessInfoArgs("program", "arts", "workingDir", new Dictionary<string, string?> { ["key"] = "value" });
         }
 
         if (type == typeof(KeyValuePair<string, string>))
@@ -313,7 +313,7 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(TelemetryEventArgs))
         {
-            return new TelemetryEventArgs("eventName", new Dictionary<string, object> { { "key", 1 } });
+            return new TelemetryEventArgs("eventName", new Dictionary<string, object> { ["key"] = 1 });
         }
 
         if (type == typeof(CancelRequestArgs))

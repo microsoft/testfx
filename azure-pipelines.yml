@@ -1,13 +1,4 @@
-trigger:
-  branches:
-    include:
-    - main
-    - rel/*
-  paths:
-    exclude:
-      - .github/**
-      - .gitignore
-      - formal-verification/**
+trigger: none
 
 # Branch(es) that trigger(s) build(s) on PR
 pr:
@@ -18,7 +9,6 @@ pr:
     exclude:
       - .github/**
       - .gitignore
-      - formal-verification/**
       - .devcontainer/*
       - docs/*
       - .vscode/*
