@@ -202,4 +202,40 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic(UseAttributeOnTestMethodAnalyzer.OwnerRule).WithLocation(0), fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenMethodIsMarkedWithIgnoreButNotWithTestMethod_UsesConcreteConditionAttributeInDiagnosticAsync()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{|#0:Ignore|}]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [Ignore]
+                [TestMethod]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UseAttributeOnTestMethodAnalyzer.ConditionBaseRule).WithLocation(0).WithArguments("IgnoreAttribute"),
+            fixedCode);
+    }
 }

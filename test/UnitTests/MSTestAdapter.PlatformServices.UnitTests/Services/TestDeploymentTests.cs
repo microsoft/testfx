@@ -254,7 +254,7 @@ public class TestDeploymentTests : TestContainer
 #endif
     }
 
-    // TODO: This test has to have mocks. It actually deploys stuff and we cannot assume that all the dependencies get copied over to bin\debug.
+    // TODO: This test has to have mocks (tracked by https://github.com/microsoft/testfx/issues/8086). It actually deploys stuff and we cannot assume that all the dependencies get copied over to bin\debug.
     internal void DeployShouldReturnTrueWhenDeploymentEnabledSetToTrueAndHasDeploymentItems()
     {
         var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), typeof(TestDeploymentTests).Assembly.Location);
