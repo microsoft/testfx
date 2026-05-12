@@ -235,9 +235,6 @@ public sealed partial class Assert
     private static string BuildUserMessageForValueExpression(string? format, string valueExpression)
         => BuildUserMessageForSingleExpression(format, valueExpression, "value");
 
-    private static string BuildUserMessageForActionExpression(string? format, string actionExpression)
-        => BuildUserMessageForSingleExpression(format, actionExpression, "action");
-
     private static string BuildUserMessageForCollectionExpression(string? format, string collectionExpression)
         => BuildUserMessageForSingleExpression(format, collectionExpression, "collection");
 
@@ -306,6 +303,15 @@ public sealed partial class Assert
 
     internal static string ReplaceNulls(object? input)
         => input?.ToString() ?? string.Empty;
+
+    /// <summary>
+    /// Formats a call-site expression like <c>Assert.MethodName(expression)</c>.
+    /// Returns <see langword="null"/> if the expression is empty or contains a newline.
+    /// </summary>
+    private static string? FormatCallSiteExpression(string methodName, string expression)
+        => string.IsNullOrEmpty(expression) || expression.Contains('\n')
+            ? null
+            : $"{methodName}({expression})";
 
     private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo culture)
 #pragma warning disable CA1309 // Use ordinal string comparison
