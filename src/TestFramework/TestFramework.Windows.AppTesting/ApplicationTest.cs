@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
-using System.Diagnostics;
 
 namespace Microsoft.MSTest.Windows.AppTesting;
 
@@ -72,7 +71,7 @@ public class ApplicationTest : AutomationTest
             ?? throw new InvalidOperationException($"Failed to start process: {ApplicationPath}");
 
         // Wait for the main window to be created
-        Stopwatch sw = Stopwatch.StartNew();
+        var sw = Stopwatch.StartNew();
         while (AppProcess.MainWindowHandle == IntPtr.Zero && sw.Elapsed < ApplicationStartTimeout)
         {
             AppProcess.Refresh();

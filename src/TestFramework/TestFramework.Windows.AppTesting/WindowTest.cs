@@ -52,10 +52,8 @@ public class WindowTest : ApplicationTest
     /// Obtains the application's main window <see cref="AutomationElement"/> before each test method.
     /// </summary>
     [TestInitialize]
-    public void WindowSetup()
-    {
+    public void WindowSetup() =>
         MainWindow = AutomationElement.FromHandle(AppProcess.MainWindowHandle)
             ?? throw new InvalidOperationException(
                 $"Could not obtain an AutomationElement for the main window of '{ApplicationPath}' (handle 0x{AppProcess.MainWindowHandle:X}). The process may have exited.");
-    }
 }
