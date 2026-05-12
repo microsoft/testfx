@@ -256,7 +256,7 @@ Tests that share state are the #1 cause of flaky test suites.
 **Severity: MAJOR**
 
 **Rules:**
-1. Assertions must use FluentAssertions style.
+1. Follow the test project's assertion library conventions (check `BannedSymbols.txt` in the test project directory).
 2. `Assert.IsTrue(a == b)` should be `Assert.AreEqual(a, b)` for better failure messages.
 3. Assertions must verify the *right* thing — asserting a collection has items vs. has the *right* items.
 4. Over-assertion on implementation details (exact exception messages) makes tests brittle.
@@ -267,7 +267,7 @@ Tests that share state are the #1 cause of flaky test suites.
 - [ ] Asserting on the wrong thing (existence vs. correctness)
 - [ ] Over-assertion on implementation details
 - [ ] MSTest unit test not using `TestFramework.ForTestingMSTest`
-- [ ] Assertions not using FluentAssertions style
+- [ ] Assertion library violates the test project's `BannedSymbols.txt` policy
 
 ---
 
@@ -470,7 +470,7 @@ Applies to changes in `src/Platform/` involving serialization/deserialization.
 | 1 | **Public API Shipping** | Declare in `PublicAPI.Unshipped.txt`. Run `eng/mark-shipped.ps1` to promote. Multi-TFM: `net8.0/`, `net9.0/`, `netstandard2.0/` subfolders. | `eng/mark-shipped.ps1` |
 | 2 | **No `init` on Public API** | New public API MUST NOT use `init` accessors. Existing MTP `init` accessors are grandfathered. | `.github/copilot-instructions.md` |
 | 3 | **Localization** | `.resx` for user-facing strings. Never edit `.xlf` — build generates them. | `src/*/Strings.resx` |
-| 4 | **Test Architecture** | MSTest unit tests use `TestFramework.ForTestingMSTest`. MTP/analyzer tests use MSTest. FluentAssertions style for all. | `test/Utilities/TestFramework.ForTestingMSTest` |
+| 4 | **Test Architecture** | MSTest unit tests use `TestFramework.ForTestingMSTest`. MTP/analyzer tests use MSTest. Follow test project's assertion library policy (check `BannedSymbols.txt`). | `test/Utilities/TestFramework.ForTestingMSTest` |
 | 5 | **IPC Protocol** | Named pipes, JSON-RPC between test platform and runners. Wire format backward-compatible. | `src/Platform/` |
 | 6 | **Analyzer IDs** | `MSTEST0001`+ for MSTest analyzers. Unique across codebase. | `src/Analyzers/` |
 | 7 | **Multi-TFM Targeting** | `net462`, `netstandard2.0`, `net8.0`, `net9.0`. Polyfills in `src/Polyfills/`. | `src/Polyfills/` |

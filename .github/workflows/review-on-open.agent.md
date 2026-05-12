@@ -30,6 +30,10 @@ permissions:
 imports:
   - shared/review-shared.md
 
+safe-outputs:
+  noop:
+    report-as-issue: false
+
 timeout-minutes: 60
 ---
 
