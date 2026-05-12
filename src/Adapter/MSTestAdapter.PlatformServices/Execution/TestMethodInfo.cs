@@ -182,20 +182,21 @@ internal partial class TestMethodInfo : ITestMethod
     /// </returns>
     private RetryBaseAttribute? GetRetryAttribute()
     {
-        IEnumerable<RetryBaseAttribute> attributes = PlatformServiceProvider.Instance.ReflectionOperations.GetAttributes<RetryBaseAttribute>(MethodInfo);
-        using IEnumerator<RetryBaseAttribute> enumerator = attributes.GetEnumerator();
-        if (!enumerator.MoveNext())
+        Attribute[] attributes = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached(MethodInfo);
+        RetryBaseAttribute? result = null;
+        foreach (Attribute attribute in attributes)
         {
-            return null;
+            if (attribute is RetryBaseAttribute retryAttribute)
+            {
+                if (result is not null)
+                {
+                    ThrowMultipleAttributesException(nameof(RetryBaseAttribute));
+                }
+
+                result = retryAttribute;
+            }
         }
 
-        RetryBaseAttribute attribute = enumerator.Current;
-
-        if (enumerator.MoveNext())
-        {
-            ThrowMultipleAttributesException(nameof(RetryBaseAttribute));
-        }
-
-        return attribute;
+        return result;
     }
 }

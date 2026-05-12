@@ -68,6 +68,8 @@ internal sealed class MockableReflectionOperations(Mock<IReflectionOperations> m
         where TAttributeType : Attribute
         => GetCustomAttributesCached(attributeProvider).OfType<TAttributeType>();
 
+    // Note: no caching by design — each call re-queries the mock so that test setups
+    // can change the returned attributes between calls without needing to clear a cache.
     public Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider)
         => attributeProvider switch
         {

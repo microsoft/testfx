@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -330,6 +330,82 @@ public class ReflectionOperationsTests : TestContainer
 
     #endregion
 
+    #region GetFirstAttributeOrDefault Tests
+
+    public void GetFirstAttributeOrDefaultShouldReturnAttributeWhenPresent()
+    {
+        var rh = new ReflectionOperations();
+        var mockMemberInfo = new Mock<MemberInfo>();
+        var expectedAttribute = new DummySealedAttribute("value");
+        var attributes = new Attribute[] { expectedAttribute };
+
+        _testablePlatformServiceProvider.MockReflectionOperations
+            .Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object))
+            .Returns(attributes);
+
+        rh.GetFirstAttributeOrDefault<DummySealedAttribute>(mockMemberInfo.Object).Should().BeSameAs(expectedAttribute);
+    }
+
+    public void GetFirstAttributeOrDefaultShouldReturnNullWhenNotPresent()
+    {
+        var rh = new ReflectionOperations();
+        var mockMemberInfo = new Mock<MemberInfo>();
+        var attributes = new Attribute[] { new DummyAAttribute("foo") };
+
+        _testablePlatformServiceProvider.MockReflectionOperations
+            .Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object))
+            .Returns(attributes);
+
+        rh.GetFirstAttributeOrDefault<DummySealedAttribute>(mockMemberInfo.Object).Should().BeNull();
+    }
+
+    #endregion
+
+    #region GetSingleAttributeOrDefault Tests
+
+    public void GetSingleAttributeOrDefaultShouldReturnAttributeWhenPresent()
+    {
+        var rh = new ReflectionOperations();
+        var mockMemberInfo = new Mock<MemberInfo>();
+        var expectedAttribute = new DummyAAttribute("value");
+        var attributes = new Attribute[] { expectedAttribute };
+
+        _testablePlatformServiceProvider.MockReflectionOperations
+            .Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object))
+            .Returns(attributes);
+
+        rh.GetSingleAttributeOrDefault<DummyAAttribute>(mockMemberInfo.Object).Should().BeSameAs(expectedAttribute);
+    }
+
+    public void GetSingleAttributeOrDefaultShouldReturnNullWhenNotPresent()
+    {
+        var rh = new ReflectionOperations();
+        var mockMemberInfo = new Mock<MemberInfo>();
+        var attributes = new Attribute[] { new DummySingleAAttribute("foo") };
+
+        _testablePlatformServiceProvider.MockReflectionOperations
+            .Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object))
+            .Returns(attributes);
+
+        rh.GetSingleAttributeOrDefault<DummyAAttribute>(mockMemberInfo.Object).Should().BeNull();
+    }
+
+    public void GetSingleAttributeOrDefaultShouldThrowWhenMultipleAttributesPresent()
+    {
+        var rh = new ReflectionOperations();
+        var mockMemberInfo = new Mock<MemberInfo>();
+        var attributes = new Attribute[] { new DummyAAttribute("first"), new DummyAAttribute("second") };
+
+        _testablePlatformServiceProvider.MockReflectionOperations
+            .Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object))
+            .Returns(attributes);
+
+        Action action = () => rh.GetSingleAttributeOrDefault<DummyAAttribute>(mockMemberInfo.Object);
+        action.Should().Throw<InvalidOperationException>();
+    }
+
+    #endregion
+
     #region Helpers
 
     private static string[] GetAttributeValuePairs(object[] attributes)
@@ -402,6 +478,14 @@ public class ReflectionOperationsTests : TestContainer
     #endregion
 
     #region Dummy Test Classes
+
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly)]
+    public sealed class DummySealedAttribute : Attribute
+    {
+        public DummySealedAttribute(string foo) => Value = foo;
+
+        public string Value { get; set; }
+    }
 
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = true)]
     public class DummyAAttribute : Attribute

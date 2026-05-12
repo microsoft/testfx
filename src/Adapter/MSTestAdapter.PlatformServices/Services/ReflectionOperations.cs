@@ -129,7 +129,7 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
     /// </returns>
     [SecurityCritical]
 #if NET5_0_OR_GREATER
-    [Obsolete]
+    [Obsolete("MarshalByRefObject.InitializeLifetimeService is obsolete in .NET 5+. This override is required to maintain infinite lifetime service.")]
 #endif
     public override object InitializeLifetimeService() => null!;
 
@@ -276,9 +276,12 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
             IReflectionOperations reflectionOperations = PlatformServiceProvider.Instance.ReflectionOperations;
             object[] attributesArray = attributeProvider switch
             {
+                null => throw new ArgumentNullException(nameof(attributeProvider)),
                 MemberInfo memberInfo => reflectionOperations.GetCustomAttributes(memberInfo),
                 Assembly assembly => reflectionOperations.GetCustomAttributes(assembly, typeof(Attribute)),
-                _ => throw new ArgumentException($"Unsupported attribute provider type: {attributeProvider.GetType()}", nameof(attributeProvider)),
+                _ => throw new ArgumentException(
+                    $"Unsupported attribute provider type: {attributeProvider.GetType()}. Only MemberInfo and Assembly are supported.",
+                    nameof(attributeProvider)),
             };
 
             return attributesArray;
