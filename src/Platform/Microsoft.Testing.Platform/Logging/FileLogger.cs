@@ -6,6 +6,9 @@ using System.Threading.Channels;
 #endif
 
 using Microsoft.Testing.Platform.Helpers;
+#if !NETCOREAPP
+using Microsoft.Testing.Platform.Messages;
+#endif
 using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Logging;
@@ -29,7 +32,7 @@ internal sealed class FileLogger : IDisposable
 #if NETCOREAPP
     private readonly Channel<string>? _channel;
 #else
-    private readonly BlockingCollection<string>? _asyncLogs;
+    private readonly SingleConsumerUnboundedChannel<string>? _channel;
 #endif
     private bool _disposed;
 
@@ -69,7 +72,7 @@ internal sealed class FileLogger : IDisposable
                 AllowSynchronousContinuations = false,
             });
 #else
-            _asyncLogs = [];
+            _channel = new SingleConsumerUnboundedChannel<string>();
 #endif
 
             _logLoop = task.Run(WriteLogToFileAsync, CancellationToken.None);
@@ -222,7 +225,7 @@ internal sealed class FileLogger : IDisposable
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.FailedToWriteLogToChannelErrorMessage, log));
         }
 #else
-        _asyncLogs.Add(log);
+        _channel.Write(log);
 #endif
     }
 
@@ -231,28 +234,24 @@ internal sealed class FileLogger : IDisposable
 
     private async Task WriteLogToFileAsync()
     {
-        // We do this check out of the try because we want to crash the process if the _channel/_asyncLogs is null.
-#if NETCOREAPP
+        // We do this check out of the try because we want to crash the process if the _channel is null.
         ApplicationStateGuard.Ensure(_channel is not null);
-#else
-        // We do this check out of the try because we want to crash the process if the _asyncLogs is null.
-        ApplicationStateGuard.Ensure(_asyncLogs is not null);
-#endif
 
         try
         {
-#if NETCOREAPP
             // We don't need cancellation token because the task will be stopped when the Channel is completed thanks to the call to Complete() inside the Dispose method.
+#if NETCOREAPP
             while (await _channel.Reader.WaitToReadAsync().ConfigureAwait(false))
             {
                 await _writer.WriteLineAsync(await _channel.Reader.ReadAsync().ConfigureAwait(false)).ConfigureAwait(false);
             }
 #else
-            // We don't need cancellation token because the task will be stopped when the BlockingCollection is completed thanks to the call to CompleteAdding()
-            // inside the Dispose method.
-            foreach (string message in _asyncLogs.GetConsumingEnumerable())
+            while (await _channel.WaitToReadAsync(CancellationToken.None).ConfigureAwait(false))
             {
-                await _writer.WriteLineAsync(message).ConfigureAwait(false);
+                while (_channel.TryRead(out string message))
+                {
+                    await _writer.WriteLineAsync(message).ConfigureAwait(false);
+                }
             }
 #endif
         }
@@ -262,18 +261,10 @@ internal sealed class FileLogger : IDisposable
         }
     }
 
-#if NETCOREAPP
     [MemberNotNull(nameof(_channel), nameof(_logLoop))]
-#else
-    [MemberNotNull(nameof(_asyncLogs), nameof(_logLoop))]
-#endif
     private void EnsureAsyncLogObjectsAreNotNull()
     {
-#if NETCOREAPP
         ApplicationStateGuard.Ensure(_channel is not null);
-#else
-        ApplicationStateGuard.Ensure(_asyncLogs is not null);
-#endif
         ApplicationStateGuard.Ensure(_logLoop is not null);
     }
 
@@ -288,12 +279,11 @@ internal sealed class FileLogger : IDisposable
         {
             EnsureAsyncLogObjectsAreNotNull();
 
-#if NETCOREAPP
             // Wait for all logs to be written
+#if NETCOREAPP
             _channel.Writer.TryComplete();
 #else
-            // Wait for all logs to be written
-            _asyncLogs.CompleteAdding();
+            _channel.Complete();
 #endif
 
             if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))

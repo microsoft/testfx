@@ -321,10 +321,19 @@ internal sealed class TestMethodRunner
             data = tupleExpandedToArray;
         }
 
-        displayName = displayNameFromTestDataRow
-            ?? testDataSource?.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data)
-            ?? (testDataSource is null ? displayName : TestDataSourceUtilities.ComputeDefaultDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data))
-            ?? displayName;
+        // PERF: Extract ReflectionTestMethodInfo to avoid allocating it twice when testDataSource is not null
+        // and both GetDisplayName and ComputeDefaultDisplayName need to be consulted.
+        if (displayNameFromTestDataRow is null && testDataSource is not null)
+        {
+            var reflectionMethodInfo = new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName);
+            displayName = testDataSource.GetDisplayName(reflectionMethodInfo, data)
+                ?? TestDataSourceUtilities.ComputeDefaultDisplayName(reflectionMethodInfo, data)
+                ?? displayName;
+        }
+        else
+        {
+            displayName = displayNameFromTestDataRow ?? displayName;
+        }
 
         var stopwatch = Stopwatch.StartNew();
         _testMethodInfo.SetArguments(data);
@@ -392,6 +401,7 @@ internal sealed class TestMethodRunner
                     {
                         using (TestContextImplementation.SetCurrentTestContext(_testContext as TestContext))
                         {
+                            testMethodInfo.TestContext = _testContext;
                             tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false));
                         }
                     }

@@ -124,7 +124,7 @@
     <value>Failed to create a test execution filter</value>
   </data>
   <data name="CompositeServiceFactoryInstanceAlreadyRegistered" xml:space="preserve">
-    <value>The same instance of 'CompositeExtensonFactory' is already registered</value>
+    <value>The same instance of 'CompositeExtensionFactory' is already registered</value>
   </data>
   <data name="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage" xml:space="preserve">
     <value>Could not find the default json configuration</value>
@@ -317,7 +317,7 @@
     <value>You can fix the previous option clash by overriding the option name using the configuration file</value>
   </data>
   <data name="CommandLineOptionIsReserved" xml:space="preserve">
-    <value>Option '--{0}' is reserved and cannot be used by providers: '{0}'</value>
+    <value>Option '--{0}' is reserved and cannot be used by providers: '{1}'</value>
   </data>
   <data name="CommandLineParserUnexpectedArgument" xml:space="preserve">
     <value>Unexpected argument {0}</value>

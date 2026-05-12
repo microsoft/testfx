@@ -64,7 +64,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
     public string Uid => nameof(HangDumpActivityIndicator);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => ExtensionResources.HangDumpExtensionDisplayName;
 

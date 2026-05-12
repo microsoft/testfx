@@ -54,7 +54,7 @@ internal sealed class AzureDevOpsReporter :
     public string Uid => nameof(AzureDevOpsReporter);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = AzureDevOpsResources.DisplayName;

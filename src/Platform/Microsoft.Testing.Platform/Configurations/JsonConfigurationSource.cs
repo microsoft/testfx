@@ -18,7 +18,7 @@ internal sealed partial class JsonConfigurationSource(ITestApplicationModuleInfo
     public string Uid => nameof(JsonConfigurationSource);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     /// <inheritdoc />
     // Can be empty string because it's not used in the UI

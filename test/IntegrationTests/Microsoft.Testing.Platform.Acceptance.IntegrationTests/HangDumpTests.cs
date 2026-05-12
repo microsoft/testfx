@@ -20,7 +20,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
                         { "SLEEPTIMEMS2", "600000" },
             },
             cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
         string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
         Assert.ContainsSingle(dumpFiles, $"Expected single dump file. Found: {Environment.NewLine}{string.Join(Environment.NewLine, dumpFiles)}{Environment.NewLine}{testHostResult}");
     }
@@ -41,7 +41,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        testResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
         string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
         Assert.ContainsSingle(dumpFiles, $"Expected single dump file. Found: {Environment.NewLine}{string.Join(Environment.NewLine, dumpFiles)}{Environment.NewLine}{testResult}");
     }
@@ -62,7 +62,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        testResult.AssertExitCodeIs(ExitCodes.Success);
+        testResult.AssertExitCodeIs(ExitCode.Success);
         string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
         Assert.IsEmpty(dumpFiles);
     }
@@ -79,7 +79,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
                 { "SLEEPTIMEMS1", "4000" },
                 { "SLEEPTIMEMS2", "600000" },
             }, cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
         string? dumpFile = Directory.GetFiles(resultDirectory, "myhungdumpfile_*.dmp", SearchOption.AllDirectories).SingleOrDefault();
         Assert.IsNotNull(dumpFile, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
     }
@@ -99,7 +99,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
                 { "SLEEPTIMEMS2", "600000" },
             },
             cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
         string? dumpFile = Directory.GetFiles(resultDirectory, "myhungdumpfile_*.dmp", SearchOption.AllDirectories).SingleOrDefault();
         Assert.IsNotNull(dumpFile, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
     }
@@ -122,7 +122,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
                 { "SLEEPTIMEMS2", "600000" },
             },
             cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
 
         string? dumpFile = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories).SingleOrDefault();
         if (format != "None")
@@ -148,7 +148,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
                 { "SLEEPTIMEMS2", "600000" },
             },
             cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
         testHostResult.AssertOutputContains("""
             Option '--hangdump-type' has invalid arguments: 'invalid' is not a valid dump type.
             Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'
@@ -169,7 +169,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
                 { "SPAWN_FOREGROUND_THREAD", "true" },
             },
             cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
         string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
         Assert.ContainsSingle(dumpFiles, $"Expected single dump file. Found: {Environment.NewLine}{string.Join(Environment.NewLine, dumpFiles)}{Environment.NewLine}{testHostResult}");
     }

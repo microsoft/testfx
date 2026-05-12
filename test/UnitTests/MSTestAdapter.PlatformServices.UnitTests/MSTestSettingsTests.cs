@@ -1141,7 +1141,7 @@ public class MSTestSettingsTests : TestContainer
     public void ConfigJson_WithValidValues_MethodScope()
     {
         // Arrange - setting up valid configuration values
-        var configDictionary = new Dictionary<string, string> { { "mstest:parallelism:scope", "method" } };
+        var configDictionary = new Dictionary<string, string> { ["mstest:parallelism:scope"] = "method" };
 
         var mockConfig = new Mock<IConfiguration>();
         mockConfig.Setup(config => config[It.IsAny<string>()])

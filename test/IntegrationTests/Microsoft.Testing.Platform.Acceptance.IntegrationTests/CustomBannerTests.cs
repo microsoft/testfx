@@ -15,7 +15,7 @@ public class CustomBannerTests : AcceptanceTestBase<CustomBannerTests.TestAssetF
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--no-banner", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
         testHostResult.AssertOutputDoesNotContain(TestAssetFixture.CustomBannerPrefix);
     }
 
@@ -32,7 +32,7 @@ public class CustomBannerTests : AcceptanceTestBase<CustomBannerTests.TestAssetF
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
         testHostResult.AssertOutputDoesNotContain(TestAssetFixture.CustomBannerPrefix);
     }
 
@@ -49,7 +49,7 @@ public class CustomBannerTests : AcceptanceTestBase<CustomBannerTests.TestAssetF
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
         testHostResult.AssertOutputDoesNotContain(TestAssetFixture.CustomBannerPrefix);
     }
 
@@ -60,7 +60,7 @@ public class CustomBannerTests : AcceptanceTestBase<CustomBannerTests.TestAssetF
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
         testHostResult.AssertOutputMatchesRegex($"{TestAssetFixture.CustomBannerPrefix} Platform info: Name: Microsoft.Testing.Platform, Version: .+?, Hash: .*?, Date: .+?");
     }
 

@@ -165,7 +165,7 @@ internal sealed partial class TrxReportEngine
             AddTestLists(testRun);
 
             bool hasFailedTests = summaryCounts.Failed > 0 || summaryCounts.Timedout > 0;
-            string trxOutcome = isTestHostCrashed || _exitCode != ExitCodes.Success || hasFailedTests ? "Failed" : "Completed";
+            string trxOutcome = isTestHostCrashed || _exitCode != (int)ExitCode.Success || hasFailedTests ? "Failed" : "Completed";
 
             AddResultSummary(testRun, trxOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, summaryCounts, isTestHostCrashed);
 
@@ -333,7 +333,7 @@ internal sealed partial class TrxReportEngine
             runInfo.Add(text);
             runInfos.Add(runInfo);
         }
-        else if (exitCode != ExitCodes.Success)
+        else if (exitCode != (int)ExitCode.Success)
         {
             var runInfos = new XElement(NamespaceUri + "RunInfos");
             resultSummary.Add(runInfos);

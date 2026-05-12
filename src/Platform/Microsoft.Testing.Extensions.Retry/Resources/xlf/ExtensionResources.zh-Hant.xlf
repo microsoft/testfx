@@ -100,11 +100,6 @@ Moving last attempt asset files to the default result directory
         <target state="translated">選項 '{0}' 和 '{1}' 不能同時使用</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryProviderRequiresDefaultTestHostManagerErrorMessage">
-        <source>The retry provider requires the default TestHostManager implementation.</source>
-        <target state="translated">重試提供者需要預設的 TestHostManager 實作。</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
         <source>Test host process exited before the retry service could connect to it. Exit code: {0}</source>
         <target state="translated">測試主機處理序在重試服務連線到它之前已結束。結束代碼: {0}</target>

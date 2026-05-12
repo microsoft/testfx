@@ -14,7 +14,7 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         Assert.AreEqual("TestHostProcessLifetimeHandler.BeforeTestHostProcessStartAsync", File.ReadAllText(Path.Combine(testHost.DirectoryName, "BeforeTestHostProcessStartAsync.txt")));
         Assert.AreEqual("TestHostProcessLifetimeHandler.OnTestHostProcessStartedAsync", File.ReadAllText(Path.Combine(testHost.DirectoryName, "OnTestHostProcessStartedAsync.txt")));
         Assert.AreEqual("TestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync", File.ReadAllText(Path.Combine(testHost.DirectoryName, "OnTestHostProcessExitedAsync.txt")));

@@ -30,7 +30,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
     {
         CancellationToken testApplicationCancellationToken = ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
 
-        int exitCode = ExitCodes.GenericFailure;
+        int exitCode = (int)ExitCode.GenericFailure;
         IPlatformOpenTelemetryService? platformOTelService = null;
         IPlatformActivity? activity = null;
         try
@@ -45,7 +45,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
                 if (testApplicationCancellationToken.IsCancellationRequested)
                 {
-                    exitCode = ExitCodes.TestSessionAborted;
+                    exitCode = (int)ExitCode.TestSessionAborted;
                 }
 
                 return exitCode;
@@ -59,7 +59,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
                 exitCode = isValidProtocol
                     ? await RunTestAppAsync(platformOTelService, testApplicationCancellationToken).ConfigureAwait(false)
-                    : ExitCodes.IncompatibleProtocolVersion;
+                    : (int)ExitCode.IncompatibleProtocolVersion;
             }
             finally
             {
@@ -90,7 +90,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
         if (testApplicationCancellationToken.IsCancellationRequested)
         {
-            exitCode = ExitCodes.TestSessionAborted;
+            exitCode = (int)ExitCode.TestSessionAborted;
         }
 
         return exitCode;
@@ -231,7 +231,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         TestSessionLifetimeHandlersContainer? testSessionLifetimeHandlersContainer = serviceProvider.GetService<TestSessionLifetimeHandlersContainer>();
         if (testSessionLifetimeHandlersContainer is null)
         {
-            // TODO: Is this reachable? If so, are we missing await baseMessageBus.DisableAsync() here?
+            // TODO: Is this reachable? If so, are we missing await baseMessageBus.DisableAsync() here? Tracked by https://github.com/microsoft/testfx/issues/8086.
             return;
         }
 
