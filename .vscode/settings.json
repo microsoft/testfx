@@ -1,5 +1,6 @@
 {
-    "dotnet.automaticallyCreateSolutionInWorkspace": false,
-    "dotnet.enableWorkspaceBasedDevelopment": false,
-    "dotnet.solution.autoOpen": "TestFx.slnx",
+  "dotnet.automaticallyCreateSolutionInWorkspace": false,
+  "dotnet.enableWorkspaceBasedDevelopment": false,
+  "dotnet.solution.autoOpen": "TestFx.slnx",
+  "azure-pipelines.1ESPipelineTemplatesSchemaFile": true,
 }
