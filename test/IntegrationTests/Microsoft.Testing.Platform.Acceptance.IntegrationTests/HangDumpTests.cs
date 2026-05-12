@@ -118,7 +118,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
                 ["SLEEPTIMEMS2"] = "20000",
             },
             cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
 
         // Verify the dump file uses the template format
         string[] dumpFiles = Directory.GetFiles(resultDirectory, "*_hang.dmp", SearchOption.AllDirectories);
@@ -151,7 +151,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
                 ["SLEEPTIMEMS2"] = "20000",
             },
             cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
 
         // Verify the dump file was created inside a subdirectory named after the assembly
         string[] dumpFiles = Directory.GetFiles(resultDirectory, "*_hang.dmp", SearchOption.AllDirectories);
