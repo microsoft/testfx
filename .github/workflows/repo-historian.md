@@ -173,9 +173,7 @@ This workflow does NOT act on the data. The PR reviewers read `repo-history.json
 
 | Consumer | How it uses history |
 | --- | --- |
-| **Expert Reviewer** | Applies extra scrutiny to high-churn files; checks reverted areas more carefully for the same class of bug |
-| **Nitpick Reviewer** | Prioritizes reviews on high-risk directories; skips deep analysis of stable, low-churn areas |
-| **Test Expert Reviewer** | Cross-references CI failures with test file changes; flags test changes in fragile areas |
+| **Expert Reviewer** (`.github/agents/expert-reviewer.agent.md`) | Applies extra scrutiny to high-churn files; checks reverted areas for the same class of bug; correlates CI failures with changed files; flags recurring review patterns proactively; weights review effort by directory risk score |
 
 ## Important Notes
 
