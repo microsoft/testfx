@@ -34,7 +34,7 @@ internal sealed partial class MSTestSettings
     }
 
 #if !WINDOWS_UWP
-    private static bool IsRunSettingsFileHasMSTestSettings(string? runSettingsXml)
+    private static bool RunSettingsFileHasMSTestSettings(string? runSettingsXml)
     {
         if (StringEx.IsNullOrWhiteSpace(runSettingsXml))
         {

@@ -28,7 +28,7 @@ internal sealed partial class MSTestSettings
 #if !WINDOWS_UWP
         if (configuration?["mstest"] != null
             && context?.RunSettings != null
-            && IsRunSettingsFileHasMSTestSettings(context.RunSettings.SettingsXml))
+            && RunSettingsFileHasMSTestSettings(context.RunSettings.SettingsXml))
         {
             throw new InvalidOperationException(Resource.DuplicateConfigurationError);
         }
