@@ -48,9 +48,9 @@ internal interface IReflectionOperations
     /// Checks to see if a member or type is decorated with the given attribute, or an attribute that derives from it.
     /// </summary>
     /// <typeparam name="TAttribute">Attribute to search for.</typeparam>
-    /// <param name="memberInfo">Member to inspect for attributes.</param>
-    /// <returns>True if the attribute of the specified type is defined on this member or a class.</returns>
-    bool IsAttributeDefined<TAttribute>(MemberInfo memberInfo)
+    /// <param name="attributeProvider">The type, assembly or method to inspect for attributes.</param>
+    /// <returns>True if the attribute of the specified type is defined.</returns>
+    bool IsAttributeDefined<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute;
 
     /// <summary>

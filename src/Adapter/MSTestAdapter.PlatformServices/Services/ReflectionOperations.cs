@@ -94,18 +94,18 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
     /// Checks to see if a member or type is decorated with the given attribute, or an attribute that derives from it. e.g. [MyTestClass] from [TestClass] will match if you look for [TestClass]. The inherit parameter does not impact this checking.
     /// </summary>
     /// <typeparam name="TAttribute">Attribute to search for.</typeparam>
-    /// <param name="memberInfo">Member to inspect for attributes.</param>
-    /// <returns>True if the attribute of the specified type is defined on this member or a class.</returns>
-    public bool IsAttributeDefined<TAttribute>(MemberInfo memberInfo)
+    /// <param name="attributeProvider">The type, assembly or method to inspect for attributes.</param>
+    /// <returns>True if the attribute of the specified type is defined.</returns>
+    public bool IsAttributeDefined<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
     {
-        if (memberInfo is null)
+        if (attributeProvider is null)
         {
-            throw new ArgumentNullException(nameof(memberInfo));
+            throw new ArgumentNullException(nameof(attributeProvider));
         }
 
         // Get all attributes on the member.
-        Attribute[] attributes = GetCustomAttributesCached(memberInfo);
+        Attribute[] attributes = GetCustomAttributesCached(attributeProvider);
 
         // Try to find the attribute that is derived from baseAttrType.
         foreach (Attribute attribute in attributes)
@@ -224,10 +224,15 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
     /// <returns>attributes defined.</returns>
     public Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider)
     {
+        if (attributeProvider is null)
+        {
+            throw new ArgumentNullException(nameof(attributeProvider));
+        }
+
         if (attributeProvider is not (MemberInfo or Assembly))
         {
             throw new ArgumentException(
-                $"Unsupported attribute provider type: {attributeProvider?.GetType()}. Only MemberInfo and Assembly are supported.",
+                $"Unsupported attribute provider type: {attributeProvider.GetType()}. Only MemberInfo and Assembly are supported.",
                 nameof(attributeProvider));
         }
 

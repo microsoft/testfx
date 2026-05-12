@@ -15,7 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 /// </summary>
 internal sealed class DeploymentItemUtility
 {
-    private readonly IReflectionOperations _reflectionOperation;
+    private readonly IReflectionOperations _reflectionOperations;
 
     /// <summary>
     /// A cache for class level deployment items.
@@ -25,10 +25,10 @@ internal sealed class DeploymentItemUtility
     /// <summary>
     /// Initializes a new instance of the <see cref="DeploymentItemUtility"/> class.
     /// </summary>
-    /// <param name="reflectionOperation"> The reflection operations. </param>
-    internal DeploymentItemUtility(IReflectionOperations reflectionOperation)
+    /// <param name="reflectionOperations"> The reflection operations. </param>
+    internal DeploymentItemUtility(IReflectionOperations reflectionOperations)
     {
-        _reflectionOperation = reflectionOperation;
+        _reflectionOperations = reflectionOperations;
         _classLevelDeploymentItems = [];
     }
 
@@ -42,7 +42,7 @@ internal sealed class DeploymentItemUtility
     {
         if (!_classLevelDeploymentItems.TryGetValue(type, out IList<DeploymentItem>? value))
         {
-            IEnumerable<DeploymentItemAttribute> deploymentItemAttributes = _reflectionOperation.GetAttributes<DeploymentItemAttribute>(type);
+            IEnumerable<DeploymentItemAttribute> deploymentItemAttributes = _reflectionOperations.GetAttributes<DeploymentItemAttribute>(type);
             value = GetDeploymentItems(deploymentItemAttributes, warnings);
             _classLevelDeploymentItems[type] = value;
         }
@@ -59,7 +59,7 @@ internal sealed class DeploymentItemUtility
     internal KeyValuePair<string, string>[]? GetDeploymentItems(MethodInfo method, IEnumerable<DeploymentItem> classLevelDeploymentItems,
         ICollection<string> warnings)
     {
-        List<DeploymentItem> testLevelDeploymentItems = GetDeploymentItems(_reflectionOperation.GetAttributes<DeploymentItemAttribute>(method), warnings);
+        List<DeploymentItem> testLevelDeploymentItems = GetDeploymentItems(_reflectionOperations.GetAttributes<DeploymentItemAttribute>(method), warnings);
 
         return ToKeyValuePairs(Concat(testLevelDeploymentItems, classLevelDeploymentItems));
     }

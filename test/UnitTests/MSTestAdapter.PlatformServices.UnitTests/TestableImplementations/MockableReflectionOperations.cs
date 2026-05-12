@@ -52,9 +52,9 @@ internal sealed class MockableReflectionOperations(Mock<IReflectionOperations> m
     public object? CreateInstance(Type type, object?[] parameters) => mock.Object.CreateInstance(type, parameters);
 
     // Higher-level generic methods → filter results from mock's GetCustomAttributes
-    public bool IsAttributeDefined<TAttribute>(MemberInfo memberInfo)
+    public bool IsAttributeDefined<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-        => GetCustomAttributesCached(memberInfo).OfType<TAttribute>().Any();
+        => GetCustomAttributesCached(attributeProvider).OfType<TAttribute>().Any();
 
     public TAttribute? GetFirstAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute

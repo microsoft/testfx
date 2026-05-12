@@ -15,6 +15,7 @@ using TestFramework.ForTestingMSTest;
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
+[DoNotParallelize]
 public class ReflectionOperationsTests : TestContainer
 {
     private readonly ReflectionOperations _reflectionOperations;
@@ -25,10 +26,8 @@ public class ReflectionOperationsTests : TestContainer
     // NOTE: This class mutates the shared static PlatformServiceProvider.Instance (set in
     // the constructor, restored in Dispose). Tests that call GetCustomAttributesCached or
     // methods that go through NotCachedReflectionAccessor depend on this static being set
-    // to _testablePlatformServiceProvider. This pattern is inherited from the former
-    // ReflectHelperTests. If parallel execution with other test classes that also mutate
-    // PlatformServiceProvider.Instance causes intermittent failures, consider adding
-    // [DoNotParallelize] to this class.
+    // to _testablePlatformServiceProvider. [DoNotParallelize] is applied to prevent
+    // cross-class race conditions with other test classes that follow the same pattern.
     public ReflectionOperationsTests()
     {
         _reflectionOperations = new ReflectionOperations();
@@ -242,13 +241,6 @@ public class ReflectionOperationsTests : TestContainer
         rh.IsAttributeDefined<TestMethodAttribute>(mockMemberInfo.Object).Should().BeTrue();
     }
 
-    public void IsAttributeDefinedShouldThrowWhenMemberInfoIsNull()
-    {
-        var rh = new ReflectionOperations();
-        Action action = () => rh.IsAttributeDefined<TestMethodAttribute>(null!);
-        action.Should().Throw<ArgumentNullException>().WithParameterName("memberInfo");
-    }
-
     public void IsAttributeDefinedShouldReturnFalseIfSpecifiedAttributeIsNotDefinedOnAMember()
     {
         var rh = new ReflectionOperations();
@@ -267,7 +259,7 @@ public class ReflectionOperationsTests : TestContainer
         var rh = new ReflectionOperations();
 
         // Not using mocks here because for some reason a dictionary match of the mock is not returning true in the product code.
-        MethodInfo memberInfo = typeof(ReflectionOperationsTests).GetMethod("IsAttributeDefinedShouldReturnFromCache")!;
+        var memberInfo = (MethodInfo)MethodBase.GetCurrentMethod()!;
 
         // new Mock<MemberInfo>();
         var attributes = new Attribute[] { new TestMethodAttribute() };
@@ -314,7 +306,7 @@ public class ReflectionOperationsTests : TestContainer
         var rh = new ReflectionOperations();
 
         // Not using mocks here because for some reason a dictionary match of the mock is not returning true in the product code.
-        MethodInfo memberInfo = typeof(ReflectionOperationsTests).GetMethod("HasAttributeDerivedFromShouldReturnFromCache")!;
+        var memberInfo = (MethodInfo)MethodBase.GetCurrentMethod()!;
 
         // new Mock<MemberInfo>();
         var attributes = new Attribute[] { new TestableExtendedTestMethod() };
@@ -415,7 +407,61 @@ public class ReflectionOperationsTests : TestContainer
             .Returns(attributes);
 
         Action action = () => rh.GetSingleAttributeOrDefault<DummyAAttribute>(mockMemberInfo.Object);
-        action.Should().Throw<InvalidOperationException>();
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage($"*{nameof(DummyAAttribute)}*");
+    }
+
+    #endregion
+
+    #region Null Guard Tests
+
+    public void IsAttributeDefinedShouldThrowWhenProviderIsNull()
+    {
+        var rh = new ReflectionOperations();
+        Action action = () => rh.IsAttributeDefined<TestMethodAttribute>(null!);
+        action.Should().Throw<ArgumentNullException>().WithParameterName("attributeProvider");
+    }
+
+    public void GetFirstAttributeOrDefaultShouldThrowWhenProviderIsNull()
+    {
+        var rh = new ReflectionOperations();
+        Action action = () => rh.GetFirstAttributeOrDefault<DummySealedAttribute>(null!);
+        action.Should().Throw<ArgumentNullException>().WithParameterName("attributeProvider");
+    }
+
+    public void GetSingleAttributeOrDefaultShouldThrowWhenProviderIsNull()
+    {
+        var rh = new ReflectionOperations();
+        Action action = () => rh.GetSingleAttributeOrDefault<DummyAAttribute>(null!);
+        action.Should().Throw<ArgumentNullException>().WithParameterName("attributeProvider");
+    }
+
+    public void GetAttributesShouldThrowWhenProviderIsNull()
+    {
+        var rh = new ReflectionOperations();
+        Action action = () => _ = rh.GetAttributes<DummyAAttribute>(null!).ToArray();
+        action.Should().Throw<ArgumentNullException>().WithParameterName("attributeProvider");
+    }
+
+    public void GetCustomAttributesCachedShouldThrowWhenProviderIsNull()
+    {
+        var rh = new ReflectionOperations();
+        Action action = () => rh.GetCustomAttributesCached(null!);
+        action.Should().Throw<ArgumentNullException>().WithParameterName("attributeProvider");
+    }
+
+    #endregion
+
+    #region MockableReflectionOperations Tests
+
+    public void MockableReflectionOperationsGetCustomAttributesCachedShouldThrowForUnsupportedProvider()
+    {
+        var mockReflectionOps = new Mock<IReflectionOperations>();
+        var mockable = MockableReflectionOperations.Create(mockReflectionOps);
+        var mockProvider = new Mock<ICustomAttributeProvider>();
+
+        Action action = () => mockable.GetCustomAttributesCached(mockProvider.Object);
+        action.Should().Throw<NotSupportedException>();
     }
 
     #endregion
