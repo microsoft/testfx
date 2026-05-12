@@ -26,6 +26,8 @@ safe-outputs:
     allowed-events: [COMMENT, REQUEST_CHANGES]
   add-comment:
     max: 5
+  noop:
+    report-as-issue: false
 ---
 
 # Expert Code Review

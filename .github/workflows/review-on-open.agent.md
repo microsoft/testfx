@@ -20,7 +20,7 @@ on:
 
 checkout: false
 
-# Skip draft PRs — only run for PRs opened as ready or converted from draft
+# Skip draft PRs — only run for PRs opened as ready
 if: github.event.pull_request.draft == false
 
 permissions:

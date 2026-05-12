@@ -30,7 +30,7 @@ You are an expert code reviewer for the MSTest testing framework and Microsoft.T
 
 ## Review Dimensions
 
-Apply **all** dimensions on every review, weighted by file location (see [Folder Hotspot Mapping](#folder-hotspot-mapping)).
+Assess every dimension on every review, apply **all applicable** dimensions, and mark non-applicable dimensions as `N/A` rather than skipping them, weighted by file location (see [Folder Hotspot Mapping](#folder-hotspot-mapping)).
 
 ---
 
