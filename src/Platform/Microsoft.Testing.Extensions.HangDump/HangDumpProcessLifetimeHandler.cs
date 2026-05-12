@@ -333,7 +333,12 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         finalDumpFileName = Path.GetFullPath(Path.Combine(resultsDirectory, finalDumpFileName));
 
         // Reject resolved paths that escape the results directory (e.g. rooted paths or ".." segments).
-        if (!finalDumpFileName.StartsWith(resultsDirectory, StringComparison.Ordinal))
+        // Append a trailing separator to prevent sibling-directory bypass (e.g. "/tmp/results" vs "/tmp/results-evil").
+        string separatorStr = Path.DirectorySeparatorChar.ToString();
+        string resultsDirectoryGuard = resultsDirectory.EndsWith(separatorStr, StringComparison.Ordinal)
+            ? resultsDirectory
+            : resultsDirectory + separatorStr;
+        if (!finalDumpFileName.StartsWith(resultsDirectoryGuard, StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"The resolved dump file path '{finalDumpFileName}' is outside the results directory '{resultsDirectory}'. Ensure --hangdump-filename is a relative path without '..' segments.");
         }

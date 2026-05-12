@@ -27,7 +27,7 @@ public sealed class ArtifactNamingHelperTests
     }
 
     [TestMethod]
-    public void ResolveTemplate_WithCustomValues_OverridesCorrectly()
+    public void ResolveTemplate_LiteralTextAndPlaceholders_ReplacesOnlyPlaceholders()
     {
         string template = "<pname>_<pid>_custom.dmp";
         var replacements = new Dictionary<string, string>
@@ -145,6 +145,21 @@ public sealed class ArtifactNamingHelperTests
         string result = ArtifactNamingHelper.ResolveTemplate(template, replacements);
 
         Assert.AreEqual("simple.dmp", result);
+    }
+
+    [TestMethod]
+    public void ResolveTemplate_CaseInsensitiveDictionary_EnforcesOrdinalComparison()
+    {
+        var ciDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["PNAME"] = "process",
+        };
+
+        // After ordinal normalization, key is stored as "PNAME".
+        // <pname> looks up "pname" which does not match "PNAME" ordinally, so placeholder is preserved.
+        string result = ArtifactNamingHelper.ResolveTemplate("<pname>", ciDict);
+
+        Assert.AreEqual("<pname>", result);
     }
 
     [TestMethod]
