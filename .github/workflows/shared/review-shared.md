@@ -26,6 +26,8 @@ safe-outputs:
     allowed-events: [COMMENT, REQUEST_CHANGES]
   add-comment:
     max: 5
+  # NOTE: Consumers must also define this explicitly until workflow import/merge
+  # preserves `report-as-issue: false` in compiled lock files.
   noop:
     report-as-issue: false
 ---
