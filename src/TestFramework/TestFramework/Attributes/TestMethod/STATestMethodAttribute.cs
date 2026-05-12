@@ -76,8 +76,7 @@ public class STATestMethodAttribute : TestMethodAttribute
 #if !NETFRAMEWORK
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            // TODO: Throw?
-            return await ExecuteCoreAsync(testMethod).ConfigureAwait(false);
+            throw new PlatformNotSupportedException(FrameworkMessages.STATestMethodNonWindowsNotSupported);
         }
 #endif
 

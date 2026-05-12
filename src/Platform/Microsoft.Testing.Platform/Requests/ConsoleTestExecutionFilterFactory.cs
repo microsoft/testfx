@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Requests;
@@ -14,7 +13,7 @@ internal sealed class ConsoleTestExecutionFilterFactory(ICommandLineOptions comm
 
     public string Uid => nameof(ConsoleTestExecutionFilterFactory);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => PlatformResources.ConsoleTestExecutionFilterFactoryDisplayName;
 

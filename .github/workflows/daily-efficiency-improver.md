@@ -49,11 +49,15 @@ safe-outputs:
   update-issue:
     target: "*"
     max: 1
+  noop:
+    report-as-issue: false
 
 tools:
   web-fetch:
   github:
-    toolsets: [all]
+    lockdown: true
+    toolsets: [repos, pull_requests, issues, discussions]
+    min-integrity: none
   bash: true
   repo-memory: true
 ---

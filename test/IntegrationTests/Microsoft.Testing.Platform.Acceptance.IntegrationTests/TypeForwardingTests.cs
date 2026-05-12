@@ -73,7 +73,7 @@ public class TypeForwardingTests : AcceptanceTestBase<NopAssetFixture>
         var testHost = TestInfrastructure.TestHost.LocateFrom($"{testAsset.TargetAssetPath}/ConsoleApp", "ConsoleApp", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContains("MyDisplayName");
     }
 

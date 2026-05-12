@@ -67,6 +67,16 @@
         <target state="translated">Entfernen Sie das Argument „ClassCleanupBehavior“.</target>
         <note />
       </trans-unit>
+      <trans-unit id="RemoveDuplicateDataRowFix">
+        <source>Remove duplicate 'DataRow'</source>
+        <target state="translated">Duplizierte „DataRow“ entfernen</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveDuplicateTestMethodAttributeFix">
+        <source>Remove duplicate TestMethod attribute</source>
+        <target state="translated">Doppelte TestMethod-Attribute entfernen</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
         <source>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</source>
         <target state="translated">Entfernen Sie den Parameter „DynamicDataSourceType“, um die Standardeinstellung „AutoDetect“ zu verwenden.</target>
@@ -150,6 +160,11 @@
       <trans-unit id="UseDisplayNamePropertyInsteadOfStringArgumentFix">
         <source>Use 'DisplayName' property instead of string argument</source>
         <target state="translated">Verwenden Sie die Eigenschaft „DisplayName“ anstelle eines Zeichenfolgenarguments.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
+        <source>Use MSTest 'Description' attribute instead</source>
+        <target state="new">Use MSTest 'Description' attribute instead</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">

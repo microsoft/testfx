@@ -100,12 +100,12 @@
       </trans-unit>
       <trans-unit id="AssertScopeFailure">
         <source>{0} assertion(s) failed within the assert scope.</source>
-        <target state="new">{0} assertion(s) failed within the assert scope.</target>
+        <target state="translated">{0} assertion(s) ont échoué dans la portée de l’assertion.</target>
         <note>{0} is the number of assertion failures collected in the scope.</note>
       </trans-unit>
       <trans-unit id="AssertScopeNestedNotAllowed">
         <source>Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</source>
-        <target state="new">Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</target>
+        <target state="translated">Les portées d’assertion imbriquées ne sont pas autorisées. Libérez la portée actuelle avant d’en créer une nouvelle.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThatDetailsPrefix">
@@ -254,7 +254,7 @@ Réel : {2}</target>
       </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed.</source>
-        <target state="new">{0} failed.</target>
+        <target state="translated">Échec de {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="HasCountFailMsg">
@@ -356,6 +356,11 @@ Réel : {2}</target>
       <trans-unit id="ReturnedSubsetValueMessage">
         <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
         <target state="translated">L’élément ou les éléments &lt;{0}&gt; n’est ou ne sont pas présent(s) dans la collection.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="STATestMethodNonWindowsNotSupported">
+        <source>[STATestMethod] is not supported on non-Windows platforms. STA (Single Threaded Apartment) is a Windows-only COM threading concept. Use [OSCondition(OperatingSystems.Windows)] to skip this test on non-Windows platforms.</source>
+        <target state="translated">[STATestMethod] n’est pas pris en charge sur les plateformes non-Windows. STA (Single Threaded Apartment) est un concept de threading COM propre à Windows. Utilisez [OSCondition(OperatingSystems.Windows)] pour ignorer ce test sur les plateformes non Windows.</target>
         <note />
       </trans-unit>
       <trans-unit id="StartsWithFail">

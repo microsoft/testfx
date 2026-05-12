@@ -15,6 +15,8 @@ permissions:
 tracker-id: daily-file-diet
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   create-issue:
     expires: 2d
     title-prefix: "[file-diet] "

@@ -10,4 +10,23 @@ internal readonly struct FrameworkEngineMetadataProperty() : IProperty
     public bool PreventArgumentsExpansion { get; init; }
 
     public string[] UsedFixtureIds { get; init; } = [];
+
+    public static FrameworkEngineMetadataProperty GetFromProperties(IProperty[] properties)
+    {
+        FrameworkEngineMetadataProperty? result = null;
+        foreach (IProperty property in properties)
+        {
+            if (property is FrameworkEngineMetadataProperty frameworkEngineMetadataProperty)
+            {
+                if (result is not null)
+                {
+                    throw new InvalidOperationException("Sequence contains more than one matching element");
+                }
+
+                result = frameworkEngineMetadataProperty;
+            }
+        }
+
+        return result ?? default;
+    }
 }

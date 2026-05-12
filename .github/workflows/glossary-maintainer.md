@@ -26,6 +26,7 @@ safe-outputs:
     draft: false
     protected-files: fallback-to-issue
   noop:
+    report-as-issue: false
 
 tools:
   cache-memory: true

@@ -18,7 +18,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         // Assert
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
     }
 
     [TestMethod]
@@ -29,7 +29,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         // Assert
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
     }
 
     [TestMethod]
@@ -44,7 +44,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputContainsSummary(failed: 1, passed: 1, skipped: 0);
     }
 
@@ -60,7 +60,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
     }
 

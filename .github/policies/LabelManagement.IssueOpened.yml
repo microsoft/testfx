@@ -13,15 +13,14 @@ configuration:
           - payloadType: Issues
           - isAction:
               action: Opened
-          - or:
-            - and:
-              - not:
-                  activitySenderHasPermission:
-                    permission: Admin
-              - not:
-                  activitySenderHasPermission:
-                    permission: Write
-            - isActivitySender:
+          - not:
+              activitySenderHasPermission:
+                permission: Admin
+          - not:
+              activitySenderHasPermission:
+                permission: Write
+          - not:
+              isActivitySender:
                 user: github-actions[bot]
         then:
           - addLabel:

@@ -5,7 +5,6 @@ using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
@@ -24,7 +23,7 @@ internal sealed class TrxEnvironmentVariableProvider : ITestHostEnvironmentVaria
 
     public string Uid => nameof(TrxEnvironmentVariableProvider);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => ExtensionResources.TrxReportGeneratorDisplayName;
 

@@ -67,6 +67,16 @@
         <target state="translated">'ClassCleanupBehavior' 引数を削除する</target>
         <note />
       </trans-unit>
+      <trans-unit id="RemoveDuplicateDataRowFix">
+        <source>Remove duplicate 'DataRow'</source>
+        <target state="translated">重複する 'DataRow' を削除する</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveDuplicateTestMethodAttributeFix">
+        <source>Remove duplicate TestMethod attribute</source>
+        <target state="translated">重複する TestMethod 属性を削除する</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
         <source>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</source>
         <target state="translated">'DynamicDataSourceType' パラメーターを削除して、既定の 'AutoDetect' を使用します</target>
@@ -150,6 +160,11 @@
       <trans-unit id="UseDisplayNamePropertyInsteadOfStringArgumentFix">
         <source>Use 'DisplayName' property instead of string argument</source>
         <target state="translated">文字列引数の代わりに 'DisplayName' プロパティを使用する</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
+        <source>Use MSTest 'Description' attribute instead</source>
+        <target state="new">Use MSTest 'Description' attribute instead</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">

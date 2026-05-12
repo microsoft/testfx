@@ -25,6 +25,8 @@
 
   <ItemGroup>
     <PackageReference Include="MSBuild.StructuredLogger" />
+    <!-- Transitive dependency of StreamJsonRpc, pinned to fix a security vulnerability -->
+    <PackageReference Include="Nerdbank.MessagePack" />
     <PackageReference Include="StreamJsonRpc" />
   </ItemGroup>
 

@@ -37,7 +37,7 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicatio
     public string Uid => nameof(TrxTestApplicationLifecycleCallbacks);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = ExtensionResources.TrxReportGeneratorDisplayName;

@@ -6,7 +6,6 @@ using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
@@ -19,7 +18,7 @@ internal sealed class TrxReportGeneratorCommandLine : ICommandLineOptionsProvide
     public string Uid => nameof(TrxReportGeneratorCommandLine);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = ExtensionResources.TrxReportGeneratorDisplayName;

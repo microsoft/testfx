@@ -22,8 +22,8 @@ internal sealed class ConsoleTestHost(
     TestHostManager testHostManager)
     : CommonHost(serviceProvider)
 {
-    private static readonly ClientInfo ClientInfoHost = new("testingplatform-console", AppVersion.DefaultSemVer);
-    private static readonly IClientInfo ClientInfoService = new ClientInfoService("testingplatform-console", AppVersion.DefaultSemVer);
+    private static readonly ClientInfo ClientInfoHost = new("testingplatform-console", PlatformVersion.Version);
+    private static readonly IClientInfo ClientInfoService = new ClientInfoService("testingplatform-console", PlatformVersion.Version);
 
     private readonly ILogger<ConsoleTestHost> _logger = serviceProvider.GetLoggerFactory().CreateLogger<ConsoleTestHost>();
     private readonly IClock _clock = serviceProvider.GetClock();
@@ -108,7 +108,7 @@ internal sealed class ConsoleTestHost(
         {
             requestExecuteStop ??= _clock.UtcNow;
 
-            exitCode = ExitCodes.TestSessionAborted;
+            exitCode = (int)ExitCode.TestSessionAborted;
             await _logger.LogInformationAsync("Test session canceled.").ConfigureAwait(false);
         }
         finally
@@ -128,7 +128,7 @@ internal sealed class ConsoleTestHost(
                 { TelemetryProperties.RequestProperties.AdapterLoadStop, adapterLoadStop },
                 { TelemetryProperties.RequestProperties.RequestExecuteStart, requestExecuteStart },
                 { TelemetryProperties.RequestProperties.RequestExecuteStop, requestExecuteStop },
-                { TelemetryProperties.HostProperties.ExitCodePropertyName, cancellationToken.IsCancellationRequested ? ExitCodes.TestSessionAborted : exitCode.ToString(CultureInfo.InvariantCulture) },
+                { TelemetryProperties.HostProperties.ExitCodePropertyName, exitCode.ToString(CultureInfo.InvariantCulture) },
             };
 
             if (statistics is not null)

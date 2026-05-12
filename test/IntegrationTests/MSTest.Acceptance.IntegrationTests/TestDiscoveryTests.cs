@@ -20,7 +20,7 @@ public class TestDiscoveryTests : AcceptanceTestBase<TestDiscoveryTests.TestAsse
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContains("Test1");
         testHostResult.AssertOutputContains("Test2");
         testHostResult.AssertOutputContains("Display name: 1, one");
@@ -35,7 +35,7 @@ public class TestDiscoveryTests : AcceptanceTestBase<TestDiscoveryTests.TestAsse
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --filter Name=Test1", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContains("Test1");
         testHostResult.AssertOutputDoesNotContain("Test2");
     }
