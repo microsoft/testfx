@@ -68,6 +68,11 @@ public class ApplicationTest : AutomationTest
         while (AppProcess.MainWindowHandle == IntPtr.Zero && sw.Elapsed < ApplicationStartTimeout)
         {
             AppProcess.Refresh();
+            if (AppProcess.HasExited)
+            {
+                throw new InvalidOperationException(
+                    $"Application '{ApplicationPath}' exited with code {AppProcess.ExitCode} before a main window was created.");
+            }
 
             TimeSpan remainingTime = ApplicationStartTimeout - sw.Elapsed;
             if (remainingTime > TimeSpan.Zero)
@@ -102,7 +107,7 @@ public class ApplicationTest : AutomationTest
                     _ = appProcess.CloseMainWindow();
                     if (!appProcess.WaitForExit(5000))
                     {
-                        appProcess.Kill();
+                        appProcess.Kill(entireProcessTree: true);
                         _ = appProcess.WaitForExit(5000);
                     }
                 }

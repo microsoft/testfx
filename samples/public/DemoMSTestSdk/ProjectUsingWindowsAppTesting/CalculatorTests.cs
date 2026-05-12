@@ -10,7 +10,15 @@ namespace ProjectUsingWindowsAppTesting;
 /// Demonstrates the WindowTest base class which manages app launch, main window
 /// discovery, and teardown — analogous to how PageTest works for Playwright.
 /// </summary>
-[TestClass]
+/// <remarks>
+/// <para>
+/// On modern Windows 10/11, <c>calc.exe</c> launches the Store/UWP Calculator, whose
+/// UI Automation tree uses different AutomationIds than the classic Win32 Calculator.
+/// The <c>Calculator_NumberButtons_AreVisible</c> test below is illustrative — you will
+/// need to replace the AutomationId values with the actual IDs for your target application.
+/// </para>
+/// </remarks>
+[STATestClass]
 public class CalculatorTests : WindowTest
 {
     /// <summary>
@@ -35,7 +43,9 @@ public class CalculatorTests : WindowTest
     [TestMethod]
     public void Calculator_NumberButtons_AreVisible()
     {
-        // Use non-localized AutomationId values to locate UI elements.
+        // NOTE: Modern Windows Calculator (UWP) uses different AutomationIds than the
+        // classic Win32 Calculator. Replace "num1Button" / "num2Button" with the actual
+        // AutomationIds for your target application version.
         AutomationElement? button1 = MainWindow.FindFirst(
             TreeScope.Descendants,
             new PropertyCondition(AutomationElement.AutomationIdProperty, "num1Button"));

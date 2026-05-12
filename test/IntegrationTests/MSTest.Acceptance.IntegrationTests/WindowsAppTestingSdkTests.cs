@@ -8,23 +8,54 @@ using Microsoft.Testing.Platform.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<NopAssetFixture>
+public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTestingSdkTests.TestAssetFixture>
 {
-    private const string AssetName = "WindowsAppTestingSdk";
-
     private static readonly string DesktopTargetFramework = $"{TargetFrameworks.NetCurrent}-windows";
 
-    private const string SourceCode = """
+    public TestContext TestContext { get; set; }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
+    public async Task EnableWindowsAppTesting_WhenUsingMSTestRunner_RunsDesktopTests()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, DesktopTargetFramework);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
+    public async Task EnableWindowsAppTesting_WhenUsingVSTest_RunsDesktopTests()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, DesktopTargetFramework);
+        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
+            $"test {testHost.FullName}",
+            workingDirectory: AssetFixture.ProjectPath,
+            failIfReturnValueIsNotZero: false,
+            warnAsError: false,
+            suppressPreviewDotNetMessage: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        dotnetTestResult.AssertExitCodeIs(0);
+        dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2");
+    }
+
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
+    {
+        public const string ProjectName = "WindowsAppTestingSdk";
+
+        private const string SourceCode = """
 #file WindowsAppTestingSdk.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$">
   <PropertyGroup>
-    <TargetFrameworks>$TargetFramework$</TargetFrameworks>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TestingExtensionsProfile>None</TestingExtensionsProfile>
     <EnableWindowsAppTesting>true</EnableWindowsAppTesting>
-    $ExtraProperties$
   </PropertyGroup>
 
   <ItemGroup>
@@ -37,7 +68,7 @@ using System.Windows.Automation;
 using Microsoft.MSTest.Windows.AppTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
+[STATestClass]
 public class NotepadTests : WindowTest
 {
     public override string ApplicationPath => "notepad.exe";
@@ -57,49 +88,20 @@ public class NotepadTests : WindowTest
         Assert.IsFalse(string.IsNullOrEmpty(title), "Window title should not be empty.");
     }
 }
+
+#file global.json
+{
+  "test": {
+    "runner": "VSTest"
+  }
+}
 """;
 
-    public TestContext TestContext { get; set; }
+        public string ProjectPath => GetAssetPath(ProjectName);
 
-    [TestMethod]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
-    public async Task EnableWindowsAppTesting_WhenUsingMSTestRunner_RunsDesktopTests()
-    {
-        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
-            AssetName,
-            SourceCode
-            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$TargetFramework$", DesktopTargetFramework)
-            .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
-
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-            $"test --no-progress --no-ansi -c Release {testAsset.TargetAssetPath}",
-            workingDirectory: testAsset.TargetAssetPath,
-            cancellationToken: TestContext.CancellationToken);
-
-        compilationResult.AssertExitCodeIs(ExitCodes.Success);
-    }
-
-    [TestMethod]
-    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
-    public async Task EnableWindowsAppTesting_WhenUsingVSTest_RunsDesktopTests()
-    {
-        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
-            AssetName,
-            SourceCode
-            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$TargetFramework$", DesktopTargetFramework)
-            .PatchCodeWithReplace("$ExtraProperties$", "<UseVSTest>true</UseVSTest>"));
-
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-            $"test -c Release {testAsset.TargetAssetPath}",
-            workingDirectory: testAsset.TargetAssetPath,
-            failIfReturnValueIsNotZero: false,
-            warnAsError: false,
-            suppressPreviewDotNetMessage: false,
-            cancellationToken: TestContext.CancellationToken);
-
-        compilationResult.AssertExitCodeIs(0);
-        compilationResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2");
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
+                SourceCode
+                .PatchCodeWithReplace("$TargetFrameworks$", DesktopTargetFramework)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
     }
 }

@@ -16,7 +16,7 @@ namespace Microsoft.MSTest.Windows.AppTesting;
 /// specify the application to test:
 /// </para>
 /// <code>
-/// [TestClass]
+/// [STATestClass]
 /// public class MyAppTests : WindowTest
 /// {
 ///     public override string ApplicationPath =&gt; @"C:\MyApp\MyApp.exe";
@@ -39,7 +39,7 @@ namespace Microsoft.MSTest.Windows.AppTesting;
 /// <see cref="MainWindow"/> handle to bridge into it.
 /// </para>
 /// </remarks>
-[TestClass]
+[STATestClass]
 public class WindowTest : ApplicationTest
 {
     /// <summary>
@@ -54,6 +54,8 @@ public class WindowTest : ApplicationTest
     [TestInitialize]
     public void WindowSetup()
     {
-        MainWindow = AutomationElement.FromHandle(AppProcess.MainWindowHandle);
+        MainWindow = AutomationElement.FromHandle(AppProcess.MainWindowHandle)
+            ?? throw new InvalidOperationException(
+                $"Could not obtain an AutomationElement for the main window of '{ApplicationPath}' (handle 0x{AppProcess.MainWindowHandle:X}). The process may have exited.");
     }
 }
