@@ -154,4 +154,24 @@ public class RunConfigurationSettingsTests : TestContainer
     }
 
     #endregion
+
+    #region GetSettings error path tests
+
+    public void GetSettingsShouldThrowFormatExceptionWhenRootElementIsNotRunSettings()
+    {
+        string runSettingsXml =
+            """
+            <NotRunSettings>
+              <RunConfiguration />
+            </NotRunSettings>
+            """;
+
+        Action action = () => RunConfigurationSettings.GetSettings(runSettingsXml);
+
+        FormatException exception = action.Should().Throw<FormatException>().Which;
+        exception.Message.Should().Contain("<NotRunSettings>");
+        exception.Message.Should().Contain("<RunSettings>");
+    }
+
+    #endregion
 }
