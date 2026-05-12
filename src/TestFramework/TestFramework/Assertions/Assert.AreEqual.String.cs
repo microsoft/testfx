@@ -229,8 +229,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
-        ReportAssertAreNotEqualFailed(notExpected, actual, userMessage);
+        ReportAssertAreNotEqualFailed(notExpected, actual, message, notExpectedExpression, actualExpression);
     }
 
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
