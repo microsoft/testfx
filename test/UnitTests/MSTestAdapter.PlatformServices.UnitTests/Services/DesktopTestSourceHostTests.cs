@@ -104,7 +104,7 @@ public class DesktopTestSourceHostTests : TestContainer
         _ = new DummyClass();
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        Mock<TestSourceHost> sourceHost = new(location, null!) { CallBase = true };
+        Mock<TestSourceHost> sourceHost = new(location, (IRunSettings?)null) { CallBase = true };
 
         try
         {
@@ -161,7 +161,7 @@ public class DesktopTestSourceHostTests : TestContainer
         DummyClass dummyClass = new();
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        Mock<TestSourceHost> sourceHost = new(location, null!) { CallBase = true };
+        Mock<TestSourceHost> sourceHost = new(location, (IRunSettings?)null) { CallBase = true };
 
         try
         {

@@ -183,20 +183,22 @@ internal partial class TestMethodInfo : ITestMethod
     /// </returns>
     private RetryBaseAttribute? GetRetryAttribute()
     {
-        IEnumerable<RetryBaseAttribute> attributes = ReflectHelper.Instance.GetAttributes<RetryBaseAttribute>(MethodInfo);
-        using IEnumerator<RetryBaseAttribute> enumerator = attributes.GetEnumerator();
-        if (!enumerator.MoveNext())
+        // Iterate the cached attribute array directly to avoid allocating the yield-return
+        // state machine that GetAttributes<T>() would create.
+        RetryBaseAttribute? found = null;
+        foreach (Attribute attribute in ReflectHelper.Instance.GetCustomAttributesCached(MethodInfo))
         {
-            return null;
+            if (attribute is RetryBaseAttribute retryAttribute)
+            {
+                if (found is not null)
+                {
+                    ThrowMultipleAttributesException(nameof(RetryBaseAttribute));
+                }
+
+                found = retryAttribute;
+            }
         }
 
-        RetryBaseAttribute attribute = enumerator.Current;
-
-        if (enumerator.MoveNext())
-        {
-            ThrowMultipleAttributesException(nameof(RetryBaseAttribute));
-        }
-
-        return attribute;
+        return found;
     }
 }
