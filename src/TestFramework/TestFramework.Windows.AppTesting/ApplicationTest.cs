@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
 using System.Diagnostics;
 
 namespace Microsoft.MSTest.Windows.AppTesting;
@@ -90,6 +91,7 @@ public class ApplicationTest : AutomationTest
             }
         }
 
+        AppProcess.Refresh();
         if (AppProcess.MainWindowHandle == IntPtr.Zero)
         {
             throw new TimeoutException(
@@ -118,9 +120,9 @@ public class ApplicationTest : AutomationTest
                         _ = appProcess.WaitForExit(5000);
                     }
                 }
-                catch (InvalidOperationException)
+                catch (Exception ex) when (ex is InvalidOperationException or Win32Exception)
                 {
-                    // The process exited between state checks and shutdown operations.
+                    // The process exited or became inaccessible between state checks and shutdown operations.
                 }
             }
         }

@@ -39,6 +39,7 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
             cancellationToken: TestContext.CancellationToken);
 
         dotnetTestResult.AssertExitCodeIs(0);
+        dotnetTestResult.AssertOutputContains("VSTest version");
         dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2");
     }
 

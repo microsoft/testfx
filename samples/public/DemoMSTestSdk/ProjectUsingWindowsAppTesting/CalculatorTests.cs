@@ -32,7 +32,8 @@ public class CalculatorTests : WindowTest
     {
         // The MainWindow property is automatically populated by WindowTest
         // after launching the application specified by ApplicationPath.
-        Assert.IsNotNull(MainWindow);
+        Assert.AreEqual(ControlType.Window, MainWindow.Current.ControlType,
+            "Expected the main window element to be of control type Window.");
 
         string title = MainWindow.Current.Name;
         Assert.IsFalse(

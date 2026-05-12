@@ -3,8 +3,11 @@
   <PropertyGroup>
     <TargetFrameworks>net8.0-windows;net9.0-windows</TargetFrameworks>
     <EnableWindowsTargeting Condition=" '$(OS)' != 'Windows_NT' ">true</EnableWindowsTargeting>
-    <UseWPF>true</UseWPF>
   </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App" />
+  </ItemGroup>
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
