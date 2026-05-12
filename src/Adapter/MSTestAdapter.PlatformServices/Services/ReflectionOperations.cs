@@ -224,6 +224,13 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
     /// <returns>attributes defined.</returns>
     public Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider)
     {
+        if (attributeProvider is not (MemberInfo or Assembly))
+        {
+            throw new ArgumentException(
+                $"Unsupported attribute provider type: {attributeProvider?.GetType()}. Only MemberInfo and Assembly are supported.",
+                nameof(attributeProvider));
+        }
+
         // If the information is cached, then use it otherwise populate the cache using
         // the reflection APIs.
         return _attributeCache.GetOrAdd(attributeProvider, GetAttributes);

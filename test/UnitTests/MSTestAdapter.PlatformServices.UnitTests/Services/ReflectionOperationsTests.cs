@@ -22,6 +22,13 @@ public class ReflectionOperationsTests : TestContainer
     private readonly Mock<MethodInfo> _method;
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
+    // NOTE: This class mutates the shared static PlatformServiceProvider.Instance (set in
+    // the constructor, restored in Dispose). Tests that call GetCustomAttributesCached or
+    // methods that go through NotCachedReflectionAccessor depend on this static being set
+    // to _testablePlatformServiceProvider. This pattern is inherited from the former
+    // ReflectHelperTests. If parallel execution with other test classes that also mutate
+    // PlatformServiceProvider.Instance causes intermittent failures, consider adding
+    // [DoNotParallelize] to this class.
     public ReflectionOperationsTests()
     {
         _reflectionOperations = new ReflectionOperations();
@@ -235,6 +242,13 @@ public class ReflectionOperationsTests : TestContainer
         rh.IsAttributeDefined<TestMethodAttribute>(mockMemberInfo.Object).Should().BeTrue();
     }
 
+    public void IsAttributeDefinedShouldThrowWhenMemberInfoIsNull()
+    {
+        var rh = new ReflectionOperations();
+        Action action = () => rh.IsAttributeDefined<TestMethodAttribute>(null!);
+        action.Should().Throw<ArgumentNullException>().WithParameterName("memberInfo");
+    }
+
     public void IsAttributeDefinedShouldReturnFalseIfSpecifiedAttributeIsNotDefinedOnAMember()
     {
         var rh = new ReflectionOperations();
@@ -439,6 +453,12 @@ public class ReflectionOperationsTests : TestContainer
         private readonly List<(Type Type, Attribute Attribute, MemberTypes MemberType)> _data = [];
         private readonly Mock<IReflectionOperations> _mockReflectionOperations;
 
+        /// <summary>
+        /// Adds (not replaces) attribute entries of <paramref name="memberTypes"/>
+        /// to the internal list used by the mock handler. Successive calls for the
+        /// same <paramref name="memberTypes"/> are cumulative — previous entries are
+        /// kept alongside new ones.
+        /// </summary>
         public void SetCustomAttribute(Type type, Attribute[] values, MemberTypes memberTypes)
         {
             foreach (Attribute attribute in values)

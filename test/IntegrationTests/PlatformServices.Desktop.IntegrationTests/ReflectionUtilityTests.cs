@@ -45,7 +45,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
 
-        string[] expectedAttributes = ["TestCategory : base", "Owner : base"];
+        string[] expectedAttributes = ["Owner : base", "TestCategory : base"];
         GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
     }
 
@@ -59,7 +59,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().HaveCount(3);
 
         // Notice that the Owner on the base method does not show up since it can only be defined once.
-        string[] expectedAttributes = ["TestCategory : derived", "TestCategory : base", "Owner : derived"];
+        string[] expectedAttributes = ["Owner : derived", "TestCategory : derived", "TestCategory : base"];
         GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
     }
 
@@ -125,7 +125,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(3);
 
-        string[] expectedAttributes = ["Duration : superfast", "TestCategory : base", "Owner : base"];
+        string[] expectedAttributes = ["Duration : superfast", "Owner : base", "TestCategory : base"];
         GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
     }
 
