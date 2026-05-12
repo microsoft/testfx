@@ -354,7 +354,7 @@ jobs:
           echo "⬇ Downloading the last 100 open issues (excluding sub-issues)..."
 
           # Fetch the last 100 open issues that don't have a parent issue.
-          # If gh fails behind the proxy (for example due /meta restrictions), fallback to REST.
+          # If gh fails behind the proxy (for example due to /meta restrictions), fallback to REST.
           if ! gh issue list --repo ${{ github.repository }} \
             --search "-parent-issue:*" \
             --state open \
