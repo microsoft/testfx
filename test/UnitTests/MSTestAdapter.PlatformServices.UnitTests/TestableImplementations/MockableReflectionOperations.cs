@@ -97,7 +97,9 @@ internal sealed class MockableReflectionOperations(Mock<IReflectionOperations> m
         {
             MemberInfo memberInfo => mock.Object.GetCustomAttributes(memberInfo)?.OfType<Attribute>().ToArray() ?? [],
             Assembly assembly => mock.Object.GetCustomAttributes(assembly, typeof(Attribute))?.OfType<Attribute>().ToArray() ?? [],
-            _ => throw new NotSupportedException($"Unsupported attribute provider type: {attributeProvider.GetType()}. Only MemberInfo and Assembly are supported."),
+            _ => throw new ArgumentException(
+                $"Unsupported attribute provider type: {attributeProvider.GetType()}. Only MemberInfo and Assembly are supported.",
+                nameof(attributeProvider)),
         };
     }
 

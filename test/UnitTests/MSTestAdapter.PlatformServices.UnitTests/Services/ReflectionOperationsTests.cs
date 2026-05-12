@@ -593,7 +593,7 @@ public class ReflectionOperationsTests : TestContainer
         var mockProvider = new Mock<ICustomAttributeProvider>();
 
         Action action = () => mockable.GetCustomAttributesCached(mockProvider.Object);
-        action.Should().Throw<NotSupportedException>();
+        action.Should().Throw<ArgumentException>().WithParameterName("attributeProvider");
     }
 
     public void MockableReflectionOperationsGetCustomAttributesCachedShouldThrowForNullProvider()
