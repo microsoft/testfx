@@ -318,24 +318,25 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         };
 
         string? asmName = Assembly.GetEntryAssembly()?.GetName().Name;
-        if (asmName is not null)
-        {
-            replacements["asm"] = asmName;
-        }
+        replacements["asm"] = asmName ?? "unknown";
 
         string? tfm = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
             ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
-        if (tfm is not null)
-        {
-            replacements["tfm"] = tfm;
-        }
+        replacements["tfm"] = tfm ?? "unknown";
 
         string pattern = _dumpFileNamePattern ?? $"{process.Name}_%p_hang.dmp";
 
         // First resolve <placeholder> templates, then handle legacy %p pattern for backward compatibility.
         string finalDumpFileName = ArtifactNamingHelper.ResolveTemplate(pattern, replacements)
             .Replace("%p", processId);
-        finalDumpFileName = Path.GetFullPath(Path.Combine(_configuration.GetTestResultDirectory(), finalDumpFileName));
+        string resultsDirectory = Path.GetFullPath(_configuration.GetTestResultDirectory());
+        finalDumpFileName = Path.GetFullPath(Path.Combine(resultsDirectory, finalDumpFileName));
+
+        // Reject resolved paths that escape the results directory (e.g. rooted paths or ".." segments).
+        if (!finalDumpFileName.StartsWith(resultsDirectory, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"The resolved dump file path '{finalDumpFileName}' is outside the results directory '{resultsDirectory}'. Ensure --hangdump-filename is a relative path without '..' segments.");
+        }
 
         // Ensure the destination directory exists (templates may include directory separators, e.g. <asm>/<pname>).
         Directory.CreateDirectory(Path.GetDirectoryName(finalDumpFileName)!);

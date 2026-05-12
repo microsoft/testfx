@@ -126,6 +126,28 @@ public sealed class ArtifactNamingHelperTests
     }
 
     [TestMethod]
+    public void ResolveTemplate_RepeatedPlaceholder_ReplacesAllOccurrences()
+    {
+        string template = "<pname>_<pname>.dmp";
+        var replacements = new Dictionary<string, string> { ["pname"] = "test-process" };
+
+        string result = ArtifactNamingHelper.ResolveTemplate(template, replacements);
+
+        Assert.AreEqual("test-process_test-process.dmp", result);
+    }
+
+    [TestMethod]
+    public void ResolveTemplate_NoPlaceholders_ReturnsTemplateUnchanged()
+    {
+        string template = "simple.dmp";
+        var replacements = new Dictionary<string, string> { ["pname"] = "test-process" };
+
+        string result = ArtifactNamingHelper.ResolveTemplate(template, replacements);
+
+        Assert.AreEqual("simple.dmp", result);
+    }
+
+    [TestMethod]
     public void ResolveTemplate_NullTemplate_ThrowsArgumentException()
         => Assert.ThrowsExactly<ArgumentException>(() => ArtifactNamingHelper.ResolveTemplate(null!));
 
