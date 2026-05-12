@@ -3,6 +3,7 @@
 
 using System.Security;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -15,11 +16,9 @@ internal class ReflectHelper : MarshalByRefObject
     private static readonly Lazy<ReflectHelper> InstanceValue = new(() => new());
 #pragma warning restore RS0030 // Do not use banned APIs
 
-    // PERF: This was moved from Dictionary<MemberInfo, Dictionary<string, object>> to Concurrent<ICustomAttributeProvider, Attribute[]>
-    // storing an array allows us to store multiple attributes of the same type if we find them. It also has lower memory footprint, and is faster
-    // when we are going through the whole collection. Giving us overall better perf.
-    private readonly ConcurrentDictionary<ICustomAttributeProvider, Attribute[]> _attributeCache = [];
-
+    // PERF: Attribute caching is now centralized in ReflectionOperations._attributeCache.
+    // ReflectHelper delegates to PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached
+    // so that discovery and execution paths share a single cache, avoiding double memory usage.
     public static ReflectHelper Instance => InstanceValue.Value;
 
     /// <summary>
@@ -141,7 +140,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="categoryAttributeProvider">The member to inspect.</param>
     /// <param name="owningType">The reflected type that owns <paramref name="categoryAttributeProvider"/>.</param>
     /// <returns>Categories defined.</returns>
-    internal string[] GetTestCategories(MemberInfo categoryAttributeProvider, Type owningType)
+    internal static string[] GetTestCategories(MemberInfo categoryAttributeProvider, Type owningType)
     {
         Attribute[] methodAttributes = GetCustomAttributesCached(categoryAttributeProvider);
         Attribute[] typeAttributes = GetCustomAttributesCached(owningType);
@@ -228,7 +227,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// </summary>
     /// <param name="testPropertyProvider">The member to inspect.</param>
     /// <returns>List of traits.</returns>
-    internal Trait[] GetTestPropertiesAsTraits(MethodInfo testPropertyProvider)
+    internal static Trait[] GetTestPropertiesAsTraits(MethodInfo testPropertyProvider)
     {
         Attribute[] attributesFromMethod = GetCustomAttributesCached(testPropertyProvider);
         Attribute[] attributesFromClass = testPropertyProvider.ReflectedType is { } testClass ? GetCustomAttributesCached(testClass) : [];
@@ -307,7 +306,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="attributeProvider">The member to inspect.</param>
     /// <param name="action">The action to perform.</param>
     /// <param name="state">The state to pass to action.</param>
-    internal void PerformActionOnAttribute<TAttributeType, TState>(ICustomAttributeProvider attributeProvider, Action<TAttributeType, TState?> action, TState? state)
+    internal static void PerformActionOnAttribute<TAttributeType, TState>(ICustomAttributeProvider attributeProvider, Action<TAttributeType, TState?> action, TState? state)
         where TAttributeType : Attribute
     {
         Attribute[] attributes = GetCustomAttributesCached(attributeProvider);
@@ -324,69 +323,20 @@ internal class ReflectHelper : MarshalByRefObject
 
     /// <summary>
     /// Gets and caches the attributes for the given type, or method.
+    /// Delegates to <see cref="PlatformServiceProvider.Instance"/> so that
+    /// discovery and execution share a single attribute cache.
     /// </summary>
     /// <param name="attributeProvider">The member to inspect.</param>
     /// <returns>attributes defined.</returns>
-    internal Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider)
+    internal static Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider)
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached(attributeProvider);
+
+    internal static /* for tests */ void ClearCache()
     {
-        // If the information is cached, then use it otherwise populate the cache using
-        // the reflection APIs.
-        return _attributeCache.GetOrAdd(attributeProvider, GetAttributes);
-
-        // We are avoiding func allocation here.
-        static Attribute[] GetAttributes(ICustomAttributeProvider attributeProvider)
+        // Delegate to the shared cache in ReflectionOperations.
+        if (PlatformServiceProvider.Instance?.ReflectionOperations is ReflectionOperations reflectionOperations)
         {
-            // Populate the cache
-            try
-            {
-                object[]? attributes = NotCachedReflectionAccessor.GetCustomAttributesNotCached(attributeProvider);
-                return attributes is null ? [] : attributes as Attribute[] ?? [.. attributes.Cast<Attribute>()];
-            }
-            catch (Exception ex)
-            {
-                // Get the exception description
-                string description;
-                try
-                {
-                    // Can throw if the Message or StackTrace properties throw exceptions
-                    description = ex.ToString();
-                }
-                catch (Exception ex2)
-                {
-                    description = string.Format(CultureInfo.CurrentCulture, Resource.ExceptionOccuredWhileGettingTheExceptionDescription, ex.GetType().FullName, ex2.GetType().FullName);                               // ex.GetType().FullName +
-                }
-
-                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
-                {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(Resource.FailedToGetCustomAttribute, attributeProvider.GetType().FullName!, description);
-                }
-
-                return [];
-            }
+            reflectionOperations.ClearCache();
         }
     }
-
-    /// <summary>
-    /// Reflection helper that is accessing Reflection directly, and won't cache the results.
-    /// </summary>
-    internal static class NotCachedReflectionAccessor
-    {
-        /// <summary>
-        /// Get custom attributes on a member without cache. Be CAREFUL where you use this, repeatedly accessing reflection without caching the results degrades the performance.
-        /// </summary>
-        /// <param name="attributeProvider">Member for which attributes needs to be retrieved.</param>
-        /// <returns>All attributes of give type on member.</returns>
-        public static object[]? GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider)
-        {
-            object[] attributesArray = attributeProvider is MemberInfo memberInfo
-                ? PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(memberInfo)
-                : PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes((Assembly)attributeProvider, typeof(Attribute));
-
-            return attributesArray; // TODO: Investigate if we rely on NRE
-        }
-    }
-
-    internal /* for tests */ void ClearCache()
-        // Tests manipulate the platform reflection provider, and we end up caching different attributes than the class / method actually has.
-        => _attributeCache.Clear();
 }

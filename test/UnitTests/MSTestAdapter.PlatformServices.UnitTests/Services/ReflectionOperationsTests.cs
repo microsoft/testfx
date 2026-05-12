@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using Moq;
 
@@ -33,6 +34,7 @@ public class ReflectionOperationsTests : TestContainer
         _reflectionOperations = new ReflectionOperations();
         _method = new Mock<MethodInfo>();
         _method.Setup(x => x.MemberType).Returns(MemberTypes.Method);
+        _method.Setup(x => x.ReflectedType).Returns(typeof(ReflectionOperationsTests));
 
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         _testablePlatformServiceProvider.SetupMockReflectionOperations();
@@ -130,7 +132,7 @@ public class ReflectionOperationsTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtClassLevel()
     {
-        _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("ClassLevel")], MemberTypes.TypeInfo);
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("ClassLevel")], MemberTypes.TypeInfo);
 
         string[] expected = ["ClassLevel"];
         string[] actual = [.. _reflectionOperations.GetTestCategories(_method.Object, typeof(ReflectionOperationsTests))];
@@ -143,10 +145,10 @@ public class ReflectionOperationsTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtAllLevels()
     {
-        _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("AsmLevel1"), new TestCategoryAttribute("AsmLevel2")], MemberTypes.All);
-        _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("AsmLevel3")], MemberTypes.All);
-        _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("ClassLevel")], MemberTypes.TypeInfo);
-        _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("MethodLevel")], MemberTypes.Method);
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("AsmLevel1"), new TestCategoryAttribute("AsmLevel2")], MemberTypes.All);
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("AsmLevel3")], MemberTypes.All);
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("ClassLevel")], MemberTypes.TypeInfo);
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("MethodLevel")], MemberTypes.Method);
 
         string[] actual = [.. _reflectionOperations.GetTestCategories(_method.Object, typeof(ReflectionOperationsTests))];
         string[] expected = ["MethodLevel", "ClassLevel", "AsmLevel1", "AsmLevel2", "AsmLevel3"];
@@ -159,12 +161,12 @@ public class ReflectionOperationsTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldConcatCustomAttributeOfSameType()
     {
-        _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("AsmLevel1")], MemberTypes.All);
-        _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("AsmLevel2")], MemberTypes.All);
-        _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("ClassLevel1")], MemberTypes.TypeInfo);
-        _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("ClassLevel2")], MemberTypes.TypeInfo);
-        _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("MethodLevel1")], MemberTypes.Method);
-        _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("MethodLevel2")], MemberTypes.Method);
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("AsmLevel1")], MemberTypes.All);
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("AsmLevel2")], MemberTypes.All);
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("ClassLevel1")], MemberTypes.TypeInfo);
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("ClassLevel2")], MemberTypes.TypeInfo);
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("MethodLevel1")], MemberTypes.Method);
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("MethodLevel2")], MemberTypes.Method);
 
         string[] actual = [.. _reflectionOperations.GetTestCategories(_method.Object, typeof(ReflectionOperationsTests))];
         string[] expected = ["MethodLevel1", "MethodLevel2", "ClassLevel1", "ClassLevel2", "AsmLevel1", "AsmLevel2"];
@@ -177,7 +179,7 @@ public class ReflectionOperationsTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtAssemblyLevel()
     {
-        _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("AsmLevel")], MemberTypes.All);
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("AsmLevel")], MemberTypes.All);
 
         string[] expected = ["AsmLevel"];
 
@@ -191,7 +193,7 @@ public class ReflectionOperationsTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeMultipleTestCategoriesAtClassLevel()
     {
-        _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("ClassLevel"), new TestCategoryAttribute("ClassLevel1")], MemberTypes.TypeInfo);
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("ClassLevel"), new TestCategoryAttribute("ClassLevel1")], MemberTypes.TypeInfo);
 
         string[] expected = ["ClassLevel", "ClassLevel1"];
         string[] actual = [.. _reflectionOperations.GetTestCategories(_method.Object, typeof(ReflectionOperationsTests))];
@@ -204,7 +206,7 @@ public class ReflectionOperationsTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeMultipleTestCategoriesAtAssemblyLevel()
     {
-        _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("AsmLevel"), new TestCategoryAttribute("AsmLevel1")], MemberTypes.All);
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("AsmLevel"), new TestCategoryAttribute("AsmLevel1")], MemberTypes.All);
 
         string[] expected = ["AsmLevel", "AsmLevel1"];
         string[] actual = [.. _reflectionOperations.GetTestCategories(_method.Object, typeof(ReflectionOperationsTests))];
@@ -216,12 +218,77 @@ public class ReflectionOperationsTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtMethodLevel()
     {
-        _attributeMockingHelper.SetCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("MethodLevel")], MemberTypes.Method);
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("MethodLevel")], MemberTypes.Method);
 
         string[] expected = ["MethodLevel"];
         string[] actual = [.. _reflectionOperations.GetTestCategories(_method.Object, typeof(ReflectionOperationsTests))];
 
         actual.Should().Equal(expected);
+    }
+
+    #endregion
+
+    #region GetTestPropertiesAsTraits Tests
+
+    /// <summary>
+    /// Testing test property attributes adorned at method level.
+    /// </summary>
+    public void GetTestPropertiesAsTraitsShouldIncludeTestPropertiesAtMethodLevel()
+    {
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestPropertyAttribute), [new TestPropertyAttribute("MethodKey", "MethodValue")], MemberTypes.Method);
+
+        Trait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
+
+        actual.Should().Equal([new Trait("MethodKey", "MethodValue")]);
+    }
+
+    /// <summary>
+    /// Testing test property attributes adorned at class level.
+    /// </summary>
+    public void GetTestPropertiesAsTraitsShouldIncludeTestPropertiesAtClassLevel()
+    {
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestPropertyAttribute), [new TestPropertyAttribute("ClassKey", "ClassValue")], MemberTypes.TypeInfo);
+
+        Trait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
+
+        actual.Should().Equal([new Trait("ClassKey", "ClassValue")]);
+    }
+
+    /// <summary>
+    /// Testing test property attributes adorned at both method and class level.
+    /// </summary>
+    public void GetTestPropertiesAsTraitsShouldIncludeTestPropertiesAtAllLevels()
+    {
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestPropertyAttribute), [new TestPropertyAttribute("MethodKey", "MethodValue")], MemberTypes.Method);
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestPropertyAttribute), [new TestPropertyAttribute("ClassKey", "ClassValue")], MemberTypes.TypeInfo);
+
+        Trait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
+
+        actual.Should().Equal([new Trait("MethodKey", "MethodValue"), new Trait("ClassKey", "ClassValue")]);
+    }
+
+    /// <summary>
+    /// Testing multiple test property attributes adorned at method level.
+    /// </summary>
+    public void GetTestPropertiesAsTraitsShouldIncludeMultipleTestPropertiesAtMethodLevel()
+    {
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestPropertyAttribute), [new TestPropertyAttribute("Key1", "Value1"), new TestPropertyAttribute("Key2", "Value2")], MemberTypes.Method);
+
+        Trait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
+
+        actual.Should().Equal([new Trait("Key1", "Value1"), new Trait("Key2", "Value2")]);
+    }
+
+    /// <summary>
+    /// Testing that empty array is returned when no test properties are defined.
+    /// </summary>
+    public void GetTestPropertiesAsTraitsShouldReturnEmptyWhenNoTestProperties()
+    {
+        _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("SomeCategory")], MemberTypes.Method);
+
+        Trait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
+
+        actual.Should().BeEmpty();
     }
 
     #endregion
@@ -505,7 +572,7 @@ public class ReflectionOperationsTests : TestContainer
         /// same <paramref name="memberTypes"/> are cumulative — previous entries are
         /// kept alongside new ones.
         /// </summary>
-        public void SetCustomAttribute(Type type, Attribute[] values, MemberTypes memberTypes)
+        public void AddCustomAttribute(Type type, Attribute[] values, MemberTypes memberTypes)
         {
             foreach (Attribute attribute in values)
             {

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 
 using Moq;
 
@@ -62,7 +63,26 @@ internal sealed class MockableReflectionOperations(Mock<IReflectionOperations> m
 
     public TAttribute? GetSingleAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-        => GetCustomAttributesCached(attributeProvider).OfType<TAttribute>().SingleOrDefault();
+    {
+        // Mirror the production ReflectionOperations implementation so that the error
+        // message on duplicate attributes matches what callers would see at runtime.
+        TAttribute? found = null;
+        foreach (Attribute attr in GetCustomAttributesCached(attributeProvider))
+        {
+            if (attr is TAttribute match)
+            {
+                if (found is not null)
+                {
+                    throw new InvalidOperationException(
+                        string.Format(CultureInfo.InvariantCulture, Resource.DuplicateAttributeError, typeof(TAttribute)));
+                }
+
+                found = match;
+            }
+        }
+
+        return found;
+    }
 
     public IEnumerable<TAttributeType> GetAttributes<TAttributeType>(ICustomAttributeProvider attributeProvider)
         where TAttributeType : Attribute

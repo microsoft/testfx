@@ -21,11 +21,39 @@ internal static class ReflectionHelper
     /// <returns>Categories defined.</returns>
     public static string[] GetTestCategories(this IReflectionOperations reflectionOperations, MemberInfo categoryAttributeProvider, Type owningType)
     {
-        IEnumerable<TestCategoryBaseAttribute> methodCategories = reflectionOperations.GetAttributes<TestCategoryBaseAttribute>(categoryAttributeProvider);
-        IEnumerable<TestCategoryBaseAttribute> typeCategories = reflectionOperations.GetAttributes<TestCategoryBaseAttribute>(owningType);
-        IEnumerable<TestCategoryBaseAttribute> assemblyCategories = reflectionOperations.GetAttributes<TestCategoryBaseAttribute>(owningType.Assembly);
+        // Iterate the cached attribute arrays directly to avoid LINQ iterator/state-machine
+        // allocations. This follows the same allocation-free pattern used by GetTestPropertiesAsTraits.
+        Attribute[] methodAttributes = reflectionOperations.GetCustomAttributesCached(categoryAttributeProvider);
+        Attribute[] typeAttributes = reflectionOperations.GetCustomAttributesCached(owningType);
+        Attribute[] assemblyAttributes = reflectionOperations.GetCustomAttributesCached(owningType.Assembly);
 
-        return [.. methodCategories.Concat(typeCategories).Concat(assemblyCategories).SelectMany(c => c.TestCategories)];
+        List<string>? categories = null;
+
+        foreach (Attribute attribute in methodAttributes)
+        {
+            if (attribute is TestCategoryBaseAttribute categoryAttr)
+            {
+                (categories ??= []).AddRange(categoryAttr.TestCategories);
+            }
+        }
+
+        foreach (Attribute attribute in typeAttributes)
+        {
+            if (attribute is TestCategoryBaseAttribute categoryAttr)
+            {
+                (categories ??= []).AddRange(categoryAttr.TestCategories);
+            }
+        }
+
+        foreach (Attribute attribute in assemblyAttributes)
+        {
+            if (attribute is TestCategoryBaseAttribute categoryAttr)
+            {
+                (categories ??= []).AddRange(categoryAttr.TestCategories);
+            }
+        }
+
+        return categories is null ? [] : [.. categories];
     }
 
     /// <summary>

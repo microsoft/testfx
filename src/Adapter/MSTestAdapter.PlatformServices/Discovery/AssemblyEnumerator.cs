@@ -222,7 +222,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         // PERF: Access the cached attribute array directly to avoid allocating two iterator state machines
         // for GetAttributes<Attribute>().OfType<ITestDataSource>() on every data-driven test during discovery.
-        Attribute[] allAttributes = ReflectHelper.Instance.GetCustomAttributesCached(testMethodInfo.MethodInfo);
+        Attribute[] allAttributes = ReflectHelper.GetCustomAttributesCached(testMethodInfo.MethodInfo);
 
         // We need to use a temporary list to avoid adding tests to the main list if we fail to expand any data source.
         List<UnitTestElement> tempListOfTests = [];

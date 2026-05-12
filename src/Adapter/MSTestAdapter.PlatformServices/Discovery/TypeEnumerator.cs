@@ -136,15 +136,15 @@ internal class TypeEnumerator
         // information (like test categories, traits, deployment items) which is not optimal.
         var testElement = new UnitTestElement(testMethod)
         {
-            TestCategory = _reflectHelper.GetTestCategories(method, _type),
+            TestCategory = ReflectHelper.GetTestCategories(method, _type),
             DoNotParallelize = classDisablesParallelization || _reflectHelper.IsAttributeDefined<DoNotParallelizeAttribute>(method),
 #if !WINDOWS_UWP && !WIN_UI
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
 #endif
-            Traits = [.. _reflectHelper.GetTestPropertiesAsTraits(method)],
+            Traits = [.. ReflectHelper.GetTestPropertiesAsTraits(method)],
         };
 
-        Attribute[] attributes = _reflectHelper.GetCustomAttributesCached(method);
+        Attribute[] attributes = ReflectHelper.GetCustomAttributesCached(method);
         TestMethodAttribute? testMethodAttribute = null;
         List<string>? workItemIds = null;
 

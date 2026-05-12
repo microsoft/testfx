@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -43,8 +43,9 @@ public class ReflectionUtilityTests : TestContainer
         object[]? attributes = _reflectionOperations.GetCustomAttributes(methodInfo);
 
         attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(2);
 
+        // Filter to known test attributes to avoid fragility if the test asset ever
+        // enables nullable annotations (which would add compiler-generated attributes).
         string[] expectedAttributes = ["Owner : base", "TestCategory : base"];
         GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
     }
@@ -56,9 +57,10 @@ public class ReflectionUtilityTests : TestContainer
         object[]? attributes = _reflectionOperations.GetCustomAttributes(methodInfo);
 
         attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(3);
 
         // Notice that the Owner on the base method does not show up since it can only be defined once.
+        // Filter to known test attributes to avoid fragility if the test asset ever
+        // enables nullable annotations (which would add compiler-generated attributes).
         string[] expectedAttributes = ["Owner : derived", "TestCategory : derived", "TestCategory : base"];
         GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
     }
@@ -70,8 +72,8 @@ public class ReflectionUtilityTests : TestContainer
         object[]? attributes = _reflectionOperations.GetCustomAttributes(type);
 
         attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(1);
 
+        // Filter to known test attributes to avoid fragility with compiler-generated attributes.
         string[] expectedAttributes = ["TestCategory : ba"];
         GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
     }
@@ -83,8 +85,8 @@ public class ReflectionUtilityTests : TestContainer
         object[]? attributes = _reflectionOperations.GetCustomAttributes(type);
 
         attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(2);
 
+        // Filter to known test attributes to avoid fragility with compiler-generated attributes.
         string[] expectedAttributes = ["TestCategory : a", "TestCategory : ba"];
         GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
     }
@@ -123,8 +125,8 @@ public class ReflectionUtilityTests : TestContainer
         object[]? attributes = _reflectionOperations.GetCustomAttributes(methodInfo);
 
         attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(3);
 
+        // Filter to known test attributes to avoid fragility with compiler-generated attributes.
         string[] expectedAttributes = ["Duration : superfast", "Owner : base", "TestCategory : base"];
         GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
     }
