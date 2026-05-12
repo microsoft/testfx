@@ -1679,8 +1679,6 @@ public class TestMethodInfoTests : TestContainer
         }
     }
 
-    #endregion
-
     private static async Task<TestResult> RunInvokeAsyncOnContextAsync(
         TestMethodInfo info,
         SingleThreadedSynchronizationContextForTesting ctx)
@@ -1715,11 +1713,13 @@ public class TestMethodInfoTests : TestContainer
         return await tcs.Task;
     }
 
+    #endregion
+
     #region Test data
 
     private sealed class SingleThreadedSynchronizationContextForTesting : SynchronizationContext, IDisposable
     {
-        private readonly BlockingCollection<(SendOrPostCallback D, object? State)> _queue = [];
+        private readonly BlockingCollection<(SendOrPostCallback Callback, object? State)> _queue = [];
         private readonly Thread _thread;
 
         public SingleThreadedSynchronizationContextForTesting()
@@ -1727,9 +1727,9 @@ public class TestMethodInfoTests : TestContainer
             _thread = new Thread(() =>
             {
                 SynchronizationContext.SetSynchronizationContext(this);
-                foreach ((SendOrPostCallback d, object? state) in _queue.GetConsumingEnumerable())
+                foreach ((SendOrPostCallback callback, object? state) in _queue.GetConsumingEnumerable())
                 {
-                    d(state);
+                    callback(state);
                 }
             })
             {
