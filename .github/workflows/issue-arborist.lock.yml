@@ -365,7 +365,7 @@ jobs:
             if curl -fsSL \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-              "${GH_AW_ORIGINAL_GITHUB_API_URL:-${GITHUB_API_URL}}/search/issues?q=repo:${GITHUB_REPOSITORY}+is:issue+is:open+-parent-issue%3A%2A&per_page=100" \
+              "${GH_AW_ORIGINAL_GITHUB_API_URL:-${GITHUB_API_URL}}/search/issues?q=repo:${GITHUB_REPOSITORY}+is:issue+is:open+-parent-issue%3A%2A&sort=created&order=desc&per_page=100" \
               > /tmp/gh-aw/issues-data/issues-rest.json; then
               if ! jq '[.items[] | {
                   number,
