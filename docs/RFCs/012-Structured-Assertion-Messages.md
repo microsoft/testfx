@@ -1,4 +1,4 @@
-# RFC 011 - Structured Assertion Messages
+# RFC 012 - Structured Assertion Messages
 
 - [ ] Approved in principle
 - [x] Under discussion
