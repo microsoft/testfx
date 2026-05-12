@@ -59,6 +59,7 @@
   </Folder>
   <Folder Name="/src/3 - TestFramework/">
     <Project Path="src/TestFramework/TestFramework.Extensions/TestFramework.Extensions.csproj" />
+    <Project Path="src/TestFramework/TestFramework.Windows.AppTesting/TestFramework.Windows.AppTesting.csproj" />
     <Project Path="src/TestFramework/TestFramework/TestFramework.csproj" />
   </Folder>
   <Folder Name="/src/4 - Analyzers/">
