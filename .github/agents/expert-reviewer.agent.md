@@ -517,9 +517,9 @@ Before analyzing the diff, load the repository history knowledge base produced b
 
 1. Map changed files to the [Folder Hotspot Mapping](#folder-hotspot-mapping). Cross-reference with `high_churn_files` and `directory_risk_scores` from the historian data to prioritize review effort.
 
-1b. **Historical context** (for bug fix and follow-up PRs): Read the linked issue and the original feature PR discussions. Identify design intent, constraints, and reviewer-established principles. Feed this context to every dimension agent so they can evaluate whether the fix aligns with the original design.
+> **Historical context** (for bug fix and follow-up PRs): Read the linked issue and the original feature PR discussions. Identify design intent, constraints, and reviewer-established principles. Feed this context to every dimension agent so they can evaluate whether the fix aligns with the original design.
 
-2. Launch **one sub-agent per dimension** (`task` tool, `agent_type: "general-purpose"`, `model: "claude-opus-4.6"`). Each agent evaluates exactly one dimension against the full PR diff. Run in **parallel batches of 6** (4 batches for 21 dimensions).
+2. Launch **one sub-agent per dimension** (`task` tool, `agent_type: "general-purpose"`, `model: "claude-opus-4.6"`). Each agent evaluates exactly one dimension against the full PR diff. Run in **parallel batches of up to 6** (4 batches for 21 dimensions, last batch has 3).
 
    Each sub-agent receives: the PR diff, PR description, the single dimension's rules and checklist, and the folder context.
 
