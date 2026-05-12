@@ -4,10 +4,10 @@ The `ArtifactNamingHelper` is a shared static helper that provides a standardize
 
 ## Template-Based Naming
 
-Use placeholders in angle brackets to create dynamic file names. Placeholder matching is **case-sensitive** — use lowercase placeholder names (e.g., `<pname>`, not `<PName>`).
+Use placeholders in curly braces to create dynamic file names. Placeholder matching is **case-sensitive** — use lowercase placeholder names (e.g., `{pname}`, not `{PName}`).
 
 ```text
-<pname>_<pid>_<time>_hang.dmp
+{pname}_{pid}_{time}_hang.dmp
 ```
 
 Resolves to: `MyTests_12345_2025-09-22_13-49-34.0000000_hang.dmp`
@@ -16,12 +16,12 @@ Resolves to: `MyTests_12345_2025-09-22_13-49-34.0000000_hang.dmp`
 
 | Placeholder | Description | Example |
 |-------------|-------------|---------|
-| `<pname>` | Name of the process | `MyTests` |
-| `<pid>` | Process ID | `12345` |
-| `<os>` | Operating system | `windows`, `linux`, `macos`, `unknown` |
-| `<asm>` | Assembly name | `MyTests` |
-| `<tfm>` | Target framework moniker | `net9.0`, `net8.0` |
-| `<time>` | Timestamp (high precision) | `2025-09-22_13-49-34.0000000` |
+| `{pname}` | Name of the process | `MyTests` |
+| `{pid}` | Process ID | `12345` |
+| `{os}` | Operating system | `windows`, `linux`, `macos`, `unknown` |
+| `{asm}` | Assembly name | `MyTests` |
+| `{tfm}` | Target framework moniker | `net9.0`, `net8.0` |
+| `{time}` | Timestamp (high precision) | `2025-09-22_13-49-34.0000000` |
 
 ## Backward Compatibility
 
@@ -38,7 +38,7 @@ var replacements = new Dictionary<string, string>
     ["pid"] = "1111"
 };
 
-string result = ArtifactNamingHelper.ResolveTemplate("<pname>_<pid>.dmp", replacements);
+string result = ArtifactNamingHelper.ResolveTemplate("{pname}_{pid}.dmp", replacements);
 // Result: "Notepad_1111.dmp"
 ```
 
@@ -51,5 +51,5 @@ The hang dump extension uses the artifact naming helper and supports both legacy
 --hangdump-filename "mydump_%p.dmp"
 
 # New template pattern
---hangdump-filename "<pname>_<pid>_<time>_hang.dmp"
+--hangdump-filename "{pname}_{pid}_{time}_hang.dmp"
 ```

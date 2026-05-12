@@ -326,7 +326,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         string pattern = _dumpFileNamePattern ?? $"{process.Name}_%p_hang.dmp";
 
-        // First resolve <placeholder> templates, then handle legacy %p pattern for backward compatibility.
+        // First resolve {placeholder} templates, then handle legacy %p pattern for backward compatibility.
         string finalDumpFileName = ArtifactNamingHelper.ResolveTemplate(pattern, replacements)
             .Replace("%p", processId);
         string resultsDirectory = Path.GetFullPath(_configuration.GetTestResultDirectory());
@@ -347,14 +347,14 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             throw new InvalidOperationException($"The resolved dump file path '{finalDumpFileName}' is outside the results directory '{resultsDirectory}'. Ensure --hangdump-filename is a relative path without '..' segments.");
         }
 
-        // Ensure the destination directory exists (templates may include directory separators, e.g. <asm>/<pname>).
+        // Ensure the destination directory exists (templates may include directory separators, e.g. {asm}/{pname}).
         Directory.CreateDirectory(Path.GetDirectoryName(finalDumpFileName)!);
 
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
         GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), cancellationToken).ConfigureAwait(false);
         if (tests.Tests.Length > 0)
         {
-            string hangTestsFileName = Path.Combine(_configuration.GetTestResultDirectory(), Path.ChangeExtension(Path.GetFileName(finalDumpFileName), ".log"));
+            string hangTestsFileName = Path.ChangeExtension(finalDumpFileName, ".log");
             using (FileStream fs = File.OpenWrite(hangTestsFileName))
             using (StreamWriter sw = new(fs))
             {

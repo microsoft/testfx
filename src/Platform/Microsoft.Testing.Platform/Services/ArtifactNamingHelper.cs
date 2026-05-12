@@ -8,10 +8,10 @@ namespace Microsoft.Testing.Platform.Services;
 [Embedded]
 internal static class ArtifactNamingHelper
 {
-    private static readonly Regex TemplateFieldRegex = new(@"<([^>]+)>", RegexOptions.Compiled);
+    private static readonly Regex TemplateFieldRegex = new(@"\{([^}]+)\}", RegexOptions.Compiled);
 
     /// <summary>
-    /// Resolves a template pattern by replacing &lt;placeholder&gt; tokens with values from the provided dictionary.
+    /// Resolves a template pattern by replacing {placeholder} tokens with values from the provided dictionary.
     /// Unknown placeholders are preserved as-is. Placeholder matching is always case-sensitive (ordinal).
     /// </summary>
     public static string ResolveTemplate(string template, IDictionary<string, string>? replacements = null)
@@ -34,7 +34,7 @@ internal static class ArtifactNamingHelper
         return TemplateFieldRegex.Replace(template, match =>
         {
             string fieldName = match.Groups[1].Value;
-            return ordinalReplacements.TryGetValue(fieldName, out string? value) && value is not null ? value : match.Value;
+            return ordinalReplacements.TryGetValue(fieldName, out string? value) ? value : match.Value;
         });
     }
 

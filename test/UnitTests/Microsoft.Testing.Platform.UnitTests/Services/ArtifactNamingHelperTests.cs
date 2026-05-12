@@ -13,7 +13,7 @@ public sealed class ArtifactNamingHelperTests
     [TestMethod]
     public void ResolveTemplate_WithReplacements_ReplacesCorrectly()
     {
-        string template = "<pname>_<pid>_<asm>.dmp";
+        string template = "{pname}_{pid}_{asm}.dmp";
         var replacements = new Dictionary<string, string>
         {
             ["pname"] = "test-process",
@@ -29,7 +29,7 @@ public sealed class ArtifactNamingHelperTests
     [TestMethod]
     public void ResolveTemplate_LiteralTextAndPlaceholders_ReplacesOnlyPlaceholders()
     {
-        string template = "<pname>_<pid>_custom.dmp";
+        string template = "{pname}_{pid}_custom.dmp";
         var replacements = new Dictionary<string, string>
         {
             ["pname"] = "custom-process",
@@ -44,7 +44,7 @@ public sealed class ArtifactNamingHelperTests
     [TestMethod]
     public void ResolveTemplate_EmptyReplacementValue_ReplacesWithEmptyString()
     {
-        string template = "<asm>_<pname>.dmp";
+        string template = "{asm}_{pname}.dmp";
         var replacements = new Dictionary<string, string>
         {
             ["asm"] = string.Empty,
@@ -59,7 +59,7 @@ public sealed class ArtifactNamingHelperTests
     [TestMethod]
     public void ResolveTemplate_WithUnknownPlaceholder_KeepsPlaceholderAsIs()
     {
-        string template = "<unknown-field>_<pname>";
+        string template = "{unknown-field}_{pname}";
         var replacements = new Dictionary<string, string>
         {
             ["pname"] = "test-process",
@@ -67,13 +67,13 @@ public sealed class ArtifactNamingHelperTests
 
         string result = ArtifactNamingHelper.ResolveTemplate(template, replacements);
 
-        Assert.AreEqual("<unknown-field>_test-process", result);
+        Assert.AreEqual("{unknown-field}_test-process", result);
     }
 
     [TestMethod]
     public void ResolveTemplate_ComplexTemplate_ReplacesAllKnownPlaceholders()
     {
-        string template = "<asm>/<pname>_<pid>_<tfm>_<time>.dmp";
+        string template = "{asm}/{pname}_{pid}_{tfm}_{time}.dmp";
         var replacements = new Dictionary<string, string>
         {
             ["asm"] = "TestAssembly",
@@ -91,7 +91,7 @@ public sealed class ArtifactNamingHelperTests
     [TestMethod]
     public void ResolveTemplate_CaseSensitive_DoesNotMatchDifferentCase()
     {
-        string template = "<PName>_<PID>";
+        string template = "{PName}_{PID}";
         var replacements = new Dictionary<string, string>
         {
             ["pname"] = "test-process",
@@ -100,35 +100,35 @@ public sealed class ArtifactNamingHelperTests
 
         string result = ArtifactNamingHelper.ResolveTemplate(template, replacements);
 
-        // Case-sensitive: <PName> and <PID> don't match lowercase keys, so they are preserved as-is.
-        Assert.AreEqual("<PName>_<PID>", result);
+        // Case-sensitive: {PName} and {PID} don't match lowercase keys, so they are preserved as-is.
+        Assert.AreEqual("{PName}_{PID}", result);
     }
 
     [TestMethod]
     public void ResolveTemplate_NullReplacements_ReturnsTemplateUnchanged()
     {
-        string template = "<pname>_<pid>.dmp";
+        string template = "{pname}_{pid}.dmp";
 
         string result = ArtifactNamingHelper.ResolveTemplate(template, null);
 
-        Assert.AreEqual("<pname>_<pid>.dmp", result);
+        Assert.AreEqual("{pname}_{pid}.dmp", result);
     }
 
     [TestMethod]
     public void ResolveTemplate_EmptyReplacements_ReturnsTemplateUnchanged()
     {
-        string template = "<pname>_<pid>.dmp";
+        string template = "{pname}_{pid}.dmp";
         var replacements = new Dictionary<string, string>();
 
         string result = ArtifactNamingHelper.ResolveTemplate(template, replacements);
 
-        Assert.AreEqual("<pname>_<pid>.dmp", result);
+        Assert.AreEqual("{pname}_{pid}.dmp", result);
     }
 
     [TestMethod]
     public void ResolveTemplate_RepeatedPlaceholder_ReplacesAllOccurrences()
     {
-        string template = "<pname>_<pname>.dmp";
+        string template = "{pname}_{pname}.dmp";
         var replacements = new Dictionary<string, string> { ["pname"] = "test-process" };
 
         string result = ArtifactNamingHelper.ResolveTemplate(template, replacements);
@@ -156,10 +156,34 @@ public sealed class ArtifactNamingHelperTests
         };
 
         // After ordinal normalization, key is stored as "PNAME".
-        // <pname> looks up "pname" which does not match "PNAME" ordinally, so placeholder is preserved.
-        string result = ArtifactNamingHelper.ResolveTemplate("<pname>", ciDict);
+        // {pname} looks up "pname" which does not match "PNAME" ordinally, so placeholder is preserved.
+        string result = ArtifactNamingHelper.ResolveTemplate("{pname}", ciDict);
 
-        Assert.AreEqual("<pname>", result);
+        Assert.AreEqual("{pname}", result);
+    }
+
+    [TestMethod]
+    public void ResolveTemplate_CaseInsensitiveDictionaryWithMatchingKey_Resolves()
+    {
+        var ciDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["pname"] = "process",
+        };
+
+        string result = ArtifactNamingHelper.ResolveTemplate("{pname}", ciDict);
+
+        Assert.AreEqual("process", result);
+    }
+
+    [TestMethod]
+    public void ResolveTemplate_EmptyPlaceholder_IsPreservedAsIs()
+    {
+        string template = "{}_{pname}.dmp";
+        var replacements = new Dictionary<string, string> { ["pname"] = "myproc" };
+
+        string result = ArtifactNamingHelper.ResolveTemplate(template, replacements);
+
+        Assert.AreEqual("{}_myproc.dmp", result);
     }
 
     [TestMethod]
