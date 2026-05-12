@@ -12,21 +12,21 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsExactInstanceOfType(null, typeof(AssertTests));
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'null'. Expected exact type:<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>. Actual type:<null>.");
+            .WithMessage($"Assertion failed. Expected value to be exactly of type AssertTests.{Environment.NewLine}{Environment.NewLine}expected type: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests{Environment.NewLine}actual:        null{Environment.NewLine}{Environment.NewLine}Assert.IsExactInstanceOfType(null)");
     }
 
     public void ExactInstanceOfTypeShouldFailWhenTypeIsNull()
     {
         Action action = () => Assert.IsExactInstanceOfType(5, null);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'.");
+            .WithMessage($"Assertion failed. Expected value to be exactly of type null.{Environment.NewLine}{Environment.NewLine}Assert.IsExactInstanceOfType(5)");
     }
 
     public void ExactInstanceOfTypeShouldFailWhenTypeIsMismatched()
     {
         Action action = () => Assert.IsExactInstanceOfType(5, typeof(string));
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'. Expected exact type:<System.String>. Actual type:<System.Int32>.");
+            .WithMessage($"Assertion failed. Expected value to be exactly of type String.{Environment.NewLine}{Environment.NewLine}expected type: System.String{Environment.NewLine}actual type:   System.Int32{Environment.NewLine}actual value:  5{Environment.NewLine}{Environment.NewLine}Assert.IsExactInstanceOfType(5)");
     }
 
     public void ExactInstanceOfTypeShouldPassOnSameInstance() => Assert.IsExactInstanceOfType(5, typeof(int));
@@ -35,7 +35,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsExactInstanceOfType(5, typeof(object));
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'. Expected exact type:<System.Object>. Actual type:<System.Int32>.");
+            .WithMessage($"Assertion failed. Expected value to be exactly of type Object.{Environment.NewLine}{Environment.NewLine}expected type: System.Object{Environment.NewLine}actual type:   System.Int32{Environment.NewLine}actual value:  5{Environment.NewLine}{Environment.NewLine}Assert.IsExactInstanceOfType(5)");
     }
 
     public void ExactInstanceOfTypeShouldFailOnDerivedType()
@@ -43,7 +43,7 @@ public partial class AssertTests
         object x = new MemoryStream();
         Action action = () => Assert.IsExactInstanceOfType(x, typeof(Stream));
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'x'. Expected exact type:<System.IO.Stream>. Actual type:<System.IO.MemoryStream>.");
+            .WithMessage($"Assertion failed. Expected value to be exactly of type Stream.{Environment.NewLine}{Environment.NewLine}expected type: System.IO.Stream{Environment.NewLine}actual type:   System.IO.MemoryStream{Environment.NewLine}actual value:  *{Environment.NewLine}{Environment.NewLine}Assert.IsExactInstanceOfType(x)");
     }
 
     public void ExactInstanceOfTypeShouldPassOnExactType()
@@ -56,21 +56,21 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsExactInstanceOfType(null, typeof(AssertTests), "User-provided message");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'null'. User-provided message Expected exact type:<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>. Actual type:<null>.");
+            .WithMessage($"Assertion failed. Expected value to be exactly of type AssertTests.{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}expected type: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests{Environment.NewLine}actual:        null{Environment.NewLine}{Environment.NewLine}Assert.IsExactInstanceOfType(null)");
     }
 
     public void ExactInstanceOfType_WithStringMessage_ShouldFailWhenTypeIsNull()
     {
         Action action = () => Assert.IsExactInstanceOfType(5, null, "User-provided message");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'. User-provided message");
+            .WithMessage($"Assertion failed. Expected value to be exactly of type null.{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}Assert.IsExactInstanceOfType(5)");
     }
 
     public void ExactInstanceOfType_WithStringMessage_ShouldFailWhenTypeIsMismatched()
     {
         Action action = () => Assert.IsExactInstanceOfType(5, typeof(string), "User-provided message");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'. User-provided message Expected exact type:<System.String>. Actual type:<System.Int32>.");
+            .WithMessage($"Assertion failed. Expected value to be exactly of type String.{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}expected type: System.String{Environment.NewLine}actual type:   System.Int32{Environment.NewLine}actual value:  5{Environment.NewLine}{Environment.NewLine}Assert.IsExactInstanceOfType(5)");
     }
 
     public void ExactInstanceOfType_WithStringMessage_ShouldPassWhenTypeIsCorrect()
@@ -82,7 +82,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsExactInstanceOfType(null, typeof(AssertTests), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<AssertFailedException>())
-            .WithMessage($"Assert.IsExactInstanceOfType failed. 'value' expression: 'null'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)} Expected exact type:<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>. Actual type:<null>.");
+            .WithMessage($"Assertion failed. Expected value to be exactly of type AssertTests.{Environment.NewLine}User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}{Environment.NewLine}{Environment.NewLine}expected type: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests{Environment.NewLine}actual:        null{Environment.NewLine}{Environment.NewLine}Assert.IsExactInstanceOfType(null)");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -91,7 +91,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         Action action = () => Assert.IsExactInstanceOfType(5, null, $"User-provided message {o}");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'. User-provided message DummyClassTrackingToStringCalls");
+            .WithMessage($"Assertion failed. Expected value to be exactly of type null.{Environment.NewLine}User-provided message DummyClassTrackingToStringCalls{Environment.NewLine}{Environment.NewLine}Assert.IsExactInstanceOfType(5)");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -100,7 +100,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         Action action = () => Assert.IsExactInstanceOfType(5, typeof(string), $"User-provided message {o}");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'. User-provided message DummyClassTrackingToStringCalls Expected exact type:<System.String>. Actual type:<System.Int32>.");
+            .WithMessage($"Assertion failed. Expected value to be exactly of type String.{Environment.NewLine}User-provided message DummyClassTrackingToStringCalls{Environment.NewLine}{Environment.NewLine}expected type: System.String{Environment.NewLine}actual type:   System.Int32{Environment.NewLine}actual value:  5{Environment.NewLine}{Environment.NewLine}Assert.IsExactInstanceOfType(5)");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -134,21 +134,21 @@ public partial class AssertTests
         object x = new MemoryStream();
         Action action = () => Assert.IsNotExactInstanceOfType(x, typeof(MemoryStream));
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsNotExactInstanceOfType failed. Wrong exact Type:<System.IO.MemoryStream>. Actual type:<System.IO.MemoryStream>. 'value' expression: 'x'.");
+            .WithMessage($"Assertion failed. Expected value to not be exactly of type MemoryStream.{Environment.NewLine}{Environment.NewLine}not expected type: System.IO.MemoryStream{Environment.NewLine}actual value:      *{Environment.NewLine}{Environment.NewLine}Assert.IsNotExactInstanceOfType(x)");
     }
 
     public void IsExactInstanceOfTypeUsingGenericType_WhenValueIsNull_Fails()
     {
         Action action = () => Assert.IsExactInstanceOfType<AssertTests>(null);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'null'. Expected exact type:<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>. Actual type:<null>.");
+            .WithMessage($"Assertion failed. Expected value to be exactly of type AssertTests.{Environment.NewLine}{Environment.NewLine}expected type: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests{Environment.NewLine}actual:        null{Environment.NewLine}{Environment.NewLine}Assert.IsExactInstanceOfType(null)");
     }
 
     public void IsExactInstanceOfTypeUsingGenericType_WhenTypeMismatch_Fails()
     {
         Action action = () => Assert.IsExactInstanceOfType<string>(5);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'. Expected exact type:<System.String>. Actual type:<System.Int32>.");
+            .WithMessage($"Assertion failed. Expected value to be exactly of type String.{Environment.NewLine}{Environment.NewLine}expected type: System.String{Environment.NewLine}actual type:   System.Int32{Environment.NewLine}actual value:  5{Environment.NewLine}{Environment.NewLine}Assert.IsExactInstanceOfType(5)");
     }
 
     public void IsExactInstanceOfTypeUsingGenericType_WhenDerivedType_Fails()
@@ -156,7 +156,7 @@ public partial class AssertTests
         object x = new MemoryStream();
         Action action = () => Assert.IsExactInstanceOfType<Stream>(x);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'x'. Expected exact type:<System.IO.Stream>. Actual type:<System.IO.MemoryStream>.");
+            .WithMessage($"Assertion failed. Expected value to be exactly of type Stream.{Environment.NewLine}{Environment.NewLine}expected type: System.IO.Stream{Environment.NewLine}actual type:   System.IO.MemoryStream{Environment.NewLine}actual value:  *{Environment.NewLine}{Environment.NewLine}Assert.IsExactInstanceOfType(x)");
     }
 
     public void IsExactInstanceOfTypeUsingGenericType_OnSameInstance_DoesNotThrow() => Assert.IsExactInstanceOfType<int>(5);
@@ -178,7 +178,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsExactInstanceOfType<object>(5);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'. Expected exact type:<System.Object>. Actual type:<System.Int32>.");
+            .WithMessage($"Assertion failed. Expected value to be exactly of type Object.{Environment.NewLine}{Environment.NewLine}expected type: System.Object{Environment.NewLine}actual type:   System.Int32{Environment.NewLine}actual value:  5{Environment.NewLine}{Environment.NewLine}Assert.IsExactInstanceOfType(5)");
     }
 
     public void IsExactInstanceOfTypeUsingGenericTypeWithReturn_OnExactType_DoesNotThrow()
@@ -205,7 +205,7 @@ public partial class AssertTests
         object x = new MemoryStream();
         Action action = () => Assert.IsNotExactInstanceOfType<MemoryStream>(x);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsNotExactInstanceOfType failed. Wrong exact Type:<System.IO.MemoryStream>. Actual type:<System.IO.MemoryStream>. 'value' expression: 'x'.");
+            .WithMessage($"Assertion failed. Expected value to not be exactly of type MemoryStream.{Environment.NewLine}{Environment.NewLine}not expected type: System.IO.MemoryStream{Environment.NewLine}actual value:      *{Environment.NewLine}{Environment.NewLine}Assert.IsNotExactInstanceOfType(x)");
     }
 
     public void IsExactInstanceOfType_WhenNonNullNullableValue_LearnNonNull()

@@ -160,7 +160,7 @@ public partial class AssertTests
             .Which;
 
         innerException.InnerExceptions.Should().HaveCount(2);
-        innerException.InnerExceptions[0].Message.Should().Be("Assert.IsInstanceOfType failed. 'value' expression: 'value'. Expected type:<System.Int32>. Actual type:<System.String>.");
+        innerException.InnerExceptions[0].Message.Should().Contain("Assertion failed. Expected value to be of type Int32 (or derived).");
         innerException.InnerExceptions[1].Message.Should().Contain("Assert.AreEqual failed.");
     }
 
@@ -183,7 +183,7 @@ public partial class AssertTests
             .Which;
 
         innerException.InnerExceptions.Should().HaveCount(2);
-        innerException.InnerExceptions[0].Message.Should().Be("Assert.IsExactInstanceOfType failed. 'value' expression: 'value'. Expected exact type:<System.Object>. Actual type:<System.String>.");
+        innerException.InnerExceptions[0].Message.Should().Contain("Assertion failed. Expected value to be exactly of type Object.");
         innerException.InnerExceptions[1].Message.Should().Contain("Assert.AreEqual failed.");
     }
 
