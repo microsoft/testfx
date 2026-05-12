@@ -10,17 +10,17 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 internal sealed partial class TerminalTestReporter
 {
     internal void TestCompleted(
-       string testNodeUid,
-       string displayName,
-       TestOutcome outcome,
-       TimeSpan? duration,
-       string? informativeMessage,
-       string? errorMessage,
-       Exception? exception,
-       string? expected,
-       string? actual,
-       string? standardOutput,
-       string? errorOutput)
+        string testNodeUid,
+        string displayName,
+        TestOutcome outcome,
+        TimeSpan? duration,
+        string? informativeMessage,
+        string? errorMessage,
+        Exception? exception,
+        string? expected,
+        string? actual,
+        string? standardOutput,
+        string? errorOutput)
     {
         FlatException[] flatExceptions = ExceptionFlattener.Flatten(errorMessage, exception);
         TestCompleted(
