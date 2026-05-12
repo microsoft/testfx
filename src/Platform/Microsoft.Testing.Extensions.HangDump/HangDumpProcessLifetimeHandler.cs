@@ -334,11 +334,15 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         // Reject resolved paths that escape the results directory (e.g. rooted paths or ".." segments).
         // Append a trailing separator to prevent sibling-directory bypass (e.g. "/tmp/results" vs "/tmp/results-evil").
+        // Use case-insensitive comparison on Windows where paths are case-insensitive.
+        StringComparison pathComparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
         string separatorStr = Path.DirectorySeparatorChar.ToString();
         string resultsDirectoryGuard = resultsDirectory.EndsWith(separatorStr, StringComparison.Ordinal)
             ? resultsDirectory
             : resultsDirectory + separatorStr;
-        if (!finalDumpFileName.StartsWith(resultsDirectoryGuard, StringComparison.Ordinal))
+        if (!finalDumpFileName.StartsWith(resultsDirectoryGuard, pathComparison))
         {
             throw new InvalidOperationException($"The resolved dump file path '{finalDumpFileName}' is outside the results directory '{resultsDirectory}'. Ensure --hangdump-filename is a relative path without '..' segments.");
         }
