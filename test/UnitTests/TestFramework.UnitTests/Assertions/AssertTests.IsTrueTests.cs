@@ -12,7 +12,7 @@ public partial class AssertTests
         bool? nullBool = null;
         Action action = () => Assert.IsFalse(nullBool);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsFalse failed. 'condition' expression: 'nullBool'.");
+            .WithMessage($"Assertion failed. Expected condition to be false.{Environment.NewLine}{Environment.NewLine}actual: null{Environment.NewLine}{Environment.NewLine}Assert.IsFalse(nullBool)");
     }
 
     public void IsFalseNullableBooleanShouldFailWithTrue()
@@ -20,7 +20,7 @@ public partial class AssertTests
         bool? nullBool = true;
         Action action = () => Assert.IsFalse(nullBool);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsFalse failed. 'condition' expression: 'nullBool'.");
+            .WithMessage($"Assertion failed. Expected condition to be false.{Environment.NewLine}{Environment.NewLine}actual: true{Environment.NewLine}{Environment.NewLine}Assert.IsFalse(nullBool)");
     }
 
     public void IsFalseNullableBooleanShouldNotFailWithFalse()
@@ -33,7 +33,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsFalse(true);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsFalse failed. 'condition' expression: 'true'.");
+            .WithMessage($"Assertion failed. Expected condition to be false.{Environment.NewLine}{Environment.NewLine}actual: true{Environment.NewLine}{Environment.NewLine}Assert.IsFalse(true)");
     }
 
     public void IsFalseBooleanShouldNotFailWithFalse()
@@ -44,7 +44,7 @@ public partial class AssertTests
         bool? nullBool = null;
         Action action = () => Assert.IsFalse(nullBool, "User-provided message");
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsFalse failed. 'condition' expression: 'nullBool'. User-provided message");
+            .WithMessage($"Assertion failed. Expected condition to be false.{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}actual: null{Environment.NewLine}{Environment.NewLine}Assert.IsFalse(nullBool)");
     }
 
     public void IsFalseNullableBooleanStringMessageShouldFailWithTrue()
@@ -52,7 +52,7 @@ public partial class AssertTests
         bool? nullBool = true;
         Action action = () => Assert.IsFalse(nullBool, "User-provided message");
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsFalse failed. 'condition' expression: 'nullBool'. User-provided message");
+            .WithMessage($"Assertion failed. Expected condition to be false.{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}actual: true{Environment.NewLine}{Environment.NewLine}Assert.IsFalse(nullBool)");
     }
 
     public void IsFalseNullableBooleanStringMessageShouldNotFailWithFalse()
@@ -65,7 +65,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsFalse(true, "User-provided message");
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsFalse failed. 'condition' expression: 'true'. User-provided message");
+            .WithMessage($"Assertion failed. Expected condition to be false.{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}actual: true{Environment.NewLine}{Environment.NewLine}Assert.IsFalse(true)");
     }
 
     public void IsFalseBooleanStringMessageShouldNotFailWithFalse()
@@ -78,7 +78,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsFalse(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.IsFalse failed. 'condition' expression: 'nullBool'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage($"Assertion failed. Expected condition to be false.{Environment.NewLine}User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}{Environment.NewLine}{Environment.NewLine}actual: null{Environment.NewLine}{Environment.NewLine}Assert.IsFalse(nullBool)");
     }
 
     public async Task IsFalseNullableBooleanInterpolatedStringMessageShouldFailWithTrue()
@@ -88,7 +88,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsFalse(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.IsFalse failed. 'condition' expression: 'nullBool'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage($"Assertion failed. Expected condition to be false.{Environment.NewLine}User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}{Environment.NewLine}{Environment.NewLine}actual: true{Environment.NewLine}{Environment.NewLine}Assert.IsFalse(nullBool)");
     }
 
     public void IsFalseNullableBooleanInterpolatedStringMessageShouldNotFailWithFalse()
@@ -103,7 +103,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsFalse(true, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.IsFalse failed. 'condition' expression: 'true'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage($"Assertion failed. Expected condition to be false.{Environment.NewLine}User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}{Environment.NewLine}{Environment.NewLine}actual: true{Environment.NewLine}{Environment.NewLine}Assert.IsFalse(true)");
     }
 
     public void IsFalseBooleanInterpolatedStringMessageShouldNotFailWithFalse()
@@ -114,7 +114,7 @@ public partial class AssertTests
         bool? nullBool = null;
         Action action = () => Assert.IsTrue(nullBool);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsTrue failed. 'condition' expression: 'nullBool'.");
+            .WithMessage($"Assertion failed. Expected condition to be true.{Environment.NewLine}{Environment.NewLine}actual: null{Environment.NewLine}{Environment.NewLine}Assert.IsTrue(nullBool)");
     }
 
     public void IsTrueNullableBooleanShouldFailWithFalse()
@@ -122,7 +122,7 @@ public partial class AssertTests
         bool? nullBool = false;
         Action action = () => Assert.IsTrue(nullBool);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsTrue failed. 'condition' expression: 'nullBool'.");
+            .WithMessage($"Assertion failed. Expected condition to be true.{Environment.NewLine}{Environment.NewLine}actual: false{Environment.NewLine}{Environment.NewLine}Assert.IsTrue(nullBool)");
     }
 
     public void IsTrueNullableBooleanShouldNotFailWithTrue()
@@ -135,7 +135,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsTrue(false);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsTrue failed. 'condition' expression: 'false'.");
+            .WithMessage($"Assertion failed. Expected condition to be true.{Environment.NewLine}{Environment.NewLine}actual: false{Environment.NewLine}{Environment.NewLine}Assert.IsTrue(false)");
     }
 
     public void IsTrueBooleanShouldNotFailWithTrue()
@@ -146,7 +146,7 @@ public partial class AssertTests
         bool? nullBool = null;
         Action action = () => Assert.IsTrue(nullBool, "User-provided message");
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsTrue failed. 'condition' expression: 'nullBool'. User-provided message");
+            .WithMessage($"Assertion failed. Expected condition to be true.{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}actual: null{Environment.NewLine}{Environment.NewLine}Assert.IsTrue(nullBool)");
     }
 
     public void IsTrueNullableBooleanStringMessageShouldFailWithFalse()
@@ -154,7 +154,7 @@ public partial class AssertTests
         bool? nullBool = false;
         Action action = () => Assert.IsTrue(nullBool, "User-provided message");
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsTrue failed. 'condition' expression: 'nullBool'. User-provided message");
+            .WithMessage($"Assertion failed. Expected condition to be true.{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}actual: false{Environment.NewLine}{Environment.NewLine}Assert.IsTrue(nullBool)");
     }
 
     public void IsTrueNullableBooleanStringMessageShouldNotFailWithTrue()
@@ -167,7 +167,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsTrue(false, "User-provided message");
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsTrue failed. 'condition' expression: 'false'. User-provided message");
+            .WithMessage($"Assertion failed. Expected condition to be true.{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}actual: false{Environment.NewLine}{Environment.NewLine}Assert.IsTrue(false)");
     }
 
     public void IsTrueBooleanStringMessageShouldNotFailWithTrue()
@@ -180,7 +180,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsTrue(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.IsTrue failed. 'condition' expression: 'nullBool'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage($"Assertion failed. Expected condition to be true.{Environment.NewLine}User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}{Environment.NewLine}{Environment.NewLine}actual: null{Environment.NewLine}{Environment.NewLine}Assert.IsTrue(nullBool)");
     }
 
     public async Task IsTrueNullableBooleanInterpolatedStringMessageShouldFailWithFalse()
@@ -190,7 +190,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsTrue(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.IsTrue failed. 'condition' expression: 'nullBool'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage($"Assertion failed. Expected condition to be true.{Environment.NewLine}User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}{Environment.NewLine}{Environment.NewLine}actual: false{Environment.NewLine}{Environment.NewLine}Assert.IsTrue(nullBool)");
     }
 
     public void IsTrueNullableBooleanInterpolatedStringMessageShouldNotFailWithTrue()
@@ -205,7 +205,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsTrue(false, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.IsTrue failed. 'condition' expression: 'false'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage($"Assertion failed. Expected condition to be true.{Environment.NewLine}User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}{Environment.NewLine}{Environment.NewLine}actual: false{Environment.NewLine}{Environment.NewLine}Assert.IsTrue(false)");
     }
 
     public void IsTrueBooleanInterpolatedStringMessageShouldNotFailWithTrue()
