@@ -10,15 +10,20 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTestingSdkTests.TestAssetFixture>
 {
-    private static readonly string DesktopTargetFramework = $"{TargetFrameworks.NetCurrent}-windows";
+    private static readonly string[] DesktopTargetFrameworks =
+        TargetFrameworks.Net.Select(tfm => $"{tfm}-windows").ToArray();
+
+    public static IEnumerable<object[]> DesktopTargetFrameworksForDynamicData =>
+        DesktopTargetFrameworks.Select(tfm => new object[] { tfm });
 
     public TestContext TestContext { get; set; }
 
     [TestMethod]
+    [DynamicData(nameof(DesktopTargetFrameworksForDynamicData))]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
-    public async Task EnableWindowsAppTesting_WhenUsingMSTestRunner_RunsDesktopTests()
+    public async Task EnableWindowsAppTesting_WhenUsingMSTestRunner_RunsDesktopTests(string tfm)
     {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, DesktopTargetFramework);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
@@ -26,10 +31,11 @@ public sealed class WindowsAppTestingSdkTests : AcceptanceTestBase<WindowsAppTes
     }
 
     [TestMethod]
+    [DynamicData(nameof(DesktopTargetFrameworksForDynamicData))]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows app testing is Windows-only")]
-    public async Task EnableWindowsAppTesting_WhenUsingVSTest_RunsDesktopTests()
+    public async Task EnableWindowsAppTesting_WhenUsingVSTest_RunsDesktopTests(string tfm)
     {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, DesktopTargetFramework);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
             $"test {testHost.FullName}",
             workingDirectory: AssetFixture.ProjectPath,
@@ -103,7 +109,7 @@ public class NotepadTests : WindowTest
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
-                .PatchCodeWithReplace("$TargetFrameworks$", DesktopTargetFramework)
+                .PatchTargetFrameworks(DesktopTargetFrameworks)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
     }
 }
