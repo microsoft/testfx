@@ -306,8 +306,9 @@ Assert.ThrowsExactly<ArgumentException>(() => Validate(input))
 ```text
 Assertion failed. Expected exception of exact type ArgumentException but caught InvalidOperationException.
 
-expected type: System.ArgumentException
-actual type:   System.InvalidOperationException
+expected type:    System.ArgumentException
+actual type:      System.InvalidOperationException
+actual exception: System.InvalidOperationException: Operation is not valid due to the current state of the object.
 
 Assert.ThrowsExactly<ArgumentException>(() => Validate(input))
    at MyTests.ValidationTests.InvalidInput_ShouldThrow() in ValidationTests.cs:line 18
@@ -524,14 +525,18 @@ Note: Hash codes are non-deterministic across runs in modern .NET. They are usef
 
 ```text
 Assertion failed. Expected both values to refer to the same object.
-Expected is null.
+
+expected: null
+actual:   System.Object (hash: 0x4D5E6F)
 ```
 
 #### Assert.AreSame (actual is null)
 
 ```text
 Assertion failed. Expected both values to refer to the same object.
-Actual is null.
+
+expected: System.Object (hash: 0x1A2B3C)
+actual:   null
 ```
 
 #### Assert.AreSame (both are value types)
@@ -628,8 +633,8 @@ actual:        null
 ```text
 Assertion failed. Expected value to not be of type String (or derived).
 
-wrong type:   System.String (or derived)
-actual value: "hello"
+not expected type: System.String (or derived)
+actual value:      "hello"
 ```
 
 #### Assert.IsExactInstanceOfType
@@ -656,8 +661,8 @@ actual:        null
 ```text
 Assertion failed. Expected value to not be exactly of type String.
 
-wrong type:   System.String
-actual value: "hello"
+not expected type: System.String
+actual value:      "hello"
 ```
 
 ### Assert — Exceptions
@@ -673,8 +678,9 @@ Assertion failed. Expected exception of type ArgumentException (or derived) but 
 ```text
 Assertion failed. Expected exception of type ArgumentException (or derived) but caught InvalidOperationException.
 
-expected type: System.ArgumentException (or derived)
-actual type:   System.InvalidOperationException
+expected type:    System.ArgumentException (or derived)
+actual type:      System.InvalidOperationException
+actual exception: System.InvalidOperationException: Operation is not valid due to the current state of the object.
 ```
 
 #### Assert.ThrowsExactly (no exception thrown)
@@ -688,8 +694,9 @@ Assertion failed. Expected exception of exact type ArgumentException but no exce
 ```text
 Assertion failed. Expected exception of exact type ArgumentException but caught ArgumentNullException.
 
-expected type: System.ArgumentException
-actual type:   System.ArgumentNullException
+expected type:    System.ArgumentException
+actual type:      System.ArgumentNullException
+actual exception: System.ArgumentNullException: Value cannot be null.
 ```
 
 #### Assert.ThrowsAsync / Assert.ThrowsExactlyAsync
