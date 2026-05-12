@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <Target Name="_ValidateWindowsAppTestingPlatform" BeforeTargets="Restore;Build"
-          Condition=" '$(_IsWindowsTfm)' != 'true' ">
+          Condition=" '$(TargetFramework)' != '' and '$(_IsWindowsTfm)' != 'true' ">
     <Error Text="MSTest.Windows.AppTesting requires a Windows target framework (e.g. net8.0-windows). Current TargetFramework: '$(TargetFramework)'." />
   </Target>
 

@@ -74,9 +74,10 @@ public class NotepadTests : WindowTest
     public override string ApplicationPath => "notepad.exe";
 
     [TestMethod]
-    public void Notepad_MainWindow_IsNotNull()
+    public void Notepad_MainWindow_IsVisible()
     {
-        Assert.IsNotNull(MainWindow);
+        Assert.AreEqual(ControlType.Window, MainWindow.Current.ControlType,
+            "Expected the main window element to be of control type Window.");
     }
 
     [TestMethod]

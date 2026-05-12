@@ -41,6 +41,7 @@ public class CalculatorTests : WindowTest
     }
 
     [TestMethod]
+    [Ignore("AutomationIds are app-version-specific. Replace 'num1Button'/'num2Button' with actual IDs for your target application.")]
     public void Calculator_NumberButtons_AreVisible()
     {
         // NOTE: Modern Windows Calculator (UWP) uses different AutomationIds than the

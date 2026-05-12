@@ -36,7 +36,7 @@ namespace Microsoft.MSTest.Windows.AppTesting;
 /// </code>
 /// <para>
 /// For a richer element interaction API, add a library like FlaUI on top and use
-/// <see cref="MainWindow"/> handle to bridge into it.
+/// the <see cref="MainWindow"/> <see cref="AutomationElement"/> to bridge into it.
 /// </para>
 /// </remarks>
 [STATestClass]

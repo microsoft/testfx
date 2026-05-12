@@ -32,9 +32,16 @@ public class ApplicationTest : AutomationTest
     /// Defaults to the <c>DESKTOP_TEST_APP_PATH</c> environment variable.
     /// </summary>
     public virtual string ApplicationPath
-        => Environment.GetEnvironmentVariable(AppPathEnvVar)
-           ?? throw new InvalidOperationException(
-               $"Override {nameof(ApplicationPath)} or set the '{AppPathEnvVar}' environment variable to the path of the application under test.");
+    {
+        get
+        {
+            string? envPath = Environment.GetEnvironmentVariable(AppPathEnvVar);
+            return string.IsNullOrWhiteSpace(envPath)
+                ? throw new InvalidOperationException(
+                    $"Override {nameof(ApplicationPath)} or set the '{AppPathEnvVar}' environment variable to the path of the application under test.")
+                : envPath;
+        }
+    }
 
     /// <summary>
     /// Gets the command-line arguments to pass when launching the application.
