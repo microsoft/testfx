@@ -99,8 +99,8 @@ internal sealed class MSTestTelemetryDataCollector
                 _customTestClassTypes.Add(AnonymizeString(attributeType.FullName ?? attributeName));
             }
 
-            // Track attribute usage counts by base type name
-            string trackingName = attribute switch
+            // Track attribute usage counts by base type name (only known MSTest attributes)
+            string? trackingName = attribute switch
             {
                 TestMethodAttribute => nameof(TestMethodAttribute),
                 TestClassAttribute => nameof(TestClassAttribute),
@@ -115,12 +115,15 @@ internal sealed class MSTestTelemetryDataCollector
 #if !WIN_UI
                 DeploymentItemAttribute => nameof(DeploymentItemAttribute),
 #endif
-                _ => attributeName,
+                _ => null,
             };
 
-            _attributeCounts[trackingName] = _attributeCounts.TryGetValue(trackingName, out long count)
-                ? count + 1
-                : 1;
+            if (trackingName is not null)
+            {
+                _attributeCounts[trackingName] = _attributeCounts.TryGetValue(trackingName, out long count)
+                    ? count + 1
+                    : 1;
+            }
         }
     }
 
@@ -176,28 +179,28 @@ internal sealed class MSTestTelemetryDataCollector
             metrics["mstest.config_source"] = ConfigurationSource;
         }
 
-        // Attribute usage (aggregated counts as JSON)
+        // Attribute usage (aggregated counts as JSON, sorted for deterministic output)
         if (_attributeCounts.Count > 0)
         {
-            metrics["mstest.attribute_usage"] = SerializeDictionary(_attributeCounts);
+            metrics["mstest.attribute_usage"] = SerializeDictionary(_attributeCounts.OrderBy(static kvp => kvp.Key));
         }
 
-        // Custom/inherited types (anonymized names)
+        // Custom/inherited types (anonymized names, sorted for deterministic output)
         if (_customTestMethodTypes.Count > 0)
         {
-            metrics["mstest.custom_test_method_types"] = SerializeCollection(_customTestMethodTypes);
+            metrics["mstest.custom_test_method_types"] = SerializeCollection(_customTestMethodTypes.OrderBy(static x => x));
         }
 
         if (_customTestClassTypes.Count > 0)
         {
-            metrics["mstest.custom_test_class_types"] = SerializeCollection(_customTestClassTypes);
+            metrics["mstest.custom_test_class_types"] = SerializeCollection(_customTestClassTypes.OrderBy(static x => x));
         }
 
-        // Assertion usage (drain the static counters)
+        // Assertion usage (drain the static counters, sorted for deterministic output)
         Dictionary<string, long> assertionCounts = TelemetryCollector.DrainAssertionCallCounts();
         if (assertionCounts.Count > 0)
         {
-            metrics["mstest.assertion_usage"] = SerializeDictionary(assertionCounts);
+            metrics["mstest.assertion_usage"] = SerializeDictionary(assertionCounts.OrderBy(static kvp => kvp.Key));
         }
 
         return metrics;
@@ -223,7 +226,7 @@ internal sealed class MSTestTelemetryDataCollector
         return builder.ToString();
     }
 
-    private static string SerializeDictionary(Dictionary<string, long> values)
+    private static string SerializeDictionary(IEnumerable<KeyValuePair<string, long>> values)
     {
         System.Text.StringBuilder builder = new("{");
         bool isFirst = true;

@@ -328,4 +328,18 @@ public sealed class TreeNodeFilterTests
 
     [TestMethod]
     public void MatchAllFilterWithPropertyExpression_DoNotAllowInMiddleOfFilter() => Assert.ThrowsExactly<ArgumentException>(() => _ = new TreeNodeFilter("/**/Path[A=B]"));
+
+    [DataRow("/**", false)]
+    [DataRow("/A/B", false)]
+    [DataRow("/(A|B)", false)]
+    [DataRow("/(A&B)", false)]
+    [DataRow("/*.UnitTests[Tag=Fast]", true)]
+    [DataRow("/**[A=B]", true)]
+    [DataRow("/(A[Tag=Fast]&B)", true)]
+    [TestMethod]
+    public void ContainsPropertyFilters_ReturnsExpectedValue(string filterExpression, bool expected)
+    {
+        TreeNodeFilter filter = new(filterExpression);
+        Assert.AreEqual(expected, filter.ContainsPropertyFilters);
+    }
 }

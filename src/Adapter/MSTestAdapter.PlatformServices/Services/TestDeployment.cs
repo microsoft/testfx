@@ -127,6 +127,7 @@ internal sealed class TestDeployment : ITestDeployment
             return false;
         }
 
+#if NETFRAMEWORK
         string? firstTestSource = testCases.FirstOrDefault()?.Source;
         RunDirectories = _deploymentUtility.CreateDeploymentDirectories(runContext, firstTestSource);
 
@@ -136,6 +137,16 @@ internal sealed class TestDeployment : ITestDeployment
         {
             return false;
         }
+#else
+        // On .NET Core, avoid creating empty deployment folders when no deployment items are used.
+        if (!hasDeploymentItems)
+        {
+            return false;
+        }
+
+        string? firstTestSource = testCases.FirstOrDefault()?.Source;
+        RunDirectories = _deploymentUtility.CreateDeploymentDirectories(runContext, firstTestSource);
+#endif
 
         // Object model currently does not have support for SuspendCodeCoverage. We can remove this once support is added
 #if NETFRAMEWORK

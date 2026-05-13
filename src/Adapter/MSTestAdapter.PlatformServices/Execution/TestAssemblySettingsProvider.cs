@@ -19,7 +19,7 @@ internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
     /// </returns>
     [SecurityCritical]
 #if NET5_0_OR_GREATER
-    [Obsolete]
+    [Obsolete("MarshalByRefObject.InitializeLifetimeService is obsolete in .NET 5+. This override is required to maintain infinite lifetime service.")]
 #endif
     public override object InitializeLifetimeService() => null!;
 

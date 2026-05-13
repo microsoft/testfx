@@ -153,7 +153,9 @@ internal class TypeEnumerator
         DebugEx.Assert(_type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
 
         ManagedNameHelper.GetManagedNameAndHierarchy(method, out string managedType, out string managedMethod, out string?[] hierarchyValues);
-        var testMethod = new TestMethod(managedType, managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, null, string.Join(",", method.GetParameters().Select(p => p.ParameterType.ToString())))
+        ParameterInfo[] parameters = method.GetParameters();
+        var testMethod = new TestMethod(managedType, managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, null,
+            parameters.Length == 0 ? string.Empty : string.Join(",", Array.ConvertAll(parameters, static p => p.ParameterType.ToString())))
         {
             MethodInfo = method,
         };
@@ -175,9 +177,11 @@ internal class TypeEnumerator
         _telemetryDataCollector?.TrackDiscoveredMethod(attributes);
 #endif
         TestMethodAttribute? testMethodAttribute = null;
+        List<string>? workItemIds = null;
 
         // Backward looping for backcompat. This used to be calls to _reflectHelper.GetFirstAttributeOrDefault
         // So, to make sure the first attribute always wins, we loop from end to start.
+        // WorkItemAttribute is also collected here to avoid a second pass with OfType + Any + Select.
         for (int i = attributes.Length - 1; i >= 0; i--)
         {
             if (attributes[i] is TestMethodAttribute tma)
@@ -188,12 +192,16 @@ internal class TypeEnumerator
             {
                 testElement.Priority = priorityAttribute.Priority;
             }
+            else if (attributes[i] is WorkItemAttribute workItem)
+            {
+                (workItemIds ??= []).Add(workItem.Id.ToString(CultureInfo.InvariantCulture));
+            }
         }
 
-        IEnumerable<WorkItemAttribute> workItemAttributes = attributes.OfType<WorkItemAttribute>();
-        if (workItemAttributes.Any())
+        if (workItemIds is not null)
         {
-            testElement.WorkItemIds = [.. workItemAttributes.Select(x => x.Id.ToString(CultureInfo.InvariantCulture))];
+            workItemIds.Reverse();
+            testElement.WorkItemIds = [.. workItemIds];
         }
 
         // In production, we always have a TestMethod attribute because GetTestFromMethod is called under IsValidTestMethod

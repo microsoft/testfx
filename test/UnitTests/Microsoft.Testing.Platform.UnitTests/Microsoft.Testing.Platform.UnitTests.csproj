@@ -6,6 +6,8 @@
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
     <DefineConstants>$(DefineConstants);IS_MTP_UNIT_TESTS</DefineConstants>
+    <GenerateBuildInfo>true</GenerateBuildInfo>
+    <BuildInfoTemplateFile>$(RepoRoot)src\Platform\Microsoft.Testing.Platform\BuildInfo.cs.template</BuildInfoTemplateFile>
   </PropertyGroup>
 
   <!-- start netstandard2.0 polyfill -->

@@ -3,6 +3,7 @@
 
 namespace Microsoft.Testing.Platform.Helpers;
 
+[System.Obsolete("Use PlatformVersion.Version instead. AppVersion will be removed in v3.")]
 internal static class AppVersion
 {
     public static readonly string DefaultSemVer = PlatformVersion.Version;

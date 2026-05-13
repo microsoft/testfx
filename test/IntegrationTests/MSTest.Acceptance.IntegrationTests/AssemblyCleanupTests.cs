@@ -16,7 +16,7 @@ public sealed class AssemblyCleanupTests : AcceptanceTestBase<AssemblyCleanupTes
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
         testHostResult.AssertOutputContains("""
             TestClass1.Test1.

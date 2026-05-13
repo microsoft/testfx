@@ -118,8 +118,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsReserved">
-        <source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</source>
-        <target state="translated">La opción “--{0}” está reservada y los proveedores no la pueden usar: “{0}”</target>
+        <source>Option '--{0}' is reserved and cannot be used by providers: '{1}'</source>
+        <target state="translated">La opción “--{0}” está reservada y los proveedores no la pueden usar: “{1}”</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
@@ -163,8 +163,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
-        <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
-        <target state="translated">La misma instancia de "CompositeExtensonFactory" ya está registrada</target>
+        <source>The same instance of 'CompositeExtensionFactory' is already registered</source>
+        <target state="translated">La misma instancia de "CompositeExtensionFactory" ya está registrada</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">

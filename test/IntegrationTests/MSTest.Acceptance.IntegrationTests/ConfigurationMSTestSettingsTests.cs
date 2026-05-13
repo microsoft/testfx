@@ -20,7 +20,7 @@ public sealed class ConfigurationMSTestSettingsTests : AcceptanceTestBase<Config
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         // Assert
-        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
+        testHostResult.AssertExitCodeIsNot(ExitCode.Success);
         testHostResult.AssertStandardErrorContains("Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.");
     }
 

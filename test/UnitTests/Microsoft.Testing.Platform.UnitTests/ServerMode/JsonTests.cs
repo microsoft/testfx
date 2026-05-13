@@ -135,6 +135,22 @@ public sealed class JsonTests
         Assert.AreEqual("Thomas", actual.Name);
     }
 
+    [TestMethod]
+    public void GetProperties_WhenPropertiesDelegateIsNotSet_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var serializer = new TestJsonObjectSerializer();
+
+        // Act
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(() => serializer.GetProperties(new object()));
+
+        // Assert
+        Assert.Contains(nameof(JsonObjectSerializer.Properties), exception.Message);
+        Assert.Contains(nameof(TestJsonObjectSerializer), exception.Message);
+    }
+
+    private sealed class TestJsonObjectSerializer : JsonObjectSerializer;
+
     private sealed class Person
     {
         public string? Name { get; set; }

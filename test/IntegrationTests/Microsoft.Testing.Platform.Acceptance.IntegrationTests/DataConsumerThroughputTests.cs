@@ -18,7 +18,7 @@ public class DataConsumerThroughputTests : AcceptanceTestBase<DataConsumerThroug
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         stopwatch.Stop();
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
 
         Assert.IsLessThan(7, stopwatch.Elapsed.TotalSeconds, testHostResult.ToString());

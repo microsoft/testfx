@@ -88,6 +88,9 @@ ehthumbs.db
 /.dotnet/
 /TestAssets/
 
+# Lean build artifacts
+.lake/
+
 # ===========================
 # Tools
 # ===========================
@@ -132,7 +135,7 @@ project.fragment.lock.json
 # ===========================
 # Language Server cache
 # ===========================
-.lscache/
+*.lscache
 
 # Arcade files
 .dotnet/

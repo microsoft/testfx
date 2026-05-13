@@ -189,7 +189,7 @@ public sealed class TestApplicationBuilderTests
 
         public string Uid => nameof(InvalidComposition);
 
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         public string DisplayName => nameof(InvalidComposition);
 
@@ -220,7 +220,7 @@ public sealed class TestApplicationBuilderTests
 
         public string Uid => nameof(TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider);
 
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         public string DisplayName => nameof(TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider);
 
@@ -291,7 +291,7 @@ public sealed class TestApplicationBuilderTests
 
         public string Uid => nameof(TestSessionLifetimeHandlerPlusConsumer);
 
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         public string DisplayName => nameof(TestSessionLifetimeHandlerPlusConsumer);
 
