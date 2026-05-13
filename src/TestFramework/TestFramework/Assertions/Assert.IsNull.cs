@@ -167,7 +167,7 @@ public sealed partial class Assert
         StructuredAssertionMessage structured = new(FrameworkMessages.IsNullFailedSummary);
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
-        structured.WithExpectedAndActual(null, actualValue);
+        structured.WithExpectedAndActual(AssertionValueRenderer.RenderValue(null), actualValue);
         structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNull", valueExpression, nameof(value)));
 
         ReportAssertFailed(structured);

@@ -168,7 +168,7 @@ public sealed partial class Assert
         StructuredAssertionMessage structured = new(FrameworkMessages.IsTrueFailedSummary);
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
-        structured.WithExpectedAndActual(null, actualValue);
+        structured.WithExpectedAndActual(AssertionValueRenderer.RenderValue(true), actualValue);
         structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsTrue", conditionExpression, nameof(condition)));
 
         ReportAssertFailed(structured);
@@ -219,7 +219,7 @@ public sealed partial class Assert
         StructuredAssertionMessage structured = new(FrameworkMessages.IsFalseFailedSummary);
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
-        structured.WithExpectedAndActual(null, actualValue);
+        structured.WithExpectedAndActual(AssertionValueRenderer.RenderValue(false), actualValue);
         structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsFalse", conditionExpression, nameof(condition)));
 
         ReportAssertFailed(structured);
