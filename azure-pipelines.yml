@@ -1,12 +1,4 @@
-trigger:
-  branches:
-    include:
-    - main
-    - rel/*
-  paths:
-    exclude:
-      - .github/**
-      - .gitignore
+trigger: none
 
 # Branch(es) that trigger(s) build(s) on PR
 pr:
