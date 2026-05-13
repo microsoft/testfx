@@ -57,6 +57,8 @@ public sealed partial class CollectionAssert
     public static void AllItemsAreInstancesOfType(
         [NotNull] ICollection? collection, [NotNull] Type? expectedType, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AllItemsAreInstancesOfType");
+
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreInstancesOfType", "collection");
         Assert.CheckParameterNotNull(expectedType, "CollectionAssert.AllItemsAreInstancesOfType", "expectedType");
         int i = 0;

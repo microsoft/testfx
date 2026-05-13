@@ -127,6 +127,8 @@ public sealed partial class Assert
     /// </exception>
     public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreEqual");
+
         CheckParameterNotNull(culture, "Assert.AreEqual", nameof(culture));
         if (!AreEqualFailing(expected, actual, ignoreCase, culture))
         {
@@ -223,6 +225,8 @@ public sealed partial class Assert
     /// </exception>
     public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, CultureInfo culture, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreNotEqual");
+
         CheckParameterNotNull(culture, "Assert.AreNotEqual", "culture");
         if (!AreNotEqualFailing(notExpected, actual, ignoreCase, culture))
         {

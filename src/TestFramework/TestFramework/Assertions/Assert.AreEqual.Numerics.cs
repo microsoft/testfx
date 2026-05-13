@@ -117,6 +117,8 @@ public sealed partial class Assert
     /// </exception>
     public static void AreEqual(float expected, float actual, float delta, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreEqual");
+
         if (AreEqualFailing(expected, actual, delta))
         {
             string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
@@ -164,6 +166,8 @@ public sealed partial class Assert
     /// </exception>
     public static void AreNotEqual(float notExpected, float actual, float delta, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreNotEqual");
+
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
             string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
@@ -232,6 +236,8 @@ public sealed partial class Assert
     /// </exception>
     public static void AreEqual(decimal expected, decimal actual, decimal delta, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreEqual");
+
         if (AreEqualFailing(expected, actual, delta))
         {
             string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
@@ -279,6 +285,8 @@ public sealed partial class Assert
     /// </exception>
     public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreNotEqual");
+
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
             string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
@@ -329,6 +337,8 @@ public sealed partial class Assert
     /// </exception>
     public static void AreEqual(long expected, long actual, long delta, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreEqual");
+
         if (AreEqualFailing(expected, actual, delta))
         {
             string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
@@ -376,6 +386,8 @@ public sealed partial class Assert
     /// </exception>
     public static void AreNotEqual(long notExpected, long actual, long delta, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreNotEqual");
+
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
             string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
@@ -425,6 +437,8 @@ public sealed partial class Assert
     /// </exception>
     public static void AreEqual(double expected, double actual, double delta, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreEqual");
+
         if (AreEqualFailing(expected, actual, delta))
         {
             string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
@@ -472,6 +486,8 @@ public sealed partial class Assert
     /// </exception>
     public static void AreNotEqual(double notExpected, double actual, double delta, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreNotEqual");
+
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
             string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
