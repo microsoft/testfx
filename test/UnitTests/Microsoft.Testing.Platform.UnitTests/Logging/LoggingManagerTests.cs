@@ -158,17 +158,17 @@ public sealed class LoggingManagerTests
         Mock<IExtensionLoggerProvider> disabledProvider = new();
         disabledProvider.Setup(p => p.IsEnabledAsync()).ReturnsAsync(false);
 
-        Mock<ILoggerProvider> enabledProvider = new();
-        enabledProvider.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+        Mock<ILoggerProvider> nonExtensionProvider = new();
+        nonExtensionProvider.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
 
         manager.AddProvider((_, _) => disabledProvider.Object);
-        manager.AddProvider((_, _) => enabledProvider.Object);
+        manager.AddProvider((_, _) => nonExtensionProvider.Object);
 
         ILoggerFactory factory = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
         _ = factory.CreateLogger("test");
 
         disabledProvider.Verify(p => p.CreateLogger(It.IsAny<string>()), Times.Never);
-        enabledProvider.Verify(p => p.CreateLogger("test"), Times.Once);
+        nonExtensionProvider.Verify(p => p.CreateLogger("test"), Times.Once);
     }
 }
 
