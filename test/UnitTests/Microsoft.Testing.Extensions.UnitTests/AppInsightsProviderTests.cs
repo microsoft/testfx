@@ -152,4 +152,55 @@ public sealed class AppInsightsProviderTests
         appInsightsProvider.Dispose();
 #endif
     }
+
+    [TestMethod]
+    public async Task LogEvent_WithBooleanProperty_ConvertsValueToTelemetryString()
+    {
+        Mock<IEnvironment> environment = new();
+        Mock<IClock> clock = new();
+        Mock<IConfiguration> config = new();
+        Mock<ITelemetryInformation> telemetryInformation = new();
+
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+
+        var capturedProperties = new Dictionary<string, string>();
+        Mock<ITelemetryClient> testTelemetryClient = new();
+        testTelemetryClient.Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
+            .Callback((string _, Dictionary<string, string> properties, Dictionary<string, double> _) =>
+            {
+                foreach (KeyValuePair<string, string> pair in properties)
+                {
+                    capturedProperties[pair.Key] = pair.Value;
+                }
+            });
+
+        Mock<ITelemetryClientFactory> telemetryClientFactory = new();
+        telemetryClientFactory.Setup(x => x.Create(It.IsAny<string?>(), It.IsAny<string>())).Returns(testTelemetryClient.Object);
+
+        CancellationTokenSource cancellationTokenSource = new();
+        Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new();
+        testApplicationCancellationTokenSource.Setup(x => x.CancellationToken).Returns(cancellationTokenSource.Token);
+
+        AppInsightsProvider appInsightsProvider = new(
+            environment.Object,
+            testApplicationCancellationTokenSource.Object,
+            new SystemTask(),
+            loggerFactory.Object,
+            clock.Object,
+            config.Object,
+            telemetryInformation.Object,
+            telemetryClientFactory.Object,
+            "sessionId");
+
+        await appInsightsProvider.LogEventAsync(
+            "Sample",
+            new Dictionary<string, object> { ["my.bool"] = true },
+            CancellationToken.None);
+
+        await appInsightsProvider.DisposeAsync();
+
+        Assert.IsTrue(capturedProperties.ContainsKey("my.bool"));
+        Assert.AreEqual(TelemetryProperties.True, capturedProperties["my.bool"]);
+    }
 }

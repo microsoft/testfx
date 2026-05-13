@@ -189,7 +189,6 @@ internal sealed partial class AppInsightsProvider :
                                 break;
 #endif
                             case bool value:
-                                RoslynDebug.Assert(false, $"Telemetry entry '{pair.Key}' contains a boolean value, boolean values should always be converted to string using: .{nameof(TelemetryExtensions.AsTelemetryBool)}()");
                                 properties.Add(pair.Key, value.AsTelemetryBool());
                                 break;
                             default:
