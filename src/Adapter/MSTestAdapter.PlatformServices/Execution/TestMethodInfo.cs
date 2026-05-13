@@ -183,22 +183,22 @@ internal partial class TestMethodInfo : ITestMethod
     /// </returns>
     private RetryBaseAttribute? GetRetryAttribute()
     {
-        // Iterate the cached attribute array directly to avoid allocating the yield-return
-        // state machine that GetAttributes<T>() would create.
-        RetryBaseAttribute? found = null;
+        // Inline the GetSingleAttributeOrDefault<T> pattern to avoid allocating the
+        // yield-return state machine that GetAttributes<T>() would create.
+        RetryBaseAttribute? foundAttribute = null;
         foreach (Attribute attribute in ReflectHelper.Instance.GetCustomAttributesCached(MethodInfo))
         {
             if (attribute is RetryBaseAttribute retryAttribute)
             {
-                if (found is not null)
+                if (foundAttribute is not null)
                 {
                     ThrowMultipleAttributesException(nameof(RetryBaseAttribute));
                 }
 
-                found = retryAttribute;
+                foundAttribute = retryAttribute;
             }
         }
 
-        return found;
+        return foundAttribute;
     }
 }

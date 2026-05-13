@@ -3,250 +3,153 @@
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
-
-using Moq;
+using Microsoft.Testing.Platform.UnitTests.Helpers;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
 public sealed class ExtensionValidationHelperTests
 {
-    // ---- IEnumerable<T> overload ----
     [TestMethod]
-    public void ValidateUniqueExtension_Generic_NullExistingExtensions_Throws()
+    public void ValidateUniqueExtension_WithNullExistingExtensions_ThrowsArgumentNullException()
     {
         IEnumerable<IExtension> existing = null!;
-        Mock<IExtension> newExt = new();
-        newExt.Setup(e => e.Uid).Returns("uid");
+        TestExtension newExtension = new();
 
-        Assert.ThrowsExactly<ArgumentNullException>(() =>
-            existing.ValidateUniqueExtension(newExt.Object, x => x));
+        Assert.ThrowsExactly<ArgumentNullException>(() => existing.ValidateUniqueExtension(newExtension));
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_Generic_NullNewExtension_Throws()
+    public void ValidateUniqueExtension_WithNullNewExtension_ThrowsArgumentNullException()
     {
         List<IExtension> existing = [];
 
-        Assert.ThrowsExactly<ArgumentNullException>(() =>
-            existing.ValidateUniqueExtension(null!, x => x));
+        Assert.ThrowsExactly<ArgumentNullException>(() => existing.ValidateUniqueExtension(null!));
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_Generic_NullSelector_Throws()
+    public void ValidateUniqueExtension_WithEmptyCollection_DoesNotThrow()
     {
         List<IExtension> existing = [];
-        Mock<IExtension> newExt = new();
-        newExt.Setup(e => e.Uid).Returns("uid");
+        TestExtension newExtension = new("uid1");
 
-        Assert.ThrowsExactly<ArgumentNullException>(() =>
-            existing.ValidateUniqueExtension<IExtension>(newExt.Object, null!));
+        existing.ValidateUniqueExtension(newExtension);
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_Generic_EmptyCollection_DoesNotThrow()
+    public void ValidateUniqueExtension_WithNonDuplicateUid_DoesNotThrow()
     {
-        List<IExtension> existing = [];
-        Mock<IExtension> newExt = new();
-        newExt.Setup(e => e.Uid).Returns("uid");
+        List<IExtension> existing = [new TestExtension("uid1")];
+        TestExtension newExtension = new("uid2");
 
-        existing.ValidateUniqueExtension(newExt.Object, x => x);
+        existing.ValidateUniqueExtension(newExtension);
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_Generic_NoDuplicateUid_DoesNotThrow()
+    public void ValidateUniqueExtension_WithDuplicateUid_ThrowsInvalidOperationException()
     {
-        Mock<IExtension> existing1 = new();
-        existing1.Setup(e => e.Uid).Returns("other-uid");
+        List<IExtension> existing = [new TestExtension("uid1")];
+        TestExtension newExtension = new("uid1");
 
-        Mock<IExtension> newExt = new();
-        newExt.Setup(e => e.Uid).Returns("uid");
-
-        new[] { existing1.Object }.ValidateUniqueExtension(newExt.Object, x => x);
+        Assert.ThrowsExactly<InvalidOperationException>(() => existing.ValidateUniqueExtension(newExtension));
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_Generic_OneDuplicateUid_ThrowsInvalidOperationException()
+    public void ValidateUniqueExtension_WithDuplicateUid_ErrorMessageContainsDuplicateUid()
     {
-        (InvalidOperationException ex, _, _) = AssertGenericDuplicateUidThrows("duplicate-uid");
+        List<IExtension> existing = [new TestExtension("uid1")];
+        TestExtension newExtension = new("uid1");
 
-        Assert.Contains("duplicate-uid", ex.Message);
+        InvalidOperationException ex = Assert.ThrowsExactly<InvalidOperationException>(
+            () => existing.ValidateUniqueExtension(newExtension));
+
+        Assert.Contains("uid1", ex.Message);
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_Generic_OneDuplicateUid_ErrorMessageContainsTypeNames()
+    public void ValidateUniqueExtension_WithDuplicateUid_ErrorMessageContainsTypeName()
     {
-        (InvalidOperationException ex, IExtension existing1, IExtension newExt) = AssertGenericDuplicateUidThrows("duplicate-uid");
+        List<IExtension> existing = [new TestExtension("uid1")];
+        TestExtension newExtension = new("uid1");
 
-        Assert.Contains(existing1.GetType().ToString(), ex.Message);
-        Assert.Contains(newExt.GetType().ToString(), ex.Message);
+        InvalidOperationException ex = Assert.ThrowsExactly<InvalidOperationException>(
+            () => existing.ValidateUniqueExtension(newExtension));
+
+        Assert.Contains(typeof(TestExtension).ToString(), ex.Message);
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_Generic_MultipleDuplicates_ThrowsInvalidOperationException()
+    public void ValidateUniqueExtension_WithMultipleDuplicates_ThrowsInvalidOperationException()
     {
-        Mock<IExtension> existing1 = new();
-        existing1.Setup(e => e.Uid).Returns("dup-uid");
+        List<IExtension> existing = [new TestExtension("uid1"), new TestExtension("uid1")];
+        TestExtension newExtension = new("uid1");
 
-        Mock<IExtension> existing2 = new();
-        existing2.Setup(e => e.Uid).Returns("dup-uid");
-
-        Mock<IExtension> newExt = new();
-        newExt.Setup(e => e.Uid).Returns("dup-uid");
-
-        Assert.ThrowsExactly<InvalidOperationException>(() =>
-            new[] { existing1.Object, existing2.Object }.ValidateUniqueExtension(newExt.Object, x => x));
+        Assert.ThrowsExactly<InvalidOperationException>(() => existing.ValidateUniqueExtension(newExtension));
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_Generic_CustomSelector_DetectsDuplicate()
-    {
-        var wrapper1 = new { Extension = CreateExtension("uid-x") };
-        Mock<IExtension> newExt = new();
-        newExt.Setup(e => e.Uid).Returns("uid-x");
-
-        Assert.ThrowsExactly<InvalidOperationException>(() =>
-            new[] { wrapper1 }.ValidateUniqueExtension(newExt.Object, w => w.Extension));
-    }
-
-    [TestMethod]
-    public void ValidateUniqueExtension_Generic_CustomSelector_NoDuplicate_DoesNotThrow()
-    {
-        var wrapper1 = new { Extension = CreateExtension("uid-a") };
-        Mock<IExtension> newExt = new();
-        newExt.Setup(e => e.Uid).Returns("uid-b");
-
-        new[] { wrapper1 }.ValidateUniqueExtension(newExt.Object, w => w.Extension);
-    }
-
-    // ---- IEnumerable<IExtension> simple overload ----
-    [TestMethod]
-    public void ValidateUniqueExtension_Simple_NullExistingExtensions_Throws()
+    public void ValidateUniqueExtension_Selector_WithNullExistingExtensions_ThrowsArgumentNullException()
     {
         IEnumerable<IExtension> existing = null!;
-        Mock<IExtension> newExt = new();
-        newExt.Setup(e => e.Uid).Returns("uid");
+        TestExtension newExtension = new();
 
-        Assert.ThrowsExactly<ArgumentNullException>(() =>
-            existing.ValidateUniqueExtension(newExt.Object));
+        Assert.ThrowsExactly<ArgumentNullException>(() => existing.ValidateUniqueExtension(newExtension, x => x));
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_Simple_NullNewExtension_Throws()
+    public void ValidateUniqueExtension_Selector_WithNullNewExtension_ThrowsArgumentNullException()
     {
         List<IExtension> existing = [];
 
-        Assert.ThrowsExactly<ArgumentNullException>(() =>
-            existing.ValidateUniqueExtension(null!));
+        Assert.ThrowsExactly<ArgumentNullException>(() => existing.ValidateUniqueExtension(null!, x => x));
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_Simple_EmptyCollection_DoesNotThrow()
+    public void ValidateUniqueExtension_Selector_WithNullSelector_ThrowsArgumentNullException()
     {
         List<IExtension> existing = [];
-        Mock<IExtension> newExt = new();
-        newExt.Setup(e => e.Uid).Returns("uid");
+        TestExtension newExtension = new();
 
-        existing.ValidateUniqueExtension(newExt.Object);
+        Assert.ThrowsExactly<ArgumentNullException>(() => existing.ValidateUniqueExtension<IExtension>(newExtension, null!));
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_Simple_NoDuplicate_DoesNotThrow()
+    public void ValidateUniqueExtension_Selector_WithNonDuplicateUid_DoesNotThrow()
     {
-        Mock<IExtension> existing1 = new();
-        existing1.Setup(e => e.Uid).Returns("other-uid");
+        List<(string Tag, IExtension Ext)> existing = [("a", new TestExtension("uid1"))];
+        TestExtension newExtension = new("uid2");
 
-        Mock<IExtension> newExt = new();
-        newExt.Setup(e => e.Uid).Returns("uid");
-
-        new[] { existing1.Object }.ValidateUniqueExtension(newExt.Object);
+        existing.ValidateUniqueExtension(newExtension, item => item.Ext);
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_Simple_DuplicateUid_ThrowsInvalidOperationException()
+    public void ValidateUniqueExtension_Selector_WithDuplicateUid_ThrowsInvalidOperationException()
     {
-        (InvalidOperationException ex, _, _) = AssertSimpleDuplicateUidThrows("dup-uid");
+        List<(string Tag, IExtension Ext)> existing = [("a", new TestExtension("uid1"))];
+        TestExtension newExtension = new("uid1");
 
-        Assert.Contains("dup-uid", ex.Message);
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => existing.ValidateUniqueExtension(newExtension, item => item.Ext));
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_Simple_DuplicateUid_ErrorMessageContainsTypeNames()
+    public void ValidateUniqueExtension_Selector_WithDuplicateUid_ErrorMessageContainsDuplicateUid()
     {
-        (InvalidOperationException ex, IExtension existing1, IExtension newExt) = AssertSimpleDuplicateUidThrows("dup-uid");
+        List<(string Tag, IExtension Ext)> existing = [("a", new TestExtension("uid1"))];
+        TestExtension newExtension = new("uid1");
 
-        Assert.Contains(existing1.GetType().ToString(), ex.Message);
-        Assert.Contains(newExt.GetType().ToString(), ex.Message);
+        InvalidOperationException ex = Assert.ThrowsExactly<InvalidOperationException>(
+            () => existing.ValidateUniqueExtension(newExtension, item => item.Ext));
+
+        Assert.Contains("uid1", ex.Message);
     }
 
     [TestMethod]
-    public void ValidateUniqueExtension_Simple_MultipleDuplicates_ThrowsInvalidOperationException()
+    public void ValidateUniqueExtension_Selector_WithEmptyCollection_DoesNotThrow()
     {
-        Mock<IExtension> existing1 = new();
-        existing1.Setup(e => e.Uid).Returns("dup-uid");
+        List<(string Tag, IExtension Ext)> existing = [];
+        TestExtension newExtension = new("uid1");
 
-        Mock<IExtension> existing2 = new();
-        existing2.Setup(e => e.Uid).Returns("dup-uid");
-
-        Mock<IExtension> newExt = new();
-        newExt.Setup(e => e.Uid).Returns("dup-uid");
-
-        Assert.ThrowsExactly<InvalidOperationException>(() =>
-            new[] { existing1.Object, existing2.Object }.ValidateUniqueExtension(newExt.Object));
-    }
-
-    private static IExtension CreateExtension(string uid)
-    {
-        Mock<IExtension> ext = new();
-        ext.Setup(e => e.Uid).Returns(uid);
-        return ext.Object;
-    }
-
-    private static (InvalidOperationException Exception, IExtension ExistingExtension, IExtension NewExtension) AssertGenericDuplicateUidThrows(string uid)
-    {
-        IExtension existingExtension = new DuplicateExtensionA(uid);
-        IExtension newExtension = new DuplicateExtensionB(uid);
-
-        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(() =>
-            new[] { existingExtension }.ValidateUniqueExtension(newExtension, x => x));
-
-        return (exception, existingExtension, newExtension);
-    }
-
-    private static (InvalidOperationException Exception, IExtension ExistingExtension, IExtension NewExtension) AssertSimpleDuplicateUidThrows(string uid)
-    {
-        IExtension existingExtension = new DuplicateExtensionA(uid);
-        IExtension newExtension = new DuplicateExtensionB(uid);
-
-        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(() =>
-            new[] { existingExtension }.ValidateUniqueExtension(newExtension));
-
-        return (exception, existingExtension, newExtension);
-    }
-
-    private sealed class DuplicateExtensionA(string uid) : IExtension
-    {
-        public string Uid => uid;
-
-        public string Version => "1.0";
-
-        public string DisplayName => nameof(DuplicateExtensionA);
-
-        public string Description => nameof(DuplicateExtensionA);
-
-        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-    }
-
-    private sealed class DuplicateExtensionB(string uid) : IExtension
-    {
-        public string Uid => uid;
-
-        public string Version => "1.0";
-
-        public string DisplayName => nameof(DuplicateExtensionB);
-
-        public string Description => nameof(DuplicateExtensionB);
-
-        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+        existing.ValidateUniqueExtension(newExtension, item => item.Ext);
     }
 }
