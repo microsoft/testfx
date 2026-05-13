@@ -1,7 +1,7 @@
 # TestFX Test Improver Memory
 
 ## Last Updated
-2026-05-12
+2026-05-13
 
 ## Build/Test Commands
 
@@ -47,7 +47,6 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
   - `AwesomeAssertions` is BANNED — use MSTest `Assert.*` methods
   - Has `InternalsVisibleTo` access to `Microsoft.Testing.Platform` internals
   - Tests run on both net8.0 and net9.0 — total count doubled
-  - Baseline (after 2026-05-11 merges): 11 tests in `LoggingManagerTests.cs` (main HEAD, #8130 merged)
   - `PlatformResources.LoggerFactoryNotReady` NOT accessible in test project (only in IS_CORE_MTP mode)
   - For multi-interface mocks (e.g. ILoggerProvider + IExtension), define internal interface combining them and mock that
   - **IMPORTANT**: LoggerFactory wraps providers into a composite Logger — Logger.IsEnabled uses `logLevel >= _logLevel` directly, does NOT delegate to mock logger. Test IsEnabled on the factory-created logger directly.
@@ -68,47 +67,25 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 6. ✅ **DONE** `LoggingManager.BuildAsync` tests → merged via #8124 and #8130
 7. ✅ **DONE** `ExtensionValidationHelper.ValidateUniqueExtension` → merged via #8128
 8. ✅ **DONE** MSTEST0031 code fix tests → confirmed merged via #7898 (2026-05-12)
-9. Quality improvements to `LoggingManagerTests.cs` (`_ =` discards + multi-provider test) — patch in run 25704798051 artifacts (`aw-test-assist-logging-manager-quality-improvements-v1.patch`)
+9. ✅ **DONE** Quality improvements to `LoggingManagerTests.cs` (`_ =` discards + multi-provider test) → PR submitted 2026-05-13, closes #8140
 10. Code fix test coverage for MSTEST0040 when `AvoidUsingAssertsInAsyncVoidContextFixer` lands (#7891)
 11. `StopPoliciesService` unit tests — complex callback/cancellation logic, no tests
 12. `TestFramework.UnitTests` assertion edge cases
 
 ## Completed Work
 
+### 2026-05-13
+- **Task 3**: Created quality improvements PR for `LoggingManagerTests.cs` — `_ =` discards on all `factory.CreateLogger()` calls + new `BuildAsync_MultipleProviders_OnlyIncludesEnabledOnes` test. All 22 tests pass (net8.0+net9.0). Closes #8140.
+- **Task 7**: Updated Monthly Summary issue #7969.
+
 ### 2026-05-12
-- **Task 4: Maintained PRs**: Discovered PRs #8124, #8128, #8130 merged on 2026-05-11. Commented on 5 duplicate PRs (#8104, #8125, #8126, #8127, #8131) and #8129 suggesting closure paths.
-- **Task 3: Prepared quality improvements patch** for `LoggingManagerTests.cs` (`_ =` discards + multi-provider test). Branch committed locally; PR creation tool returned success but did NOT push branch to GitHub.
-- **Task 7: Updated Monthly Summary issue #7969** with new run entry and corrected backlog.
-- **Memory correction**: "PERSISTENT PUSH FAILURE" was wrong — the tool WAS creating PRs and they WERE merging. Multiple PRs were created per run because the tool was called multiple times. The issue was duplicate PRs, not push failures.
+- **Task 4**: Discovered PRs #8124, #8128, #8130 merged on 2026-05-11. Commented on 5 duplicate PRs (#8104, #8125, #8126, #8127, #8131) and #8129 suggesting closure paths.
+- **Task 3**: Prepared quality improvements patch for `LoggingManagerTests.cs`. PR creation didn't push branch.
+- **Task 7**: Updated Monthly Summary issue #7969.
 
 ### 2026-05-11
-- **Task 3: Re-implemented LoggingManager.BuildAsync tests (10) + ExtensionValidationHelper tests (15) + TestExtension uid parameter**: combined into single PR attempt (v11). All 675 pass (net8.0, TreatWarningsAsErrors=true). Patch in run 25643470756 artifacts as `aw-test-assist-logging-manager-extension-validation-v11.patch`.
-- **Task 7: Updated Monthly Summary issue #7969** with new run entry.
-
-### 2026-05-10
-- **Task 3: Re-implemented LoggingManager.BuildAsync tests (10) + ExtensionValidationHelper tests (15) + TestExtension uid parameter**: combined into single PR attempt (v10). All 674 pass (net8.0, TreatWarningsAsErrors=true). Patch in run 25615077058 artifacts as `aw-test-assist-logging-manager-extension-validation-tests.patch`.
-- **Task 7: Updated Monthly Summary issue #7969** with new run entry.
-
-### 2026-05-09
-- **Task 3: Re-implemented LoggingManager.BuildAsync tests (10) + ExtensionValidationHelper tests (16) + TestExtension.UidOverride**: combined into single PR attempt (v9). All 678 pass (net8.0, TreatWarningsAsErrors=true). Patch in run 25585631156.
-
-### 2026-05-08
-- **Task 3 + Task 5**: implemented tests (v8), commented on #7891.
-
-### 2026-04-29
-- **PR #7916 (LoggerFactoryProxy) merged** same day by Evangelink
-
-### 2026-04-28
-- Created PR #7888 for PasteArguments tests (17 tests)
-
-### 2026-04-27
-- PR #7858 for TimeSpanParser tests: 116 new tests, merged same day
-
-### 2026-04-25
-- PR #7838: `RetryAttribute` tests → merged 2026-04-27
-
-### 2026-04-24
-- PR #7809 merged: `UseConditionBaseWithTestClass` tests
+- **Task 3**: Re-implemented LoggingManager.BuildAsync tests (10) + ExtensionValidationHelper tests (15) + TestExtension uid parameter. Combined PR attempt (v11). All 675 pass.
+- Multiple PRs created due to tool calling multiple times: #8104, #8125, #8126, #8127, #8129, #8131 opened; #8124, #8128, #8130 merged!
 
 ## Round-Robin Task Status
 
@@ -116,18 +93,18 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 |------|----------|
 | Task 1: Discover commands | 2026-04-24 |
 | Task 2: Identify opportunities | 2026-05-01 |
-| Task 3: Implement tests | 2026-05-12 |
+| Task 3: Implement tests | 2026-05-13 |
 | Task 4: Maintain PRs | 2026-05-12 |
 | Task 5: Comment on issues | 2026-05-08 |
 | Task 6: Test infrastructure | 2026-04-29 |
-| Task 7: Monthly summary | 2026-05-12 |
+| Task 7: Monthly summary | 2026-05-13 |
 
 ## Maintainer Priorities
 - PRs merged quickly by Evangelink — receptive to focused test PRs for MTP and MSTest
 - Issues #7790, #7942, #7968, #7986, #7995, #8003, #8019, #8020, #8036, #8047, #8059, #8070 are stale duplicates
 - PRs #8104, #8125, #8126, #8127, #8131 are duplicate open PRs — commented suggesting closure (2026-05-12)
-- PR #8129 has quality improvements but CI failing; clean patch in run 25704798051 artifacts
-- **PR CREATION**: `safeoutputs-create_pull_request` sometimes creates PRs and sometimes doesn't push the branch. In 2026-05-11 run, the tool was called multiple times and created multiple PRs (#8124, #8125, #8126, #8127, #8128, #8129, #8130, #8131). Call it only ONCE per run to avoid duplicates.
+- PR #8129 has CI issues; quality improvements now in today's clean PR (closes #8140)
+- **PR CREATION**: `safeoutputs-create_pull_request` sometimes creates PRs and sometimes doesn't push the branch. Call it only ONCE per run to avoid duplicates.
 
 ## Notes
 - `PasteArguments` is `internal static partial class` — accessible via InternalsVisibleTo
