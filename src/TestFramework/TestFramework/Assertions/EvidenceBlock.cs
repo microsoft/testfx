@@ -56,7 +56,7 @@ internal readonly struct EvidenceBlock
 
             EvidenceLine line = _lines[i];
 
-            // Pad label to align values, then append ": " and value
+            // Pad label (which includes trailing colon) to align values, then append a space and value
             sb.Append(line.Label.PadRight(maxLabelLength));
             sb.Append(' ');
             sb.Append(line.Value);

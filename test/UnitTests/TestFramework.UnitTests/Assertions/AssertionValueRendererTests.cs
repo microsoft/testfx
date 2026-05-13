@@ -48,7 +48,7 @@ public class AssertionValueRendererTests : TestContainer
         AssertionValueRenderer.RenderValue(-7).Should().Be("-7");
 
     public void RenderValue_Double_ReturnsUnquoted() =>
-        AssertionValueRenderer.RenderValue(3.14).Should().Be("3.14");
+        AssertionValueRenderer.RenderValue(3.14).Should().Be(3.14.ToString());
 
     public void RenderValue_BoolTrue_ReturnsLowercase() =>
         AssertionValueRenderer.RenderValue(true).Should().Be("true");

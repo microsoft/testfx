@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -36,9 +36,11 @@ public class StructuredAssertionMessageTests : TestContainer
 
         string result = message.Format();
 
-        string expected = "Assertion failed. Expected values to be equal." + Environment.NewLine
-            + "Discount should be applied after tax";
-        result.Should().Be(expected);
+        result.Should().Be(
+            """
+            Assertion failed. Expected values to be equal.
+            Discount should be applied after tax
+            """);
     }
 
     public void Format_WithEvidenceBlock_SeparatedByBlankLine()
@@ -52,11 +54,13 @@ public class StructuredAssertionMessageTests : TestContainer
 
         string result = message.Format();
 
-        string expected = "Assertion failed. Expected values to be equal." + Environment.NewLine
-            + Environment.NewLine
-            + "expected: 42" + Environment.NewLine
-            + "actual:   37";
-        result.Should().Be(expected);
+        result.Should().Be(
+            """
+            Assertion failed. Expected values to be equal.
+
+            expected: 42
+            actual:   37
+            """);
     }
 
     public void Format_WithUserMessageAndEvidence_CorrectLayout()
@@ -71,12 +75,14 @@ public class StructuredAssertionMessageTests : TestContainer
 
         string result = message.Format();
 
-        string expected = "Assertion failed. Expected values to be equal." + Environment.NewLine
-            + "Discount should be applied after tax" + Environment.NewLine
-            + Environment.NewLine
-            + "expected: 42" + Environment.NewLine
-            + "actual:   37";
-        result.Should().Be(expected);
+        result.Should().Be(
+            """
+            Assertion failed. Expected values to be equal.
+            Discount should be applied after tax
+
+            expected: 42
+            actual:   37
+            """);
     }
 
     public void Format_WithCallSiteExpression_SeparatedByBlankLine()
@@ -91,13 +97,15 @@ public class StructuredAssertionMessageTests : TestContainer
 
         string result = message.Format();
 
-        string expected = "Assertion failed. Expected values to be equal." + Environment.NewLine
-            + Environment.NewLine
-            + "expected: 42" + Environment.NewLine
-            + "actual:   37" + Environment.NewLine
-            + Environment.NewLine
-            + "Assert.AreEqual(expectedCount, actualCount)";
-        result.Should().Be(expected);
+        result.Should().Be(
+            """
+            Assertion failed. Expected values to be equal.
+
+            expected: 42
+            actual:   37
+
+            Assert.AreEqual(expectedCount, actualCount)
+            """);
     }
 
     public void Format_FullMessage_CorrectLayout()
@@ -114,15 +122,17 @@ public class StructuredAssertionMessageTests : TestContainer
 
         string result = message.Format();
 
-        string expected = "Assertion failed. Expected values to be equal." + Environment.NewLine
-            + "Values differ at position 3." + Environment.NewLine
-            + "Check the discount logic" + Environment.NewLine
-            + Environment.NewLine
-            + "expected: 42" + Environment.NewLine
-            + "actual:   37" + Environment.NewLine
-            + Environment.NewLine
-            + "Assert.AreEqual(expected, actual)";
-        result.Should().Be(expected);
+        result.Should().Be(
+            """
+            Assertion failed. Expected values to be equal.
+            Values differ at position 3.
+            Check the discount logic
+
+            expected: 42
+            actual:   37
+
+            Assert.AreEqual(expected, actual)
+            """);
     }
 
     public void Format_NullUserMessage_OmitsUserMessageLine()
