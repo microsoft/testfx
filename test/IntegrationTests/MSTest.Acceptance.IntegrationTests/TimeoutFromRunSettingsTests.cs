@@ -80,7 +80,7 @@ public sealed class TimeoutFromRunSettingsTests : AcceptanceTestBase<TimeoutFrom
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.runsettings");
         File.WriteAllText(runSettingsFilePath, runSettings);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new() { { $"TIMEOUT_{InfoByKind[entryKind].EnvVarSuffix}", "1" } });
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new() { [$"TIMEOUT_{InfoByKind[entryKind].EnvVarSuffix}"] = "1" });
         testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' timed out after {timeoutValue}ms");
     }
 
