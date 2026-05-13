@@ -9,7 +9,8 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\*.cs" Link="IPC\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\BaseSerializer.cs" Link="IPC\Serializers\BaseSerializer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\VoidResponseSerializer.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
-    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Models\VoidResponse.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Models\VoidResponse.cs" Link="IPC\Models\VoidResponse.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\IPC\ObjectFieldIds.cs" Link="IPC\ObjectFieldIds.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\PlatformResources.cs" Link="Resources\PlatformResources.cs" />
 
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
@@ -19,6 +20,11 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ExitCodes.cs" Link="Helpers\ExitCodes.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeoutHelper.cs" Link="Helpers\TimeoutHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeSpanParser.cs" Link="Helpers\TimeSpanParser.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\StringBuilderExtensions.cs" Link="Helpers\StringBuilderExtensions.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\IEnvironment.cs" Link="Helpers\System\IEnvironment.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\SystemEnvironment.cs" Link="Helpers\System\SystemEnvironment.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\ITask.cs" Link="Helpers\System\ITask.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\SystemTask.cs" Link="Helpers\System\SystemTask.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\TargetFrameworkParser.cs" Link="Helpers\TargetFrameworkParser.cs" />
   </ItemGroup>
 

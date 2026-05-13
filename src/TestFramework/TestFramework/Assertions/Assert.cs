@@ -107,6 +107,75 @@ public sealed partial class Assert
     private static AssertFailedException CreateAssertFailedException(string assertionName, string? message)
         => new(FormatAssertionFailed(assertionName, message));
 
+    private static AssertFailedException CreateAssertFailedException(StructuredAssertionMessage structuredMessage)
+    {
+        AssertFailedException exception = new(structuredMessage.Format())
+        {
+            ExpectedText = structuredMessage.ExpectedText,
+            ActualText = structuredMessage.ActualText,
+        };
+
+        if (structuredMessage.ExpectedText is not null)
+        {
+            exception.Data["assert.expected"] = structuredMessage.ExpectedText;
+        }
+
+        if (structuredMessage.ActualText is not null)
+        {
+            exception.Data["assert.actual"] = structuredMessage.ActualText;
+        }
+
+        return exception;
+    }
+
+    /// <summary>
+    /// Reports an assertion failure using a structured message. Within an <see cref="AssertScope"/>,
+    /// the failure is collected and execution continues. Outside a scope, the failure is thrown immediately.
+    /// </summary>
+    /// <param name="structuredMessage">
+    /// The structured assertion failure message.
+    /// </param>
+#pragma warning disable CS8763 // A method marked [DoesNotReturn] should not return - Deliberately keeping [DoesNotReturn] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
+    [DoesNotReturn]
+    [StackTraceHidden]
+    internal static void ReportAssertFailed(StructuredAssertionMessage structuredMessage)
+    {
+        LaunchDebuggerIfNeeded();
+        AssertFailedException assertionFailedException = CreateAssertFailedException(structuredMessage);
+        if (AssertScope.Current is { } scope)
+        {
+            try
+            {
+                throw assertionFailedException;
+            }
+            catch (AssertFailedException ex)
+            {
+                assertionFailedException = ex;
+            }
+
+            scope.AddError(assertionFailedException);
+            return;
+        }
+
+        throw assertionFailedException;
+    }
+#pragma warning restore CS8763 // A method marked [DoesNotReturn] should not return
+
+    /// <summary>
+    /// Reports an assertion failure using a structured message and always throws,
+    /// even within an <see cref="AssertScope"/>.
+    /// </summary>
+    /// <param name="structuredMessage">
+    /// The structured assertion failure message.
+    /// </param>
+    [DoesNotReturn]
+    [StackTraceHidden]
+    internal static void ThrowAssertFailed(StructuredAssertionMessage structuredMessage)
+    {
+        LaunchDebuggerIfNeeded();
+        throw CreateAssertFailedException(structuredMessage);
+    }
+
     private static string FormatAssertionFailed(string assertionName, string? message)
     {
         string failedMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName);
