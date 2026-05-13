@@ -444,7 +444,7 @@ public sealed class StringAssert
         FrameworkConstants.DoNotUseStringAssertEquals,
         error: false,
         DiagnosticId = "MSTEST0102",
-        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0102")]
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 #elif DEBUG
     [Obsolete(
         FrameworkConstants.DoNotUseStringAssertEquals,
@@ -454,7 +454,7 @@ public sealed class StringAssert
         FrameworkConstants.DoNotUseStringAssertEquals,
         error: true,
         DiagnosticId = "MSTEST0102",
-        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0102")]
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 #else
     [Obsolete(
         FrameworkConstants.DoNotUseStringAssertEquals,
@@ -481,7 +481,7 @@ public sealed class StringAssert
         FrameworkConstants.DoNotUseStringAssertReferenceEquals,
         error: false,
         DiagnosticId = "MSTEST0103",
-        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0103")]
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 #elif DEBUG
     [Obsolete(
         FrameworkConstants.DoNotUseStringAssertReferenceEquals,
@@ -491,7 +491,7 @@ public sealed class StringAssert
         FrameworkConstants.DoNotUseStringAssertReferenceEquals,
         error: true,
         DiagnosticId = "MSTEST0103",
-        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0103")]
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 #else
     [Obsolete(
         FrameworkConstants.DoNotUseStringAssertReferenceEquals,

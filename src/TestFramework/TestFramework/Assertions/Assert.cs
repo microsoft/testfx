@@ -339,7 +339,7 @@ public sealed partial class Assert
         FrameworkConstants.DoNotUseAssertEquals,
         error: false,
         DiagnosticId = "MSTEST0100",
-        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0100")]
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 #elif DEBUG
     [Obsolete(
         FrameworkConstants.DoNotUseAssertEquals,
@@ -349,7 +349,7 @@ public sealed partial class Assert
         FrameworkConstants.DoNotUseAssertEquals,
         error: true,
         DiagnosticId = "MSTEST0100",
-        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0100")]
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 #else
     [Obsolete(
         FrameworkConstants.DoNotUseAssertEquals,
@@ -376,7 +376,7 @@ public sealed partial class Assert
         FrameworkConstants.DoNotUseAssertReferenceEquals,
         error: false,
         DiagnosticId = "MSTEST0101",
-        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0101")]
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 #elif DEBUG
     [Obsolete(
         FrameworkConstants.DoNotUseAssertReferenceEquals,
@@ -386,7 +386,7 @@ public sealed partial class Assert
         FrameworkConstants.DoNotUseAssertReferenceEquals,
         error: true,
         DiagnosticId = "MSTEST0101",
-        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0101")]
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 #else
     [Obsolete(
         FrameworkConstants.DoNotUseAssertReferenceEquals,

@@ -134,9 +134,9 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             FailedTestNodeStateProperty failed => ("failed", failed.Exception, null),
             ErrorTestNodeStateProperty error => ("error", error.Exception, null),
             TimeoutTestNodeStateProperty timeout => ("timeout", timeout.Exception, timeout.Timeout),
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
             CancelledTestNodeStateProperty cancelled => ("cancelled", cancelled.Exception, null),
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
             SkippedTestNodeStateProperty => ("skipped", null, null),
             _ => ("unknown", null, null),
         };

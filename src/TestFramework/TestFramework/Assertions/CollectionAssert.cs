@@ -45,7 +45,7 @@ public sealed partial class CollectionAssert
         FrameworkConstants.DoNotUseCollectionAssertEquals,
         error: false,
         DiagnosticId = "MSTEST0104",
-        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0104")]
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 #elif DEBUG
     [Obsolete(
         FrameworkConstants.DoNotUseCollectionAssertEquals,
@@ -55,7 +55,7 @@ public sealed partial class CollectionAssert
         FrameworkConstants.DoNotUseCollectionAssertEquals,
         error: true,
         DiagnosticId = "MSTEST0104",
-        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0104")]
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 #else
     [Obsolete(
         FrameworkConstants.DoNotUseCollectionAssertEquals,
@@ -82,7 +82,7 @@ public sealed partial class CollectionAssert
         FrameworkConstants.DoNotUseCollectionAssertReferenceEquals,
         error: false,
         DiagnosticId = "MSTEST0105",
-        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0105")]
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 #elif DEBUG
     [Obsolete(
         FrameworkConstants.DoNotUseCollectionAssertReferenceEquals,
@@ -92,7 +92,7 @@ public sealed partial class CollectionAssert
         FrameworkConstants.DoNotUseCollectionAssertReferenceEquals,
         error: true,
         DiagnosticId = "MSTEST0105",
-        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0105")]
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 #else
     [Obsolete(
         FrameworkConstants.DoNotUseCollectionAssertReferenceEquals,
