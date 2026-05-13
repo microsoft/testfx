@@ -60,7 +60,7 @@ internal sealed partial class MSTestSettings
         CurrentSettings = settings;
         RunConfigurationSettings = runConfigurationSettings;
 
-        // Track configuration source for telemetry
+        // Track configuration source for telemetry.
 #if !WINDOWS_UWP && !WIN_UI
         if (MSTestTelemetryDataCollector.Current is { } telemetry)
         {

@@ -28,7 +28,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
             disableTelemetry: false,
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string diagContentsPattern =
 """
@@ -61,7 +61,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
             disableTelemetry: false,
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string diagContentsPattern =
 """
@@ -91,7 +91,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
             disableTelemetry: false,
             TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         string diagContentsPattern =
 """

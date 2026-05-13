@@ -211,7 +211,7 @@ internal sealed class MSTestTelemetryDataCollector
         System.Text.StringBuilder builder = new("[");
         bool isFirst = true;
 
-        foreach (string value in values)
+        foreach (string value in values.Order(StringComparer.Ordinal))
         {
             if (!isFirst)
             {
@@ -231,7 +231,7 @@ internal sealed class MSTestTelemetryDataCollector
         System.Text.StringBuilder builder = new("{");
         bool isFirst = true;
 
-        foreach (KeyValuePair<string, long> value in values)
+        foreach (KeyValuePair<string, long> value in values.OrderBy(x => x.Key, StringComparer.Ordinal))
         {
             if (!isFirst)
             {

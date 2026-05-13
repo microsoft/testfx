@@ -126,8 +126,6 @@ public sealed partial class Assert
     /// </exception>
     public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
-        TelemetryCollector.TrackAssertionCall("Assert.AreEqual");
-
         if (!AreEqualFailing(expected, actual, comparer))
         {
             return;
@@ -344,8 +342,6 @@ public sealed partial class Assert
     /// </exception>
     public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
-        TelemetryCollector.TrackAssertionCall("Assert.AreNotEqual");
-
         if (!AreNotEqualFailing(notExpected, actual, comparer))
         {
             return;

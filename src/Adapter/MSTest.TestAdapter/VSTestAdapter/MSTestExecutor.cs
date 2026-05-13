@@ -174,9 +174,9 @@ internal sealed class MSTestExecutor : ITestExecutor
         }
 #endif
 
-        TestSourceHandler testSourceHandler = new();
         try
         {
+            TestSourceHandler testSourceHandler = new();
             if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))
             {
                 return;
