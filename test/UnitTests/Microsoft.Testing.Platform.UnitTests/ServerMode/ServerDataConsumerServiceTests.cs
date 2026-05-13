@@ -138,7 +138,7 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
     }
 
     [TestMethod]
-    public void PopulateTestNodeStatistics_WithOutcomeChangeForSameUid()
+    public void PopulateTestNodeStatistics_WithOutcomeChangeForSameUid_CountsAsRetry()
     {
         PropertyBag properties = new(
             new FailedTestNodeStateProperty("failed"));
@@ -162,7 +162,7 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
     }
 
     [TestMethod]
-    public void PopulateTestNodeStatistics_WithDuplicateFailedEvents()
+    public void PopulateTestNodeStatistics_WithDuplicateFailedEvents_DoesNotCountAsRetry()
     {
         PropertyBag properties = new(
             new FailedTestNodeStateProperty("failed"));
@@ -181,7 +181,7 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
     }
 
     [TestMethod]
-    public void PopulateTestNodeStatistics_WithDuplicateEventAfterOutcomeChange()
+    public void PopulateTestNodeStatistics_WithDuplicateEventAfterOutcomeChange_OnlyCountsFirstRetry()
     {
         PropertyBag failedProperties = new(
             new FailedTestNodeStateProperty("failed"));
