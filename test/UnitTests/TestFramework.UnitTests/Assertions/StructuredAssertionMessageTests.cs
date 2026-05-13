@@ -170,4 +170,32 @@ public class StructuredAssertionMessageTests : TestContainer
 
         message.ToString().Should().Be(message.Format());
     }
+
+    public void Format_WithMultipleEvidenceBlocks_SeparatedByBlankLines()
+    {
+        EvidenceBlock evidence1 = EvidenceBlock.Create()
+            .AddLine("expected:", "42")
+            .AddLine("actual:", "37");
+
+        EvidenceBlock evidence2 = EvidenceBlock.Create()
+            .AddLine("ignore case:", "true")
+            .AddLine("culture:", "tr-TR");
+
+        StructuredAssertionMessage message = new("Expected values to be equal.");
+        message.WithEvidence(evidence1);
+        message.WithEvidence(evidence2);
+
+        string result = message.Format();
+
+        result.Should().Be(
+            """
+            Assertion failed. Expected values to be equal.
+
+            expected: 42
+            actual:   37
+
+            ignore case: true
+            culture:     tr-TR
+            """);
+    }
 }
