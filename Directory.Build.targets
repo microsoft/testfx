@@ -30,7 +30,7 @@
       <_TemplatePropertiesCacheFile>$(IntermediateOutputPath)$(MSBuildProjectFile).GenerateVersionSourceFile.cache</_TemplatePropertiesCacheFile>
     </PropertyGroup>
 
-    <Hash ItemsToHash="@(_TemplateProperties)">
+    <Hash ItemsToHash="$(_TemplateProperties)">
       <Output TaskParameter="HashResult" PropertyName="_TemplatePropertiesHash" />
     </Hash>
 

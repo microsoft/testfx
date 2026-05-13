@@ -69,12 +69,12 @@
       </trans-unit>
       <trans-unit id="RemoveDuplicateDataRowFix">
         <source>Remove duplicate 'DataRow'</source>
-        <target state="new">Remove duplicate 'DataRow'</target>
+        <target state="translated">Remover 'DataRow' duplicado</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDuplicateTestMethodAttributeFix">
         <source>Remove duplicate TestMethod attribute</source>
-        <target state="new">Remove duplicate TestMethod attribute</target>
+        <target state="translated">Remover o atributo TestMethod duplicado</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -160,6 +160,11 @@
       <trans-unit id="UseDisplayNamePropertyInsteadOfStringArgumentFix">
         <source>Use 'DisplayName' property instead of string argument</source>
         <target state="translated">Usar a propriedade "DisplayName" em vez do argumento de cadeia de caracteres</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
+        <source>Use MSTest 'Description' attribute instead</source>
+        <target state="new">Use MSTest 'Description' attribute instead</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">

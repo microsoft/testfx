@@ -212,7 +212,7 @@ internal sealed class TrxProcessLifetimeHandler :
             return;
         }
 
-        // TODO:
+        // Tracked by https://github.com/microsoft/testfx/issues/8086:
         // If the current TRX file is indicating a success status while
         // testHostProcessInformation.ExitCode indicates non-success, then that must be
         // a crash after TRX was written.

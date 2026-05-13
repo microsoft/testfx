@@ -16,8 +16,7 @@
     "**/PublicAPI.Shipped.txt",
     "**/PublicAPI.Unshipped.txt",
     "**/test/**",
-    "**/samples/**",
-    "**/formal-verification/**"
+    "**/samples/**"
   ],
   "format": ["csharp"],
   "absolute": false

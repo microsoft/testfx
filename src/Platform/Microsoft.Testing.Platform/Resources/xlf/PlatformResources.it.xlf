@@ -163,8 +163,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
-        <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
-        <target state="translated">La stessa istanza di 'CompositeExtensonFactory' è già registrata</target>
+        <source>The same instance of 'CompositeExtensionFactory' is already registered</source>
+        <target state="translated">L'istanza di 'CompositeExtensionFactory' specificata è già registrata</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
