@@ -53,7 +53,7 @@ public class PlatformServiceProviderTests : TestContainer
     {
         // Arrange.
         var testMethod = new Mock<Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod>();
-        var properties = new Dictionary<string, object?> { { "prop", "value" } };
+        var properties = new Dictionary<string, object?> { ["prop"] = "value" };
         testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
         testMethod.Setup(tm => tm.Name).Returns("M");
 

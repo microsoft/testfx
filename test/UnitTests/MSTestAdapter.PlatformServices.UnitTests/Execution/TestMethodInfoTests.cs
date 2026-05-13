@@ -314,6 +314,72 @@ public class TestMethodInfoTests : TestContainer
         result.TestContextMessages!.Contains("SeaShore").Should().BeTrue();
     }
 
+    public async Task TestMethodInfoInvokeShouldClearStdOutAfterReporting()
+    {
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteConsoleOut("output1");
+
+        var method = new TestMethodInfo(
+            _methodInfo,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result1 = await method.InvokeAsync(null);
+        result1.LogOutput.Should().Contain("output1");
+
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteConsoleOut("output2");
+        TestResult result2 = await method.InvokeAsync(null);
+
+        result2.LogOutput.Should().Contain("output2");
+        result2.LogOutput.Should().NotContain("output1", "StdOut should be cleared between invocations to prevent O(n^2) output accumulation in data-driven tests");
+    }
+
+    public async Task TestMethodInfoInvokeShouldClearStdErrAfterReporting()
+    {
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteConsoleErr("error1");
+
+        var method = new TestMethodInfo(
+            _methodInfo,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result1 = await method.InvokeAsync(null);
+        result1.LogError.Should().Contain("error1");
+
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteConsoleErr("error2");
+        TestResult result2 = await method.InvokeAsync(null);
+
+        result2.LogError.Should().Contain("error2");
+        result2.LogError.Should().NotContain("error1", "StdErr should be cleared between invocations to prevent O(n^2) output accumulation in data-driven tests");
+    }
+
+    public async Task TestMethodInfoInvokeShouldClearDebugTraceAfterReporting()
+    {
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteTrace("trace1");
+
+        var method = new TestMethodInfo(
+            _methodInfo,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result1 = await method.InvokeAsync(null);
+        result1.DebugTrace.Should().Contain("trace1");
+
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteTrace("trace2");
+        TestResult result2 = await method.InvokeAsync(null);
+
+        result2.DebugTrace.Should().Contain("trace2");
+        result2.DebugTrace.Should().NotContain("trace1", "DebugTrace should be cleared between invocations to prevent O(n^2) output accumulation in data-driven tests");
+    }
+
     public async Task Invoke_WhenTestMethodThrowsMissingMethodException_TestOutcomeIsFailedAndExceptionIsPreserved()
     {
         DummyTestClass.TestMethodBody = _ =>
@@ -594,6 +660,60 @@ public class TestMethodInfoTests : TestContainer
 
         testInitializeCalled.Should().BeTrue();
         result.Outcome.Should().Be(UnitTestOutcome.Passed);
+    }
+
+    public async Task TestMethodInfo_AsyncTestInitialize_PreservesSynchronizationContextForTestMethod()
+    {
+        // Arrange
+        SynchronizationContext? capturedContextInTestMethod = null;
+
+        DummyTestClass.TestInitializeMethodBodyAsync = async _ => await Task.Delay(1);
+        DummyTestClass.TestMethodBody = _ => capturedContextInTestMethod = SynchronizationContext.Current;
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethodAsync")!;
+
+        // Create a TestMethodInfo without a timeout so we go through ExecuteInternalAsync directly
+        // (not the non-cooperative timeout path which runs on a separate thread pool thread).
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            Executor = _testMethodAttribute,
+        };
+
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        TestResult result = await RunInvokeAsyncOnContextAsync(testMethodInfo, syncContext);
+
+        // Assert: the SynchronizationContext should be preserved in the test method even after async TestInitialize
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        capturedContextInTestMethod.Should().BeSameAs(syncContext);
+    }
+
+    public async Task TestMethodInfo_AsyncTestCleanup_PreservesSynchronizationContextForTestCleanup()
+    {
+        // Arrange
+        SynchronizationContext? capturedContextInTestCleanup = null;
+
+        DummyTestClass.TestInitializeMethodBodyAsync = async _ => await Task.Delay(1);
+        DummyTestClass.TestCleanupMethodBodyAsync = async _ =>
+        {
+            capturedContextInTestCleanup = SynchronizationContext.Current;
+            await Task.Delay(1);
+        };
+        DummyTestClass.TestMethodBody = _ => { };
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethodAsync")!;
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethodAsync")!;
+
+        // Create a TestMethodInfo without a timeout so we go through ExecuteInternalAsync directly
+        // (not the non-cooperative timeout path which runs on a separate thread pool thread).
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            Executor = _testMethodAttribute,
+        };
+
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        TestResult result = await RunInvokeAsyncOnContextAsync(testMethodInfo, syncContext);
+
+        // Assert: the SynchronizationContext should be preserved at the start of TestCleanup
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        capturedContextInTestCleanup.Should().BeSameAs(syncContext);
     }
 
     public async Task TestMethodInfoInvokeShouldCallTestInitializeOfAllBaseClasses()
@@ -1575,9 +1695,90 @@ public class TestMethodInfoTests : TestContainer
         }
     }
 
+    private static async Task<TestResult> RunInvokeAsyncOnContextAsync(
+        TestMethodInfo info,
+        SingleThreadedSynchronizationContextForTesting ctx)
+    {
+        var tcs = new TaskCompletionSource<TestResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        ctx.Post(
+            _ => _ = info.InvokeAsync(null).ContinueWith(
+                t =>
+                {
+                    if (t.IsFaulted)
+                    {
+                        tcs.SetException(t.Exception!);
+                    }
+                    else if (t.IsCanceled)
+                    {
+                        tcs.SetCanceled();
+                    }
+                    else
+                    {
+                        tcs.SetResult(t.Result);
+                    }
+                },
+                CancellationToken.None,
+                TaskContinuationOptions.None,
+                TaskScheduler.Default),
+            null);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        Task completed = await Task.WhenAny(tcs.Task, Task.Delay(Timeout.Infinite, cts.Token));
+        completed.Should().BeSameAs(tcs.Task, "Timed out waiting for InvokeAsync to complete.");
+
+        return await tcs.Task;
+    }
+
     #endregion
 
     #region Test data
+
+    private sealed class SingleThreadedSynchronizationContextForTesting : SynchronizationContext, IDisposable
+    {
+        private readonly BlockingCollection<(SendOrPostCallback Callback, object? State)> _queue = [];
+        private readonly Thread _thread;
+
+        public SingleThreadedSynchronizationContextForTesting()
+        {
+            _thread = new Thread(() =>
+            {
+                SynchronizationContext.SetSynchronizationContext(this);
+                foreach ((SendOrPostCallback callback, object? state) in _queue.GetConsumingEnumerable())
+                {
+                    callback(state);
+                }
+            })
+            {
+                IsBackground = true,
+            };
+            _thread.Start();
+        }
+
+        public override void Post(SendOrPostCallback d, object? state)
+        {
+            try
+            {
+                _queue.TryAdd((d, state));
+            }
+            catch (InvalidOperationException)
+            {
+                // Collection completed (after Dispose called CompleteAdding) or disposed
+            }
+        }
+
+        public void Dispose()
+        {
+            _queue.CompleteAdding();
+            if (!_thread.Join(TimeSpan.FromSeconds(5)))
+            {
+                // Thread is background, so it will be killed on process exit.
+                // Avoid hanging the test run indefinitely.
+            }
+
+            _queue.Dispose();
+        }
+    }
+
     public class DummyTestClassBase
     {
         public static Action<DummyTestClassBase> BaseTestClassMethodBody { get; set; } = null!;

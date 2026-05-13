@@ -80,14 +80,14 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
             // Product title, do not translate.
             await outputDevice.DisplayAsync(this, new TextOutputDeviceData("Microsoft Testing Platform:"), cancellationToken).ConfigureAwait(false);
 
-            // TODO: Replace Assembly with IAssembly
+            // TODO: Replace Assembly with IAssembly (tracked by https://github.com/microsoft/testfx/issues/8086)
             AssemblyInformationalVersionAttribute? version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
             string versionInfo = version?.InformationalVersion ?? "Not Available";
             await outputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Version: {versionInfo}"), cancellationToken).ConfigureAwait(false);
 
             await outputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Dynamic Code Supported: {_runtimeFeature.IsDynamicCodeSupported}"), cancellationToken).ConfigureAwait(false);
 
-            // TODO: Replace RuntimeInformation with IRuntimeInformation
+            // TODO: Replace RuntimeInformation with IRuntimeInformation (tracked by https://github.com/microsoft/testfx/issues/8086)
 #if NETCOREAPP
             string runtimeInformation = $"{RuntimeInformation.RuntimeIdentifier} - {RuntimeInformation.FrameworkDescription}";
 #else

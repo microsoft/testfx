@@ -472,7 +472,7 @@ public class TestMethodRunnerTests : TestContainer
 
     [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Use through reflection")]
     private static void InitMethodThrowingException(TestContext tc)
-        // TODO: Fix exception type
+        // TODO: Fix exception type (tracked by https://github.com/microsoft/testfx/issues/8086)
 #pragma warning disable CA2208 // Instantiate argument exceptions correctly
         => throw new ArgumentException();
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
