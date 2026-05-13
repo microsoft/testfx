@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -439,11 +439,25 @@ public sealed class StringAssert
     /// <param name="objB"> Object B. </param>
     /// <returns> Never returns. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
+#if DEBUG && NET8_0_OR_GREATER
     [Obsolete(
         FrameworkConstants.DoNotUseStringAssertEquals,
-#if DEBUG
+        error: false,
+        DiagnosticId = "MSTEST0102",
+        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0102")]
+#elif DEBUG
+    [Obsolete(
+        FrameworkConstants.DoNotUseStringAssertEquals,
         error: false)]
+#elif NET8_0_OR_GREATER
+    [Obsolete(
+        FrameworkConstants.DoNotUseStringAssertEquals,
+        error: true,
+        DiagnosticId = "MSTEST0102",
+        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0102")]
 #else
+    [Obsolete(
+        FrameworkConstants.DoNotUseStringAssertEquals,
         error: true)]
 #endif
     [DoesNotReturn]
@@ -462,11 +476,25 @@ public sealed class StringAssert
     /// <param name="objB"> Object B. </param>
     /// <returns> Never returns. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
+#if DEBUG && NET8_0_OR_GREATER
     [Obsolete(
         FrameworkConstants.DoNotUseStringAssertReferenceEquals,
-#if DEBUG
+        error: false,
+        DiagnosticId = "MSTEST0103",
+        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0103")]
+#elif DEBUG
+    [Obsolete(
+        FrameworkConstants.DoNotUseStringAssertReferenceEquals,
         error: false)]
+#elif NET8_0_OR_GREATER
+    [Obsolete(
+        FrameworkConstants.DoNotUseStringAssertReferenceEquals,
+        error: true,
+        DiagnosticId = "MSTEST0103",
+        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0103")]
 #else
+    [Obsolete(
+        FrameworkConstants.DoNotUseStringAssertReferenceEquals,
         error: true)]
 #endif
     [DoesNotReturn]

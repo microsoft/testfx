@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -40,11 +40,25 @@ public sealed partial class CollectionAssert
     /// <param name="objB"> Object B. </param>
     /// <returns> Never returns. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
+#if DEBUG && NET8_0_OR_GREATER
     [Obsolete(
         FrameworkConstants.DoNotUseCollectionAssertEquals,
-#if DEBUG
+        error: false,
+        DiagnosticId = "MSTEST0104",
+        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0104")]
+#elif DEBUG
+    [Obsolete(
+        FrameworkConstants.DoNotUseCollectionAssertEquals,
         error: false)]
+#elif NET8_0_OR_GREATER
+    [Obsolete(
+        FrameworkConstants.DoNotUseCollectionAssertEquals,
+        error: true,
+        DiagnosticId = "MSTEST0104",
+        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0104")]
 #else
+    [Obsolete(
+        FrameworkConstants.DoNotUseCollectionAssertEquals,
         error: true)]
 #endif
     [DoesNotReturn]
@@ -63,11 +77,25 @@ public sealed partial class CollectionAssert
     /// <param name="objB"> Object B. </param>
     /// <returns> Never returns. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
+#if DEBUG && NET8_0_OR_GREATER
     [Obsolete(
         FrameworkConstants.DoNotUseCollectionAssertReferenceEquals,
-#if DEBUG
+        error: false,
+        DiagnosticId = "MSTEST0105",
+        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0105")]
+#elif DEBUG
+    [Obsolete(
+        FrameworkConstants.DoNotUseCollectionAssertReferenceEquals,
         error: false)]
+#elif NET8_0_OR_GREATER
+    [Obsolete(
+        FrameworkConstants.DoNotUseCollectionAssertReferenceEquals,
+        error: true,
+        DiagnosticId = "MSTEST0105",
+        UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0105")]
 #else
+    [Obsolete(
+        FrameworkConstants.DoNotUseCollectionAssertReferenceEquals,
         error: true)]
 #endif
     [DoesNotReturn]

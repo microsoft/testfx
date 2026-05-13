@@ -77,7 +77,9 @@ internal sealed class MSTestExecutor : ITestExecutor
     /// <param name="tests">The collection of test cases to run.</param>
     /// <param name="runContext">The run context.</param>
     /// <param name="frameworkHandle">The handle to the framework.</param>
-#if DEBUG
+#if DEBUG && NET8_0_OR_GREATER
+    [Obsolete("Use RunTestsAsync instead.", DiagnosticId = "MSTEST0106", UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0106")]
+#elif DEBUG
     [Obsolete("Use RunTestsAsync instead.")]
 #endif
     public void RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
@@ -89,7 +91,9 @@ internal sealed class MSTestExecutor : ITestExecutor
     /// <param name="sources">The collection of assemblies to run.</param>
     /// <param name="runContext">The run context.</param>
     /// <param name="frameworkHandle">The handle to the framework.</param>
-#if DEBUG
+#if DEBUG && NET8_0_OR_GREATER
+    [Obsolete("Use RunTestsAsync instead.", DiagnosticId = "MSTEST0106", UrlFormat = "https://aka.ms/mstest/diagnostics#MSTEST0106")]
+#elif DEBUG
     [Obsolete("Use RunTestsAsync instead.")]
 #endif
     public void RunTests(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
