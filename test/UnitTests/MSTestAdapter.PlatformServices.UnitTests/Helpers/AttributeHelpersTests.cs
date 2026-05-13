@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -30,42 +30,55 @@ public class AttributeHelpersTests : TestContainer
         public override string GroupName { get; }
     }
 
-    // ── Dummy methods decorated with attribute combinations ──────────────────
-
-    private static void NoConditionMethod() { }
+    private static void NoConditionMethod()
+    {
+    }
 
     [Ignore("unsatisfied reason")]
-    private static void SingleUnsatisfiedConditionMethod() { }
+    private static void SingleUnsatisfiedConditionMethod()
+    {
+    }
 
     [TestCondition(true)]
-    private static void SingleSatisfiedConditionMethod() { }
+    private static void SingleSatisfiedConditionMethod()
+    {
+    }
 
-    // Same group: one unsatisfied followed by one satisfied → group is satisfied.
     [TestCondition(false, IgnoreMessage = "first")]
     [TestCondition(true)]
-    private static void SameGroupOneSatisfiedMethod() { }
+    private static void SameGroupOneSatisfiedMethod()
+    {
+    }
 
-    // Same group: both unsatisfied with messages → first non-null message is returned.
     [TestCondition(false, IgnoreMessage = "first reason")]
     [TestCondition(false, IgnoreMessage = "second reason")]
-    private static void SameGroupBothUnsatisfiedWithMessagesMethod() { }
+    private static void SameGroupBothUnsatisfiedWithMessagesMethod()
+    {
+    }
 
-    // Same group: both unsatisfied, first has null message, second has a message.
     [TestCondition(false)]
     [TestCondition(false, IgnoreMessage = "actual reason")]
-    private static void SameGroupFirstMessageNullMethod() { }
+    private static void SameGroupFirstMessageNullMethod()
+    {
+    }
 
-    // Different groups: group A unsatisfied, group B satisfied → test is ignored (group A fails).
     [TestCondition(false, "GroupA", IgnoreMessage = "group A reason")]
     [TestCondition(true, "GroupB")]
-    private static void DifferentGroupsOneUnsatisfiedMethod() { }
+    private static void DifferentGroupsOneUnsatisfiedMethod()
+    {
+    }
 
-    // Different groups: both satisfied → test is not ignored.
     [TestCondition(true, "GroupA")]
     [TestCondition(true, "GroupB")]
-    private static void DifferentGroupsBothSatisfiedMethod() { }
+    private static void DifferentGroupsBothSatisfiedMethod()
+    {
+    }
 
-    // ── Tests ────────────────────────────────────────────────────────────────
+    [TestCondition(false, "GroupA", IgnoreMessage = "group A reason")]
+    [TestCondition(false, "GroupB", IgnoreMessage = "group B reason")]
+    private static void DifferentGroupsBothUnsatisfiedMethod()
+    {
+    }
 
     public void IsIgnored_NoConditionAttribute_ReturnsFalse()
     {
@@ -129,5 +142,13 @@ public class AttributeHelpersTests : TestContainer
         bool result = method.IsIgnored(out string? message);
         result.Should().BeFalse();
         message.Should().BeNull();
+    }
+
+    public void IsIgnored_DifferentGroupsBothUnsatisfied_ReturnsFirstSeenGroupMessage()
+    {
+        MethodInfo method = typeof(AttributeHelpersTests).GetMethod(nameof(DifferentGroupsBothUnsatisfiedMethod), BindingFlags.NonPublic | BindingFlags.Static)!;
+        bool result = method.IsIgnored(out string? message);
+        result.Should().BeTrue();
+        message.Should().Be("group A reason");
     }
 }

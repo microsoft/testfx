@@ -28,8 +28,12 @@ internal static class AttributeExtensions
             return false;
         }
 
-        // Slow path: manual grouping instead of LINQ GroupBy to avoid iterator/Lookup allocations
+        // Slow path: manual grouping instead of LINQ GroupBy to avoid iterator/Lookup allocations.
+        // We track insertion order explicitly because Dictionary<TKey,TValue>.Values enumeration
+        // order is not guaranteed (especially on .NET Framework), and we need to return the ignore
+        // message from the first unsatisfied group in attribute order.
         Dictionary<string, (bool Satisfied, string? FirstMessage)> groups = [];
+        List<string> groupOrder = [];
         foreach (Attribute attr in allAttributes)
         {
             if (attr is not ConditionBaseAttribute conditionAttr)
@@ -42,6 +46,7 @@ internal static class AttributeExtensions
             if (!groups.TryGetValue(conditionAttr.GroupName, out (bool Satisfied, string? FirstMessage) groupState))
             {
                 groups[conditionAttr.GroupName] = (shouldRun, shouldRun ? null : conditionAttr.IgnoreMessage);
+                groupOrder.Add(conditionAttr.GroupName);
             }
             else if (!groupState.Satisfied)
             {
@@ -56,8 +61,9 @@ internal static class AttributeExtensions
             }
         }
 
-        foreach ((bool satisfied, string? firstMessage) in groups.Values)
+        foreach (string groupName in groupOrder)
         {
+            (bool satisfied, string? firstMessage) = groups[groupName];
             if (!satisfied)
             {
                 ignoreMessage = firstMessage;
