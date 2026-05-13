@@ -368,6 +368,79 @@ public class TestMethodRunnerTests : TestContainer
         results[1].ResultFiles!.Should().Contain("C:\\temp.txt");
     }
 
+    public async Task RunTestMethodShouldUseFreshTestContextForEachFoldedDataDrivenIteration()
+    {
+        DataRowAttribute dataRowAttribute1 = new(1);
+        DataRowAttribute dataRowAttribute2 = new(2);
+        var attributes = new Attribute[] { dataRowAttribute1, dataRowAttribute2 };
+
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo)).Returns(attributes);
+
+        var capturedTestContexts = new List<ITestContext?>();
+
+        TestableTestMethodInfo? testMethodInfo = null;
+        testMethodInfo = new TestableTestMethodInfo(
+            _methodInfo,
+            _testClassInfo,
+            _testMethodOptions,
+            () =>
+            {
+                capturedTestContexts.Add(testMethodInfo!.TestContext);
+                return new TestResult { Outcome = UnitTestOutcome.Passed };
+            });
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        TestResult[] results = await testMethodRunner.RunTestMethodAsync();
+
+        results.Should().HaveCount(2);
+        capturedTestContexts.Should().HaveCount(2);
+        capturedTestContexts[0].Should().NotBeNull();
+        capturedTestContexts[1].Should().NotBeNull();
+        capturedTestContexts[0].Should().NotBeSameAs(capturedTestContexts[1]);
+        capturedTestContexts[0].Should().NotBeSameAs(_testContextImplementation);
+        capturedTestContexts[1].Should().NotBeSameAs(_testContextImplementation);
+    }
+
+    public async Task RunTestMethodShouldNotShareTestContextStateAcrossFoldedDataDrivenIterations()
+    {
+        DataRowAttribute dataRowAttribute1 = new(1);
+        DataRowAttribute dataRowAttribute2 = new(2);
+        var attributes = new Attribute[] { dataRowAttribute1, dataRowAttribute2 };
+
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo)).Returns(attributes);
+
+        int callCount = 0;
+        bool? secondIterationSawFirstIterationProperty = null;
+
+        TestableTestMethodInfo? testMethodInfo = null;
+        testMethodInfo = new TestableTestMethodInfo(
+            _methodInfo,
+            _testClassInfo,
+            _testMethodOptions,
+            () =>
+            {
+                callCount++;
+                var iterationTestContext = (TestContextImplementation)testMethodInfo!.TestContext!;
+                if (callCount == 1)
+                {
+                    iterationTestContext.AddProperty("CrossRowProperty", "row-1-only");
+                }
+                else
+                {
+                    secondIterationSawFirstIterationProperty = iterationTestContext.Properties.ContainsKey("CrossRowProperty");
+                }
+
+                return new TestResult { Outcome = UnitTestOutcome.Passed };
+            });
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        TestResult[] results = await testMethodRunner.RunTestMethodAsync();
+
+        results.Should().HaveCount(2);
+        secondIterationSawFirstIterationProperty.Should().BeFalse();
+        _testContextImplementation.Properties.ContainsKey("CrossRowProperty").Should().BeFalse();
+    }
+
     public async Task RunTestMethodWithEmptyDataSourceShouldFailBecauseConsiderEmptyDataSourceAsInconclusiveIsFalse()
         => await RunTestMethodWithEmptyDataSourceShouldFailIfConsiderEmptyDataSourceAsInconclusiveIsNotTrueHelper(false);
 

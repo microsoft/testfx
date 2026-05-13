@@ -21,11 +21,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 internal sealed class TestMethodRunner
 {
     /// <summary>
-    /// Test context which needs to be passed to the various methods of the test.
-    /// </summary>
-    private readonly ITestContext _testContext;
-
-    /// <summary>
     /// TestMethod that needs to be executed.
     /// </summary>
     private readonly TestMethod _test;
@@ -34,6 +29,15 @@ internal sealed class TestMethodRunner
     /// TestMethod referred by the above test element.
     /// </summary>
     private readonly TestMethodInfo _testMethodInfo;
+
+    /// <summary>
+    /// Test context which needs to be passed to the various methods of the test.
+    /// </summary>
+    /// <remarks>
+    /// Mutable so the folded data-driven path can swap in a fresh context per iteration to avoid
+    /// cross-row state bleed (output buffers, properties, result files, ...).
+    /// </remarks>
+    private ITestContext _testContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodRunner"/> class.
@@ -228,6 +232,15 @@ internal sealed class TestMethodRunner
             foreach (object?[] data in testDataSource.GetData(_testMethodInfo.MethodInfo))
             {
                 dataSourceHasData = true;
+
+                // Each iteration needs its own TestContext so accumulated state (output, errors, trace,
+                // properties, result files) does not leak across rows. The unfolded data-driven path
+                // achieves this naturally because each row is a separate test case with its own runner.
+                ITestContext originalTestContext = _testContext;
+                ITestContext iterationTestContext = originalTestContext is TestContextImplementation testContextImplementation
+                    ? testContextImplementation.CreateForDataDrivenIteration()
+                    : originalTestContext;
+                _testContext = iterationTestContext;
                 try
                 {
                     TestResult[] testResults = await ExecuteTestWithDataSourceAsync(testDataSource, data, actualDataAlreadyHandledDuringDiscovery: false).ConfigureAwait(false);
@@ -236,6 +249,12 @@ internal sealed class TestMethodRunner
                 }
                 finally
                 {
+                    _testContext = originalTestContext;
+                    if (!ReferenceEquals(iterationTestContext, originalTestContext) && iterationTestContext is IDisposable disposableIterationTestContext)
+                    {
+                        disposableIterationTestContext.Dispose();
+                    }
+
                     _testMethodInfo.SetArguments(null);
                 }
             }
