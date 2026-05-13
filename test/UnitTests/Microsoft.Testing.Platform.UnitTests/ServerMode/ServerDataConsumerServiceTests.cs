@@ -138,7 +138,7 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
     }
 
     [TestMethod]
-    public void PopulateTestNodeStatistics_WithEventsForSameUid()
+    public void PopulateTestNodeStatistics_WithOutcomeChangeForSameUid()
     {
         PropertyBag properties = new(
             new FailedTestNodeStateProperty("failed"));
@@ -148,7 +148,7 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
         PropertyBag otherProperties = new(
             PassedTestNodeStateProperty.CachedInstance);
 
-        TestNodeUpdateMessage otherTestNode = new(new SessionUid(string.Empty), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = otherProperties });
+        TestNodeUpdateMessage otherTestNode = new(new SessionUid("2"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = otherProperties });
 
         _service.PopulateTestNodeStatistics(testNode);
         _service.PopulateTestNodeStatistics(otherTestNode);
