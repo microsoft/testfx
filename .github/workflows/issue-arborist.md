@@ -37,7 +37,9 @@ steps:
 
       echo "⬇ Downloading the last 100 open issues (excluding sub-issues)..."
 
-      # Use REST API directly to avoid gh CLI /meta check blocked by DIFC proxy
+      # Use REST API directly to avoid gh CLI /meta check blocked by DIFC proxy.
+      # Fetches the most recently created 100 issues (intentional limit matching previous behavior).
+      # State is normalized to uppercase (OPEN/CLOSED) to match gh CLI GraphQL output format.
       curl -s \
         -H "Authorization: Bearer ${GITHUB_TOKEN}" \
         -H "Accept: application/vnd.github+json" \
