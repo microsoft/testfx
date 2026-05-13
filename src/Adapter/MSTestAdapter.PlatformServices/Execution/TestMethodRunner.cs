@@ -178,10 +178,25 @@ internal sealed class TestMethodRunner
 
     private async Task<bool> TryExecuteDataSourceBasedTestsAsync(List<TestResult> results)
     {
-        // IsAttributeDefined avoids the array allocation of GetAttributes<DataSourceAttribute>().
-        // DataSourceAttribute is sealed (no subclass can coexist alongside it) and
-        // has AllowMultiple = false (default), so IsAttributeDefined is equivalent to Length == 1.
-        if (!ReflectHelper.Instance.IsAttributeDefined<DataSourceAttribute>(_testMethodInfo.MethodInfo))
+        // Iterate cached attributes directly to preserve the previous semantics:
+        // execute only when there is exactly one DataSourceAttribute.
+        bool hasSingleDataSource = false;
+        foreach (Attribute attribute in ReflectHelper.Instance.GetCustomAttributesCached(_testMethodInfo.MethodInfo))
+        {
+            if (attribute is not DataSourceAttribute)
+            {
+                continue;
+            }
+
+            if (hasSingleDataSource)
+            {
+                return false;
+            }
+
+            hasSingleDataSource = true;
+        }
+
+        if (!hasSingleDataSource)
         {
             return false;
         }
