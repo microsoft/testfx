@@ -95,18 +95,35 @@ internal sealed class AggregatedConfiguration(
 
         // If not specified by command line, then use the configuration providers.
         // And finally fallback to DefaultTestResultFolderName relative to the current working directory.
+        string? dotnetTestCwd = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY);
         return CalculateFromConfigurationProviders(PlatformConfigurationConstants.PlatformResultDirectory)
-            ?? Path.Combine(_environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY) ?? this[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]!, DefaultTestResultFolderName);
+            ?? Path.Combine(!RoslynString.IsNullOrWhiteSpace(dotnetTestCwd) ? dotnetTestCwd : this[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]!, DefaultTestResultFolderName);
     }
 
     private string GetCurrentWorkingDirectoryCore()
-         // If the value is already set, use that.
-         => _currentWorkingDirectory
-            // If first time calculating it, prefer the value from configuration,
-            ?? CalculateFromConfigurationProviders(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)
-            // then check if dotnet test working directory is set (to keep PlatformCurrentWorkingDirectory and
-            // PlatformResultDirectory consistent when running under 'dotnet test'),
-            ?? _environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY)
-            // then fallback to the actual working directory.
-            ?? _testApplicationModuleInfo.GetCurrentTestApplicationDirectory();
+    {
+        // If the value is already set, use that.
+        if (_currentWorkingDirectory is not null)
+        {
+            return _currentWorkingDirectory;
+        }
+
+        // If first time calculating it, prefer the value from configuration,
+        string? fromConfig = CalculateFromConfigurationProviders(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory);
+        if (fromConfig is not null)
+        {
+            return fromConfig;
+        }
+
+        // then check if dotnet test working directory is set (to keep PlatformCurrentWorkingDirectory and
+        // PlatformResultDirectory consistent when running under 'dotnet test'),
+        string? dotnetTestCwd = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY);
+        if (!RoslynString.IsNullOrWhiteSpace(dotnetTestCwd))
+        {
+            return dotnetTestCwd;
+        }
+
+        // then fallback to the actual working directory.
+        return _testApplicationModuleInfo.GetCurrentTestApplicationDirectory();
+    }
 }

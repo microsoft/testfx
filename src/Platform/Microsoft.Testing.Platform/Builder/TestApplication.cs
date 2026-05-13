@@ -306,7 +306,11 @@ public sealed class TestApplication : ITestApplication
 
         // Set the directory to the default test result directory
         string? effectiveWorkingDirectory = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY);
-        effectiveWorkingDirectory ??= testApplicationModuleInfo.GetCurrentTestApplicationDirectory();
+        if (RoslynString.IsNullOrWhiteSpace(effectiveWorkingDirectory))
+        {
+            effectiveWorkingDirectory = testApplicationModuleInfo.GetCurrentTestApplicationDirectory();
+        }
+
         string directory = Path.Combine(effectiveWorkingDirectory, AggregatedConfiguration.DefaultTestResultFolderName);
         bool customDirectory = false;
 
