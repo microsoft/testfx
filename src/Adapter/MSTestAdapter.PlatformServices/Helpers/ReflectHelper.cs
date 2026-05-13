@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
 using System.Security;
+#endif
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -9,7 +11,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 [SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for mocking")]
-internal class ReflectHelper : MarshalByRefObject
+internal class ReflectHelper
+#if NETFRAMEWORK
+    : MarshalByRefObject
+#endif
 {
 #pragma warning disable RS0030 // Do not use banned APIs
     private static readonly Lazy<ReflectHelper> InstanceValue = new(() => new());
@@ -53,6 +58,7 @@ internal class ReflectHelper : MarshalByRefObject
         return false;
     }
 
+#if NETFRAMEWORK
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>
@@ -60,10 +66,8 @@ internal class ReflectHelper : MarshalByRefObject
     /// The <see cref="object"/>.
     /// </returns>
     [SecurityCritical]
-#if NET5_0_OR_GREATER
-    [Obsolete("MarshalByRefObject.InitializeLifetimeService is obsolete in .NET 5+. This override is required to maintain infinite lifetime service.")]
-#endif
     public override object InitializeLifetimeService() => null!;
+#endif
 
     /// <summary>
     /// Gets first attribute that matches the type.

@@ -13,7 +13,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// <summary>
 /// TestMethod contains information about a unit test method that needs to be executed.
 /// </summary>
+#if NETFRAMEWORK
 [Serializable]
+#endif
 internal sealed class TestMethod : ITestMethod
 {
     /// <summary>

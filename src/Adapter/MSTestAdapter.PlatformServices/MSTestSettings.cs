@@ -18,7 +18,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// <summary>
 /// Adapter Settings for the run.
 /// </summary>
+#if NETFRAMEWORK
 [Serializable]
+#endif
 internal sealed class MSTestSettings
 {
     /// <summary>

@@ -8,7 +8,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// TestResult object to be returned to adapter.
 /// </summary>
+#if NETFRAMEWORK
 [Serializable]
+#endif
 public class TestResult
 {
     /// <summary>

@@ -2,7 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Runtime.Serialization;
+#if NETFRAMEWORK
 using System.Security;
+#endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -16,7 +18,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 /// Enumerates through all types in the assembly in search of valid test methods.
 /// </summary>
 [SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
-internal class AssemblyEnumerator : MarshalByRefObject
+internal class AssemblyEnumerator
+#if NETFRAMEWORK
+    : MarshalByRefObject
+#endif
 {
     /// <summary>
     /// Helper for reflection API's.
@@ -45,6 +50,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
 
+#if NETFRAMEWORK
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>
@@ -52,10 +58,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// The <see cref="object"/>.
     /// </returns>
     [SecurityCritical]
-#if NET5_0_OR_GREATER
-    [Obsolete("MarshalByRefObject.InitializeLifetimeService is obsolete in .NET 5+. This override is required to maintain infinite lifetime service.")]
-#endif
     public override object InitializeLifetimeService() => null!;
+#endif
 
     /// <summary>
     /// Enumerates through all types in the assembly in search of valid test methods.

@@ -8,7 +8,11 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "MTP logger bridge")]
-internal sealed class MTPTraceLogger : MarshalByRefObject, ITraceLogger
+internal sealed class MTPTraceLogger :
+#if NETFRAMEWORK
+    MarshalByRefObject,
+#endif
+    ITraceLogger
 {
     private readonly ILogger _logger;
 
