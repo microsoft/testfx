@@ -30,19 +30,39 @@ steps:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_AW_ORIGINAL_GITHUB_API_URL: ${{ github.api_url }}
     run: |
       # Create output directory
       mkdir -p /tmp/gh-aw/issues-data
 
       echo "⬇ Downloading the last 100 open issues (excluding sub-issues)..."
 
-      # Fetch the last 100 open issues that don't have a parent issue
-      gh issue list --repo ${{ github.repository }} \
-        --search "-parent-issue:*" \
-        --state open \
-        --json number,title,author,createdAt,state,url,body,labels,updatedAt,closedAt,milestone,assignees \
-        --limit 100 \
-        > /tmp/gh-aw/issues-data/issues.json
+      # Use REST API directly to avoid gh CLI /meta check blocked by DIFC proxy
+      curl -s \
+        -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+        -H "Accept: application/vnd.github+json" \
+        --get \
+        --data-urlencode "q=repo:${{ github.repository }} is:issue is:open -is:sub-issue" \
+        --data-urlencode "sort=created" \
+        --data-urlencode "order=desc" \
+        --data-urlencode "per_page=100" \
+        "${GH_AW_ORIGINAL_GITHUB_API_URL}/search/issues" \
+        | jq '.items // [] | map({
+            number: .number,
+            title: .title,
+            author: {login: .user.login},
+            createdAt: .created_at,
+            state: (.state | ascii_upcase),
+            url: .html_url,
+            body: .body,
+            labels: [.labels[] | {name: .name}],
+            updatedAt: .updated_at,
+            closedAt: .closed_at,
+            milestone: (if .milestone != null then {title: .milestone.title} else null end),
+            assignees: [.assignees[] | {login: .login}]
+          })' \
+        > /tmp/gh-aw/issues-data/issues.json \
+        || echo '[]' > /tmp/gh-aw/issues-data/issues.json
 
       echo "✓ Issues data saved to /tmp/gh-aw/issues-data/issues.json"
       echo "Total issues fetched: $(jq 'length' /tmp/gh-aw/issues-data/issues.json)"
