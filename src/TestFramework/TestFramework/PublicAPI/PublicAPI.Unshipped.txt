@@ -1,2 +1,4 @@
 #nullable enable
 [MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Scope() -> System.IDisposable!
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ActualText.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ExpectedText.get -> string?

@@ -34,7 +34,7 @@ public sealed class TimeoutWhenCanceledTests : AcceptanceTestBase<TimeoutWhenCan
     private static async Task RunAndAssertTestWasCanceledAsync(string tfm, string envVarPrefix, string entryKind)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new() { { envVarPrefix + InfoByKind[entryKind].EnvVarSuffix, "1" } });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new() { [envVarPrefix + InfoByKind[entryKind].EnvVarSuffix] = "1" });
         testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' was canceled");
     }
 
