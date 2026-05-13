@@ -215,7 +215,9 @@ public sealed partial class Assert
         // RFC: IsNotNull omits the evidence block since actual is always null
         StructuredAssertionMessage structured = new(FrameworkMessages.IsNotNullFailedSummary);
         structured.WithUserMessage(message);
+#pragma warning disable CA1507 // Use nameof - 'value' is the parameter name of the public IsNotNull method, not available in this scope
         structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotNull", valueExpression, "value"));
+#pragma warning restore CA1507
 
         ReportAssertFailed(structured);
     }

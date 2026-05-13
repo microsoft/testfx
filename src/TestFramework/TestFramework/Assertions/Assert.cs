@@ -189,29 +189,11 @@ public sealed partial class Assert
         }
 
         // If expression contains newlines (multiline constant), replace with placeholder per RFC
-        string arg = expression.Contains('\n') || expression.Contains('\r')
+        string arg = expression.IndexOf('\n') >= 0 || expression.IndexOf('\r') >= 0
             ? $"<{paramName}>"
             : expression;
 
         return $"{assertionMethodName}({arg})";
-    }
-
-    /// <summary>
-    /// Formats a call-site expression for display at the bottom of a structured assertion message,
-    /// using two captured expressions. When an expression contains newlines, it is replaced with a
-    /// <c>&lt;paramName&gt;</c> placeholder.
-    /// </summary>
-    internal static string? FormatCallSiteExpression(string assertionMethodName, string expression1, string paramName1, string expression2, string paramName2)
-    {
-        if (string.IsNullOrWhiteSpace(expression1) || string.IsNullOrWhiteSpace(expression2))
-        {
-            return null;
-        }
-
-        string arg1 = expression1.Contains('\n') || expression1.Contains('\r') ? $"<{paramName1}>" : expression1;
-        string arg2 = expression2.Contains('\n') || expression2.Contains('\r') ? $"<{paramName2}>" : expression2;
-
-        return $"{assertionMethodName}({arg1}, {arg2})";
     }
 
     private static string FormatAssertionFailed(string assertionName, string? message)
