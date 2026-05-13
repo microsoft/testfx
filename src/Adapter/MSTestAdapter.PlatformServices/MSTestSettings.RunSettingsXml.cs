@@ -81,7 +81,10 @@ internal sealed partial class MSTestSettings
 
     private static MSTestSettings ToSettings(XmlReader reader, IMessageLogger? logger)
     {
-        ArgumentNullException.ThrowIfNull(reader);
+        if (reader is null)
+        {
+            throw new ArgumentNullException(nameof(reader));
+        }
 
         MSTestSettings settings = new();
         reader.ReadToNextElement();
