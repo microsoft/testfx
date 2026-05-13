@@ -385,14 +385,16 @@ internal class TestMethodInfo : ITestMethod
                     // For any failure after this point, we must run TestCleanup
                     _isTestContextSet = true;
 
-                    if (await RunTestInitializeMethodAsync(_classInstance!, result, timeoutTokenSource).ConfigureAwait(false))
+                    // Intentionally using ConfigureAwait(true) here to ensure the continuation is posted to the synchronization context.
+                    // In case of WinUI's default synchronization context, this will ensure that the test method runs on the UI thread.
+                    if (await RunTestInitializeMethodAsync(_classInstance!, result, timeoutTokenSource).ConfigureAwait(true))
                     {
                         if (_executionContext is null)
                         {
                             Task? invokeResult = MethodInfo.GetInvokeResultAsync(_classInstance, arguments);
                             if (invokeResult is not null)
                             {
-                                await invokeResult.ConfigureAwait(false);
+                                await invokeResult.ConfigureAwait(true);
                             }
                         }
                         else
