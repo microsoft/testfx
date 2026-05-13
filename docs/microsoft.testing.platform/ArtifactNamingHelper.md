@@ -18,9 +18,8 @@ Resolves to: `MyTests_12345_2025-09-22_13-49-34.0000000_hang.dmp`
 |-------------|-------------|---------|
 | `{pname}` | Name of the process | `MyTests` |
 | `{pid}` | Process ID | `12345` |
-| `{os}` | Operating system | `windows`, `linux`, `macos`, `unknown` |
-| `{asm}` | Assembly name | `MyTests` |
-| `{tfm}` | Target framework moniker | `net9.0`, `net8.0` |
+| `{asm}` | Assembly name (entry assembly, or `unknown` if unavailable) | `MyTests` |
+| `{tfm}` | Target framework moniker (best-effort, detected at runtime — may differ from the build-time TFM, e.g. a `net462` assembly running on .NET Framework 4.8 reports `net481`) | `net9.0`, `net8.0` |
 | `{time}` | Timestamp (high precision) | `2025-09-22_13-49-34.0000000` |
 
 ## Backward Compatibility

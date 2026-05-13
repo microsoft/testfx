@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Runtime.InteropServices;
-
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.UnitTests.Services;
@@ -199,25 +197,18 @@ public sealed class ArtifactNamingHelperTests
         => Assert.ThrowsExactly<ArgumentException>(() => ArtifactNamingHelper.ResolveTemplate("   "));
 
     [TestMethod]
-    public void GetOperatingSystemName_ReturnsKnownValue()
+    public void GetStandardReplacements_ReturnsExpectedKeys()
     {
-        string os = ArtifactNamingHelper.GetOperatingSystemName();
+        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements("myproc", "42", new DateTimeOffset(2025, 9, 22, 13, 49, 34, TimeSpan.Zero));
 
-        string[] validValues = ["windows", "linux", "macos", "unknown"];
-        Assert.Contains(os, validValues, $"Unexpected OS name: '{os}'");
+        Assert.AreEqual("myproc", replacements["pname"]);
+        Assert.AreEqual("42", replacements["pid"]);
+        Assert.AreEqual("2025-09-22_13-49-34.0000000", replacements["time"]);
 
-        // Anchor the current-platform value explicitly.
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            Assert.AreEqual("windows", os);
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            Assert.AreEqual("linux", os);
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            Assert.AreEqual("macos", os);
-        }
+        // asm and tfm are runtime-dependent, just verify they're present and non-empty.
+        Assert.IsTrue(replacements.ContainsKey("asm"), "Expected 'asm' key in standard replacements");
+        Assert.IsTrue(replacements.ContainsKey("tfm"), "Expected 'tfm' key in standard replacements");
+        Assert.AreNotEqual(string.Empty, replacements["asm"], "Expected 'asm' to have a non-empty value");
+        Assert.AreNotEqual(string.Empty, replacements["tfm"], "Expected 'tfm' to have a non-empty value");
     }
 }

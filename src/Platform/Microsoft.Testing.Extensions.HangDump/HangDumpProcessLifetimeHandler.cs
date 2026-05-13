@@ -309,20 +309,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ApplicationStateGuard.Ensure(_dumpType is not null);
 
         string processId = process.Id.ToString(CultureInfo.InvariantCulture);
-        var replacements = new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["pname"] = process.Name,
-            ["pid"] = processId,
-            ["os"] = ArtifactNamingHelper.GetOperatingSystemName(),
-            ["time"] = _clock.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss.fffffff", CultureInfo.InvariantCulture),
-        };
-
-        string? asmName = Assembly.GetEntryAssembly()?.GetName().Name;
-        replacements["asm"] = asmName ?? "unknown";
-
-        string? tfm = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
-            ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
-        replacements["tfm"] = tfm ?? "unknown";
+        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(process.Name, processId, _clock.UtcNow);
 
         string pattern = _dumpFileNamePattern ?? $"{process.Name}_%p_hang.dmp";
 

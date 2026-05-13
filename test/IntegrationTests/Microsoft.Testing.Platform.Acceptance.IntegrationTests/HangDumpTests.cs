@@ -111,7 +111,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--hangdump --hangdump-timeout 8s --hangdump-filename {{pname}}_{{pid}}_{{os}}_{{tfm}}_{{time}}_hang.dmp --results-directory {resultDirectory}",
+            $"--hangdump --hangdump-timeout 8s --hangdump-filename {{pname}}_{{pid}}_{{tfm}}_{{time}}_hang.dmp --results-directory {resultDirectory}",
             new Dictionary<string, string?>
             {
                 ["SLEEPTIMEMS1"] = "4000",
@@ -127,12 +127,11 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             $"Expected single dump file in '{resultDirectory}'\n{testHostResult}'");
         string fileName = Path.GetFileNameWithoutExtension(dumpFile);
 
-        // File should match pattern: {pname}_{pid}_{os}_{tfm}_{time}_hang
-        // where {os} is windows, linux, macos, or unknown
+        // File should match pattern: {pname}_{pid}_{tfm}_{time}_hang
         // where {tfm} is e.g. net10.0, net8.0, net462
         // and {time} is yyyy-MM-dd_HH-mm-ss.fffffff
-        Assert.MatchesRegex(@"^.+_\d+_(windows|linux|macos|unknown)_net[\w.]+_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.\d{7}_hang$", fileName,
-            $"File name should match '{{pname}}_{{pid}}_{{os}}_{{tfm}}_{{time}}_hang' pattern. Actual: {fileName}");
+        Assert.MatchesRegex(@"^.+_\d+_net[\w.]+_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.\d{7}_hang$", fileName,
+            $"File name should match '{{pname}}_{{pid}}_{{tfm}}_{{time}}_hang' pattern. Actual: {fileName}");
 
         // Verify the TFM segment matches the expected target framework
         Assert.Contains($"_{tfm}_", fileName, $"File name should contain the TFM '{tfm}'. Actual: {fileName}");
@@ -166,6 +165,25 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         Assert.AreNotEqual(resultDirectory, parentDir, "Dump file should be in a subdirectory created from the {asm} placeholder");
         Assert.AreEqual("HangDump", Path.GetFileName(parentDir),
             $"Subdirectory should be named after the assembly ('HangDump'). Actual: {Path.GetFileName(parentDir)}");
+    }
+
+    [TestMethod]
+    public async Task HangDump_TemplateWithPathTraversal_RejectsAndFails()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--hangdump --hangdump-timeout 8s --hangdump-filename ../../outside/{{pname}}_hang.dmp --results-directory {resultDirectory}",
+            new Dictionary<string, string?>
+            {
+                ["SLEEPTIMEMS1"] = "4000",
+                ["SLEEPTIMEMS2"] = "20000",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        // The path-traversal guard should cause a non-graceful exit and no dump file should be created outside the results directory.
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        Assert.Contains("outside the results directory", testHostResult.StandardOutput);
     }
 
     [DataRow("Mini")]
