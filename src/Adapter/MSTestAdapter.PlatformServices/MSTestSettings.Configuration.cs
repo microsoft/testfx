@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
@@ -28,8 +28,8 @@ internal sealed partial class MSTestSettings
     internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger? logger, IConfiguration? configuration)
     {
 #if !WINDOWS_UWP
-        if (configuration?["mstest"] != null
-            && context?.RunSettings != null
+        if (configuration?["mstest"] is not null
+            && context?.RunSettings is not null
             && RunSettingsFileHasMSTestSettings(context.RunSettings.SettingsXml))
         {
             throw new InvalidOperationException(Resource.DuplicateConfigurationError);
