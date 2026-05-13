@@ -46,7 +46,7 @@ public readonly struct TimingInfo : IEquatable<TimingInfo>
         builder.Append($", {nameof(EndTime)} = ");
         builder.Append(EndTime);
         builder.Append($", {nameof(Duration)} = ");
-        builder.Append(Duration.ToString());
+        builder.Append(Duration);
         builder.Append(" }");
         return builder.ToString();
     }

@@ -152,7 +152,7 @@ internal sealed class RunConfigurationSettings
         // Verify that it is a "RunSettings" node.
         if (reader.Name != "RunSettings")
         {
-            throw new FormatException("Invalid runsettings");
+            throw new FormatException($"The runsettings XML document has an invalid root element '<{reader.Name}>'. Expected root element is '<RunSettings>'.");
         }
     }
 
