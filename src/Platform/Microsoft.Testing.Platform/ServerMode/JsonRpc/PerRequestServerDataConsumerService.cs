@@ -243,6 +243,11 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
             return;
         }
 
+        if (existingStatistics.HasPassed == hasPassed)
+        {
+            return;
+        }
+
         if (hasPassed)
         {
             existingStatistics.TotalPassedRetries++;

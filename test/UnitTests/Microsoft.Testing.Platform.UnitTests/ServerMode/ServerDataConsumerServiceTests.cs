@@ -133,7 +133,7 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
         Assert.AreEqual(0, statistics.TotalDiscoveredTests);
         Assert.AreEqual(1, statistics.TotalPassedTests);
         Assert.AreEqual(0, statistics.TotalFailedTests);
-        Assert.AreEqual(1, statistics.TotalPassedRetries);
+        Assert.AreEqual(0, statistics.TotalPassedRetries);
         Assert.AreEqual(0, statistics.TotalFailedRetries);
     }
 
@@ -152,6 +152,50 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
 
         _service.PopulateTestNodeStatistics(testNode);
         _service.PopulateTestNodeStatistics(otherTestNode);
+
+        TestNodeStatistics statistics = _service.GetTestNodeStatistics();
+        Assert.AreEqual(0, statistics.TotalDiscoveredTests);
+        Assert.AreEqual(1, statistics.TotalPassedTests);
+        Assert.AreEqual(0, statistics.TotalFailedTests);
+        Assert.AreEqual(1, statistics.TotalPassedRetries);
+        Assert.AreEqual(0, statistics.TotalFailedRetries);
+    }
+
+    [TestMethod]
+    public void PopulateTestNodeStatistics_WithDuplicateFailedEvents()
+    {
+        PropertyBag properties = new(
+            new FailedTestNodeStateProperty("failed"));
+
+        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = properties });
+
+        _service.PopulateTestNodeStatistics(testNode);
+        _service.PopulateTestNodeStatistics(testNode);
+
+        TestNodeStatistics statistics = _service.GetTestNodeStatistics();
+        Assert.AreEqual(0, statistics.TotalDiscoveredTests);
+        Assert.AreEqual(0, statistics.TotalPassedTests);
+        Assert.AreEqual(1, statistics.TotalFailedTests);
+        Assert.AreEqual(0, statistics.TotalPassedRetries);
+        Assert.AreEqual(0, statistics.TotalFailedRetries);
+    }
+
+    [TestMethod]
+    public void PopulateTestNodeStatistics_WithDuplicateEventAfterOutcomeChange()
+    {
+        PropertyBag failedProperties = new(
+            new FailedTestNodeStateProperty("failed"));
+
+        TestNodeUpdateMessage failedTestNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = failedProperties });
+
+        PropertyBag passedProperties = new(
+            PassedTestNodeStateProperty.CachedInstance);
+
+        TestNodeUpdateMessage passedTestNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = passedProperties });
+
+        _service.PopulateTestNodeStatistics(failedTestNode);
+        _service.PopulateTestNodeStatistics(passedTestNode);
+        _service.PopulateTestNodeStatistics(passedTestNode);
 
         TestNodeStatistics statistics = _service.GetTestNodeStatistics();
         Assert.AreEqual(0, statistics.TotalDiscoveredTests);
