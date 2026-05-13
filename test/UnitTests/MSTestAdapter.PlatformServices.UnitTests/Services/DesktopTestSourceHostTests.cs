@@ -104,7 +104,24 @@ public class DesktopTestSourceHostTests : TestContainer
         _ = new DummyClass();
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        Mock<TestSourceHost> sourceHost = new(location, (IRunSettings?)null) { CallBase = true };
+        Mock<TestSourceHost> sourceHost = new(location, null!) { CallBase = true };
+
+        try
+        {
+            // Act
+            sourceHost.Object.SetupHost();
+            var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
+
+            // Assert
+            expectedObject?.AppDomainAppBase.Should().Be(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location));
+        }
+        finally
+        {
+            sourceHost.Object.Dispose();
+        }
+    }
+
+    public void SetupHostShouldHaveParentDomainsAppBaseSetToTestSourceLocation()
     {
         // Arrange
         DummyClass dummyClass = new();
@@ -144,7 +161,15 @@ public class DesktopTestSourceHostTests : TestContainer
         DummyClass dummyClass = new();
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        Mock<TestSourceHost> sourceHost = new(location, (IRunSettings?)null) { CallBase = true };
+        Mock<TestSourceHost> sourceHost = new(location, null!) { CallBase = true };
+
+        try
+        {
+            // Act
+            sourceHost.Object.SetupHost();
+
+            // Assert
+            sourceHost.Verify(sh => sh.GetResolutionPaths(location, It.IsAny<bool>()), Times.Once);
         }
         finally
         {
