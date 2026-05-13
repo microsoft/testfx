@@ -11,11 +11,11 @@ on:
   reaction: "eyes"
 
 # Only run when:
-# 1. The review has actionable feedback (not an approval)
+# 1. The review explicitly requests changes (not an approval or informational comment)
 # 2. The PR is from the same repo (not a fork — we need push access)
 # 3. The PR was created by Copilot OR has the 'copilot-autofix' label
 if: >-
-  github.event.review.state != 'approved'
+  github.event.review.state == 'changes_requested'
   && github.event.pull_request.head.repo.id == github.repository_id
   && (
     github.event.pull_request.user.login == 'copilot-swe-agent[bot]'

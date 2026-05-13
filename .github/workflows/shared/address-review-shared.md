@@ -60,7 +60,7 @@ already run on this PR:
 3. **If the count is 3 or more**, post the following comment and then **stop immediately** — do not edit any files:
 
    > ⚠️ **Autofix loop limit reached** (3 iterations). This PR needs human attention.
-   > <!-- autofix-iteration -->
+   > <!-- autofix-limit-reached -->
 
    Then exit.
 
@@ -146,18 +146,20 @@ After applying all fixes:
 3. Do **not** run the full test suite (it takes too long). Compilation
    verification is sufficient.
 
-## Step 5 — Commit and Push
+## Step 5 — Push Changes
 
-1. Stage all changed files.
-2. Commit with a message in this format:
+Use the `push_to_pull_request_branch` safe output tool to push all edited files to the
+PR branch. Provide a commit message in this format:
 
-   ```
-   Address review feedback
+```
+Address review feedback
 
-   Applied fixes for N review comments from the expert-reviewer.
-   ```
+Applied fixes for N review comments from the expert-reviewer.
+```
 
-3. Push to the PR branch.
+Do **not** run `git add`, `git commit`, or `git push` directly — credentials are not
+available to the agent; the safe output handler manages authentication and enforces
+protected-file policies.
 
 ## Step 6 — Post Summary
 
