@@ -4,7 +4,7 @@ description: "Automatically runs the expert-reviewer agent when a non-draft PR i
 
 # Non-draft PRs trigger this workflow.
 # The `roles` setting restricts execution to users with admin, maintainer, or
-# write permissions — fork PRs from non-members are blocked.
+# write permissions, and fork PRs are blocked by the compiled repository_id guard.
 #
 # NOTE: Only `opened` is used here; for PRs transitioned from draft to ready,
 # use the `/review` slash command.
