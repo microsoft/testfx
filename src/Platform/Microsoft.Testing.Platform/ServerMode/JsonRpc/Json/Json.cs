@@ -707,7 +707,7 @@ internal sealed class Json
             if (converter is JsonObjectSerializer objectConverter)
             {
                 writer.WriteStartObject();
-                (string Key, object? Value)[]? properties = objectConverter.Properties(obj);
+                (string Key, object? Value)[]? properties = objectConverter.GetProperties(obj);
                 if (properties is not null)
                 {
                     foreach ((string property, object? value) in properties)
