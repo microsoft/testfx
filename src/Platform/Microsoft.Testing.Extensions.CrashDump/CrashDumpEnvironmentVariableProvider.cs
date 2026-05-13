@@ -18,6 +18,8 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     private const string MiniDumpNameVariable = "DbgMiniDumpName";
     private const string CreateDumpDiagnosticsVariable = "CreateDumpDiagnostics";
     private const string CreateDumpVerboseDiagnosticsVariable = "CreateDumpVerboseDiagnostics";
+    private const string EnableCrashReportVariable = "EnableCrashReport";
+    private const string EnableCrashReportOnlyVariable = "EnableCrashReportOnly";
     private const string EnableMiniDumpValue = "1";
 
     private static readonly string[] Prefixes = ["DOTNET_", "COMPlus_"];
@@ -54,15 +56,46 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync()
-        => Task.FromResult(_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) && _crashDumpGeneratorConfiguration.Enable);
+        => Task.FromResult(
+            (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) ||
+             _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName) ||
+             _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOnlyOptionName)) &&
+            _crashDumpGeneratorConfiguration.Enable);
 
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
+        bool crashDumpEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName);
+        bool crashReportEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
+        bool crashReportOnlyEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOnlyOptionName);
+
+        if (crashDumpEnabled || crashReportOnlyEnabled)
+        {
+            foreach (string prefix in Prefixes)
+            {
+                environmentVariables.SetVariable(new($"{prefix}{EnableMiniDumpVariable}", EnableMiniDumpValue, false, true));
+            }
+        }
+
         foreach (string prefix in Prefixes)
         {
-            environmentVariables.SetVariable(new($"{prefix}{EnableMiniDumpVariable}", EnableMiniDumpValue, false, true));
             environmentVariables.SetVariable(new($"{prefix}{CreateDumpDiagnosticsVariable}", EnableMiniDumpValue, false, true));
             environmentVariables.SetVariable(new($"{prefix}{CreateDumpVerboseDiagnosticsVariable}", EnableMiniDumpValue, false, true));
+        }
+
+        if (crashReportEnabled)
+        {
+            foreach (string prefix in Prefixes)
+            {
+                environmentVariables.SetVariable(new($"{prefix}{EnableCrashReportVariable}", EnableMiniDumpValue, false, true));
+            }
+        }
+
+        if (crashReportOnlyEnabled)
+        {
+            foreach (string prefix in Prefixes)
+            {
+                environmentVariables.SetVariable(new($"{prefix}{EnableCrashReportOnlyVariable}", EnableMiniDumpValue, false, true));
+            }
         }
 
         string miniDumpTypeValue = "4";
@@ -133,12 +166,16 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         return ValidationResult.InvalidTask(CrashDumpResources.CrashDumpNotSupportedInNonNetCoreErrorMessage);
 #else
         StringBuilder errors = new();
-        foreach (string prefix in Prefixes)
+        if (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) ||
+            _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOnlyOptionName))
         {
-            if (!environmentVariables.TryGetVariable($"{prefix}{EnableMiniDumpVariable}", out OwnedEnvironmentVariable? enableMiniDump)
-            || enableMiniDump.Value != EnableMiniDumpValue)
+            foreach (string prefix in Prefixes)
             {
-                AddError(errors, $"{prefix}{EnableMiniDumpVariable}", EnableMiniDumpValue, enableMiniDump?.Value);
+                if (!environmentVariables.TryGetVariable($"{prefix}{EnableMiniDumpVariable}", out OwnedEnvironmentVariable? enableMiniDump)
+                || enableMiniDump.Value != EnableMiniDumpValue)
+                {
+                    AddError(errors, $"{prefix}{EnableMiniDumpVariable}", EnableMiniDumpValue, enableMiniDump?.Value);
+                }
             }
         }
 
@@ -157,6 +194,30 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             || enableMiniDump.Value != EnableMiniDumpValue)
             {
                 AddError(errors, $"{prefix}{CreateDumpVerboseDiagnosticsVariable}", EnableMiniDumpValue, enableMiniDump?.Value);
+            }
+        }
+
+        if (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName))
+        {
+            foreach (string prefix in Prefixes)
+            {
+                if (!environmentVariables.TryGetVariable($"{prefix}{EnableCrashReportVariable}", out OwnedEnvironmentVariable? enableCrashReport)
+                || enableCrashReport.Value != EnableMiniDumpValue)
+                {
+                    AddError(errors, $"{prefix}{EnableCrashReportVariable}", EnableMiniDumpValue, enableCrashReport?.Value);
+                }
+            }
+        }
+
+        if (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOnlyOptionName))
+        {
+            foreach (string prefix in Prefixes)
+            {
+                if (!environmentVariables.TryGetVariable($"{prefix}{EnableCrashReportOnlyVariable}", out OwnedEnvironmentVariable? enableCrashReportOnly)
+                || enableCrashReportOnly.Value != EnableMiniDumpValue)
+                {
+                    AddError(errors, $"{prefix}{EnableCrashReportOnlyVariable}", EnableMiniDumpValue, enableCrashReportOnly?.Value);
+                }
             }
         }
 

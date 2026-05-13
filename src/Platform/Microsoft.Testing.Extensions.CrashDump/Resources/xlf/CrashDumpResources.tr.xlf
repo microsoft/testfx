@@ -7,6 +7,11 @@
         <target state="translated">Beklenen kilitlenme dökümü dosyası '{0}' bulunamadı, '*.dmp' düzeniyle eşleşen tüm dosyalar sonuç klasörüne kopyalanacak</target>
         <note />
       </trans-unit>
+      <trans-unit id="CannotFindExpectedCrashReportFile">
+        <source>Expected crash report file '{0}' could not be found, all files matching the '*.crashreport.json' pattern will be copied to the result folder</source>
+        <target state="new">Expected crash report file '{0}' could not be found, all files matching the '*.crashreport.json' pattern will be copied to the result folder</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CrashDumpArtifactDescription">
         <source>The testhost process crash dump file</source>
         <target state="translated">Test ana bilgisayarı işlemi kilitlenme bilgi dökümü dosyası</target>
@@ -47,9 +52,19 @@
         <target state="translated">[yalnızca net6.0+] Test işlemi çökerse bir döküm dosyası oluşturun</target>
         <note />
       </trans-unit>
+      <trans-unit id="CrashDumpProcessCrashedDumpAndReportFileCreated">
+        <source>Test host process with PID '{0}' crashed, a dump file and crash report were generated</source>
+        <target state="new">Test host process with PID '{0}' crashed, a dump file and crash report were generated</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
         <target state="translated">PID'li test ana işlemi ‘{0}' kilitlendi, bir döküm dosyası oluşturuldu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpProcessCrashedReportFileCreated">
+        <source>Test host process with PID '{0}' crashed, a crash report was generated</source>
+        <target state="new">Test host process with PID '{0}' crashed, a crash report was generated</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
@@ -69,6 +84,36 @@ Daha fazla bilgi için https://learn.microsoft.com/dotnet/core/diagnostics/colle
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">
         <source>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</source>
         <target state="translated">'--crashdump-type' argüman olarak tek bir döküm tipini bekler (örneğin, '--crashdump-type Heap')</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashReportArtifactDescription">
+        <source>The testhost process crash report file</source>
+        <target state="new">The testhost process crash report file</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashReportArtifactDisplayName">
+        <source>Crash report file</source>
+        <target state="new">Crash report file</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashReportOnlyCannotBeCombinedErrorMessage">
+        <source>'--crashreport-only' can't be combined with '--crashdump' or '--crashreport'</source>
+        <target state="new">'--crashreport-only' can't be combined with '--crashdump' or '--crashreport'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashReportOnlyOptionDescription">
+        <source>[net7.0+ only] Generate only a crash report file if the test process crashes</source>
+        <target state="new">[net7.0+ only] Generate only a crash report file if the test process crashes</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashReportOptionDescription">
+        <source>[net6.0+ only] Generate a crash report file if the test process crashes. Requires '--crashdump'.</source>
+        <target state="new">[net6.0+ only] Generate a crash report file if the test process crashes. Requires '--crashdump'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashReportRequiresCrashDumpErrorMessage">
+        <source>You specified '--crashreport' but did not enable crash dumps, add --crashdump to the command line</source>
+        <target state="new">You specified '--crashreport' but did not enable crash dumps, add --crashdump to the command line</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">

@@ -1,6 +1,6 @@
 # Microsoft.Testing.Extensions.CrashDump
 
-Microsoft.Testing.Extensions.CrashDump is an extension for [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform) that captures a crash dump of the test host process when an unhandled exception or crash occurs.
+Microsoft.Testing.Extensions.CrashDump is an extension for [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform) that captures a crash dump or crash report for the test host process when an unhandled exception or crash occurs.
 
 Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.CrashDump` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
 
@@ -15,11 +15,13 @@ dotnet add package Microsoft.Testing.Extensions.CrashDump
 This package extends Microsoft.Testing.Platform with:
 
 - **Crash dump collection**: automatically captures a memory dump when the test process crashes
+- **Crash report collection**: optionally emits a lightweight JSON crash report to help diagnose crashes without uploading a full dump
 - **Post-mortem debugging**: collected dumps can be analyzed with tools like Visual Studio, WinDbg, or `dotnet-dump`
 - **Cross-platform**: supported on Windows, Linux, and macOS. Note that dumps collected on macOS can only be analyzed on macOS
 - **Runtime behavior**: supported for .NET 6+; on .NET Framework this extension is ignored
 
 Enable crash dump collection via the `--crashdump` command line option.
+Add `--crashreport` to generate a dump and crash report together, or use `--crashreport-only` to generate only the crash report.
 
 ## Related packages
 

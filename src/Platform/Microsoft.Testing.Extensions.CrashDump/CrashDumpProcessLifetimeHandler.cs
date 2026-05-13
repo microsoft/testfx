@@ -46,8 +46,11 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
     public Type[] DataTypesProduced => [typeof(FileArtifact)];
 
     public Task<bool> IsEnabledAsync()
-        => Task.FromResult(_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName)
-        && _netCoreCrashDumpGeneratorConfiguration.Enable);
+        => Task.FromResult(
+            (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) ||
+             _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName) ||
+             _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOnlyOptionName)) &&
+            _netCoreCrashDumpGeneratorConfiguration.Enable);
 
     public Task BeforeTestHostProcessStartAsync(CancellationToken _) => Task.CompletedTask;
 
@@ -63,22 +66,51 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         }
 
         ApplicationStateGuard.Ensure(_netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern is not null);
-        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpFileCreated, testHostProcessInformation.PID)), cancellationToken).ConfigureAwait(false);
+        bool generateDump = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName);
+        bool generateCrashReport = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName) ||
+            _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOnlyOptionName);
+
+        string processCrashedMessage = generateDump && generateCrashReport
+            ? string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpAndReportFileCreated, testHostProcessInformation.PID)
+            : generateCrashReport
+                ? string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedReportFileCreated, testHostProcessInformation.PID)
+                : string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpFileCreated, testHostProcessInformation.PID);
+        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(processCrashedMessage), cancellationToken).ConfigureAwait(false);
 
         // TODO: Crash dump supports more placeholders that we don't handle here.
         // See "Dump name formatting" in:
         // https://github.com/dotnet/runtime/blob/82742628310076fff22d7e7ee216a74384352056/docs/design/coreclr/botr/xplat-minidump-generation.md
         string expectedDumpFile = _netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern.Replace("%p", testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
-        if (File.Exists(expectedDumpFile))
+        if (generateDump)
         {
-            await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(expectedDumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
-        }
-        else
-        {
-            await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashDumpFile, expectedDumpFile)), cancellationToken).ConfigureAwait(false);
-            foreach (string dumpFile in Directory.GetFiles(Path.GetDirectoryName(expectedDumpFile)!, "*.dmp"))
+            if (File.Exists(expectedDumpFile))
             {
-                await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
+                await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(expectedDumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
+            }
+            else
+            {
+                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashDumpFile, expectedDumpFile)), cancellationToken).ConfigureAwait(false);
+                foreach (string dumpFile in Directory.GetFiles(Path.GetDirectoryName(expectedDumpFile)!, "*.dmp"))
+                {
+                    await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
+                }
+            }
+        }
+
+        if (generateCrashReport)
+        {
+            string expectedCrashReportFile = $"{expectedDumpFile}.crashreport.json";
+            if (File.Exists(expectedCrashReportFile))
+            {
+                await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(expectedCrashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
+            }
+            else
+            {
+                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashReportFile, expectedCrashReportFile)), cancellationToken).ConfigureAwait(false);
+                foreach (string crashReportFile in Directory.GetFiles(Path.GetDirectoryName(expectedCrashReportFile)!, "*.crashreport.json"))
+                {
+                    await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(crashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
+                }
             }
         }
     }

@@ -70,6 +70,10 @@ Options:
 Extension options:
     --crashdump
         [net6.0+ only] Generate a dump file if the test process crashes
+    --crashreport
+        [net6.0+ only] Generate a crash report file if the test process crashes. Requires '--crashdump'.
+    --crashreport-only
+        [net7.0+ only] Generate only a crash report file if the test process crashes
     --crashdump-filename
         Specify the name of the dump file
     --crashdump-type
@@ -270,6 +274,14 @@ Registered command line providers:
         Arity: 0
         Hidden: False
         Description: [net6.0+ only] Generate a dump file if the test process crashes
+      --crashreport
+        Arity: 0
+        Hidden: False
+        Description: [net6.0+ only] Generate a crash report file if the test process crashes. Requires '--crashdump'.
+      --crashreport-only
+        Arity: 0
+        Hidden: False
+        Description: [net7.0+ only] Generate only a crash report file if the test process crashes
       --crashdump-filename
         Arity: 1
         Hidden: False

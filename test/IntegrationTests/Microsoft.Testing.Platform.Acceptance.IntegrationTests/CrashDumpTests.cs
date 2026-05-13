@@ -45,6 +45,30 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
     }
 
     [TestMethod]
+    public async Task CrashDump_WithCrashReport_CreateDumpAndCrashReport()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --crashreport --results-directory {resultDirectory}", cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+
+        Assert.ContainsSingle(Directory.GetFiles(resultDirectory, "CrashDump_*.dmp", SearchOption.AllDirectories), $"Dump file not found\n{testHostResult}");
+        Assert.ContainsSingle(Directory.GetFiles(resultDirectory, "CrashDump_*.dmp.crashreport.json", SearchOption.AllDirectories), $"Crash report file not found\n{testHostResult}");
+    }
+
+    [TestMethod]
+    public async Task CrashReportOnly_CustomDumpName_CreateOnlyCrashReport()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashreport-only --crashdump-filename customdumpname.dmp --results-directory {resultDirectory}", cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+
+        Assert.IsEmpty(Directory.GetFiles(resultDirectory, "customdumpname.dmp", SearchOption.AllDirectories), $"Unexpected dump file found\n{testHostResult}");
+        Assert.ContainsSingle(Directory.GetFiles(resultDirectory, "customdumpname.dmp.crashreport.json", SearchOption.AllDirectories), $"Crash report file not found\n{testHostResult}");
+    }
+
+    [TestMethod]
     public async Task CrashDump_InvalidFormat_ShouldFail()
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
@@ -52,6 +76,16 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump  --crashdump-type invalid --results-directory {resultDirectory}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
         testHostResult.AssertOutputContains("Option '--crashdump-type' has invalid arguments: 'invalid' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'");
+    }
+
+    [TestMethod]
+    public async Task CrashReport_Without_CrashDump_ShouldFail()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashreport --results-directory {resultDirectory}", cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        testHostResult.AssertOutputContains("You specified '--crashreport' but did not enable crash dumps, add --crashdump to the command line");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()

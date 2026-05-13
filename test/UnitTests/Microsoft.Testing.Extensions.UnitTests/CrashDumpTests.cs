@@ -38,11 +38,69 @@ public sealed class CrashDumpTests
     }
 
     [TestMethod]
-    public async Task CrashDump_CommandLineOptions_Are_AlwaysValid()
+    public async Task CrashDump_CommandLineOptions_Are_Valid_ByDefault()
     {
         var provider = new CrashDumpCommandLineProvider();
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions([])).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    public async Task CrashReport_Without_CrashDump_Is_Invalid()
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashReportOptionName, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(CrashDumpResources.CrashReportRequiresCrashDumpErrorMessage, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task CrashReport_Alongside_CrashDump_Is_Valid()
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashDumpOptionName, [] },
+            { CrashDumpCommandLineOptions.CrashReportOptionName, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    public async Task CrashReportOnly_Cannot_Be_Combined_With_Other_Crash_Options()
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashDumpOptionName, [] },
+            { CrashDumpCommandLineOptions.CrashReportOnlyOptionName, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(CrashDumpResources.CrashReportOnlyCannotBeCombinedErrorMessage, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task CrashReportOnly_Alone_Is_Valid()
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashReportOnlyOptionName, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
         Assert.IsTrue(validateOptionsResult.IsValid);
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
