@@ -25,7 +25,7 @@ public sealed class HangDumpOutputTests : AcceptanceTestBase<HangDumpOutputTests
                 { "SLEEPTIMEMS2", "600000" },
             },
             cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
         testHostResult.AssertOutputContains("Test1");
     }
 

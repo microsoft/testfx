@@ -14,7 +14,7 @@ public class ForwardCompatibilityTests : AcceptanceTestBase<ForwardCompatibility
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--crashdump --hangdump --report-trx --retry-failed-tests 3", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(0, 1, 0);
 
         string testResultsPath = Path.Combine(testHost.DirectoryName, "TestResults");

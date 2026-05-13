@@ -43,7 +43,7 @@ internal static class DiagnosticIds
     public const string DoNotUseShadowingRuleId = "MSTEST0036";
     public const string UseProperAssertMethodsRuleId = "MSTEST0037";
     public const string AvoidAssertAreSameWithValueTypesRuleId = "MSTEST0038";
-    public const string UseNewerAssertThrowsRuleId = "MSTEST0039";
+    // public const string UseNewerAssertThrowsRuleId = "MSTEST0039"; - // Don't remove this commented out line, and don't reuse this ID.
     public const string AvoidUsingAssertsInAsyncVoidContextRuleId = "MSTEST0040";
     public const string UseConditionBaseWithTestClassRuleId = "MSTEST0041";
     public const string DuplicateDataRowRuleId = "MSTEST0042";

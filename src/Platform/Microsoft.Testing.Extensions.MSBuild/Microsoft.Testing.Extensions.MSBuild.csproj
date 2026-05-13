@@ -4,6 +4,8 @@
     <TargetFrameworks>$(SupportedNetFrameworks);netstandard2.0</TargetFrameworks>
     <!-- Packaged as part of Microsoft.Testing.Platform.MSBuild -->
     <IsPackable>false</IsPackable>
+    <GenerateBuildInfo>true</GenerateBuildInfo>
+    <BuildInfoTemplateFile>$(RepoRoot)src\Platform\SharedExtensionHelpers\BuildInfo.cs.template</BuildInfoTemplateFile>
   </PropertyGroup>
 
   <ItemGroup>

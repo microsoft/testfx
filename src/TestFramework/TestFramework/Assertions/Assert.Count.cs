@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -49,7 +49,7 @@ public sealed partial class Assert
             {
                 TelemetryCollector.TrackAssertionCall(string.Concat("Assert.", assertionName));
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
-                ThrowAssertCountFailed(assertionName, _expectedCount, _actualCount, _builder.ToString());
+                ReportAssertCountFailed(assertionName, _expectedCount, _actualCount, _builder.ToString());
             }
         }
 
@@ -118,7 +118,7 @@ public sealed partial class Assert
             {
                 TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
-                ThrowAssertIsNotEmptyFailed(_builder.ToString());
+                ReportAssertIsNotEmptyFailed(_builder.ToString());
             }
         }
 
@@ -207,7 +207,7 @@ public sealed partial class Assert
         }
 
         string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-        ThrowAssertIsNotEmptyFailed(userMessage);
+        ReportAssertIsNotEmptyFailed(userMessage);
     }
 
     /// <summary>
@@ -229,7 +229,7 @@ public sealed partial class Assert
         }
 
         string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-        ThrowAssertIsNotEmptyFailed(userMessage);
+        ReportAssertIsNotEmptyFailed(userMessage);
     }
     #endregion // IsNotEmpty
 
@@ -335,14 +335,14 @@ public sealed partial class Assert
         }
 
         string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-        ThrowAssertCountFailed(assertionName, expected, actualCount, userMessage);
+        ReportAssertCountFailed(assertionName, expected, actualCount, userMessage);
     }
 
     private static void HasCount(string assertionName, int expected, IEnumerable collection, string? message, string collectionExpression)
         => HasCount(assertionName, expected, collection.Cast<object>(), message, collectionExpression);
 
     [DoesNotReturn]
-    private static void ThrowAssertCountFailed(string assertionName, int expectedCount, int actualCount, string userMessage)
+    private static void ReportAssertCountFailed(string assertionName, int expectedCount, int actualCount, string userMessage)
     {
         string finalMessage = string.Format(
             CultureInfo.CurrentCulture,
@@ -350,16 +350,16 @@ public sealed partial class Assert
             userMessage,
             expectedCount,
             actualCount);
-        ThrowAssertFailed($"Assert.{assertionName}", finalMessage);
+        ReportAssertFailed($"Assert.{assertionName}", finalMessage);
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertIsNotEmptyFailed(string userMessage)
+    private static void ReportAssertIsNotEmptyFailed(string userMessage)
     {
         string finalMessage = string.Format(
             CultureInfo.CurrentCulture,
             FrameworkMessages.IsNotEmptyFailMsg,
             userMessage);
-        ThrowAssertFailed("Assert.IsNotEmpty", finalMessage);
+        ReportAssertFailed("Assert.IsNotEmpty", finalMessage);
     }
 }

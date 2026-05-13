@@ -44,7 +44,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     public string Uid => nameof(CrashDumpEnvironmentVariableProvider);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName => CrashDumpResources.CrashDumpDisplayName;

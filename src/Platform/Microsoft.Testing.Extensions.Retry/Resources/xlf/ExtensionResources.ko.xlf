@@ -100,11 +100,6 @@ Moving last attempt asset files to the default result directory
         <target state="translated">'{0}' 및 '{1}' 옵션은 함께 사용할 수 없습니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryProviderRequiresDefaultTestHostManagerErrorMessage">
-        <source>The retry provider requires the default TestHostManager implementation.</source>
-        <target state="translated">다시 시도 공급자에는 기본 TestHostManager 구현이 필요합니다.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
         <source>Test host process exited before the retry service could connect to it. Exit code: {0}</source>
         <target state="translated">다시 시도 서비스가 연결되기 전에 테스트 호스트 프로세스가 종료되었습니다. 종료 코드: {0}</target>

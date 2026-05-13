@@ -136,9 +136,23 @@ namespace MSTestSdkTest
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_CentralPackageManagement_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
     {
+        // Exercise CPM with CentralPackageVersionOverrideEnabled=false to ensure MSTest.Sdk
+        // does not rely on the (then-forbidden) VersionOverride attribute and instead injects
+        // PackageVersion items for its implicit references.
+        const string CpmSourceCode = SingleTestSourceCode + """
+
+#file Directory.Packages.props
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageVersionOverrideEnabled>false</CentralPackageVersionOverrideEnabled>
+  </PropertyGroup>
+</Project>
+""";
+
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                AssetName,
-               SingleTestSourceCode
+               CpmSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
@@ -212,7 +226,7 @@ namespace MSTestSdkTest
             testHostResult.AssertOutputContainsSummary(0, 1, 0);
 
             testHostResult = await testHost.ExecuteAsync(command: invalidCommandLineArg, cancellationToken: TestContext.CancellationToken);
-            Assert.AreEqual(ExitCodes.InvalidCommandLine, testHostResult.ExitCode);
+            testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
         }
     }
 
@@ -269,7 +283,7 @@ namespace MSTestSdkTest
             }
             else
             {
-                Assert.AreEqual(ExitCodes.InvalidCommandLine, testHostResult.ExitCode);
+                testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
             }
         }
     }
@@ -315,7 +329,7 @@ namespace MSTestSdkTest
         var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, verb: Verb.publish);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(0, 1, 0);
     }
 

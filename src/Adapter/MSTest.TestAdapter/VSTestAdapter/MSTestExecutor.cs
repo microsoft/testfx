@@ -131,13 +131,13 @@ internal sealed class MSTestExecutor : ITestExecutor
         }
 #endif
 
-        if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
-        {
-            return;
-        }
-
         try
         {
+            if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
+            {
+                return;
+            }
+
             await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(tests, runContext, frameworkHandle, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
         finally
@@ -174,15 +174,15 @@ internal sealed class MSTestExecutor : ITestExecutor
         }
 #endif
 
-        TestSourceHandler testSourceHandler = new();
-        if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))
-        {
-            return;
-        }
-
-        sources = testSourceHandler.GetTestSources(sources);
         try
         {
+            TestSourceHandler testSourceHandler = new();
+            if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))
+            {
+                return;
+            }
+
+            sources = testSourceHandler.GetTestSources(sources);
             await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testSourceHandler, isMTP, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
         finally

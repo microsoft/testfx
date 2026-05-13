@@ -1205,6 +1205,43 @@ public sealed class DynamicDataShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenPrivateMemberIsFromBase_Diagnostic()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public abstract class MyTestClassBase
+            {
+                private static IEnumerable<object[]> Data => new List<object[]>();
+                private static IEnumerable<object[]> GetData() => new List<object[]>();
+            }
+
+            [TestClass]
+            public class MyTestClass : MyTestClassBase
+            {
+                [{|#0:DynamicData("Data")|}]
+                [TestMethod]
+                public void TestMethod1(object[] o)
+                {
+                }
+
+                [{|#1:DynamicData("GetData", DynamicDataSourceType.Method)|}]
+                [TestMethod]
+                public void TestMethod2(object[] o)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberNotFoundRule).WithLocation(0).WithArguments("MyTestClass", "Data"),
+            VerifyCS.Diagnostic(DynamicDataShouldBeValidAnalyzer.MemberNotFoundRule).WithLocation(1).WithArguments("MyTestClass", "GetData"));
+    }
+
+    [TestMethod]
     public async Task WhenMethodHasParameters_Diagnostic()
     {
         string code = """

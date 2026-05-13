@@ -58,7 +58,7 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
         // progress causes flakiness. See https://github.com/microsoft/testfx/pull/4930#issuecomment-2648506466
         testHostResult = await testHost.ExecuteAsync("--filter ClassName=TestDataRowTests --no-progress", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 9, skipped: 15);
         // If this assert fails with difference showing only missing double quotes, then we are using the wrong value
         // of DynamicDataAttribute.TestIdGenerationStrategy.
@@ -107,7 +107,7 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
 
         bool isSuccess = isEmptyDataInconclusive.HasValue && isEmptyDataInconclusive.Value;
 
-        testHostResult.AssertExitCodeIs(isSuccess ? ExitCodes.Success : ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(isSuccess ? ExitCode.Success : ExitCode.AtLeastOneTestFailed);
 
         testHostResult.AssertOutputContains(isSuccess ? "skipped Test" : "failed Test");
 

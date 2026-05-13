@@ -15,7 +15,7 @@ internal sealed class ToolTrxCompareFactory : IExtension
     public string Uid => nameof(TrxCompareTool);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = ExtensionResources.TrxComparerToolDisplayName;

@@ -101,7 +101,7 @@ num1,num2,expectedSum
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "DataSourceTests", "net472");
 
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        result.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         result.AssertOutputContainsSummary(failed: 1, passed: 4, skipped: 0);
     }
 
