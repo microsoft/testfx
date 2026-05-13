@@ -95,9 +95,10 @@ internal sealed class AggregatedConfiguration(
 
         // If not specified by command line, then use the configuration providers.
         // And finally fallback to DefaultTestResultFolderName relative to the current working directory.
-        string? dotnetTestCwd = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY);
+        // Note: PlatformCurrentWorkingDirectory already incorporates DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY
+        // (via GetCurrentWorkingDirectoryCore), so we don't need to check that env var separately here.
         return CalculateFromConfigurationProviders(PlatformConfigurationConstants.PlatformResultDirectory)
-            ?? Path.Combine(!RoslynString.IsNullOrWhiteSpace(dotnetTestCwd) ? dotnetTestCwd : this[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]!, DefaultTestResultFolderName);
+            ?? Path.Combine(this[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]!, DefaultTestResultFolderName);
     }
 
     private string GetCurrentWorkingDirectoryCore()
