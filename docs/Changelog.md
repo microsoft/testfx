@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="4.2.3" />[4.2.3] - 2026-05-XX
+
+See full log [of v4.2.2...v4.2.3](https://github.com/microsoft/testfx/compare/v4.2.1...v4.2.2)
+
+### Fixed
+
+* Fix log accumulation across DynamicData test invocations by @Evangelink in [#7925](https://github.com/microsoft/testfx/pull/7925)
+
+### Artifacts
+
+## <a name="4.2.2" />[4.2.2] - 2026-04-30
+
+See full log [of v4.2.1...v4.2.2](https://github.com/microsoft/testfx/compare/v4.2.1...v4.2.2)
+
+### Fixed
+
+* Fix log accumulation across DynamicData test invocations by @Evangelink in [#7925](https://github.com/microsoft/testfx/pull/7925)
+* Fix WinUI TestContext.Current being null by @Youssef1313 in [#7749](https://github.com/microsoft/testfx/pull/7749)
+
+### Artifacts
+
+* MSTest: [4.2.2](https://www.nuget.org/packages/MSTest/4.2.2)
+* MSTest.TestFramework: [4.2.2](https://www.nuget.org/packages/MSTest.TestFramework/4.2.2)
+* MSTest.TestAdapter: [4.2.2](https://www.nuget.org/packages/MSTest.TestAdapter/4.2.2)
+* MSTest.Analyzers: [4.2.2](https://www.nuget.org/packages/MSTest.Analyzers/4.2.2)
+* MSTest.Sdk: [4.2.2](https://www.nuget.org/packages/MSTest.Sdk/4.2.2)
+* MSTest.SourceGeneration: [2.0.0-alpha.26228.3](https://www.nuget.org/packages/MSTest.SourceGeneration/2.0.0-alpha.26228.3)
+* MSTest.Engine: [2.0.0-alpha.26228.3](https://www.nuget.org/packages/MSTest.Engine/2.0.0-alpha.26228.3)
+
 ## <a name="4.2.1" />[4.2.1] - 2026-04-07
 
 See full log [of v4.1.0...v4.2.1](https://github.com/microsoft/testfx/compare/v4.1.0...v4.2.1)

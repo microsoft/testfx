@@ -119,7 +119,7 @@ public sealed class TimeoutWhenExpiresTests : AcceptanceTestBase<TimeoutWhenExpi
     private static async Task RunAndAssertTestTimedOutAsync(string tfm, string envVarPrefix, string entryKind)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new() { { envVarPrefix + InfoByKind[entryKind].EnvVarSuffix, "1" } });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new() { [envVarPrefix + InfoByKind[entryKind].EnvVarSuffix] = "1" });
         testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' timed out after 1000ms");
     }
 
@@ -142,7 +142,7 @@ public sealed class TimeoutWhenExpiresTests : AcceptanceTestBase<TimeoutWhenExpi
         File.WriteAllText(runSettingsFilePath, runSettings);
 
         var stopwatch = Stopwatch.StartNew();
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new() { { $"TIMEOUT_{InfoByKind[entryKind].EnvVarSuffix}", "1" } });
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new() { [$"TIMEOUT_{InfoByKind[entryKind].EnvVarSuffix}"] = "1" });
         stopwatch.Stop();
 
         Assert.IsLessThan(25, stopwatch.Elapsed.TotalSeconds);

@@ -38,7 +38,7 @@ jobs:
           persist-credentials: false
 
       - name: Super-linter
-        uses: super-linter/super-linter@v8.5.0
+        uses: super-linter/super-linter@v8.6.0
         id: super-linter
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -64,7 +64,7 @@ jobs:
 
       - name: Upload super-linter log
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: super-linter-log
           path: super-linter.log
@@ -72,7 +72,7 @@ jobs:
 
 steps:
   - name: Download super-linter log
-    uses: actions/download-artifact@v8
+    uses: actions/download-artifact@v8.0.1
     with:
       name: super-linter-log
       path: /tmp/gh-aw/

@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="2.2.2" />[2.2.2] - 2026-04-30
+
+See full log [of v4.2.1...v4.2.2](https://github.com/microsoft/testfx/compare/v4.2.1...v4.2.2)
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [2.2.2](https://www.nuget.org/packages/Microsoft.Testing.Platform/2.2.2)
+* Microsoft.Testing.Platform.MSBuild: [2.2.2](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/2.2.2)
+* Microsoft.Testing.Extensions.CrashDump: [2.2.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/2.2.2)
+* Microsoft.Testing.Extensions.HangDump: [2.2.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/2.2.2)
+* Microsoft.Testing.Extensions.HotReload: [2.2.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/2.2.2)
+* Microsoft.Testing.Extensions.Retry: [2.2.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/2.2.2)
+* Microsoft.Testing.Extensions.Telemetry: [2.2.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/2.2.2)
+* Microsoft.Testing.Extensions.TrxReport: [2.2.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/2.2.2)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [2.2.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/2.2.2)
+
 ## <a name="2.2.1" />[2.2.1] - 2026-04-07
 
 See full log [of v4.1.0...v4.2.1](https://github.com/microsoft/testfx/compare/v4.1.0...v4.2.1)
