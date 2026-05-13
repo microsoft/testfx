@@ -4,21 +4,14 @@ description: "Automatically runs the expert-reviewer agent when a non-draft PR i
 
 # Non-draft PRs trigger this workflow.
 # The `roles` setting restricts execution to users with admin, maintainer, or
-# write permissions.
-#
-# Uses pull_request_target (not pull_request) so that fork PRs have
-# access to repo secrets. This is safe because the agent reads the diff via
-# GitHub MCP tools — it does not check out or execute code from the PR branch.
+# write permissions — fork PRs from non-members are blocked.
 #
 # NOTE: Only `opened` is used here; for PRs transitioned from draft to ready,
 # use the `/review` slash command.
 on:
-  pull_request_target:
+  pull_request:
     types: [opened]
-    forks: ["*"]
   roles: [admin, maintainer, write]
-
-checkout: false
 
 # Skip draft PRs — only run for PRs opened as ready
 if: github.event.pull_request.draft == false
