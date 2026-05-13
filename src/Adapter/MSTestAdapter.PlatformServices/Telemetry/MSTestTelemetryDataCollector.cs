@@ -211,7 +211,7 @@ internal sealed class MSTestTelemetryDataCollector
         System.Text.StringBuilder builder = new("[");
         bool isFirst = true;
 
-        foreach (string value in values.Order(StringComparer.Ordinal))
+        foreach (string value in values.OrderBy(static x => x, StringComparer.Ordinal))
         {
             if (!isFirst)
             {
