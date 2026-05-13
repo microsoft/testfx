@@ -627,7 +627,7 @@ public class ReflectionOperationsTests : TestContainer
         return [.. attribValuePairs];
     }
 
-    internal class AttributeMockingHelper
+    private class AttributeMockingHelper
     {
         public AttributeMockingHelper(Mock<IReflectionOperations> mockReflectionOperations) => _mockReflectionOperations = mockReflectionOperations;
 
@@ -668,7 +668,7 @@ public class ReflectionOperationsTests : TestContainer
                 {
                     foundAttributes.Add(attributeData.Attribute);
                 }
-                else if (attributeProvider is MemberInfo { MemberType: MemberTypes.TypeInfo } && attributeData.MemberType == MemberTypes.TypeInfo)
+                else if ((attributeProvider is Type || attributeProvider is MemberInfo { MemberType: MemberTypes.TypeInfo }) && attributeData.MemberType == MemberTypes.TypeInfo)
                 {
                     foundAttributes.Add(attributeData.Attribute);
                 }
