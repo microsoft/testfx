@@ -9,6 +9,12 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
+internal interface IExtensionLoggerProvider : ILoggerProvider, IExtension;
+
+internal interface IInitializableLoggerProvider : ILoggerProvider, IAsyncInitializableExtension;
+
+internal interface IInitializableExtensionLoggerProvider : ILoggerProvider, IExtension, IAsyncInitializableExtension;
+
 [TestClass]
 public sealed class LoggingManagerTests
 {
@@ -131,6 +137,7 @@ public sealed class LoggingManagerTests
 
         await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Information, _mockMonitor.Object);
 
+        mockProvider.Verify(p => p.IsEnabledAsync(), Times.Once);
         mockProvider.Verify(p => p.InitializeAsync(), Times.Never);
     }
 
@@ -150,9 +157,3 @@ public sealed class LoggingManagerTests
         mockProvider.Verify(p => p.CreateLogger("test"), Times.Once);
     }
 }
-
-internal interface IExtensionLoggerProvider : ILoggerProvider, IExtension;
-
-internal interface IInitializableLoggerProvider : ILoggerProvider, IAsyncInitializableExtension;
-
-internal interface IInitializableExtensionLoggerProvider : ILoggerProvider, IExtension, IAsyncInitializableExtension;
