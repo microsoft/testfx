@@ -100,7 +100,7 @@ internal sealed class MSTestTelemetryDataCollector
             }
 
             // Track attribute usage counts by base type name
-            string trackingName = attribute switch
+            string? trackingName = attribute switch
             {
                 TestMethodAttribute => nameof(TestMethodAttribute),
                 TestClassAttribute => nameof(TestClassAttribute),
