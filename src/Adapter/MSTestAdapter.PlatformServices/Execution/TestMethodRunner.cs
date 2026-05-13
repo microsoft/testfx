@@ -180,7 +180,7 @@ internal sealed class TestMethodRunner
         // Iterate cached attributes directly to preserve the previous semantics:
         // execute only when there is exactly one DataSourceAttribute.
         bool hasSingleDataSource = false;
-        foreach (Attribute attribute in ReflectHelper.Instance.GetCustomAttributesCached(_testMethodInfo.MethodInfo))
+        foreach (Attribute attribute in PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached(_testMethodInfo.MethodInfo))
         {
             if (attribute is not DataSourceAttribute)
             {

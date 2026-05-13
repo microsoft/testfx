@@ -571,7 +571,7 @@ public class ReflectionOperationsTests : TestContainer
     {
         var methodWithNullReflectedType = new Mock<MethodInfo>();
         methodWithNullReflectedType.Setup(x => x.MemberType).Returns(MemberTypes.Method);
-        methodWithNullReflectedType.Setup(x => x.ReflectedType).Returns((Type?)null);
+        methodWithNullReflectedType.Setup(x => x.ReflectedType).Returns((Type)null!);
         _attributeMockingHelper.AddCustomAttribute(
             typeof(TestPropertyAttribute),
             [new TestPropertyAttribute("ClassKey", "ClassValue")],
