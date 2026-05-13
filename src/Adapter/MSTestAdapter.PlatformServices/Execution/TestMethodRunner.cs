@@ -178,14 +178,16 @@ internal sealed class TestMethodRunner
 
     private async Task<bool> TryExecuteDataSourceBasedTestsAsync(List<TestResult> results)
     {
-        DataSourceAttribute[] dataSourceAttribute = _testMethodInfo.GetAttributes<DataSourceAttribute>();
-        if (dataSourceAttribute is { Length: 1 })
+        // IsAttributeDefined avoids the array allocation of GetAttributes<DataSourceAttribute>().
+        // DataSourceAttribute is sealed (no subclass can coexist alongside it) and
+        // has AllowMultiple = false (default), so IsAttributeDefined is equivalent to Length == 1.
+        if (!ReflectHelper.Instance.IsAttributeDefined<DataSourceAttribute>(_testMethodInfo.MethodInfo))
         {
-            await ExecuteTestFromDataSourceAttributeAsync(results).ConfigureAwait(false);
-            return true;
+            return false;
         }
 
-        return false;
+        await ExecuteTestFromDataSourceAttributeAsync(results).ConfigureAwait(false);
+        return true;
     }
 
     private async Task<bool> TryExecuteFoldedDataDrivenTestsAsync(List<TestResult> results)
