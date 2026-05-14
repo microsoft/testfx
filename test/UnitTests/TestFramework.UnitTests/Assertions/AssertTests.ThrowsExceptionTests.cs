@@ -339,4 +339,69 @@ public partial class AssertTests
         exceptionPassedToBuilder.Should().BeOfType<ArgumentOutOfRangeException>();
         ((ArgumentOutOfRangeException)exceptionPassedToBuilder!).ParamName.Should().Be("MyParamNameHere");
     }
+
+    public void Throws_WithInterpolation_InsideAssertScope_WrongExceptionType_DoesNotThrowInvalidCast()
+    {
+        // Regression: ComputeAssertion used to fall through to (TException)_state.ExceptionThrown! after
+        // ReportAssertFailed returned in scope mode, casting an unrelated exception type and crashing the test.
+        Action action = () =>
+        {
+            using (Assert.Scope())
+            {
+                Assert.Throws<ArgumentException>(() => throw new InvalidOperationException("boom"), $"ctx={42}");
+            }
+        };
+
+        action.Should().Throw<AssertFailedException>();
+    }
+
+    public void ThrowsExactly_WithInterpolation_InsideAssertScope_WrongExceptionType_DoesNotThrowInvalidCast()
+    {
+        Action action = () =>
+        {
+            using (Assert.Scope())
+            {
+                Assert.ThrowsExactly<ArgumentException>(() => throw new ArgumentNullException("p"), $"ctx={42}");
+            }
+        };
+
+        action.Should().Throw<AssertFailedException>();
+    }
+
+    public void Throws_WhenExceptionMessageContainsNewline_ContinuationLinesAreIndented()
+    {
+        static void Action() => Assert.Throws<ArgumentException>(() => throw new InvalidOperationException("line1\nline2"));
+        Action action = Action;
+
+        // Continuation line should be indented under the value column (label "actual exception:" is 17 chars, +1 space = 18).
+        string indent = new(' ', 18);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                $"Assertion failed. Expected exception of type ArgumentException (or derived) but caught InvalidOperationException." +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                $"expected type:    System.ArgumentException (or derived){Environment.NewLine}" +
+                $"actual type:      System.InvalidOperationException{Environment.NewLine}" +
+                $"actual exception: System.InvalidOperationException: line1{Environment.NewLine}" +
+                $"{indent}line2" +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                "Assert.Throws<ArgumentException>(() => throw new InvalidOperationException(\"line1\\nline2\"))");
+    }
+
+    public void Throws_WhenActionExpressionContainsNewline_OmitsCallSiteLine()
+    {
+        // Multi-line action expressions can't be re-rendered as a single call-site line; the helper drops the line.
+        static void Action() => Assert.Throws<ArgumentException>(() =>
+        {
+            throw new InvalidOperationException("oops");
+        });
+        Action action = Action;
+
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                $"Assertion failed. Expected exception of type ArgumentException (or derived) but caught InvalidOperationException." +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                $"expected type:    System.ArgumentException (or derived){Environment.NewLine}" +
+                $"actual type:      System.InvalidOperationException{Environment.NewLine}" +
+                $"actual exception: System.InvalidOperationException: oops");
+    }
 }

@@ -42,10 +42,15 @@ public sealed partial class Assert
         {
             if (_state.FailureKind != ThrowsFailureKind.NotFailing)
             {
-                ReportThrowsFailed<TException>(isStrictType: false, _state, _builder!.ToString(), actionExpression, "Throws");
+                ReportThrowsFailed<TException>(isStrictType: false, _state, _builder!.ToString(), actionExpression, nameof(Throws));
+            }
+            else
+            {
+                return (TException)_state.ExceptionThrown!;
             }
 
-            return (TException)_state.ExceptionThrown!;
+            // Reached when ReportThrowsFailed records the failure into the active AssertScope and returns instead of throwing.
+            return null!;
         }
 
         public void AppendLiteral(string value) => _builder!.Append(value);
@@ -107,10 +112,15 @@ public sealed partial class Assert
         {
             if (_state.FailureKind != ThrowsFailureKind.NotFailing)
             {
-                ReportThrowsFailed<TException>(isStrictType: true, _state, _builder!.ToString(), actionExpression, "ThrowsExactly");
+                ReportThrowsFailed<TException>(isStrictType: true, _state, _builder!.ToString(), actionExpression, nameof(ThrowsExactly));
+            }
+            else
+            {
+                return (TException)_state.ExceptionThrown!;
             }
 
-            return (TException)_state.ExceptionThrown!;
+            // Reached when ReportThrowsFailed records the failure into the active AssertScope and returns instead of throwing.
+            return null!;
         }
 
         public void AppendLiteral(string value) => _builder!.Append(value);
@@ -550,7 +560,7 @@ public sealed partial class Assert
         ThrowsExceptionState state,
         string? userMessage,
         string actionExpression,
-        [CallerMemberName] string assertMethodName = "")
+        string assertMethodName)
         where TException : Exception
     {
         string expectedTypeName = typeof(TException).Name;
@@ -583,7 +593,7 @@ public sealed partial class Assert
             EvidenceBlock evidence = EvidenceBlock.Create()
                 .AddLine("expected type:", expectedTypeLabel)
                 .AddLine("actual type:", actualTypeFullName)
-                .AddLine("actual exception:", $"{actualException.GetType()}: {actualException.Message}");
+                .AddLine("actual exception:", $"{actualTypeFullName}: {actualException.Message}");
 
             message = new StructuredAssertionMessage(summary)
                 .WithUserMessage(userMessage)

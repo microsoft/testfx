@@ -317,10 +317,10 @@ public sealed partial class Assert
 
     /// <summary>
     /// Formats a call-site expression like <c>Assert.MethodName(expression)</c>.
-    /// Returns <see langword="null"/> if the expression is empty or contains a newline.
+    /// Returns <see langword="null"/> if the expression is empty or contains a line break.
     /// </summary>
     private static string? FormatCallSiteExpression(string methodName, string expression)
-        => string.IsNullOrEmpty(expression) || expression.Contains('\n')
+        => string.IsNullOrEmpty(expression) || expression.IndexOfAny(['\n', '\r']) >= 0
             ? null
             : $"{methodName}({expression})";
 

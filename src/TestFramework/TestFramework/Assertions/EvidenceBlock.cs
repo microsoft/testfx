@@ -23,7 +23,8 @@ internal sealed class EvidenceBlock
 
     /// <summary>
     /// Formats the evidence block as aligned label: value lines.
-    /// Labels are right-padded so all values start at the same column.
+    /// Labels are right-padded so all values start at the same column. Values that span multiple lines
+    /// are re-indented so continuation lines align under the first value column.
     /// </summary>
     internal string Format()
     {
@@ -41,6 +42,8 @@ internal sealed class EvidenceBlock
             }
         }
 
+        string continuationIndent = new(' ', maxLabelLength + 1);
+
         StringBuilder sb = new();
         for (int i = 0; i < _lines.Count; i++)
         {
@@ -51,12 +54,38 @@ internal sealed class EvidenceBlock
 
             EvidenceLine line = _lines[i];
 
-            // Pad label (which includes trailing colon) to align values, then append a space and value
             sb.Append(line.Label.PadRight(maxLabelLength));
             sb.Append(' ');
-            sb.Append(line.Value);
+            AppendValue(sb, line.Value, continuationIndent);
         }
 
         return sb.ToString();
+    }
+
+    private static void AppendValue(StringBuilder sb, string value, string continuationIndent)
+    {
+        int start = 0;
+        for (int i = 0; i < value.Length; i++)
+        {
+            char c = value[i];
+            if (c is '\n' or '\r')
+            {
+                sb.Append(value, start, i - start);
+                sb.Append(Environment.NewLine);
+                sb.Append(continuationIndent);
+
+                if (c == '\r' && i + 1 < value.Length && value[i + 1] == '\n')
+                {
+                    i++;
+                }
+
+                start = i + 1;
+            }
+        }
+
+        if (start < value.Length)
+        {
+            sb.Append(value, start, value.Length - start);
+        }
     }
 }
