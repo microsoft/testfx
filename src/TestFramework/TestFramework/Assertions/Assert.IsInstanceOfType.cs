@@ -347,10 +347,11 @@ public sealed partial class Assert
                 evidence.AddLine("actual value:", AssertionValueRenderer.RenderValue(value));
             }
 
-            msg.WithEvidence(evidence);
+            msg.WithEvidence(evidence)
+               .WithExpectedAndActual($"{expectedType} (or derived)", value?.GetType().ToString() ?? "null");
         }
 
-        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsInstanceOfType", valueExpression));
+        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsInstanceOfType", valueExpression, "<value>"));
         ReportAssertFailed(msg);
     }
 
@@ -430,7 +431,7 @@ public sealed partial class Assert
             msg.WithEvidence(evidence);
         }
 
-        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotInstanceOfType", valueExpression));
+        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotInstanceOfType", valueExpression, "<value>"));
         ReportAssertFailed(msg);
     }
 }

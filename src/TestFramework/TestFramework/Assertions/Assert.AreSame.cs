@@ -207,7 +207,7 @@ public sealed partial class Assert
             msg.WithEvidence(evidence).WithExpectedAndActual(expectedText, actualText);
         }
 
-        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreSame", expectedExpression, actualExpression));
+        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreSame", expectedExpression, actualExpression, "<expected>", "<actual>"));
 
         ReportAssertFailed(msg);
     }
@@ -272,7 +272,7 @@ public sealed partial class Assert
 
         msg.WithUserMessage(userMessage);
 
-        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreNotSame", notExpectedExpression, actualExpression));
+        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreNotSame", notExpectedExpression, actualExpression, "<notExpected>", "<actual>"));
 
         ReportAssertFailed(msg);
     }

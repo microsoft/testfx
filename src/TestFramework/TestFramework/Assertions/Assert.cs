@@ -178,34 +178,33 @@ public sealed partial class Assert
 
     /// <summary>
     /// Formats a call-site expression for display at the bottom of a structured assertion message.
-    /// When the expression is empty or contains newlines, the expression is replaced with a placeholder.
+    /// When the expression contains newlines (multiline constant), it is replaced with the supplied placeholder.
+    /// Returns <see langword="null"/> when the expression is empty or whitespace.
     /// </summary>
-    internal static string? FormatCallSiteExpression(string assertionMethodName, string expression)
+    internal static string? FormatCallSiteExpression(string assertionMethodName, string expression, string placeholder = "<value>")
     {
         if (string.IsNullOrWhiteSpace(expression))
         {
             return null;
         }
 
-        // If expression contains newlines (multiline constant), replace with placeholder per RFC
-        return expression.Contains('\n') || expression.Contains('\r')
-            ? null
-            : $"{assertionMethodName}({expression})";
+        string arg = expression.Contains('\n') || expression.Contains('\r') ? placeholder : expression;
+        return $"{assertionMethodName}({arg})";
     }
 
     /// <summary>
     /// Formats a call-site expression for display at the bottom of a structured assertion message,
-    /// using two captured expressions.
+    /// using two captured expressions. Multiline expressions are replaced with the supplied placeholders.
     /// </summary>
-    internal static string? FormatCallSiteExpression(string assertionMethodName, string expression1, string expression2)
+    internal static string? FormatCallSiteExpression(string assertionMethodName, string expression1, string expression2, string placeholder1 = "<arg1>", string placeholder2 = "<arg2>")
     {
         if (string.IsNullOrWhiteSpace(expression1) || string.IsNullOrWhiteSpace(expression2))
         {
             return null;
         }
 
-        string arg1 = expression1.Contains('\n') || expression1.Contains('\r') ? "<expected>" : expression1;
-        string arg2 = expression2.Contains('\n') || expression2.Contains('\r') ? "<actual>" : expression2;
+        string arg1 = expression1.Contains('\n') || expression1.Contains('\r') ? placeholder1 : expression1;
+        string arg2 = expression2.Contains('\n') || expression2.Contains('\r') ? placeholder2 : expression2;
 
         return $"{assertionMethodName}({arg1}, {arg2})";
     }
