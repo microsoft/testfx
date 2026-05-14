@@ -51,6 +51,22 @@ public sealed class AggregatedConfigurationTests
     }
 
     [TestMethod]
+    [DataRow("")]
+    [DataRow("   ")]
+    public void IndexerTest_DotnetCliTestCommandWorkingDirectoryIsWhitespace_FallsBackToTestApplicationDirectory(string envVarValue)
+    {
+        const string appDirectory = "AppDirectory";
+        _environmentMock.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY))
+            .Returns(envVarValue);
+        _testApplicationModuleInfoMock.Setup(x => x.GetCurrentTestApplicationDirectory()).Returns(appDirectory);
+
+        AggregatedConfiguration aggregatedConfiguration = new([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object, _environmentMock.Object, new(null, [], []));
+        Assert.AreEqual(Path.Combine(appDirectory, "TestResults"), aggregatedConfiguration[PlatformConfigurationConstants.PlatformResultDirectory]);
+        Assert.AreEqual(appDirectory, aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
+        Assert.AreEqual(appDirectory, aggregatedConfiguration[PlatformConfigurationConstants.PlatformTestHostWorkingDirectory]);
+    }
+
+    [TestMethod]
     public void IndexerTest_ResultsDirectoryCliArgTakesPrecedenceOverDotnetCliTestCommandWorkingDirectory()
     {
         const string dotnetTestWorkingDir = "DotnetTestWorkingDir";
