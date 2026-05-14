@@ -68,4 +68,27 @@ public class TestCaseExtensionsTests : TestContainer
         resultUnitTestElement.TestMethod.FullClassName.Should().Be("SemanticClassName");
         resultUnitTestElement.TestMethod.ManagedTypeName.Should().Be("SemanticClassName");
     }
+
+    public void ToUnitTestElementShouldParseLegacyClosedGenericFullyQualifiedNameWhenManagedTypeIsOpenGeneric()
+    {
+        Type closedType = typeof(DummyGenericTestClass<int>);
+        string methodName = nameof(DummyGenericTestClass<int>.GenericTestMethod);
+        TestCase testCase = new($"{closedType.FullName}.{methodName}", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!);
+        testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, closedType.FullName);
+        testCase.SetPropertyValue(TestCaseExtensions.ManagedTypeProperty, typeof(DummyGenericTestClass<>).FullName);
+        testCase.SetPropertyValue(TestCaseExtensions.ManagedMethodProperty, methodName);
+
+        UnitTestElement resultUnitTestElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
+
+        resultUnitTestElement.TestMethod.Name.Should().Be(methodName);
+        resultUnitTestElement.TestMethod.FullClassName.Should().Be(closedType.FullName);
+        resultUnitTestElement.TestMethod.ManagedTypeName.Should().Be(typeof(DummyGenericTestClass<>).FullName);
+    }
+
+    private class DummyGenericTestClass<T>
+    {
+        public void GenericTestMethod()
+        {
+        }
+    }
 }

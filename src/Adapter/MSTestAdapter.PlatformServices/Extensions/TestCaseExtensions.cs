@@ -88,11 +88,12 @@ internal static class TestCaseExtensions
                 : unitTestElement.CloneWithUpdatedSource(source);
         }
 
-        // Prefer the semantic managed type when present. Fall back to the legacy
-        // TestClassNameProperty for compatibility with TestCases produced by older
-        // runners that do not populate ManagedTypeProperty (when ManagedMethodName
-        // is unknown, ToTestCase does not write the managed-type pair).
-        string? testClassName = testCase.GetManagedType() ?? (testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string);
+        string? managedTypeName = testCase.GetManagedType();
+        string? legacyTestClassName = testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string;
+        string? testClassName = testCase.GetClassNamePrefix(managedTypeName)
+            ?? testCase.GetClassNamePrefix(legacyTestClassName)
+            ?? managedTypeName
+            ?? legacyTestClassName;
         string name = testCase.GetTestName(testClassName);
 
         var testMethod = new TestMethod(testCase.GetManagedMethod(), testCase.GetHierarchy(), name, testClassName!, source, testCase.DisplayName, testCase.GetPropertyValue<string>(EngineConstants.ParameterTypesProperty, null));
@@ -142,6 +143,11 @@ internal static class TestCaseExtensions
     internal static string? GetManagedType(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedTypeProperty, null);
 
     internal static string? GetManagedMethod(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedMethodProperty, null);
+
+    private static string? GetClassNamePrefix(this TestCase testCase, string? testClassName)
+        => testClassName is not null && testCase.FullyQualifiedName.StartsWith($"{testClassName}.", StringComparison.Ordinal)
+            ? testClassName
+            : null;
 
     internal static string[]? GetHierarchy(this TestCase testCase) => testCase.GetPropertyValue<string[]>(HierarchyProperty, null);
 

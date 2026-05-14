@@ -72,14 +72,15 @@ internal sealed class TestMethod : ITestMethod
     public string AssemblyName { get; private set; }
 
     /// <inheritdoc />
-    public string? ManagedTypeName => FullClassName;
+    public string? ManagedTypeName => GetManagedTypeName(FullClassName);
 
     /// <inheritdoc />
     public string? ManagedMethodName { get; }
 
     /// <inheritdoc />
-    [MemberNotNullWhen(true, nameof(ManagedTypeName), nameof(ManagedMethodName))]
-    public bool HasManagedMethodAndTypeProperties => !StringEx.IsNullOrWhiteSpace(ManagedTypeName) && !StringEx.IsNullOrWhiteSpace(ManagedMethodName);
+    [MemberNotNullWhen(true, nameof(ManagedMethodName))]
+    // ManagedTypeName is derived from FullClassName, so this only gates the managed method metadata.
+    public bool HasManagedMethodAndTypeProperties => !StringEx.IsNullOrWhiteSpace(ManagedMethodName);
 
     /// <inheritdoc />
     public IReadOnlyCollection<string?>? Hierarchy { get; }
@@ -104,6 +105,14 @@ internal sealed class TestMethod : ITestMethod
 
     [field: NonSerialized]
     internal MethodInfo? MethodInfo { get; set; }
+
+    private static string GetManagedTypeName(string fullClassName)
+    {
+        int genericArgumentsStart = fullClassName.IndexOf('[', StringComparison.Ordinal);
+        return genericArgumentsStart >= 0
+            ? fullClassName[..genericArgumentsStart]
+            : fullClassName;
+    }
 
     /// <summary>
     /// Gets or sets the test data source ignore message.

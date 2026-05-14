@@ -83,7 +83,7 @@ public class UnitTestElementTests : TestContainer
         var testMethod = new TestMethod("DummyMethod", null, "DummyMethod", "SemanticClassName", "A", displayName: null, null);
         var testCase = new UnitTestElement(testMethod).ToTestCase();
 
-        testCase.GetPropertyValue(TestCaseExtensions.ManagedTypeProperty).Should().Be("SemanticClassName");
+        (testCase.GetPropertyValue(TestCaseExtensions.ManagedTypeProperty) as string).Should().Be("SemanticClassName");
     }
 
     public void ToTestCaseShouldSetTestCategoryIfPresent()

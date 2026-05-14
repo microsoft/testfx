@@ -126,7 +126,7 @@ internal class TypeEnumerator
 
         ManagedNameHelper.GetManagedNameAndHierarchy(method, out string managedType, out string managedMethod, out string?[] hierarchyValues);
         ParameterInfo[] parameters = method.GetParameters();
-        var testMethod = new TestMethod(managedMethod, hierarchyValues, method.Name, managedType, _assemblyFilePath, null,
+        var testMethod = new TestMethod(managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, null,
             parameters.Length == 0 ? string.Empty : string.Join(",", Array.ConvertAll(parameters, static p => p.ParameterType.ToString())))
         {
             MethodInfo = method,

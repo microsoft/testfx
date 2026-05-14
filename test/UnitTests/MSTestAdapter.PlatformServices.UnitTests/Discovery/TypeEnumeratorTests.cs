@@ -5,10 +5,13 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
@@ -225,15 +228,27 @@ public partial class TypeEnumeratorTests : TestContainer
         testElement.TestMethod.AssemblyName.Should().Be("DummyAssemblyName");
     }
 
-    public void GetTestFromMethodShouldUseManagedTypeNameForGenericTypes()
+    public void GetTestFromMethodShouldUseClosedFullClassNameAndOpenManagedTypeNameForGenericTypes()
     {
         Type closedType = typeof(DummyGenericTestClass<int>);
-        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(closedType, "DummyAssemblyName");
+        string assemblyName = Assembly.GetExecutingAssembly().FullName!;
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(closedType, assemblyName);
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(closedType.GetMethod(nameof(DummyGenericTestClass<>.GenericTestMethod))!, classDisablesParallelization: false, _warnings);
 
-        testElement.TestMethod.FullClassName.Should().Be(typeof(DummyGenericTestClass<>).FullName);
+        testElement.TestMethod.FullClassName.Should().Be(closedType.FullName);
         testElement.TestMethod.ManagedTypeName.Should().Be(typeof(DummyGenericTestClass<>).FullName);
+
+        var testCase = testElement.ToTestCase();
+        (testCase.GetPropertyValue(TestCaseExtensions.ManagedTypeProperty) as string).Should().Be(typeof(DummyGenericTestClass<>).FullName);
+
+        testCase.LocalExtensionData = null;
+        MSTest.TestAdapter.ObjectModel.UnitTestElement roundTrippedTestElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
+        roundTrippedTestElement.TestMethod.MethodInfo = null;
+
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(assemblyName))
+            .Returns(Assembly.GetExecutingAssembly());
+        new TypeCache().GetTestMethodInfo(roundTrippedTestElement.TestMethod).Should().NotBeNull();
     }
 
     public void GetTestFromMethodShouldInitializeAsyncTypeNameCorrectly()
@@ -528,8 +543,10 @@ public class DummySecondHidingTestClass : DummyOverridingTestClass
     }
 }
 
-public class DummyGenericTestClass<T>
+[TestClass]
+internal class DummyGenericTestClass<T>
 {
+    [TestMethod]
     public void GenericTestMethod()
     {
     }
