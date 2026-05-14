@@ -28,7 +28,7 @@ safe-outputs:
   allowed-github-references: []
   create-discussion:
     title-prefix: "${{ github.workflow }}"
-    category: "q-a"
+    category: "announcements"
   add-comment:
     target: "*"
     max: 5

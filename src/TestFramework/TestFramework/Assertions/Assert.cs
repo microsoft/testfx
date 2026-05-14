@@ -176,6 +176,26 @@ public sealed partial class Assert
         throw CreateAssertFailedException(structuredMessage);
     }
 
+    /// <summary>
+    /// Formats a call-site expression for display at the bottom of a structured assertion message.
+    /// When the expression is empty, the call-site is omitted. When the expression contains newlines,
+    /// it is replaced with a <c>&lt;paramName&gt;</c> placeholder.
+    /// </summary>
+    internal static string? FormatCallSiteExpression(string assertionMethodName, string expression, string paramName)
+    {
+        if (string.IsNullOrWhiteSpace(expression))
+        {
+            return null;
+        }
+
+        // If expression contains newlines (multiline constant), replace with placeholder per RFC
+        string arg = expression.IndexOf('\n') >= 0 || expression.IndexOf('\r') >= 0
+            ? $"<{paramName}>"
+            : expression;
+
+        return $"{assertionMethodName}({arg})";
+    }
+
     private static string FormatAssertionFailed(string assertionName, string? message)
     {
         string failedMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName);
@@ -240,14 +260,8 @@ public sealed partial class Assert
             : $"{callerArgMessagePart} {userMessage}";
     }
 
-    private static string BuildUserMessageForConditionExpression(string? format, string conditionExpression)
-        => BuildUserMessageForSingleExpression(format, conditionExpression, "condition");
-
     private static string BuildUserMessageForValueExpression(string? format, string valueExpression)
         => BuildUserMessageForSingleExpression(format, valueExpression, "value");
-
-    private static string BuildUserMessageForActionExpression(string? format, string actionExpression)
-        => BuildUserMessageForSingleExpression(format, actionExpression, "action");
 
     private static string BuildUserMessageForCollectionExpression(string? format, string collectionExpression)
         => BuildUserMessageForSingleExpression(format, collectionExpression, "collection");
@@ -317,6 +331,15 @@ public sealed partial class Assert
 
     internal static string ReplaceNulls(object? input)
         => input?.ToString() ?? string.Empty;
+
+    /// <summary>
+    /// Formats a call-site expression like <c>Assert.MethodName(expression)</c>.
+    /// Returns <see langword="null"/> if the expression is empty or contains a line break.
+    /// </summary>
+    private static string? FormatCallSiteExpression(string methodName, string expression)
+        => string.IsNullOrEmpty(expression) || expression.IndexOfAny(['\n', '\r']) >= 0
+            ? null
+            : $"{methodName}({expression})";
 
     private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo culture)
 #pragma warning disable CA1309 // Use ordinal string comparison

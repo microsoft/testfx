@@ -149,6 +149,47 @@ public sealed class ServiceProviderTests
     }
 
     [TestMethod]
+    public void ReplaceService_WhenMatchingServiceExists_ReplacesInPlace()
+    {
+        TestSessionLifetimeHandler first = new();
+        TestSessionLifetimeHandler second = new();
+        _serviceProvider.AddService(first);
+        _serviceProvider.ReplaceService<TestSessionLifetimeHandler>(second);
+
+        Assert.HasCount(1, _serviceProvider.Services);
+        Assert.AreSame(second, _serviceProvider.Services.First());
+    }
+
+    [TestMethod]
+    public void ReplaceService_WhenNoMatchingServiceExists_AppendsService()
+    {
+        TestSessionLifetimeHandler instance = new();
+        _serviceProvider.ReplaceService<TestSessionLifetimeHandler>(instance);
+
+        Assert.HasCount(1, _serviceProvider.Services);
+        Assert.AreSame(instance, _serviceProvider.Services.First());
+    }
+
+    [TestMethod]
+    public void ReplaceService_ReplacesFirstMatch_PreservesOtherServices()
+    {
+        TestHostProcessLifetimeHandler other = new();
+        TestSessionLifetimeHandler first = new();
+        TestSessionLifetimeHandler second = new();
+        _serviceProvider.AddService(other);
+        _serviceProvider.AddService(first);
+        _serviceProvider.ReplaceService<TestSessionLifetimeHandler>(second);
+
+        Assert.HasCount(2, _serviceProvider.Services);
+        Assert.AreSame(other, _serviceProvider.Services.First());
+        Assert.AreSame(second, _serviceProvider.Services.Last());
+    }
+
+    [TestMethod]
+    public void ReplaceService_NullService_ThrowsArgumentNullException()
+        => Assert.ThrowsExactly<ArgumentNullException>(() => _serviceProvider.ReplaceService<TestSessionLifetimeHandler>(null!));
+
+    [TestMethod]
     public void GetServicesInternal_ExtensionMethod_InternalExtension_ShouldReturn()
     {
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
