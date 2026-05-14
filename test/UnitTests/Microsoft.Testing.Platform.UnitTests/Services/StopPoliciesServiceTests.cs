@@ -96,13 +96,16 @@ public sealed class StopPoliciesServiceTests : IDisposable
     [TestMethod]
     public async Task RegisterOnMaxFailedTestsCallbackAsync_ThrowsIfNotTestHost()
     {
-        StopPoliciesService service = new(_cancellationTokenSource.Object)
+        foreach (TestProcessRole? processRole in new TestProcessRole?[] { null, TestProcessRole.TestHostController })
         {
-            ProcessRole = TestProcessRole.TestHostController,
-        };
+            StopPoliciesService service = new(_cancellationTokenSource.Object)
+            {
+                ProcessRole = processRole,
+            };
 
-        await Assert.ThrowsExactlyAsync<InvalidOperationException>(
-            () => service.RegisterOnMaxFailedTestsCallbackAsync((_, _) => Task.CompletedTask));
+            await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+                () => service.RegisterOnMaxFailedTestsCallbackAsync((_, _) => Task.CompletedTask));
+        }
     }
 
     [TestMethod]
@@ -114,14 +117,19 @@ public sealed class StopPoliciesServiceTests : IDisposable
         };
         await service.ExecuteMaxFailedTestsCallbacksAsync(3, CancellationToken.None);
 
+        int invocationCount = 0;
         int capturedCount = -1;
         await service.RegisterOnMaxFailedTestsCallbackAsync((count, _) =>
         {
+            invocationCount++;
             capturedCount = count;
             return Task.CompletedTask;
         });
 
-        Assert.AreEqual(3, capturedCount);
+        await service.ExecuteMaxFailedTestsCallbacksAsync(10, CancellationToken.None);
+
+        Assert.AreEqual(2, invocationCount);
+        Assert.AreEqual(10, capturedCount);
     }
 
     [TestMethod]
@@ -130,14 +138,16 @@ public sealed class StopPoliciesServiceTests : IDisposable
         StopPoliciesService service = new(_cancellationTokenSource.Object);
         await service.ExecuteAbortCallbacksAsync();
 
-        bool callbackInvoked = false;
+        int invocationCount = 0;
         await service.RegisterOnAbortCallbackAsync(() =>
         {
-            callbackInvoked = true;
+            invocationCount++;
             return Task.CompletedTask;
         });
 
-        Assert.IsTrue(callbackInvoked);
+        await service.ExecuteAbortCallbacksAsync();
+
+        Assert.AreEqual(2, invocationCount);
     }
 
     [TestMethod]
@@ -145,18 +155,22 @@ public sealed class StopPoliciesServiceTests : IDisposable
     {
         StopPoliciesService service = new(_cancellationTokenSource.Object);
 
-        bool callbackInvoked = false;
+        TaskCompletionSource<bool> callbackInvoked = new(TaskCreationOptions.RunContinuationsAsynchronously);
         await service.RegisterOnAbortCallbackAsync(() =>
         {
-            callbackInvoked = true;
+            callbackInvoked.TrySetResult(true);
             return Task.CompletedTask;
         });
 
+#if NETCOREAPP
         await _cts.CancelAsync();
+#else
+        _cts.Cancel();
+#endif
 
-        // Allow async callback time to complete
-        await Task.Delay(200, TestContext.CancellationToken);
+        Task completedTask = await Task.WhenAny(callbackInvoked.Task, Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken));
+        Assert.AreSame(callbackInvoked.Task, completedTask);
 
-        Assert.IsTrue(callbackInvoked);
+        await callbackInvoked.Task;
     }
 }
