@@ -65,27 +65,39 @@ internal sealed class EvidenceBlock
     private static void AppendValue(StringBuilder sb, string value, string continuationIndent)
     {
         int start = 0;
-        for (int i = 0; i < value.Length; i++)
+        int len = value.Length;
+        int i = 0;
+        while (i < len)
         {
             char c = value[i];
             if (c is '\n' or '\r')
             {
                 sb.Append(value, start, i - start);
-                sb.Append(Environment.NewLine);
-                sb.Append(continuationIndent);
-
-                if (c == '\r' && i + 1 < value.Length && value[i + 1] == '\n')
+                int next = i + 1;
+                if (c == '\r' && next < len && value[next] == '\n')
                 {
-                    i++;
+                    next++;
                 }
 
-                start = i + 1;
+                sb.Append(Environment.NewLine);
+
+                // Skip the continuation indent when the line break is the last thing in the value to avoid trailing whitespace.
+                if (next < len)
+                {
+                    sb.Append(continuationIndent);
+                }
+
+                start = next;
+                i = next;
+                continue;
             }
+
+            i++;
         }
 
-        if (start < value.Length)
+        if (start < len)
         {
-            sb.Append(value, start, value.Length - start);
+            sb.Append(value, start, len - start);
         }
     }
 }

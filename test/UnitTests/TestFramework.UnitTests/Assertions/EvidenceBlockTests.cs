@@ -74,4 +74,73 @@ public class EvidenceBlockTests : TestContainer
         block.Lines[1].Label.Should().Be("actual:");
         block.Lines[1].Value.Should().Be("37");
     }
+
+    public void Format_ValueWithLF_IndentsContinuationToValueColumn()
+    {
+        EvidenceBlock block = EvidenceBlock.Create()
+            .AddLine("expected:", "line1\nline2");
+
+        string result = block.Format();
+
+        // "expected:" is 9 chars + 1 space = 10 chars of indent.
+        result.Should().Be($"expected: line1{Environment.NewLine}          line2");
+    }
+
+    public void Format_ValueWithCRLF_IndentsContinuationOnce()
+    {
+        EvidenceBlock block = EvidenceBlock.Create()
+            .AddLine("expected:", "line1\r\nline2");
+
+        string result = block.Format();
+
+        result.Should().Be($"expected: line1{Environment.NewLine}          line2");
+    }
+
+    public void Format_ValueWithCROnly_IndentsContinuation()
+    {
+        EvidenceBlock block = EvidenceBlock.Create()
+            .AddLine("expected:", "line1\rline2");
+
+        string result = block.Format();
+
+        result.Should().Be($"expected: line1{Environment.NewLine}          line2");
+    }
+
+    public void Format_ValueWithMultipleNewlines_IndentsAllContinuations()
+    {
+        EvidenceBlock block = EvidenceBlock.Create()
+            .AddLine("expected:", "a\nb\nc");
+
+        string result = block.Format();
+
+        result.Should().Be($"expected: a{Environment.NewLine}          b{Environment.NewLine}          c");
+    }
+
+    public void Format_ValueEndingWithNewline_DoesNotEmitTrailingIndent()
+    {
+        EvidenceBlock block = EvidenceBlock.Create()
+            .AddLine("expected:", "abc\n")
+            .AddLine("actual:", "37");
+
+        string result = block.Format();
+
+        // No row of pure whitespace between the two lines.
+        result.Should().Be($"expected: abc{Environment.NewLine}{Environment.NewLine}actual:   37");
+    }
+
+    public void Format_MixedSingleAndMultiLineValues_AlignsToValueColumn()
+    {
+        EvidenceBlock block = EvidenceBlock.Create()
+            .AddLine("expected type:", "Foo")
+            .AddLine("actual exception:", "System.InvalidOperationException: line1\nline2");
+
+        string result = block.Format();
+
+        // Longest label is "actual exception:" (17 chars) + 1 space = 18 chars indent for continuation.
+        string indent = new(' ', 18);
+        result.Should().Be(
+            $"expected type:    Foo{Environment.NewLine}" +
+            $"actual exception: System.InvalidOperationException: line1{Environment.NewLine}" +
+            $"{indent}line2");
+    }
 }
