@@ -72,7 +72,7 @@ Examples:
 | Assertion | Line 1 |
 | --------- | ------ |
 | `AreEqual` (int) | `Assertion failed. Expected values to be equal.` |
-| `AreEqual` (string) | `Assertion failed. Expected strings to be equal (case-sensitive).` |
+| `AreEqual` (string) | `Assertion failed. Expected strings to be equal.` |
 | `IsTrue` | `Assertion failed. Expected condition to be true.` |
 | `IsNull` | `Assertion failed. Expected value to be null.` |
 | `IsInstanceOfType` | `Assertion failed. Expected value to be of type String (or derived).` |
@@ -270,7 +270,7 @@ Assert.AreEqual(expectedCount, actualCount)
 ### Assert.AreEqual (strings, with user message)
 
 ```text
-Assertion failed. Expected strings to be equal (case-sensitive).
+Assertion failed. Expected strings to be equal.
 Strings have same length (11) but differ at 1 location(s). First difference at index 7.
 The greeting should include the user's full name
 
@@ -317,7 +317,7 @@ Assert.ThrowsExactly<ArgumentException>(() => Validate(input))
 ### Assert.AreEqual (large strings)
 
 ```text
-Assertion failed. Expected strings to be equal (case-sensitive).
+Assertion failed. Expected strings to be equal.
 Strings have different lengths (expected: 50000, actual: 49997) and differ at 1 location(s). First difference at index 1042.
 
 expected:
@@ -382,7 +382,7 @@ Assert.AreEqual(
 Output — the multiline expression is replaced with `<expected>` in the call-site:
 
 ```text
-Assertion failed. Expected strings to be equal (case-sensitive).
+Assertion failed. Expected strings to be equal.
 Strings differ at 1 location(s). First difference at index 22.
 
 expected: "{\n  \"name\": \"Alice\",\n  \"age\": 30\n}"
@@ -429,7 +429,7 @@ expected: 42
 actual:   37
 ```
 
-Note: When the generic `AreEqual<T>` overload is called with `T = string` (without `ignoreCase`/`culture` parameters), the message **auto-detects the string type** and uses the string-specific format (`"Expected strings to be equal (case-sensitive)."`) with full string diff diagnostics. The generic overload defaults to case-sensitive ordinal comparison, which is exactly what the string-specific format conveys. Developers writing `Assert.AreEqual("expected", actual)` get string diagnostics without needing to know about the string-specific overload.
+Note: When the generic `AreEqual<T>` overload is called with `T = string` (without `ignoreCase`/`culture` parameters), the message **auto-detects the string type** and uses the string-specific format (`"Expected strings to be equal."`) with full string diff diagnostics. The generic overload defaults to case-sensitive ordinal comparison, which is exactly what the string-specific format conveys. Developers writing `Assert.AreEqual("expected", actual)` get string diagnostics without needing to know about the string-specific overload.
 
 #### Assert.AreEqual (with delta)
 
@@ -446,7 +446,7 @@ Note: The `delta` overload exists for `float`, `double`, `decimal`, and `long`. 
 #### Assert.AreEqual (string, case-sensitive)
 
 ```text
-Assertion failed. Expected strings to be equal (case-sensitive).
+Assertion failed. Expected strings to be equal.
 Strings have same length (11) but differ at 1 location(s). First difference at index 7.
 
 expected: "hello world"

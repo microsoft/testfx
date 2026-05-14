@@ -391,6 +391,7 @@ public sealed partial class Assert
         string actualRendered = AssertionValueRenderer.RenderValue(actual);
 
         EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("notExpected:", notExpectedRendered)
             .AddLine("actual:", actualRendered);
 
         StructuredAssertionMessage structured = new(FrameworkMessages.AreNotEqualFailedSummary);

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -412,7 +412,8 @@ public partial class AssertTests : TestContainer
                 Assertion failed. Expected values to not be equal.
                 User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}
 
-                actual: 0
+                notExpected: 0
+                actual:      0
 
                 Assert.AreNotEqual(0, 0)
                 """);
@@ -1438,7 +1439,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .Which.Message.Should().Be(
                 """
-                Assertion failed. Expected strings to be equal (case-sensitive).
+                Assertion failed. Expected strings to be equal.
                 String lengths are both 4 but differ at index 0.
 
                 expected: "baaa"
@@ -1454,7 +1455,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .Which.Message.Should().Be(
                 """
-                Assertion failed. Expected strings to be equal (case-sensitive).
+                Assertion failed. Expected strings to be equal.
                 String lengths are both 4 but differ at index 3.
 
                 expected: "aaaa"
@@ -1470,7 +1471,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .Which.Message.Should().Be(
                 """
-                Assertion failed. Expected strings to be equal (case-sensitive).
+                Assertion failed. Expected strings to be equal.
                 String lengths are both 4 but differ at index 2.
 
                 expected: "aa\ta"
@@ -1489,7 +1490,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .Which.Message.Should().Be(
                 """
-                Assertion failed. Expected strings to be equal (case-sensitive).
+                Assertion failed. Expected strings to be equal.
                 String lengths are both 201 but differ at index 100.
 
                 expected: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
@@ -1517,7 +1518,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .Which.Message.Should().Be(
                 """
-                Assertion failed. Expected strings to be equal (case-sensitive).
+                Assertion failed. Expected strings to be equal.
                 Expected string length 4 but was 3.
 
                 expected: "aaaa"
@@ -1533,7 +1534,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .Which.Message.Should().Be(
                 """
-                Assertion failed. Expected strings to be equal (case-sensitive).
+                Assertion failed. Expected strings to be equal.
                 Expected string length 3 but was 4.
 
                 expected: "aaa"
@@ -1549,7 +1550,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .Which.Message.Should().Be(
                 """
-                Assertion failed. Expected strings to be equal (case-sensitive).
+                Assertion failed. Expected strings to be equal.
                 String lengths are both 4 but differ at index 3.
                 My custom message
 
@@ -1566,7 +1567,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .Which.Message.Should().Be(
                 """
-                Assertion failed. Expected strings to be equal (case-sensitive).
+                Assertion failed. Expected strings to be equal.
                 Expected string length 2 but was 4.
 
                 expected: "🥰"

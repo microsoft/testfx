@@ -159,6 +159,7 @@ public sealed partial class Assert
     private static bool IsTrueFailing(bool? condition)
         => condition is false or null;
 
+    [DoesNotReturn]
     private static void ReportAssertIsTrueFailed(bool? condition, string? message, string conditionExpression)
     {
         string actualValue = AssertionValueRenderer.RenderValue(condition);

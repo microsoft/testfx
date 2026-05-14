@@ -79,8 +79,8 @@
         <note></note>
       </trans-unit>
       <trans-unit id="AreEqualStringsFailedSummary">
-        <source>Expected strings to be equal (case-sensitive).</source>
-        <target state="new">Expected strings to be equal (case-sensitive).</target>
+        <source>Expected strings to be equal.</source>
+        <target state="new">Expected strings to be equal.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">

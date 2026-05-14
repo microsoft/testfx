@@ -158,6 +158,7 @@ public sealed partial class Assert
 
     private static bool IsNullFailing(object? value) => value is not null;
 
+    [DoesNotReturn]
     private static void ReportAssertIsNullFailed(object? value, string? message, string valueExpression)
     {
         string actualValue = AssertionValueRenderer.RenderValue(value);
