@@ -36,7 +36,7 @@ public class TypeCacheTests : TestContainer
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
 
-        ReflectHelper.Instance.ClearCache();
+        ReflectHelper.ClearCache();
 
         SetupMocks();
     }
