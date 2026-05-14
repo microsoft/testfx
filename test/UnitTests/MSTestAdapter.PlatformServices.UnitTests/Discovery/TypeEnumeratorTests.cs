@@ -230,7 +230,7 @@ public partial class TypeEnumeratorTests : TestContainer
         Type closedType = typeof(DummyGenericTestClass<int>);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(closedType, "DummyAssemblyName");
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(closedType.GetMethod(nameof(DummyGenericTestClass<int>.GenericTestMethod))!, classDisablesParallelization: false, _warnings);
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(closedType.GetMethod(nameof(DummyGenericTestClass<>.GenericTestMethod))!, classDisablesParallelization: false, _warnings);
 
         testElement.TestMethod.FullClassName.Should().Be(typeof(DummyGenericTestClass<>).FullName);
         testElement.TestMethod.ManagedTypeName.Should().Be(typeof(DummyGenericTestClass<>).FullName);
