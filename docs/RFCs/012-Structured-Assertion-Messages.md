@@ -429,7 +429,7 @@ expected: 42
 actual:   37
 ```
 
-Note: When the generic `AreEqual<T>` overload is called with `T = string` (without `ignoreCase`/`culture` parameters), the message **auto-detects the string type** and uses the string-specific format (`"Expected strings to be equal."`) with full string diff diagnostics. The generic overload defaults to case-sensitive ordinal comparison, which is exactly what the string-specific format conveys. Developers writing `Assert.AreEqual("expected", actual)` get string diagnostics without needing to know about the string-specific overload.
+Note: When the generic `AreEqual<T>` overload is called with `T = string` (without `ignoreCase`/`culture` parameters), the message **auto-detects the string type** and uses the string-specific format (`"Expected strings to be equal."`) with full string diff diagnostics. The generic overload defaults to ordinal equality (`EqualityComparer<string>.Default`), which is case-sensitive. Developers writing `Assert.AreEqual("expected", actual)` get string diagnostics without needing to know about the string-specific overload.
 
 #### Assert.AreEqual (with delta)
 

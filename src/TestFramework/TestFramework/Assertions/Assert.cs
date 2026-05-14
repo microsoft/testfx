@@ -350,7 +350,7 @@ public sealed partial class Assert
     /// </summary>
     private static string? FormatBinaryCallSiteExpression(string methodName, string expression1, string paramName1, string expression2, string paramName2)
     {
-        if (string.IsNullOrEmpty(expression1) || string.IsNullOrEmpty(expression2))
+        if (string.IsNullOrWhiteSpace(expression1) || string.IsNullOrWhiteSpace(expression2))
         {
             return null;
         }
