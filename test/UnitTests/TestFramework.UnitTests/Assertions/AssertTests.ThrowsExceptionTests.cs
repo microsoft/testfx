@@ -404,4 +404,26 @@ public partial class AssertTests
                 $"actual type:      System.InvalidOperationException{Environment.NewLine}" +
                 $"actual exception: System.InvalidOperationException: oops");
     }
+
+    public void Throws_WhenExpectedTypeIsGeneric_RendersFriendlyTypeName()
+    {
+        // Without the friendly-name helper, the closed generic would render as "ThrowsTestGenericException`1" (with backtick) in
+        // both the summary and the call-site line, breaking the prose and producing un-pasteable C#.
+        static void Action() => Assert.Throws<ThrowsTestGenericException<int>>(() => throw new InvalidOperationException("oops"));
+        Action action = Action;
+
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                $"Assertion failed. Expected exception of type ThrowsTestGenericException<Int32> (or derived) but caught InvalidOperationException." +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                $"expected type:    Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ThrowsTestGenericException<System.Int32> (or derived){Environment.NewLine}" +
+                $"actual type:      System.InvalidOperationException{Environment.NewLine}" +
+                $"actual exception: System.InvalidOperationException: oops" +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                "Assert.Throws<ThrowsTestGenericException<Int32>>(() => throw new InvalidOperationException(\"oops\"))");
+    }
+}
+
+internal sealed class ThrowsTestGenericException<T> : Exception
+{
 }

@@ -332,7 +332,7 @@ public sealed partial class Assert
             return (TException)state.ExceptionThrown!;
         }
 
-        // This will not hit, but need it for compiler.
+        // Reached when ReportThrowsFailed records the failure into the active AssertScope and returns instead of throwing.
         return null!;
     }
 
@@ -352,7 +352,7 @@ public sealed partial class Assert
             return (TException)state.ExceptionThrown!;
         }
 
-        // This will not hit, but need it for compiler.
+        // Reached when ReportThrowsFailed records the failure into the active AssertScope and returns instead of throwing.
         return null!;
     }
 
@@ -488,7 +488,7 @@ public sealed partial class Assert
             return (TException)state.ExceptionThrown!;
         }
 
-        // This will not hit, but need it for compiler.
+        // Reached when ReportThrowsFailed records the failure into the active AssertScope and returns instead of throwing.
         return null!;
     }
 
@@ -508,7 +508,7 @@ public sealed partial class Assert
             return (TException)state.ExceptionThrown!;
         }
 
-        // This will not hit, but need it for compiler.
+        // Reached when ReportThrowsFailed records the failure into the active AssertScope and returns instead of throwing.
         return null!;
     }
 
@@ -563,8 +563,9 @@ public sealed partial class Assert
         string assertMethodName)
         where TException : Exception
     {
-        string expectedTypeName = typeof(TException).Name;
-        string expectedTypeFullName = typeof(TException).FullName ?? expectedTypeName;
+        Type expectedType = typeof(TException);
+        string expectedTypeName = GetDisplayTypeName(expectedType, includeNamespace: false);
+        string expectedTypeFullName = GetDisplayTypeName(expectedType, includeNamespace: true);
 
         StructuredAssertionMessage message;
 
@@ -582,8 +583,8 @@ public sealed partial class Assert
         {
             Exception actualException = state.ExceptionThrown!;
             Type actualType = actualException.GetType();
-            string actualTypeName = actualType.Name;
-            string actualTypeFullName = actualType.FullName ?? actualTypeName;
+            string actualTypeName = GetDisplayTypeName(actualType, includeNamespace: false);
+            string actualTypeFullName = GetDisplayTypeName(actualType, includeNamespace: true);
 
             string summary = isStrictType
                 ? $"Expected exception of exact type {expectedTypeName} but caught {actualTypeName}."
@@ -603,6 +604,45 @@ public sealed partial class Assert
         }
 
         ReportAssertFailed(message);
+    }
+
+    // Renders a type name without the CLR backtick-arity suffix and with closed generic arguments expanded recursively
+    // (e.g. "MyException`1" with int → "MyException<Int32>") so it stays readable in summary lines and pasteable in call-site lines.
+    private static string GetDisplayTypeName(Type type, bool includeNamespace)
+    {
+        if (!type.IsGenericType)
+        {
+            return includeNamespace ? type.FullName ?? type.Name : type.Name;
+        }
+
+        string name = type.Name;
+        int tick = name.IndexOf('`');
+        if (tick >= 0)
+        {
+            name = name.Substring(0, tick);
+        }
+
+        if (includeNamespace && !string.IsNullOrEmpty(type.Namespace))
+        {
+            name = $"{type.Namespace}.{name}";
+        }
+
+        Type[] args = type.GetGenericArguments();
+        StringBuilder sb = new(name.Length + 16);
+        sb.Append(name);
+        sb.Append('<');
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (i > 0)
+            {
+                sb.Append(", ");
+            }
+
+            sb.Append(GetDisplayTypeName(args[i], includeNamespace));
+        }
+
+        sb.Append('>');
+        return sb.ToString();
     }
 
     private enum ThrowsFailureKind : byte
