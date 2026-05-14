@@ -31,7 +31,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     }
 
     private TestMethod CreateTestMethod(string methodName, string typeFullName, string assemblyName, string? displayName)
-        => new(typeFullName, methodName, null, methodName, typeFullName, assemblyName, displayName, null);
+        => new(methodName, null, methodName, typeFullName, assemblyName, displayName, null);
 
     private UnitTestRunner CreateUnitTestRunner(UnitTestElement[] testsToRun)
         => new(GetSettingsWithDebugTrace(false), testsToRun);
