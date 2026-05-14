@@ -239,7 +239,7 @@ public class ReflectionOperationsTests : TestContainer
 
         Trait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
 
-        actual.Should().Equal([new Trait("MethodKey", "MethodValue")]);
+        actual.Should().BeEquivalentTo(new[] { new Trait("MethodKey", "MethodValue") }, options => options.WithStrictOrdering());
     }
 
     /// <summary>
@@ -251,7 +251,7 @@ public class ReflectionOperationsTests : TestContainer
 
         Trait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
 
-        actual.Should().Equal([new Trait("ClassKey", "ClassValue")]);
+        actual.Should().BeEquivalentTo(new[] { new Trait("ClassKey", "ClassValue") }, options => options.WithStrictOrdering());
     }
 
     /// <summary>
@@ -264,7 +264,7 @@ public class ReflectionOperationsTests : TestContainer
 
         Trait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
 
-        actual.Should().Equal([new Trait("MethodKey", "MethodValue"), new Trait("ClassKey", "ClassValue")]);
+        actual.Should().BeEquivalentTo(new[] { new Trait("MethodKey", "MethodValue"), new Trait("ClassKey", "ClassValue") }, options => options.WithStrictOrdering());
     }
 
     /// <summary>
@@ -276,7 +276,7 @@ public class ReflectionOperationsTests : TestContainer
 
         Trait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
 
-        actual.Should().Equal([new Trait("Key1", "Value1"), new Trait("Key2", "Value2")]);
+        actual.Should().BeEquivalentTo(new[] { new Trait("Key1", "Value1"), new Trait("Key2", "Value2") }, options => options.WithStrictOrdering());
     }
 
     /// <summary>
@@ -744,7 +744,7 @@ public class ReflectionOperationsTests : TestContainer
 
 #region Dummy Implementations
 
-public class TestableExtendedTestMethod : TestMethodAttribute;
+internal class TestableExtendedTestMethod : TestMethodAttribute;
 
 #endregion
 
