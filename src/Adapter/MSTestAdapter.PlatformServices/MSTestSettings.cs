@@ -29,12 +29,14 @@ internal sealed partial class MSTestSettings
     /// <summary>
     /// Member variable for Adapter settings.
     /// </summary>
+#pragma warning disable IDE0032 // Use auto property — property uses lazy '??=' initialization, which cannot be expressed as an auto-property.
     private static MSTestSettings? s_currentSettings;
 
     /// <summary>
     /// Member variable for RunConfiguration settings.
     /// </summary>
     private static RunConfigurationSettings? s_runConfigurationSettings;
+#pragma warning restore IDE0032
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MSTestSettings"/> class.
