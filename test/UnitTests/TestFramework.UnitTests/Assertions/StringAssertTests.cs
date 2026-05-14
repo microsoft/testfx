@@ -244,9 +244,9 @@ public class StringAssertTests : TestContainer
 #if DEBUG
     public void ObsoleteEqualsMethodThrowsAssertFailedException()
     {
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MSTEST0102 // Type or member is obsolete
         Action action = () => StringAssert.Equals("test", "test");
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MSTEST0102 // Type or member is obsolete
         action.Should().Throw<AssertFailedException>()
             .And.Message.Should().Contain("StringAssert.Equals should not be used for Assertions");
     }
@@ -254,9 +254,9 @@ public class StringAssertTests : TestContainer
     public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
     {
         object obj = new();
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MSTEST0103 // Type or member is obsolete
         Action action = () => StringAssert.ReferenceEquals(obj, obj);
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MSTEST0103 // Type or member is obsolete
         action.Should().Throw<AssertFailedException>()
             .And.Message.Should().Contain("StringAssert.ReferenceEquals should not be used for Assertions");
     }

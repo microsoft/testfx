@@ -357,11 +357,25 @@ public sealed partial class Assert
     /// <param name="objB"> Object B. </param>
     /// <returns> Never returns. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
+#if DEBUG && NET8_0_OR_GREATER
     [Obsolete(
         FrameworkConstants.DoNotUseAssertEquals,
-#if DEBUG
+        error: false,
+        DiagnosticId = "MSTEST0100",
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
+#elif DEBUG
+    [Obsolete(
+        FrameworkConstants.DoNotUseAssertEquals,
         error: false)]
+#elif NET8_0_OR_GREATER
+    [Obsolete(
+        FrameworkConstants.DoNotUseAssertEquals,
+        error: true,
+        DiagnosticId = "MSTEST0100",
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 #else
+    [Obsolete(
+        FrameworkConstants.DoNotUseAssertEquals,
         error: true)]
 #endif
     [DoesNotReturn]
@@ -380,11 +394,25 @@ public sealed partial class Assert
     /// <param name="objB"> Object B. </param>
     /// <returns> Never returns. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
+#if DEBUG && NET8_0_OR_GREATER
     [Obsolete(
         FrameworkConstants.DoNotUseAssertReferenceEquals,
-#if DEBUG
+        error: false,
+        DiagnosticId = "MSTEST0101",
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
+#elif DEBUG
+    [Obsolete(
+        FrameworkConstants.DoNotUseAssertReferenceEquals,
         error: false)]
+#elif NET8_0_OR_GREATER
+    [Obsolete(
+        FrameworkConstants.DoNotUseAssertReferenceEquals,
+        error: true,
+        DiagnosticId = "MSTEST0101",
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 #else
+    [Obsolete(
+        FrameworkConstants.DoNotUseAssertReferenceEquals,
         error: true)]
 #endif
     [DoesNotReturn]

@@ -37,7 +37,11 @@ public sealed class TestApplication : ITestApplication
     /// <param name="args">The command line arguments.</param>
     /// <param name="testApplicationOptions">The test application options.</param>
     /// <returns>The task representing the asynchronous operation.</returns>
+#if NET8_0_OR_GREATER
+    [Obsolete("This method is obsolete. Use CreateBuilderAsync instead.", DiagnosticId = "MTP0002", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+#else
     [Obsolete("This method is obsolete. Use CreateBuilderAsync instead.")]
+#endif
     public static Task<ITestApplicationBuilder> CreateServerModeBuilderAsync(string[] args, TestApplicationOptions? testApplicationOptions = null)
     {
         if (args.Contains($"--{PlatformCommandLineProvider.ServerOptionKey}") || args.Contains($"-{PlatformCommandLineProvider.ServerOptionKey}"))
