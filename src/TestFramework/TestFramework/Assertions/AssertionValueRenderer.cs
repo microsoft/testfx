@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable IDE0046 // Convert to conditional expression
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -14,21 +12,15 @@ internal static class AssertionValueRenderer
     /// Renders a value as a string suitable for display in the evidence block.
     /// </summary>
     internal static string RenderValue(object? value)
-    {
-        if (value is null)
+        => value switch
         {
-            return "null";
-        }
-
-        return value switch
-        {
+            null => "null",
             string s => RenderString(s),
             bool b => b ? "true" : "false",
             char c => RenderChar(c),
-            IEnumerable enumerable when value is not string => RenderCollection(enumerable),
+            IEnumerable enumerable => RenderCollection(enumerable),
             _ => value.ToString() ?? value.GetType().FullName ?? value.GetType().Name,
         };
-    }
 
     /// <summary>
     /// Renders a string value with double quotes and escape sequences for control characters.

@@ -114,6 +114,17 @@ public sealed partial class Assert
             ExpectedText = structuredMessage.ExpectedText,
             ActualText = structuredMessage.ActualText,
         };
+
+        if (structuredMessage.ExpectedText is not null)
+        {
+            exception.Data["assert.expected"] = structuredMessage.ExpectedText;
+        }
+
+        if (structuredMessage.ActualText is not null)
+        {
+            exception.Data["assert.actual"] = structuredMessage.ActualText;
+        }
+
         return exception;
     }
 
@@ -124,7 +135,7 @@ public sealed partial class Assert
     /// <param name="structuredMessage">
     /// The structured assertion failure message.
     /// </param>
-#pragma warning disable CS8763 // A method marked [DoesNotReturn] should not return
+#pragma warning disable CS8763 // A method marked [DoesNotReturn] should not return - Deliberately keeping [DoesNotReturn] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
     [DoesNotReturn]
     [StackTraceHidden]
     internal static void ReportAssertFailed(StructuredAssertionMessage structuredMessage)
