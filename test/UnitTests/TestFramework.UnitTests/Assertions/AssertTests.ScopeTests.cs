@@ -160,11 +160,15 @@ public partial class AssertTests
             .Which;
 
         innerException.InnerExceptions.Should().HaveCount(2);
-        string instanceOfTypeMessage = innerException.InnerExceptions[0].Message;
-        instanceOfTypeMessage.Should().Contain("Assertion failed. Expected value to be of type Int32 (or derived).");
-        instanceOfTypeMessage.Should().Contain("expected type: System.Int32 (or derived)");
-        instanceOfTypeMessage.Should().Contain("actual type:   System.String");
-        instanceOfTypeMessage.Should().Contain("Assert.IsInstanceOfType(value)");
+        innerException.InnerExceptions[0].Message.Should().Be(
+            """
+            Assertion failed. Expected value to be of type Int32 (or derived).
+
+            expected type: System.Int32 (or derived)
+            actual type:   System.String
+
+            Assert.IsInstanceOfType(value)
+            """);
         innerException.InnerExceptions[1].Message.Should().Contain("Assert.AreEqual failed.");
     }
 
@@ -187,11 +191,15 @@ public partial class AssertTests
             .Which;
 
         innerException.InnerExceptions.Should().HaveCount(2);
-        string exactInstanceOfTypeMessage = innerException.InnerExceptions[0].Message;
-        exactInstanceOfTypeMessage.Should().Contain("Assertion failed. Expected value to be exactly of type Object.");
-        exactInstanceOfTypeMessage.Should().Contain("expected type: System.Object");
-        exactInstanceOfTypeMessage.Should().Contain("actual type:   System.String");
-        exactInstanceOfTypeMessage.Should().Contain("Assert.IsExactInstanceOfType(value)");
+        innerException.InnerExceptions[0].Message.Should().Be(
+            """
+            Assertion failed. Expected value to be exactly of type Object.
+
+            expected type: System.Object
+            actual type:   System.String
+
+            Assert.IsExactInstanceOfType(value)
+            """);
         innerException.InnerExceptions[1].Message.Should().Contain("Assert.AreEqual failed.");
     }
 

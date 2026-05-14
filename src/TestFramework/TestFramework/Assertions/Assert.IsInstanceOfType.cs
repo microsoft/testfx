@@ -329,26 +329,19 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ReportAssertIsInstanceOfTypeFailed(object? value, Type? expectedType, string? userMessage, string valueExpression)
     {
-        string typeName = expectedType?.Name ?? "null";
-        StructuredAssertionMessage msg = new($"Expected value to be of type {typeName} (or derived).");
+        StructuredAssertionMessage msg = expectedType is null
+            ? new("Cannot check type because the expected type argument is null.")
+            : new($"Expected value to be of type {expectedType.Name} (or derived).");
         msg.WithUserMessage(userMessage);
 
         if (expectedType is not null)
         {
+            string actualTypeText = value?.GetType().ToString() ?? "null";
             EvidenceBlock evidence = EvidenceBlock.Create()
-                .AddLine("expected type:", $"{expectedType} (or derived)");
-            if (value is null)
-            {
-                evidence.AddLine("actual:", "null");
-            }
-            else
-            {
-                evidence.AddLine("actual type:", value.GetType().ToString());
-                evidence.AddLine("actual value:", AssertionValueRenderer.RenderValue(value));
-            }
-
+                .AddLine("expected type:", $"{expectedType} (or derived)")
+                .AddLine(value is null ? "actual:" : "actual type:", actualTypeText);
             msg.WithEvidence(evidence)
-               .WithExpectedAndActual($"{expectedType} (or derived)", value?.GetType().ToString() ?? "null");
+               .WithExpectedAndActual($"{expectedType} (or derived)", actualTypeText);
         }
 
         msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsInstanceOfType", valueExpression, "<value>"));
@@ -419,16 +412,19 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ReportAssertIsNotInstanceOfTypeFailed(object? value, Type? wrongType, string? userMessage, string valueExpression)
     {
-        string typeName = wrongType?.Name ?? "null";
-        StructuredAssertionMessage msg = new($"Expected value to not be of type {typeName} (or derived).");
+        StructuredAssertionMessage msg = wrongType is null
+            ? new("Cannot check type because the not-expected type argument is null.")
+            : new($"Expected value to not be of type {wrongType.Name} (or derived).");
         msg.WithUserMessage(userMessage);
 
         if (wrongType is not null)
         {
+            string actualTypeText = value?.GetType().ToString() ?? "null";
             EvidenceBlock evidence = EvidenceBlock.Create()
                 .AddLine("not expected type:", $"{wrongType} (or derived)")
-                .AddLine("actual value:", AssertionValueRenderer.RenderValue(value));
-            msg.WithEvidence(evidence);
+                .AddLine("actual type:", actualTypeText);
+            msg.WithEvidence(evidence)
+               .WithExpectedAndActual($"{wrongType} (or derived)", actualTypeText);
         }
 
         msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotInstanceOfType", valueExpression, "<value>"));

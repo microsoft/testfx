@@ -12,21 +12,42 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsInstanceOfType(null, typeof(AssertTests));
         action.Should().Throw<AssertFailedException>()
-            .WithMessage($"Assertion failed. Expected value to be of type AssertTests (or derived).{Environment.NewLine}{Environment.NewLine}expected type: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests (or derived){Environment.NewLine}actual:        null{Environment.NewLine}{Environment.NewLine}Assert.IsInstanceOfType(null)");
+            .WithMessage(
+                """
+                Assertion failed. Expected value to be of type AssertTests (or derived).
+
+                expected type: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests (or derived)
+                actual:        null
+
+                Assert.IsInstanceOfType(null)
+                """);
     }
 
     public void InstanceOfTypeShouldFailWhenTypeIsNull()
     {
         Action action = () => Assert.IsInstanceOfType(5, null);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage($"Assertion failed. Expected value to be of type null (or derived).{Environment.NewLine}{Environment.NewLine}Assert.IsInstanceOfType(5)");
+            .WithMessage(
+                """
+                Assertion failed. Cannot check type because the expected type argument is null.
+
+                Assert.IsInstanceOfType(5)
+                """);
     }
 
     public void InstanceOfTypeShouldFailWhenTypeIsMismatched()
     {
         Action action = () => Assert.IsInstanceOfType(5, typeof(string));
         action.Should().Throw<AssertFailedException>()
-            .WithMessage($"Assertion failed. Expected value to be of type String (or derived).{Environment.NewLine}{Environment.NewLine}expected type: System.String (or derived){Environment.NewLine}actual type:   System.Int32{Environment.NewLine}actual value:  5{Environment.NewLine}{Environment.NewLine}Assert.IsInstanceOfType(5)");
+            .WithMessage(
+                """
+                Assertion failed. Expected value to be of type String (or derived).
+
+                expected type: System.String (or derived)
+                actual type:   System.Int32
+
+                Assert.IsInstanceOfType(5)
+                """);
     }
 
     public void InstanceOfTypeShouldPassOnSameInstance() => Assert.IsInstanceOfType(5, typeof(int));
@@ -37,21 +58,45 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsInstanceOfType(null, typeof(AssertTests), "User-provided message");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage($"Assertion failed. Expected value to be of type AssertTests (or derived).{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}expected type: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests (or derived){Environment.NewLine}actual:        null{Environment.NewLine}{Environment.NewLine}Assert.IsInstanceOfType(null)");
+            .WithMessage(
+                """
+                Assertion failed. Expected value to be of type AssertTests (or derived).
+                User-provided message
+
+                expected type: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests (or derived)
+                actual:        null
+
+                Assert.IsInstanceOfType(null)
+                """);
     }
 
     public void InstanceOfType_WithStringMessage_ShouldFailWhenTypeIsNull()
     {
         Action action = () => Assert.IsInstanceOfType(5, null, "User-provided message");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage($"Assertion failed. Expected value to be of type null (or derived).{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}Assert.IsInstanceOfType(5)");
+            .WithMessage(
+                """
+                Assertion failed. Cannot check type because the expected type argument is null.
+                User-provided message
+
+                Assert.IsInstanceOfType(5)
+                """);
     }
 
     public void InstanceOfType_WithStringMessage_ShouldFailWhenTypeIsMismatched()
     {
         Action action = () => Assert.IsInstanceOfType(5, typeof(string), "User-provided message");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage($"Assertion failed. Expected value to be of type String (or derived).{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}expected type: System.String (or derived){Environment.NewLine}actual type:   System.Int32{Environment.NewLine}actual value:  5{Environment.NewLine}{Environment.NewLine}Assert.IsInstanceOfType(5)");
+            .WithMessage(
+                """
+                Assertion failed. Expected value to be of type String (or derived).
+                User-provided message
+
+                expected type: System.String (or derived)
+                actual type:   System.Int32
+
+                Assert.IsInstanceOfType(5)
+                """);
     }
 
     public void InstanceOfType_WithStringMessage_ShouldPassWhenTypeIsCorrect()
@@ -63,7 +108,16 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsInstanceOfType(null, typeof(AssertTests), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<AssertFailedException>())
-            .WithMessage($"Assertion failed. Expected value to be of type AssertTests (or derived).{Environment.NewLine}User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}{Environment.NewLine}{Environment.NewLine}expected type: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests (or derived){Environment.NewLine}actual:        null{Environment.NewLine}{Environment.NewLine}Assert.IsInstanceOfType(null)");
+            .WithMessage(
+                $$"""
+                Assertion failed. Expected value to be of type AssertTests (or derived).
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {{string.Format(null, "{0:tt}", dateTime)}}, {{string.Format(null, "{0,5:tt}", dateTime)}}
+
+                expected type: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests (or derived)
+                actual:        null
+
+                Assert.IsInstanceOfType(null)
+                """);
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -72,7 +126,13 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         Action action = () => Assert.IsInstanceOfType(5, null, $"User-provided message {o}");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage($"Assertion failed. Expected value to be of type null (or derived).{Environment.NewLine}User-provided message DummyClassTrackingToStringCalls{Environment.NewLine}{Environment.NewLine}Assert.IsInstanceOfType(5)");
+            .WithMessage(
+                """
+                Assertion failed. Cannot check type because the expected type argument is null.
+                User-provided message DummyClassTrackingToStringCalls
+
+                Assert.IsInstanceOfType(5)
+                """);
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -81,7 +141,16 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         Action action = () => Assert.IsInstanceOfType(5, typeof(string), $"User-provided message {o}");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage($"Assertion failed. Expected value to be of type String (or derived).{Environment.NewLine}User-provided message DummyClassTrackingToStringCalls{Environment.NewLine}{Environment.NewLine}expected type: System.String (or derived){Environment.NewLine}actual type:   System.Int32{Environment.NewLine}actual value:  5{Environment.NewLine}{Environment.NewLine}Assert.IsInstanceOfType(5)");
+            .WithMessage(
+                """
+                Assertion failed. Expected value to be of type String (or derived).
+                User-provided message DummyClassTrackingToStringCalls
+
+                expected type: System.String (or derived)
+                actual type:   System.Int32
+
+                Assert.IsInstanceOfType(5)
+                """);
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -108,14 +177,30 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsInstanceOfType<AssertTests>(null);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage($"Assertion failed. Expected value to be of type AssertTests (or derived).{Environment.NewLine}{Environment.NewLine}expected type: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests (or derived){Environment.NewLine}actual:        null{Environment.NewLine}{Environment.NewLine}Assert.IsInstanceOfType(null)");
+            .WithMessage(
+                """
+                Assertion failed. Expected value to be of type AssertTests (or derived).
+
+                expected type: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests (or derived)
+                actual:        null
+
+                Assert.IsInstanceOfType(null)
+                """);
     }
 
     public void IsInstanceOfTypeUsingGenericType_WhenTypeMismatch_Fails()
     {
         Action action = () => Assert.IsInstanceOfType<string>(5);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage($"Assertion failed. Expected value to be of type String (or derived).{Environment.NewLine}{Environment.NewLine}expected type: System.String (or derived){Environment.NewLine}actual type:   System.Int32{Environment.NewLine}actual value:  5{Environment.NewLine}{Environment.NewLine}Assert.IsInstanceOfType(5)");
+            .WithMessage(
+                """
+                Assertion failed. Expected value to be of type String (or derived).
+
+                expected type: System.String (or derived)
+                actual type:   System.Int32
+
+                Assert.IsInstanceOfType(5)
+                """);
     }
 
     public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_WhenValueIsNull_Fails()
@@ -222,6 +307,85 @@ public partial class AssertTests
         Type? intType = GetIntType();
         Assert.IsNotInstanceOfType(new object(), intType, "my message");
         _ = intType.ToString(); // no warning about possible null
+    }
+
+    public void IsNotInstanceOfType_OnExactType_ShouldFailWithActualTypeEvidence()
+    {
+        Action action = () => Assert.IsNotInstanceOfType(5, typeof(int));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected value to not be of type Int32 (or derived).
+
+                not expected type: System.Int32 (or derived)
+                actual type:       System.Int32
+
+                Assert.IsNotInstanceOfType(5)
+                """);
+    }
+
+    public void IsNotInstanceOfType_OnDerivedType_ShouldFailWithActualTypeEvidence()
+    {
+        object x = new MemoryStream();
+        Action action = () => Assert.IsNotInstanceOfType(x, typeof(Stream));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected value to not be of type Stream (or derived).
+
+                not expected type: System.IO.Stream (or derived)
+                actual type:       System.IO.MemoryStream
+
+                Assert.IsNotInstanceOfType(x)
+                """);
+    }
+
+    public void IsNotInstanceOfType_WhenTypeIsNull_ShouldFailWithDedicatedMessage()
+    {
+        Action action = () => Assert.IsNotInstanceOfType(5, null);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Cannot check type because the not-expected type argument is null.
+
+                Assert.IsNotInstanceOfType(5)
+                """);
+    }
+
+    public void IsInstanceOfType_OnFailure_ShouldPopulateExpectedAndActualPayload()
+    {
+        try
+        {
+            Assert.IsInstanceOfType(5, typeof(string));
+        }
+        catch (AssertFailedException ex)
+        {
+            ex.ExpectedText.Should().Be("System.String (or derived)");
+            ex.ActualText.Should().Be("System.Int32");
+            ex.Data["assert.expected"].Should().Be("System.String (or derived)");
+            ex.Data["assert.actual"].Should().Be("System.Int32");
+            return;
+        }
+
+        throw new AssertFailedException("Expected AssertFailedException was not thrown.");
+    }
+
+    public void IsNotInstanceOfType_OnFailure_ShouldPopulateExpectedAndActualPayload()
+    {
+        try
+        {
+            Assert.IsNotInstanceOfType(5, typeof(int));
+        }
+        catch (AssertFailedException ex)
+        {
+            ex.ExpectedText.Should().Be("System.Int32 (or derived)");
+            ex.ActualText.Should().Be("System.Int32");
+            ex.Data["assert.expected"].Should().Be("System.Int32 (or derived)");
+            ex.Data["assert.actual"].Should().Be("System.Int32");
+            return;
+        }
+
+        throw new AssertFailedException("Expected AssertFailedException was not thrown.");
     }
 
     private object? GetObj() => new();

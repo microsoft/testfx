@@ -268,7 +268,7 @@ public sealed partial class Assert
         msg.WithAdditionalSummaryLine(
             notExpected is null && actual is null
                 ? "Both values are null."
-                : "Both variables refer to the same object.");
+                : "Both values refer to the same object.");
 
         msg.WithUserMessage(userMessage);
 

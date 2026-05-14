@@ -188,26 +188,34 @@ public sealed partial class Assert
             return null;
         }
 
-        string arg = expression.Contains('\n') || expression.Contains('\r') ? placeholder : expression;
+        string arg = IsMultiline(expression) ? placeholder : expression;
         return $"{assertionMethodName}({arg})";
     }
 
     /// <summary>
     /// Formats a call-site expression for display at the bottom of a structured assertion message,
     /// using two captured expressions. Multiline expressions are replaced with the supplied placeholders.
+    /// When only one expression is empty/whitespace, its placeholder is used so the partial call site is still shown;
+    /// only when both expressions are empty/whitespace is the entire call-site line suppressed.
     /// </summary>
     internal static string? FormatCallSiteExpression(string assertionMethodName, string expression1, string expression2, string placeholder1 = "<arg1>", string placeholder2 = "<arg2>")
     {
-        if (string.IsNullOrWhiteSpace(expression1) || string.IsNullOrWhiteSpace(expression2))
+        bool empty1 = string.IsNullOrWhiteSpace(expression1);
+        bool empty2 = string.IsNullOrWhiteSpace(expression2);
+        if (empty1 && empty2)
         {
             return null;
         }
 
-        string arg1 = expression1.Contains('\n') || expression1.Contains('\r') ? placeholder1 : expression1;
-        string arg2 = expression2.Contains('\n') || expression2.Contains('\r') ? placeholder2 : expression2;
+        string arg1 = empty1 || IsMultiline(expression1) ? placeholder1 : expression1;
+        string arg2 = empty2 || IsMultiline(expression2) ? placeholder2 : expression2;
 
         return $"{assertionMethodName}({arg1}, {arg2})";
     }
+
+    // string.Contains(char) is not available on netstandard2.0 / net462, so use IndexOf to check for newline characters.
+    private static bool IsMultiline(string expression)
+        => expression.IndexOf('\n') >= 0 || expression.IndexOf('\r') >= 0;
 
     private static string FormatAssertionFailed(string assertionName, string? message)
     {

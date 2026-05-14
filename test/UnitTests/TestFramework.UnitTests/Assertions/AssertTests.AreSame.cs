@@ -17,7 +17,15 @@ public partial class AssertTests
     {
         Action action = () => Assert.AreSame(new object(), new object());
         action.Should().Throw<Exception>()
-            .WithMessage($"Assertion failed. Expected both values to refer to the same object.{Environment.NewLine}{Environment.NewLine}expected: System.Object (hash: 0x*){Environment.NewLine}actual:   System.Object (hash: 0x*){Environment.NewLine}{Environment.NewLine}Assert.AreSame(new object(), new object())");
+            .WithMessage(
+                """
+                Assertion failed. Expected both values to refer to the same object.
+
+                expected: System.Object (hash: 0x*)
+                actual:   System.Object (hash: 0x*)
+
+                Assert.AreSame(new object(), new object())
+                """);
     }
 
     public void AreSame_StringMessage_PassSameObject_ShouldPass()
@@ -30,7 +38,16 @@ public partial class AssertTests
     {
         Action action = () => Assert.AreSame(new object(), new object(), "User-provided message");
         action.Should().Throw<Exception>()
-            .WithMessage($"Assertion failed. Expected both values to refer to the same object.{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}expected: System.Object (hash: 0x*){Environment.NewLine}actual:   System.Object (hash: 0x*){Environment.NewLine}{Environment.NewLine}Assert.AreSame(new object(), new object())");
+            .WithMessage(
+                """
+                Assertion failed. Expected both values to refer to the same object.
+                User-provided message
+
+                expected: System.Object (hash: 0x*)
+                actual:   System.Object (hash: 0x*)
+
+                Assert.AreSame(new object(), new object())
+                """);
     }
 
     public void AreSame_InterpolatedString_PassSameObject_ShouldPass()
@@ -45,7 +62,16 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreSame(new object(), new object(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
-        (await action.Should().ThrowAsync<Exception>()).WithMessage($"Assertion failed. Expected both values to refer to the same object.{Environment.NewLine}User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}{Environment.NewLine}{Environment.NewLine}expected: System.Object (hash: 0x*){Environment.NewLine}actual:   System.Object (hash: 0x*){Environment.NewLine}{Environment.NewLine}Assert.AreSame(new object(), new object())");
+        (await action.Should().ThrowAsync<Exception>()).WithMessage(
+            $$"""
+            Assertion failed. Expected both values to refer to the same object.
+            User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {{string.Format(null, "{0:tt}", dateTime)}}, {{string.Format(null, "{0,5:tt}", dateTime)}}
+
+            expected: System.Object (hash: 0x*)
+            actual:   System.Object (hash: 0x*)
+
+            Assert.AreSame(new object(), new object())
+            """);
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -56,21 +82,41 @@ public partial class AssertTests
     {
         Action action = () => Assert.AreSame(1, 1);
         action.Should().Throw<Exception>()
-            .WithMessage($"Assertion failed. Expected both values to refer to the same object.{Environment.NewLine}Do not pass value types to AreSame \u2014 value types are boxed on each call, so references will never be the same.{Environment.NewLine}{Environment.NewLine}Assert.AreSame(1, 1)");
+            .WithMessage(
+                """
+                Assertion failed. Expected both values to refer to the same object.
+                Do not pass value types to AreSame — value types are boxed on each call, so references will never be the same.
+
+                Assert.AreSame(1, 1)
+                """);
     }
 
     public void AreSame_StringMessage_BothAreValueTypes_ShouldFailWithSpecializedMessage()
     {
         Action action = () => Assert.AreSame(1, 1, "User-provided message");
         action.Should().Throw<Exception>()
-            .WithMessage($"Assertion failed. Expected both values to refer to the same object.{Environment.NewLine}Do not pass value types to AreSame \u2014 value types are boxed on each call, so references will never be the same.{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}Assert.AreSame(1, 1)");
+            .WithMessage(
+                """
+                Assertion failed. Expected both values to refer to the same object.
+                Do not pass value types to AreSame — value types are boxed on each call, so references will never be the same.
+                User-provided message
+
+                Assert.AreSame(1, 1)
+                """);
     }
 
     public void AreSame_InterpolatedString_BothAreValueTypes_ShouldFailWithSpecializedMessage()
     {
         Action action = () => Assert.AreSame(1, 1, $"User-provided message {new object().GetType()}");
         action.Should().Throw<Exception>()
-            .WithMessage($"Assertion failed. Expected both values to refer to the same object.{Environment.NewLine}Do not pass value types to AreSame \u2014 value types are boxed on each call, so references will never be the same.{Environment.NewLine}User-provided message System.Object{Environment.NewLine}{Environment.NewLine}Assert.AreSame(1, 1)");
+            .WithMessage(
+                """
+                Assertion failed. Expected both values to refer to the same object.
+                Do not pass value types to AreSame — value types are boxed on each call, so references will never be the same.
+                User-provided message System.Object
+
+                Assert.AreSame(1, 1)
+                """);
     }
 
     public void AreSame_ExpectedNull_ShouldFailWithNullMessage()
@@ -78,7 +124,15 @@ public partial class AssertTests
         object? expected = null;
         Action action = () => Assert.AreSame(expected, new object());
         action.Should().Throw<Exception>()
-            .WithMessage($"Assertion failed. Expected both values to refer to the same object.{Environment.NewLine}{Environment.NewLine}expected: null{Environment.NewLine}actual:   System.Object (hash: 0x*){Environment.NewLine}{Environment.NewLine}Assert.AreSame(expected, new object())");
+            .WithMessage(
+                """
+                Assertion failed. Expected both values to refer to the same object.
+
+                expected: null
+                actual:   System.Object (hash: 0x*)
+
+                Assert.AreSame(expected, new object())
+                """);
     }
 
     public void AreSame_ActualNull_ShouldFailWithNullMessage()
@@ -86,7 +140,15 @@ public partial class AssertTests
         object? actual = null;
         Action action = () => Assert.AreSame(new object(), actual);
         action.Should().Throw<Exception>()
-            .WithMessage($"Assertion failed. Expected both values to refer to the same object.{Environment.NewLine}{Environment.NewLine}expected: System.Object (hash: 0x*){Environment.NewLine}actual:   null{Environment.NewLine}{Environment.NewLine}Assert.AreSame(new object(), actual)");
+            .WithMessage(
+                """
+                Assertion failed. Expected both values to refer to the same object.
+
+                expected: System.Object (hash: 0x*)
+                actual:   null
+
+                Assert.AreSame(new object(), actual)
+                """);
     }
 
     public void AreSame_StringMessage_ExpectedNull_ShouldFailWithNullMessage()
@@ -94,7 +156,16 @@ public partial class AssertTests
         object? expected = null;
         Action action = () => Assert.AreSame(expected, new object(), "User-provided message");
         action.Should().Throw<Exception>()
-            .WithMessage($"Assertion failed. Expected both values to refer to the same object.{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}expected: null{Environment.NewLine}actual:   System.Object (hash: 0x*){Environment.NewLine}{Environment.NewLine}Assert.AreSame(expected, new object())");
+            .WithMessage(
+                """
+                Assertion failed. Expected both values to refer to the same object.
+                User-provided message
+
+                expected: null
+                actual:   System.Object (hash: 0x*)
+
+                Assert.AreSame(expected, new object())
+                """);
     }
 
     public void AreSame_StringMessage_ActualNull_ShouldFailWithNullMessage()
@@ -102,7 +173,16 @@ public partial class AssertTests
         object? actual = null;
         Action action = () => Assert.AreSame(new object(), actual, "User-provided message");
         action.Should().Throw<Exception>()
-            .WithMessage($"Assertion failed. Expected both values to refer to the same object.{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}expected: System.Object (hash: 0x*){Environment.NewLine}actual:   null{Environment.NewLine}{Environment.NewLine}Assert.AreSame(new object(), actual)");
+            .WithMessage(
+                """
+                Assertion failed. Expected both values to refer to the same object.
+                User-provided message
+
+                expected: System.Object (hash: 0x*)
+                actual:   null
+
+                Assert.AreSame(new object(), actual)
+                """);
     }
 
     public void AreSame_InterpolatedString_ExpectedNull_ShouldFailWithNullMessage()
@@ -110,7 +190,16 @@ public partial class AssertTests
         object? expected = null;
         Action action = () => Assert.AreSame(expected, new object(), $"User-provided message {new object().GetType()}");
         action.Should().Throw<Exception>()
-            .WithMessage($"Assertion failed. Expected both values to refer to the same object.{Environment.NewLine}User-provided message System.Object{Environment.NewLine}{Environment.NewLine}expected: null{Environment.NewLine}actual:   System.Object (hash: 0x*){Environment.NewLine}{Environment.NewLine}Assert.AreSame(expected, new object())");
+            .WithMessage(
+                """
+                Assertion failed. Expected both values to refer to the same object.
+                User-provided message System.Object
+
+                expected: null
+                actual:   System.Object (hash: 0x*)
+
+                Assert.AreSame(expected, new object())
+                """);
     }
 
     public void AreSame_InterpolatedString_ActualNull_ShouldFailWithNullMessage()
@@ -118,7 +207,29 @@ public partial class AssertTests
         object? actual = null;
         Action action = () => Assert.AreSame(new object(), actual, $"User-provided message {new object().GetType()}");
         action.Should().Throw<Exception>()
-            .WithMessage($"Assertion failed. Expected both values to refer to the same object.{Environment.NewLine}User-provided message System.Object{Environment.NewLine}{Environment.NewLine}expected: System.Object (hash: 0x*){Environment.NewLine}actual:   null{Environment.NewLine}{Environment.NewLine}Assert.AreSame(new object(), actual)");
+            .WithMessage(
+                """
+                Assertion failed. Expected both values to refer to the same object.
+                User-provided message System.Object
+
+                expected: System.Object (hash: 0x*)
+                actual:   null
+
+                Assert.AreSame(new object(), actual)
+                """);
+    }
+
+    public void AreSame_ShouldPopulateExpectedAndActualPayloadOnFailure()
+    {
+        object expected = new();
+        object actual = new();
+        Action action = () => Assert.AreSame(expected, actual);
+
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.ExpectedText.Should().Be($"System.Object (hash: 0x{System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(expected):X})");
+        ex.ActualText.Should().Be($"System.Object (hash: 0x{System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(actual):X})");
+        ex.Data["assert.expected"].Should().Be(ex.ExpectedText);
+        ex.Data["assert.actual"].Should().Be(ex.ActualText);
     }
 
     public void AreNotSame_PassSameObject_ShouldFail()
@@ -126,7 +237,13 @@ public partial class AssertTests
         object o = new();
         Action action = () => Assert.AreNotSame(o, o);
         action.Should().Throw<Exception>()
-            .WithMessage($"Assertion failed. Expected values to refer to different objects.{Environment.NewLine}Both variables refer to the same object.{Environment.NewLine}{Environment.NewLine}Assert.AreNotSame(o, o)");
+            .WithMessage(
+                """
+                Assertion failed. Expected values to refer to different objects.
+                Both values refer to the same object.
+
+                Assert.AreNotSame(o, o)
+                """);
     }
 
     public void AreNotSame_StringMessage_PassDifferentObject_ShouldPass()
@@ -137,7 +254,14 @@ public partial class AssertTests
         object o = new();
         Action action = () => Assert.AreNotSame(o, o, "User-provided message");
         action.Should().Throw<Exception>()
-            .WithMessage($"Assertion failed. Expected values to refer to different objects.{Environment.NewLine}Both variables refer to the same object.{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}Assert.AreNotSame(o, o)");
+            .WithMessage(
+                """
+                Assertion failed. Expected values to refer to different objects.
+                Both values refer to the same object.
+                User-provided message
+
+                Assert.AreNotSame(o, o)
+                """);
     }
 
     public void AreNotSame_InterpolatedString_PassDifferentObject_ShouldPass()
@@ -152,7 +276,14 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreNotSame(o, o, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
-        (await action.Should().ThrowAsync<Exception>()).WithMessage($"Assertion failed. Expected values to refer to different objects.{Environment.NewLine}Both variables refer to the same object.{Environment.NewLine}User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}{Environment.NewLine}{Environment.NewLine}Assert.AreNotSame(o, o)");
+        (await action.Should().ThrowAsync<Exception>()).WithMessage(
+            $$"""
+            Assertion failed. Expected values to refer to different objects.
+            Both values refer to the same object.
+            User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {{string.Format(null, "{0:tt}", dateTime)}}, {{string.Format(null, "{0,5:tt}", dateTime)}}
+
+            Assert.AreNotSame(o, o)
+            """);
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -162,7 +293,13 @@ public partial class AssertTests
         object? actual = null;
         Action action = () => Assert.AreNotSame(notExpected, actual);
         action.Should().Throw<Exception>()
-            .WithMessage($"Assertion failed. Expected values to refer to different objects.{Environment.NewLine}Both values are null.{Environment.NewLine}{Environment.NewLine}Assert.AreNotSame(notExpected, actual)");
+            .WithMessage(
+                """
+                Assertion failed. Expected values to refer to different objects.
+                Both values are null.
+
+                Assert.AreNotSame(notExpected, actual)
+                """);
     }
 
     public void AreNotSame_StringMessage_BothNull_ShouldFailWithNullMessage()
@@ -171,7 +308,14 @@ public partial class AssertTests
         object? actual = null;
         Action action = () => Assert.AreNotSame(notExpected, actual, "User-provided message");
         action.Should().Throw<Exception>()
-            .WithMessage($"Assertion failed. Expected values to refer to different objects.{Environment.NewLine}Both values are null.{Environment.NewLine}User-provided message{Environment.NewLine}{Environment.NewLine}Assert.AreNotSame(notExpected, actual)");
+            .WithMessage(
+                """
+                Assertion failed. Expected values to refer to different objects.
+                Both values are null.
+                User-provided message
+
+                Assert.AreNotSame(notExpected, actual)
+                """);
     }
 
     public void AreNotSame_InterpolatedString_BothNull_ShouldFailWithNullMessage()
@@ -180,6 +324,13 @@ public partial class AssertTests
         object? actual = null;
         Action action = () => Assert.AreNotSame(notExpected, actual, $"User-provided message {new object().GetType()}");
         action.Should().Throw<Exception>()
-            .WithMessage($"Assertion failed. Expected values to refer to different objects.{Environment.NewLine}Both values are null.{Environment.NewLine}User-provided message System.Object{Environment.NewLine}{Environment.NewLine}Assert.AreNotSame(notExpected, actual)");
+            .WithMessage(
+                """
+                Assertion failed. Expected values to refer to different objects.
+                Both values are null.
+                User-provided message System.Object
+
+                Assert.AreNotSame(notExpected, actual)
+                """);
     }
 }
