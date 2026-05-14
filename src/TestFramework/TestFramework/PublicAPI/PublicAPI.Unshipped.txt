@@ -2,3 +2,11 @@
 [MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Scope() -> System.IDisposable!
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ActualText.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ExpectedText.get -> string?
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AllItemsAreInstancesOfType(System.Collections.IEnumerable? collection, System.Type? expectedType, string? message = "", string! collectionExpression = "", string! expectedTypeExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AllItemsAreInstancesOfType<TExpected>(System.Collections.IEnumerable? collection, string? message = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AllItemsAreNotNull(System.Collections.IEnumerable? collection, string? message = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AllItemsAreNotNull<T>(System.Collections.Generic.IEnumerable<T>? collection, string? message = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AllItemsAreUnique(System.Collections.IEnumerable? collection, string? message = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AllItemsAreUnique(System.Collections.IEnumerable? collection, System.Collections.IEqualityComparer? comparer, string? message = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AllItemsAreUnique<T>(System.Collections.Generic.IEnumerable<T>? collection, string? message = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AllItemsAreUnique<T>(System.Collections.Generic.IEnumerable<T>? collection, System.Collections.Generic.IEqualityComparer<T>? comparer, string? message = "", string! collectionExpression = "") -> void
