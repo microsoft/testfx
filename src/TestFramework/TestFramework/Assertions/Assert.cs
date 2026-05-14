@@ -341,7 +341,7 @@ public sealed partial class Assert
             ? null
             : $"{methodName}({expression})";
 
-    private static readonly char[] s_lineBreakChars = ['\n', '\r'];
+    private static readonly char[] LineBreakChars = ['\n', '\r'];
 
     /// <summary>
     /// Formats a call-site expression like <c>Assert.MethodName(expression1, expression2)</c>.
@@ -355,8 +355,8 @@ public sealed partial class Assert
             return null;
         }
 
-        string arg1 = expression1.IndexOfAny(s_lineBreakChars) >= 0 ? $"<{paramName1}>" : expression1;
-        string arg2 = expression2.IndexOfAny(s_lineBreakChars) >= 0 ? $"<{paramName2}>" : expression2;
+        string arg1 = expression1.IndexOfAny(LineBreakChars) >= 0 ? $"<{paramName1}>" : expression1;
+        string arg2 = expression2.IndexOfAny(LineBreakChars) >= 0 ? $"<{paramName2}>" : expression2;
 
         return $"{methodName}({arg1}, {arg2})";
     }
