@@ -171,6 +171,12 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 ? false
                 : !_testHostControllerInfo.IsCurrentProcessTestHostController;
 
+        TestNameFormatter? testNameFormatter = null;
+        if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.TestFormatOptionKey, out string[]? testFormatArguments) && testFormatArguments is { Length: > 0 })
+        {
+            testNameFormatter = new TestNameFormatter(testFormatArguments[0]);
+        }
+
         // This is single exe run, don't show all the details of assemblies and their summaries.
         _terminalTestReporter = new TerminalTestReporter(_assemblyName, _targetFramework, _shortArchitecture, _console, _testApplicationCancellationTokenSource, new()
         {
@@ -181,6 +187,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             ShowProgress = shouldShowProgress,
             ShowStdout = showStdout,
             ShowStderr = showStderr,
+            TestNameFormatter = testNameFormatter,
         });
     }
 
@@ -423,15 +430,12 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
                     case InProgressTestNodeStateProperty:
-                        _terminalTestReporter.TestInProgress(
-                            testNodeStateChanged.TestNode.Uid.Value,
-                            testNodeStateChanged.TestNode.DisplayName);
+                        _terminalTestReporter.TestInProgress(testNodeStateChanged.TestNode);
                         break;
 
                     case ErrorTestNodeStateProperty errorState:
                         _terminalTestReporter.TestCompleted(
-                            testNodeStateChanged.TestNode.Uid.Value,
-                            testNodeStateChanged.TestNode.DisplayName,
+                            testNodeStateChanged.TestNode,
                             TestOutcome.Error,
                             duration,
                             null,
@@ -445,8 +449,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
                     case FailedTestNodeStateProperty failedState:
                         _terminalTestReporter.TestCompleted(
-                             testNodeStateChanged.TestNode.Uid.Value,
-                             testNodeStateChanged.TestNode.DisplayName,
+                             testNodeStateChanged.TestNode,
                              TestOutcome.Fail,
                              duration,
                              null,
@@ -460,8 +463,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
                     case TimeoutTestNodeStateProperty timeoutState:
                         _terminalTestReporter.TestCompleted(
-                             testNodeStateChanged.TestNode.Uid.Value,
-                             testNodeStateChanged.TestNode.DisplayName,
+                             testNodeStateChanged.TestNode,
                              TestOutcome.Timeout,
                              duration,
                              null,
@@ -477,8 +479,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                     case CancelledTestNodeStateProperty cancelledState:
 #pragma warning restore CS0618 // Type or member is obsolete
                         _terminalTestReporter.TestCompleted(
-                             testNodeStateChanged.TestNode.Uid.Value,
-                             testNodeStateChanged.TestNode.DisplayName,
+                             testNodeStateChanged.TestNode,
                              TestOutcome.Canceled,
                              duration,
                              null,
@@ -492,8 +493,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
                     case PassedTestNodeStateProperty:
                         _terminalTestReporter.TestCompleted(
-                            testNodeStateChanged.TestNode.Uid.Value,
-                            testNodeStateChanged.TestNode.DisplayName,
+                            testNodeStateChanged.TestNode,
                             outcome: TestOutcome.Passed,
                             duration: duration,
                             informativeMessage: null,
@@ -507,8 +507,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
                     case SkippedTestNodeStateProperty skippedState:
                         _terminalTestReporter.TestCompleted(
-                            testNodeStateChanged.TestNode.Uid.Value,
-                            testNodeStateChanged.TestNode.DisplayName,
+                            testNodeStateChanged.TestNode,
                             TestOutcome.Skipped,
                             duration,
                             informativeMessage: skippedState.Explanation,
@@ -521,7 +520,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                         break;
 
                     case DiscoveredTestNodeStateProperty:
-                        _terminalTestReporter.TestDiscovered(testNodeStateChanged.TestNode.DisplayName);
+                        _terminalTestReporter.TestDiscovered(testNodeStateChanged.TestNode);
                         break;
                 }
 

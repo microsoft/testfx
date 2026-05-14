@@ -40,6 +40,45 @@ public class TestDiscoveryTests : AcceptanceTestBase<TestDiscoveryTests.TestAsse
         testHostResult.AssertOutputDoesNotContain("Test2");
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task DiscoverTests_WithTestFormat_DisplayPlaceholder_ShowsDisplayNames(string currentTfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --test-format \"{display}\"", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("Test1");
+        testHostResult.AssertOutputContains("Test2");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task DiscoverTests_WithTestFormat_FullyQualifiedName_ShowsFqn(string currentTfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --test-format \"{fqn}\"", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("TestClass.Test1");
+        testHostResult.AssertOutputContains("TestClass.Test2");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task DiscoverTests_WithTestFormat_MixedPlaceholders_ShowsBoth(string currentTfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --test-format \"{display} ({fqn})\"", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("Test1 (TestClass.Test1)");
+        testHostResult.AssertOutputContains("Test2 (TestClass.Test2)");
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public string TargetAssetPath => GetAssetPath(AssetName);

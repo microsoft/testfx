@@ -390,6 +390,9 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
   <data name="PlatformCommandLineHelpOptionDescription" xml:space="preserve">
     <value>Show the command line help.</value>
   </data>
+  <data name="PlatformCommandLineTestFormatOptionDescription" xml:space="preserve">
+    <value>Format string for displaying tests. Supported placeholders: {display} (display name), {fqn} (fully qualified name), {ns} (namespace), {type} (type name), {method} (method name), {asm} (assembly name). Default is '{display}'.</value>
+  </data>
   <data name="PlatformCommandLineInfoOptionDescription" xml:space="preserve">
     <value>Display .NET test application information.</value>
   </data>

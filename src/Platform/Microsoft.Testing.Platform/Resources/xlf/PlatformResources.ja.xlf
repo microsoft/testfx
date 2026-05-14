@@ -632,6 +632,11 @@ The default is TestResults in the directory that contains the test application.<
         <target state="translated">テスト目的</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineTestFormatOptionDescription">
+        <source>Format string for displaying tests. Supported placeholders: {display} (display name), {fqn} (fully qualified name), {ns} (namespace), {type} (type name), {method} (method name), {asm} (assembly name). Default is '{display}'.</source>
+        <target state="new">Format string for displaying tests. Supported placeholders: {display} (display name), {fqn} (fully qualified name), {ns} (namespace), {type} (type name), {method} (method name), {asm} (assembly name). Default is '{display}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
         <source>Eventual parent test host controller PID.</source>
         <target state="translated">最終的な親テスト ホスト コントローラー PID。</target>

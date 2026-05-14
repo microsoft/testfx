@@ -15,9 +15,9 @@ public class HelpInfoTests : AcceptanceTestBase<HelpInfoTests.TestAssetFixture>
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
-        const string wildcardMatchPattern = $"""
+        const string wildcardMatchPattern = $$"""
 Microsoft.Testing.Platform v*
-Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
+Usage {{TestAssetFixture.NoExtensionAssetName}}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
     --config-file
@@ -58,6 +58,8 @@ Options:
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
         The default is TestResults in the directory that contains the test application.
+    --test-format
+        Format string for displaying tests. Supported placeholders: {display} (display name), {fqn} (fully qualified name), {ns} (namespace), {type} (type name), {method} (method name), {asm} (assembly name). Default is '{display}'.
     --timeout
         A global test execution timeout.
         Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
@@ -130,14 +132,14 @@ Options:
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
-        string regexMatchPattern = $"""
+        string regexMatchPattern = $$"""
 Microsoft.Testing.Platform v.+ \[.+\]
 Microsoft Testing Platform:
   Version: .+
   Dynamic Code Supported: True
   Runtime information: .+
-  {(tfm != TargetFrameworks.NetFramework[0] ? "###SKIP###" : "Runtime location: .+")}
-  Test module: .+{TestAssetFixture.NoExtensionAssetName}.*
+  {{(tfm != TargetFrameworks.NetFramework[0] ? "###SKIP###" : "Runtime location: .+")}}
+  Test module: .+{{TestAssetFixture.NoExtensionAssetName}}.*
 Built-in command line providers:
   PlatformCommandLineProvider
     Name: Platform command line provider
@@ -244,6 +246,10 @@ Built-in command line providers:
         Arity: 0\.\.1
         Hidden: True
         Description: Enable the server mode\.
+      --test-format
+        Arity: 1
+        Hidden: False
+        Description: Format string for displaying tests\. Supported placeholders: {display} \(display name\), {fqn} \(fully qualified name\), {ns} \(namespace\), {type} \(type name\), {method} \(method name\), {asm} \(assembly name\)\. Default is '{display}'\.
       --timeout
         Arity: 1
         Hidden: False

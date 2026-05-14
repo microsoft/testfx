@@ -42,6 +42,12 @@ internal sealed class TerminalTestReporterOptions
     /// Gets a value indicating when to show standard error output.
     /// </summary>
     public OutputShowMode ShowStderr { get; init; } = OutputShowMode.All;
+
+    /// <summary>
+    /// Gets the formatter to use when rendering test names. When <see langword="null"/>, the
+    /// <see cref="Extensions.Messages.TestNode.DisplayName"/> is used as-is.
+    /// </summary>
+    public TestNameFormatter? TestNameFormatter { get; init; }
 }
 
 internal enum OutputShowMode
