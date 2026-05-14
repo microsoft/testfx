@@ -41,6 +41,7 @@ public static class WellKnownEnvironmentVariables
 
         // dotnet test
         "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID",
+        "DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY",
 
         // Isolate from the skip banner in case of parent, children tests
         "TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER"
