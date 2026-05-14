@@ -12,11 +12,12 @@ using static Microsoft.Testing.Platform.Configurations.JsonConfigurationSource;
 
 namespace Microsoft.Testing.Platform.Configurations;
 
-internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo) : IConfigurationManager
+internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment) : IConfigurationManager
 {
     private readonly List<Func<IConfigurationSource>> _configurationSources = [];
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
+    private readonly IEnvironment _environment = environment;
 
     public void AddConfigurationSource(Func<IConfigurationSource> source) => _configurationSources.Add(source);
 
@@ -68,6 +69,6 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
             }
         }
 
-        return new AggregatedConfiguration(configurationProvidersArray, _testApplicationModuleInfo, _fileSystem, commandLineParseResult);
+        return new AggregatedConfiguration(configurationProvidersArray, _testApplicationModuleInfo, _fileSystem, _environment, commandLineParseResult);
     }
 }
