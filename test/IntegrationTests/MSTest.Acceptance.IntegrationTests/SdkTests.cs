@@ -362,4 +362,176 @@ namespace MSTestSdkTest
         // It's not an executable
         Assert.DoesNotContain(p => p.Value == "Exe", binLog.FindChildrenRecursive<SL.Property>(p => p.Name == "OutputType"));
     }
+
+    private const string ParallelizeAssertSourceCode = """
+#file MSTestSdk.csproj
+<Project Sdk="MSTest.Sdk/$MSTestVersion$" >
+
+  <PropertyGroup>
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+    <TargetFrameworks>$TargetFramework$</TargetFrameworks>
+    <PlatformTarget>x64</PlatformTarget>
+    <NoWarn>$(NoWarn);NU1507</NoWarn>
+    $ExtraProperties$
+  </PropertyGroup>
+
+</Project>
+
+#file UnitTest1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace MSTestSdkTest
+{
+    [TestClass]
+    public class UnitTest1
+    {
+        [TestMethod]
+        public void TestMethod1()
+        {
+        }
+    }
+}
+""";
+
+    [TestMethod]
+    public async Task MSTestParallelizeScope_ClassLevel_EmitsParallelizeAttribute()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            ParallelizeAssertSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", "<MSTestParallelizeScope>ClassLevel</MSTestParallelizeScope>"));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(0, 1, 0);
+        testHostResult.AssertOutputMatchesRegex(@"Test Parallelization enabled .* \(Workers: \d+, Scope: ClassLevel\)");
+    }
+
+    [TestMethod]
+    public async Task MSTestParallelizeScope_MethodLevelWithWorkers_EmitsParallelizeAttribute()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            ParallelizeAssertSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", """
+                <MSTestParallelizeScope>MethodLevel</MSTestParallelizeScope>
+                <MSTestParallelizeWorkers>3</MSTestParallelizeWorkers>
+                """));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(0, 1, 0);
+        testHostResult.AssertOutputContains("Test Parallelization enabled");
+        testHostResult.AssertOutputContains("(Workers: 3, Scope: MethodLevel)");
+    }
+
+    [TestMethod]
+    public async Task MSTestParallelizeWorkers_Only_EmitsParallelizeAttributeWithDefaultScope()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            ParallelizeAssertSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", "<MSTestParallelizeWorkers>2</MSTestParallelizeWorkers>"));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(0, 1, 0);
+
+        // ParallelizeAttribute defaults Scope to ClassLevel when only Workers is provided.
+        testHostResult.AssertOutputContains("Test Parallelization enabled");
+        testHostResult.AssertOutputContains("(Workers: 2, Scope: ClassLevel)");
+    }
+
+    [TestMethod]
+    public async Task MSTestParallelizeScope_None_EmitsDoNotParallelizeAttribute()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            ParallelizeAssertSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", "<MSTestParallelizeScope>None</MSTestParallelizeScope>"));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(0, 1, 0);
+
+        // DoNotParallelize disables parallelization entirely.
+        testHostResult.AssertOutputDoesNotContain("Test Parallelization enabled");
+    }
+
+    [TestMethod]
+    public async Task MSTestParallelizeScope_InvalidValue_FailsBuild()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", "<MSTestParallelizeScope>NotAValidValue</MSTestParallelizeScope>"));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath}",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(1);
+        compilationResult.AssertOutputContains("Invalid value 'NotAValidValue' for property MSTestParallelizeScope. Valid values are 'None', 'ClassLevel' and 'MethodLevel'.");
+    }
+
+    [TestMethod]
+    public async Task MSTestParallelizeWorkers_NonInteger_FailsBuild()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", "<MSTestParallelizeWorkers>abc</MSTestParallelizeWorkers>"));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath}",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(1);
+        compilationResult.AssertOutputContains("Invalid value 'abc' for property MSTestParallelizeWorkers. The value must be a non-negative integer.");
+    }
+
+    [TestMethod]
+    public async Task MSTestParallelizeScope_None_With_Workers_FailsBuild()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", """
+                <MSTestParallelizeScope>None</MSTestParallelizeScope>
+                <MSTestParallelizeWorkers>2</MSTestParallelizeWorkers>
+                """));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath}",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(1);
+        compilationResult.AssertOutputContains("Property MSTestParallelizeWorkers cannot be set when MSTestParallelizeScope is 'None'.");
+    }
 }

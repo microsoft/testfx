@@ -13,6 +13,9 @@
   <!-- Import VSTest.targets -->
   <Import Project="$(MSBuildThisFileDirectory)VSTest/VSTest.targets" Condition=" '$(UseVSTest)' == 'true' " />
 
+  <!-- Import Parallelize.targets (applies to both runners) -->
+  <Import Project="$(MSBuildThisFileDirectory)Parallelize.targets" />
+
   <!-- Implicit bottom import -->
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 </Project>
