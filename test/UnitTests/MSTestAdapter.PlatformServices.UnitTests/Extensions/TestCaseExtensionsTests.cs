@@ -72,7 +72,7 @@ public class TestCaseExtensionsTests : TestContainer
     public void ToUnitTestElementShouldParseLegacyClosedGenericFullyQualifiedNameWhenManagedTypeIsOpenGeneric()
     {
         Type closedType = typeof(DummyGenericTestClass<int>);
-        string methodName = nameof(DummyGenericTestClass<int>.GenericTestMethod);
+        string methodName = nameof(DummyGenericTestClass<>.GenericTestMethod);
         TestCase testCase = new($"{closedType.FullName}.{methodName}", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!);
         testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, closedType.FullName);
         testCase.SetPropertyValue(TestCaseExtensions.ManagedTypeProperty, typeof(DummyGenericTestClass<>).FullName);

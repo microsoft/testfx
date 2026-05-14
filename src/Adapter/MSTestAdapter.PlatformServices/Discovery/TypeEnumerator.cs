@@ -124,7 +124,11 @@ internal class TypeEnumerator
         // null if the current instance represents a generic type parameter.
         DebugEx.Assert(_type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
 
-        ManagedNameHelper.GetManagedNameAndHierarchy(method, out string managedType, out string managedMethod, out string?[] hierarchyValues);
+        // Note: We pass _type.FullName (the closed-generic CLR name) as FullClassName because TypeCache.LoadType
+        // calls assembly.GetType(FullClassName) which requires the closed-generic form to instantiate the type.
+        // The managed type name (open-generic form, used for VSTest ManagedType property) is derived from
+        // FullClassName by TestMethod.ManagedTypeName via stripping the generic argument list.
+        ManagedNameHelper.GetManagedNameAndHierarchy(method, out _, out string managedMethod, out string?[] hierarchyValues);
         ParameterInfo[] parameters = method.GetParameters();
         var testMethod = new TestMethod(managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, null,
             parameters.Length == 0 ? string.Empty : string.Join(",", Array.ConvertAll(parameters, static p => p.ParameterType.ToString())))

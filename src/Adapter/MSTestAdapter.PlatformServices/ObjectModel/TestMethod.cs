@@ -108,7 +108,7 @@ internal sealed class TestMethod : ITestMethod
 
     private static string GetManagedTypeName(string fullClassName)
     {
-        int genericArgumentsStart = fullClassName.IndexOf('[', StringComparison.Ordinal);
+        int genericArgumentsStart = fullClassName.IndexOf('[');
         return genericArgumentsStart >= 0
             ? fullClassName[..genericArgumentsStart]
             : fullClassName;
