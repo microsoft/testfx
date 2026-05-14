@@ -126,7 +126,7 @@ Acknowledge in the summary if relevant, but do not make code changes.
 ### Common fix categories
 
 | Review finding | What to do |
-|---|---|
+| --- | --- |
 | Missing `ConfigureAwait(false)` | Add it to every `await` in library code |
 | `init` accessor on new public API | Change to `set` or use constructor |
 | Missing `PublicAPI.Unshipped.txt` entry | Add the API signature |
@@ -151,7 +151,7 @@ After applying all fixes:
 Use the `push_to_pull_request_branch` safe output tool to push all edited files to the
 PR branch. Provide a commit message in this format:
 
-```
+```text
 Address review feedback
 
 Applied fixes for N review comments from the expert-reviewer.
@@ -168,14 +168,17 @@ Post a comment on the PR summarizing what was done. Use this format:
 > 🔧 **Autofix applied** — assessed N review comment(s).
 >
 > **Applied (M):**
+>
 > - `path/to/file.cs`: Brief description of change
 > - `path/to/other.cs`: Brief description of change
 >
 > **Skipped with explanation (K):**
-> - *"Consider using Span<T> here"* — Skipped: not applicable on netstandard2.0 TFM without polyfill.
+>
+> - *"Consider using Span\<T> here"* — Skipped: not applicable on netstandard2.0 TFM without polyfill.
 > - *"Nit: rename variable"* — Skipped: name is consistent with surrounding code.
 >
 > **No action needed (J):**
+>
 > - Informational / praise comments acknowledged.
 >
 > A re-review will be triggered automatically if code was pushed.
