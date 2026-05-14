@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Xml.Linq;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
@@ -34,6 +36,38 @@ Out of process file artifacts produced:
 
         // number of test is the third param because we have two different test code with different number of tests.
         await AssertTrxReportWasGeneratedAsync(testHostResult, trxPathPattern, 1);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Trx_WhenReportTrxAndResultsDirectoryAreSpecifiedWithArtifact_ArtifactIsCopiedUnderRelativeResultsDirectory(string tfm)
+    {
+        string fileName = Guid.NewGuid().ToString("N");
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
+            new() { ["WITH_ARTIFACT"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+
+        string[] trxFiles = Directory.GetFiles(testResultsPath, $"{fileName}.trx", SearchOption.AllDirectories);
+        Assert.HasCount(1, trxFiles, $"Expected exactly one trx file but found {trxFiles.Length}: {string.Join(", ", trxFiles)}");
+
+        var trxDocument = XDocument.Parse(File.ReadAllText(trxFiles[0]));
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement unitTestResult = trxDocument.Descendants(ns + "UnitTestResult").Single();
+        string relativeResultsDirectory = unitTestResult.Attribute("relativeResultsDirectory")!.Value;
+        string resultFilePath = unitTestResult.Descendants(ns + "ResultFile").Single().Attribute("path")!.Value;
+        string runDeploymentRoot = trxDocument.Descendants(ns + "Deployment").Single().Attribute("runDeploymentRoot")!.Value;
+        string normalizedResultFilePath = resultFilePath.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+
+        string copiedArtifactPath = Path.Combine(testResultsPath, runDeploymentRoot, "In", relativeResultsDirectory, normalizedResultFilePath);
+        Assert.IsTrue(File.Exists(copiedArtifactPath), $"Expected copied artifact at '{copiedArtifactPath}' but it was not found.");
+
+        string legacyArtifactPath = Path.Combine(testResultsPath, runDeploymentRoot, "In", normalizedResultFilePath);
+        Assert.IsFalse(File.Exists(legacyArtifactPath), $"Artifact was copied to legacy path '{legacyArtifactPath}'.");
     }
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
@@ -252,8 +286,16 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         }
 
         var testMethodIdentifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "Test", 0, Array.Empty<string>(), string.Empty);
+        PropertyBag properties = new(PassedTestNodeStateProperty.CachedInstance, testMethodIdentifier);
+        if (Environment.GetEnvironmentVariable("WITH_ARTIFACT") == "1")
+        {
+            string artifactPath = Path.Combine(Directory.GetCurrentDirectory(), "test-artifact.txt");
+            File.WriteAllText(artifactPath, "artifact");
+            properties.Add(new FileArtifactProperty(new FileInfo(artifactPath), "TestMethod", "description"));
+        }
+
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "0", DisplayName = "Test", Properties = new(PassedTestNodeStateProperty.CachedInstance, testMethodIdentifier) }));
+            new TestNode() { Uid = "0", DisplayName = "Test", Properties = properties }));
         context.Complete();
     }
 }
