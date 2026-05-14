@@ -52,14 +52,14 @@ internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
         bool isCrashReportSet = commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
         bool isCrashReportOnlySet = commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOnlyOptionName);
 
-        if (isCrashReportSet && !isCrashDumpSet)
-        {
-            return ValidationResult.InvalidTask(CrashDumpResources.CrashReportRequiresCrashDumpErrorMessage);
-        }
-
         if (isCrashReportOnlySet && (isCrashDumpSet || isCrashReportSet))
         {
             return ValidationResult.InvalidTask(CrashDumpResources.CrashReportOnlyCannotBeCombinedErrorMessage);
+        }
+
+        if (isCrashReportSet && !isCrashDumpSet)
+        {
+            return ValidationResult.InvalidTask(CrashDumpResources.CrashReportRequiresCrashDumpErrorMessage);
         }
 
         // No problem found

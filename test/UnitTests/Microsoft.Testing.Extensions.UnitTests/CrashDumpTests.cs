@@ -76,13 +76,15 @@ public sealed class CrashDumpTests
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
 
+    [DataRow(CrashDumpCommandLineOptions.CrashDumpOptionName)]
+    [DataRow(CrashDumpCommandLineOptions.CrashReportOptionName)]
     [TestMethod]
-    public async Task CrashReportOnly_Cannot_Be_Combined_With_Other_Crash_Options()
+    public async Task CrashReportOnly_Cannot_Be_Combined_With_Other_Crash_Options(string otherCrashOption)
     {
         var provider = new CrashDumpCommandLineProvider();
         var options = new Dictionary<string, string[]>
         {
-            { CrashDumpCommandLineOptions.CrashDumpOptionName, [] },
+            { otherCrashOption, [] },
             { CrashDumpCommandLineOptions.CrashReportOnlyOptionName, [] },
         };
 

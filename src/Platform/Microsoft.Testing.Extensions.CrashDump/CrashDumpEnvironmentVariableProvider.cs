@@ -68,7 +68,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         bool crashReportEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
         bool crashReportOnlyEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOnlyOptionName);
 
-        if (crashDumpEnabled || crashReportOnlyEnabled)
+        if (crashDumpEnabled || crashReportEnabled || crashReportOnlyEnabled)
         {
             foreach (string prefix in Prefixes)
             {
@@ -167,58 +167,23 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 #else
         StringBuilder errors = new();
         if (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) ||
+            _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName) ||
             _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOnlyOptionName))
         {
-            foreach (string prefix in Prefixes)
-            {
-                if (!environmentVariables.TryGetVariable($"{prefix}{EnableMiniDumpVariable}", out OwnedEnvironmentVariable? enableMiniDump)
-                || enableMiniDump.Value != EnabledValue)
-                {
-                    AddError(errors, $"{prefix}{EnableMiniDumpVariable}", EnabledValue, enableMiniDump?.Value);
-                }
-            }
+            ValidateBothPrefixes(EnableMiniDumpVariable, EnabledValue);
         }
 
-        foreach (string prefix in Prefixes)
-        {
-            if (!environmentVariables.TryGetVariable($"{prefix}{CreateDumpDiagnosticsVariable}", out OwnedEnvironmentVariable? enableMiniDump)
-            || enableMiniDump.Value != EnabledValue)
-            {
-                AddError(errors, $"{prefix}{CreateDumpDiagnosticsVariable}", EnabledValue, enableMiniDump?.Value);
-            }
-        }
-
-        foreach (string prefix in Prefixes)
-        {
-            if (!environmentVariables.TryGetVariable($"{prefix}{CreateDumpVerboseDiagnosticsVariable}", out OwnedEnvironmentVariable? enableMiniDump)
-            || enableMiniDump.Value != EnabledValue)
-            {
-                AddError(errors, $"{prefix}{CreateDumpVerboseDiagnosticsVariable}", EnabledValue, enableMiniDump?.Value);
-            }
-        }
+        ValidateBothPrefixes(CreateDumpDiagnosticsVariable, EnabledValue);
+        ValidateBothPrefixes(CreateDumpVerboseDiagnosticsVariable, EnabledValue);
 
         if (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName))
         {
-            foreach (string prefix in Prefixes)
-            {
-                if (!environmentVariables.TryGetVariable($"{prefix}{EnableCrashReportVariable}", out OwnedEnvironmentVariable? enableCrashReport)
-                || enableCrashReport.Value != EnabledValue)
-                {
-                    AddError(errors, $"{prefix}{EnableCrashReportVariable}", EnabledValue, enableCrashReport?.Value);
-                }
-            }
+            ValidateBothPrefixes(EnableCrashReportVariable, EnabledValue);
         }
 
         if (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOnlyOptionName))
         {
-            foreach (string prefix in Prefixes)
-            {
-                if (!environmentVariables.TryGetVariable($"{prefix}{EnableCrashReportOnlyVariable}", out OwnedEnvironmentVariable? enableCrashReportOnly)
-                || enableCrashReportOnly.Value != EnabledValue)
-                {
-                    AddError(errors, $"{prefix}{EnableCrashReportOnlyVariable}", EnabledValue, enableCrashReportOnly?.Value);
-                }
-            }
+            ValidateBothPrefixes(EnableCrashReportOnlyVariable, EnabledValue);
         }
 
         foreach (string prefix in Prefixes)
@@ -259,6 +224,18 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         {
             string actualValueString = actualValue ?? "<null>";
             errors.AppendLine(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpInvalidEnvironmentVariableValueErrorMessage, variableName, expectedValue, actualValueString));
+        }
+
+        void ValidateBothPrefixes(string variableName, string expectedValue)
+        {
+            foreach (string prefix in Prefixes)
+            {
+                if (!environmentVariables.TryGetVariable($"{prefix}{variableName}", out OwnedEnvironmentVariable? variable)
+                    || variable.Value != expectedValue)
+                {
+                    AddError(errors, $"{prefix}{variableName}", expectedValue, variable?.Value);
+                }
+            }
         }
 #endif
     }

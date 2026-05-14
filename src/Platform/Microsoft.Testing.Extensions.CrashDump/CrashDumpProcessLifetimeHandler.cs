@@ -14,6 +14,9 @@ namespace Microsoft.Testing.Extensions.Diagnostics;
 
 internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetimeHandler, IDataProducer, IOutputDeviceDataProducer
 {
+    private const string CrashReportFileExtension = ".crashreport.json";
+    private const string CrashReportFileSearchPattern = "*" + CrashReportFileExtension;
+
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IMessageBus _messageBus;
     private readonly IOutputDevice _outputDisplay;
@@ -99,15 +102,15 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
 
         if (generateCrashReport)
         {
-            string expectedCrashReportFile = $"{expectedDumpFile}.crashreport.json";
+            string expectedCrashReportFile = $"{expectedDumpFile}{CrashReportFileExtension}";
             if (File.Exists(expectedCrashReportFile))
             {
                 await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(expectedCrashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
             }
             else
             {
-                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashReportFile, expectedCrashReportFile)), cancellationToken).ConfigureAwait(false);
-                foreach (string crashReportFile in Directory.GetFiles(Path.GetDirectoryName(expectedCrashReportFile)!, "*.crashreport.json"))
+                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashReportFile, expectedCrashReportFile, CrashReportFileSearchPattern)), cancellationToken).ConfigureAwait(false);
+                foreach (string crashReportFile in Directory.GetFiles(Path.GetDirectoryName(expectedCrashReportFile)!, CrashReportFileSearchPattern))
                 {
                     await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(crashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
                 }

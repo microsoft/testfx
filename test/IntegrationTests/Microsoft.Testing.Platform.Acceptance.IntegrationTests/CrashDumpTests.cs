@@ -57,7 +57,7 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
     }
 
     [TestMethod]
-    public async Task CrashReportOnly_CustomDumpName_CreateOnlyCrashReport()
+    public async Task CrashReportOnly_WithCustomDumpFilename_CreatesOnlyCrashReport()
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
@@ -90,7 +90,7 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashreport --results-directory {resultDirectory}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("You specified '--crashreport' but did not enable crash dumps, add --crashdump to the command line");
+        testHostResult.AssertOutputContains("You specified '--crashreport' but did not enable crash dumps, add '--crashdump' to the command line");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()

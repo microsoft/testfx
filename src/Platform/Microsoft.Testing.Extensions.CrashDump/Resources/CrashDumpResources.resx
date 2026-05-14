@@ -121,7 +121,7 @@
     <value>Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</value>
   </data>
   <data name="CannotFindExpectedCrashReportFile" xml:space="preserve">
-    <value>Expected crash report file '{0}' could not be found, all files matching the '*.crashreport.json' pattern will be copied to the result folder</value>
+    <value>Expected crash report file '{0}' could not be found, all files matching the '{1}' pattern will be copied to the result folder</value>
   </data>
   <data name="CrashDumpArtifactDescription" xml:space="preserve">
     <value>The testhost process crash dump file</value>
@@ -163,7 +163,7 @@
     <value>[net6.0+ only] Generate a crash report file if the test process crashes. Requires '--crashdump'.</value>
   </data>
   <data name="CrashReportRequiresCrashDumpErrorMessage" xml:space="preserve">
-    <value>You specified '--crashreport' but did not enable crash dumps, add --crashdump to the command line</value>
+    <value>You specified '--crashreport' but did not enable crash dumps, add '--crashdump' to the command line</value>
   </data>
   <data name="CrashDumpProcessCrashedDumpAndReportFileCreated" xml:space="preserve">
     <value>Test host process with PID '{0}' crashed, a dump file and crash report were generated</value>

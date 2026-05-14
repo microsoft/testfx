@@ -8,8 +8,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CannotFindExpectedCrashReportFile">
-        <source>Expected crash report file '{0}' could not be found, all files matching the '*.crashreport.json' pattern will be copied to the result folder</source>
-        <target state="new">Expected crash report file '{0}' could not be found, all files matching the '*.crashreport.json' pattern will be copied to the result folder</target>
+        <source>Expected crash report file '{0}' could not be found, all files matching the '{1}' pattern will be copied to the result folder</source>
+        <target state="new">Expected crash report file '{0}' could not be found, all files matching the '{1}' pattern will be copied to the result folder</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpArtifactDescription">
@@ -112,8 +112,8 @@ Weitere Informationen finden Sie unter https://learn.microsoft.com/dotnet/core/d
         <note />
       </trans-unit>
       <trans-unit id="CrashReportRequiresCrashDumpErrorMessage">
-        <source>You specified '--crashreport' but did not enable crash dumps, add --crashdump to the command line</source>
-        <target state="new">You specified '--crashreport' but did not enable crash dumps, add --crashdump to the command line</target>
+        <source>You specified '--crashreport' but did not enable crash dumps, add '--crashdump' to the command line</source>
+        <target state="new">You specified '--crashreport' but did not enable crash dumps, add '--crashdump' to the command line</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
