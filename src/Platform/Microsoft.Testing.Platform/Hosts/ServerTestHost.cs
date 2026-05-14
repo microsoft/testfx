@@ -29,7 +29,6 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
     private readonly IMessageHandlerFactory _messageHandlerFactory;
     private readonly TestFrameworkManager _testFrameworkManager;
     private readonly TestHostManager _testSessionManager;
-    private readonly ServerTelemetry _telemetryService;
     private readonly IAsyncMonitor _messageMonitor;
     private readonly IEnvironment _environment;
     private readonly ILogger<ServerTestHost> _logger;
@@ -66,7 +65,6 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
         _messageHandlerFactory = messageHandlerFactory;
         _testFrameworkManager = testFrameworkManager;
         _testSessionManager = testSessionManager;
-        _telemetryService = new ServerTelemetry(this);
         _clientToServerRequests = new();
         _serverToClientRequests = new();
 
@@ -571,7 +569,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
                     requestExecuteStart, (DateTimeOffset)requestExecuteStop,
                     testNodeUpdateProcessor.GetTestNodeStatistics().TotalDiscoveredTests);
 
-        await _telemetryService.LogEventAsync(isRunRequest ? TelemetryEvents.TestsRunEventName : TelemetryEvents.TestsDiscoveryEventName, metadata, cancellationToken).ConfigureAwait(false);
+        await ServiceProvider.GetTelemetryCollector().LogEventAsync(isRunRequest ? TelemetryEvents.TestsRunEventName : TelemetryEvents.TestsDiscoveryEventName, metadata, cancellationToken).ConfigureAwait(false);
 
         return isRunRequest
             ? new RunResponseArgs([.. testNodeUpdateProcessor.Artifacts])

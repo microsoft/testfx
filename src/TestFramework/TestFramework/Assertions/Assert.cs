@@ -176,6 +176,26 @@ public sealed partial class Assert
         throw CreateAssertFailedException(structuredMessage);
     }
 
+    /// <summary>
+    /// Formats a call-site expression for display at the bottom of a structured assertion message.
+    /// When the expression is empty, the call-site is omitted. When the expression contains newlines,
+    /// it is replaced with a <c>&lt;paramName&gt;</c> placeholder.
+    /// </summary>
+    internal static string? FormatCallSiteExpression(string assertionMethodName, string expression, string paramName)
+    {
+        if (string.IsNullOrWhiteSpace(expression))
+        {
+            return null;
+        }
+
+        // If expression contains newlines (multiline constant), replace with placeholder per RFC
+        string arg = expression.IndexOf('\n') >= 0 || expression.IndexOf('\r') >= 0
+            ? $"<{paramName}>"
+            : expression;
+
+        return $"{assertionMethodName}({arg})";
+    }
+
     private static string FormatAssertionFailed(string assertionName, string? message)
     {
         string failedMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName);
@@ -239,9 +259,6 @@ public sealed partial class Assert
             ? callerArgMessagePart
             : $"{callerArgMessagePart} {userMessage}";
     }
-
-    private static string BuildUserMessageForConditionExpression(string? format, string conditionExpression)
-        => BuildUserMessageForSingleExpression(format, conditionExpression, "condition");
 
     private static string BuildUserMessageForValueExpression(string? format, string valueExpression)
         => BuildUserMessageForSingleExpression(format, valueExpression, "value");

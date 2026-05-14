@@ -49,7 +49,14 @@ public partial class AssertTests
 
         innerException.InnerExceptions.Should().HaveCount(2);
         innerException.InnerExceptions[0].Message.Should().Be("Assert.AreEqual failed. Expected:<1>. Actual:<2>. 'expected' expression: '1', 'actual' expression: '2'.");
-        innerException.InnerExceptions[1].Message.Should().Be("Assert.IsTrue failed. 'condition' expression: 'false'.");
+        innerException.InnerExceptions[1].Message.Should().Be(
+            """
+            Assertion failed. Expected condition to be true.
+
+            actual: false
+
+            Assert.IsTrue(false)
+            """);
     }
 
     public void Scope_AfterDispose_AssertionsThrowNormally()
@@ -137,7 +144,14 @@ public partial class AssertTests
             .Which;
 
         innerException.InnerExceptions.Should().HaveCount(2);
-        innerException.InnerExceptions[0].Message.Should().Be("Assert.IsNotNull failed. 'value' expression: 'value'.");
+        innerException.InnerExceptions[0].Message.Should().Be(
+            """
+            Assertion failed. Expected value to not be null.
+
+            actual: null
+
+            Assert.IsNotNull(value)
+            """);
         innerException.InnerExceptions[1].Message.Should().Contain("Assert.AreEqual failed.");
     }
 
