@@ -315,6 +315,52 @@ public partial class AssertTests : TestContainer
                 """);
     }
 
+    public void AreNotEqual_PopulatesExpectedAndActualTextWithNotPrefix()
+    {
+        Action action = () => Assert.AreNotEqual(0, 0);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.ExpectedText.Should().Be("not 0");
+        ex.ActualText.Should().Be("0");
+        ex.Data["assert.expected"].Should().Be("not 0");
+        ex.Data["assert.actual"].Should().Be("0");
+    }
+
+    public void AreEqual_MultilineExpectedExpression_UsesPlaceholderInCallSite()
+    {
+        Action action = () => Assert.AreEqual(
+            """
+            line1
+            line2
+            """,
+            "different");
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().EndWith("Assert.AreEqual(<expected>, \"different\")");
+    }
+
+    public void AreEqual_MultilineActualExpression_UsesPlaceholderInCallSite()
+    {
+        Action action = () => Assert.AreEqual(
+            "different",
+            """
+            line1
+            line2
+            """);
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().EndWith("Assert.AreEqual(\"different\", <actual>)");
+    }
+
+    public void AreNotEqual_MultilineNotExpectedExpression_UsesPlaceholderInCallSite()
+    {
+        string value = "x";
+        Action action = () => Assert.AreNotEqual(
+            """
+            x
+            """,
+            value);
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().EndWith("Assert.AreNotEqual(<notExpected>, value)");
+    }
+
     public void AreEqualWithTypeOverridingEqualsShouldWork()
     {
         var a = new TypeOverridesEquals();

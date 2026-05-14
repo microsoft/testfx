@@ -249,9 +249,9 @@ public sealed partial class Assert
             summary = FrameworkMessages.AreEqualDifferentTypesFailedSummary;
             evidence = EvidenceBlock.Create()
                 .AddLine("expected:", expectedRendered)
-                .AddLine("expected type:", expected.GetType().FullName!)
+                .AddLine("expected type:", expected.GetType().FullName ?? expected.GetType().Name)
                 .AddLine("actual:", actualRendered)
-                .AddLine("actual type:", actual.GetType().FullName!);
+                .AddLine("actual type:", actual.GetType().FullName ?? actual.GetType().Name);
         }
         else if (expected is string expectedString && actual is string actualString)
         {
