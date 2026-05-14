@@ -43,10 +43,11 @@
 2. **[In main]** Eliminate LINQ iterator allocations in TryUnfoldITestDataSources
 3. **[Merged PR #7927 - 2026-04-30]** GetTestCategories (6 iterators→0) + WorkItemAttribute double-pass + param string LINQ iterator - fixes issue #7868
 4. **[Deprioritized - no profiler evidence]** Avoid yield iterator in TryExecuteDataSourceBasedTestsAsync + GetRetryAttribute (issue #7904 - branch perf-assist/avoid-yield-iterator-in-test-execution-hot-path can be discarded)
-5. **[MERGED PR #8095 - 2026-05-13]** IsIgnored() LINQ allocation elimination. Closes #7992, #7993, #8000, #8016, #8028, #8044, #8055, #8067, #8075.
+5. **[MERGED PR #8095 - 2026-05-13]** IsIgnored() LINQ allocation elimination. Issue #7992 still open (pending close by maintainer).
 6. TreeNodeFilter MatchFilterPattern: LINQ closure allocations - covered by Efficiency Improver (#7947, #7974, #8035)
 7. SynchronizedStringBuilder lock overhead - LOW PRIORITY, requires profiler evidence, may be intentionally thread-safe
 8. Scanned Execution/, Discovery/, Helpers/ on 2026-05-06 - no new high-confidence targets beyond backlog items
+9. Scanned Platform/ briefly on 2026-05-14 - LINQ usage found but in non-hot-path areas (CommandLine, ServerMode) - needs deeper analysis
 
 ## Completed Work
 - Branch: perf-assist/reduce-allocations-discovery-execution (changes applied to main by maintainer, issue #7815 still open - suggest closing)
@@ -54,27 +55,27 @@
 - Branch: perf-assist/reduce-linq-iterators-get-test-categories-d392d71fd502f8cc → PR #7927 MERGED 2026-04-30 by Evangelink
 - Branch: perf-assist/avoid-yield-iterator-in-test-execution-hot-path (issue #7904 - DEPRIORITIZED)
 - IsIgnored patches: PR #8095 MERGED 2026-05-13 by Evangelink
-  - Duplicate issues to close (not yet closed): #7992, #7993, #8000, #8016, #8028, #8044, #8055, #8067, #8075
-- Commented on #6326 (Track perf over time) - suggested allocation scenarios + BDN thresholds
+  - Duplicate issue still open: #7992 (pending close by maintainer)
 
 ## Monthly Activity
 - April 2026 issue #7816: CLOSED 2026-05-01
-- May 2026 issue #7981: OPEN
+- May 2026 issue #7981: CLOSED 2026-05-13 by Evangelink as "not_planned"
+- IMPORTANT: Do NOT create a new monthly activity issue - maintainer closed #7981 as not_planned on 2026-05-13
 
 ## Last Run
-- 2026-05-13: Task 4/2 (PR #8095 merged!), Task 7 (monthly summary updated)
-- 2026-05-12: Task 4 (fixed Windows CI in PR #8095 - ConfigureAwait(true) restored + BOM restored), Task 7 (monthly summary updated)
-- 2026-05-10: Tasks 4 (no open PRs), 6 (assessed perf runner - all Windows-only; DotnetTrace step cross-platform-ready), 7 (monthly summary updated)
-- 2026-05-09: Tasks 3 (IsIgnored 9th attempt, SA1316 fixed, patch in #7992 comment), 5 (posted patch to #7992), 7 (monthly summary updated)
+- 2026-05-14: Task 2/5 (scanned Platform/ briefly - no new high-confidence targets), noop (monthly issue closed by maintainer)
+- 2026-05-13: Task 4/2 (PR #8095 merged!), Task 7 (monthly summary updated - but issue subsequently closed by Evangelink)
+- 2026-05-12: Task 4 (fixed Windows CI in PR #8095), Task 7 (monthly summary updated)
 
 ## Round Robin Status
-- 2026-05-12: Tasks 4, 7 done
 - 2026-05-13: Tasks 4, 2, 7 done
-- Next run: should focus on Tasks 1, 3, 5 (find and implement new optimization targets)
+- 2026-05-14: Tasks 2, 5 attempted; noop (no new high-confidence targets)
+- Next run: consider Task 6 (assess MTP Platform code for deeper LINQ analysis), Task 3 if new target found
 
 ## IMPORTANT NOTES FOR FUTURE RUNS
-- **DO NOT create more IsIgnored issues/PRs** - PR #8095 is MERGED. All 9 duplicate issues can be closed.
+- **DO NOT create more IsIgnored issues/PRs** - PR #8095 is MERGED.
 - **DO NOT propose BDN infrastructure** - rejected by Evangelink in #7959 (closed as not_planned)
+- **DO NOT create Monthly Activity tracking issues** - maintainer closed #7981 as not_planned 2026-05-13
 - **DO NOT change ConfigureAwait(true) in TestMethodInfo.Execution.cs** - intentional for WinUI UI thread requirement
 - If stuck, look at NEW opportunities in test execution/discovery code using profiler evidence
 - The maintainers want profiler evidence before accepting allocation-optimization issues
