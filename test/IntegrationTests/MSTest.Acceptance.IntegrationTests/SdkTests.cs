@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -363,7 +363,7 @@ namespace MSTestSdkTest
         Assert.DoesNotContain(p => p.Value == "Exe", binLog.FindChildrenRecursive<SL.Property>(p => p.Name == "OutputType"));
     }
 
-    private const string ParallelizeAssertSourceCode = """
+    private const string ParallelizeAssetSourceCode = """
 #file MSTestSdk.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$" >
 
@@ -398,7 +398,7 @@ namespace MSTestSdkTest
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
-            ParallelizeAssertSourceCode
+            ParallelizeAssetSourceCode
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
             .PatchCodeWithReplace("$ExtraProperties$", "<MSTestParallelizeScope>ClassLevel</MSTestParallelizeScope>"));
@@ -417,7 +417,7 @@ namespace MSTestSdkTest
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
-            ParallelizeAssertSourceCode
+            ParallelizeAssetSourceCode
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
             .PatchCodeWithReplace("$ExtraProperties$", """
@@ -440,7 +440,7 @@ namespace MSTestSdkTest
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
-            ParallelizeAssertSourceCode
+            ParallelizeAssetSourceCode
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
             .PatchCodeWithReplace("$ExtraProperties$", "<MSTestParallelizeWorkers>2</MSTestParallelizeWorkers>"));
@@ -462,7 +462,7 @@ namespace MSTestSdkTest
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
-            ParallelizeAssertSourceCode
+            ParallelizeAssetSourceCode
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
             .PatchCodeWithReplace("$ExtraProperties$", "<MSTestParallelizeScope>None</MSTestParallelizeScope>"));
