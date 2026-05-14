@@ -81,8 +81,10 @@ internal sealed class EvidenceBlock
 
                 sb.Append(Environment.NewLine);
 
-                // Skip the continuation indent when the line break is the last thing in the value to avoid trailing whitespace.
-                if (next < len)
+                // Skip the continuation indent when the line break is the last thing in the value, or when the next
+                // character is itself another line break. The latter avoids emitting an indent on a line that is
+                // intentionally blank, which would leave whitespace-only continuation lines.
+                if (next < len && value[next] is not '\n' and not '\r')
                 {
                     sb.Append(continuationIndent);
                 }
