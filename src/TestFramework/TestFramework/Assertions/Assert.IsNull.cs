@@ -158,6 +158,7 @@ public sealed partial class Assert
 
     private static bool IsNullFailing(object? value) => value is not null;
 
+    [DoesNotReturn]
     private static void ReportAssertIsNullFailed(object? value, string? message, string valueExpression)
     {
         string actualValue = AssertionValueRenderer.RenderValue(value);
@@ -219,7 +220,7 @@ public sealed partial class Assert
         StructuredAssertionMessage structured = new(FrameworkMessages.IsNotNullFailedSummary);
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
-        structured.WithExpectedAndActual("not null", actualValue);
+        structured.WithExpectedAndActual("<not-null>", actualValue);
         structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotNull", valueExpression, paramName));
 
         ReportAssertFailed(structured);
