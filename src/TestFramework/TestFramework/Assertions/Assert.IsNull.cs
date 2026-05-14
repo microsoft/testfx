@@ -91,7 +91,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                ReportAssertIsNotNullFailed(_builder.ToString(), valueExpression);
+                ReportAssertIsNotNullFailed(_builder.ToString(), valueExpression, "value");
             }
         }
 
@@ -203,21 +203,24 @@ public sealed partial class Assert
     {
         if (IsNotNullFailing(value))
         {
-            ReportAssertIsNotNullFailed(message, valueExpression);
+            ReportAssertIsNotNullFailed(message, valueExpression, nameof(value));
         }
     }
 
     private static bool IsNotNullFailing([NotNullWhen(false)] object? value) => value is null;
 
     [DoesNotReturn]
-    private static void ReportAssertIsNotNullFailed(string? message, string valueExpression)
+    private static void ReportAssertIsNotNullFailed(string? message, string valueExpression, string paramName)
     {
-        // RFC: IsNotNull omits the evidence block since actual is always null
+        string actualValue = AssertionValueRenderer.RenderValue(null);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("actual:", actualValue);
+
         StructuredAssertionMessage structured = new(FrameworkMessages.IsNotNullFailedSummary);
         structured.WithUserMessage(message);
-#pragma warning disable CA1507 // Use nameof - 'value' is the parameter name of the public IsNotNull method, not available in this scope
-        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotNull", valueExpression, "value"));
-#pragma warning restore CA1507
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual("not null", actualValue);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotNull", valueExpression, paramName));
 
         ReportAssertFailed(structured);
     }

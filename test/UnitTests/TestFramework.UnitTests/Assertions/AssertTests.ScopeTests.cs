@@ -148,6 +148,8 @@ public partial class AssertTests
             """
             Assertion failed. Expected value to not be null.
 
+            actual: null
+
             Assert.IsNotNull(value)
             """);
         innerException.InnerExceptions[1].Message.Should().Contain("Assert.AreEqual failed.");

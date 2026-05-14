@@ -100,6 +100,8 @@ public partial class AssertTests : TestContainer
                 """
                 Assertion failed. Expected value to not be null.
 
+                actual: null
+
                 Assert.IsNotNull(null)
                 """);
     }
@@ -112,6 +114,8 @@ public partial class AssertTests : TestContainer
                 """
                 Assertion failed. Expected value to not be null.
                 User-provided message
+
+                actual: null
 
                 Assert.IsNotNull(null)
                 """);
@@ -127,6 +131,8 @@ public partial class AssertTests : TestContainer
                 $"""
                 Assertion failed. Expected value to not be null.
                 User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}
+
+                actual: null
 
                 Assert.IsNotNull(null)
                 """);
