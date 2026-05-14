@@ -11,35 +11,22 @@ internal static class AttributeExtensions
     {
         Attribute[] allAttributes = ReflectHelper.Instance.GetCustomAttributesCached(type);
 
-        // Fast path: no ConditionBaseAttribute present (common case) → zero allocations
-        bool hasConditionAttribute = false;
-        foreach (Attribute attr in allAttributes)
-        {
-            if (attr is ConditionBaseAttribute)
-            {
-                hasConditionAttribute = true;
-                break;
-            }
-        }
-
-        if (!hasConditionAttribute)
-        {
-            ignoreMessage = null;
-            return false;
-        }
-
-        // Slow path: manual grouping instead of LINQ GroupBy to avoid iterator/Lookup allocations.
+        // Single pass: build groups while iterating. For the common case (no ConditionBaseAttribute)
+        // the dictionary and list are never allocated → zero heap allocations.
         // We track insertion order explicitly because Dictionary<TKey,TValue>.Values enumeration
         // order is not guaranteed (especially on .NET Framework), and we need to return the ignore
         // message from the first unsatisfied group in attribute order.
-        Dictionary<string, (bool Satisfied, string? FirstMessage)> groups = [];
-        List<string> groupOrder = [];
+        Dictionary<string, (bool Satisfied, string? FirstMessage)>? groups = null;
+        List<string>? groupOrder = null;
         foreach (Attribute attr in allAttributes)
         {
             if (attr is not ConditionBaseAttribute conditionAttr)
             {
                 continue;
             }
+
+            groups ??= [];
+            groupOrder ??= [];
 
             bool shouldRun = conditionAttr.Mode == ConditionMode.Include ? conditionAttr.IsConditionMet : !conditionAttr.IsConditionMet;
 
@@ -61,7 +48,13 @@ internal static class AttributeExtensions
             }
         }
 
-        foreach (string groupName in groupOrder)
+        if (groups is null)
+        {
+            ignoreMessage = null;
+            return false;
+        }
+
+        foreach (string groupName in groupOrder!)
         {
             (bool satisfied, string? firstMessage) = groups[groupName];
             if (!satisfied)
