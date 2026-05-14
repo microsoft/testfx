@@ -20,7 +20,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     private const string CreateDumpVerboseDiagnosticsVariable = "CreateDumpVerboseDiagnostics";
     private const string EnableCrashReportVariable = "EnableCrashReport";
     private const string EnableCrashReportOnlyVariable = "EnableCrashReportOnly";
-    private const string EnabledValue = "1";
+    private const string EnableMiniDumpValue = "1";
 
     private static readonly string[] Prefixes = ["DOTNET_", "COMPlus_"];
     private readonly IConfiguration _configuration;
@@ -72,21 +72,21 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         {
             foreach (string prefix in Prefixes)
             {
-                environmentVariables.SetVariable(new($"{prefix}{EnableMiniDumpVariable}", EnabledValue, false, true));
+                environmentVariables.SetVariable(new($"{prefix}{EnableMiniDumpVariable}", EnableMiniDumpValue, false, true));
             }
         }
 
         foreach (string prefix in Prefixes)
         {
-            environmentVariables.SetVariable(new($"{prefix}{CreateDumpDiagnosticsVariable}", EnabledValue, false, true));
-            environmentVariables.SetVariable(new($"{prefix}{CreateDumpVerboseDiagnosticsVariable}", EnabledValue, false, true));
+            environmentVariables.SetVariable(new($"{prefix}{CreateDumpDiagnosticsVariable}", EnableMiniDumpValue, false, true));
+            environmentVariables.SetVariable(new($"{prefix}{CreateDumpVerboseDiagnosticsVariable}", EnableMiniDumpValue, false, true));
         }
 
         if (crashReportEnabled)
         {
             foreach (string prefix in Prefixes)
             {
-                environmentVariables.SetVariable(new($"{prefix}{EnableCrashReportVariable}", EnabledValue, false, true));
+                environmentVariables.SetVariable(new($"{prefix}{EnableCrashReportVariable}", EnableMiniDumpValue, false, true));
             }
         }
 
@@ -94,7 +94,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         {
             foreach (string prefix in Prefixes)
             {
-                environmentVariables.SetVariable(new($"{prefix}{EnableCrashReportOnlyVariable}", EnabledValue, false, true));
+                environmentVariables.SetVariable(new($"{prefix}{EnableCrashReportOnlyVariable}", EnableMiniDumpValue, false, true));
             }
         }
 
@@ -172,9 +172,9 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             foreach (string prefix in Prefixes)
             {
                 if (!environmentVariables.TryGetVariable($"{prefix}{EnableMiniDumpVariable}", out OwnedEnvironmentVariable? enableMiniDump)
-                || enableMiniDump.Value != EnabledValue)
+                || enableMiniDump.Value != EnableMiniDumpValue)
                 {
-                    AddError(errors, $"{prefix}{EnableMiniDumpVariable}", EnabledValue, enableMiniDump?.Value);
+                    AddError(errors, $"{prefix}{EnableMiniDumpVariable}", EnableMiniDumpValue, enableMiniDump?.Value);
                 }
             }
         }
@@ -182,18 +182,18 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         foreach (string prefix in Prefixes)
         {
             if (!environmentVariables.TryGetVariable($"{prefix}{CreateDumpDiagnosticsVariable}", out OwnedEnvironmentVariable? enableMiniDump)
-            || enableMiniDump.Value != EnabledValue)
+            || enableMiniDump.Value != EnableMiniDumpValue)
             {
-                AddError(errors, $"{prefix}{CreateDumpDiagnosticsVariable}", EnabledValue, enableMiniDump?.Value);
+                AddError(errors, $"{prefix}{CreateDumpDiagnosticsVariable}", EnableMiniDumpValue, enableMiniDump?.Value);
             }
         }
 
         foreach (string prefix in Prefixes)
         {
             if (!environmentVariables.TryGetVariable($"{prefix}{CreateDumpVerboseDiagnosticsVariable}", out OwnedEnvironmentVariable? enableMiniDump)
-            || enableMiniDump.Value != EnabledValue)
+            || enableMiniDump.Value != EnableMiniDumpValue)
             {
-                AddError(errors, $"{prefix}{CreateDumpVerboseDiagnosticsVariable}", EnabledValue, enableMiniDump?.Value);
+                AddError(errors, $"{prefix}{CreateDumpVerboseDiagnosticsVariable}", EnableMiniDumpValue, enableMiniDump?.Value);
             }
         }
 
@@ -202,9 +202,9 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             foreach (string prefix in Prefixes)
             {
                 if (!environmentVariables.TryGetVariable($"{prefix}{EnableCrashReportVariable}", out OwnedEnvironmentVariable? enableCrashReport)
-                || enableCrashReport.Value != EnabledValue)
+                || enableCrashReport.Value != EnableMiniDumpValue)
                 {
-                    AddError(errors, $"{prefix}{EnableCrashReportVariable}", EnabledValue, enableCrashReport?.Value);
+                    AddError(errors, $"{prefix}{EnableCrashReportVariable}", EnableMiniDumpValue, enableCrashReport?.Value);
                 }
             }
         }
@@ -214,9 +214,9 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             foreach (string prefix in Prefixes)
             {
                 if (!environmentVariables.TryGetVariable($"{prefix}{EnableCrashReportOnlyVariable}", out OwnedEnvironmentVariable? enableCrashReportOnly)
-                || enableCrashReportOnly.Value != EnabledValue)
+                || enableCrashReportOnly.Value != EnableMiniDumpValue)
                 {
-                    AddError(errors, $"{prefix}{EnableCrashReportOnlyVariable}", EnabledValue, enableCrashReportOnly?.Value);
+                    AddError(errors, $"{prefix}{EnableCrashReportOnlyVariable}", EnableMiniDumpValue, enableCrashReportOnly?.Value);
                 }
             }
         }
