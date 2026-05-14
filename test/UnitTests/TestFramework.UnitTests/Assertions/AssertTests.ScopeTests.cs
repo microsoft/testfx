@@ -152,7 +152,7 @@ public partial class AssertTests
 
             Assert.IsNotNull(value)
             """);
-        innerException.InnerExceptions[1].Message.Should().Contain("Assert.AreEqual failed.");
+        innerException.InnerExceptions[1].Message.Should().Be("Assert.AreEqual failed. Expected:<1>. Actual:<2>. 'expected' expression: '1', 'actual' expression: '2'.");
     }
 
     public void Scope_AssertIsInstanceOfType_IsSoftFailure()
@@ -183,7 +183,7 @@ public partial class AssertTests
 
             Assert.IsInstanceOfType(value)
             """);
-        innerException.InnerExceptions[1].Message.Should().Contain("Assert.AreEqual failed.");
+        innerException.InnerExceptions[1].Message.Should().Be("Assert.AreEqual failed. Expected:<1>. Actual:<2>. 'expected' expression: '1', 'actual' expression: '2'.");
     }
 
     public void Scope_AssertIsExactInstanceOfType_IsSoftFailure()
@@ -214,7 +214,7 @@ public partial class AssertTests
 
             Assert.IsExactInstanceOfType(value)
             """);
-        innerException.InnerExceptions[1].Message.Should().Contain("Assert.AreEqual failed.");
+        innerException.InnerExceptions[1].Message.Should().Be("Assert.AreEqual failed. Expected:<1>. Actual:<2>. 'expected' expression: '1', 'actual' expression: '2'.");
     }
 
     public void Scope_AssertContainsSingle_IsSoftFailure()
@@ -237,6 +237,6 @@ public partial class AssertTests
 
         innerException.InnerExceptions.Should().HaveCount(2);
         innerException.InnerExceptions[0].Message.Should().Be("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). 'collection' expression: 'items'.");
-        innerException.InnerExceptions[1].Message.Should().Contain("Assert.AreEqual failed.");
+        innerException.InnerExceptions[1].Message.Should().Be("Assert.AreEqual failed. Expected:<1>. Actual:<2>. 'expected' expression: '1', 'actual' expression: '2'.");
     }
 }
