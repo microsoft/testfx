@@ -244,6 +244,7 @@ public partial class TypeEnumeratorTests : TestContainer
 
         testCase.LocalExtensionData = null;
         MSTest.TestAdapter.ObjectModel.UnitTestElement roundTrippedTestElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
+        // Simulate execution after serialization, where MethodInfo is not available and managed metadata must resolve the method.
         roundTrippedTestElement.TestMethod.MethodInfo = null;
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(assemblyName))

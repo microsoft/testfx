@@ -90,8 +90,8 @@ internal static class TestCaseExtensions
 
         string? managedTypeName = testCase.GetManagedType();
         string? legacyTestClassName = testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string;
-        string? testClassName = testCase.GetClassNamePrefix(managedTypeName)
-            ?? testCase.GetClassNamePrefix(legacyTestClassName)
+        string? testClassName = testCase.GetClassNameWhenFullyQualifiedNameStartsWith(managedTypeName)
+            ?? testCase.GetClassNameWhenFullyQualifiedNameStartsWith(legacyTestClassName)
             ?? managedTypeName
             ?? legacyTestClassName;
         string name = testCase.GetTestName(testClassName);
@@ -144,7 +144,7 @@ internal static class TestCaseExtensions
 
     internal static string? GetManagedMethod(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedMethodProperty, null);
 
-    private static string? GetClassNamePrefix(this TestCase testCase, string? testClassName)
+    private static string? GetClassNameWhenFullyQualifiedNameStartsWith(this TestCase testCase, string? testClassName)
         => testClassName is not null && testCase.FullyQualifiedName.StartsWith($"{testClassName}.", StringComparison.Ordinal)
             ? testClassName
             : null;
