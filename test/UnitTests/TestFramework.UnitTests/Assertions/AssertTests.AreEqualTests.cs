@@ -325,6 +325,21 @@ public partial class AssertTests : TestContainer
         ex.Data["assert.actual"].Should().Be("0");
     }
 
+    public void AreNotEqual_FailsWithStructuredMessage()
+    {
+        Action action = () => Assert.AreNotEqual(0, 0);
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected values to not be equal.
+
+                notExpected: 0
+                actual:      0
+
+                Assert.AreNotEqual(0, 0)
+                """);
+    }
+
     public void AreEqual_MultilineExpectedExpression_UsesPlaceholderInCallSite()
     {
         Action action = () => Assert.AreEqual(
@@ -1529,7 +1544,8 @@ public partial class AssertTests : TestContainer
                 """);
     }
 
-    public void AreEqualLongStringsShouldTruncateAndShowContext()
+    // Long-string truncation is intentionally not yet implemented; documents the current full-string render.
+    public void AreEqualLongStringsShowsFullStrings()
     {
         string expected = new string('a', 100) + "b" + new string('c', 100);
         string actual = new string('a', 100) + "d" + new string('c', 100);

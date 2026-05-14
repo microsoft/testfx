@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -243,37 +243,30 @@ public sealed partial class Assert
 
         string summary;
         EvidenceBlock evidence;
+        string? additionalSummaryLine = null;
 
         if (actual is not null && expected is not null && !actual.GetType().Equals(expected.GetType()))
         {
+            Type expectedType = expected.GetType();
+            Type actualType = actual.GetType();
             summary = FrameworkMessages.AreEqualDifferentTypesFailedSummary;
             evidence = EvidenceBlock.Create()
                 .AddLine("expected:", expectedRendered)
-                .AddLine("expected type:", expected.GetType().FullName ?? expected.GetType().Name)
+                .AddLine("expected type:", expectedType.FullName ?? expectedType.Name)
                 .AddLine("actual:", actualRendered)
-                .AddLine("actual type:", actual.GetType().FullName ?? actual.GetType().Name);
+                .AddLine("actual type:", actualType.FullName ?? actualType.Name);
         }
         else if (expected is string expectedString && actual is string actualString)
         {
             summary = FrameworkMessages.AreEqualStringsFailedSummary;
             int diffIndex = FindFirstStringDifference(expectedString, actualString);
-            string lengthInfo = expectedString.Length == actualString.Length
+            additionalSummaryLine = expectedString.Length == actualString.Length
                 ? string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthBothMsg, expectedString.Length, diffIndex)
                 : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthDifferentMsg, expectedString.Length, actualString.Length);
 
             evidence = EvidenceBlock.Create()
                 .AddLine("expected:", expectedRendered)
                 .AddLine("actual:", actualRendered);
-
-            StructuredAssertionMessage stringStructured = new(summary);
-            stringStructured.WithAdditionalSummaryLine(lengthInfo);
-            stringStructured.WithUserMessage(message);
-            stringStructured.WithEvidence(evidence);
-            stringStructured.WithExpectedAndActual(expectedRendered, actualRendered);
-            stringStructured.WithCallSiteExpression(FormatBinaryCallSiteExpression("Assert.AreEqual", expectedExpression, "expected", actualExpression, "actual"));
-            ReportAssertFailed(stringStructured);
-
-            return;
         }
         else
         {
@@ -284,6 +277,11 @@ public sealed partial class Assert
         }
 
         StructuredAssertionMessage structured = new(summary);
+        if (additionalSummaryLine is not null)
+        {
+            structured.WithAdditionalSummaryLine(additionalSummaryLine);
+        }
+
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
         structured.WithExpectedAndActual(expectedRendered, actualRendered);
