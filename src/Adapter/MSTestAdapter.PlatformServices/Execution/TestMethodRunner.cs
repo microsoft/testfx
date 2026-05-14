@@ -178,14 +178,31 @@ internal sealed class TestMethodRunner
 
     private async Task<bool> TryExecuteDataSourceBasedTestsAsync(List<TestResult> results)
     {
-        DataSourceAttribute[] dataSourceAttribute = _testMethodInfo.GetAttributes<DataSourceAttribute>();
-        if (dataSourceAttribute is { Length: 1 })
+        // Iterate cached attributes directly to preserve the previous semantics:
+        // execute only when there is exactly one DataSourceAttribute.
+        bool hasSingleDataSource = false;
+        foreach (Attribute attribute in ReflectHelper.Instance.GetCustomAttributesCached(_testMethodInfo.MethodInfo))
         {
-            await ExecuteTestFromDataSourceAttributeAsync(results).ConfigureAwait(false);
-            return true;
+            if (attribute is not DataSourceAttribute)
+            {
+                continue;
+            }
+
+            if (hasSingleDataSource)
+            {
+                return false;
+            }
+
+            hasSingleDataSource = true;
         }
 
-        return false;
+        if (!hasSingleDataSource)
+        {
+            return false;
+        }
+
+        await ExecuteTestFromDataSourceAttributeAsync(results).ConfigureAwait(false);
+        return true;
     }
 
     private async Task<bool> TryExecuteFoldedDataDrivenTestsAsync(List<TestResult> results)
