@@ -342,9 +342,9 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
                         OnFailedTest(testNodeStateChanged, timeoutState, timeoutState.Exception, duration);
                         break;
 
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
                     case CancelledTestNodeStateProperty cancelledState:
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
                         OnFailedTest(testNodeStateChanged, cancelledState, cancelledState.Exception, duration);
                         break;
 

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -22,7 +22,7 @@ public class TestPropertyAttributeTests : TestContainer
         testablePlatformServiceProvider.MockFileOperations.Setup(x => x.LoadAssembly(It.IsAny<string>())).Returns(GetType().Assembly);
         PlatformServiceProvider.Instance = testablePlatformServiceProvider;
 
-        ReflectHelper.Instance.ClearCache();
+        ReflectHelper.ClearCache();
     }
 
     protected override void Dispose(bool disposing)
@@ -39,7 +39,7 @@ public class TestPropertyAttributeTests : TestContainer
 
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassCorrectly()
     {
-        TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassBase).GetMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived))!)];
+        TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.GetTestPropertiesAsTraits(typeof(DummyTestClassBase).GetMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived))!)];
         traits.Length.Should().Be(3);
         traits[0].Name.Should().Be("TestMethodKeyFromBase");
         traits[0].Value.Should().Be("TestMethodValueFromBase");
@@ -51,7 +51,7 @@ public class TestPropertyAttributeTests : TestContainer
 
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassAndBaseClassesAndOverriddenMethodsCorrectly_OverriddenIsTestMethod()
     {
-        TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived))!)];
+        TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived))!)];
         traits.Length.Should().Be(6);
         traits[0].Name.Should().Be("DerivedMethod1Key");
         traits[0].Value.Should().Be("DerivedMethod1Value");
@@ -69,7 +69,7 @@ public class TestPropertyAttributeTests : TestContainer
 
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassAndBaseClassesAndOverriddenMethodsCorrectly_OverriddenIsNotTestMethod()
     {
-        TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase))!)];
+        TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase))!)];
         traits.Length.Should().Be(6);
         traits[0].Name.Should().Be("DerivedMethod2Key");
         traits[0].Value.Should().Be("DerivedMethod2Value");

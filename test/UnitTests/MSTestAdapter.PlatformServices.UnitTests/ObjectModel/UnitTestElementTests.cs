@@ -3,6 +3,7 @@
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -75,6 +76,14 @@ public class UnitTestElementTests : TestContainer
         var testCase = _unitTestElement.ToTestCase();
 
         (testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string).Should().Be("C");
+    }
+
+    public void ToTestCaseShouldUseFullClassNameAsManagedTypeName()
+    {
+        var testMethod = new TestMethod("DummyMethod", null, "DummyMethod", "SemanticClassName", "A", displayName: null, null);
+        var testCase = new UnitTestElement(testMethod).ToTestCase();
+
+        (testCase.GetPropertyValue(TestCaseExtensions.ManagedTypeProperty) as string).Should().Be("SemanticClassName");
     }
 
     public void ToTestCaseShouldSetTestCategoryIfPresent()

@@ -19,8 +19,21 @@ internal static class AssertionValueRenderer
             bool b => b ? "true" : "false",
             char c => RenderChar(c),
             IEnumerable enumerable => RenderCollection(enumerable),
-            _ => value.ToString() ?? value.GetType().FullName ?? value.GetType().Name,
+            _ => RenderObject(value),
         };
+
+    private static string RenderObject(object value)
+    {
+        // Guard against user types whose ToString() throws so the original assertion failure is preserved.
+        try
+        {
+            return value.ToString() ?? value.GetType().FullName ?? value.GetType().Name;
+        }
+        catch (Exception ex)
+        {
+            return $"{value.GetType().FullName ?? value.GetType().Name} (ToString threw {ex.GetType().Name})";
+        }
+    }
 
     /// <summary>
     /// Renders a string value with double quotes and escape sequences for control characters.
