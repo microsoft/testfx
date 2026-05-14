@@ -64,7 +64,12 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashreport-only --crashdump-filename customdumpname.dmp --results-directory {resultDirectory}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
 
-        Assert.IsEmpty(Directory.GetFiles(resultDirectory, "customdumpname.dmp", SearchOption.AllDirectories), $"Unexpected dump file found\n{testHostResult}");
+        // Use an explicit equality check on the file name rather than relying on Directory.GetFiles' pattern matching,
+        // because on Windows a literal pattern such as "customdumpname.dmp" can also match files like
+        // "customdumpname.dmp.crashreport.json" (8.3 short-name aliases / extension prefix matching).
+        string[] dumpFiles = [.. Directory.EnumerateFiles(resultDirectory, "*", SearchOption.AllDirectories)
+            .Where(f => string.Equals(Path.GetFileName(f), "customdumpname.dmp", StringComparison.Ordinal))];
+        Assert.IsEmpty(dumpFiles, $"Unexpected dump file found\n{testHostResult}");
         Assert.ContainsSingle(Directory.GetFiles(resultDirectory, "customdumpname.dmp.crashreport.json", SearchOption.AllDirectories), $"Crash report file not found\n{testHostResult}");
     }
 
