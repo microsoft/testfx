@@ -469,6 +469,8 @@ public class TrxTests
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
+        string relativeResultsDirectory = xml.Descendants().Single(x => x.Name.LocalName == "UnitTestResult").Attribute("relativeResultsDirectory")!.Value;
+        string expectedDestinationSuffix = Path.Combine("_MachineName_0001-01-01_00_00_00.0000000", "In", relativeResultsDirectory, "MachineName", "fileName");
         string trxContent = xml.ToString();
         string trxContentsPattern = @"
     <UnitTestResult .* testName=""TestMethod"" .* outcome=""Passed"" .*>
@@ -478,6 +480,13 @@ public class TrxTests
     </UnitTestResult>
  ";
         Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern));
+        _fileSystem.Verify(
+            x => x.CopyFile(
+                It.Is<string>(source => source.EndsWith("fileName", StringComparison.Ordinal)),
+                It.Is<string>(destination => destination.EndsWith(
+                    expectedDestinationSuffix,
+                    StringComparison.Ordinal))),
+            Times.Once);
     }
 
     [TestMethod]

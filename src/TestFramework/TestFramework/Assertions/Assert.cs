@@ -114,6 +114,17 @@ public sealed partial class Assert
             ExpectedText = structuredMessage.ExpectedText,
             ActualText = structuredMessage.ActualText,
         };
+
+        if (structuredMessage.ExpectedText is not null)
+        {
+            exception.Data["assert.expected"] = structuredMessage.ExpectedText;
+        }
+
+        if (structuredMessage.ActualText is not null)
+        {
+            exception.Data["assert.actual"] = structuredMessage.ActualText;
+        }
+
         return exception;
     }
 
@@ -124,7 +135,7 @@ public sealed partial class Assert
     /// <param name="structuredMessage">
     /// The structured assertion failure message.
     /// </param>
-#pragma warning disable CS8763 // A method marked [DoesNotReturn] should not return
+#pragma warning disable CS8763 // A method marked [DoesNotReturn] should not return - Deliberately keeping [DoesNotReturn] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
     [DoesNotReturn]
     [StackTraceHidden]
     internal static void ReportAssertFailed(StructuredAssertionMessage structuredMessage)
@@ -163,40 +174,6 @@ public sealed partial class Assert
     {
         LaunchDebuggerIfNeeded();
         throw CreateAssertFailedException(structuredMessage);
-    }
-
-    /// <summary>
-    /// Formats a call-site expression for display at the bottom of a structured assertion message.
-    /// When the expression is empty or contains newlines, the expression is replaced with a placeholder.
-    /// </summary>
-    internal static string? FormatCallSiteExpression(string assertionMethodName, string expression)
-    {
-        if (string.IsNullOrWhiteSpace(expression))
-        {
-            return null;
-        }
-
-        // If expression contains newlines (multiline constant), replace with placeholder per RFC
-        return expression.Contains('\n') || expression.Contains('\r')
-            ? null
-            : $"{assertionMethodName}({expression})";
-    }
-
-    /// <summary>
-    /// Formats a call-site expression for display at the bottom of a structured assertion message,
-    /// using two captured expressions.
-    /// </summary>
-    internal static string? FormatCallSiteExpression(string assertionMethodName, string expression1, string expression2)
-    {
-        if (string.IsNullOrWhiteSpace(expression1) || string.IsNullOrWhiteSpace(expression2))
-        {
-            return null;
-        }
-
-        string arg1 = expression1.Contains('\n') || expression1.Contains('\r') ? "<expected>" : expression1;
-        string arg2 = expression2.Contains('\n') || expression2.Contains('\r') ? "<actual>" : expression2;
-
-        return $"{assertionMethodName}({arg1}, {arg2})";
     }
 
     private static string FormatAssertionFailed(string assertionName, string? message)
@@ -266,9 +243,6 @@ public sealed partial class Assert
     private static string BuildUserMessageForValueExpression(string? format, string valueExpression)
         => BuildUserMessageForSingleExpression(format, valueExpression, "value");
 
-    private static string BuildUserMessageForActionExpression(string? format, string actionExpression)
-        => BuildUserMessageForSingleExpression(format, actionExpression, "action");
-
     private static string BuildUserMessageForCollectionExpression(string? format, string collectionExpression)
         => BuildUserMessageForSingleExpression(format, collectionExpression, "collection");
 
@@ -337,6 +311,25 @@ public sealed partial class Assert
 
     internal static string ReplaceNulls(object? input)
         => input?.ToString() ?? string.Empty;
+
+    /// <summary>
+    /// Formats a call-site expression like <c>Assert.MethodName(expression)</c>.
+    /// Returns <see langword="null"/> if the expression is empty or contains a line break.
+    /// </summary>
+    private static string? FormatCallSiteExpression(string methodName, string expression)
+        => string.IsNullOrEmpty(expression) || expression.IndexOfAny(['\n', '\r']) >= 0
+            ? null
+            : $"{methodName}({expression})";
+
+    /// <summary>
+    /// Formats a call-site expression like <c>Assert.MethodName(expression1, expression2)</c>.
+    /// Returns <see langword="null"/> if either expression is empty or contains a line break.
+    /// </summary>
+    private static string? FormatCallSiteExpression(string methodName, string expression1, string expression2)
+        => string.IsNullOrEmpty(expression1) || string.IsNullOrEmpty(expression2)
+            || expression1.IndexOfAny(['\n', '\r']) >= 0 || expression2.IndexOfAny(['\n', '\r']) >= 0
+            ? null
+            : $"{methodName}({expression1}, {expression2})";
 
     private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo culture)
 #pragma warning disable CA1309 // Use ordinal string comparison
