@@ -73,7 +73,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
     }
 
     /// <summary>
-    /// Replaces the first registered service instance that is assignable to the given type with the new service.
+    /// Replaces the first registered service instance that is an instance of <typeparamref name="T"/> with the new service.
     /// If no such service is found, the new service is added at the end of the list.
     /// </summary>
     /// <typeparam name="T">The type of service to replace.</typeparam>
