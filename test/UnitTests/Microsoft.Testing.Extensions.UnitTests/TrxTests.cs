@@ -307,6 +307,56 @@ public class TrxTests
     }
 
     [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithAsmPlaceholder_PlaceholderIsResolved()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        string[]? argumentTrxReportFileName = ["report_{asm}.trx"];
+        _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
+        PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        // {asm} resolves to the entry assembly name (or "unknown" if there is no entry assembly).
+        // We do not assert the exact value because the entry assembly differs across runners and TFMs;
+        // we only verify that the placeholder was replaced with a non-empty token and is sanitized as a valid file name.
+        Assert.IsTrue(fileName.StartsWith("report_", StringComparison.Ordinal), $"Expected fileName to start with 'report_' but was '{fileName}'.");
+        Assert.IsTrue(fileName.EndsWith(".trx", StringComparison.Ordinal), $"Expected fileName to end with '.trx' but was '{fileName}'.");
+        Assert.DoesNotContain("{asm}", fileName, $"Expected '{{asm}}' to be resolved but was still present in '{fileName}'.");
+        Assert.AreNotEqual("report_.trx", fileName, "Expected {asm} to resolve to a non-empty value.");
+        Assert.IsNotNull(memoryStream.TrxContent);
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithTfmPlaceholder_PlaceholderIsResolved()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        string[]? argumentTrxReportFileName = ["report_{tfm}.trx"];
+        _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
+        PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        // {tfm} resolves via TargetFrameworkAttribute or RuntimeInformation.FrameworkDescription
+        // (e.g. "net462", "net8.0", "net9.0"). We only assert the placeholder was replaced with a non-empty
+        // token rather than the exact value, because the test runs on multiple TFMs.
+        Assert.IsTrue(fileName.StartsWith("report_", StringComparison.Ordinal), $"Expected fileName to start with 'report_' but was '{fileName}'.");
+        Assert.IsTrue(fileName.EndsWith(".trx", StringComparison.Ordinal), $"Expected fileName to end with '.trx' but was '{fileName}'.");
+        Assert.DoesNotContain("{tfm}", fileName, $"Expected '{{tfm}}' to be resolved but was still present in '{fileName}'.");
+        Assert.AreNotEqual("report_.trx", fileName, "Expected {tfm} to resolve to a non-empty value.");
+        Assert.IsNotNull(memoryStream.TrxContent);
+    }
+
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithTestHostCrash_ResultSummaryOutcomeIsFailed()
     {
         // Arrange
