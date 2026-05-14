@@ -646,8 +646,118 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzerTests
     {
         string code = """
             using System.Collections;
-            using System.Web;
+            using System.Xml;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async void TestMethod()
+                {
+                    await System.Threading.Tasks.Task.Delay(1);
+                    [|Assert.Fail("")|];
+                    _ = nameof(XmlReader);
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections;
+            using System.Threading.Tasks;
+            using System.Xml;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task TestMethod()
+                {
+                    await System.Threading.Tasks.Task.Delay(1);
+                    Assert.Fail("");
+                    _ = nameof(XmlReader);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task UseAssertMethodInAsyncVoidMethod_MultipleNamespaces_AddsUsingInCorrectScope()
+    {
+        // Namespace A has the using; namespace B contains the async void method to fix.
+        // The fixer must ensure 'Task' resolves at the method's location (namespace B),
+        // not just rely on the using existing somewhere in the file.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace A
+            {
+                using System.Threading.Tasks;
+
+                public class Helper
+                {
+                    public Task DoAsync() => Task.CompletedTask;
+                }
+            }
+
+            namespace B
+            {
+                [TestClass]
+                public class MyTestClass
+                {
+                    [TestMethod]
+                    public async void TestMethod()
+                    {
+                        await System.Threading.Tasks.Task.Delay(1);
+                        [|Assert.Fail("")|];
+                    }
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace A
+            {
+                using System.Threading.Tasks;
+
+                public class Helper
+                {
+                    public Task DoAsync() => Task.CompletedTask;
+                }
+            }
+
+            namespace B
+            {
+                using System.Threading.Tasks;
+
+                [TestClass]
+                public class MyTestClass
+                {
+                    [TestMethod]
+                    public async Task TestMethod()
+                    {
+                        await System.Threading.Tasks.Task.Delay(1);
+                        Assert.Fail("");
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task UseAssertMethodInAsyncVoidMethod_FileScopedNamespace_AddsUsingAtFileScope()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace MyNamespace;
 
             [TestClass]
             public class MyTestClass
@@ -662,10 +772,10 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzerTests
             """;
 
         string fixedCode = """
-            using System.Collections;
             using System.Threading.Tasks;
-            using System.Web;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace MyNamespace;
 
             [TestClass]
             public class MyTestClass
@@ -674,6 +784,126 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextAnalyzerTests
                 public async Task TestMethod()
                 {
                     await System.Threading.Tasks.Task.Delay(1);
+                    Assert.Fail("");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task UseAssertMethodInAsyncVoidMethod_BatchFixAcrossNamespaces_AddsUsingInEachNamespace()
+    {
+        // FixAll/BatchFixer scenario: two async void methods in two separate namespaces, both needing
+        // the 'using System.Threading.Tasks;' to be added inside their own namespace.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace A
+            {
+                [TestClass]
+                public class TestClassA
+                {
+                    [TestMethod]
+                    public async void TestMethodA()
+                    {
+                        await System.Threading.Tasks.Task.Delay(1);
+                        [|Assert.Fail("")|];
+                    }
+                }
+            }
+
+            namespace B
+            {
+                [TestClass]
+                public class TestClassB
+                {
+                    [TestMethod]
+                    public async void TestMethodB()
+                    {
+                        await System.Threading.Tasks.Task.Delay(1);
+                        [|Assert.Fail("")|];
+                    }
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace A
+            {
+                using System.Threading.Tasks;
+
+                [TestClass]
+                public class TestClassA
+                {
+                    [TestMethod]
+                    public async Task TestMethodA()
+                    {
+                        await System.Threading.Tasks.Task.Delay(1);
+                        Assert.Fail("");
+                    }
+                }
+            }
+
+            namespace B
+            {
+                using System.Threading.Tasks;
+
+                [TestClass]
+                public class TestClassB
+                {
+                    [TestMethod]
+                    public async Task TestMethodB()
+                    {
+                        await System.Threading.Tasks.Task.Delay(1);
+                        Assert.Fail("");
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task UseAssertMethodInAsyncVoidMethod_GlobalUsingPresent_InsertsAfterGlobalUsings()
+    {
+        // C# 10+ same-file 'global using' directives must precede non-global usings.
+        // Verify the new 'using System.Threading.Tasks;' is inserted after the global block,
+        // not before it (which would be a compile error).
+        string code = """
+            global using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async void TestMethod()
+                {
+                    await System.Threading.Tasks.Task.Delay(1);
+                    var _ = nameof(Console);
+                    [|Assert.Fail("")|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            global using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task TestMethod()
+                {
+                    await System.Threading.Tasks.Task.Delay(1);
+                    var _ = nameof(Console);
                     Assert.Fail("");
                 }
             }

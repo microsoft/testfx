@@ -11,7 +11,6 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Editing;
 
 using MSTest.Analyzers.Helpers;
 
@@ -24,6 +23,8 @@ namespace MSTest.Analyzers;
 [Shared]
 public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
 {
+    private const string SystemThreadingTasksNamespace = "System.Threading.Tasks";
+
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
         = ImmutableArray.Create(DiagnosticIds.AvoidUsingAssertsInAsyncVoidContextRuleId);
@@ -93,105 +94,140 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
         }
     }
 
-    private static async Task<Document> ChangeReturnTypeToTaskAsync(
+    private static Task<Document> ChangeReturnTypeToTaskAsync(
         Document document,
         MethodDeclarationSyntax methodDeclaration,
         CancellationToken cancellationToken)
-    {
-        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
-        MethodDeclarationSyntax newMethodDeclaration = methodDeclaration.WithReturnType(
-            SyntaxFactory.IdentifierName("Task").WithTriviaFrom(methodDeclaration.ReturnType));
-        editor.ReplaceNode(methodDeclaration, newMethodDeclaration);
-        Document updatedDocument = editor.GetChangedDocument();
+        => ReplaceReturnTypeAsync(
+            document,
+            methodDeclaration,
+            (node, newType) => ((MethodDeclarationSyntax)node).WithReturnType(newType),
+            cancellationToken);
 
-        return await EnsureSystemThreadingTasksImportAsync(updatedDocument, cancellationToken).ConfigureAwait(false);
-    }
-
-    private static async Task<Document> ChangeReturnTypeToTaskAsync(
+    private static Task<Document> ChangeReturnTypeToTaskAsync(
         Document document,
         LocalFunctionStatementSyntax localFunction,
         CancellationToken cancellationToken)
-    {
-        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
-        LocalFunctionStatementSyntax newLocalFunction = localFunction.WithReturnType(
-            SyntaxFactory.IdentifierName("Task").WithTriviaFrom(localFunction.ReturnType));
-        editor.ReplaceNode(localFunction, newLocalFunction);
-        Document updatedDocument = editor.GetChangedDocument();
+        => ReplaceReturnTypeAsync(
+            document,
+            localFunction,
+            (node, newType) => ((LocalFunctionStatementSyntax)node).WithReturnType(newType),
+            cancellationToken);
 
-        return await EnsureSystemThreadingTasksImportAsync(updatedDocument, cancellationToken).ConfigureAwait(false);
-    }
-
-    private static async Task<Document> EnsureSystemThreadingTasksImportAsync(Document document, CancellationToken cancellationToken)
+    private static async Task<Document> ReplaceReturnTypeAsync(
+        Document document,
+        SyntaxNode nodeToReplace,
+        Func<SyntaxNode, TypeSyntax, SyntaxNode> withNewReturnType,
+        CancellationToken cancellationToken)
     {
         SyntaxNode root = await document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-        if (root is not CompilationUnitSyntax compilationUnit)
+
+        TypeSyntax originalReturnType = nodeToReplace switch
         {
-            return document;
+            MethodDeclarationSyntax m => m.ReturnType,
+            LocalFunctionStatementSyntax l => l.ReturnType,
+            _ => throw new InvalidOperationException(),
+        };
+
+        // Determine whether 'Task' (System.Threading.Tasks.Task) is already in scope at the method's
+        // location. This correctly handles file-scoped, namespace-scoped, global, and SDK-implicit usings.
+        bool needsImport = !await IsTaskInScopeAsync(document, nodeToReplace, cancellationToken).ConfigureAwait(false);
+
+        TypeSyntax newReturnType = SyntaxFactory.IdentifierName("Task").WithTriviaFrom(originalReturnType);
+        SyntaxAnnotation methodMarker = new();
+        SyntaxNode replacement = withNewReturnType(nodeToReplace, newReturnType).WithAdditionalAnnotations(methodMarker);
+        SyntaxNode newRoot = root.ReplaceNode(nodeToReplace, replacement);
+
+        if (needsImport && newRoot is CompilationUnitSyntax compilationUnit)
+        {
+            SyntaxNode newMethodNode = newRoot.GetAnnotatedNodes(methodMarker).First();
+            newRoot = AddSystemThreadingTasksUsing(compilationUnit, newMethodNode);
         }
 
-        // Check file-level usings and namespace-scoped usings for an existing System.Threading.Tasks import.
-        if (HasSystemThreadingTasksUsing(compilationUnit.Usings))
+        return document.WithSyntaxRoot(newRoot);
+    }
+
+    private static async Task<bool> IsTaskInScopeAsync(Document document, SyntaxNode nodeAtPosition, CancellationToken cancellationToken)
+    {
+        SemanticModel? semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+        if (semanticModel is null)
         {
-            return document;
+            return false;
         }
 
-        foreach (NamespaceDeclarationSyntax ns in compilationUnit.DescendantNodes().OfType<NamespaceDeclarationSyntax>())
+        INamedTypeSymbol? taskSymbol = semanticModel.Compilation.GetTypeByMetadataName("System.Threading.Tasks.Task");
+        if (taskSymbol is null)
         {
-            if (HasSystemThreadingTasksUsing(ns.Usings))
-            {
-                return document;
-            }
+            // Reference assembly missing — let the user deal with the resulting error rather than guessing.
+            return true;
         }
 
-        UsingDirectiveSyntax usingDirective = SyntaxFactory
-            .UsingDirective(SyntaxFactory.ParseName("System.Threading.Tasks").WithLeadingTrivia(SyntaxFactory.Space))
+        // Look up the unqualified name "Task" at the method/local function's position. If it resolves
+        // to System.Threading.Tasks.Task, no extra import is needed (covers file-scoped, namespace-scoped,
+        // global, and SDK-implicit usings, including 'using global::System.Threading.Tasks;' and
+        // 'using System.Threading.Tasks;' inside the enclosing namespace).
+        ImmutableArray<ISymbol> candidates = semanticModel.LookupNamespacesAndTypes(nodeAtPosition.SpanStart, name: "Task");
+        return candidates.Any(c => SymbolEqualityComparer.Default.Equals(c, taskSymbol));
+    }
+
+    private static CompilationUnitSyntax AddSystemThreadingTasksUsing(CompilationUnitSyntax compilationUnit, SyntaxNode methodNode)
+    {
+        UsingDirectiveSyntax newUsing = SyntaxFactory
+            .UsingDirective(SyntaxFactory.ParseName(SystemThreadingTasksNamespace).WithLeadingTrivia(SyntaxFactory.Space))
             .WithTrailingTrivia(SyntaxFactory.ElasticCarriageReturnLineFeed);
 
-        // Insert in correct alphabetical position: after System.* usings that sort before "System.Threading.Tasks"
-        // and before any that sort after it or before any non-System usings.
-        int insertionIndex = compilationUnit.Usings.Count; // default: append after all usings
-        for (int i = 0; i < compilationUnit.Usings.Count; i++)
+        // Add the using to the smallest enclosing block-scoped namespace (preserving the file's existing
+        // namespace-scoped style when applicable). For file-scoped namespaces (no NamespaceDeclarationSyntax
+        // ancestor), fall back to file-scope insertion — that is the conventional location for usings
+        // when a file uses 'namespace Foo;' style.
+        NamespaceDeclarationSyntax? containingNs = methodNode.Ancestors().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+        if (containingNs is not null)
         {
-            string? nameText = NormalizeUsingName(compilationUnit.Usings[i].Name?.ToString());
+            SyntaxList<UsingDirectiveSyntax> updatedUsings = InsertAlphabetically(containingNs.Usings, newUsing);
+            return compilationUnit.ReplaceNode(containingNs, containingNs.WithUsings(updatedUsings));
+        }
+
+        return compilationUnit.WithUsings(InsertAlphabetically(compilationUnit.Usings, newUsing));
+    }
+
+    private static SyntaxList<UsingDirectiveSyntax> InsertAlphabetically(SyntaxList<UsingDirectiveSyntax> existing, UsingDirectiveSyntax newUsing)
+    {
+        // Place 'System.Threading.Tasks' alphabetically among System.* usings, before any non-System usings.
+        // C# 10+ same-file 'global using' directives must precede non-global usings, so always insert
+        // after the global block.
+        int insertionIndex = existing.Count;
+        for (int i = 0; i < existing.Count; i++)
+        {
+            UsingDirectiveSyntax current = existing[i];
+            if (IsGlobalUsing(current))
+            {
+                continue;
+            }
+
+            string? nameText = current.Name?.ToString();
             if (nameText is null)
             {
                 continue;
             }
 
-            bool isSystemNamespace = IsSystemNamespace(nameText);
+            bool isSystemNamespace = string.Equals(nameText, "System", StringComparison.Ordinal) ||
+                                     nameText.StartsWith("System.", StringComparison.Ordinal);
             if (!isSystemNamespace ||
-                string.Compare(nameText, "System.Threading.Tasks", StringComparison.Ordinal) > 0)
+                string.Compare(nameText, SystemThreadingTasksNamespace, StringComparison.Ordinal) > 0)
             {
                 insertionIndex = i;
                 break;
             }
         }
 
-        SyntaxList<UsingDirectiveSyntax> newUsings = compilationUnit.Usings.Insert(insertionIndex, usingDirective);
-        return document.WithSyntaxRoot(compilationUnit.WithUsings(newUsings));
+        return existing.Insert(insertionIndex, newUsing);
     }
 
-    private static bool HasSystemThreadingTasksUsing(SyntaxList<UsingDirectiveSyntax> usings)
-        => usings.Any(
-            u => u.Alias is null &&
-                 !u.StaticKeyword.IsKind(SyntaxKind.StaticKeyword) &&
-                 string.Equals(NormalizeUsingName(u.Name?.ToString()), "System.Threading.Tasks", StringComparison.Ordinal));
-
-    private static bool IsSystemNamespace(string nameText)
-        => string.Equals(nameText, "System", StringComparison.Ordinal) ||
-           nameText.StartsWith("System.", StringComparison.Ordinal);
-
-    private static string? NormalizeUsingName(string? name)
+    private static bool IsGlobalUsing(UsingDirectiveSyntax usingDirective)
     {
-        if (name is null)
-        {
-            return null;
-        }
-
-        // Strip the "global::" qualifier if present so that "global::System.Threading.Tasks" is recognized.
-        const string globalPrefix = "global::";
-        return name.StartsWith(globalPrefix, StringComparison.Ordinal)
-            ? name[globalPrefix.Length..]
-            : name;
+        // 'global' is a contextual keyword introduced in C# 10. Detect it textually so the build-time
+        // Roslyn 3.11 package does not need to expose UsingDirectiveSyntax.GlobalKeyword.
+        SyntaxToken firstToken = usingDirective.GetFirstToken();
+        return firstToken.Text == "global";
     }
 }
