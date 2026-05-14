@@ -28,7 +28,15 @@ public partial class AssertTests
         Action action = () => scope.Dispose();
 
         action.Should().Throw<AssertFailedException>()
-            .WithMessage($"Assertion failed. Expected values to be equal.{Environment.NewLine}{Environment.NewLine}expected: 1{Environment.NewLine}actual:   2{Environment.NewLine}{Environment.NewLine}Assert.AreEqual(1, 2)");
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected values to be equal.
+
+                expected: 1
+                actual:   2
+
+                Assert.AreEqual(1, 2)
+                """);
     }
 
     public void Scope_MultipleFailures_CollectsAllErrors()
@@ -48,8 +56,23 @@ public partial class AssertTests
             .Which;
 
         innerException.InnerExceptions.Should().HaveCount(2);
-        innerException.InnerExceptions[0].Message.Should().Be($"Assertion failed. Expected values to be equal.{Environment.NewLine}{Environment.NewLine}expected: 1{Environment.NewLine}actual:   2{Environment.NewLine}{Environment.NewLine}Assert.AreEqual(1, 2)");
-        innerException.InnerExceptions[1].Message.Should().Be($"Assertion failed. Expected condition to be true.{Environment.NewLine}{Environment.NewLine}actual: false{Environment.NewLine}{Environment.NewLine}Assert.IsTrue(false)");
+        innerException.InnerExceptions[0].Message.Should().Be(
+            """
+            Assertion failed. Expected values to be equal.
+
+            expected: 1
+            actual:   2
+
+            Assert.AreEqual(1, 2)
+            """);
+        innerException.InnerExceptions[1].Message.Should().Be(
+            """
+            Assertion failed. Expected condition to be true.
+
+            actual: false
+
+            Assert.IsTrue(false)
+            """);
     }
 
     public void Scope_AfterDispose_AssertionsThrowNormally()
@@ -95,7 +118,15 @@ public partial class AssertTests
 
         Action firstDispose = () => scope.Dispose();
         firstDispose.Should().Throw<AssertFailedException>()
-            .WithMessage($"Assertion failed. Expected values to be equal.{Environment.NewLine}{Environment.NewLine}expected: 1{Environment.NewLine}actual:   2{Environment.NewLine}{Environment.NewLine}Assert.AreEqual(1, 2)");
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected values to be equal.
+
+                expected: 1
+                actual:   2
+
+                Assert.AreEqual(1, 2)
+                """);
 
         // Second dispose should be a no-op
         Action secondDispose = () => scope.Dispose();
@@ -137,8 +168,21 @@ public partial class AssertTests
             .Which;
 
         innerException.InnerExceptions.Should().HaveCount(2);
-        innerException.InnerExceptions[0].Message.Should().Be($"Assertion failed. Expected value to not be null.{Environment.NewLine}{Environment.NewLine}Assert.IsNotNull(value)");
-        innerException.InnerExceptions[1].Message.Should().Contain("Assertion failed. Expected values to be equal.");
+        innerException.InnerExceptions[0].Message.Should().Be(
+            """
+            Assertion failed. Expected value to not be null.
+
+            Assert.IsNotNull(value)
+            """);
+        innerException.InnerExceptions[1].Message.Should().Be(
+            """
+            Assertion failed. Expected values to be equal.
+
+            expected: 1
+            actual:   2
+
+            Assert.AreEqual(1, 2)
+            """);
     }
 
     public void Scope_AssertIsInstanceOfType_IsSoftFailure()
@@ -161,7 +205,15 @@ public partial class AssertTests
 
         innerException.InnerExceptions.Should().HaveCount(2);
         innerException.InnerExceptions[0].Message.Should().Be("Assert.IsInstanceOfType failed. 'value' expression: 'value'. Expected type:<System.Int32>. Actual type:<System.String>.");
-        innerException.InnerExceptions[1].Message.Should().Contain("Assertion failed. Expected values to be equal.");
+        innerException.InnerExceptions[1].Message.Should().Be(
+            """
+            Assertion failed. Expected values to be equal.
+
+            expected: 1
+            actual:   2
+
+            Assert.AreEqual(1, 2)
+            """);
     }
 
     public void Scope_AssertIsExactInstanceOfType_IsSoftFailure()
@@ -184,7 +236,15 @@ public partial class AssertTests
 
         innerException.InnerExceptions.Should().HaveCount(2);
         innerException.InnerExceptions[0].Message.Should().Be("Assert.IsExactInstanceOfType failed. 'value' expression: 'value'. Expected exact type:<System.Object>. Actual type:<System.String>.");
-        innerException.InnerExceptions[1].Message.Should().Contain("Assertion failed. Expected values to be equal.");
+        innerException.InnerExceptions[1].Message.Should().Be(
+            """
+            Assertion failed. Expected values to be equal.
+
+            expected: 1
+            actual:   2
+
+            Assert.AreEqual(1, 2)
+            """);
     }
 
     public void Scope_AssertContainsSingle_IsSoftFailure()
@@ -207,6 +267,14 @@ public partial class AssertTests
 
         innerException.InnerExceptions.Should().HaveCount(2);
         innerException.InnerExceptions[0].Message.Should().Be("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). 'collection' expression: 'items'.");
-        innerException.InnerExceptions[1].Message.Should().Contain("Assertion failed. Expected values to be equal.");
+        innerException.InnerExceptions[1].Message.Should().Be(
+            """
+            Assertion failed. Expected values to be equal.
+
+            expected: 1
+            actual:   2
+
+            Assert.AreEqual(1, 2)
+            """);
     }
 }
