@@ -225,6 +225,17 @@ public partial class TypeEnumeratorTests : TestContainer
         testElement.TestMethod.AssemblyName.Should().Be("DummyAssemblyName");
     }
 
+    public void GetTestFromMethodShouldUseManagedTypeNameForGenericTypes()
+    {
+        Type closedType = typeof(DummyGenericTestClass<int>);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(closedType, "DummyAssemblyName");
+
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(closedType.GetMethod(nameof(DummyGenericTestClass<int>.GenericTestMethod))!, classDisablesParallelization: false, _warnings);
+
+        testElement.TestMethod.FullClassName.Should().Be(typeof(DummyGenericTestClass<>).FullName);
+        testElement.TestMethod.ManagedTypeName.Should().Be(typeof(DummyGenericTestClass<>).FullName);
+    }
+
     public void GetTestFromMethodShouldInitializeAsyncTypeNameCorrectly()
     {
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
@@ -513,6 +524,13 @@ public class DummySecondHidingTestClass : DummyOverridingTestClass
     }
 
     public new void DerivedTestMethod()
+    {
+    }
+}
+
+public class DummyGenericTestClass<T>
+{
+    public void GenericTestMethod()
     {
     }
 }
