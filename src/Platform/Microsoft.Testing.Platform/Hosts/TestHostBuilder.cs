@@ -35,7 +35,7 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
 
     public ITestHostManager TestHost { get; } = new TestHostManager();
 
-    public IConfigurationManager Configuration { get; } = new ConfigurationManager(fileSystem, testApplicationModuleInfo);
+    public IConfigurationManager Configuration { get; } = new ConfigurationManager(fileSystem, testApplicationModuleInfo, environment);
 
     public ILoggingManager Logging { get; } = new LoggingManager();
 

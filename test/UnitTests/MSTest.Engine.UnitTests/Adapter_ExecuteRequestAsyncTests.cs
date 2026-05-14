@@ -109,7 +109,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
             ServiceProvider.AddService(new LoggerFactory());
             ServiceProvider.AddService(new FakeClock());
             ServiceProvider.AddService(new SystemTask());
-            ServiceProvider.AddService(new AggregatedConfiguration([], new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()), new SystemFileSystem(), new(null, [], [])));
+            ServiceProvider.AddService(new AggregatedConfiguration([], new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()), new SystemFileSystem(), new SystemEnvironment(), new(null, [], [])));
         }
 
         public MessageBus MessageBus { get; }
