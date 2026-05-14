@@ -542,9 +542,59 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         int endFragmentIndex,
         PropertyBag properties)
     {
+#if NET8_0_OR_GREATER
+        return MatchFilterPattern(
+            filterExpression,
+            testNodeFullPath.AsSpan(startFragmentIndex, endFragmentIndex - startFragmentIndex),
+            properties);
+#else
         string str = testNodeFullPath[startFragmentIndex..endFragmentIndex];
         return MatchFilterPattern(filterExpression, str, properties);
+#endif
     }
+
+#if NET8_0_OR_GREATER
+    private static bool MatchFilterPattern(
+        FilterExpression filterExpression,
+        ReadOnlySpan<char> testNodeFragment,
+        PropertyBag properties)
+    {
+        switch (filterExpression)
+        {
+            case ValueExpression vExpr:
+                return vExpr.Regex.IsMatch(testNodeFragment);
+            case OperatorExpression { Op: FilterOperator.Or, SubExpressions: var subexprs }:
+                foreach (FilterExpression expr in subexprs)
+                {
+                    if (MatchFilterPattern(expr, testNodeFragment, properties))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            case OperatorExpression { Op: FilterOperator.And, SubExpressions: var subexprs }:
+                foreach (FilterExpression expr in subexprs)
+                {
+                    if (!MatchFilterPattern(expr, testNodeFragment, properties))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            case OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subexprs }:
+                return !MatchFilterPattern(subexprs.Single(), testNodeFragment, properties);
+            case ValueAndPropertyExpression { Value: var valueExpr, Properties: var propExpr }:
+                return MatchFilterPattern(valueExpr, testNodeFragment, properties)
+                    && MatchProperties(propExpr, properties);
+            case NopExpression:
+                return true;
+            default:
+                throw ApplicationStateGuard.Unreachable();
+        }
+    }
+#endif
 
     private static bool MatchFilterPattern(
         FilterExpression filterExpression,
