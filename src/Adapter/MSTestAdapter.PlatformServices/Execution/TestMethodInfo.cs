@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -99,7 +98,7 @@ internal partial class TestMethodInfo : ITestMethod
     /// </summary>
     /// <returns>An array of the attributes.</returns>
     public Attribute[]? GetAllAttributes()
-        => [.. ReflectHelper.Instance.GetAttributes<Attribute>(MethodInfo)];
+        => [.. PlatformServiceProvider.Instance.ReflectionOperations.GetAttributes<Attribute>(MethodInfo)];
 
     /// <summary>
     /// Gets all attributes of the test method.
@@ -108,7 +107,7 @@ internal partial class TestMethodInfo : ITestMethod
     /// <returns>An array of the attributes.</returns>
     public TAttributeType[] GetAttributes<TAttributeType>()
         where TAttributeType : Attribute
-        => [.. ReflectHelper.Instance.GetAttributes<TAttributeType>(MethodInfo)];
+        => [.. PlatformServiceProvider.Instance.ReflectionOperations.GetAttributes<TAttributeType>(MethodInfo)];
 
     /// <summary>
     /// Execute test method. Capture failures, handle async and return result.
@@ -167,7 +166,7 @@ internal partial class TestMethodInfo : ITestMethod
     {
         // Get the derived TestMethod attribute from reflection.
         // It should be non-null as it was already validated by IsValidTestMethod.
-        TestMethodAttribute testMethodAttribute = ReflectHelper.Instance.GetSingleAttributeOrDefault<TestMethodAttribute>(MethodInfo)!;
+        TestMethodAttribute testMethodAttribute = PlatformServiceProvider.Instance.ReflectionOperations.GetSingleAttributeOrDefault<TestMethodAttribute>(MethodInfo)!;
 
         // Get the derived TestMethod attribute from Extended TestClass Attribute
         // If the extended TestClass Attribute doesn't have extended TestMethod attribute then base class returns back the original testMethod Attribute
@@ -183,22 +182,21 @@ internal partial class TestMethodInfo : ITestMethod
     /// </returns>
     private RetryBaseAttribute? GetRetryAttribute()
     {
-        // Inline the GetSingleAttributeOrDefault<T> pattern to avoid allocating the
-        // yield-return state machine that GetAttributes<T>() would create.
-        RetryBaseAttribute? foundAttribute = null;
-        foreach (Attribute attribute in ReflectHelper.Instance.GetCustomAttributesCached(MethodInfo))
+        Attribute[] attributes = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached(MethodInfo);
+        RetryBaseAttribute? result = null;
+        foreach (Attribute attribute in attributes)
         {
             if (attribute is RetryBaseAttribute retryAttribute)
             {
-                if (foundAttribute is not null)
+                if (result is not null)
                 {
                     ThrowMultipleAttributesException(nameof(RetryBaseAttribute));
                 }
 
-                foundAttribute = retryAttribute;
+                result = retryAttribute;
             }
         }
 
-        return foundAttribute;
+        return result;
     }
 }

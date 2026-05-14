@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -60,7 +60,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider
             .MockReflectionOperations
-            .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(ParallelizeAttribute)))
+            .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(Attribute)))
             .Returns([new ParallelizeAttribute { Workers = 10 }]);
 
         // Act.
@@ -79,7 +79,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider
             .MockReflectionOperations
-            .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(ParallelizeAttribute)))
+            .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(Attribute)))
             .Returns([new ParallelizeAttribute { Workers = 0 }]);
 
         // Act.
@@ -113,7 +113,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider
             .MockReflectionOperations
-            .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(ParallelizeAttribute)))
+            .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(Attribute)))
             .Returns([new ParallelizeAttribute { Scope = ExecutionScope.MethodLevel }]);
 
         // Act.
@@ -147,7 +147,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider
             .MockReflectionOperations
-            .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(DoNotParallelizeAttribute)))
+            .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(Attribute)))
             .Returns([new DoNotParallelizeAttribute()]);
 
         // Act.
