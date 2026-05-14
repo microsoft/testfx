@@ -29,7 +29,6 @@ steps:
   - name: Fetch issues data
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_AW_ORIGINAL_GITHUB_API_URL: ${{ github.api_url }}
     run: |
       # Create output directory
