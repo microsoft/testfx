@@ -19,8 +19,6 @@ if: >-
     || contains(github.event.pull_request.labels.*.name, 'copilot-autofix')
   )
 
-checkout: false
-
 permissions:
   contents: read
   pull-requests: read
