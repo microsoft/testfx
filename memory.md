@@ -1,7 +1,7 @@
 # TestFX Test Improver Memory
 
 ## Last Updated
-2026-05-13
+2026-05-14
 
 ## Build/Test Commands
 
@@ -68,11 +68,16 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 7. ✅ **DONE** `ExtensionValidationHelper.ValidateUniqueExtension` → merged via #8128
 8. ✅ **DONE** MSTEST0031 code fix tests → confirmed merged via #7898 (2026-05-12)
 9. ✅ **DONE** Quality improvements to `LoggingManagerTests.cs` (`_ =` discards + multi-provider test) → PR submitted 2026-05-13, closes #8140
-10. Code fix test coverage for MSTEST0040 when `AvoidUsingAssertsInAsyncVoidContextFixer` lands (#7891)
-11. `StopPoliciesService` unit tests — complex callback/cancellation logic, no tests
+9. 🔄 Quality improvements to `LoggingManagerTests.cs` — PR #8129 open, CI green
+10. 🔄 `StopPoliciesService` unit tests — patch created (PR push fallback). Patch in run artifacts: https://github.com/microsoft/testfx/actions/runs/25846237976
+11. Code fix test coverage for MSTEST0040 when `AvoidUsingAssertsInAsyncVoidContextFixer` lands (#7891)
 12. `TestFramework.UnitTests` assertion edge cases
 
 ## Completed Work
+
+### 2026-05-14
+- **Task 3**: Implemented 10 unit tests for `StopPoliciesService`. 1352→1374 tests passing. PR push fell back to patch artifact.
+- **Task 7**: Created new Monthly Summary issue (previous #7969 closed by Evangelink as "not_planned").
 
 ### 2026-05-13
 - **Task 3**: Created quality improvements PR for `LoggingManagerTests.cs` — `_ =` discards on all `factory.CreateLogger()` calls + new `BuildAsync_MultipleProviders_OnlyIncludesEnabledOnes` test. All 22 tests pass (net8.0+net9.0). Closes #8140.
@@ -93,11 +98,11 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 |------|----------|
 | Task 1: Discover commands | 2026-04-24 |
 | Task 2: Identify opportunities | 2026-05-01 |
-| Task 3: Implement tests | 2026-05-13 |
+| Task 3: Implement tests | 2026-05-14 |
 | Task 4: Maintain PRs | 2026-05-12 |
 | Task 5: Comment on issues | 2026-05-08 |
 | Task 6: Test infrastructure | 2026-04-29 |
-| Task 7: Monthly summary | 2026-05-13 |
+| Task 7: Monthly summary | 2026-05-14 |
 
 ## Maintainer Priorities
 - PRs merged quickly by Evangelink — receptive to focused test PRs for MTP and MSTest
