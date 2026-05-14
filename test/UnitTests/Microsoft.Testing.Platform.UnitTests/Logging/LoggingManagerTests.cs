@@ -9,12 +9,6 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
-internal interface IExtensionLoggerProvider : ILoggerProvider, IExtension;
-
-internal interface IInitializableLoggerProvider : ILoggerProvider, IAsyncInitializableExtension;
-
-internal interface IInitializableExtensionLoggerProvider : ILoggerProvider, IExtension, IAsyncInitializableExtension;
-
 [TestClass]
 public sealed class LoggingManagerTests
 {
