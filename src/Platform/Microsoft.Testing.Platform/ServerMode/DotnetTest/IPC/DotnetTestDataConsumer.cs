@@ -265,7 +265,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 return null;
             }
 
-            FlatException[] exceptions = ExceptionFlattener.Flatten(errorMessage, exception);
+            (string? ErrorMessage, string? ErrorType, string? StackTrace)[] exceptions = ExceptionFlattener.Flatten(errorMessage, exception);
 
             var exceptionMessages = new ExceptionMessage[exceptions.Length];
             for (int i = 0; i < exceptions.Length; i++)

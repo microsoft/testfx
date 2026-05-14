@@ -5,7 +5,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 internal sealed class ExceptionFlattener
 {
-    internal static FlatException[] Flatten(string? errorMessage, Exception? exception)
+    internal static (string? ErrorMessage, string? ErrorType, string? StackTrace)[] Flatten(string? errorMessage, Exception? exception)
     {
         if (errorMessage is null && exception is null)
         {
@@ -15,9 +15,9 @@ internal sealed class ExceptionFlattener
         string? message = !RoslynString.IsNullOrWhiteSpace(errorMessage) ? errorMessage : exception?.Message;
         string? type = exception?.GetType().FullName;
         string? stackTrace = exception?.StackTrace;
-        var flatException = new FlatException(message, type, stackTrace);
+        (string? ErrorMessage, string? ErrorType, string? StackTrace) flatException = (message, type, stackTrace);
 
-        List<FlatException> flatExceptions = [flatException];
+        List<(string? ErrorMessage, string? ErrorType, string? StackTrace)> flatExceptions = [flatException];
 
         // Add all inner exceptions. This will flatten top level AggregateExceptions,
         // and all AggregateExceptions that are directly in AggregateExceptions, but won't expand
@@ -33,7 +33,7 @@ internal sealed class ExceptionFlattener
             Exception? currentException = aggregate;
             while (currentException is not null)
             {
-                flatExceptions.Add(new FlatException(
+                flatExceptions.Add((
                     currentException.Message,
                     currentException.GetType().FullName,
                     currentException.StackTrace));
@@ -45,5 +45,3 @@ internal sealed class ExceptionFlattener
         return [.. flatExceptions];
     }
 }
-
-internal sealed record FlatException(string? ErrorMessage, string? ErrorType, string? StackTrace);

@@ -9,7 +9,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 [UnsupportedOSPlatform("browser")]
 internal sealed partial class TerminalTestReporter
 {
-    private static void FormatInnerExceptions(ITerminal terminal, FlatException[] exceptions)
+    private static void FormatInnerExceptions(ITerminal terminal, (string? ErrorMessage, string? ErrorType, string? StackTrace)[] exceptions)
     {
         if (exceptions.Length == 0)
         {
@@ -26,7 +26,7 @@ internal sealed partial class TerminalTestReporter
         }
     }
 
-    private static void FormatErrorMessage(ITerminal terminal, FlatException[] exceptions, TestOutcome outcome, int index)
+    private static void FormatErrorMessage(ITerminal terminal, (string? ErrorMessage, string? ErrorType, string? StackTrace)[] exceptions, TestOutcome outcome, int index)
     {
         string? firstErrorMessage = GetStringFromIndexOrDefault(exceptions, e => e.ErrorMessage, index);
         string? firstErrorType = GetStringFromIndexOrDefault(exceptions, e => e.ErrorType, index);
@@ -55,7 +55,7 @@ internal sealed partial class TerminalTestReporter
         terminal.ResetColor();
     }
 
-    private static string? GetStringFromIndexOrDefault(FlatException[] exceptions, Func<FlatException, string?> property, int index) =>
+    private static string? GetStringFromIndexOrDefault((string? ErrorMessage, string? ErrorType, string? StackTrace)[] exceptions, Func<(string? ErrorMessage, string? ErrorType, string? StackTrace), string?> property, int index) =>
         exceptions.Length >= index + 1 ? property(exceptions[index]) : null;
 
     private static void FormatExpectedAndActual(ITerminal terminal, string? expected, string? actual)
@@ -75,7 +75,7 @@ internal sealed partial class TerminalTestReporter
         terminal.ResetColor();
     }
 
-    private static void FormatStackTrace(ITerminal terminal, FlatException[] exceptions, int index)
+    private static void FormatStackTrace(ITerminal terminal, (string? ErrorMessage, string? ErrorType, string? StackTrace)[] exceptions, int index)
     {
         string? stackTrace = GetStringFromIndexOrDefault(exceptions, e => e.StackTrace, index);
         if (RoslynString.IsNullOrWhiteSpace(stackTrace))

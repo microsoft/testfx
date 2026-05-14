@@ -22,7 +22,7 @@ internal sealed partial class TerminalTestReporter
         string? standardOutput,
         string? errorOutput)
     {
-        FlatException[] flatExceptions = ExceptionFlattener.Flatten(errorMessage, exception);
+        (string? ErrorMessage, string? ErrorType, string? StackTrace)[] flatExceptions = ExceptionFlattener.Flatten(errorMessage, exception);
         TestCompleted(
             testNodeUid,
             displayName,
@@ -42,7 +42,7 @@ internal sealed partial class TerminalTestReporter
         TestOutcome outcome,
         TimeSpan? duration,
         string? informativeMessage,
-        FlatException[] exceptions,
+        (string? ErrorMessage, string? ErrorType, string? StackTrace)[] exceptions,
         string? expected,
         string? actual,
         string? standardOutput,
@@ -108,7 +108,7 @@ internal sealed partial class TerminalTestReporter
         TestOutcome outcome,
         TimeSpan? duration,
         string? informativeMessage,
-        FlatException[] flatExceptions,
+        (string? ErrorMessage, string? ErrorType, string? StackTrace)[] flatExceptions,
         string? expected,
         string? actual,
         string? standardOutput,

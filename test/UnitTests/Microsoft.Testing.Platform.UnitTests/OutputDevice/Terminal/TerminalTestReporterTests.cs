@@ -16,7 +16,7 @@ public sealed class TerminalTestReporterTests
     {
         var exception = new Exception("outer", new InvalidOperationException("inner-1", new ArgumentException("inner-2")));
 
-        FlatException[] flattenedExceptions = ExceptionFlattener.Flatten(null, exception);
+        (string? ErrorMessage, string? ErrorType, string? StackTrace)[] flattenedExceptions = ExceptionFlattener.Flatten(null, exception);
 
         Assert.HasCount(3, flattenedExceptions);
         Assert.AreEqual("outer", flattenedExceptions[0].ErrorMessage);
@@ -32,7 +32,7 @@ public sealed class TerminalTestReporterTests
             new InvalidOperationException("inner-1"),
             new ArgumentException("inner-2"));
 
-        FlatException[] flattenedExceptions = ExceptionFlattener.Flatten(null, exception);
+        (string? ErrorMessage, string? ErrorType, string? StackTrace)[] flattenedExceptions = ExceptionFlattener.Flatten(null, exception);
 
         Assert.HasCount(3, flattenedExceptions);
         Assert.AreEqual(typeof(AggregateException).FullName, flattenedExceptions[0].ErrorType);
