@@ -420,4 +420,10 @@ Actual: {2}</value>
   <data name="IsNotNullFailedSummary" xml:space="preserve">
     <value>Expected value to not be null.</value>
   </data>
+  <data name="IsSubsetOfFailedSummary" xml:space="preserve">
+    <value>Expected collection to be a subset of the specified superset.</value>
+  </data>
+  <data name="IsNotSubsetOfFailedSummary" xml:space="preserve">
+    <value>Expected collection to not be a subset of the specified superset.</value>
+  </data>
 </root>

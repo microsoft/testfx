@@ -327,9 +327,19 @@ Rzeczywiste: {2}</target>
         <target state="new">Expected value to not be null.</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsNotSubsetOfFailedSummary">
+        <source>Expected collection to not be a subset of the specified superset.</source>
+        <target state="new">Expected collection to not be a subset of the specified superset.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
         <target state="new">Expected value to be null.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsSubsetOfFailedSummary">
+        <source>Expected collection to be a subset of the specified superset.</source>
+        <target state="new">Expected collection to be a subset of the specified superset.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">
