@@ -175,8 +175,10 @@ function InitializeDotNetCli {
   # Add dotnet to PATH. This prevents any bare invocation of dotnet in custom
   # build steps from using anything other than what we've downloaded.
   Write-PipelinePrependPath -path "$dotnet_root"
+  export DOTNET_ROOT="$dotnet_root"
 
   Write-PipelineSetVariable -name "DOTNET_NOLOGO" -value "1"
+  Write-PipelineSetVariable -name "DOTNET_ROOT" -value "$dotnet_root"
   Write-PipelineSetVariable -name "DOTNET_MULTILEVEL_LOOKUP" -value "0"
   Write-PipelineSetVariable -name "DOTNET_SKIP_FIRST_TIME_EXPERIENCE" -value "1"
   Write-PipelineSetVariable -name "DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE" -value "1"

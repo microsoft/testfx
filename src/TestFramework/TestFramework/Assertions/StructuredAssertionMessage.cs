@@ -20,8 +20,8 @@ internal sealed class StructuredAssertionMessage
 
     private readonly string _summary;
     private readonly List<string> _additionalSummaryLines = [];
+    private readonly List<EvidenceBlock> _evidenceBlocks = [];
     private string? _userMessage;
-    private EvidenceBlock? _evidenceBlock;
     private string? _callSiteExpression;
 
     internal StructuredAssertionMessage(string summary)
@@ -51,7 +51,7 @@ internal sealed class StructuredAssertionMessage
 
     internal StructuredAssertionMessage WithEvidence(EvidenceBlock evidenceBlock)
     {
-        _evidenceBlock = evidenceBlock;
+        _evidenceBlocks.Add(evidenceBlock);
         return this;
     }
 
@@ -101,8 +101,8 @@ internal sealed class StructuredAssertionMessage
             sb.Append(_userMessage);
         }
 
-        // Evidence block (separated by blank line)
-        if (_evidenceBlock is { } evidence)
+        // Evidence blocks (each separated by blank line)
+        foreach (EvidenceBlock evidence in _evidenceBlocks)
         {
             string formattedEvidence = evidence.Format();
             if (!string.IsNullOrEmpty(formattedEvidence))

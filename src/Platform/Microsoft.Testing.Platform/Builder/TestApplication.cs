@@ -305,7 +305,7 @@ public sealed class TestApplication : ITestApplication
         }
 
         // Set the directory to the default test result directory
-        string directory = Path.Combine(testApplicationModuleInfo.GetCurrentTestApplicationDirectory(), AggregatedConfiguration.DefaultTestResultFolderName);
+        string directory = GetDiagnosticDefaultDirectory(environment, testApplicationModuleInfo);
         bool customDirectory = false;
 
         if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.ResultDirectoryOptionKey, out string[]? resultDirectoryArg))
@@ -379,6 +379,17 @@ public sealed class TestApplication : ITestApplication
         return !RoslynString.IsNullOrEmpty(environmentLogLevel)
             && (Enum.TryParse(environmentLogLevel, ignoreCase: true, out parsedLogLevel)
                 || ThrowInvalidDiagnosticVerbosity(environmentLogLevel));
+    }
+
+    internal /* for testing purposes */ static string GetDiagnosticDefaultDirectory(IEnvironment environment, ITestApplicationModuleInfo testApplicationModuleInfo)
+    {
+        string? effectiveWorkingDirectory = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY);
+        if (RoslynString.IsNullOrWhiteSpace(effectiveWorkingDirectory))
+        {
+            effectiveWorkingDirectory = testApplicationModuleInfo.GetCurrentTestApplicationDirectory();
+        }
+
+        return Path.Combine(effectiveWorkingDirectory, AggregatedConfiguration.DefaultTestResultFolderName);
     }
 
     private static bool ThrowInvalidDiagnosticVerbosity(string environmentLogLevel)

@@ -360,9 +360,9 @@ internal sealed partial class TrxReportEngine
         AddArtifactsToCollection(_artifactsByExtension, collectorDataEntries, runDeploymentRoot);
     }
 
-    private string CopyArtifactIntoTrxDirectoryAndReturnHrefValue(FileInfo artifact, string runDeploymentRoot)
+    private string CopyArtifactIntoTrxDirectoryAndReturnHrefValue(FileInfo artifact, string runDeploymentRoot, string? relativeResultsDirectory = null)
     {
-        string artifactDirectory = CreateOrGetTrxArtifactDirectory(runDeploymentRoot);
+        string artifactDirectory = CreateOrGetTrxArtifactDirectory(runDeploymentRoot, relativeResultsDirectory);
         string fileName = artifact.Name;
 
         string destination = Path.Combine(artifactDirectory, fileName);
@@ -386,9 +386,11 @@ internal sealed partial class TrxReportEngine
         return Path.Combine(_environment.MachineName, Path.GetFileName(destination));
     }
 
-    private string CreateOrGetTrxArtifactDirectory(string runDeploymentRoot)
+    private string CreateOrGetTrxArtifactDirectory(string runDeploymentRoot, string? relativeResultsDirectory = null)
     {
-        string directoryName = Path.Combine(_configuration.GetTestResultDirectory(), runDeploymentRoot, "In", _environment.MachineName);
+        string directoryName = relativeResultsDirectory is null
+            ? Path.Combine(_configuration.GetTestResultDirectory(), runDeploymentRoot, "In", _environment.MachineName)
+            : Path.Combine(_configuration.GetTestResultDirectory(), runDeploymentRoot, "In", relativeResultsDirectory, _environment.MachineName);
         if (!Directory.Exists(directoryName))
         {
             Directory.CreateDirectory(directoryName);
@@ -580,7 +582,7 @@ internal sealed partial class TrxReportEngine
             {
                 resultFiles ??= new XElement("ResultFiles");
 
-                string href = CopyArtifactIntoTrxDirectoryAndReturnHrefValue(testFileArtifact.FileInfo, runDeploymentRoot);
+                string href = CopyArtifactIntoTrxDirectoryAndReturnHrefValue(testFileArtifact.FileInfo, runDeploymentRoot, executionId);
                 resultFiles.Add(new XElement(
                     "ResultFile",
                     new XAttribute("path", href)));
