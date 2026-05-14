@@ -246,14 +246,14 @@ public sealed partial class Assert
 
         if (actual is not null && expected is not null && !actual.GetType().Equals(expected.GetType()))
         {
-            summary = "Expected values to be equal, but they are of different types.";
+            summary = FrameworkMessages.AreEqualDifferentTypesFailedSummary;
             evidence = EvidenceBlock.Create()
                 .AddLine("expected:", $"{expectedRendered} ({expected.GetType().FullName})")
                 .AddLine("actual:", $"{actualRendered} ({actual.GetType().FullName})");
         }
         else if (expected is string expectedString && actual is string actualString)
         {
-            summary = "Expected strings to be equal (case-sensitive).";
+            summary = FrameworkMessages.AreEqualStringsFailedSummary;
             int diffIndex = FindFirstStringDifference(expectedString, actualString);
             string lengthInfo = expectedString.Length == actualString.Length
                 ? string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthBothMsg, expectedString.Length, diffIndex)
@@ -275,7 +275,7 @@ public sealed partial class Assert
         }
         else
         {
-            summary = "Expected values to be equal.";
+            summary = FrameworkMessages.AreEqualFailedSummary;
             evidence = EvidenceBlock.Create()
                 .AddLine("expected:", expectedRendered)
                 .AddLine("actual:", actualRendered);
@@ -387,14 +387,16 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ReportAssertAreNotEqualFailed(object? notExpected, object? actual, string? message, string notExpectedExpression, string actualExpression)
     {
+        string notExpectedRendered = AssertionValueRenderer.RenderValue(notExpected);
         string actualRendered = AssertionValueRenderer.RenderValue(actual);
 
         EvidenceBlock evidence = EvidenceBlock.Create()
             .AddLine("actual:", actualRendered);
 
-        StructuredAssertionMessage structured = new("Expected values to not be equal.");
+        StructuredAssertionMessage structured = new(FrameworkMessages.AreNotEqualFailedSummary);
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(notExpectedRendered, actualRendered);
         structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreNotEqual", notExpectedExpression, actualExpression));
 
         ReportAssertFailed(structured);

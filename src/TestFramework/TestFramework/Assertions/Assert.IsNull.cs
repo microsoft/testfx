@@ -164,7 +164,7 @@ public sealed partial class Assert
         EvidenceBlock evidence = EvidenceBlock.Create()
             .AddLine("actual:", actualValue);
 
-        StructuredAssertionMessage structured = new("Expected value to be null.");
+        StructuredAssertionMessage structured = new(FrameworkMessages.IsNullFailedSummary);
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
         structured.WithExpectedAndActual(null, actualValue);
@@ -213,7 +213,7 @@ public sealed partial class Assert
     private static void ReportAssertIsNotNullFailed(string? message, string valueExpression)
     {
         // RFC: IsNotNull omits the evidence block since actual is always null
-        StructuredAssertionMessage structured = new("Expected value to not be null.");
+        StructuredAssertionMessage structured = new(FrameworkMessages.IsNotNullFailedSummary);
         structured.WithUserMessage(message);
         structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotNull", valueExpression));
 

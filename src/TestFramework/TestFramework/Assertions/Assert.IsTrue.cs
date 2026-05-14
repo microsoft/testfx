@@ -165,7 +165,7 @@ public sealed partial class Assert
         EvidenceBlock evidence = EvidenceBlock.Create()
             .AddLine("actual:", actualValue);
 
-        StructuredAssertionMessage structured = new("Expected condition to be true.");
+        StructuredAssertionMessage structured = new(FrameworkMessages.IsTrueFailedSummary);
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
         structured.WithExpectedAndActual(null, actualValue);
@@ -216,7 +216,7 @@ public sealed partial class Assert
         EvidenceBlock evidence = EvidenceBlock.Create()
             .AddLine("actual:", actualValue);
 
-        StructuredAssertionMessage structured = new("Expected condition to be false.");
+        StructuredAssertionMessage structured = new(FrameworkMessages.IsFalseFailedSummary);
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
         structured.WithExpectedAndActual(null, actualValue);

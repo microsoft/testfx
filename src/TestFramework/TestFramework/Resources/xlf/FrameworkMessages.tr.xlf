@@ -17,6 +17,11 @@
         <target state="translated">Yinelenen öğe bulundu:&lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreEqualDifferentTypesFailedSummary">
+        <source>Expected values to be equal, but they are of different types.</source>
+        <target state="new">Expected values to be equal, but they are of different types.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreEqualFailMsg">
         <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
         <target state="translated">Beklenen:&lt;{1}&gt;. Gerçek:&lt;{2}&gt;. {0}</target>
@@ -36,6 +41,11 @@
         <source>Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</source>
         <target state="translated">Beklenen:&lt;{1} ({2})&gt;. Gerçek:&lt;{3} ({4})&gt;. {0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualFailedSummary">
+        <source>Expected values to be equal.</source>
+        <target state="new">Expected values to be equal.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffFailMsg">
         <source>{0}{1}
@@ -68,6 +78,11 @@
         <target state="translated">Beklenen dize uzunluğu {0} idi, ancak dize uzunluğu {1} oldu.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreEqualStringsFailedSummary">
+        <source>Expected strings to be equal (case-sensitive).</source>
+        <target state="new">Expected strings to be equal (case-sensitive).</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
         <source>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
         <target state="translated">Şunun dışında bir değer bekleniyor:&lt;{1}&gt;. Gerçek:&lt;{2}&gt;. {0}</target>
@@ -77,6 +92,11 @@
         <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
         <target state="translated">Beklenen değer &lt;{1}&gt; ile gerçek değer &lt;{2}&gt; arasında, şundan büyük olan fark bekleniyor: &lt;{3}&gt;. {0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualFailedSummary">
+        <source>Expected values to not be equal.</source>
+        <target state="new">Expected values to not be equal.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreNotSameBothNull">
         <source>Both values are &lt;null&gt;. {0}</source>
@@ -272,6 +292,11 @@ Gerçekte olan: {2}</target>
         <target state="translated">Geçersiz GitHub anahtar URL'si</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsFalseFailedSummary">
+        <source>Expected condition to be false.</source>
+        <target state="new">Expected condition to be false.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
         <target state="translated">Değer '{0}' beklenen aralık [{1}..{2}] içinde değil. {3}</target>
@@ -315,6 +340,21 @@ Gerçekte olan: {2}</target>
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}</source>
         <target state="translated">'{0}' dizesi, '{1}' deseni ile eşleşiyor. {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsNotNullFailedSummary">
+        <source>Expected value to not be null.</source>
+        <target state="new">Expected value to not be null.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsNullFailedSummary">
+        <source>Expected value to be null.</source>
+        <target state="new">Expected value to be null.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsTrueFailedSummary">
+        <source>Expected condition to be true.</source>
+        <target state="new">Expected condition to be true.</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
