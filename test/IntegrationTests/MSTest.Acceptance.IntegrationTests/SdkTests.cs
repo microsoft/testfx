@@ -534,4 +534,63 @@ namespace MSTestSdkTest
         compilationResult.AssertExitCodeIs(1);
         compilationResult.AssertOutputContains("Property MSTestParallelizeWorkers cannot be set when MSTestParallelizeScope is 'None'.");
     }
+
+    // Verifies that the MSTestParallelizeScope/MSTestParallelizeWorkers properties also work for
+    // projects that don't use MSTest.Sdk (i.e. they reference MSTest.TestAdapter directly via the
+    // MSTest meta-package), since the targets logic ships in MSTest.TestAdapter.
+    [TestMethod]
+    public async Task MSTestParallelizeScope_NonSdkProject_EmitsParallelizeAttribute()
+    {
+        const string NonSdkSource = """
+#file MSTestPlain.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>$TargetFramework$</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <PlatformTarget>x64</PlatformTarget>
+    <NoWarn>$(NoWarn);NU1507</NoWarn>
+    <MSTestParallelizeScope>MethodLevel</MSTestParallelizeScope>
+    <MSTestParallelizeWorkers>3</MSTestParallelizeWorkers>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+  </ItemGroup>
+</Project>
+
+#file UnitTest1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace MSTestPlainTest
+{
+    [TestClass]
+    public class UnitTest1
+    {
+        [TestMethod]
+        public void TestMethod1()
+        {
+        }
+    }
+}
+""";
+
+        const string PlainAssetName = "MSTestPlain";
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            PlainAssetName,
+            NonSdkSource
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, PlainAssetName, TargetFrameworks.NetCurrent, buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(0, 1, 0);
+        testHostResult.AssertOutputContains("Test Parallelization enabled");
+        testHostResult.AssertOutputContains("(Workers: 3, Scope: MethodLevel)");
+    }
 }
