@@ -30,6 +30,9 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
+        // In MTP run mode, MTP only invokes the executor (no separate discovery call), so the
+        // single sessionexit event carries the full picture: settings, config_source, attribute
+        // usage, and assertion usage.
         string diagContentsPattern =
 """
 .+ Send telemetry event: dotnet/testingplatform/mstest/sessionexit
@@ -37,11 +40,15 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
 """;
         string diagFilePath = await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
 
-        // Verify attribute usage and config source are also present
         string content = await File.ReadAllTextAsync(diagFilePath, TestContext.CancellationToken);
         Assert.IsTrue(Regex.IsMatch(content, "mstest\\.attribute_usage"), $"Expected attribute_usage in telemetry.\n{content}");
         Assert.IsTrue(Regex.IsMatch(content, "mstest\\.config_source"), $"Expected config_source in telemetry.\n{content}");
         Assert.IsTrue(Regex.IsMatch(content, "mstest\\.assertion_usage"), $"Expected assertion_usage in telemetry.\n{content}");
+
+        // Regression guard: discovery + execution data must ship in a single sessionexit event,
+        // not split across two (an earlier iteration of this code did the latter).
+        MatchCollection sessionExitEvents = Regex.Matches(content, "Send telemetry event: dotnet/testingplatform/mstest/sessionexit");
+        Assert.HasCount(1, sessionExitEvents, $"Expected exactly one MSTest sessionexit telemetry event, found {sessionExitEvents.Count}.\n{content}");
     }
 
     #endregion
@@ -65,7 +72,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
 
         string diagContentsPattern =
 """
-.+ Send telemetry event: dotnet/testingplatform/mstest/sessionexit[\s\S]+?mstest\.attribute_usage
+.+ Send telemetry event: dotnet/testingplatform/mstest/discovery[\s\S]+?mstest\.attribute_usage
 """;
         await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
     }
@@ -102,7 +109,10 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
         string content = await File.ReadAllTextAsync(diagFilePath, TestContext.CancellationToken);
         Assert.IsFalse(
             Regex.IsMatch(content, "Send telemetry event: dotnet/testingplatform/mstest/sessionexit"),
-            "MSTest telemetry event should not be sent when telemetry is disabled.");
+            "MSTest sessionexit telemetry event should not be sent when telemetry is disabled.");
+        Assert.IsFalse(
+            Regex.IsMatch(content, "Send telemetry event: dotnet/testingplatform/mstest/discovery"),
+            "MSTest discovery telemetry event should not be sent when telemetry is disabled.");
     }
 
     #endregion

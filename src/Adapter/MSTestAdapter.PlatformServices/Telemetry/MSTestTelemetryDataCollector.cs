@@ -12,6 +12,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// Collects and aggregates telemetry data about MSTest usage within a test session.
 /// Captures settings, attribute usage, custom/inherited types, and assertion API usage.
 /// </summary>
+/// <remarks>
+/// This collector relies on static state (<see cref="s_current"/>) that lives in the
+/// AppDomain in which the adapter executes. On .NET Framework runs that opt into the
+/// adapter's child-AppDomain isolation, code that runs inside the child AppDomain (for
+/// example, attribute discovery via the adapter's enumerators) sees its own
+/// <see cref="Current"/> snapshot, which is initially null. In that case telemetry from
+/// the isolated AppDomain is silently dropped (the <c>Current?.Track*</c> call sites are
+/// null-safe). This is an intentional, graceful degradation: the .NET Framework AppDomain
+/// scenario is rare and the effort to marshal counters across AppDomain boundaries via
+/// <see cref="MarshalByRefObject"/> is not justified for best-effort usage telemetry.
+/// </remarks>
 internal sealed class MSTestTelemetryDataCollector
 {
     private readonly Dictionary<string, long> _attributeCounts = [];
@@ -20,6 +31,7 @@ internal sealed class MSTestTelemetryDataCollector
 
 #pragma warning disable IDE0032 // Use auto property - Volatile.Read/Write requires a ref to a field
     private static MSTestTelemetryDataCollector? s_current;
+    private static int s_discoveryEventEmitted;
 #pragma warning restore IDE0032 // Use auto property
 
     /// <summary>
@@ -45,11 +57,6 @@ internal sealed class MSTestTelemetryDataCollector
 
         return existingCollector ?? collector;
     }
-
-    /// <summary>
-    /// Gets a value indicating whether any data has been collected.
-    /// </summary>
-    internal bool HasData { get; private set; }
 
     /// <summary>
     /// Checks whether telemetry collection is opted out via environment variables.
@@ -80,8 +87,6 @@ internal sealed class MSTestTelemetryDataCollector
     /// <param name="attributes">The cached attributes from the method.</param>
     internal void TrackDiscoveredMethod(Attribute[] attributes)
     {
-        HasData = true;
-
         foreach (Attribute attribute in attributes)
         {
             Type attributeType = attribute.GetType();
@@ -133,8 +138,6 @@ internal sealed class MSTestTelemetryDataCollector
     /// <param name="attributes">The cached attributes from the class.</param>
     internal void TrackDiscoveredClass(Attribute[] attributes)
     {
-        HasData = true;
-
         foreach (Attribute attribute in attributes)
         {
             Type attributeType = attribute.GetType();
@@ -163,13 +166,49 @@ internal sealed class MSTestTelemetryDataCollector
     }
 
     /// <summary>
-    /// Builds the telemetry metrics dictionary for sending via the telemetry collector.
+    /// Builds the discovery telemetry metrics dictionary (settings + discovery-time data).
+    /// Sent at the end of MTP discover-only sessions (e.g. dotnet test --list-tests).
     /// </summary>
-    /// <returns>A dictionary of telemetry key-value pairs.</returns>
-    internal Dictionary<string, object> BuildMetrics()
+    /// <returns>A dictionary of telemetry key-value pairs for the discovery event.</returns>
+    internal Dictionary<string, object> BuildDiscoveryMetrics()
+    {
+        Dictionary<string, object> metrics = [];
+        AddDiscoveryMetrics(metrics);
+        return metrics;
+    }
+
+    /// <summary>
+    /// Builds the execution telemetry metrics dictionary. Sent at the end of an MSTest run
+    /// (MTP run mode or VSTest run mode). Always carries assertion usage. Also carries the
+    /// settings/attribute/config payload UNLESS a discovery event has already been emitted
+    /// during this process — that avoids duplicating the discovery payload across two events
+    /// when a host (such as a future MTP host) chooses to call both discover and run within
+    /// the same session.
+    /// </summary>
+    /// <param name="assertionCounts">Drained assertion call counts captured during execution.</param>
+    /// <param name="includeDiscoveryPayload">When true, also include the discovery metrics
+    /// (settings, config_source, attribute_usage, custom_test_*_types). False when the discovery
+    /// event already shipped these in this process.</param>
+    /// <returns>A dictionary of telemetry key-value pairs for the sessionexit event.</returns>
+    internal Dictionary<string, object> BuildExecutionMetrics(Dictionary<string, long> assertionCounts, bool includeDiscoveryPayload)
     {
         Dictionary<string, object> metrics = [];
 
+        if (includeDiscoveryPayload)
+        {
+            AddDiscoveryMetrics(metrics);
+        }
+
+        if (assertionCounts.Count > 0)
+        {
+            metrics["mstest.assertion_usage"] = SerializeDictionary(assertionCounts);
+        }
+
+        return metrics;
+    }
+
+    private void AddDiscoveryMetrics(Dictionary<string, object> metrics)
+    {
         // Settings
         AddSettingsMetrics(metrics);
 
@@ -179,36 +218,27 @@ internal sealed class MSTestTelemetryDataCollector
             metrics["mstest.config_source"] = ConfigurationSource;
         }
 
-        // Attribute usage (aggregated counts as JSON, sorted for deterministic output)
+        // Attribute usage (aggregated counts as JSON; serializer enforces ordinal sort)
         if (_attributeCounts.Count > 0)
         {
-            metrics["mstest.attribute_usage"] = SerializeDictionary(_attributeCounts.OrderBy(static kvp => kvp.Key));
+            metrics["mstest.attribute_usage"] = SerializeDictionary(_attributeCounts);
         }
 
-        // Custom/inherited types (anonymized names, sorted for deterministic output)
+        // Custom/inherited types (anonymized names; serializer enforces ordinal sort)
         if (_customTestMethodTypes.Count > 0)
         {
-            metrics["mstest.custom_test_method_types"] = SerializeCollection(_customTestMethodTypes.OrderBy(static x => x));
+            metrics["mstest.custom_test_method_types"] = SerializeCollection(_customTestMethodTypes);
         }
 
         if (_customTestClassTypes.Count > 0)
         {
-            metrics["mstest.custom_test_class_types"] = SerializeCollection(_customTestClassTypes.OrderBy(static x => x));
+            metrics["mstest.custom_test_class_types"] = SerializeCollection(_customTestClassTypes);
         }
-
-        // Assertion usage (drain the static counters, sorted for deterministic output)
-        Dictionary<string, long> assertionCounts = TelemetryCollector.DrainAssertionCallCounts();
-        if (assertionCounts.Count > 0)
-        {
-            metrics["mstest.assertion_usage"] = SerializeDictionary(assertionCounts.OrderBy(static kvp => kvp.Key));
-        }
-
-        return metrics;
     }
 
     private static string SerializeCollection(IEnumerable<string> values)
     {
-        System.Text.StringBuilder builder = new("[");
+        StringBuilder builder = new("[");
         bool isFirst = true;
 
         foreach (string value in values.OrderBy(static x => x, StringComparer.Ordinal))
@@ -228,7 +258,7 @@ internal sealed class MSTestTelemetryDataCollector
 
     private static string SerializeDictionary(IEnumerable<KeyValuePair<string, long>> values)
     {
-        System.Text.StringBuilder builder = new("{");
+        StringBuilder builder = new("{");
         bool isFirst = true;
 
         foreach (KeyValuePair<string, long> value in values.OrderBy(x => x.Key, StringComparer.Ordinal))
@@ -240,7 +270,7 @@ internal sealed class MSTestTelemetryDataCollector
 
             AppendJsonString(builder, value.Key);
             builder.Append(':');
-            builder.Append(value.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            builder.Append(value.Value.ToString(CultureInfo.InvariantCulture));
             isFirst = false;
         }
 
@@ -248,7 +278,7 @@ internal sealed class MSTestTelemetryDataCollector
         return builder.ToString();
     }
 
-    private static void AppendJsonString(System.Text.StringBuilder builder, string value)
+    private static void AppendJsonString(StringBuilder builder, string value)
     {
         builder.Append('"');
 
@@ -281,7 +311,7 @@ internal sealed class MSTestTelemetryDataCollector
                     if (char.IsControl(character))
                     {
                         builder.Append("\\u");
-                        builder.Append(((int)character).ToString("x4", System.Globalization.CultureInfo.InvariantCulture));
+                        builder.Append(((int)character).ToString("x4", CultureInfo.InvariantCulture));
                     }
                     else
                     {
@@ -300,7 +330,7 @@ internal sealed class MSTestTelemetryDataCollector
         MSTestSettings settings = MSTestSettings.CurrentSettings;
 
         // Parallelization
-        metrics["mstest.setting.parallelization_enabled"] = !settings.DisableParallelization;
+        metrics["mstest.setting.parallelization_enabled"] = AsTelemetryBool(!settings.DisableParallelization);
         if (settings.ParallelizationScope is not null)
         {
             metrics["mstest.setting.parallelization_scope"] = settings.ParallelizationScope.Value.ToString();
@@ -319,16 +349,22 @@ internal sealed class MSTestTelemetryDataCollector
         metrics["mstest.setting.class_cleanup_timeout"] = settings.ClassCleanupTimeout;
         metrics["mstest.setting.test_initialize_timeout"] = settings.TestInitializeTimeout;
         metrics["mstest.setting.test_cleanup_timeout"] = settings.TestCleanupTimeout;
-        metrics["mstest.setting.cooperative_cancellation"] = settings.CooperativeCancellationTimeout;
+        metrics["mstest.setting.cooperative_cancellation"] = AsTelemetryBool(settings.CooperativeCancellationTimeout);
 
         // Behavior
-        metrics["mstest.setting.map_inconclusive_to_failed"] = settings.MapInconclusiveToFailed;
-        metrics["mstest.setting.map_not_runnable_to_failed"] = settings.MapNotRunnableToFailed;
-        metrics["mstest.setting.treat_discovery_warnings_as_errors"] = settings.TreatDiscoveryWarningsAsErrors;
-        metrics["mstest.setting.consider_empty_data_source_as_inconclusive"] = settings.ConsiderEmptyDataSourceAsInconclusive;
-        metrics["mstest.setting.order_tests_by_name"] = settings.OrderTestsByNameInClass;
-        metrics["mstest.setting.capture_debug_traces"] = settings.CaptureDebugTraces;
+        metrics["mstest.setting.map_inconclusive_to_failed"] = AsTelemetryBool(settings.MapInconclusiveToFailed);
+        metrics["mstest.setting.map_not_runnable_to_failed"] = AsTelemetryBool(settings.MapNotRunnableToFailed);
+        metrics["mstest.setting.treat_discovery_warnings_as_errors"] = AsTelemetryBool(settings.TreatDiscoveryWarningsAsErrors);
+        metrics["mstest.setting.consider_empty_data_source_as_inconclusive"] = AsTelemetryBool(settings.ConsiderEmptyDataSourceAsInconclusive);
+        metrics["mstest.setting.order_tests_by_name"] = AsTelemetryBool(settings.OrderTestsByNameInClass);
+        metrics["mstest.setting.capture_debug_traces"] = AsTelemetryBool(settings.CaptureDebugTraces);
     }
+
+    // MTP's telemetry providers (e.g. AppInsightsProvider) reject raw boolean values and assert
+    // that they should be sent as their lowercase string form. This mirrors
+    // Microsoft.Testing.Platform.Telemetry.TelemetryExtensions.AsTelemetryBool, which we can't
+    // reference from here because that type lives in a different assembly.
+    private static string AsTelemetryBool(bool value) => value ? "true" : "false";
 
     private static string AnonymizeString(string value)
     {
@@ -343,22 +379,88 @@ internal sealed class MSTestTelemetryDataCollector
     }
 
     /// <summary>
-    /// Sends collected telemetry via the provided sender delegate and resets the current collector.
-    /// Safe to call even when no sender is available (no-op).
+    /// Sends the accumulated discovery telemetry via the provided sender delegate and clears the
+    /// discovery state by resetting the current collector. Safe to call when no sender is available
+    /// (the collector is still cleared so state does not leak across sessions).
     /// </summary>
     /// <param name="telemetrySender">Optional delegate to send telemetry. If null, telemetry is silently discarded.</param>
-    internal static async Task SendTelemetryAndResetAsync(Func<string, IDictionary<string, object>, Task>? telemetrySender)
+    internal static async Task SendDiscoveryTelemetryAndResetAsync(Func<string, IDictionary<string, object>, Task>? telemetrySender)
     {
         try
         {
             MSTestTelemetryDataCollector? collector = Current;
-            if (collector is not { HasData: true } || telemetrySender is null)
+            if (collector is null || telemetrySender is null)
             {
-                TelemetryCollector.DrainAssertionCallCounts();
                 return;
             }
 
-            Dictionary<string, object> metrics = collector.BuildMetrics();
+            // Defense in depth: re-check opt-out at send time in case the env var was set after
+            // EnsureInitialized but before this point.
+            if (IsTelemetryOptedOut())
+            {
+                return;
+            }
+
+            Dictionary<string, object> metrics = collector.BuildDiscoveryMetrics();
+            if (metrics.Count > 0)
+            {
+                await telemetrySender("dotnet/testingplatform/mstest/discovery", metrics).ConfigureAwait(false);
+
+                // Mark that the discovery payload (settings + attribute_usage + custom_test_*_types
+                // + config_source) has shipped in this process so a subsequent execution event in
+                // the same session does not duplicate it.
+                Interlocked.Exchange(ref s_discoveryEventEmitted, 1);
+            }
+        }
+        catch (Exception)
+        {
+            // Telemetry should never cause test failures
+        }
+        finally
+        {
+            // Clear the current collector so a subsequent execution accumulates settings/config
+            // anew (settings are static-per-process so re-population is cheap and keeps each
+            // event self-contained).
+            Current = null;
+        }
+    }
+
+    /// <summary>
+    /// Sends the accumulated execution telemetry via the provided sender delegate, drains the
+    /// static assertion counters, and clears the current collector. Safe to call when no sender
+    /// is available (the counters and collector are still drained/cleared so state does not leak
+    /// across sessions).
+    /// </summary>
+    /// <param name="telemetrySender">Optional delegate to send telemetry. If null, telemetry is silently discarded.</param>
+    internal static async Task SendExecutionTelemetryAndResetAsync(Func<string, IDictionary<string, object>, Task>? telemetrySender)
+    {
+        try
+        {
+            // Always drain the static assertion counters so they don't leak across sessions,
+            // even when no sender is wired (VSTest mode) or no collector was initialized
+            // (e.g. telemetry opted out before EnsureInitialized was called).
+            Dictionary<string, long> assertionCounts = TelemetryCollector.DrainAssertionCallCounts();
+
+            MSTestTelemetryDataCollector? collector = Current;
+            if (collector is null || telemetrySender is null)
+            {
+                return;
+            }
+
+            // Defense in depth: re-check opt-out at send time in case the env var was set after
+            // EnsureInitialized but before this point.
+            if (IsTelemetryOptedOut())
+            {
+                return;
+            }
+
+            // If the discovery event already shipped the settings/attribute payload during this
+            // process, do not duplicate it in the sessionexit event. The flag is reset below in
+            // the finally block so each process can still ship a fresh payload after a full
+            // session reset.
+            bool includeDiscoveryPayload = Interlocked.CompareExchange(ref s_discoveryEventEmitted, 0, 0) == 0;
+
+            Dictionary<string, object> metrics = collector.BuildExecutionMetrics(assertionCounts, includeDiscoveryPayload);
             if (metrics.Count > 0)
             {
                 await telemetrySender("dotnet/testingplatform/mstest/sessionexit", metrics).ConfigureAwait(false);
@@ -371,6 +473,7 @@ internal sealed class MSTestTelemetryDataCollector
         finally
         {
             Current = null;
+            Interlocked.Exchange(ref s_discoveryEventEmitted, 0);
         }
     }
 }

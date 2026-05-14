@@ -199,7 +199,7 @@ internal sealed class MSTestExecutor : ITestExecutor
 
 #if !WINDOWS_UWP && !WIN_UI
     private Task SendTelemetryAsync()
-        => MSTestTelemetryDataCollector.SendTelemetryAndResetAsync(_telemetrySender);
+        => MSTestTelemetryDataCollector.SendExecutionTelemetryAndResetAsync(_telemetrySender);
 #else
     private static Task SendTelemetryAsync()
         => Task.CompletedTask;

@@ -24,6 +24,9 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
     private readonly Func<string, IDictionary<string, object>, Task>? _telemetrySender;
 #endif
 
+    // The parameterless constructor is required by VSTest, which instantiates the
+    // discoverer via reflection. The internal constructor exists for tests and for the
+    // MTP bridge (MSTestBridgedTestFramework) which injects a telemetry sender.
     public MSTestDiscoverer()
         : this(new TestSourceHandler())
     {
@@ -49,9 +52,12 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
     [System.Security.SecurityCritical]
     [SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "Discovery context can be null.")]
     public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink)
-        => DiscoverTests(sources, discoveryContext, logger, discoverySink, null, isMTP: false);
+        // VSTest's ITestDiscoverer is a synchronous interface. The telemetry sender is null in
+        // this code path (only the MTP bridge supplies one), so the awaited send below completes
+        // synchronously and GetAwaiter().GetResult() does not actually block on I/O.
+        => DiscoverTestsAsync(sources, discoveryContext, logger, discoverySink, configuration: null, isMTP: false).GetAwaiter().GetResult();
 
-    internal void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IConfiguration? configuration, bool isMTP)
+    internal async Task DiscoverTestsAsync(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IConfiguration? configuration, bool isMTP)
     {
         if (sources is null)
         {
@@ -68,7 +74,7 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
             throw new ArgumentNullException(nameof(discoverySink));
         }
 
-        // Initialize telemetry collection if not already set (e.g. first call in the session)
+        // Initialize telemetry collection if not already set (e.g. first call in the session).
 #if !WINDOWS_UWP && !WIN_UI
         if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
         {
@@ -86,7 +92,12 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
         finally
         {
 #if !WINDOWS_UWP && !WIN_UI
-            MSTestTelemetryDataCollector.SendTelemetryAndResetAsync(_telemetrySender).GetAwaiter().GetResult();
+            // Send the discovery telemetry event ('mstest/discovery'). This always runs at the
+            // end of discovery — for discover-only sessions it is the only event; for sessions
+            // where a run follows, MSTestExecutor will send a separate 'mstest/sessionexit' event
+            // carrying assertion usage. Keeping the two events distinct avoids settings/attribute
+            // duplication and lets each event be self-contained.
+            await MSTestTelemetryDataCollector.SendDiscoveryTelemetryAndResetAsync(_telemetrySender).ConfigureAwait(false);
 #endif
         }
     }

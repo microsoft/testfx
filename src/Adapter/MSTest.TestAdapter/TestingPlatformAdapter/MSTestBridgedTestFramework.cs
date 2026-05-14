@@ -43,8 +43,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
             Debugger.Launch();
         }
 
-        new MSTestDiscoverer(new TestSourceHandler(), CreateTelemetrySender()).DiscoverTests(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink, _configuration, isMTP: true);
-        return Task.CompletedTask;
+        return new MSTestDiscoverer(new TestSourceHandler(), CreateTelemetrySender()).DiscoverTestsAsync(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink, _configuration, isMTP: true);
     }
 
     /// <inheritdoc />

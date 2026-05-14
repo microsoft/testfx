@@ -19,22 +19,7 @@ internal class TypeEnumerator
     private readonly TypeValidator _typeValidator;
     private readonly TestMethodValidator _testMethodValidator;
     private readonly ReflectHelper _reflectHelper;
-#if !WINDOWS_UWP && !WIN_UI
-    private readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector? _telemetryDataCollector;
-#endif
 
-#if !WINDOWS_UWP && !WIN_UI
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TypeEnumerator"/> class.
-    /// </summary>
-    /// <param name="type"> The reflected type. </param>
-    /// <param name="assemblyFilePath"> The name of the assembly being reflected. </param>
-    /// <param name="reflectHelper"> An instance to reflection helper for type information. </param>
-    /// <param name="typeValidator"> The validator for test classes. </param>
-    /// <param name="testMethodValidator"> The validator for test methods. </param>
-    /// <param name="telemetryDataCollector"> Optional telemetry data collector for tracking API usage. </param>
-    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector? telemetryDataCollector = null)
-#else
     /// <summary>
     /// Initializes a new instance of the <see cref="TypeEnumerator"/> class.
     /// </summary>
@@ -44,16 +29,12 @@ internal class TypeEnumerator
     /// <param name="typeValidator"> The validator for test classes. </param>
     /// <param name="testMethodValidator"> The validator for test methods. </param>
     internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator)
-#endif
     {
         _type = type;
         _assemblyFilePath = assemblyFilePath;
         _reflectHelper = reflectHelper;
         _typeValidator = typeValidator;
         _testMethodValidator = testMethodValidator;
-#if !WINDOWS_UWP && !WIN_UI
-        _telemetryDataCollector = telemetryDataCollector;
-#endif
     }
 
     /// <summary>
@@ -68,12 +49,14 @@ internal class TypeEnumerator
             return null;
         }
 
-        // Track class-level attributes for telemetry
+        // Track class-level attributes for telemetry (read Current per call so a session reset
+        // between TypeEnumerator construction and use cannot cause writes to land on an
+        // orphaned collector).
 #if !WINDOWS_UWP && !WIN_UI
-        if (_telemetryDataCollector is not null)
+        if (Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector.Current is { } telemetryDataCollector)
         {
             Attribute[] classAttributes = _reflectHelper.GetCustomAttributesCached(_type);
-            _telemetryDataCollector.TrackDiscoveredClass(classAttributes);
+            telemetryDataCollector.TrackDiscoveredClass(classAttributes);
         }
 #endif
 
@@ -174,7 +157,7 @@ internal class TypeEnumerator
 
         Attribute[] attributes = _reflectHelper.GetCustomAttributesCached(method);
 #if !WINDOWS_UWP && !WIN_UI
-        _telemetryDataCollector?.TrackDiscoveredMethod(attributes);
+        Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector.Current?.TrackDiscoveredMethod(attributes);
 #endif
         TestMethodAttribute? testMethodAttribute = null;
         List<string>? workItemIds = null;
