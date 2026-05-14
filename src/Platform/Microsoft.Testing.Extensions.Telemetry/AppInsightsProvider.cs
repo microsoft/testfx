@@ -5,7 +5,6 @@
 using System.Threading.Channels;
 #endif
 
-using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -37,7 +36,6 @@ internal sealed partial class AppInsightsProvider :
     private readonly bool _isCi;
     private readonly IEnvironment _environment;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
-    private readonly ITask _task;
     private readonly IClock _clock;
     private readonly ITelemetryInformation _telemetryInformation;
     private readonly ITelemetryClientFactory _telemetryClientFactory;
