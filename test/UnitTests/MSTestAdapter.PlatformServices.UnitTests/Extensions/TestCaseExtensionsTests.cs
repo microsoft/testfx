@@ -55,4 +55,17 @@ public class TestCaseExtensionsTests : TestContainer
 
         resultUnitTestElement.TestMethod.FullClassName.Should().Be("DummyClassName");
     }
+
+    public void ToUnitTestElementShouldPreferManagedTypeOverTestClassNameWhenAvailable()
+    {
+        TestCase testCase = new("SemanticClassName.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!);
+        testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, "SyntacticClassName");
+        testCase.SetPropertyValue(TestCaseExtensions.ManagedTypeProperty, "SemanticClassName");
+        testCase.SetPropertyValue(TestCaseExtensions.ManagedMethodProperty, "DummyMethod");
+
+        UnitTestElement resultUnitTestElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
+
+        resultUnitTestElement.TestMethod.FullClassName.Should().Be("SemanticClassName");
+        resultUnitTestElement.TestMethod.ManagedTypeName.Should().Be("SemanticClassName");
+    }
 }

@@ -25,17 +25,16 @@ internal sealed class TestMethod : ITestMethod
     /// Initializes a new instance of the <see cref="TestMethod"/> class.
     /// </summary>
     /// <param name="name">The name of the method.</param>
-    /// <param name="fullClassName">The full name of the class declaring the method.</param>
+    /// <param name="fullClassName">The full name of the class containing the method in execution context.</param>
     /// <param name="assemblyName">The full assembly name.</param>
     /// <param name="displayName">The display name of the test method.</param>
     // This constructor is used in testing only, and we should remove it in the future and update the tests.
     internal TestMethod(string name, string fullClassName, string assemblyName, string? displayName)
-        : this(fullClassName, null, null, name, fullClassName, assemblyName, displayName, null)
+        : this(null, null, name, fullClassName, assemblyName, displayName, null)
     {
     }
 
     internal TestMethod(
-        string? managedTypeName,
         string? managedMethodName,
         string?[]? hierarchyValues,
         string name,
@@ -58,7 +57,6 @@ internal sealed class TestMethod : ITestMethod
             Hierarchy = new ReadOnlyCollection<string?>(hierarchyValues);
         }
 
-        ManagedTypeName = managedTypeName;
         ManagedMethodName = managedMethodName;
     }
 
@@ -74,7 +72,7 @@ internal sealed class TestMethod : ITestMethod
     public string AssemblyName { get; private set; }
 
     /// <inheritdoc />
-    public string? ManagedTypeName { get; }
+    public string? ManagedTypeName => FullClassName;
 
     /// <inheritdoc />
     public string? ManagedMethodName { get; }

@@ -89,9 +89,10 @@ internal static class TestCaseExtensions
         }
 
         string? testClassName = testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string;
-        string name = testCase.GetTestName(testClassName);
+        string? semanticClassName = testCase.GetManagedType() ?? testClassName;
+        string name = testCase.GetTestName(semanticClassName ?? testClassName);
 
-        var testMethod = new TestMethod(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy(), name, testClassName!, source, testCase.DisplayName, testCase.GetPropertyValue<string>(EngineConstants.ParameterTypesProperty, null));
+        var testMethod = new TestMethod(testCase.GetManagedMethod(), testCase.GetHierarchy(), name, semanticClassName!, source, testCase.DisplayName, testCase.GetPropertyValue<string>(EngineConstants.ParameterTypesProperty, null));
 
         var dataType = (DynamicDataType)testCase.GetPropertyValue(EngineConstants.TestDynamicDataTypeProperty, (int)DynamicDataType.None);
         if (dataType != DynamicDataType.None)

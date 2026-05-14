@@ -16,7 +16,7 @@ internal interface ITestMethod
     string Name { get; }
 
     /// <summary>
-    /// Gets the full class name of the test method.
+    /// Gets the semantic full class name of the test method.
     /// </summary>
     string FullClassName { get; }
 
@@ -31,6 +31,9 @@ internal interface ITestMethod
     /// <example>
     ///     <c>NamespaceA.NamespaceB.ClassName`1+InnerClass`2</c>.
     /// </example>
+    /// <remarks>
+    /// This value maps to <see cref="FullClassName"/>.
+    /// </remarks>
     string? ManagedTypeName { get; }
 
     /// <summary>
