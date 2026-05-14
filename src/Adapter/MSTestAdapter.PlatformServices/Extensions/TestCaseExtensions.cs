@@ -88,6 +88,10 @@ internal static class TestCaseExtensions
                 : unitTestElement.CloneWithUpdatedSource(source);
         }
 
+        // Prefer the semantic managed type when present. Fall back to the legacy
+        // TestClassNameProperty for compatibility with TestCases produced by older
+        // runners that do not populate ManagedTypeProperty (when ManagedMethodName
+        // is unknown, ToTestCase does not write the managed-type pair).
         string? testClassName = testCase.GetManagedType() ?? (testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string);
         string name = testCase.GetTestName(testClassName);
 
