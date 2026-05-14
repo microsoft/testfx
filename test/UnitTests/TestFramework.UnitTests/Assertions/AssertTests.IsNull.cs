@@ -16,7 +16,7 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.IsNull(new object());
         action.Should().Throw<Exception>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected value to be null.
 
@@ -33,7 +33,7 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.IsNull(new object(), "User-provided message");
         action.Should().Throw<Exception>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected value to be null.
                 User-provided message
@@ -57,7 +57,7 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsNull(new object(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .Which.Message.Should().Be(
+            .WithMessage(
                 $"""
                 Assertion failed. Expected value to be null.
                 User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}
@@ -96,9 +96,11 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.IsNotNull(null);
         action.Should().Throw<Exception>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected value to not be null.
+
+                actual: null
 
                 Assert.IsNotNull(null)
                 """);
@@ -108,10 +110,12 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.IsNotNull(null, "User-provided message");
         action.Should().Throw<Exception>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected value to not be null.
                 User-provided message
+
+                actual: null
 
                 Assert.IsNotNull(null)
                 """);
@@ -123,10 +127,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsNotNull(null, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .Which.Message.Should().Be(
+            .WithMessage(
                 $"""
                 Assertion failed. Expected value to not be null.
                 User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}
+
+                actual: null
 
                 Assert.IsNotNull(null)
                 """);

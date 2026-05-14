@@ -268,7 +268,7 @@ public sealed partial class Assert
             stringStructured.WithUserMessage(message);
             stringStructured.WithEvidence(evidence);
             stringStructured.WithExpectedAndActual(expectedRendered, actualRendered);
-            stringStructured.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreEqual", expectedExpression, actualExpression));
+            stringStructured.WithCallSiteExpression(FormatBinaryCallSiteExpression("Assert.AreEqual", expectedExpression, actualExpression));
             ReportAssertFailed(stringStructured);
 
             return;
@@ -285,7 +285,7 @@ public sealed partial class Assert
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
         structured.WithExpectedAndActual(expectedRendered, actualRendered);
-        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreEqual", expectedExpression, actualExpression));
+        structured.WithCallSiteExpression(FormatBinaryCallSiteExpression("Assert.AreEqual", expectedExpression, actualExpression));
 
         ReportAssertFailed(structured);
     }
@@ -398,7 +398,7 @@ public sealed partial class Assert
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
         structured.WithExpectedAndActual(notExpectedRendered, actualRendered);
-        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreNotEqual", notExpectedExpression, actualExpression));
+        structured.WithCallSiteExpression(FormatBinaryCallSiteExpression("Assert.AreNotEqual", notExpectedExpression, actualExpression));
 
         ReportAssertFailed(structured);
     }

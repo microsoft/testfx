@@ -28,7 +28,7 @@ public partial class AssertTests
         Action action = () => scope.Dispose();
 
         action.Should().Throw<AssertFailedException>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected values to be equal.
 
@@ -118,7 +118,7 @@ public partial class AssertTests
 
         Action firstDispose = () => scope.Dispose();
         firstDispose.Should().Throw<AssertFailedException>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected values to be equal.
 
@@ -171,6 +171,8 @@ public partial class AssertTests
         innerException.InnerExceptions[0].Message.Should().Be(
             """
             Assertion failed. Expected value to not be null.
+
+            actual: null
 
             Assert.IsNotNull(value)
             """);

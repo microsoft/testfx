@@ -91,7 +91,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                ReportAssertIsNotNullFailed(_builder.ToString(), valueExpression);
+                ReportAssertIsNotNullFailed(_builder.ToString(), valueExpression, "value");
             }
         }
 
@@ -168,8 +168,8 @@ public sealed partial class Assert
         StructuredAssertionMessage structured = new(FrameworkMessages.IsNullFailedSummary);
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
-        structured.WithExpectedAndActual(null, actualValue);
-        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNull", valueExpression));
+        structured.WithExpectedAndActual(AssertionValueRenderer.RenderValue(null), actualValue);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNull", valueExpression, nameof(value)));
 
         ReportAssertFailed(structured);
     }
@@ -204,19 +204,24 @@ public sealed partial class Assert
     {
         if (IsNotNullFailing(value))
         {
-            ReportAssertIsNotNullFailed(message, valueExpression);
+            ReportAssertIsNotNullFailed(message, valueExpression, nameof(value));
         }
     }
 
     private static bool IsNotNullFailing([NotNullWhen(false)] object? value) => value is null;
 
     [DoesNotReturn]
-    private static void ReportAssertIsNotNullFailed(string? message, string valueExpression)
+    private static void ReportAssertIsNotNullFailed(string? message, string valueExpression, string paramName)
     {
-        // RFC: IsNotNull omits the evidence block since actual is always null
+        string actualValue = AssertionValueRenderer.RenderValue(null);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("actual:", actualValue);
+
         StructuredAssertionMessage structured = new(FrameworkMessages.IsNotNullFailedSummary);
         structured.WithUserMessage(message);
-        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotNull", valueExpression));
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual("not null", actualValue);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotNull", valueExpression, paramName));
 
         ReportAssertFailed(structured);
     }

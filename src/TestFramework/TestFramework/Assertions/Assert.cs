@@ -176,6 +176,26 @@ public sealed partial class Assert
         throw CreateAssertFailedException(structuredMessage);
     }
 
+    /// <summary>
+    /// Formats a call-site expression for display at the bottom of a structured assertion message.
+    /// When the expression is empty, the call-site is omitted. When the expression contains newlines,
+    /// it is replaced with a <c>&lt;paramName&gt;</c> placeholder.
+    /// </summary>
+    internal static string? FormatCallSiteExpression(string assertionMethodName, string expression, string paramName)
+    {
+        if (string.IsNullOrWhiteSpace(expression))
+        {
+            return null;
+        }
+
+        // If expression contains newlines (multiline constant), replace with placeholder per RFC
+        string arg = expression.IndexOf('\n') >= 0 || expression.IndexOf('\r') >= 0
+            ? $"<{paramName}>"
+            : expression;
+
+        return $"{assertionMethodName}({arg})";
+    }
+
     private static string FormatAssertionFailed(string assertionName, string? message)
     {
         string failedMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName);
@@ -325,7 +345,7 @@ public sealed partial class Assert
     /// Formats a call-site expression like <c>Assert.MethodName(expression1, expression2)</c>.
     /// Returns <see langword="null"/> if either expression is empty or contains a line break.
     /// </summary>
-    private static string? FormatCallSiteExpression(string methodName, string expression1, string expression2)
+    private static string? FormatBinaryCallSiteExpression(string methodName, string expression1, string expression2)
         => string.IsNullOrEmpty(expression1) || string.IsNullOrEmpty(expression2)
             || expression1.IndexOfAny(['\n', '\r']) >= 0 || expression2.IndexOfAny(['\n', '\r']) >= 0
             ? null

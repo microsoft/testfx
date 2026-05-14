@@ -12,7 +12,7 @@ public partial class AssertTests
         bool? nullBool = null;
         Action action = () => Assert.IsFalse(nullBool);
         action.Should().Throw<Exception>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected condition to be false.
 
@@ -27,7 +27,7 @@ public partial class AssertTests
         bool? nullBool = true;
         Action action = () => Assert.IsFalse(nullBool);
         action.Should().Throw<Exception>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected condition to be false.
 
@@ -47,7 +47,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsFalse(true);
         action.Should().Throw<Exception>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected condition to be false.
 
@@ -65,7 +65,7 @@ public partial class AssertTests
         bool? nullBool = null;
         Action action = () => Assert.IsFalse(nullBool, "User-provided message");
         action.Should().Throw<Exception>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected condition to be false.
                 User-provided message
@@ -81,7 +81,7 @@ public partial class AssertTests
         bool? nullBool = true;
         Action action = () => Assert.IsFalse(nullBool, "User-provided message");
         action.Should().Throw<Exception>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected condition to be false.
                 User-provided message
@@ -102,7 +102,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsFalse(true, "User-provided message");
         action.Should().Throw<Exception>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected condition to be false.
                 User-provided message
@@ -123,7 +123,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsFalse(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .Which.Message.Should().Be(
+            .WithMessage(
                 $"""
                 Assertion failed. Expected condition to be false.
                 User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}
@@ -141,7 +141,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsFalse(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .Which.Message.Should().Be(
+            .WithMessage(
                 $"""
                 Assertion failed. Expected condition to be false.
                 User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}
@@ -164,7 +164,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsFalse(true, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .Which.Message.Should().Be(
+            .WithMessage(
                 $"""
                 Assertion failed. Expected condition to be false.
                 User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}
@@ -183,7 +183,7 @@ public partial class AssertTests
         bool? nullBool = null;
         Action action = () => Assert.IsTrue(nullBool);
         action.Should().Throw<Exception>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected condition to be true.
 
@@ -198,7 +198,7 @@ public partial class AssertTests
         bool? nullBool = false;
         Action action = () => Assert.IsTrue(nullBool);
         action.Should().Throw<Exception>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected condition to be true.
 
@@ -218,7 +218,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsTrue(false);
         action.Should().Throw<Exception>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected condition to be true.
 
@@ -236,7 +236,7 @@ public partial class AssertTests
         bool? nullBool = null;
         Action action = () => Assert.IsTrue(nullBool, "User-provided message");
         action.Should().Throw<Exception>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected condition to be true.
                 User-provided message
@@ -252,7 +252,7 @@ public partial class AssertTests
         bool? nullBool = false;
         Action action = () => Assert.IsTrue(nullBool, "User-provided message");
         action.Should().Throw<Exception>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected condition to be true.
                 User-provided message
@@ -273,7 +273,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsTrue(false, "User-provided message");
         action.Should().Throw<Exception>()
-            .Which.Message.Should().Be(
+            .WithMessage(
                 """
                 Assertion failed. Expected condition to be true.
                 User-provided message
@@ -294,7 +294,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsTrue(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .Which.Message.Should().Be(
+            .WithMessage(
                 $"""
                 Assertion failed. Expected condition to be true.
                 User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}
@@ -312,7 +312,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsTrue(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .Which.Message.Should().Be(
+            .WithMessage(
                 $"""
                 Assertion failed. Expected condition to be true.
                 User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}
@@ -335,7 +335,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsTrue(false, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .Which.Message.Should().Be(
+            .WithMessage(
                 $"""
                 Assertion failed. Expected condition to be true.
                 User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}
