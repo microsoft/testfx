@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -248,8 +248,10 @@ public sealed partial class Assert
         {
             summary = FrameworkMessages.AreEqualDifferentTypesFailedSummary;
             evidence = EvidenceBlock.Create()
-                .AddLine("expected:", $"{expectedRendered} ({expected.GetType().FullName})")
-                .AddLine("actual:", $"{actualRendered} ({actual.GetType().FullName})");
+                .AddLine("expected:", expectedRendered)
+                .AddLine("expected type:", expected.GetType().FullName!)
+                .AddLine("actual:", actualRendered)
+                .AddLine("actual type:", actual.GetType().FullName!);
         }
         else if (expected is string expectedString && actual is string actualString)
         {
@@ -268,7 +270,7 @@ public sealed partial class Assert
             stringStructured.WithUserMessage(message);
             stringStructured.WithEvidence(evidence);
             stringStructured.WithExpectedAndActual(expectedRendered, actualRendered);
-            stringStructured.WithCallSiteExpression(FormatBinaryCallSiteExpression("Assert.AreEqual", expectedExpression, actualExpression));
+            stringStructured.WithCallSiteExpression(FormatBinaryCallSiteExpression("Assert.AreEqual", expectedExpression, "expected", actualExpression, "actual"));
             ReportAssertFailed(stringStructured);
 
             return;
@@ -285,7 +287,7 @@ public sealed partial class Assert
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
         structured.WithExpectedAndActual(expectedRendered, actualRendered);
-        structured.WithCallSiteExpression(FormatBinaryCallSiteExpression("Assert.AreEqual", expectedExpression, actualExpression));
+        structured.WithCallSiteExpression(FormatBinaryCallSiteExpression("Assert.AreEqual", expectedExpression, "expected", actualExpression, "actual"));
 
         ReportAssertFailed(structured);
     }
@@ -397,8 +399,8 @@ public sealed partial class Assert
         StructuredAssertionMessage structured = new(FrameworkMessages.AreNotEqualFailedSummary);
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
-        structured.WithExpectedAndActual(notExpectedRendered, actualRendered);
-        structured.WithCallSiteExpression(FormatBinaryCallSiteExpression("Assert.AreNotEqual", notExpectedExpression, actualExpression));
+        structured.WithExpectedAndActual($"not {notExpectedRendered}", actualRendered);
+        structured.WithCallSiteExpression(FormatBinaryCallSiteExpression("Assert.AreNotEqual", notExpectedExpression, "notExpected", actualExpression, "actual"));
 
         ReportAssertFailed(structured);
     }
