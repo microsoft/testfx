@@ -77,7 +77,7 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
 
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputMatchesRegex(
-            """failed ScopeWithIsNotNullSoftFailure \(\d+ms\)[\s\S]+Assert\.IsNotNull failed\.[\s\S]+at UnitTest1\.ScopeWithIsNotNullSoftFailure\(\)""");
+            """failed ScopeWithIsNotNullSoftFailure \(\d+ms\)[\s\S]+Assertion failed\. Expected value to not be null\.[\s\S]+at UnitTest1\.ScopeWithIsNotNullSoftFailure\(\)""");
     }
 
     [TestMethod]

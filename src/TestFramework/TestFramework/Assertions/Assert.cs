@@ -178,17 +178,17 @@ public sealed partial class Assert
 
     /// <summary>
     /// Formats a call-site expression for display at the bottom of a structured assertion message.
-    /// When the expression contains newlines (multiline constant), it is replaced with the supplied placeholder.
-    /// Returns <see langword="null"/> when the expression is empty or whitespace.
+    /// When the expression is empty, the call-site is omitted. When the expression contains newlines,
+    /// it is replaced with the supplied placeholder (either a full <c>&lt;placeholder&gt;</c> or a raw parameter name).
     /// </summary>
-    internal static string? FormatCallSiteExpression(string assertionMethodName, string expression, string placeholder = "<value>")
+    internal static string? FormatCallSiteExpression(string assertionMethodName, string expression, string placeholderOrParamName = "<value>")
     {
         if (string.IsNullOrWhiteSpace(expression))
         {
             return null;
         }
 
-        string arg = IsMultiline(expression) ? placeholder : expression;
+        string arg = IsMultiline(expression) ? NormalizeCallSitePlaceholder(placeholderOrParamName) : expression;
         return $"{assertionMethodName}({arg})";
     }
 
@@ -207,8 +207,8 @@ public sealed partial class Assert
             return null;
         }
 
-        string arg1 = empty1 || IsMultiline(expression1) ? placeholder1 : expression1;
-        string arg2 = empty2 || IsMultiline(expression2) ? placeholder2 : expression2;
+        string arg1 = empty1 || IsMultiline(expression1) ? NormalizeCallSitePlaceholder(placeholder1) : expression1;
+        string arg2 = empty2 || IsMultiline(expression2) ? NormalizeCallSitePlaceholder(placeholder2) : expression2;
 
         return $"{assertionMethodName}({arg1}, {arg2})";
     }
@@ -216,6 +216,11 @@ public sealed partial class Assert
     // string.Contains(char) is not available on netstandard2.0 / net462, so use IndexOf to check for newline characters.
     private static bool IsMultiline(string expression)
         => expression.IndexOf('\n') >= 0 || expression.IndexOf('\r') >= 0;
+
+    private static string NormalizeCallSitePlaceholder(string placeholderOrParamName)
+        => placeholderOrParamName.Length > 1 && placeholderOrParamName[0] == '<' && placeholderOrParamName[placeholderOrParamName.Length - 1] == '>'
+            ? placeholderOrParamName
+            : $"<{placeholderOrParamName}>";
 
     private static string FormatAssertionFailed(string assertionName, string? message)
     {
@@ -281,14 +286,8 @@ public sealed partial class Assert
             : $"{callerArgMessagePart} {userMessage}";
     }
 
-    private static string BuildUserMessageForConditionExpression(string? format, string conditionExpression)
-        => BuildUserMessageForSingleExpression(format, conditionExpression, "condition");
-
     private static string BuildUserMessageForValueExpression(string? format, string valueExpression)
         => BuildUserMessageForSingleExpression(format, valueExpression, "value");
-
-    private static string BuildUserMessageForActionExpression(string? format, string actionExpression)
-        => BuildUserMessageForSingleExpression(format, actionExpression, "action");
 
     private static string BuildUserMessageForCollectionExpression(string? format, string collectionExpression)
         => BuildUserMessageForSingleExpression(format, collectionExpression, "collection");
@@ -358,6 +357,15 @@ public sealed partial class Assert
 
     internal static string ReplaceNulls(object? input)
         => input?.ToString() ?? string.Empty;
+
+    /// <summary>
+    /// Formats a call-site expression like <c>Assert.MethodName(expression)</c>.
+    /// Returns <see langword="null"/> if the expression is empty or contains a line break.
+    /// </summary>
+    private static string? FormatCallSiteExpression(string methodName, string expression)
+        => string.IsNullOrEmpty(expression) || expression.IndexOfAny(['\n', '\r']) >= 0
+            ? null
+            : $"{methodName}({expression})";
 
     private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo culture)
 #pragma warning disable CA1309 // Use ordinal string comparison
