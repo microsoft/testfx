@@ -16,7 +16,7 @@ public sealed class LoggingManagerTests
     private readonly Mock<IMonitor> _mockMonitor = new();
 
     public LoggingManagerTests()
-        => _mockMonitor.Setup(x => x.Lock(It.IsAny<object>())).Returns(new Mock<IDisposable>().Object);
+        => _mockMonitor.Setup(m => m.Lock(It.IsAny<object>())).Returns(new Mock<IDisposable>().Object);
 
     [TestMethod]
     public async Task BuildAsync_WithNoProviders_ReturnsFactoryThatCreatesLogger()
@@ -123,7 +123,10 @@ public sealed class LoggingManagerTests
     }
 
     [TestMethod]
-    public async Task BuildAsync_PassesLogLevelAndServiceProviderToFactory()
+    [DataRow(LogLevel.Trace)]
+    [DataRow(LogLevel.Warning)]
+    [DataRow(LogLevel.Critical)]
+    public async Task BuildAsync_PassesLogLevelAndServiceProviderToFactory(LogLevel level)
     {
         LogLevel capturedLogLevel = LogLevel.None;
         IServiceProvider? capturedServiceProvider = null;
@@ -132,16 +135,16 @@ public sealed class LoggingManagerTests
         mockProvider.Setup(p => p.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
 
         LoggingManager manager = new();
-        manager.AddProvider((level, sp) =>
+        manager.AddProvider((l, sp) =>
         {
-            capturedLogLevel = level;
+            capturedLogLevel = l;
             capturedServiceProvider = sp;
             return mockProvider.Object;
         });
 
-        _ = await manager.BuildAsync(_mockServiceProvider.Object, LogLevel.Warning, _mockMonitor.Object);
+        _ = await manager.BuildAsync(_mockServiceProvider.Object, level, _mockMonitor.Object);
 
-        Assert.AreEqual(LogLevel.Warning, capturedLogLevel);
+        Assert.AreEqual(level, capturedLogLevel);
         Assert.AreSame(_mockServiceProvider.Object, capturedServiceProvider);
     }
 
