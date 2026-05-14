@@ -84,7 +84,6 @@ internal sealed partial class AppInsightsProvider :
         _environment = environment;
         _currentSessionId = sessionId;
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
-        _task = task;
         _clock = clock;
         _telemetryInformation = telemetryInformation;
         _telemetryClientFactory = telemetryClientFactory;
@@ -261,7 +260,7 @@ internal sealed partial class AppInsightsProvider :
             return;
         }
 
-        RoslynDebug.Assert(false, $"Telemetry entry '{key}' contains an unhashed string value '{value}'. Strings need to be hashed using {nameof(Sha256Hasher)}.{nameof(Sha256Hasher.HashWithNormalizedCasing)}(), or white-listed.");
+        Microsoft.Testing.Platform.RoslynDebug.Assert(false, $"Telemetry entry '{key}' contains an unhashed string value '{value}'. Strings need to be hashed using {nameof(Sha256Hasher)}.{nameof(Sha256Hasher.HashWithNormalizedCasing)}(), or white-listed.");
     }
 
 #if NET7_0_OR_GREATER

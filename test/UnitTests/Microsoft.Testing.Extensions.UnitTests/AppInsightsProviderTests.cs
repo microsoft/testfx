@@ -198,7 +198,11 @@ public sealed class AppInsightsProviderTests
             new Dictionary<string, object> { ["my.bool"] = true },
             CancellationToken.None);
 
+#if NETCOREAPP
         await appInsightsProvider.DisposeAsync();
+#else
+        appInsightsProvider.Dispose();
+#endif
 
         Assert.IsTrue(capturedProperties.ContainsKey("my.bool"));
         Assert.AreEqual(TelemetryProperties.True, capturedProperties["my.bool"]);
