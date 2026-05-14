@@ -148,7 +148,7 @@ internal sealed partial class TrxReportEngine
             string trxFileName;
             if (_commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
             {
-                trxFileName = ReplaceInvalidFileNameChars(fileName[0]);
+                trxFileName = ReplaceInvalidFileNameChars(ResolveTrxFileNamePlaceholders(fileName[0]));
                 isFileNameExplicitlyProvided = true;
             }
             else
@@ -803,6 +803,19 @@ internal sealed partial class TrxReportEngine
         // We use custom format string to make sure that runs are sorted in the same way on all intl machines.
         // This is both for directory names and for Data Warehouse.
         date.ToString("yyyy-MM-dd HH:mm:ss.fffffff", DateTimeFormatInfo.InvariantInfo);
+
+    private string ResolveTrxFileNamePlaceholders(string template)
+    {
+        string testAppPath = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+        string processName = RoslynString.IsNullOrEmpty(testAppPath)
+            ? string.Empty
+            : Path.GetFileNameWithoutExtension(testAppPath);
+
+        string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
+
+        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(processName, processId, _clock.UtcNow);
+        return ArtifactNamingHelper.ResolveTemplate(template, replacements);
+    }
 
     private static string ReplaceInvalidFileNameChars(string fileName)
     {
