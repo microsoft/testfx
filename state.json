@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-05-13T18:11:17Z",
-  "last_tasks": ["task4_maintain_prs", "task7_summary"],
+  "last_run": "2026-05-14T18:09:36Z",
+  "last_tasks": ["task2_scan", "task4_maintain_prs", "task7_summary"],
   "validated_commands": {
     "build": "export PATH=\"$PWD/.dotnet:$PATH\" && dotnet build <project.csproj> -p:SignAssembly=false --nologo",
     "restore": "dotnet restore <project.csproj> -p:SignAssembly=false",
@@ -13,11 +13,11 @@
     {"title": "[Efficiency Improver] perf: skip PropertyBag construction in BFSTestNodeVisitor when filter has no property expressions", "pr_number": 7901, "date": "2026-04-28", "status": "merged_by_Evangelink_2026-04-29"},
     {"title": "[Efficiency Improver] perf: eliminate yield-iterator state machine in PropertyBag.OfType<T>()", "pr_number": 7917, "date": "2026-04-29", "status": "merged_by_Evangelink_2026-04-29"},
     {"title": "[Efficiency Improver] perf: avoid iterator allocation in GetRetryAttribute()", "pr_number": 8103, "date": "2026-05-11", "status": "merged_by_Evangelink_2026-05-11"},
-    {"title": "[Efficiency Improver] perf: eliminate yield-iterator allocations in test execution hot path", "pr_number": 8093, "date": "2026-05-11", "status": "merged_by_Evangelink_2026-05-13"}
+    {"title": "[Efficiency Improver] perf: eliminate yield-iterator allocations in test execution hot path", "pr_number": 8093, "date": "2026-05-11", "status": "merged_by_Evangelink_2026-05-13"},
+    {"title": "[Efficiency Improver] perf: eliminate yield-iterator and GroupBy allocations in IsIgnored() hot path", "pr_number": 8195, "date": "2026-05-12", "status": "merged_by_Evangelink_2026-05-14"}
   ],
   "open_prs": [
-    {"pr_number": 8035, "title": "[Efficiency Improver] perf: eliminate LINQ closure allocations in TreeNodeFilter", "author": "abdelghani-moussaid", "status": "open"},
-    {"pr_number": 8195, "title": "[Efficiency Improver] perf: eliminate yield-iterator and GroupBy allocations in IsIgnored() hot path", "status": "open_ci_in_progress", "notes": "Copilot SWE agent handling merge conflict resolution and review feedback as of 2026-05-13"}
+    {"pr_number": 8035, "title": "[Efficiency Improver] perf: eliminate LINQ closure allocations in TreeNodeFilter", "author": "abdelghani-moussaid", "status": "open_access_restricted", "notes": "Access restricted in lockdown mode. Tracking issues #7947 and #7998 remain open."}
   ],
   "backlog": [
     {
@@ -33,20 +33,27 @@
       "area": "code-level",
       "priority": "low",
       "notes": "Compile captures nothing so delegate is likely cached by JIT. Low impact — only called during test discovery."
+    },
+    {
+      "id": "serviceprovider-yield-firstordefault",
+      "title": "ServiceProvider.GetServicesInternal() yield-iterator + .FirstOrDefault() pattern. Low priority — not per-test hot path.",
+      "area": "code-level",
+      "priority": "low",
+      "notes": "Called from GetServiceInternal() via FirstOrDefault. Not a per-test hot path. Low impact."
     }
   ],
-  "backlog_cursor": "testmethodvalidator-any-lambda",
+  "backlog_cursor": "serviceprovider-yield-firstordefault",
   "monthly_activity_issue": {
     "april_2026": "7948_closed",
-    "may_2026": "7975_open"
+    "may_2026": "7975_closed_as_not_planned_by_Evangelink_2026-05-13"
   },
   "notes": {
     "create_pr_tool_behavior": "create_pull_request tool returns 'success' with patch file path. May or may not push branch to remote. The branch must be pre-committed locally before calling.",
     "build_env_2026-05-12": "Local build succeeds for net9.0 with .NET 11 preview SDK. MSTestAdapter.PlatformServices builds with 0 warnings/errors.",
     "test_env_issue": "MSTestAdapter.PlatformServices.UnitTests can't run locally — restore fails (net462/net48 TFM mismatch) + AwesomeAssertions path error for net8.0.",
     "sa1503_warning": "SA1503: braces must not be omitted — always use braces even for single-statement if bodies.",
-    "scan_status": "All major hot-path allocation issues addressed. IsIgnored() PR #8195 in review. Backlog is low-priority only. Fresh scan needed in future runs.",
-    "pr_8195": "Copilot SWE agent is handling this PR actively as of 2026-05-13. Do not interfere.",
+    "scan_status": "All major hot-path allocation issues addressed. IsIgnored() PR #8195 merged 2026-05-14. Backlog is low-priority only. Fresh scan needed in future runs.",
+    "monthly_summary_issue": "IMPORTANT: Issue #7975 (May 2026 activity summary) was closed as 'not_planned' by Evangelink on 2026-05-13. Do NOT create new monthly activity summary issues — maintainer has signalled they don't want them.",
     "issue_access": "Many issues are access-restricted in lockdown mode — cannot read body/comments."
   }
 }
