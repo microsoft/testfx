@@ -80,6 +80,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
     internal void ReplaceService<T>(T newService)
         where T : class
     {
+        _ = newService ?? throw new ArgumentNullException(nameof(newService));
         ArgumentGuard.Ensure(
             newService is not ITestFramework || AllowTestAdapterFrameworkRegistration,
             nameof(newService),

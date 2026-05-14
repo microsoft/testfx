@@ -220,7 +220,10 @@ internal sealed partial class TestHostBuilder
         // Register ServerTelemetry in the service provider so that all telemetry events in server mode
         // are forwarded to the client via JSON-RPC. This replaces the NopTelemetryService registered
         // earlier in SetupCommonServicesAsync.
-        context.ServiceProvider.ReplaceService<ITelemetryCollector>(new ServerTelemetry(serverTestHost));
+        if (context.ServiceProvider.GetTelemetryInformation().IsEnabled)
+        {
+            context.ServiceProvider.ReplaceService<ITelemetryCollector>(new ServerTelemetry(serverTestHost));
+        }
 
 #pragma warning disable CA1416 // Preserve existing browser behavior while splitting the method.
         IHost actualTestHost = testControllerConnection is not null
