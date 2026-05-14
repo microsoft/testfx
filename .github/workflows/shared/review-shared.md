@@ -39,7 +39,7 @@ Review pull request #${{ github.event.pull_request.number || github.event.issue.
 ## Instructions
 
 1. Fetch the full diff for the pull request.
-2. Call the `expert-reviewer` agent as a **background** task (`task` tool, `agent_type: "general-purpose"`, `model: "claude-opus-4.6"`, `mode: "background"`). Include the PR number, repository owner/name, and the full diff content in the subagent prompt.
+2. Call the `expert-reviewer` agent as a **background** task (`task` tool, `agent_type: "general-purpose"`, `model: "claude-opus-4.6"`, `mode: "background"`). Include the PR number, repository owner/name, and the full diff content in the subagent prompt. Also remind the subagent in its prompt that the `submit_pull_request_review` safe-output only accepts `event: "COMMENT"` or `event: "REQUEST_CHANGES"` — `APPROVE` is not allowed and will cause the entire review to be dropped.
 3. **Immediately after launching the background task** — do NOT wait for it to finish and do NOT read its result — call `noop` with a brief status message such as `"Expert-reviewer launched in background for PR #N. It will post the review directly."`. Then stop. The subagent has direct access to the safe-output tools and will post its own review (`create_pull_request_review_comment`, `add_comment`, `submit_pull_request_review`) without any further action from you.
 
 > **Important**: Reading the background agent result would pull its entire conversation (2+ million tokens from spawning 21 dimension sub-agents) into your context, causing a server error. Do not call `read_agent` or any equivalent after calling `noop`.
