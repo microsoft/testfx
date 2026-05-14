@@ -70,16 +70,16 @@ Options:
 Extension options:
     --crashdump
         [net6.0+ only] Generate a dump file if the test process crashes
-    --crashreport
-        [net6.0+ only] Generate a crash report file if the test process crashes. Requires '--crashdump'.
-    --crashreport-only
-        [net7.0+ only] Generate only a crash report file if the test process crashes
     --crashdump-filename
         Specify the name of the dump file
     --crashdump-type
         Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
         For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps
+    --crashreport
+        [net6.0+ only] Generate a crash report file if the test process crashes. Requires '--crashdump'.
+    --crashreport-only
+        [net7.0+ only] Generate only a crash report file if the test process crashes
     --hangdump
         Generate a dump file if the test process hangs
     --hangdump-filename
@@ -274,14 +274,6 @@ Registered command line providers:
         Arity: 0
         Hidden: False
         Description: [net6.0+ only] Generate a dump file if the test process crashes
-      --crashreport
-        Arity: 0
-        Hidden: False
-        Description: [net6.0+ only] Generate a crash report file if the test process crashes. Requires '--crashdump'.
-      --crashreport-only
-        Arity: 0
-        Hidden: False
-        Description: [net7.0+ only] Generate only a crash report file if the test process crashes
       --crashdump-filename
         Arity: 1
         Hidden: False
@@ -292,6 +284,14 @@ Registered command line providers:
         Description: Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
         For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps
+      --crashreport
+        Arity: 0
+        Hidden: False
+        Description: [net6.0+ only] Generate a crash report file if the test process crashes. Requires '--crashdump'.
+      --crashreport-only
+        Arity: 0
+        Hidden: False
+        Description: [net7.0+ only] Generate only a crash report file if the test process crashes
   HangDumpCommandLineProvider
     Name: Hang dump
     Version: *
