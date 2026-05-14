@@ -581,8 +581,9 @@ public sealed partial class Assert
         else
         {
             Exception actualException = state.ExceptionThrown!;
-            string actualTypeName = actualException.GetType().Name;
-            string actualTypeFullName = actualException.GetType().FullName ?? actualTypeName;
+            Type actualType = actualException.GetType();
+            string actualTypeName = actualType.Name;
+            string actualTypeFullName = actualType.FullName ?? actualTypeName;
 
             string summary = isStrictType
                 ? $"Expected exception of exact type {expectedTypeName} but caught {actualTypeName}."
