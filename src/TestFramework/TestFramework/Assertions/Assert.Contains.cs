@@ -120,7 +120,30 @@ public sealed partial class Assert
     /// </param>
     /// <returns>The item.</returns>
     public static T ContainsSingle<T>(IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => ContainsSingle(static _ => true, collection, message, predicateExpression: string.Empty, collectionExpression);
+    {
+        T item = default!;
+        int count = 0;
+
+        foreach (T current in collection)
+        {
+            if (count == 0)
+            {
+                item = current;
+            }
+
+            count++;
+        }
+
+        if (count == 1)
+        {
+            return item;
+        }
+
+        ReportAssertContainsSingleFailed(count, message, collectionExpression);
+
+        // Unreachable code but compiler cannot work it out
+        return default!;
+    }
 
     /// <summary>
     /// Tests whether the specified collection contains exactly one element.
@@ -133,7 +156,30 @@ public sealed partial class Assert
     /// </param>
     /// <returns>The item.</returns>
     public static object? ContainsSingle(IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => ContainsSingle(static _ => true, collection, message, predicateExpression: string.Empty, collectionExpression);
+    {
+        object? item = null;
+        int count = 0;
+
+        foreach (object? current in collection)
+        {
+            if (count == 0)
+            {
+                item = current;
+            }
+
+            count++;
+        }
+
+        if (count == 1)
+        {
+            return item;
+        }
+
+        ReportAssertContainsSingleFailed(count, message, collectionExpression);
+
+        // Unreachable code but compiler cannot work it out
+        return default;
+    }
 
     /// <summary>
     /// Tests whether the specified collection contains exactly one element that matches the given predicate.
@@ -176,17 +222,10 @@ public sealed partial class Assert
             return firstMatch;
         }
 
-        if (string.IsNullOrEmpty(predicateExpression))
-        {
-            ReportAssertContainsSingleFailed(matchCount, message, collectionExpression);
-        }
-        else
-        {
-            ReportAssertSingleMatchFailed(matchCount, message, predicateExpression, collectionExpression);
-        }
+        ReportAssertSingleMatchFailed(matchCount, message, predicateExpression, collectionExpression);
 
         // Unreachable code but compiler cannot work it out
-        return default;
+        return default!;
     }
 
     /// <summary>
@@ -222,12 +261,6 @@ public sealed partial class Assert
             }
 
             matchCount++;
-
-            // Early exit optimization - no need to continue if we already have more than one match
-            if (matchCount > 1)
-            {
-                break;
-            }
         }
 
         if (matchCount == 1)
@@ -235,15 +268,9 @@ public sealed partial class Assert
             return firstMatch;
         }
 
-        if (string.IsNullOrEmpty(predicateExpression))
-        {
-            ReportAssertContainsSingleFailed(matchCount, message, collectionExpression);
-        }
-        else
-        {
-            ReportAssertSingleMatchFailed(matchCount, message, predicateExpression, collectionExpression);
-        }
+        ReportAssertSingleMatchFailed(matchCount, message, predicateExpression, collectionExpression);
 
+        // Unreachable code but compiler cannot work it out
         return default;
     }
 
@@ -923,12 +950,10 @@ public sealed partial class Assert
             return null;
         }
 
-        string minArg = emptyMin || ContainsLineBreak(minValueExpression) ? "<minValue>" : minValueExpression;
-        string maxArg = emptyMax || ContainsLineBreak(maxValueExpression) ? "<maxValue>" : maxValueExpression;
-        string valueArg = emptyValue || ContainsLineBreak(valueExpression) ? "<value>" : valueExpression;
+        string minArg = emptyMin || IsMultiline(minValueExpression) ? "<minValue>" : minValueExpression;
+        string maxArg = emptyMax || IsMultiline(maxValueExpression) ? "<maxValue>" : maxValueExpression;
+        string valueArg = emptyValue || IsMultiline(valueExpression) ? "<value>" : valueExpression;
+
         return $"Assert.IsInRange({minArg}, {maxArg}, {valueArg})";
     }
-
-    private static bool ContainsLineBreak(string s)
-        => s.IndexOf('\n') >= 0 || s.IndexOf('\r') >= 0;
 }

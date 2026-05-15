@@ -372,5 +372,20 @@ public partial class AssertTests : TestContainer
             .And.Message.Should().Contain("expected: [5, 5]");
     }
 
+    public void IsInRange_WithMultilineMinValueExpression_UsesPlaceholderInCallSite()
+    {
+        // Arrange
+        int minValue = 1;
+        int maxValue = 2;
+        int value = 3;
+
+        // Act
+        Action action = () => Assert.IsInRange(minValue, maxValue, value, minValueExpression: "minValue\r\ncontinued");
+
+        // Assert
+        action.Should().ThrowExactly<AssertFailedException>()
+            .And.Message.Should().Contain("Assert.IsInRange(<minValue>, maxValue, value)");
+    }
+
     #endregion // IsInRange Tests
 }

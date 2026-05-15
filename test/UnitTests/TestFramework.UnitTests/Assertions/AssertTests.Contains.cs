@@ -372,6 +372,21 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the ContainsSingle method without message parameters where the collection has multiple elements.
+    /// </summary>
+    public void ContainsSingle_InNonGenericCollection_NoMessage_WithMultipleElements_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 1, 2, 3 };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to contain exactly one element.*expected count: 1*actual count:   3*Assert.ContainsSingle(collection)*");
+    }
+
+    /// <summary>
     /// Tests the ContainsSingle method with message parameter where the collection has a no element (empty collection).
     /// </summary>
     public void ContainsSingle_InNonGenericCollection_AssertCustomMessage_WithEmptyCollection_ThrowsException()
@@ -1494,6 +1509,40 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the ContainsSingle method with predicate when the predicate expression is unavailable.
+    /// Expects a predicate-specific exception using placeholders.
+    /// </summary>
+    public void ContainsSinglePredicate_EmptyPredicateExpression_UsesPredicateFailureMessage()
+    {
+        // Arrange
+        var collection = new List<int> { 1, 3, 5 };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(static x => x % 2 == 0, collection, predicateExpression: string.Empty);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*expected matches: 1*actual matches:   0*Assert.ContainsSingle(<predicate>, collection)*");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate when the predicate expression is unavailable in non-generic collections.
+    /// Expects a predicate-specific exception using placeholders.
+    /// </summary>
+    public void ContainsSinglePredicate_InNonGenericCollection_EmptyPredicateExpression_UsesPredicateFailureMessage()
+    {
+        // Arrange
+        var collection = new ArrayList { 1, 3, 5, "a" };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(static x => x is int i && i % 2 == 0, collection, predicateExpression: string.Empty);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*expected matches: 1*actual matches:   0*Assert.ContainsSingle(<predicate>, collection)*");
+    }
+
+    /// <summary>
     /// Tests the ContainsSingle method with predicate when multiple elements match.
     /// Expects an exception.
     /// </summary>
@@ -1517,14 +1566,14 @@ public partial class AssertTests : TestContainer
     public void ContainsSinglePredicate_InNonGenericCollection_MultipleItemsMatch_ThrowsException()
     {
         // Arrange
-        var collection = new ArrayList { 2, 4, "a" };
+        var collection = new ArrayList { 2, 4, 6, 8, "a" };
 
         // Act
         Action action = () => Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection);
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*expected matches: 1*actual matches:   2*Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection)*");
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*expected matches: 1*actual matches:   4*Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection)*");
     }
 
     /// <summary>
