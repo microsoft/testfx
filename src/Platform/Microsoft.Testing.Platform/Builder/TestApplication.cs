@@ -37,7 +37,11 @@ public sealed class TestApplication : ITestApplication
     /// <param name="args">The command line arguments.</param>
     /// <param name="testApplicationOptions">The test application options.</param>
     /// <returns>The task representing the asynchronous operation.</returns>
+#if NET8_0_OR_GREATER
+    [Obsolete("This method is obsolete. Use CreateBuilderAsync instead.", DiagnosticId = "MTP0002", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+#else
     [Obsolete("This method is obsolete. Use CreateBuilderAsync instead.")]
+#endif
     public static Task<ITestApplicationBuilder> CreateServerModeBuilderAsync(string[] args, TestApplicationOptions? testApplicationOptions = null)
     {
         if (args.Contains($"--{PlatformCommandLineProvider.ServerOptionKey}") || args.Contains($"-{PlatformCommandLineProvider.ServerOptionKey}"))
@@ -305,7 +309,7 @@ public sealed class TestApplication : ITestApplication
         }
 
         // Set the directory to the default test result directory
-        string directory = Path.Combine(testApplicationModuleInfo.GetCurrentTestApplicationDirectory(), AggregatedConfiguration.DefaultTestResultFolderName);
+        string directory = GetDiagnosticDefaultDirectory(environment, testApplicationModuleInfo);
         bool customDirectory = false;
 
         if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.ResultDirectoryOptionKey, out string[]? resultDirectoryArg))
@@ -379,6 +383,17 @@ public sealed class TestApplication : ITestApplication
         return !RoslynString.IsNullOrEmpty(environmentLogLevel)
             && (Enum.TryParse(environmentLogLevel, ignoreCase: true, out parsedLogLevel)
                 || ThrowInvalidDiagnosticVerbosity(environmentLogLevel));
+    }
+
+    internal /* for testing purposes */ static string GetDiagnosticDefaultDirectory(IEnvironment environment, ITestApplicationModuleInfo testApplicationModuleInfo)
+    {
+        string? effectiveWorkingDirectory = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY);
+        if (RoslynString.IsNullOrWhiteSpace(effectiveWorkingDirectory))
+        {
+            effectiveWorkingDirectory = testApplicationModuleInfo.GetCurrentTestApplicationDirectory();
+        }
+
+        return Path.Combine(effectiveWorkingDirectory, AggregatedConfiguration.DefaultTestResultFolderName);
     }
 
     private static bool ThrowInvalidDiagnosticVerbosity(string environmentLogLevel)

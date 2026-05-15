@@ -8,8 +8,6 @@ on:
     events: [pull_request_comment]
   roles: [admin, maintainer, write]
 
-checkout: false
-
 permissions:
   contents: read
   pull-requests: read

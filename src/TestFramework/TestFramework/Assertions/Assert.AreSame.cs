@@ -39,8 +39,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 TelemetryCollector.TrackAssertionCall("Assert.AreSame");
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "expected", expectedExpression, "actual", actualExpression) + " ");
-                ReportAssertAreSameFailed(_expected, _actual, _builder.ToString());
+                ReportAssertAreSameFailed(_expected, _actual, _builder.ToString(), expectedExpression, actualExpression);
             }
         }
 
@@ -100,8 +99,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 TelemetryCollector.TrackAssertionCall("Assert.AreNotSame");
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "notExpected", notExpectedExpression, "actual", actualExpression) + " ");
-                ReportAssertAreNotSameFailed(_notExpected, _actual, _builder.ToString());
+                ReportAssertAreNotSameFailed(_notExpected, _actual, _builder.ToString(), notExpectedExpression, actualExpression);
             }
         }
 
@@ -185,34 +183,37 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
-        ReportAssertAreSameFailed(expected, actual, userMessage);
+        ReportAssertAreSameFailed(expected, actual, message, expectedExpression, actualExpression);
     }
 
     private static bool IsAreSameFailing<T>(T? expected, T? actual)
         => !object.ReferenceEquals(expected, actual);
 
     [DoesNotReturn]
-    private static void ReportAssertAreSameFailed<T>(T? expected, T? actual, string userMessage)
+    private static void ReportAssertAreSameFailed<T>(T? expected, T? actual, string? userMessage, string expectedExpression, string actualExpression)
     {
-        string finalMessage = expected is null
-            ? string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreSameExpectedIsNull,
-                userMessage)
-            : actual is null
-                ? string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.AreSameActualIsNull,
-                    userMessage)
-                : expected is ValueType && actual is ValueType
-                    ? string.Format(
-                        CultureInfo.CurrentCulture,
-                        FrameworkMessages.AreSameGivenValues,
-                        userMessage)
-                    : userMessage;
+        StructuredAssertionMessage msg = new("Expected both values to refer to the same object.");
 
-        ReportAssertFailed("Assert.AreSame", finalMessage);
+        if (expected is ValueType && actual is ValueType)
+        {
+            msg.WithAdditionalSummaryLine("Do not pass value types to AreSame \u2014 value types are boxed on each call, so references will never be the same.");
+        }
+
+        msg.WithUserMessage(userMessage);
+
+        if (expected is not ValueType || actual is not ValueType)
+        {
+            string expectedText = expected is null ? "null" : $"{expected.GetType()} (hash: 0x{RuntimeHelpers.GetHashCode(expected):X})";
+            string actualText = actual is null ? "null" : $"{actual.GetType()} (hash: 0x{RuntimeHelpers.GetHashCode(actual):X})";
+            EvidenceBlock evidence = EvidenceBlock.Create()
+                .AddLine("expected:", expectedText)
+                .AddLine("actual:", actualText);
+            msg.WithEvidence(evidence).WithExpectedAndActual(expectedText, actualText);
+        }
+
+        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreSame", expectedExpression, actualExpression, "<expected>", "<actual>"));
+
+        ReportAssertFailed(msg);
     }
 
     /// <inheritdoc cref="AreNotSame{T}(T, T, string?, string, string)" />
@@ -258,7 +259,7 @@ public sealed partial class Assert
 
         if (IsAreNotSameFailing(notExpected, actual))
         {
-            ReportAssertAreNotSameFailed(notExpected, actual, BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression));
+            ReportAssertAreNotSameFailed(notExpected, actual, message, notExpectedExpression, actualExpression);
         }
     }
 
@@ -266,15 +267,19 @@ public sealed partial class Assert
         => object.ReferenceEquals(notExpected, actual);
 
     [DoesNotReturn]
-    private static void ReportAssertAreNotSameFailed<T>(T? notExpected, T? actual, string userMessage)
+    private static void ReportAssertAreNotSameFailed<T>(T? notExpected, T? actual, string? userMessage, string notExpectedExpression, string actualExpression)
     {
-        string finalMessage = notExpected is null && actual is null
-            ? string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreNotSameBothNull,
-                userMessage)
-            : userMessage;
+        StructuredAssertionMessage msg = new("Expected values to refer to different objects.");
 
-        ReportAssertFailed("Assert.AreNotSame", finalMessage);
+        msg.WithAdditionalSummaryLine(
+            notExpected is null && actual is null
+                ? "Both values are null."
+                : "Both values refer to the same object.");
+
+        msg.WithUserMessage(userMessage);
+
+        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreNotSame", notExpectedExpression, actualExpression, "<notExpected>", "<actual>"));
+
+        ReportAssertFailed(msg);
     }
 }

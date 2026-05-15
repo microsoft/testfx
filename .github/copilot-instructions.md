@@ -44,6 +44,15 @@ When making change to resource files, you MUST:
 - All assertions must be written using FluentAssertions style of assertion.
 - When running acceptance tests, you must first run `./build.sh -pack`
 
+## Agentic workflow guidelines
+
+Agentic workflows live in `.github/workflows/*.md` and `*.agent.md` and are compiled to `*.lock.yml` files via the `gh aw` GitHub CLI extension.
+
+- Always compile in **strict mode**. Strict mode is the default unless a workflow's frontmatter sets `strict: false`, so:
+  - NEVER add `strict: false` to a workflow's frontmatter.
+  - When in doubt, pass `--strict` explicitly to `gh aw compile` to enforce strict-mode validation across all workflows (action pinning, network config, safe-outputs, no write permissions, no deprecated fields).
+- After editing any agentic workflow `.md` source (or its frontmatter), run `gh aw compile <workflow-id>` and commit the regenerated `.lock.yml` in the same change. NEVER hand-edit `.lock.yml` files.
+
 ## Pull Request guidelines
 
 - Let other developers discuss their comments to your PRs, unless something sounds like a direct order to you, don't do changes.

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -39,8 +39,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 TelemetryCollector.TrackAssertionCall("Assert.IsExactInstanceOfType");
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ReportAssertIsExactInstanceOfTypeFailed(_value, _expectedType, _builder.ToString());
+                ReportAssertIsExactInstanceOfTypeFailed(_value, _expectedType, _builder.ToString(), valueExpression);
             }
         }
 
@@ -100,8 +99,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 TelemetryCollector.TrackAssertionCall("Assert.IsExactInstanceOfType");
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ReportAssertIsExactInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
+                ReportAssertIsExactInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString(), valueExpression);
             }
         }
 
@@ -163,8 +161,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 TelemetryCollector.TrackAssertionCall("Assert.IsNotExactInstanceOfType");
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ReportAssertIsNotExactInstanceOfTypeFailed(_value, _wrongType, _builder.ToString());
+                ReportAssertIsNotExactInstanceOfTypeFailed(_value, _wrongType, _builder.ToString(), valueExpression);
             }
         }
 
@@ -224,8 +221,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 TelemetryCollector.TrackAssertionCall("Assert.IsNotExactInstanceOfType");
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ReportAssertIsNotExactInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
+                ReportAssertIsNotExactInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString(), valueExpression);
             }
         }
 
@@ -297,7 +293,7 @@ public sealed partial class Assert
 
         if (IsExactInstanceOfTypeFailing(value, expectedType))
         {
-            ReportAssertIsExactInstanceOfTypeFailed(value, expectedType, BuildUserMessageForValueExpression(message, valueExpression));
+            ReportAssertIsExactInstanceOfTypeFailed(value, expectedType, message, valueExpression);
         }
     }
 
@@ -335,18 +331,25 @@ public sealed partial class Assert
         => expectedType is null || value is null || value.GetType() != expectedType;
 
     [DoesNotReturn]
-    private static void ReportAssertIsExactInstanceOfTypeFailed(object? value, Type? expectedType, string userMessage)
+    private static void ReportAssertIsExactInstanceOfTypeFailed(object? value, Type? expectedType, string? userMessage, string valueExpression)
     {
-        string finalMessage = expectedType is not null
-            ? string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.IsExactInstanceOfFailMsg,
-                userMessage,
-                expectedType.ToString(),
-                value?.GetType().ToString() ?? "null")
-            : userMessage;
+        StructuredAssertionMessage msg = expectedType is null
+            ? new("Cannot check type because the expected type argument is null.")
+            : new($"Expected value to be exactly of type {expectedType.Name}.");
+        msg.WithUserMessage(userMessage);
 
-        ReportAssertFailed("Assert.IsExactInstanceOfType", finalMessage);
+        if (expectedType is not null)
+        {
+            string actualTypeText = value?.GetType().ToString() ?? "null";
+            EvidenceBlock evidence = EvidenceBlock.Create()
+                .AddLine("expected type:", expectedType.ToString())
+                .AddLine(value is null ? "actual:" : "actual type:", actualTypeText);
+            msg.WithEvidence(evidence)
+               .WithExpectedAndActual(expectedType.ToString(), actualTypeText);
+        }
+
+        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsExactInstanceOfType", valueExpression, "<value>"));
+        ReportAssertFailed(msg);
     }
 
     /// <summary>
@@ -379,7 +382,7 @@ public sealed partial class Assert
 
         if (IsNotExactInstanceOfTypeFailing(value, wrongType))
         {
-            ReportAssertIsNotExactInstanceOfTypeFailed(value, wrongType, BuildUserMessageForValueExpression(message, valueExpression));
+            ReportAssertIsNotExactInstanceOfTypeFailed(value, wrongType, message, valueExpression);
         }
     }
 
@@ -411,19 +414,24 @@ public sealed partial class Assert
             (value is not null && value.GetType() == wrongType);
 
     [DoesNotReturn]
-    private static void ReportAssertIsNotExactInstanceOfTypeFailed(object? value, Type? wrongType, string userMessage)
+    private static void ReportAssertIsNotExactInstanceOfTypeFailed(object? value, Type? wrongType, string? userMessage, string valueExpression)
     {
-        string finalMessage = userMessage;
+        StructuredAssertionMessage msg = wrongType is null
+            ? new("Cannot check type because the not-expected type argument is null.")
+            : new($"Expected value to not be exactly of type {wrongType.Name}.");
+        msg.WithUserMessage(userMessage);
+
         if (wrongType is not null)
         {
-            finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.IsNotExactInstanceOfFailMsg,
-                userMessage,
-                wrongType.ToString(),
-                value!.GetType().ToString());
+            string actualTypeText = value?.GetType().ToString() ?? "null";
+            EvidenceBlock evidence = EvidenceBlock.Create()
+                .AddLine("not expected type:", wrongType.ToString())
+                .AddLine("actual type:", actualTypeText);
+            msg.WithEvidence(evidence)
+               .WithExpectedAndActual(wrongType.ToString(), actualTypeText);
         }
 
-        ReportAssertFailed("Assert.IsNotExactInstanceOfType", finalMessage);
+        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotExactInstanceOfType", valueExpression, "<value>"));
+        ReportAssertFailed(msg);
     }
 }
