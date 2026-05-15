@@ -330,38 +330,46 @@ public sealed partial class Assert
     /// </summary>
     /// <returns>
     /// <see langword="true"/> if at least one element is missing — in which case <paramref name="missing"/>
-    /// holds the excess elements (in their first-seen order) — and <see langword="false"/> when every
-    /// element of <paramref name="subset"/> is matched in <paramref name="superset"/>.
+    /// holds the excess elements (in their first-seen order in <paramref name="subset"/>) — and
+    /// <see langword="false"/> when every element of <paramref name="subset"/> is matched in
+    /// <paramref name="superset"/>.
     /// </returns>
     private static bool TryFindMissingElements<T>(IEnumerable<T?> subset, IEnumerable<T?> superset, IEqualityComparer<T> comparer, [NotNullWhen(true)] out List<T?>? missing)
     {
 #pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
-        Dictionary<T, int> subsetCounts = CountElements(subset, comparer, out int subsetNulls);
         Dictionary<T, int> supersetCounts = CountElements(superset, comparer, out int supersetNulls);
 #pragma warning restore CS8714
 
         missing = null;
 
-        if (subsetNulls > supersetNulls)
+        // Walk the subset in source order so excess elements appear in first-seen positional order
+        // (with multiplicity preserved). For each element, decrement its remaining quota in the superset;
+        // when the quota reaches zero, additional occurrences are reported as missing.
+        foreach (T? element in subset)
         {
-            missing = [];
-            for (int i = 0; i < subsetNulls - supersetNulls; i++)
+            if (element is null)
             {
-                missing.Add(default);
-            }
-        }
+                if (supersetNulls > 0)
+                {
+                    supersetNulls--;
+                }
+                else
+                {
+                    missing ??= [];
+                    missing.Add(default);
+                }
 
-        foreach (KeyValuePair<T, int> entry in subsetCounts)
-        {
-            supersetCounts.TryGetValue(entry.Key, out int supersetCount);
-            if (entry.Value > supersetCount)
+                continue;
+            }
+
+            if (supersetCounts.TryGetValue(element, out int remaining) && remaining > 0)
+            {
+                supersetCounts[element] = remaining - 1;
+            }
+            else
             {
                 missing ??= [];
-                int excess = entry.Value - supersetCount;
-                for (int i = 0; i < excess; i++)
-                {
-                    missing.Add(entry.Key);
-                }
+                missing.Add(element);
             }
         }
 
@@ -442,17 +450,9 @@ public sealed partial class Assert
     }
 
     private static string? BuildCallSiteWithComparer(string assertionMethodName, string subsetExpression, string supersetExpression, bool hasComparer)
-    {
-        string? callSite = FormatCallSiteExpression(assertionMethodName, subsetExpression, supersetExpression, "<subset>", "<superset>");
-        if (callSite is null || !hasComparer)
-        {
-            return callSite;
-        }
-
-        // FormatCallSiteExpression has no overload accepting a third argument expression; insert
-        // the <comparer> placeholder so the rendered call-site reflects the overload that was actually invoked.
-        return string.Concat(callSite.Substring(0, callSite.Length - 1), ", <comparer>)");
-    }
+        => hasComparer
+            ? FormatCallSiteExpression(assertionMethodName, subsetExpression, supersetExpression, expression3: string.Empty, "<subset>", "<superset>", "<comparer>")
+            : FormatCallSiteExpression(assertionMethodName, subsetExpression, supersetExpression, "<subset>", "<superset>");
 
     private sealed class NonGenericEqualityComparerAdapter : IEqualityComparer<object?>
     {
@@ -461,6 +461,9 @@ public sealed partial class Assert
         public NonGenericEqualityComparerAdapter(IEqualityComparer comparer)
             => _comparer = comparer;
 
+        // The 'new' modifier suppresses CS0108: this instance method intentionally hides the
+        // static 'object.Equals(object?, object?)' (only sharing its name/signature) to satisfy
+        // the IEqualityComparer<object?>.Equals contract. There is nothing to override.
         public new bool Equals(object? x, object? y) => _comparer.Equals(x, y);
 
         public int GetHashCode(object? obj) => obj is null ? 0 : _comparer.GetHashCode(obj);

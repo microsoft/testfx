@@ -86,11 +86,11 @@ public partial class AssertTests : TestContainer
     }
 
     public void IsSubsetOf_Generic_WithComparer_AllPresent_ShouldPass()
-        => Assert.IsSubsetOf(new[] { "A" }, new[] { "a", "b" }, StringComparer.OrdinalIgnoreCase);
+        => Assert.IsSubsetOf(new[] { "A" }, new[] { "a", "b" }, new CaseInsensitiveStringComparer());
 
     public void IsSubsetOf_Generic_WithComparer_MissingElement_ShouldFail()
     {
-        Action action = () => Assert.IsSubsetOf(new[] { "A", "C" }, new[] { "a", "b" }, StringComparer.OrdinalIgnoreCase);
+        Action action = () => Assert.IsSubsetOf(new[] { "A", "C" }, new[] { "a", "b" }, new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -99,7 +99,7 @@ public partial class AssertTests : TestContainer
                 missing:  ["C"]
                 subset:   ["A", "C"]
                 superset: ["a", "b"]
-                comparer: OrdinalIgnoreCaseComparer
+                comparer: CaseInsensitiveStringComparer
 
                 Assert.IsSubsetOf(new[] { "A", "C" }, new[] { "a", "b" }, <comparer>)
                 """);
@@ -129,6 +129,12 @@ public partial class AssertTests : TestContainer
     public void IsSubsetOf_NonGeneric_AllPresent_ShouldPass()
         => Assert.IsSubsetOf(new ArrayList { 1, 2 }, new ArrayList { 1, 2, 3 });
 
+    public void IsSubsetOf_NonGeneric_WithComparer_AllPresent_ShouldPass()
+        => Assert.IsSubsetOf(new ArrayList { "A", "b" }, new ArrayList { "a", "B", "c" }, new CaseInsensitiveStringComparer());
+
+    public void IsNotSubsetOf_NonGeneric_WithComparer_MissingElement_ShouldPass()
+        => Assert.IsNotSubsetOf(new ArrayList { "A", "C" }, new ArrayList { "a", "b" }, new CaseInsensitiveStringComparer());
+
     public void IsSubsetOf_NonGeneric_MissingElement_ShouldFail()
     {
         IEnumerable subset = new ArrayList { 1, 2, 3 };
@@ -151,7 +157,7 @@ public partial class AssertTests : TestContainer
     {
         IEnumerable subset = new ArrayList { "A", "C" };
         IEnumerable superset = new ArrayList { "a", "b" };
-        Action action = () => Assert.IsSubsetOf(subset, superset, StringComparer.OrdinalIgnoreCase);
+        Action action = () => Assert.IsSubsetOf(subset, superset, new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -160,7 +166,7 @@ public partial class AssertTests : TestContainer
                 missing:  ["C"]
                 subset:   ["A", "C"]
                 superset: ["a", "b"]
-                comparer: OrdinalIgnoreCaseComparer
+                comparer: CaseInsensitiveStringComparer
 
                 Assert.IsSubsetOf(subset, superset, <comparer>)
                 """);
@@ -201,11 +207,11 @@ public partial class AssertTests : TestContainer
     }
 
     public void IsNotSubsetOf_Generic_WithComparer_MissingElement_ShouldPass()
-        => Assert.IsNotSubsetOf(new[] { "A", "C" }, new[] { "a", "b" }, StringComparer.OrdinalIgnoreCase);
+        => Assert.IsNotSubsetOf(new[] { "A", "C" }, new[] { "a", "b" }, new CaseInsensitiveStringComparer());
 
     public void IsNotSubsetOf_Generic_WithComparer_AllPresent_ShouldFail()
     {
-        Action action = () => Assert.IsNotSubsetOf(new[] { "A" }, new[] { "a", "b" }, StringComparer.OrdinalIgnoreCase);
+        Action action = () => Assert.IsNotSubsetOf(new[] { "A" }, new[] { "a", "b" }, new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -213,7 +219,7 @@ public partial class AssertTests : TestContainer
 
                 subset:   ["A"]
                 superset: ["a", "b"]
-                comparer: OrdinalIgnoreCaseComparer
+                comparer: CaseInsensitiveStringComparer
 
                 Assert.IsNotSubsetOf(new[] { "A" }, new[] { "a", "b" }, <comparer>)
                 """);
@@ -316,7 +322,7 @@ public partial class AssertTests : TestContainer
     {
         IEnumerable subset = new ArrayList { "A" };
         IEnumerable superset = new ArrayList { "a", "b" };
-        Action action = () => Assert.IsNotSubsetOf(subset, superset, StringComparer.OrdinalIgnoreCase);
+        Action action = () => Assert.IsNotSubsetOf(subset, superset, new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -324,7 +330,7 @@ public partial class AssertTests : TestContainer
 
                 subset:   ["A"]
                 superset: ["a", "b"]
-                comparer: OrdinalIgnoreCaseComparer
+                comparer: CaseInsensitiveStringComparer
 
                 Assert.IsNotSubsetOf(subset, superset, <comparer>)
                 """);
@@ -347,5 +353,16 @@ public partial class AssertTests : TestContainer
         AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
         ex.ExpectedText.Should().BeNull();
         ex.ActualText.Should().Be("[1]");
+    }
+
+    private sealed class CaseInsensitiveStringComparer : IEqualityComparer<string>, IEqualityComparer
+    {
+        public bool Equals(string? x, string? y) => StringComparer.OrdinalIgnoreCase.Equals(x, y);
+
+        public int GetHashCode(string obj) => StringComparer.OrdinalIgnoreCase.GetHashCode(obj);
+
+        bool IEqualityComparer.Equals(object? x, object? y) => StringComparer.OrdinalIgnoreCase.Equals(x as string, y as string);
+
+        public int GetHashCode(object obj) => obj is string s ? StringComparer.OrdinalIgnoreCase.GetHashCode(s) : 0;
     }
 }
