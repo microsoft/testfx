@@ -34,7 +34,9 @@ public class TestResult
     /// <summary>
     /// Gets or sets the exception thrown when test is failed.
     /// </summary>
+#if NETFRAMEWORK
     [field: NonSerialized]
+#endif
     public Exception? TestFailureException
     {
         get
