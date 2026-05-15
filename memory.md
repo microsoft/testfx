@@ -37,6 +37,10 @@
 - TypeEnumerator.GetTests() already fast-paths common case (no duplicate test methods) - GroupBy/OrderBy only runs for inherited test classes
 - TestExecutionManager.cs GroupBy/Where - called once per source/assembly, not per-test - low priority
 - IMPORTANT: TestMethodInfo.Execution.cs has ConfigureAwait(true) on RunTestInitializeMethodAsync and invokeResult - INTENTIONAL for WinUI synchronization context (UI thread requirement). DO NOT change to false.
+- MSTest.Engine BFSTestNodeVisitor: PropertyBag.Any<TestNodeStateProperty>() already optimized (fast path, no allocation). BFS uses immutable string paths (already optimized per code comments).
+- MSTest.Engine TestFixtureManager.RegisterFixtureUsage: uses LINQ Select to create FixtureId[], but this is one-time registration (not per-execution), low priority.
+- MSTest.Engine: PropertyBag.Any<T>() has fast-path for TestNodeStateProperty, no LINQ, already well-optimized.
+- MSTest.Engine, Platform/: scanned on 2026-05-15 - no new high-confidence hot-path targets found beyond backlog items.
 
 ## Optimization Backlog
 1. **[In main]** ValidSourceExtensions static cache + ReflectionTestMethodInfo deduplication
@@ -47,7 +51,8 @@
 6. TreeNodeFilter MatchFilterPattern: LINQ closure allocations - covered by Efficiency Improver (#7947, #7974, #8035)
 7. SynchronizedStringBuilder lock overhead - LOW PRIORITY, requires profiler evidence, may be intentionally thread-safe
 8. Scanned Execution/, Discovery/, Helpers/ on 2026-05-06 - no new high-confidence targets beyond backlog items
-9. Scanned Platform/ briefly on 2026-05-14 - LINQ usage found but in non-hot-path areas (CommandLine, ServerMode) - needs deeper analysis
+9. Scanned Platform/ briefly on 2026-05-14 - LINQ usage found but in non-hot-path areas (CommandLine, ServerMode)
+10. Scanned MSTest.Engine/ and Platform/ deeper on 2026-05-15 - no new high-confidence targets
 
 ## Completed Work
 - Branch: perf-assist/reduce-allocations-discovery-execution (changes applied to main by maintainer, issue #7815 still open - suggest closing)
@@ -63,14 +68,16 @@
 - IMPORTANT: Do NOT create a new monthly activity issue - maintainer closed #7981 as not_planned on 2026-05-13
 
 ## Last Run
+- 2026-05-15: Task 2/6 (deeper scan MSTest.Engine + Platform - no new high-confidence targets); noop
 - 2026-05-14: Task 2/5 (scanned Platform/ briefly - no new high-confidence targets), noop (monthly issue closed by maintainer)
 - 2026-05-13: Task 4/2 (PR #8095 merged!), Task 7 (monthly summary updated - but issue subsequently closed by Evangelink)
 - 2026-05-12: Task 4 (fixed Windows CI in PR #8095), Task 7 (monthly summary updated)
 
 ## Round Robin Status
 - 2026-05-13: Tasks 4, 2, 7 done
-- 2026-05-14: Tasks 2, 5 attempted; noop (no new high-confidence targets)
-- Next run: consider Task 6 (assess MTP Platform code for deeper LINQ analysis), Task 3 if new target found
+- 2026-05-14: Tasks 2, 5 attempted; noop
+- 2026-05-15: Tasks 2, 6 attempted; noop (no new high-confidence targets)
+- Next run: Consider looking at new areas - maybe MSBuild targets, source generators, or waiting for profiler evidence from maintainers
 
 ## IMPORTANT NOTES FOR FUTURE RUNS
 - **DO NOT create more IsIgnored issues/PRs** - PR #8095 is MERGED.
@@ -79,3 +86,4 @@
 - **DO NOT change ConfigureAwait(true) in TestMethodInfo.Execution.cs** - intentional for WinUI UI thread requirement
 - If stuck, look at NEW opportunities in test execution/discovery code using profiler evidence
 - The maintainers want profiler evidence before accepting allocation-optimization issues
+- Consider looking at source generators (MSTest.SourceGeneration) or analyzers for perf next
