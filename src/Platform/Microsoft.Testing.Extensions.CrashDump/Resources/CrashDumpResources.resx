@@ -153,17 +153,8 @@
   <data name="CrashReportArtifactDisplayName" xml:space="preserve">
     <value>Crash report file</value>
   </data>
-  <data name="CrashReportOnlyCannotBeCombinedErrorMessage" xml:space="preserve">
-    <value>'--crashreport-only' can't be combined with '--crashdump' or '--crashreport'</value>
-  </data>
-  <data name="CrashReportOnlyOptionDescription" xml:space="preserve">
-    <value>[net7.0+ only] Generate only a crash report file if the test process crashes</value>
-  </data>
   <data name="CrashReportOptionDescription" xml:space="preserve">
-    <value>[net6.0+ only] Generate a crash report file if the test process crashes. Requires '--crashdump'.</value>
-  </data>
-  <data name="CrashReportRequiresCrashDumpErrorMessage" xml:space="preserve">
-    <value>You specified '--crashreport' but did not enable crash dumps, add '--crashdump' to the command line</value>
+    <value>Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'.</value>
   </data>
   <data name="CrashDumpProcessCrashedDumpAndReportFileCreated" xml:space="preserve">
     <value>Test host process with PID '{0}' crashed, a dump file and crash report were generated</value>

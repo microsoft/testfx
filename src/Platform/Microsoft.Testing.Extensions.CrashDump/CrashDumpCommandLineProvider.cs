@@ -15,7 +15,6 @@ internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
     [
         new(CrashDumpCommandLineOptions.CrashDumpOptionName, CrashDumpResources.CrashDumpOptionDescription, ArgumentArity.Zero, false),
         new(CrashDumpCommandLineOptions.CrashReportOptionName, CrashDumpResources.CrashReportOptionDescription, ArgumentArity.Zero, false),
-        new(CrashDumpCommandLineOptions.CrashReportOnlyOptionName, CrashDumpResources.CrashReportOnlyOptionDescription, ArgumentArity.Zero, false),
         new(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, CrashDumpResources.CrashDumpFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
         new(CrashDumpCommandLineOptions.CrashDumpTypeOptionName, CrashDumpResources.CrashDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false)
     ];
@@ -47,22 +46,5 @@ internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
     }
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-    {
-        bool isCrashDumpSet = commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName);
-        bool isCrashReportSet = commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
-        bool isCrashReportOnlySet = commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOnlyOptionName);
-
-        if (isCrashReportOnlySet && (isCrashDumpSet || isCrashReportSet))
-        {
-            return ValidationResult.InvalidTask(CrashDumpResources.CrashReportOnlyCannotBeCombinedErrorMessage);
-        }
-
-        if (isCrashReportSet && !isCrashDumpSet)
-        {
-            return ValidationResult.InvalidTask(CrashDumpResources.CrashReportRequiresCrashDumpErrorMessage);
-        }
-
-        // No problem found
-        return ValidationResult.ValidTask;
-    }
+        => ValidationResult.ValidTask;
 }

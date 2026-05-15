@@ -96,24 +96,9 @@ Další informace najdete na https://learn.microsoft.com/dotnet/core/diagnostics
         <target state="new">Crash report file</target>
         <note />
       </trans-unit>
-      <trans-unit id="CrashReportOnlyCannotBeCombinedErrorMessage">
-        <source>'--crashreport-only' can't be combined with '--crashdump' or '--crashreport'</source>
-        <target state="new">'--crashreport-only' can't be combined with '--crashdump' or '--crashreport'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CrashReportOnlyOptionDescription">
-        <source>[net7.0+ only] Generate only a crash report file if the test process crashes</source>
-        <target state="new">[net7.0+ only] Generate only a crash report file if the test process crashes</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CrashReportOptionDescription">
-        <source>[net6.0+ only] Generate a crash report file if the test process crashes. Requires '--crashdump'.</source>
-        <target state="new">[net6.0+ only] Generate a crash report file if the test process crashes. Requires '--crashdump'.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CrashReportRequiresCrashDumpErrorMessage">
-        <source>You specified '--crashreport' but did not enable crash dumps, add '--crashdump' to the command line</source>
-        <target state="new">You specified '--crashreport' but did not enable crash dumps, add '--crashdump' to the command line</target>
+        <source>Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'.</source>
+        <target state="new">Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'.</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">

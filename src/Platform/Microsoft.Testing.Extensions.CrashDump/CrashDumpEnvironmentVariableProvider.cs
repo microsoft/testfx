@@ -58,17 +58,15 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(
             (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) ||
-             _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName) ||
-             _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOnlyOptionName)) &&
+             _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName)) &&
             _crashDumpGeneratorConfiguration.Enable);
 
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
         bool crashDumpEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName);
         bool crashReportEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
-        bool crashReportOnlyEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOnlyOptionName);
 
-        if (crashDumpEnabled || crashReportEnabled || crashReportOnlyEnabled)
+        if (crashDumpEnabled || crashReportEnabled)
         {
             foreach (string prefix in Prefixes)
             {
@@ -84,17 +82,12 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 
         if (crashReportEnabled)
         {
+            // When a dump is also requested, emit a crash report alongside it.
+            // Otherwise emit only the crash report (no dump file).
+            string reportVariable = crashDumpEnabled ? EnableCrashReportVariable : EnableCrashReportOnlyVariable;
             foreach (string prefix in Prefixes)
             {
-                environmentVariables.SetVariable(new($"{prefix}{EnableCrashReportVariable}", EnabledValue, false, true));
-            }
-        }
-
-        if (crashReportOnlyEnabled)
-        {
-            foreach (string prefix in Prefixes)
-            {
-                environmentVariables.SetVariable(new($"{prefix}{EnableCrashReportOnlyVariable}", EnabledValue, false, true));
+                environmentVariables.SetVariable(new($"{prefix}{reportVariable}", EnabledValue, false, true));
             }
         }
 
@@ -166,9 +159,10 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         return ValidationResult.InvalidTask(CrashDumpResources.CrashDumpNotSupportedInNonNetCoreErrorMessage);
 #else
         StringBuilder errors = new();
-        if (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) ||
-            _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName) ||
-            _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOnlyOptionName))
+        bool crashDumpEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName);
+        bool crashReportEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
+
+        if (crashDumpEnabled || crashReportEnabled)
         {
             ValidateBothPrefixes(EnableMiniDumpVariable, EnabledValue);
         }
@@ -176,14 +170,10 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         ValidateBothPrefixes(CreateDumpDiagnosticsVariable, EnabledValue);
         ValidateBothPrefixes(CreateDumpVerboseDiagnosticsVariable, EnabledValue);
 
-        if (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName))
+        if (crashReportEnabled)
         {
-            ValidateBothPrefixes(EnableCrashReportVariable, EnabledValue);
-        }
-
-        if (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOnlyOptionName))
-        {
-            ValidateBothPrefixes(EnableCrashReportOnlyVariable, EnabledValue);
+            string reportVariable = crashDumpEnabled ? EnableCrashReportVariable : EnableCrashReportOnlyVariable;
+            ValidateBothPrefixes(reportVariable, EnabledValue);
         }
 
         foreach (string prefix in Prefixes)

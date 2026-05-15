@@ -10,8 +10,7 @@ namespace Microsoft.Testing.Extensions.Diagnostics;
 internal static class CrashDumpCommandLineOptions
 {
     public const string CrashDumpOptionName = "crashdump";
-    public const string CrashReportOptionName = "crashreport";
-    public const string CrashReportOnlyOptionName = "crashreport-only";
+    public const string CrashReportOptionName = "crash-report";
     public const string CrashDumpFileNameOptionName = "crashdump-filename";
     public const string CrashDumpTypeOptionName = "crashdump-type";
 }

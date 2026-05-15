@@ -21,7 +21,7 @@ This package extends Microsoft.Testing.Platform with:
 - **Runtime behavior**: supported for .NET 6+; on .NET Framework this extension is ignored
 
 Enable crash dump collection via the `--crashdump` command line option.
-Add `--crashreport` to generate a dump and crash report together, or use `--crashreport-only` to generate only the crash report.
+Add `--crash-report` to generate a JSON crash report; combine `--crashdump --crash-report` to produce both a dump and a report.
 
 ## Related packages
 
