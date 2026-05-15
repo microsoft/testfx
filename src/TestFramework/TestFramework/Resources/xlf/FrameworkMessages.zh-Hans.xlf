@@ -277,6 +277,16 @@ Actual: {2}</source>
         <target state="new">Expected condition to be false.</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsGreaterThanFailedSummary">
+        <source>Expected value to be greater than the lower bound.</source>
+        <target state="new">Expected value to be greater than the lower bound.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsGreaterThanOrEqualToFailedSummary">
+        <source>Expected value to be greater than or equal to the lower bound.</source>
+        <target state="new">Expected value to be greater than or equal to the lower bound.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
         <target state="translated">值 "{0}" 不在预期范围 [{1}..{2}] 内。{3}</target>
@@ -292,9 +302,24 @@ Actual: {2}</source>
         <target state="translated">{0} 类型应为: &lt;{1}&gt;。类型实为: &lt;{2}&gt;。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="IsLessThanFailedSummary">
+        <source>Expected value to be less than the upper bound.</source>
+        <target state="new">Expected value to be less than the upper bound.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsLessThanOrEqualToFailedSummary">
+        <source>Expected value to be less than or equal to the upper bound.</source>
+        <target state="new">Expected value to be less than or equal to the upper bound.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsMatchFail">
         <source>String '{0}' does not match pattern '{1}'. {2}</source>
         <target state="translated">字符串 '{0}' 与模式 '{1}' 不匹配。{2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsNegativeFailedSummary">
+        <source>Expected value to be negative.</source>
+        <target state="new">Expected value to be negative.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
@@ -330,6 +355,11 @@ Actual: {2}</source>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
         <target state="new">Expected value to be null.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsPositiveFailedSummary">
+        <source>Expected value to be positive.</source>
+        <target state="new">Expected value to be positive.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">

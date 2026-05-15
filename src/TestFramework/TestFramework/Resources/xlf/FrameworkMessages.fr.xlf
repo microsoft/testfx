@@ -277,6 +277,16 @@ Réel : {2}</target>
         <target state="new">Expected condition to be false.</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsGreaterThanFailedSummary">
+        <source>Expected value to be greater than the lower bound.</source>
+        <target state="new">Expected value to be greater than the lower bound.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsGreaterThanOrEqualToFailedSummary">
+        <source>Expected value to be greater than or equal to the lower bound.</source>
+        <target state="new">Expected value to be greater than or equal to the lower bound.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
         <target state="translated">La valeur « {0} » n'est pas dans la plage attendue [{1}..{2}]. {3}</target>
@@ -292,9 +302,24 @@ Réel : {2}</target>
         <target state="translated">{0}Type attendu :&lt;{1}&gt;. Type réel :&lt;{2}&gt;.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="IsLessThanFailedSummary">
+        <source>Expected value to be less than the upper bound.</source>
+        <target state="new">Expected value to be less than the upper bound.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsLessThanOrEqualToFailedSummary">
+        <source>Expected value to be less than or equal to the upper bound.</source>
+        <target state="new">Expected value to be less than or equal to the upper bound.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsMatchFail">
         <source>String '{0}' does not match pattern '{1}'. {2}</source>
         <target state="translated">La chaîne '{0}' ne correspond pas au modèle '{1}'. {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsNegativeFailedSummary">
+        <source>Expected value to be negative.</source>
+        <target state="new">Expected value to be negative.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
@@ -330,6 +355,11 @@ Réel : {2}</target>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
         <target state="new">Expected value to be null.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsPositiveFailedSummary">
+        <source>Expected value to be positive.</source>
+        <target state="new">Expected value to be positive.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">

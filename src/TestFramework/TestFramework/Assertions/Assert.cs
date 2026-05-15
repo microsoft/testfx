@@ -286,9 +286,6 @@ public sealed partial class Assert
             : $"{callerArgMessagePart} {userMessage}";
     }
 
-    private static string BuildUserMessageForValueExpression(string? format, string valueExpression)
-        => BuildUserMessageForSingleExpression(format, valueExpression, "value");
-
     private static string BuildUserMessageForCollectionExpression(string? format, string collectionExpression)
         => BuildUserMessageForSingleExpression(format, collectionExpression, "collection");
 
@@ -309,12 +306,6 @@ public sealed partial class Assert
 
     private static string BuildUserMessageForPatternExpressionAndValueExpression(string? format, string patternExpression, string valueExpression)
         => BuildUserMessageForTwoExpressions(format, patternExpression, "pattern", valueExpression, "value");
-
-    private static string BuildUserMessageForLowerBoundExpressionAndValueExpression(string? format, string lowerBoundExpression, string valueExpression)
-        => BuildUserMessageForTwoExpressions(format, lowerBoundExpression, "lowerBound", valueExpression, "value");
-
-    private static string BuildUserMessageForUpperBoundExpressionAndValueExpression(string? format, string upperBoundExpression, string valueExpression)
-        => BuildUserMessageForTwoExpressions(format, upperBoundExpression, "upperBound", valueExpression, "value");
 
     private static string BuildUserMessageForExpectedExpressionAndCollectionExpression(string? format, string expectedExpression, string collectionExpression)
         => BuildUserMessageForTwoExpressions(format, expectedExpression, "expected", collectionExpression, "collection");
