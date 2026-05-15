@@ -473,9 +473,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              standardError);
                         break;
 
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
                     case CancelledTestNodeStateProperty cancelledState:
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
                         _terminalTestReporter.TestCompleted(
                              testNodeStateChanged.TestNode.Uid.Value,
                              testNodeStateChanged.TestNode.DisplayName,

@@ -36,7 +36,7 @@ public class TypeCacheTests : TestContainer
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
 
-        ReflectHelper.Instance.ClearCache();
+        ReflectHelper.ClearCache();
 
         SetupMocks();
     }
@@ -54,7 +54,7 @@ public class TypeCacheTests : TestContainer
     #region GetTestMethodInfo tests
 
     private static TestMethod CreateTestMethod(string methodName, string className, string assemblyName, string? displayName)
-        => new(className, methodName, null, methodName, className, assemblyName, displayName, null);
+        => new(methodName, null, methodName, className, assemblyName, displayName, null);
 
     public void GetTestMethodInfoShouldReturnNullIfClassInfoForTheMethodIsNull()
     {

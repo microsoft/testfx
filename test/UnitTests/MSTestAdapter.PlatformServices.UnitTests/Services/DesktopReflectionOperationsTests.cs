@@ -38,10 +38,12 @@ public class DesktopReflectionOperationsTests : TestContainer
         object[] attributes = _reflectionOperations.GetCustomAttributes(type);
 
         attributes.Should().NotBeNull();
-        attributes.Length.Should().Be(1);
+        // Filter to only our test attributes (excludes compiler-generated attributes like NullableContextAttribute)
+        List<string> testAttributes = ReflectionUtilityTests.GetAttributeValuePairs(attributes);
+        testAttributes.Count.Should().Be(1);
 
         string[] expectedAttributes = ["DummyA : ba"];
-        expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)).Should().BeTrue();
+        expectedAttributes.SequenceEqual(testAttributes).Should().BeTrue();
     }
 
     public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()

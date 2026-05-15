@@ -9,7 +9,7 @@ internal static class AttributeExtensions
 {
     public static bool IsIgnored(this ICustomAttributeProvider type, out string? ignoreMessage)
     {
-        Attribute[] allAttributes = ReflectHelper.Instance.GetCustomAttributesCached(type);
+        Attribute[] allAttributes = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached(type);
 
         // Single pass: build groups while iterating. For the common case (no ConditionBaseAttribute)
         // the dictionary and list are never allocated → zero heap allocations.

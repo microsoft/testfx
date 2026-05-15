@@ -27,9 +27,9 @@ public partial class AssertTests
 #if DEBUG
     public void ObsoleteEqualsMethodThrowsAssertFailedException()
     {
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MSTEST0100 // Type or member is obsolete
         Action act = () => Assert.Equals("test", "test");
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MSTEST0100 // Type or member is obsolete
         act.Should().Throw<AssertFailedException>()
            .WithMessage("*Assert.Equals should not be used for Assertions*");
     }
@@ -37,9 +37,9 @@ public partial class AssertTests
     public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
     {
         object obj = new();
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MSTEST0101 // Type or member is obsolete
         Action act = () => Assert.ReferenceEquals(obj, obj);
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MSTEST0101 // Type or member is obsolete
         act.Should().Throw<AssertFailedException>()
            .WithMessage("*Assert.ReferenceEquals should not be used for Assertions*");
     }
