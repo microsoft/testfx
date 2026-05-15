@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.ExceptionServices;
+
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -181,6 +183,14 @@ internal sealed class TrxResultStreamingStore : IDisposable
                 batch.Clear();
             }
         }
+        catch (OperationCanceledException) when (_disposeCts.IsCancellationRequested)
+        {
+            // Dispose() asked the writer to stop. Best-effort drain, no fault, no scary log line.
+            // We deliberately do NOT increment _droppedCount: producers stopped enqueuing as soon as
+            // Dispose() called CompleteAdding, and anything left in the queue was unobserved by the
+            // user (the session was being shut down).
+            _logger.LogDebug("TRX streaming store writer cancelled during shutdown.");
+        }
         catch (Exception ex)
         {
             _faulted = true;
@@ -347,7 +357,7 @@ internal sealed class TrxResultStreamingStore : IDisposable
             }
             catch
             {
-                throw lastError;
+                ExceptionDispatchInfo.Capture(lastError).Throw();
             }
 
             try
@@ -356,11 +366,11 @@ internal sealed class TrxResultStreamingStore : IDisposable
             }
             catch (OperationCanceledException)
             {
-                throw lastError;
+                ExceptionDispatchInfo.Capture(lastError).Throw();
             }
         }
 
-        throw lastError!;
+        ExceptionDispatchInfo.Capture(lastError!).Throw();
     }
 
     // Must only be called from the writer thread. Lazy because most test runs may not produce results

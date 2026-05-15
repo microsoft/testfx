@@ -126,7 +126,7 @@ internal sealed class TrxReportGenerator :
                 (TrxTestResult extracted, bool wasTruncated) = TrxTestResultExtractor.Extract(nodeChangedMessage);
                 if (wasTruncated)
                 {
-                    _truncatedFieldCount++;
+                    Interlocked.Increment(ref _truncatedFieldCount);
                 }
 
                 Volatile.Read(ref _streamingStore)!.Enqueue(extracted);
@@ -236,13 +236,13 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
                 testSessionContext.CancellationToken).ConfigureAwait(false);
         }
 
-        if (_truncatedFieldCount > 0)
+        if (Volatile.Read(ref _truncatedFieldCount) > 0)
         {
             // Tell the user (not just the log) that captured text has been truncated. This is a
             // user-observable behavior change vs. the legacy in-memory TRX path so it must be visible.
             await _outputDisplay.DisplayAsync(
                 this,
-                new WarningMessageOutputDeviceData($"TRX streaming store truncated captured text fields (stdout / stderr / exception messages / stack traces) on {_truncatedFieldCount} test result(s) because individual fields exceeded the per-field size cap. The truncated regions are marked '[truncated by TRX streaming store]' in the TRX."),
+                new WarningMessageOutputDeviceData($"TRX streaming store truncated captured text fields (stdout / stderr / exception messages / stack traces) on {Volatile.Read(ref _truncatedFieldCount)} test result(s) because individual fields exceeded the per-field size cap. The truncated regions are marked '[truncated by TRX streaming store]' in the TRX."),
                 testSessionContext.CancellationToken).ConfigureAwait(false);
         }
 
