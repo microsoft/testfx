@@ -36,6 +36,57 @@ public partial class AssertTests : TestContainer
                 """);
     }
 
+    public void IsSubsetOf_Generic_MultipleMissing_PreservesFirstSeenOrderAndMultiplicity()
+    {
+        // Walk: 3 ✓, 1 ✓, 1 → missing(1), 4 → missing(4), 1 → missing(1)  =>  [1, 4, 1]
+        Action action = () => Assert.IsSubsetOf(new[] { 3, 1, 1, 4, 1 }, new[] { 1, 2, 3 });
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to be a subset of the specified superset.
+
+                missing:  [1, 4, 1]
+                subset:   [3, 1, 1, 4, 1]
+                superset: [1, 2, 3]
+
+                Assert.IsSubsetOf(new[] { 3, 1, 1, 4, 1 }, new[] { 1, 2, 3 })
+                """);
+    }
+
+    public void IsSubsetOf_Generic_ExcessInMiddleOfMatchingRun_ReportsOnlyExcess()
+    {
+        Action action = () => Assert.IsSubsetOf(new[] { 1, 2, 1, 3 }, new[] { 1, 2, 3 });
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to be a subset of the specified superset.
+
+                missing:  [1]
+                subset:   [1, 2, 1, 3]
+                superset: [1, 2, 3]
+
+                Assert.IsSubsetOf(new[] { 1, 2, 1, 3 }, new[] { 1, 2, 3 })
+                """);
+    }
+
+    public void IsNotSubsetOf_Generic_DuplicatesExceedSupersetMultiplicity_ShouldPass()
+        => Assert.IsNotSubsetOf(new[] { 1, 1 }, new[] { 1 });
+
+    public void IsNotSubsetOf_Generic_DuplicatesWithinSupersetMultiplicity_ShouldFail()
+    {
+        Action action = () => Assert.IsNotSubsetOf(new[] { 1, 1 }, new[] { 1, 1, 2 });
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to not be a subset of the specified superset.
+
+                subset:   [1, 1]
+                superset: [1, 1, 2]
+
+                Assert.IsNotSubsetOf(new[] { 1, 1 }, new[] { 1, 1, 2 })
+                """);
+    }
+
     public void IsSubsetOf_Generic_MissingElement_ShouldFail()
     {
         Action action = () => Assert.IsSubsetOf(new[] { 1, 2, 3 }, new[] { 1, 2 });

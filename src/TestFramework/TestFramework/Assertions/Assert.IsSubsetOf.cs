@@ -409,9 +409,10 @@ public sealed partial class Assert
     }
 
     /// <summary>
-    /// Fast-path equivalent of <see cref="TryFindMissingElements{T}(IEnumerable{T}, IEnumerable{T}, IEqualityComparer{T}, out List{T})"/>
-    /// for the <c>IsNotSubsetOf</c> path: short-circuits as soon as a single uncovered element is found
-    /// and avoids allocating a missing-elements list when only the boolean answer is needed.
+    /// Equivalent to <see cref="TryFindMissingElements{T}(IEnumerable{T}, IEnumerable{T}, IEqualityComparer{T}, out List{T})"/>
+    /// for the <c>IsNotSubsetOf</c> path, but skips the <see cref="List{T}"/> of excess elements
+    /// and exits the <paramref name="subset"/> walk on the first uncovered element. The
+    /// <c>O(|superset|)</c> count-dictionary build is still performed up-front.
     /// </summary>
     private static bool HasAnyMissingElement<T>(IEnumerable<T?> subset, IEnumerable<T?> superset, IEqualityComparer<T> comparer)
     {
