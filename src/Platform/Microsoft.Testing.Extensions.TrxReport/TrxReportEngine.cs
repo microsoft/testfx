@@ -806,6 +806,12 @@ internal sealed partial class TrxReportEngine
 
     private string ResolveTrxFileNamePlaceholders(string template)
     {
+        // Fast path: avoid reflection-based resolution when the user provided a literal file name without placeholders.
+        if (template.IndexOf('{') < 0)
+        {
+            return template;
+        }
+
         string testAppPath = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
         string processName = RoslynString.IsNullOrEmpty(testAppPath)
             ? string.Empty

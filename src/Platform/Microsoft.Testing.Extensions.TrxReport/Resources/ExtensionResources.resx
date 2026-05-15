@@ -151,7 +151,9 @@
     <value>'--report-trx-filename' file name argument must end with '.trx' (e.g. --report-trx-filename myreport.trx)</value>
   </data>
   <data name="TrxReportFileNameOptionDescription" xml:space="preserve">
-    <value>The name of the generated TRX report. Supports placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). Example: MyReport_{tfm}.trx</value>
+    <value>The name of the generated TRX report.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {tfm} (target framework moniker), {time} (timestamp).
+Example: MyReport_{tfm}.trx</value>
   </data>
   <data name="TrxReportFileNameRequiresTrxReport" xml:space="preserve">
     <value>'--report-trx-filename' requires '--report-trx' to be enabled</value>
