@@ -27,18 +27,6 @@ internal sealed partial class MSTestSettings
     private const string ParallelizeSettingsName = "Parallelize";
 
     /// <summary>
-    /// Member variable for Adapter settings.
-    /// </summary>
-#pragma warning disable IDE0032 // Use auto property — property uses lazy '??=' initialization, which cannot be expressed as an auto-property.
-    private static MSTestSettings? s_currentSettings;
-
-    /// <summary>
-    /// Member variable for RunConfiguration settings.
-    /// </summary>
-    private static RunConfigurationSettings? s_runConfigurationSettings;
-#pragma warning restore IDE0032
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="MSTestSettings"/> class.
     /// </summary>
     public MSTestSettings()
@@ -64,21 +52,25 @@ internal sealed partial class MSTestSettings
     /// <summary>
     /// Gets the current settings.
     /// </summary>
+    [field: AllowNull]
+    [field: MaybeNull]
     [AllowNull]
     public static MSTestSettings CurrentSettings
     {
-        get => s_currentSettings ??= new MSTestSettings();
-        private set => s_currentSettings = value;
+        get => field ??= new MSTestSettings();
+        private set;
     }
 
     /// <summary>
     /// Gets the current configuration settings.
     /// </summary>
+    [field: AllowNull]
+    [field: MaybeNull]
     [AllowNull]
     public static RunConfigurationSettings RunConfigurationSettings
     {
-        get => s_runConfigurationSettings ??= new RunConfigurationSettings();
-        private set => s_runConfigurationSettings = value;
+        get => field ??= new RunConfigurationSettings();
+        private set;
     }
 
     /// <summary>

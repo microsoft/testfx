@@ -58,7 +58,7 @@ internal class AssemblyEnumerator
     /// The <see cref="object"/>.
     /// </returns>
     [SecurityCritical]
-    public override object InitializeLifetimeService() => null!;
+    public override object? InitializeLifetimeService() => null;
 #endif
 
     /// <summary>

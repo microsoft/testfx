@@ -66,7 +66,7 @@ internal class ReflectHelper
     /// The <see cref="object"/>.
     /// </returns>
     [SecurityCritical]
-    public override object InitializeLifetimeService() => null!;
+    public override object? InitializeLifetimeService() => null;
 #endif
 
     /// <summary>
