@@ -627,12 +627,18 @@ public partial class AssertTests : TestContainer
         int expected = 1;
         int actual = 2;
         Action act = () => Assert.AreEquivalent(expected, actual, "numbers should match");
-        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
-        ex.Message.Should().StartWith("Assertion failed. Expected values to be structurally equivalent.");
-        ex.Message.Should().Contain($"{Environment.NewLine}Mismatch at '<root>': values are not equal.");
-        ex.Message.Should().Contain($"{Environment.NewLine}numbers should match");
-        ex.Message.Should().Contain($"{Environment.NewLine}{Environment.NewLine}expected: 1{Environment.NewLine}actual:   2");
-        ex.Message.Should().Contain($"{Environment.NewLine}{Environment.NewLine}Assert.AreEquivalent(expected, actual)");
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected values to be structurally equivalent.
+                Mismatch at '<root>': values are not equal.
+                numbers should match
+
+                expected: 1
+                actual:   2
+
+                Assert.AreEquivalent(expected, actual)
+                """);
     }
 
     #endregion
