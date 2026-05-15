@@ -168,9 +168,19 @@
         <target state="translated">La raccolta dovrebbe contenere l'elemento specificato. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ContainsItemFailedSummary">
+        <source>Expected collection to contain the specified element.</source>
+        <target state="new">Expected collection to contain the specified element.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">
         <source>Expected at least one item to match the predicate. {0}</source>
         <target state="translated">Almeno un elemento dovrebbe corrispondere al predicato. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ContainsPredicateFailedSummary">
+        <source>Expected collection to contain an element matching the predicate.</source>
+        <target state="new">Expected collection to contain an element matching the predicate.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleFailMsg">
@@ -178,9 +188,24 @@
         <target state="translated">La raccolta dovrebbe contenere un unico elemento, ma ne sono stati trovati {1}. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ContainsSingleFailedSummary">
+        <source>Expected collection to contain exactly one element.</source>
+        <target state="new">Expected collection to contain exactly one element.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ContainsSingleMatchFailMsg">
         <source>Expected exactly one item to match the predicate but found {1} item(s). {0}</source>
         <target state="translated">Un unico elemento dovrebbe corrispondere al predicato, ma ne sono stati trovati {1}. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ContainsSingleMatchFailedSummary">
+        <source>Expected collection to contain exactly one element matching the predicate.</source>
+        <target state="new">Expected collection to contain exactly one element matching the predicate.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ContainsSubstringFailedSummary">
+        <source>Expected string to contain the specified substring.</source>
+        <target state="new">Expected string to contain the specified substring.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainFail">
@@ -193,9 +218,24 @@
         <target state="translated">La raccolta non dovrebbe contenere l'elemento specificato. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoesNotContainItemFailedSummary">
+        <source>Expected collection to not contain the specified element.</source>
+        <target state="new">Expected collection to not contain the specified element.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailMsg">
         <source>Expected no items to match the predicate. {0}</source>
         <target state="translated">Nessun elemento dovrebbe corrispondere al predicato. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotContainPredicateFailedSummary">
+        <source>Expected collection to not contain an element matching the predicate.</source>
+        <target state="new">Expected collection to not contain an element matching the predicate.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotContainSubstringFailedSummary">
+        <source>Expected string to not contain the specified substring.</source>
+        <target state="new">Expected string to not contain the specified substring.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotEndWithFail">
@@ -280,6 +320,11 @@ Effettivo: {2}</target>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
         <target state="translated">Il valore '{0}' non è compreso nell'intervallo previsto [{1}, {2}]. {3}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsInRangeFailedSummary">
+        <source>Expected value to be within the inclusive range.</source>
+        <target state="new">Expected value to be within the inclusive range.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
