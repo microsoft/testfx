@@ -473,36 +473,6 @@ Actual: {2}</source>
         <target state="translated">{1}의 속성 또는 메서드 {0}이(가) 빈 IEnumerable&lt;object[]&gt;를 반환합니다.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="IsGreaterThanFailMsg">
-        <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">실제 값 &lt;{2}&gt;은(는)는 예상 값 &lt;{1}&gt;보다 크지 않습니다. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsGreaterThanOrEqualToFailMsg">
-        <source>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">실제 값 &lt;{2}&gt;은(는)는 예상 값 &lt;{1}&gt;보다 크거나 같지 않습니다. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsLessThanFailMsg">
-        <source>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">실제 값 &lt;{2}&gt;은(는)는 예상 값 &lt;{1}&gt;보다 작지 않습니다. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsLessThanOrEqualToFailMsg">
-        <source>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">실제 값 &lt;{2}&gt;은(는)는 예상 값 &lt;{1}&gt;보다 작거나 같지 않습니다. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsPositiveFailMsg">
-        <source>Expected value &lt;{1}&gt; to be positive. {0}</source>
-        <target state="translated">예상 값 &lt;{1}&gt;은(는) 양수일 것으로 예상합니다. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsNegativeFailMsg">
-        <source>Expected value &lt;{1}&gt; to be negative. {0}</source>
-        <target state="translated">예상 값 &lt;{1}&gt;은(는) 음수일 것으로 예상합니다. {0}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
         <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
         <target state="translated">어설션에 Assert.Equals를 사용할 수 없습니다. 대신 Assert.AreEqual 및 오버로드를 사용하세요.</target>

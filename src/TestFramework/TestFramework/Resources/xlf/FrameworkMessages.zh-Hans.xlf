@@ -473,36 +473,6 @@ Actual: {2}</source>
         <target state="translated">{1} 上的属性或方法 {0} 返回空 IEnumerable&lt;object[]&gt;。</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="IsGreaterThanFailMsg">
-        <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">实际值 &lt;{2}&gt; 不大于预期值 &lt;{1}&gt;。{0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsGreaterThanOrEqualToFailMsg">
-        <source>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">实际值 &lt;{2}&gt; 不大于或等于预期值 &lt;{1}&gt;。{0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsLessThanFailMsg">
-        <source>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">实际值 &lt;{2}&gt; 不小于预期值 &lt;{1}&gt;。{0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsLessThanOrEqualToFailMsg">
-        <source>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">实际值 &lt;{2}&gt; 不小于或等于预期值 &lt;{1}&gt;。{0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsPositiveFailMsg">
-        <source>Expected value &lt;{1}&gt; to be positive. {0}</source>
-        <target state="translated">预期值 &lt;{1}&gt; 为正值。{0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsNegativeFailMsg">
-        <source>Expected value &lt;{1}&gt; to be negative. {0}</source>
-        <target state="translated">预期值 &lt;{1}&gt; 为负值。{0}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
         <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
         <target state="translated">Assert.Equals 不应用于断言。请改用 Assert.AreEqual 和重载。</target>

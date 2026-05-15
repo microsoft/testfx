@@ -473,36 +473,6 @@ Actual: {2}</source>
         <target state="translated">{1} 上のプロパティまたはメソッド {0} は空の IEnumerable&lt;object[]&gt; を返します。</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="IsGreaterThanFailMsg">
-        <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">実際の値 &lt;{2}&gt; は、予期された値 &lt;{1}&gt; より大きくありません。{0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsGreaterThanOrEqualToFailMsg">
-        <source>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">実際の値 &lt;{2}&gt; は、予期された値 &lt;{1}&gt; 以上ではありません。{0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsLessThanFailMsg">
-        <source>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">実際の値 &lt;{2}&gt; は、予期された値 &lt;{1}&gt; より小さくありません。{0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsLessThanOrEqualToFailMsg">
-        <source>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">実際の値 &lt;{2}&gt; は、予期された値 &lt;{1}&gt; 以下ではありません。{0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsPositiveFailMsg">
-        <source>Expected value &lt;{1}&gt; to be positive. {0}</source>
-        <target state="translated">正の値 &lt;{1}&gt; が必要です。{0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsNegativeFailMsg">
-        <source>Expected value &lt;{1}&gt; to be negative. {0}</source>
-        <target state="translated">負の値 &lt;{1}&gt; が必要です。{0}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
         <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
         <target state="translated">アサーションには Assert.Equals を使用せずに、Assert.AreEqual とオーバーロードを使用してください。(&amp; )</target>

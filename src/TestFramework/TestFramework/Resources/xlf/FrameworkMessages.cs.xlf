@@ -473,36 +473,6 @@ Skutečnost: {2}</target>
         <target state="translated">Vlastnost nebo metoda {0} ve třídě {1} vrací prázdné IEnumerable&lt;object[]&gt;.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="IsGreaterThanFailMsg">
-        <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">Skutečná hodnota &lt;{2}&gt; není větší než očekávaná hodnota &lt;{1}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsGreaterThanOrEqualToFailMsg">
-        <source>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">Skutečná hodnota &lt;{2}&gt; není větší nebo rovna očekávané hodnotě &lt;{1}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsLessThanFailMsg">
-        <source>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">Skutečná hodnota &lt;{2}&gt; není menší než očekávaná hodnota &lt;{1}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsLessThanOrEqualToFailMsg">
-        <source>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">Skutečná hodnota &lt;{2}&gt; není menší nebo rovna očekávané hodnotě &lt;{1}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsPositiveFailMsg">
-        <source>Expected value &lt;{1}&gt; to be positive. {0}</source>
-        <target state="translated">Očekávaná hodnota &lt;{1}&gt; má být kladná. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsNegativeFailMsg">
-        <source>Expected value &lt;{1}&gt; to be negative. {0}</source>
-        <target state="translated">Očekávaná hodnota &lt;{1}&gt; má být záporná. {0}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
         <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
         <target state="translated">Assert.Equals by neměla být pro kontrolní výrazy používána. Použijte prosím místo toho Assert.AreEqual a její přetížení.</target>

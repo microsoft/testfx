@@ -473,36 +473,6 @@ Effettivo: {2}</target>
         <target state="translated">La proprietà o il metodo {0} nella classe {1} restituisce un elemento IEnumerable&lt;object[]&gt; vuoto.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="IsGreaterThanFailMsg">
-        <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">Il valore effettivo &lt;{2}&gt; non è maggiore del valore previsto &lt;{1}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsGreaterThanOrEqualToFailMsg">
-        <source>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">Il valore effettivo &lt;{2}&gt; non è maggiore o uguale al valore previsto &lt;{1}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsLessThanFailMsg">
-        <source>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">Il valore effettivo &lt;{2}&gt; non è minore del valore previsto &lt;{1}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsLessThanOrEqualToFailMsg">
-        <source>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">Il valore effettivo &lt;{2}&gt; non è minore o uguale al valore previsto &lt;{1}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsPositiveFailMsg">
-        <source>Expected value &lt;{1}&gt; to be positive. {0}</source>
-        <target state="translated">Il valore &lt;{1}{0}&gt; dovrebbe essere positivo.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsNegativeFailMsg">
-        <source>Expected value &lt;{1}&gt; to be negative. {0}</source>
-        <target state="translated">Il valore &lt;{1}{0}&gt; dovrebbe essere negativo.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
         <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
         <target state="translated">Non è possibile usare Assert.Equals per le asserzioni. Usare Assert.AreEqual e gli overload.</target>
