@@ -105,7 +105,7 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
         return invocationExpression.WithExpression(memberAccessExpression.WithName(asyncName));
     }
 
-    private static bool TryReplaceLambda(ArgumentSyntax argument, [NotNullWhen(returnValue: true)] out ArgumentSyntax? newArgument)
+    private static bool TryReplaceLambda(ArgumentSyntax argument, [NotNullWhen(true)] out ArgumentSyntax? newArgument)
     {
         if (argument.Expression is not LambdaExpressionSyntax lambdaExpression ||
             !TryGetBlockedTaskExpressionFromLambda(lambdaExpression, out ExpressionSyntax? asyncExpression))
@@ -142,7 +142,7 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
         return newMethodDeclaration.WithAdditionalAnnotations(Formatter.Annotation);
     }
 
-    private static bool TryGetBlockedTaskExpressionFromLambda(ExpressionSyntax expression, [NotNullWhen(returnValue: true)] out ExpressionSyntax? asyncExpression)
+    private static bool TryGetBlockedTaskExpressionFromLambda(ExpressionSyntax expression, [NotNullWhen(true)] out ExpressionSyntax? asyncExpression)
     {
         if (WalkDownParentheses(expression) is not LambdaExpressionSyntax lambdaExpression)
         {
@@ -166,7 +166,7 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
         return false;
     }
 
-    private static bool TryGetBlockedTaskExpression(ExpressionSyntax expression, [NotNullWhen(returnValue: true)] out ExpressionSyntax? asyncExpression)
+    private static bool TryGetBlockedTaskExpression(ExpressionSyntax expression, [NotNullWhen(true)] out ExpressionSyntax? asyncExpression)
     {
         ExpressionSyntax currentExpression = WalkDownParentheses(expression);
         if (currentExpression is InvocationExpressionSyntax getResultInvocation &&

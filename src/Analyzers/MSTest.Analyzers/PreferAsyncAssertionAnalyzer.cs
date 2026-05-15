@@ -82,7 +82,7 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
         context.ReportDiagnostic(operation.CreateDiagnostic(Rule, targetMethod.Name + "Async", targetMethod.Name));
     }
 
-    private static bool TryGetActionArgument(IInvocationOperation operation, [NotNullWhen(returnValue: true)] out IArgumentOperation? actionArgument)
+    private static bool TryGetActionArgument(IInvocationOperation operation, [NotNullWhen(true)] out IArgumentOperation? actionArgument)
     {
         foreach (IArgumentOperation argument in operation.Arguments)
         {
@@ -97,7 +97,7 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    private static bool TryGetBlockedTaskOperationFromArgument(IOperation argumentValueOperation, [NotNullWhen(returnValue: true)] out IOperation? asyncOperation)
+    private static bool TryGetBlockedTaskOperationFromArgument(IOperation argumentValueOperation, [NotNullWhen(true)] out IOperation? asyncOperation)
     {
         if (argumentValueOperation.WalkDownConversion() is not IDelegateCreationOperation delegateCreationOperation ||
             delegateCreationOperation.Target is not IAnonymousFunctionOperation anonymousFunctionOperation ||
@@ -110,7 +110,7 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
         return TryGetBlockedTaskOperation(lambdaOperation, out asyncOperation);
     }
 
-    private static bool TryGetSingleOperation(IBlockOperation blockOperation, [NotNullWhen(returnValue: true)] out IOperation? operation)
+    private static bool TryGetSingleOperation(IBlockOperation blockOperation, [NotNullWhen(true)] out IOperation? operation)
     {
         operation = null;
 
@@ -141,7 +141,7 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
         return operation is not null;
     }
 
-    private static bool TryGetBlockedTaskOperation(IOperation operation, [NotNullWhen(returnValue: true)] out IOperation? asyncOperation)
+    private static bool TryGetBlockedTaskOperation(IOperation operation, [NotNullWhen(true)] out IOperation? asyncOperation)
     {
         if (operation.WalkDownConversion() is IInvocationOperation getResultInvocation &&
             getResultInvocation.Arguments.Length == 0 &&
