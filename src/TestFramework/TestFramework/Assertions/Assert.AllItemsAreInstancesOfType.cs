@@ -43,6 +43,9 @@ public sealed partial class Assert
     /// or some elements of <paramref name="collection"/> do not inherit from / implement
     /// <paramref name="expectedType"/>.
     /// </exception>
+    /// <remarks>
+    /// Null elements in <paramref name="collection"/> are skipped and do not cause the assertion to fail.
+    /// </remarks>
     public static void AllItemsAreInstancesOfType([NotNull] IEnumerable? collection, [NotNull] Type? expectedType, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "", [CallerArgumentExpression(nameof(expectedType))] string expectedTypeExpression = "")
     {
         CheckParameterNotNull(collection, "Assert.AllItemsAreInstancesOfType", "collection");
@@ -72,6 +75,9 @@ public sealed partial class Assert
     /// Thrown if <paramref name="collection"/> is null or some elements of
     /// <paramref name="collection"/> do not inherit from / implement <typeparamref name="TExpected"/>.
     /// </exception>
+    /// <remarks>
+    /// Null elements in <paramref name="collection"/> are skipped and do not cause the assertion to fail.
+    /// </remarks>
     public static void AllItemsAreInstancesOfType<TExpected>([NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         CheckParameterNotNull(collection, "Assert.AllItemsAreInstancesOfType", "collection");

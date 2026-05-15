@@ -36,7 +36,7 @@ public sealed partial class Assert
     public static void AllItemsAreUnique<T>([NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         CheckParameterNotNull(collection, "Assert.AllItemsAreUnique", "collection");
-        AllItemsAreUniqueImpl(collection, EqualityComparer<T>.Default, comparerName: null, message, collectionExpression);
+        AllItemsAreUniqueImpl(collection, EqualityComparer<T>.Default, hasUserComparer: false, message, collectionExpression);
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public sealed partial class Assert
     {
         CheckParameterNotNull(collection, "Assert.AllItemsAreUnique", "collection");
         CheckParameterNotNull(comparer, "Assert.AllItemsAreUnique", "comparer");
-        AllItemsAreUniqueImpl(collection, comparer, comparer.GetType().Name, message, collectionExpression);
+        AllItemsAreUniqueImpl(collection, comparer, hasUserComparer: true, message, collectionExpression);
     }
 
     /// <summary>
@@ -90,7 +90,7 @@ public sealed partial class Assert
     public static void AllItemsAreUnique([NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         CheckParameterNotNull(collection, "Assert.AllItemsAreUnique", "collection");
-        AllItemsAreUniqueImpl(collection.Cast<object?>(), EqualityComparer<object?>.Default, comparerName: null, message, collectionExpression);
+        AllItemsAreUniqueImpl(collection.Cast<object?>(), EqualityComparer<object?>.Default, hasUserComparer: false, message, collectionExpression);
     }
 
     /// <summary>
@@ -119,11 +119,11 @@ public sealed partial class Assert
     {
         CheckParameterNotNull(collection, "Assert.AllItemsAreUnique", "collection");
         CheckParameterNotNull(comparer, "Assert.AllItemsAreUnique", "comparer");
-        AllItemsAreUniqueImpl(collection.Cast<object?>(), new NonGenericEqualityComparerAdapter(comparer), comparer.GetType().Name, message, collectionExpression);
+        AllItemsAreUniqueImpl(collection.Cast<object?>(), new NonGenericEqualityComparerAdapter(comparer), hasUserComparer: true, message, collectionExpression);
     }
 
 #pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
-    private static void AllItemsAreUniqueImpl<T>(IEnumerable<T> collection, IEqualityComparer<T> comparer, string? comparerName, string? message, string collectionExpression)
+    private static void AllItemsAreUniqueImpl<T>(IEnumerable<T> collection, IEqualityComparer<T> comparer, bool hasUserComparer, string? message, string collectionExpression)
     {
         List<T> snapshot = collection is List<T> list ? list : [.. collection];
 
@@ -171,13 +171,13 @@ public sealed partial class Assert
 
         if (duplicates is not null)
         {
-            ReportAssertAllItemsAreUniqueFailed(snapshot, duplicates, comparerName, message, collectionExpression);
+            ReportAssertAllItemsAreUniqueFailed(snapshot, duplicates, hasUserComparer, message, collectionExpression);
         }
     }
 #pragma warning restore CS8714
 
     [DoesNotReturn]
-    private static void ReportAssertAllItemsAreUniqueFailed<T>(IEnumerable<T> collection, List<T> duplicates, string? comparerName, string? message, string collectionExpression)
+    private static void ReportAssertAllItemsAreUniqueFailed<T>(IEnumerable<T> collection, List<T> duplicates, bool hasUserComparer, string? message, string collectionExpression)
     {
         string collectionText = AssertionValueRenderer.RenderValue(collection);
         string duplicatesText = AssertionValueRenderer.RenderValue(duplicates);
@@ -186,16 +186,11 @@ public sealed partial class Assert
             .AddLine("duplicates:", duplicatesText)
             .AddLine("collection:", collectionText);
 
-        if (comparerName is not null)
-        {
-            evidence.AddLine("comparer:", comparerName);
-        }
-
         StructuredAssertionMessage structured = new(FrameworkMessages.AllItemsAreUniqueFailedSummary);
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
         structured.WithExpectedAndActual(expectedText: null, actualText: collectionText);
-        structured.WithCallSiteExpression(BuildCallSiteWithComparerForCollection("Assert.AllItemsAreUnique", collectionExpression, comparerName is not null));
+        structured.WithCallSiteExpression(BuildCallSiteWithComparerForCollection("Assert.AllItemsAreUnique", collectionExpression, hasUserComparer));
 
         ReportAssertFailed(structured);
     }
@@ -210,11 +205,15 @@ public sealed partial class Assert
 
         // FormatCallSiteExpression has no overload accepting a third argument expression; insert
         // the <comparer> placeholder so the rendered call-site reflects the overload that was actually invoked.
+        // Note: range/index syntax (callSite[..^1]) is not used because System.Range/System.Index are unavailable
+        // on net462 / netstandard2.0, the lowest TFMs targeted by this project.
         return string.Concat(callSite.Substring(0, callSite.Length - 1), ", <comparer>)");
     }
 
     #endregion // AllItemsAreUnique
 
+    // TODO: Deduplicate with the same adapter in Assert.CollectionEquivalence.cs (introduced by PR #8234)
+    // once both PRs have landed.
     private sealed class NonGenericEqualityComparerAdapter : IEqualityComparer<object?>
     {
         private readonly IEqualityComparer _comparer;

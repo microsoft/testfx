@@ -222,7 +222,6 @@ public partial class AssertTests : TestContainer
 
                 duplicates: ["a"]
                 collection: ["A", "B", "a"]
-                comparer:   OrdinalIgnoreCaseComparer
 
                 Assert.AllItemsAreUnique(new[] { "A", "B", "a" }, <comparer>)
                 """);
@@ -275,7 +274,6 @@ public partial class AssertTests : TestContainer
 
                 duplicates: ["a"]
                 collection: ["A", "B", "a"]
-                comparer:   OrdinalIgnoreCaseComparer
 
                 Assert.AllItemsAreUnique(list, <comparer>)
                 """);
