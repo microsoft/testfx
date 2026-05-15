@@ -7,19 +7,19 @@
     [assembly: Parallelize(...)] / [assembly: DoNotParallelize] attribute via the standard
     AssemblyAttribute MSBuild item (consumed by WriteCodeFragment when GenerateAssemblyInfo is true).
   -->
+  <!--
+    Only validate the silent-failure modes here. Invalid Scope values and non-integer Workers
+    flow through to WriteCodeFragment and produce a clear C# compile error on the generated source.
+  -->
   <Target Name="_MSTestValidateParallelizeProperties" BeforeTargets="GenerateAssemblyInfo;CoreCompile">
-    <Error Condition=" '$(MSTestParallelizeScope)' != '' and '$(MSTestParallelizeScope)' != 'None' and '$(MSTestParallelizeScope)' != 'ClassLevel' and '$(MSTestParallelizeScope)' != 'MethodLevel' "
-           Text="Invalid value '$(MSTestParallelizeScope)' for property MSTestParallelizeScope. Valid values are 'None', 'ClassLevel' and 'MethodLevel'." />
     <Error Condition=" '$(MSTestParallelizeScope)' == 'None' and '$(MSTestParallelizeWorkers)' != '' "
            Text="Property MSTestParallelizeWorkers cannot be set when MSTestParallelizeScope is 'None'." />
-    <Error Condition=" '$(MSTestParallelizeWorkers)' != '' and !$([System.Text.RegularExpressions.Regex]::IsMatch('$(MSTestParallelizeWorkers)', '^\d+$')) "
-           Text="Invalid value '$(MSTestParallelizeWorkers)' for property MSTestParallelizeWorkers. The value must be a non-negative integer." />
     <Warning Condition=" ('$(MSTestParallelizeScope)' != '' or '$(MSTestParallelizeWorkers)' != '') and '$(GenerateAssemblyInfo)' == 'false' "
              Text="MSTestParallelizeScope and MSTestParallelizeWorkers require GenerateAssemblyInfo to be true to take effect." />
   </Target>
 
   <!-- Scope set to a parallel level, no explicit Workers => [assembly: Parallelize(Scope = ...)] -->
-  <ItemGroup Condition=" ('$(MSTestParallelizeScope)' == 'ClassLevel' or '$(MSTestParallelizeScope)' == 'MethodLevel') and '$(MSTestParallelizeWorkers)' == '' ">
+  <ItemGroup Condition=" '$(MSTestParallelizeScope)' != '' and '$(MSTestParallelizeScope)' != 'None' and '$(MSTestParallelizeWorkers)' == '' ">
     <AssemblyAttribute Include="Microsoft.VisualStudio.TestTools.UnitTesting.Parallelize">
       <_Parameter1>Scope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.$(MSTestParallelizeScope)</_Parameter1>
       <_Parameter1_IsLiteral>true</_Parameter1_IsLiteral>
@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <!-- Both set => [assembly: Parallelize(Scope = ..., Workers = ...)] -->
-  <ItemGroup Condition=" ('$(MSTestParallelizeScope)' == 'ClassLevel' or '$(MSTestParallelizeScope)' == 'MethodLevel') and '$(MSTestParallelizeWorkers)' != '' ">
+  <ItemGroup Condition=" '$(MSTestParallelizeScope)' != '' and '$(MSTestParallelizeScope)' != 'None' and '$(MSTestParallelizeWorkers)' != '' ">
     <AssemblyAttribute Include="Microsoft.VisualStudio.TestTools.UnitTesting.Parallelize">
       <_Parameter1>Scope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.$(MSTestParallelizeScope)</_Parameter1>
       <_Parameter1_IsLiteral>true</_Parameter1_IsLiteral>

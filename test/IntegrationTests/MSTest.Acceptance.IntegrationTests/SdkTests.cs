@@ -497,6 +497,7 @@ namespace MSTestSdkTest
     [TestMethod]
     public async Task MSTestParallelizeScope_InvalidValue_FailsBuild()
     {
+        // An invalid scope value is emitted into the generated assembly attribute and rejected by the C# compiler (CS0117).
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
             SingleTestSourceCode
@@ -509,12 +510,14 @@ namespace MSTestSdkTest
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(1);
-        compilationResult.AssertOutputContains("Invalid value 'NotAValidValue' for property MSTestParallelizeScope. Valid values are 'None', 'ClassLevel' and 'MethodLevel'.");
+        compilationResult.AssertOutputContains("CS0117");
+        compilationResult.AssertOutputContains("NotAValidValue");
     }
 
     [TestMethod]
     public async Task MSTestParallelizeWorkers_NonInteger_FailsBuild()
     {
+        // A non-integer Workers value is emitted into the generated assembly attribute and rejected by the C# compiler (CS0103).
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
             SingleTestSourceCode
@@ -527,7 +530,8 @@ namespace MSTestSdkTest
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(1);
-        compilationResult.AssertOutputContains("Invalid value 'abc' for property MSTestParallelizeWorkers. The value must be a non-negative integer.");
+        compilationResult.AssertOutputContains("CS0103");
+        compilationResult.AssertOutputContains("abc");
     }
 
     [TestMethod]
