@@ -88,6 +88,10 @@ public class AssertionValueRendererTests : TestContainer
     public void RenderValue_CharNewline_ReturnsEscaped() =>
         AssertionValueRenderer.RenderValue('\n').Should().Be("'\\n'");
 
+    public void RenderValue_ObjectWhoseToStringThrows_ReturnsTypeAndExceptionName() =>
+        AssertionValueRenderer.RenderValue(new ObjectWithThrowingToString()).Should().Be(
+            "Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertionValueRendererTests+ObjectWithThrowingToString (ToString threw InvalidOperationException)");
+
     private sealed class ObjectWithCustomToString
     {
         private readonly string _value;
@@ -98,5 +102,10 @@ public class AssertionValueRendererTests : TestContainer
         }
 
         public override string ToString() => _value;
+    }
+
+    private sealed class ObjectWithThrowingToString
+    {
+        public override string ToString() => throw new InvalidOperationException("boom");
     }
 }

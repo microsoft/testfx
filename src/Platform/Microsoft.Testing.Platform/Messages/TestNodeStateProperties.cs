@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
@@ -432,7 +432,11 @@ public sealed class TimeoutTestNodeStateProperty : TestNodeStateProperty, IEquat
 /// <summary>
 /// Property that represents an eventual cancellation of a test node.
 /// </summary>
+#if NET8_0_OR_GREATER
+[Obsolete("CancelledTestNodeStateProperty is obsolete. Test frameworks should throw OperationCanceledException using the cancellation token passed by Microsoft.Testing.Platform instead of using this state.", DiagnosticId = "MTP0001", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+#else
 [Obsolete("CancelledTestNodeStateProperty is obsolete. Test frameworks should throw OperationCanceledException using the cancellation token passed by Microsoft.Testing.Platform instead of using this state.")]
+#endif
 public sealed class CancelledTestNodeStateProperty : TestNodeStateProperty, IEquatable<CancelledTestNodeStateProperty>
 {
     /// <summary>

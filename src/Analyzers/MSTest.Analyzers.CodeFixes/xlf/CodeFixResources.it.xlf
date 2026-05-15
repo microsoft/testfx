@@ -164,7 +164,7 @@
       </trans-unit>
       <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
         <source>Use MSTest 'Description' attribute instead</source>
-        <target state="new">Use MSTest 'Description' attribute instead</target>
+        <target state="translated">Usa invece l'attributo 'Description' di MSTest</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">
