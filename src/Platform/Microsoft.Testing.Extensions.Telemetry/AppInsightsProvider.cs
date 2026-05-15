@@ -5,6 +5,7 @@
 using System.Threading.Channels;
 #endif
 
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -260,7 +261,7 @@ internal sealed partial class AppInsightsProvider :
             return;
         }
 
-        Microsoft.Testing.Platform.RoslynDebug.Assert(false, $"Telemetry entry '{key}' contains an unhashed string value '{value}'. Strings need to be hashed using {nameof(Sha256Hasher)}.{nameof(Sha256Hasher.HashWithNormalizedCasing)}(), or white-listed.");
+        RoslynDebug.Assert(false, $"Telemetry entry '{key}' contains an unhashed string value '{value}'. Strings need to be hashed using {nameof(Sha256Hasher)}.{nameof(Sha256Hasher.HashWithNormalizedCasing)}(), or white-listed.");
     }
 
 #if NET7_0_OR_GREATER

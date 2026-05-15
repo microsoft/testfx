@@ -164,7 +164,7 @@ public sealed class AppInsightsProviderTests
         Mock<ILoggerFactory> loggerFactory = new();
         loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
 
-        var capturedProperties = new Dictionary<string, string>();
+        Dictionary<string, string> capturedProperties = new();
         using ManualResetEventSlim trackEventCalled = new(initialState: false);
         Mock<ITelemetryClient> testTelemetryClient = new();
         testTelemetryClient.Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
@@ -212,7 +212,7 @@ public sealed class AppInsightsProviderTests
         appInsightsProvider.Dispose();
 #endif
 
-        Assert.IsTrue(capturedProperties.ContainsKey("my.bool"));
-        Assert.AreEqual(TelemetryProperties.True, capturedProperties["my.bool"]);
+        Assert.IsTrue(capturedProperties.TryGetValue("my.bool", out string? value), "Expected 'my.bool' property in tracked event.");
+        Assert.AreEqual(TelemetryProperties.True, value);
     }
 }
