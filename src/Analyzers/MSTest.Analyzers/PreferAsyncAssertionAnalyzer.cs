@@ -70,6 +70,7 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
             targetMethod.Name is not ("Throws" or "ThrowsExactly") ||
             context.ContainingSymbol is not IMethodSymbol containingMethod ||
             !containingMethod.GetAttributes().Any(attr => attr.AttributeClass.Inherits(testMethodAttributeSymbol)) ||
+            IsInsideNestedFunction(operation) ||
             !TryGetActionArgument(operation, out IArgumentOperation? actionArgument) ||
             !TryGetBlockedTaskOperationFromArgument(actionArgument.Value, out IOperation? asyncOperation))
         {
@@ -89,7 +90,7 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
     {
         foreach (IArgumentOperation argument in operation.Arguments)
         {
-            if (argument.Parameter?.Ordinal == 0)
+            if (argument.Parameter?.Name == "action")
             {
                 actionArgument = argument;
                 return true;
@@ -97,6 +98,19 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
         }
 
         actionArgument = null;
+        return false;
+    }
+
+    private static bool IsInsideNestedFunction(IOperation operation)
+    {
+        for (IOperation? current = operation.Parent; current is not null; current = current.Parent)
+        {
+            if (current is IAnonymousFunctionOperation or ILocalFunctionOperation)
+            {
+                return true;
+            }
+        }
+
         return false;
     }
 

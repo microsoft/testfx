@@ -99,6 +99,102 @@ public sealed class PreferAsyncAssertionAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenAssertThrowsExactlyBlocksOnTask_WithNamedArgumentsOutOfOrder_CodeFixUsesAsyncAssertion()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    [|Assert.ThrowsExactly<InvalidOperationException>(message: "boom", action: () => BarAsync().GetAwaiter().GetResult())|];
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    await Assert.ThrowsExactlyAsync<InvalidOperationException>(message: "boom", action: () => BarAsync());
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertionIsInsideNestedLambda_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Action assertion = () => Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult());
+                    assertion();
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertionIsInsideLocalFunction_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    void RunAssertion()
+                    {
+                        Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult());
+                    }
+
+                    RunAssertion();
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task WhenAssertionDoesNotBlockOnTask_NoDiagnostic()
     {
         string code = """

@@ -13,6 +13,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Operations;
 
 using MSTest.Analyzers.Helpers;
 
@@ -56,13 +57,14 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
     private static async Task<Document> UseAsyncAssertionAsync(Document document, InvocationExpressionSyntax invocationExpression, CancellationToken cancellationToken)
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        SemanticModel semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
 
         InvocationExpressionSyntax newInvocationExpression = ReplaceAssertMethodName(invocationExpression);
-        if (newInvocationExpression.ArgumentList.Arguments.Count > 0 &&
-            TryReplaceLambda(newInvocationExpression.ArgumentList.Arguments[0], out ArgumentSyntax? newArgument))
+        if (TryGetActionArgumentIndex(invocationExpression, semanticModel, cancellationToken, out int actionArgumentIndex) &&
+            TryReplaceLambda(newInvocationExpression.ArgumentList.Arguments[actionArgumentIndex], out ArgumentSyntax? newArgument))
         {
             newInvocationExpression = newInvocationExpression.WithArgumentList(
-                newInvocationExpression.ArgumentList.WithArguments(newInvocationExpression.ArgumentList.Arguments.Replace(newInvocationExpression.ArgumentList.Arguments[0], newArgument)));
+                newInvocationExpression.ArgumentList.WithArguments(newInvocationExpression.ArgumentList.Arguments.Replace(newInvocationExpression.ArgumentList.Arguments[actionArgumentIndex], newArgument)));
         }
 
         AwaitExpressionSyntax awaitExpression = SyntaxFactory.AwaitExpression(newInvocationExpression.WithoutLeadingTrivia())
@@ -103,6 +105,32 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
         };
 
         return invocationExpression.WithExpression(memberAccessExpression.WithName(asyncName));
+    }
+
+    private static bool TryGetActionArgumentIndex(
+        InvocationExpressionSyntax invocationExpression,
+        SemanticModel semanticModel,
+        CancellationToken cancellationToken,
+        out int actionArgumentIndex)
+    {
+        if (semanticModel.GetOperation(invocationExpression, cancellationToken) is not IInvocationOperation invocationOperation)
+        {
+            actionArgumentIndex = -1;
+            return false;
+        }
+
+        foreach (IArgumentOperation argumentOperation in invocationOperation.Arguments)
+        {
+            if (argumentOperation.Parameter?.Name == "action" &&
+                argumentOperation.Syntax is ArgumentSyntax argumentSyntax)
+            {
+                actionArgumentIndex = invocationExpression.ArgumentList.Arguments.IndexOf(argumentSyntax);
+                return actionArgumentIndex >= 0;
+            }
+        }
+
+        actionArgumentIndex = -1;
+        return false;
     }
 
     private static bool TryReplaceLambda(ArgumentSyntax argument, [NotNullWhen(true)] out ArgumentSyntax? newArgument)
