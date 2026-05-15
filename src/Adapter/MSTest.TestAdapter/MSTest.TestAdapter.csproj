@@ -84,6 +84,9 @@
     <None Update="buildTransitive\uwp\*" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="buildTransitive\Parallelize.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="PACKAGE.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
