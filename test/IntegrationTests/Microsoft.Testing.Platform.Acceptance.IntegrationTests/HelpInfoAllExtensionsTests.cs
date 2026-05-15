@@ -102,7 +102,7 @@ Extension options:
         Enable generating TRX report
     --report-trx-filename
         The name of the generated TRX report.
-        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {tfm} (target framework moniker), {time} (timestamp).
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
         Example: MyReport_{tfm}.trx
     --show-stderr
         Determines when to show captured error output of a test.
@@ -381,7 +381,7 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: The name of the generated TRX report.
-        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {tfm} (target framework moniker), {time} (timestamp).
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
         Example: MyReport_{tfm}.trx
 Registered tools:
   TrxCompareTool
