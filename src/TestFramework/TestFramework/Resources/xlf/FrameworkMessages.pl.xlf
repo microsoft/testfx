@@ -158,6 +158,11 @@
         <target state="translated">{0}. {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ContainsAllFailedSummary">
+        <source>Expected collection to contain all specified items.</source>
+        <target state="new">Expected collection to contain all specified items.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ContainsFail">
         <source>String '{0}' does not contain string '{1}'. {2}.</source>
         <target state="translated">Ciąg „{0}” nie zawiera ciągu „{1}”. {2}.</target>
@@ -181,6 +186,11 @@
       <trans-unit id="ContainsSingleMatchFailMsg">
         <source>Expected exactly one item to match the predicate but found {1} item(s). {0}</source>
         <target state="translated">Oczekiwano dokładnie jednego elementu zgodnego z predykatem, ale znaleziono {1} elementów. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotContainAllFailedSummary">
+        <source>Expected collection to not contain all specified items.</source>
+        <target state="new">Expected collection to not contain all specified items.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainFail">
@@ -327,19 +337,9 @@ Rzeczywiste: {2}</target>
         <target state="new">Expected value to not be null.</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsNotSubsetOfFailedSummary">
-        <source>Expected collection to not be a subset of the specified superset.</source>
-        <target state="new">Expected collection to not be a subset of the specified superset.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
         <target state="new">Expected value to be null.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="IsSubsetOfFailedSummary">
-        <source>Expected collection to be a subset of the specified superset.</source>
-        <target state="new">Expected collection to be a subset of the specified superset.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">
