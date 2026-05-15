@@ -36,7 +36,7 @@ internal partial class TestDataConnectionSql
         if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
             PlatformServiceProvider.Instance.AdapterTraceLogger.Info("ReadTable: data driven test: got table name from attribute: {0}", tableName);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("ReadTable: data driven test: will use table name: {0}", quotedTableName);
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("ReadTable: data driven test: will use table name: {0}", tableName);
         }
 
         command.Connection = Connection;
