@@ -137,6 +137,11 @@
         <target state="translated">Zmień zastąpienie „Execute” na „ExecuteAsync”</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseAsyncAssertionFix">
+        <source>Use async assertion</source>
+        <target state="new">Use async assertion</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">Dodaj „[TestMethod]”</target>

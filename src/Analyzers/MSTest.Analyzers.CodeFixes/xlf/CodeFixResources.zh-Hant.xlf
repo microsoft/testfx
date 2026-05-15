@@ -137,6 +137,11 @@
         <target state="translated">將 'Execute' 覆寫改為 'ExecuteAsync'</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseAsyncAssertionFix">
+        <source>Use async assertion</source>
+        <target state="new">Use async assertion</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">新增 '[TestMethod]'</target>
