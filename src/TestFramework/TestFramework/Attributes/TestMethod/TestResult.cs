@@ -26,10 +26,11 @@ public class TestResult
 
     internal string? IgnoreReason { get; set; }
 
-    // NOTE: As TestResult can cross appdomain boundary, the exception should generally be serializable.
+    // NOTE: On .NET Framework, TestResult can cross appdomain boundary, so the exception should generally be serializable.
     // But that's not always the case and we can't see good guarantees.
     // Alternatively, we set ExceptionMessage and ExceptionStackTrace, and serialize those instead of the exception.
     // That means, after crossing app domain, you shouldn't access TestFailureException.
+    // On modern .NET targets there are no AppDomains, so [Serializable]/[NonSerialized] are not needed.
 
     /// <summary>
     /// Gets or sets the exception thrown when test is failed.

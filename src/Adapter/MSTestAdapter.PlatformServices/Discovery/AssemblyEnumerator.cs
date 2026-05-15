@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// Note: System.Runtime.Serialization is intentionally unconditional — SerializationException is caught
+// outside the #if NETFRAMEWORK block (see catch in EnumerateAssembly).
 using System.Runtime.Serialization;
 #if NETFRAMEWORK
 using System.Security;
