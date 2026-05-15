@@ -443,7 +443,7 @@ delta:    0.001
 
 Note: The `delta` overload exists for `float`, `double`, `decimal`, and `long`. All four types use the same message format. The rendered precision follows the type’s default `ToString()` formatting.
 
-#### Assert.AreEqual (string, case-sensitive)
+#### Assert.AreEqual (string)
 
 ```text
 Assertion failed. Expected strings to be equal.
@@ -453,10 +453,10 @@ expected: "hello world"
 actual:   "hello wrold"
 ```
 
-#### Assert.AreEqual (string, case-insensitive with culture)
+#### Assert.AreEqual (string, with ignoreCase and culture)
 
 ```text
-Assertion failed. Expected strings to be equal (case-insensitive).
+Assertion failed. Expected strings to be equal.
 Strings have different lengths (expected: 6, actual: 8) and differ at 1 location(s). First difference at index 6.
 
 expected:     "straße"
@@ -465,7 +465,7 @@ ignore case:  true
 culture:      de-DE
 ```
 
-Note: Under `de-DE` culture with case-insensitive comparison, `"straße"` and `"STRASSE"` are considered equal (ß expands to SS). The example above shows a genuinely failing comparison where the actual string has additional content beyond the case-equivalent portion.
+Note: Under `de-DE` culture with case-insensitive comparison, `"straße"` and `"STRASSE"` are considered equal (ß expands to SS). The example above shows a genuinely failing comparison where the actual string has additional content beyond the case-equivalent portion. The structured-message format itself does not change between case-sensitive and case-insensitive overloads — the summary line is the same and the `ignore case:` / `culture:` evidence lines are added only when those parameters are supplied.
 
 #### Assert.AreNotEqual (generic)
 
