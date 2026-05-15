@@ -12,11 +12,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 public sealed partial class Assert
 {
-    #region AllItemsAreUnique
+    #region AreAllDistinct
 
     /// <summary>
-    /// Tests whether all items in the specified collection are unique and throws
-    /// an exception if any two elements in the collection are equal.
+    /// Tests whether all items in the specified collection are distinct (no two
+    /// elements are equal) and throws an exception if any two elements in the
+    /// collection are equal.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">
@@ -33,16 +34,16 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="collection"/> is null or contains at least one duplicate element.
     /// </exception>
-    public static void AllItemsAreUnique<T>([NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void AreAllDistinct<T>([NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        CheckParameterNotNull(collection, "Assert.AllItemsAreUnique", "collection");
-        AllItemsAreUniqueImpl(collection, EqualityComparer<T>.Default, hasUserComparer: false, message, collectionExpression);
+        CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
+        AreAllDistinctImpl(collection, EqualityComparer<T>.Default, hasUserComparer: false, message, collectionExpression);
     }
 
     /// <summary>
-    /// Tests whether all items in the specified collection are unique using the
-    /// supplied <paramref name="comparer"/> and throws an exception if any two
-    /// elements in the collection are equal.
+    /// Tests whether all items in the specified collection are distinct (no two
+    /// elements are equal) using the supplied <paramref name="comparer"/> and throws
+    /// an exception if any two elements in the collection are equal.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">
@@ -62,16 +63,17 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="collection"/> is null or contains at least one duplicate element.
     /// </exception>
-    public static void AllItemsAreUnique<T>([NotNull] IEnumerable<T>? collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void AreAllDistinct<T>([NotNull] IEnumerable<T>? collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        CheckParameterNotNull(collection, "Assert.AllItemsAreUnique", "collection");
-        CheckParameterNotNull(comparer, "Assert.AllItemsAreUnique", "comparer");
-        AllItemsAreUniqueImpl(collection, comparer, hasUserComparer: true, message, collectionExpression);
+        CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
+        CheckParameterNotNull(comparer, "Assert.AreAllDistinct", "comparer");
+        AreAllDistinctImpl(collection, comparer, hasUserComparer: true, message, collectionExpression);
     }
 
     /// <summary>
-    /// Tests whether all items in the specified collection are unique and throws
-    /// an exception if any two elements in the collection are equal.
+    /// Tests whether all items in the specified collection are distinct (no two
+    /// elements are equal) and throws an exception if any two elements in the
+    /// collection are equal.
     /// </summary>
     /// <param name="collection">
     /// The collection in which to search for duplicate elements.
@@ -87,16 +89,16 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="collection"/> is null or contains at least one duplicate element.
     /// </exception>
-    public static void AllItemsAreUnique([NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void AreAllDistinct([NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        CheckParameterNotNull(collection, "Assert.AllItemsAreUnique", "collection");
-        AllItemsAreUniqueImpl(collection.Cast<object?>(), EqualityComparer<object?>.Default, hasUserComparer: false, message, collectionExpression);
+        CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
+        AreAllDistinctImpl(collection.Cast<object?>(), EqualityComparer<object?>.Default, hasUserComparer: false, message, collectionExpression);
     }
 
     /// <summary>
-    /// Tests whether all items in the specified collection are unique using the
-    /// supplied <paramref name="comparer"/> and throws an exception if any two
-    /// elements in the collection are equal.
+    /// Tests whether all items in the specified collection are distinct (no two
+    /// elements are equal) using the supplied <paramref name="comparer"/> and throws
+    /// an exception if any two elements in the collection are equal.
     /// </summary>
     /// <param name="collection">
     /// The collection in which to search for duplicate elements.
@@ -115,15 +117,15 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="collection"/> is null or contains at least one duplicate element.
     /// </exception>
-    public static void AllItemsAreUnique([NotNull] IEnumerable? collection, [NotNull] IEqualityComparer? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void AreAllDistinct([NotNull] IEnumerable? collection, [NotNull] IEqualityComparer? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        CheckParameterNotNull(collection, "Assert.AllItemsAreUnique", "collection");
-        CheckParameterNotNull(comparer, "Assert.AllItemsAreUnique", "comparer");
-        AllItemsAreUniqueImpl(collection.Cast<object?>(), new NonGenericEqualityComparerAdapter(comparer), hasUserComparer: true, message, collectionExpression);
+        CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
+        CheckParameterNotNull(comparer, "Assert.AreAllDistinct", "comparer");
+        AreAllDistinctImpl(collection.Cast<object?>(), new NonGenericEqualityComparerAdapter(comparer), hasUserComparer: true, message, collectionExpression);
     }
 
 #pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
-    private static void AllItemsAreUniqueImpl<T>(IEnumerable<T> collection, IEqualityComparer<T> comparer, bool hasUserComparer, string? message, string collectionExpression)
+    private static void AreAllDistinctImpl<T>(IEnumerable<T> collection, IEqualityComparer<T> comparer, bool hasUserComparer, string? message, string collectionExpression)
     {
         List<T> snapshot = collection is List<T> list ? list : [.. collection];
 
@@ -171,13 +173,13 @@ public sealed partial class Assert
 
         if (duplicates is not null)
         {
-            ReportAssertAllItemsAreUniqueFailed(snapshot, duplicates, hasUserComparer, message, collectionExpression);
+            ReportAssertAreAllDistinctFailed(snapshot, duplicates, hasUserComparer, message, collectionExpression);
         }
     }
 #pragma warning restore CS8714
 
     [DoesNotReturn]
-    private static void ReportAssertAllItemsAreUniqueFailed<T>(IEnumerable<T> collection, List<T> duplicates, bool hasUserComparer, string? message, string collectionExpression)
+    private static void ReportAssertAreAllDistinctFailed<T>(IEnumerable<T> collection, List<T> duplicates, bool hasUserComparer, string? message, string collectionExpression)
     {
         string collectionText = AssertionValueRenderer.RenderValue(collection);
         string duplicatesText = AssertionValueRenderer.RenderValue(duplicates);
@@ -186,11 +188,11 @@ public sealed partial class Assert
             .AddLine("duplicates:", duplicatesText)
             .AddLine("collection:", collectionText);
 
-        StructuredAssertionMessage structured = new(FrameworkMessages.AllItemsAreUniqueFailedSummary);
+        StructuredAssertionMessage structured = new(FrameworkMessages.AreAllDistinctFailedSummary);
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
         structured.WithExpectedAndActual(expectedText: null, actualText: collectionText);
-        structured.WithCallSiteExpression(BuildCallSiteWithComparerForCollection("Assert.AllItemsAreUnique", collectionExpression, hasUserComparer));
+        structured.WithCallSiteExpression(BuildCallSiteWithComparerForCollection("Assert.AreAllDistinct", collectionExpression, hasUserComparer));
 
         ReportAssertFailed(structured);
     }
@@ -210,7 +212,7 @@ public sealed partial class Assert
         return string.Concat(callSite.Substring(0, callSite.Length - 1), ", <comparer>)");
     }
 
-    #endregion // AllItemsAreUnique
+    #endregion // AreAllDistinct
 
     // TODO: Deduplicate with the same adapter in Assert.CollectionEquivalence.cs (introduced by PR #8234)
     // once both PRs have landed.

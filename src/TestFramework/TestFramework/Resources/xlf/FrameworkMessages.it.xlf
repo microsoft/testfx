@@ -12,24 +12,24 @@
         <target state="translated">La raccolta prevista contiene {1} occorrenza/e di &lt;{2}&gt;. La raccolta effettiva contiene {3} occorrenza/e. {0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AllItemsAreInstancesOfTypeFailedSummary">
-        <source>Expected all items in collection to be instances of the specified type.</source>
-        <target state="new">Expected all items in collection to be instances of the specified type.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AllItemsAreNotNullFailedSummary">
-        <source>Expected all items in collection to be non-null.</source>
-        <target state="new">Expected all items in collection to be non-null.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AllItemsAreUniqueFailMsg">
         <source>Duplicate item found:&lt;{1}&gt;. {0}</source>
         <target state="translated">Rilevato elemento duplicato:&lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AllItemsAreUniqueFailedSummary">
-        <source>Expected all items in collection to be unique.</source>
-        <target state="new">Expected all items in collection to be unique.</target>
+      <trans-unit id="AreAllDistinctFailedSummary">
+        <source>Expected all items in collection to be distinct.</source>
+        <target state="new">Expected all items in collection to be distinct.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreAllNotNullFailedSummary">
+        <source>Expected all items in collection to be non-null.</source>
+        <target state="new">Expected all items in collection to be non-null.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreAllOfTypeFailedSummary">
+        <source>Expected all items in collection to be of the specified type.</source>
+        <target state="new">Expected all items in collection to be of the specified type.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualFailMsg">

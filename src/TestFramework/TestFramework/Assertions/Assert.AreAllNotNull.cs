@@ -12,7 +12,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 public sealed partial class Assert
 {
-    #region AllItemsAreNotNull
+    #region AreAllNotNull
 
     /// <summary>
     /// Tests whether all items in the specified collection are non-null and throws
@@ -32,10 +32,10 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="collection"/> is null or contains at least one null element.
     /// </exception>
-    public static void AllItemsAreNotNull([NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void AreAllNotNull([NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        CheckParameterNotNull(collection, "Assert.AllItemsAreNotNull", "collection");
-        AllItemsAreNotNullImpl(collection.Cast<object?>(), message, collectionExpression);
+        CheckParameterNotNull(collection, "Assert.AreAllNotNull", "collection");
+        AreAllNotNullImpl(collection.Cast<object?>(), message, collectionExpression);
     }
 
     /// <summary>
@@ -57,13 +57,13 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="collection"/> is null or contains at least one null element.
     /// </exception>
-    public static void AllItemsAreNotNull<T>([NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void AreAllNotNull<T>([NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        CheckParameterNotNull(collection, "Assert.AllItemsAreNotNull", "collection");
-        AllItemsAreNotNullImpl(collection, message, collectionExpression);
+        CheckParameterNotNull(collection, "Assert.AreAllNotNull", "collection");
+        AreAllNotNullImpl(collection, message, collectionExpression);
     }
 
-    private static void AllItemsAreNotNullImpl<T>(IEnumerable<T> collection, string? message, string collectionExpression)
+    private static void AreAllNotNullImpl<T>(IEnumerable<T> collection, string? message, string collectionExpression)
     {
         List<T> snapshot = collection is List<T> list ? list : [.. collection];
         List<int>? nullIndices = null;
@@ -78,12 +78,12 @@ public sealed partial class Assert
 
         if (nullIndices is not null)
         {
-            ReportAssertAllItemsAreNotNullFailed(snapshot, nullIndices, message, collectionExpression);
+            ReportAssertAreAllNotNullFailed(snapshot, nullIndices, message, collectionExpression);
         }
     }
 
     [DoesNotReturn]
-    private static void ReportAssertAllItemsAreNotNullFailed<T>(IEnumerable<T> collection, List<int> nullIndices, string? message, string collectionExpression)
+    private static void ReportAssertAreAllNotNullFailed<T>(IEnumerable<T> collection, List<int> nullIndices, string? message, string collectionExpression)
     {
         string collectionText = AssertionValueRenderer.RenderValue(collection);
         string nullIndicesText = AssertionValueRenderer.RenderValue(nullIndices);
@@ -92,14 +92,14 @@ public sealed partial class Assert
             .AddLine("null indices:", nullIndicesText)
             .AddLine("collection:", collectionText);
 
-        StructuredAssertionMessage structured = new(FrameworkMessages.AllItemsAreNotNullFailedSummary);
+        StructuredAssertionMessage structured = new(FrameworkMessages.AreAllNotNullFailedSummary);
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
         structured.WithExpectedAndActual(expectedText: null, actualText: collectionText);
-        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.AllItemsAreNotNull", collectionExpression, "<collection>"));
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreAllNotNull", collectionExpression, "<collection>"));
 
         ReportAssertFailed(structured);
     }
 
-    #endregion // AllItemsAreNotNull
+    #endregion // AreAllNotNull
 }

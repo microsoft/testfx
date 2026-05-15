@@ -12,24 +12,24 @@
         <target state="translated">預期在集合中包含 {1} 項 &lt;{2}&gt;，但實際的集合卻有 {3} 項。{0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AllItemsAreInstancesOfTypeFailedSummary">
-        <source>Expected all items in collection to be instances of the specified type.</source>
-        <target state="new">Expected all items in collection to be instances of the specified type.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AllItemsAreNotNullFailedSummary">
-        <source>Expected all items in collection to be non-null.</source>
-        <target state="new">Expected all items in collection to be non-null.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AllItemsAreUniqueFailMsg">
         <source>Duplicate item found:&lt;{1}&gt;. {0}</source>
         <target state="translated">找到重複的項目: &lt;{1}&gt;。{0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AllItemsAreUniqueFailedSummary">
-        <source>Expected all items in collection to be unique.</source>
-        <target state="new">Expected all items in collection to be unique.</target>
+      <trans-unit id="AreAllDistinctFailedSummary">
+        <source>Expected all items in collection to be distinct.</source>
+        <target state="new">Expected all items in collection to be distinct.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreAllNotNullFailedSummary">
+        <source>Expected all items in collection to be non-null.</source>
+        <target state="new">Expected all items in collection to be non-null.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreAllOfTypeFailedSummary">
+        <source>Expected all items in collection to be of the specified type.</source>
+        <target state="new">Expected all items in collection to be of the specified type.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualFailMsg">

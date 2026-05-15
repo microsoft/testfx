@@ -420,13 +420,13 @@ Actual: {2}</value>
   <data name="IsNotNullFailedSummary" xml:space="preserve">
     <value>Expected value to not be null.</value>
   </data>
-  <data name="AllItemsAreNotNullFailedSummary" xml:space="preserve">
+  <data name="AreAllNotNullFailedSummary" xml:space="preserve">
     <value>Expected all items in collection to be non-null.</value>
   </data>
-  <data name="AllItemsAreUniqueFailedSummary" xml:space="preserve">
-    <value>Expected all items in collection to be unique.</value>
+  <data name="AreAllDistinctFailedSummary" xml:space="preserve">
+    <value>Expected all items in collection to be distinct.</value>
   </data>
-  <data name="AllItemsAreInstancesOfTypeFailedSummary" xml:space="preserve">
-    <value>Expected all items in collection to be instances of the specified type.</value>
+  <data name="AreAllOfTypeFailedSummary" xml:space="preserve">
+    <value>Expected all items in collection to be of the specified type.</value>
   </data>
 </root>
