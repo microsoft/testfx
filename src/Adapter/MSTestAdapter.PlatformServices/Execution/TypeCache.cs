@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
 using System.Security;
+#endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -15,7 +17,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines type cache which reflects upon a type and cache its test artifacts.
 /// </summary>
-internal sealed class TypeCache : MarshalByRefObject
+internal sealed class TypeCache
+#if NETFRAMEWORK
+    : MarshalByRefObject
+#endif
 {
     /// <summary>
     /// Helper for reflection API's.
@@ -108,6 +113,7 @@ internal sealed class TypeCache : MarshalByRefObject
         return ResolveTestMethodInfoForDiscovery(testMethod, testClassInfo);
     }
 
+#if NETFRAMEWORK
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>
@@ -115,10 +121,8 @@ internal sealed class TypeCache : MarshalByRefObject
     /// The <see cref="object"/>.
     /// </returns>
     [SecurityCritical]
-#if NET5_0_OR_GREATER
-    [Obsolete("MarshalByRefObject.InitializeLifetimeService is obsolete in .NET 5+. This override is required to maintain infinite lifetime service.")]
+    public override object? InitializeLifetimeService() => null;
 #endif
-    public override object InitializeLifetimeService() => null!;
 
     #region ClassInfo creation and cache logic.
 

@@ -5,7 +5,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
+#if NETFRAMEWORK
 [Serializable]
+#endif
 internal sealed class StackTraceInformation
 {
     public StackTraceInformation(string stackTrace)
