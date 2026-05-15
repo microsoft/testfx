@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 using AwesomeAssertions;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
@@ -53,6 +55,35 @@ public partial class AssertTests
                 Assert.HasCount(1, Array.Empty<int>())
                 """);
         o.WasToStringCalled.Should().BeTrue();
+    }
+
+    public void Count_WhenCurrentCultureUsesCustomNegativeSign_ShouldUseInvariantCallSiteValue()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        CultureInfo customCulture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
+        customCulture.NumberFormat.NegativeSign = "−";
+
+        try
+        {
+            CultureInfo.CurrentCulture = customCulture;
+            var collection = new List<int>();
+
+            Action action = () => Assert.HasCount(-1, collection);
+            action.Should().Throw<Exception>()
+                .WithMessage(
+                    """
+                    Assertion failed. Expected collection to contain a specific number of elements.
+
+                    expected count: −1
+                    actual count:   0
+
+                    Assert.HasCount(-1, collection)
+                    """);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
     }
 
     public void NotAny_WhenEmpty_ShouldPass()
