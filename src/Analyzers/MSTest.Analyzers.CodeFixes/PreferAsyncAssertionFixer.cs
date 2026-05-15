@@ -172,11 +172,11 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
         if (currentExpression is InvocationExpressionSyntax getResultInvocation &&
             getResultInvocation.ArgumentList.Arguments.Count == 0 &&
             getResultInvocation.Expression is MemberAccessExpressionSyntax getResultMemberAccess &&
-            getResultMemberAccess.Name.Identifier.ValueText == "GetResult" &&
+            getResultMemberAccess.Name.Identifier.ValueText == PreferAsyncAssertionAnalyzer.GetResultMethodName &&
             WalkDownParentheses(getResultMemberAccess.Expression) is InvocationExpressionSyntax getAwaiterInvocation &&
             getAwaiterInvocation.ArgumentList.Arguments.Count == 0 &&
             getAwaiterInvocation.Expression is MemberAccessExpressionSyntax getAwaiterMemberAccess &&
-            getAwaiterMemberAccess.Name.Identifier.ValueText == "GetAwaiter")
+            getAwaiterMemberAccess.Name.Identifier.ValueText == PreferAsyncAssertionAnalyzer.GetAwaiterMethodName)
         {
             asyncExpression = WalkDownParentheses(getAwaiterMemberAccess.Expression);
             return true;

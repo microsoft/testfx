@@ -20,6 +20,9 @@ namespace MSTest.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
 {
+    internal const string GetAwaiterMethodName = "GetAwaiter";
+    internal const string GetResultMethodName = "GetResult";
+
     private static readonly LocalizableResourceString Title = new(nameof(Resources.PreferAsyncAssertionTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.PreferAsyncAssertionDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.PreferAsyncAssertionMessageFormat), Resources.ResourceManager, typeof(Resources));
@@ -145,10 +148,10 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
     {
         if (operation.WalkDownConversion() is IInvocationOperation getResultInvocation &&
             getResultInvocation.Arguments.Length == 0 &&
-            getResultInvocation.TargetMethod.Name == "GetResult" &&
+            getResultInvocation.TargetMethod.Name == GetResultMethodName &&
             getResultInvocation.Instance?.WalkDownConversion() is IInvocationOperation getAwaiterInvocation &&
             getAwaiterInvocation.Arguments.Length == 0 &&
-            getAwaiterInvocation.TargetMethod.Name == "GetAwaiter" &&
+            getAwaiterInvocation.TargetMethod.Name == GetAwaiterMethodName &&
             getAwaiterInvocation.Instance is { } instance)
         {
             asyncOperation = instance.WalkDownConversion();
