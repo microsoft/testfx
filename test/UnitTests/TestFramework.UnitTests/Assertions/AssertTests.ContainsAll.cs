@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Runtime.CompilerServices;
 
 using AwesomeAssertions;
 
@@ -406,14 +407,46 @@ public partial class AssertTests : TestContainer
         ex.ActualText.Should().Be("[1, 2]");
     }
 
+    public void ContainsAll_CaseInsensitiveStringComparer_NonGenericEquals_WithNonStringValues_ShouldReturnFalse()
+    {
+        IEqualityComparer comparer = new CaseInsensitiveStringComparer();
+        object left = new();
+        object right = new();
+
+        comparer.Equals(null, null).Should().BeTrue();
+        comparer.Equals(null, "a").Should().BeFalse();
+        comparer.Equals(left, right).Should().BeFalse();
+        comparer.Equals("A", "a").Should().BeTrue();
+    }
+
+    public void ContainsAll_CaseInsensitiveStringComparer_NonGenericGetHashCode_WithNonStringValue_ShouldUseRuntimeHashCode()
+    {
+        IEqualityComparer comparer = new CaseInsensitiveStringComparer();
+        object value = new();
+
+        comparer.GetHashCode(value).Should().Be(RuntimeHelpers.GetHashCode(value));
+    }
+
     private sealed class CaseInsensitiveStringComparer : IEqualityComparer<string>, IEqualityComparer
     {
         public bool Equals(string? x, string? y) => StringComparer.OrdinalIgnoreCase.Equals(x, y);
 
         public int GetHashCode(string obj) => StringComparer.OrdinalIgnoreCase.GetHashCode(obj);
 
-        bool IEqualityComparer.Equals(object? x, object? y) => StringComparer.OrdinalIgnoreCase.Equals(x as string, y as string);
+        bool IEqualityComparer.Equals(object? x, object? y)
+            => (x, y) switch
+            {
+                (null, null) => true,
+                (string left, string right) => Equals(left, right),
+                (null, _) or (_, null) => false,
+                _ => false,
+            };
 
-        public int GetHashCode(object obj) => obj is string s ? StringComparer.OrdinalIgnoreCase.GetHashCode(s) : 0;
+        int IEqualityComparer.GetHashCode(object obj)
+            => obj is string value
+                ? GetHashCode(value)
+                : obj is null
+                    ? 0
+                    : RuntimeHelpers.GetHashCode(obj);
     }
 }
