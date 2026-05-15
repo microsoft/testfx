@@ -1,7 +1,7 @@
 # TestFX Test Improver Memory
 
 ## Last Updated
-2026-05-14
+2026-05-15
 
 ## Build/Test Commands
 
@@ -56,6 +56,8 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
   - `ExtensionValidationHelper` in `Microsoft.Testing.Platform.Helpers` namespace — accessible via InternalsVisibleTo in test project
   - `TestExtension` in `Helpers/TestExtension.cs` accepts optional `uid` constructor parameter (default "Uid") for configurable UIDs in tests
   - SA1516: Internal interface declarations at file scope need blank lines between them
+  - MSTEST0037: Use `Assert.IsEmpty`/`Assert.HasCount` instead of `Assert.AreEqual(0/N, ...)` for collections
+  - MSTEST0017: `Assert.AreEqual/AreNotEqual` — expected comes FIRST, actual second
 
 ## Testing Backlog (prioritized)
 
@@ -67,17 +69,22 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 6. ✅ **DONE** `LoggingManager.BuildAsync` tests → merged via #8124 and #8130
 7. ✅ **DONE** `ExtensionValidationHelper.ValidateUniqueExtension` → merged via #8128
 8. ✅ **DONE** MSTEST0031 code fix tests → confirmed merged via #7898 (2026-05-12)
-9. ✅ **DONE** Quality improvements to `LoggingManagerTests.cs` (`_ =` discards + multi-provider test) → PR submitted 2026-05-13, closes #8140
-9. 🔄 Quality improvements to `LoggingManagerTests.cs` — PR #8129 open, CI green
-10. 🔄 `StopPoliciesService` unit tests — patch created (PR push fallback). Patch in run artifacts: https://github.com/microsoft/testfx/actions/runs/25846237976
-11. Code fix test coverage for MSTEST0040 when `AvoidUsingAssertsInAsyncVoidContextFixer` lands (#7891)
-12. `TestFramework.UnitTests` assertion edge cases
+9. ✅ **DONE** Quality improvements to `LoggingManagerTests.cs` → merged via #8129 (2026-05-14)
+10. ✅ **DONE** `StopPoliciesService` unit tests → patch in 2026-05-14 run (StopPoliciesServiceTests.cs already exists at 176 lines)
+11. 🔄 `CommandLineParseResult` unit tests — patch created 2026-05-15 (branch: test-assist/commandline-parse-result-tests, 20 tests × 2 TFMs = 40)
+12. `ResponseFileHelper.SplitCommandLine` — complex quote/whitespace state-machine, no dedicated tests
+13. Code fix test coverage for MSTEST0040 when `AvoidUsingAssertsInAsyncVoidContextFixer` lands (#7891)
+14. `TestFramework.UnitTests` assertion edge cases
 
 ## Completed Work
 
+### 2026-05-15
+- **Task 3**: Created 20 unit tests for `CommandLineParseResult` covering HasTool, HasError, IsOptionSet, TryGetOptionArgumentList, Equals, ToString. All 40 tests pass. PR push fell back to patch artifact.
+- **Task 7**: Created new Monthly Summary issue for May 2026 (previous #8206 closed as "completed" by Evangelink on 2026-05-14).
+
 ### 2026-05-14
-- **Task 3**: Implemented 10 unit tests for `StopPoliciesService`. 1352→1374 tests passing. PR push fell back to patch artifact.
-- **Task 7**: Created new Monthly Summary issue (previous #7969 closed by Evangelink as "not_planned").
+- **Task 3**: Implemented 10 unit tests for `StopPoliciesService`. 1352→1374 tests passing. PR push fell back to patch artifact. (Note: StopPoliciesServiceTests.cs now exists at 176 lines)
+- **Task 7**: Created new Monthly Summary issue #8206 (previous #7969 closed by Evangelink as "not_planned").
 
 ### 2026-05-13
 - **Task 3**: Created quality improvements PR for `LoggingManagerTests.cs` — `_ =` discards on all `factory.CreateLogger()` calls + new `BuildAsync_MultipleProviders_OnlyIncludesEnabledOnes` test. All 22 tests pass (net8.0+net9.0). Closes #8140.
@@ -97,19 +104,17 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 | Task | Last Run |
 |------|----------|
 | Task 1: Discover commands | 2026-04-24 |
-| Task 2: Identify opportunities | 2026-05-01 |
-| Task 3: Implement tests | 2026-05-14 |
+| Task 2: Identify opportunities | 2026-05-15 |
+| Task 3: Implement tests | 2026-05-15 |
 | Task 4: Maintain PRs | 2026-05-12 |
 | Task 5: Comment on issues | 2026-05-08 |
 | Task 6: Test infrastructure | 2026-04-29 |
-| Task 7: Monthly summary | 2026-05-14 |
+| Task 7: Monthly summary | 2026-05-15 |
 
 ## Maintainer Priorities
 - PRs merged quickly by Evangelink — receptive to focused test PRs for MTP and MSTest
-- Issues #7790, #7942, #7968, #7986, #7995, #8003, #8019, #8020, #8036, #8047, #8059, #8070 are stale duplicates
-- PRs #8104, #8125, #8126, #8127, #8131 are duplicate open PRs — commented suggesting closure (2026-05-12)
-- PR #8129 has CI issues; quality improvements now in today's clean PR (closes #8140)
-- **PR CREATION**: `safeoutputs-create_pull_request` sometimes creates PRs and sometimes doesn't push the branch. Call it only ONCE per run to avoid duplicates.
+- Evangelink closed monthly issues #7969 (not_planned) and #8206 (completed) — will keep creating new ones each run
+- **PR CREATION**: `safeoutputs-create_pull_request` consistently falls back to patch artifact. Patch files are at `/tmp/gh-aw/aw-test-assist-*.patch`.
 
 ## Notes
 - `PasteArguments` is `internal static partial class` — accessible via InternalsVisibleTo
@@ -122,3 +127,6 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 - `Assert.IsGreaterThan(lowerBound, value)` asserts `value > lowerBound` — NOT the other way around. So to check `x > 0`, write `Assert.IsGreaterThan(0, x)`.
 - SA1512: No blank line after single-line comments — section dividers like `// ---- Section ----` must immediately be followed by `[TestMethod]` without a blank line
 - SA1516: Internal interface declarations at file scope need blank lines between them
+- MSTEST0037: Use `Assert.IsEmpty`/`Assert.HasCount` for collection length checks; `Assert.IsNotNull` for null-not-equal checks
+- MSTEST0017: In `Assert.AreEqual(expected, actual)` — expected is FIRST parameter
+- `CommandLineParseResult.IsOptionSet` is case-insensitive and strips leading dashes from the option name before comparing
