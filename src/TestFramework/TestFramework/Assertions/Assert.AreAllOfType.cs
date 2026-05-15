@@ -84,57 +84,52 @@ public sealed partial class Assert
     private static void AreAllOfTypeImpl(IEnumerable collection, Type expectedType, string? genericTypeArgumentName, string? message, string collectionExpression, string? expectedTypeExpression)
     {
         List<object?> snapshot = [.. collection.Cast<object?>()];
-        List<int>? mismatchIndices = null;
-        List<Type?>? mismatchTypes = null;
+        List<TypeMismatch>? mismatches = null;
         for (int i = 0; i < snapshot.Count; i++)
         {
             object? element = snapshot[i];
             if (element is null)
             {
-                mismatchIndices ??= [];
-                mismatchTypes ??= [];
-                mismatchIndices.Add(i);
-                mismatchTypes.Add(null);
+                mismatches ??= [];
+                mismatches.Add(new TypeMismatch(i, actualType: null));
             }
             else if (!expectedType.IsInstanceOfType(element))
             {
-                mismatchIndices ??= [];
-                mismatchTypes ??= [];
-                mismatchIndices.Add(i);
-                mismatchTypes.Add(element.GetType());
+                mismatches ??= [];
+                mismatches.Add(new TypeMismatch(i, element.GetType()));
             }
         }
 
-        if (mismatchIndices is not null)
+        if (mismatches is not null)
         {
-            ReportAssertAreAllOfTypeFailed(snapshot, expectedType, mismatchIndices, mismatchTypes!, genericTypeArgumentName, message, collectionExpression, expectedTypeExpression);
+            ReportAssertAreAllOfTypeFailed(snapshot, expectedType, mismatches, genericTypeArgumentName, message, collectionExpression, expectedTypeExpression);
         }
     }
 
     [DoesNotReturn]
-    private static void ReportAssertAreAllOfTypeFailed(IEnumerable<object?> collection, Type expectedType, List<int> mismatchIndices, List<Type?> mismatchTypes, string? genericTypeArgumentName, string? message, string collectionExpression, string? expectedTypeExpression)
+    private static void ReportAssertAreAllOfTypeFailed(IEnumerable<object?> collection, Type expectedType, List<TypeMismatch> mismatches, string? genericTypeArgumentName, string? message, string collectionExpression, string? expectedTypeExpression)
     {
         string collectionText = AssertionValueRenderer.RenderValue(collection);
         string expectedTypeText = $"{expectedType} (or derived)";
 
         StringBuilder mismatchesBuilder = new();
         mismatchesBuilder.Append('[');
-        for (int i = 0; i < mismatchIndices.Count; i++)
+        for (int i = 0; i < mismatches.Count; i++)
         {
             if (i > 0)
             {
                 mismatchesBuilder.Append(", ");
             }
 
-            mismatchesBuilder.Append("index ").Append(mismatchIndices[i]).Append(": ");
-            Type? mismatchType = mismatchTypes[i];
-            if (mismatchType is null)
+            TypeMismatch mismatch = mismatches[i];
+            mismatchesBuilder.Append("index ").Append(mismatch.Index).Append(": ");
+            if (mismatch.ActualType is null)
             {
                 mismatchesBuilder.Append("<null>");
             }
             else
             {
-                mismatchesBuilder.Append(mismatchType);
+                mismatchesBuilder.Append(mismatch.ActualType);
             }
         }
 
@@ -160,6 +155,19 @@ public sealed partial class Assert
         structured.WithCallSiteExpression(callSite);
 
         ReportAssertFailed(structured);
+    }
+
+    private readonly struct TypeMismatch
+    {
+        public TypeMismatch(int index, Type? actualType)
+        {
+            Index = index;
+            ActualType = actualType;
+        }
+
+        public int Index { get; }
+
+        public Type? ActualType { get; }
     }
 
     #endregion // AreAllOfType

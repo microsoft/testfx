@@ -209,6 +209,7 @@ public sealed partial class Assert
         // the <comparer> placeholder so the rendered call-site reflects the overload that was actually invoked.
         // Note: range/index syntax (callSite[..^1]) is not used because System.Range/System.Index are unavailable
         // on net462 / netstandard2.0, the lowest TFMs targeted by this project.
+        Debug.Assert(callSite.Length > 0 && callSite[callSite.Length - 1] == ')', "FormatCallSiteExpression contract: rendered call-site must end with ')'.");
         return string.Concat(callSite.Substring(0, callSite.Length - 1), ", <comparer>)");
     }
 

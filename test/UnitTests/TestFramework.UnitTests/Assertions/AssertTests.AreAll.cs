@@ -363,6 +363,36 @@ public partial class AssertTests : TestContainer
                 """);
     }
 
+    // Pins the current behavior: null elements are short-circuited and never passed to the user-provided comparer.
+    // A comparer that treats null as equal to "" is therefore not consulted, and [null, ""] is considered distinct.
+    public void AreAllDistinct_Generic_ComparerTreatsNullAsEmpty_NullAndEmpty_ShouldPass()
+        => Assert.AreAllDistinct(new string?[] { null, string.Empty }, new NullEqualsEmptyStringComparer());
+
+    // Pins the current behavior: a comparer that throws on null is never invoked with a null argument because
+    // null elements are short-circuited before the comparer is consulted.
+    public void AreAllDistinct_Generic_ComparerThrowsOnNull_WithNulls_ShouldNotInvokeComparerForNull()
+        => Assert.AreAllDistinct(new string?[] { null, "a", "b" }, new ThrowOnNullStringComparer());
+
+    private sealed class NullEqualsEmptyStringComparer : IEqualityComparer<string?>
+    {
+        public bool Equals(string? x, string? y) => (x ?? string.Empty) == (y ?? string.Empty);
+
+        public int GetHashCode(string? obj) => (obj ?? string.Empty).GetHashCode();
+    }
+
+    private sealed class ThrowOnNullStringComparer : IEqualityComparer<string?>
+    {
+        public bool Equals(string? x, string? y)
+            => x is null || y is null
+                ? throw new InvalidOperationException("Comparer should not be invoked with null.")
+                : x == y;
+
+        public int GetHashCode(string? obj)
+            => obj is null
+                ? throw new InvalidOperationException("Comparer should not be invoked with null.")
+                : obj.GetHashCode();
+    }
+
     #endregion // AreAllDistinct
 
     #region AreAllOfType
@@ -518,6 +548,80 @@ public partial class AssertTests : TestContainer
     {
         ArrayList list = [];
         Assert.AreAllOfType(typeof(string), list);
+    }
+
+    public void AreAllOfType_Generic_BoxedValueType_AllMatch_ShouldPass()
+        => Assert.AreAllOfType<int>(new object[] { 1, 2, 3 });
+
+    public void AreAllOfType_Generic_BoxedValueType_HasMismatch_ShouldFail()
+    {
+        Action action = () => Assert.AreAllOfType<int>(new object[] { 1, "x" });
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected all items in collection to be of the specified type.
+
+                expected type: System.Int32 (or derived)
+                mismatches:    [index 1: System.String]
+                collection:    [1, "x"]
+
+                Assert.AreAllOfType<TExpected>(new object[] { 1, "x" })
+                """);
+    }
+
+    // Pins the current behavior of `AreAllOfType<T?>` for nullable value types: a `null` element fails because
+    // `typeof(int?).IsInstanceOfType(null)` returns false. Boxed non-null nullable values are accepted because
+    // boxing erases the `Nullable<T>` wrapper.
+    public void AreAllOfType_Generic_NullableValueType_NullElement_ShouldFail()
+    {
+        Action action = () => Assert.AreAllOfType<int?>(new object?[] { 1, null, 3 });
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("*mismatches:    [index 1: <null>]*");
+    }
+
+    public void AreAllOfType_Generic_StructMismatch_ShouldFail()
+    {
+        Action action = () => Assert.AreAllOfType<DateTime>(new object[] { DateTime.UtcNow, "x" });
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                *expected type: System.DateTime (or derived)
+                mismatches:    [index 1: System.String]*
+                """);
+    }
+
+    public void AreAllOfType_NonGeneric_BoxedValueType_AllMatch_ShouldPass()
+    {
+        ArrayList list = [1, 2, 3];
+        Assert.AreAllOfType(typeof(int), list);
+    }
+
+    public void AreAllOfType_NonGeneric_BoxedValueType_HasMismatch_ShouldFail()
+    {
+        ArrayList list = [1, "x"];
+        Action action = () => Assert.AreAllOfType(typeof(int), list);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected all items in collection to be of the specified type.
+
+                expected type: System.Int32 (or derived)
+                mismatches:    [index 1: System.String]
+                collection:    [1, "x"]
+
+                Assert.AreAllOfType(typeof(int), list)
+                """);
+    }
+
+    public void AreAllOfType_Generic_Interface_AllImplement_ShouldPass()
+        => Assert.AreAllOfType<IDisposable>(new object[] { new System.IO.MemoryStream(), new System.IO.MemoryStream() });
+
+    public void AreAllOfType_NonGeneric_Interface_HasMismatch_ShouldFail()
+    {
+        ArrayList list = [new System.IO.MemoryStream(), "not-disposable-string"];
+        Action action = () => Assert.AreAllOfType(typeof(IDisposable), list);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("*expected type: System.IDisposable (or derived)*mismatches:    [index 1: System.String]*");
     }
 
     private class DerivedAllItemsBase;
