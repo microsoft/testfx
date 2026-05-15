@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Hosts;
@@ -70,9 +71,29 @@ public sealed class CommonHostTests
         testSessionLifetimeHandlerMock.Verify(x => x.OnTestSessionFinishingAsync(It.IsAny<ITestSessionContext>()), Times.Once);
     }
 
-    private sealed class TestableCommonHost(ServiceProvider serviceProvider) : CommonHost(serviceProvider)
+    [TestMethod]
+    public async Task RunAsync_WhenTestHostApplicationLifetimeIsAsyncCleanable_CleansUpOnce()
     {
-        protected override bool RunTestApplicationLifeCycleCallbacks => false;
+        ServiceProvider serviceProvider = new();
+        AsyncCleanableTestHostApplicationLifetime testApplicationLifetime = new();
+        serviceProvider.AddService(new TestApplicationCancellationTokenSource());
+        serviceProvider.AddService(testApplicationLifetime);
+
+        TestableCommonHost host = new(serviceProvider, runTestApplicationLifeCycleCallbacks: true);
+
+        int exitCode = await host.RunAsync();
+
+        Assert.AreEqual(0, exitCode);
+        Assert.AreEqual(1, testApplicationLifetime.BeforeRunCount);
+        Assert.AreEqual(1, testApplicationLifetime.AfterRunCount);
+        Assert.AreEqual(1, testApplicationLifetime.CleanupCount);
+    }
+
+    private sealed class TestableCommonHost(ServiceProvider serviceProvider, bool runTestApplicationLifeCycleCallbacks = false) : CommonHost(serviceProvider)
+    {
+        protected override string HostType => "TestHost";
+
+        protected override bool RunTestApplicationLifeCycleCallbacks => runTestApplicationLifeCycleCallbacks;
 
         public static Task ExecuteRequestForTestingAsync(
             ProxyOutputDevice outputDevice,
@@ -84,6 +105,52 @@ public sealed class CommonHostTests
             => ExecuteRequestAsync(outputDevice, testSessionInfo, serviceProvider, baseMessageBus, testFramework, client);
 
         protected override Task<int> InternalRunAsync(CancellationToken cancellationToken)
-            => throw new NotImplementedException();
+            => Task.FromResult(0);
+    }
+
+    private sealed class TestApplicationCancellationTokenSource : ITestApplicationCancellationTokenSource
+    {
+        public CancellationToken CancellationToken => CancellationToken.None;
+
+        public void Cancel()
+        {
+        }
+    }
+
+    private sealed class AsyncCleanableTestHostApplicationLifetime : ITestHostApplicationLifetime, IAsyncCleanableExtension
+    {
+        public int BeforeRunCount { get; private set; }
+
+        public int AfterRunCount { get; private set; }
+
+        public int CleanupCount { get; private set; }
+
+        public string Uid => nameof(AsyncCleanableTestHostApplicationLifetime);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => nameof(AsyncCleanableTestHostApplicationLifetime);
+
+        public string Description => nameof(AsyncCleanableTestHostApplicationLifetime);
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task BeforeRunAsync(CancellationToken cancellationToken)
+        {
+            BeforeRunCount++;
+            return Task.CompletedTask;
+        }
+
+        public Task AfterRunAsync(int exitCode, CancellationToken cancellationToken)
+        {
+            AfterRunCount++;
+            return Task.CompletedTask;
+        }
+
+        public Task CleanupAsync()
+        {
+            CleanupCount++;
+            return Task.CompletedTask;
+        }
     }
 }
