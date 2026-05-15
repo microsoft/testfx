@@ -15,9 +15,12 @@ public sealed partial class Assert
     #region IsSubsetOf
 
     /// <summary>
-    /// Tests whether one collection is a subset of another collection and throws an
-    /// exception if any element in the subset is not also in the superset.
+    /// Tests whether one collection is a subset of another collection (with multiplicity)
+    /// and throws an exception if any element in the subset occurs more times than in the superset.
     /// </summary>
+    /// <remarks>
+    /// Element multiplicity is significant: <c>[1, 1]</c> is not a subset of <c>[1]</c>.
+    /// </remarks>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="subset">
     /// The collection expected to be a subset of <paramref name="superset"/>.
@@ -27,7 +30,7 @@ public sealed partial class Assert
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when an element in <paramref name="subset"/>
-    /// is not found in <paramref name="superset"/>. The message is shown in test results.
+    /// is not found (with sufficient multiplicity) in <paramref name="superset"/>. The message is shown in test results.
     /// </param>
     /// <param name="subsetExpression">
     /// The syntactic expression of subset as given by the compiler via caller argument expression.
@@ -38,7 +41,8 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="subset"/> contains at least one element not contained in <paramref name="superset"/>.
+    /// Thrown if <paramref name="subset"/> contains at least one element that occurs more times
+    /// than in <paramref name="superset"/>.
     /// </exception>
     public static void IsSubsetOf<T>([NotNull] IEnumerable<T>? subset, [NotNull] IEnumerable<T>? superset, string? message = "", [CallerArgumentExpression(nameof(subset))] string subsetExpression = "", [CallerArgumentExpression(nameof(superset))] string supersetExpression = "")
     {
@@ -48,9 +52,12 @@ public sealed partial class Assert
     }
 
     /// <summary>
-    /// Tests whether one collection is a subset of another collection and throws an
-    /// exception if any element in the subset is not also in the superset.
+    /// Tests whether one collection is a subset of another collection (with multiplicity)
+    /// and throws an exception if any element in the subset occurs more times than in the superset.
     /// </summary>
+    /// <remarks>
+    /// Element multiplicity is significant: <c>[1, 1]</c> is not a subset of <c>[1]</c>.
+    /// </remarks>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="subset">
     /// The collection expected to be a subset of <paramref name="superset"/>.
@@ -63,7 +70,7 @@ public sealed partial class Assert
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when an element in <paramref name="subset"/>
-    /// is not found in <paramref name="superset"/>. The message is shown in test results.
+    /// is not found (with sufficient multiplicity) in <paramref name="superset"/>. The message is shown in test results.
     /// </param>
     /// <param name="subsetExpression">
     /// The syntactic expression of subset as given by the compiler via caller argument expression.
@@ -74,7 +81,8 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="subset"/> contains at least one element not contained in <paramref name="superset"/>.
+    /// Thrown if <paramref name="subset"/> contains at least one element that occurs more times
+    /// than in <paramref name="superset"/>.
     /// </exception>
     public static void IsSubsetOf<T>([NotNull] IEnumerable<T>? subset, [NotNull] IEnumerable<T>? superset, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(subset))] string subsetExpression = "", [CallerArgumentExpression(nameof(superset))] string supersetExpression = "")
     {
@@ -85,9 +93,12 @@ public sealed partial class Assert
     }
 
     /// <summary>
-    /// Tests whether one collection is a subset of another collection and throws an
-    /// exception if any element in the subset is not also in the superset.
+    /// Tests whether one collection is a subset of another collection (with multiplicity)
+    /// and throws an exception if any element in the subset occurs more times than in the superset.
     /// </summary>
+    /// <remarks>
+    /// Element multiplicity is significant: <c>[1, 1]</c> is not a subset of <c>[1]</c>.
+    /// </remarks>
     /// <param name="subset">
     /// The collection expected to be a subset of <paramref name="superset"/>.
     /// </param>
@@ -96,7 +107,7 @@ public sealed partial class Assert
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when an element in <paramref name="subset"/>
-    /// is not found in <paramref name="superset"/>. The message is shown in test results.
+    /// is not found (with sufficient multiplicity) in <paramref name="superset"/>. The message is shown in test results.
     /// </param>
     /// <param name="subsetExpression">
     /// The syntactic expression of subset as given by the compiler via caller argument expression.
@@ -107,7 +118,8 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="subset"/> contains at least one element not contained in <paramref name="superset"/>.
+    /// Thrown if <paramref name="subset"/> contains at least one element that occurs more times
+    /// than in <paramref name="superset"/>.
     /// </exception>
     public static void IsSubsetOf([NotNull] IEnumerable? subset, [NotNull] IEnumerable? superset, string? message = "", [CallerArgumentExpression(nameof(subset))] string subsetExpression = "", [CallerArgumentExpression(nameof(superset))] string supersetExpression = "")
     {
@@ -118,9 +130,12 @@ public sealed partial class Assert
     }
 
     /// <summary>
-    /// Tests whether one collection is a subset of another collection and throws an
-    /// exception if any element in the subset is not also in the superset.
+    /// Tests whether one collection is a subset of another collection (with multiplicity)
+    /// and throws an exception if any element in the subset occurs more times than in the superset.
     /// </summary>
+    /// <remarks>
+    /// Element multiplicity is significant: <c>[1, 1]</c> is not a subset of <c>[1]</c>.
+    /// </remarks>
     /// <param name="subset">
     /// The collection expected to be a subset of <paramref name="superset"/>.
     /// </param>
@@ -132,7 +147,7 @@ public sealed partial class Assert
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when an element in <paramref name="subset"/>
-    /// is not found in <paramref name="superset"/>. The message is shown in test results.
+    /// is not found (with sufficient multiplicity) in <paramref name="superset"/>. The message is shown in test results.
     /// </param>
     /// <param name="subsetExpression">
     /// The syntactic expression of subset as given by the compiler via caller argument expression.
@@ -143,7 +158,8 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="subset"/> contains at least one element not contained in <paramref name="superset"/>.
+    /// Thrown if <paramref name="subset"/> contains at least one element that occurs more times
+    /// than in <paramref name="superset"/>.
     /// </exception>
     public static void IsSubsetOf([NotNull] IEnumerable? subset, [NotNull] IEnumerable? superset, [NotNull] IEqualityComparer? comparer, string? message = "", [CallerArgumentExpression(nameof(subset))] string subsetExpression = "", [CallerArgumentExpression(nameof(superset))] string supersetExpression = "")
     {
@@ -159,9 +175,13 @@ public sealed partial class Assert
     #region IsNotSubsetOf
 
     /// <summary>
-    /// Tests whether one collection is not a subset of another collection and throws
-    /// an exception if all elements in the subset are also in the superset.
+    /// Tests whether one collection is not a subset of another collection (with multiplicity)
+    /// and throws an exception if every element in the subset occurs at least as many times in the superset.
     /// </summary>
+    /// <remarks>
+    /// Element multiplicity is significant: <c>[1, 1]</c> is considered not to be a subset of <c>[1]</c>
+    /// (so this assertion would pass for those inputs).
+    /// </remarks>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="subset">
     /// The collection expected not to be a subset of <paramref name="superset"/>.
@@ -171,7 +191,7 @@ public sealed partial class Assert
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when every element in <paramref name="subset"/>
-    /// is also found in <paramref name="superset"/>. The message is shown in test results.
+    /// is also found (with sufficient multiplicity) in <paramref name="superset"/>. The message is shown in test results.
     /// </param>
     /// <param name="subsetExpression">
     /// The syntactic expression of subset as given by the compiler via caller argument expression.
@@ -182,7 +202,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if all elements of <paramref name="subset"/> are contained in <paramref name="superset"/>.
+    /// Thrown if every element of <paramref name="subset"/> occurs at least as many times in <paramref name="superset"/>.
     /// </exception>
     public static void IsNotSubsetOf<T>([NotNull] IEnumerable<T>? subset, [NotNull] IEnumerable<T>? superset, string? message = "", [CallerArgumentExpression(nameof(subset))] string subsetExpression = "", [CallerArgumentExpression(nameof(superset))] string supersetExpression = "")
     {
@@ -192,9 +212,13 @@ public sealed partial class Assert
     }
 
     /// <summary>
-    /// Tests whether one collection is not a subset of another collection and throws
-    /// an exception if all elements in the subset are also in the superset.
+    /// Tests whether one collection is not a subset of another collection (with multiplicity)
+    /// and throws an exception if every element in the subset occurs at least as many times in the superset.
     /// </summary>
+    /// <remarks>
+    /// Element multiplicity is significant: <c>[1, 1]</c> is considered not to be a subset of <c>[1]</c>
+    /// (so this assertion would pass for those inputs).
+    /// </remarks>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="subset">
     /// The collection expected not to be a subset of <paramref name="superset"/>.
@@ -207,7 +231,7 @@ public sealed partial class Assert
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when every element in <paramref name="subset"/>
-    /// is also found in <paramref name="superset"/>. The message is shown in test results.
+    /// is also found (with sufficient multiplicity) in <paramref name="superset"/>. The message is shown in test results.
     /// </param>
     /// <param name="subsetExpression">
     /// The syntactic expression of subset as given by the compiler via caller argument expression.
@@ -218,7 +242,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if all elements of <paramref name="subset"/> are contained in <paramref name="superset"/>.
+    /// Thrown if every element of <paramref name="subset"/> occurs at least as many times in <paramref name="superset"/>.
     /// </exception>
     public static void IsNotSubsetOf<T>([NotNull] IEnumerable<T>? subset, [NotNull] IEnumerable<T>? superset, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(subset))] string subsetExpression = "", [CallerArgumentExpression(nameof(superset))] string supersetExpression = "")
     {
@@ -229,9 +253,13 @@ public sealed partial class Assert
     }
 
     /// <summary>
-    /// Tests whether one collection is not a subset of another collection and throws
-    /// an exception if all elements in the subset are also in the superset.
+    /// Tests whether one collection is not a subset of another collection (with multiplicity)
+    /// and throws an exception if every element in the subset occurs at least as many times in the superset.
     /// </summary>
+    /// <remarks>
+    /// Element multiplicity is significant: <c>[1, 1]</c> is considered not to be a subset of <c>[1]</c>
+    /// (so this assertion would pass for those inputs).
+    /// </remarks>
     /// <param name="subset">
     /// The collection expected not to be a subset of <paramref name="superset"/>.
     /// </param>
@@ -240,7 +268,7 @@ public sealed partial class Assert
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when every element in <paramref name="subset"/>
-    /// is also found in <paramref name="superset"/>. The message is shown in test results.
+    /// is also found (with sufficient multiplicity) in <paramref name="superset"/>. The message is shown in test results.
     /// </param>
     /// <param name="subsetExpression">
     /// The syntactic expression of subset as given by the compiler via caller argument expression.
@@ -251,7 +279,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if all elements of <paramref name="subset"/> are contained in <paramref name="superset"/>.
+    /// Thrown if every element of <paramref name="subset"/> occurs at least as many times in <paramref name="superset"/>.
     /// </exception>
     public static void IsNotSubsetOf([NotNull] IEnumerable? subset, [NotNull] IEnumerable? superset, string? message = "", [CallerArgumentExpression(nameof(subset))] string subsetExpression = "", [CallerArgumentExpression(nameof(superset))] string supersetExpression = "")
     {
@@ -262,9 +290,13 @@ public sealed partial class Assert
     }
 
     /// <summary>
-    /// Tests whether one collection is not a subset of another collection and throws
-    /// an exception if all elements in the subset are also in the superset.
+    /// Tests whether one collection is not a subset of another collection (with multiplicity)
+    /// and throws an exception if every element in the subset occurs at least as many times in the superset.
     /// </summary>
+    /// <remarks>
+    /// Element multiplicity is significant: <c>[1, 1]</c> is considered not to be a subset of <c>[1]</c>
+    /// (so this assertion would pass for those inputs).
+    /// </remarks>
     /// <param name="subset">
     /// The collection expected not to be a subset of <paramref name="superset"/>.
     /// </param>
@@ -276,7 +308,7 @@ public sealed partial class Assert
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when every element in <paramref name="subset"/>
-    /// is also found in <paramref name="superset"/>. The message is shown in test results.
+    /// is also found (with sufficient multiplicity) in <paramref name="superset"/>. The message is shown in test results.
     /// </param>
     /// <param name="subsetExpression">
     /// The syntactic expression of subset as given by the compiler via caller argument expression.
@@ -287,7 +319,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if all elements of <paramref name="subset"/> are contained in <paramref name="superset"/>.
+    /// Thrown if every element of <paramref name="subset"/> occurs at least as many times in <paramref name="superset"/>.
     /// </exception>
     public static void IsNotSubsetOf([NotNull] IEnumerable? subset, [NotNull] IEnumerable? superset, [NotNull] IEqualityComparer? comparer, string? message = "", [CallerArgumentExpression(nameof(subset))] string subsetExpression = "", [CallerArgumentExpression(nameof(superset))] string supersetExpression = "")
     {
@@ -318,7 +350,7 @@ public sealed partial class Assert
         List<T?> subsetList = subset is List<T?> sl ? sl : [.. subset];
         List<T?> supersetList = superset is List<T?> spl ? spl : [.. superset];
 
-        if (!TryFindMissingElements(subsetList, supersetList, comparer, out _))
+        if (!HasAnyMissingElement(subsetList, supersetList, comparer))
         {
             ReportAssertIsNotSubsetOfFailed(subsetList, supersetList, comparerName, message, subsetExpression, supersetExpression);
         }
@@ -374,6 +406,46 @@ public sealed partial class Assert
         }
 
         return missing is not null;
+    }
+
+    /// <summary>
+    /// Fast-path equivalent of <see cref="TryFindMissingElements{T}(IEnumerable{T}, IEnumerable{T}, IEqualityComparer{T}, out List{T})"/>
+    /// for the <c>IsNotSubsetOf</c> path: short-circuits as soon as a single uncovered element is found
+    /// and avoids allocating a missing-elements list when only the boolean answer is needed.
+    /// </summary>
+    private static bool HasAnyMissingElement<T>(IEnumerable<T?> subset, IEnumerable<T?> superset, IEqualityComparer<T> comparer)
+    {
+#pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
+        Dictionary<T, int> supersetCounts = CountElements(superset, comparer, out int supersetNulls);
+#pragma warning restore CS8714
+
+        foreach (T? element in subset)
+        {
+            if (element is null)
+            {
+                if (supersetNulls > 0)
+                {
+                    supersetNulls--;
+                }
+                else
+                {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if (supersetCounts.TryGetValue(element, out int remaining) && remaining > 0)
+            {
+                supersetCounts[element] = remaining - 1;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 #pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
