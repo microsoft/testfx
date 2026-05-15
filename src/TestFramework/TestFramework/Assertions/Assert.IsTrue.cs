@@ -38,7 +38,6 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                TelemetryCollector.TrackAssertionCall("Assert.IsTrue");
                 ReportAssertIsTrueFailed(_condition, _builder.ToString(), conditionExpression);
             }
         }
@@ -92,7 +91,6 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                TelemetryCollector.TrackAssertionCall("Assert.IsFalse");
                 ReportAssertIsFalseFailed(_condition, _builder.ToString(), conditionExpression);
             }
         }
@@ -130,7 +128,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message, [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(conditionExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsTrue");
+        message.ComputeAssertion(conditionExpression);
+    }
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -183,7 +184,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message, [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(conditionExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsFalse");
+        message.ComputeAssertion(conditionExpression);
+    }
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception

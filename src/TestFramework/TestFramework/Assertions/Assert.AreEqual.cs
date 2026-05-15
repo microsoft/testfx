@@ -81,13 +81,19 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreEqual<T>(T? expected, T? actual, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual))] ref AssertAreEqualInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(expectedExpression, actualExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreEqual");
+        message.ComputeAssertion(expectedExpression, actualExpression);
+    }
 
     /// <inheritdoc cref="AreEqual{T}(T, T, IEqualityComparer{T}?, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T>? comparer, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(comparer))] ref AssertAreEqualInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(expectedExpression, actualExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreEqual");
+        message.ComputeAssertion(expectedExpression, actualExpression);
+    }
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
@@ -299,13 +305,19 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotEqual<T>(T? notExpected, T? actual, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual))] ref AssertAreNotEqualInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(notExpectedExpression, actualExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreNotEqual");
+        message.ComputeAssertion(notExpectedExpression, actualExpression);
+    }
 
     /// <inheritdoc cref="AreNotEqual{T}(T, T, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T> comparer, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(comparer))] ref AssertAreNotEqualInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(notExpectedExpression, actualExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreNotEqual");
+        message.ComputeAssertion(notExpectedExpression, actualExpression);
+    }
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception

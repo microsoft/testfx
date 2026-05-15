@@ -38,7 +38,6 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                TelemetryCollector.TrackAssertionCall("Assert.IsNull");
                 ReportAssertIsNullFailed(_value, _builder.ToString(), valueExpression);
             }
         }
@@ -92,7 +91,6 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                TelemetryCollector.TrackAssertionCall("Assert.IsNotNull");
                 ReportAssertIsNotNullFailed(_builder.ToString(), valueExpression, "value");
             }
         }
@@ -130,7 +128,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsNull(object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNullInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(valueExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNull");
+        message.ComputeAssertion(valueExpression);
+    }
 
     /// <summary>
     /// Tests whether the specified object is null and throws an exception
@@ -183,7 +184,10 @@ public sealed partial class Assert
     public static void IsNotNull([NotNull] object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNotNullInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Deliberately keeping [NotNull] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
-        => message.ComputeAssertion(valueExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotNull");
+        message.ComputeAssertion(valueExpression);
+    }
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <summary>

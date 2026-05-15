@@ -56,7 +56,7 @@ internal class TypeEnumerator
 #if !WINDOWS_UWP && !WIN_UI
         if (Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector.Current is { } telemetryDataCollector)
         {
-            Attribute[] classAttributes = _reflectHelper.GetCustomAttributesCached(_type);
+            Attribute[] classAttributes = ReflectHelper.GetCustomAttributesCached(_type);
             telemetryDataCollector.TrackDiscoveredClass(classAttributes);
         }
 #endif

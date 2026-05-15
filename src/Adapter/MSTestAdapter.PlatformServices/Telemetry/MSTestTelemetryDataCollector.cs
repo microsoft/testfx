@@ -25,13 +25,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// </remarks>
 internal sealed class MSTestTelemetryDataCollector
 {
-    private readonly Dictionary<string, long> _attributeCounts = [];
+    private readonly ConcurrentDictionary<string, long> _attributeCounts = new();
+    private readonly object _customTypesGate = new();
     private readonly HashSet<string> _customTestMethodTypes = [];
     private readonly HashSet<string> _customTestClassTypes = [];
 
 #pragma warning disable IDE0032 // Use auto property - Volatile.Read/Write requires a ref to a field
     private static MSTestTelemetryDataCollector? s_current;
     private static int s_discoveryEventEmitted;
+
+    // Volatile because ConfigurationSource is written from the discovery thread (e.g. settings
+    // load) and read from whichever thread runs SendDiscoveryTelemetryAndResetAsync — without
+    // a memory barrier the reader could in principle observe a stale null.
+    private volatile string? _configurationSource;
 #pragma warning restore IDE0032 // Use auto property
 
     /// <summary>
@@ -79,10 +85,16 @@ internal sealed class MSTestTelemetryDataCollector
     /// <summary>
     /// Gets or sets the configuration source used for this session.
     /// </summary>
-    internal string? ConfigurationSource { get; set; }
+    internal string? ConfigurationSource
+    {
+        get => _configurationSource;
+        set => _configurationSource = value;
+    }
 
     /// <summary>
-    /// Records the attributes found on a test method during discovery.
+    /// Records the attributes found on a test method during discovery. Safe to call concurrently
+    /// from multiple discovery threads — counters use a <see cref="ConcurrentDictionary{TKey,TValue}"/>
+    /// and the custom-type sets are protected by an internal lock.
     /// </summary>
     /// <param name="attributes">The cached attributes from the method.</param>
     internal void TrackDiscoveredMethod(Attribute[] attributes)
@@ -95,13 +107,13 @@ internal sealed class MSTestTelemetryDataCollector
             // Track custom/inherited TestMethodAttribute types (store anonymized hash)
             if (attribute is TestMethodAttribute && attributeType != typeof(TestMethodAttribute))
             {
-                _customTestMethodTypes.Add(AnonymizeString(attributeType.FullName ?? attributeName));
+                AddCustomType(_customTestMethodTypes, AnonymizeString(attributeType.FullName ?? attributeName));
             }
 
             // Track custom/inherited TestClassAttribute types (store anonymized hash)
             if (attribute is TestClassAttribute && attributeType != typeof(TestClassAttribute))
             {
-                _customTestClassTypes.Add(AnonymizeString(attributeType.FullName ?? attributeName));
+                AddCustomType(_customTestClassTypes, AnonymizeString(attributeType.FullName ?? attributeName));
             }
 
             // Track attribute usage counts by base type name (only known MSTest attributes)
@@ -125,15 +137,15 @@ internal sealed class MSTestTelemetryDataCollector
 
             if (trackingName is not null)
             {
-                _attributeCounts[trackingName] = _attributeCounts.TryGetValue(trackingName, out long count)
-                    ? count + 1
-                    : 1;
+                _attributeCounts.AddOrUpdate(trackingName, 1, static (_, count) => count + 1);
             }
         }
     }
 
     /// <summary>
-    /// Records the attributes found on a test class during discovery.
+    /// Records the attributes found on a test class during discovery. Safe to call concurrently
+    /// from multiple discovery threads — counters use a <see cref="ConcurrentDictionary{TKey,TValue}"/>
+    /// and the custom-type sets are protected by an internal lock.
     /// </summary>
     /// <param name="attributes">The cached attributes from the class.</param>
     internal void TrackDiscoveredClass(Attribute[] attributes)
@@ -145,7 +157,7 @@ internal sealed class MSTestTelemetryDataCollector
             // Track custom/inherited TestClassAttribute types (store anonymized hash)
             if (attribute is TestClassAttribute && attributeType != typeof(TestClassAttribute))
             {
-                _customTestClassTypes.Add(AnonymizeString(attributeType.FullName ?? attributeType.Name));
+                AddCustomType(_customTestClassTypes, AnonymizeString(attributeType.FullName ?? attributeType.Name));
             }
 
             string? trackingName = attribute switch
@@ -158,10 +170,16 @@ internal sealed class MSTestTelemetryDataCollector
 
             if (trackingName is not null)
             {
-                _attributeCounts[trackingName] = _attributeCounts.TryGetValue(trackingName, out long count)
-                    ? count + 1
-                    : 1;
+                _attributeCounts.AddOrUpdate(trackingName, 1, static (_, count) => count + 1);
             }
+        }
+    }
+
+    private void AddCustomType(HashSet<string> set, string value)
+    {
+        lock (_customTypesGate)
+        {
+            set.Add(value);
         }
     }
 
@@ -213,26 +231,38 @@ internal sealed class MSTestTelemetryDataCollector
         AddSettingsMetrics(metrics);
 
         // Configuration source (runsettings, testconfig.json, or none)
-        if (ConfigurationSource is not null)
+        if (ConfigurationSource is { } configSource)
         {
-            metrics["mstest.config_source"] = ConfigurationSource;
+            metrics["mstest.config_source"] = configSource;
         }
 
         // Attribute usage (aggregated counts as JSON; serializer enforces ordinal sort)
-        if (_attributeCounts.Count > 0)
+        if (!_attributeCounts.IsEmpty)
         {
             metrics["mstest.attribute_usage"] = SerializeDictionary(_attributeCounts);
         }
 
         // Custom/inherited types (anonymized names; serializer enforces ordinal sort)
-        if (_customTestMethodTypes.Count > 0)
+        // Take a snapshot under the lock that protects the HashSet to avoid concurrent
+        // modification while serializing.
+        string[]? customMethodTypesSnapshot = SnapshotCustomTypes(_customTestMethodTypes);
+        if (customMethodTypesSnapshot is { Length: > 0 })
         {
-            metrics["mstest.custom_test_method_types"] = SerializeCollection(_customTestMethodTypes);
+            metrics["mstest.custom_test_method_types"] = SerializeCollection(customMethodTypesSnapshot);
         }
 
-        if (_customTestClassTypes.Count > 0)
+        string[]? customClassTypesSnapshot = SnapshotCustomTypes(_customTestClassTypes);
+        if (customClassTypesSnapshot is { Length: > 0 })
         {
-            metrics["mstest.custom_test_class_types"] = SerializeCollection(_customTestClassTypes);
+            metrics["mstest.custom_test_class_types"] = SerializeCollection(customClassTypesSnapshot);
+        }
+    }
+
+    private string[]? SnapshotCustomTypes(HashSet<string> set)
+    {
+        lock (_customTypesGate)
+        {
+            return set.Count == 0 ? null : [.. set];
         }
     }
 
@@ -338,17 +368,19 @@ internal sealed class MSTestTelemetryDataCollector
 
         if (settings.ParallelizationWorkers is not null)
         {
-            metrics["mstest.setting.parallelization_workers"] = settings.ParallelizationWorkers.Value;
+            // Cast to double so AppInsightsProvider routes this through the metric channel
+            // instead of stringifying it as a property — see AppInsightsProvider.SendLoopAsync.
+            metrics["mstest.setting.parallelization_workers"] = (double)settings.ParallelizationWorkers.Value;
         }
 
-        // Timeouts
-        metrics["mstest.setting.test_timeout"] = settings.TestTimeout;
-        metrics["mstest.setting.assembly_initialize_timeout"] = settings.AssemblyInitializeTimeout;
-        metrics["mstest.setting.assembly_cleanup_timeout"] = settings.AssemblyCleanupTimeout;
-        metrics["mstest.setting.class_initialize_timeout"] = settings.ClassInitializeTimeout;
-        metrics["mstest.setting.class_cleanup_timeout"] = settings.ClassCleanupTimeout;
-        metrics["mstest.setting.test_initialize_timeout"] = settings.TestInitializeTimeout;
-        metrics["mstest.setting.test_cleanup_timeout"] = settings.TestCleanupTimeout;
+        // Timeouts (cast to double for the same reason as parallelization_workers above).
+        metrics["mstest.setting.test_timeout"] = (double)settings.TestTimeout;
+        metrics["mstest.setting.assembly_initialize_timeout"] = (double)settings.AssemblyInitializeTimeout;
+        metrics["mstest.setting.assembly_cleanup_timeout"] = (double)settings.AssemblyCleanupTimeout;
+        metrics["mstest.setting.class_initialize_timeout"] = (double)settings.ClassInitializeTimeout;
+        metrics["mstest.setting.class_cleanup_timeout"] = (double)settings.ClassCleanupTimeout;
+        metrics["mstest.setting.test_initialize_timeout"] = (double)settings.TestInitializeTimeout;
+        metrics["mstest.setting.test_cleanup_timeout"] = (double)settings.TestCleanupTimeout;
         metrics["mstest.setting.cooperative_cancellation"] = AsTelemetryBool(settings.CooperativeCancellationTimeout);
 
         // Behavior

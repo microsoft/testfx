@@ -227,14 +227,20 @@ public sealed partial class Assert
     public static TException Throws<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertNonStrictThrowsInterpolatedStringHandler<TException> message, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
-        => message.ComputeAssertion(actionExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.Throws");
+        return message.ComputeAssertion(actionExpression);
+    }
 
     /// <inheritdoc cref="Throws{TException}(Action, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static TException Throws<TException>(Func<object?> action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertNonStrictThrowsInterpolatedStringHandler<TException> message, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
-        => message.ComputeAssertion(actionExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.Throws");
+        return message.ComputeAssertion(actionExpression);
+    }
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
@@ -307,19 +313,25 @@ public sealed partial class Assert
     public static TException ThrowsExactly<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertThrowsExactlyInterpolatedStringHandler<TException> message, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
-        => message.ComputeAssertion(actionExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.ThrowsExactly");
+        return message.ComputeAssertion(actionExpression);
+    }
 
     /// <inheritdoc cref="ThrowsExactly{TException}(Action, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static TException ThrowsExactly<TException>(Func<object?> action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertThrowsExactlyInterpolatedStringHandler<TException> message, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
-        => message.ComputeAssertion(actionExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.ThrowsExactly");
+        return message.ComputeAssertion(actionExpression);
+    }
 
     private static TException ThrowsException<TException>(Action action, bool isStrictType, string? message, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
-        TelemetryCollector.TrackAssertionCall(string.Concat("Assert.", assertMethodName));
+        TelemetryCollector.TrackAssertionCall(GetTrackedThrowsName(assertMethodName));
 
         _ = action ?? throw new ArgumentNullException(nameof(action));
         _ = message ?? throw new ArgumentNullException(nameof(message));
@@ -341,7 +353,7 @@ public sealed partial class Assert
     private static TException ThrowsException<TException>(Action action, bool isStrictType, Func<Exception?, string> messageBuilder, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
-        TelemetryCollector.TrackAssertionCall(string.Concat("Assert.", assertMethodName));
+        TelemetryCollector.TrackAssertionCall(GetTrackedThrowsName(assertMethodName));
 
         _ = action ?? throw new ArgumentNullException(nameof(action));
         _ = messageBuilder ?? throw new ArgumentNullException(nameof(messageBuilder));
@@ -479,7 +491,7 @@ public sealed partial class Assert
     private static async Task<TException> ThrowsExceptionAsync<TException>(Func<Task> action, bool isStrictType, string? message, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
-        TelemetryCollector.TrackAssertionCall(string.Concat("Assert.", assertMethodName));
+        TelemetryCollector.TrackAssertionCall(GetTrackedThrowsName(assertMethodName));
 
         _ = action ?? throw new ArgumentNullException(nameof(action));
         _ = message ?? throw new ArgumentNullException(nameof(message));
@@ -501,7 +513,7 @@ public sealed partial class Assert
     private static async Task<TException> ThrowsExceptionAsync<TException>(Func<Task> action, bool isStrictType, Func<Exception?, string> messageBuilder, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
-        TelemetryCollector.TrackAssertionCall(string.Concat("Assert.", assertMethodName));
+        TelemetryCollector.TrackAssertionCall(GetTrackedThrowsName(assertMethodName));
 
         _ = action ?? throw new ArgumentNullException(nameof(action));
         _ = messageBuilder ?? throw new ArgumentNullException(nameof(messageBuilder));
@@ -681,4 +693,17 @@ public sealed partial class Assert
         public static ThrowsExceptionState CreateNotFailingState(Exception exception)
             => new(ThrowsFailureKind.NotFailing, exception);
     }
+
+    // assertMethodName comes from [CallerMemberName] for the Throws/ThrowsExactly/ThrowsAsync/
+    // ThrowsExactlyAsync helpers — a small fixed set. Use a switch to avoid allocating a fresh
+    // "Assert." + name string on every call.
+    private static string GetTrackedThrowsName(string assertMethodName)
+        => assertMethodName switch
+        {
+            "Throws" => "Assert.Throws",
+            "ThrowsExactly" => "Assert.ThrowsExactly",
+            "ThrowsAsync" => "Assert.ThrowsAsync",
+            "ThrowsExactlyAsync" => "Assert.ThrowsExactlyAsync",
+            _ => string.Concat("Assert.", assertMethodName),
+        };
 }

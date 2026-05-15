@@ -80,7 +80,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreEqual(string? expected, string? actual, bool ignoreCase, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(ignoreCase))] ref AssertNonGenericAreEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(expectedExpression, actualExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreEqual");
+        message.ComputeAssertion(expectedExpression, actualExpression);
+    }
 
     /// <inheritdoc cref="AreEqual(string?, string?, bool, CultureInfo, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -88,6 +91,7 @@ public sealed partial class Assert
 #pragma warning restore IDE0060 // Remove unused parameter
         CultureInfo culture, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(ignoreCase), nameof(culture))] ref AssertNonGenericAreEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreEqual");
         CheckParameterNotNull(culture, "Assert.AreEqual", nameof(culture));
         message.ComputeAssertion(expectedExpression, actualExpression);
     }
@@ -177,7 +181,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(ignoreCase))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(notExpectedExpression, actualExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreNotEqual");
+        message.ComputeAssertion(notExpectedExpression, actualExpression);
+    }
 
     /// <inheritdoc cref="AreNotEqual(string?, string?, bool, CultureInfo, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -185,6 +192,7 @@ public sealed partial class Assert
 #pragma warning restore IDE0060 // Remove unused parameter
         CultureInfo culture, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(ignoreCase), nameof(culture))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreNotEqual");
         CheckParameterNotNull(culture, "Assert.AreNotEqual", nameof(culture));
         message.ComputeAssertion(notExpectedExpression, actualExpression);
     }
