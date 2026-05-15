@@ -18,6 +18,35 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
         Assert.IsNotNull(dumpFile, $"Dump file not found '{tfm}'\n{testHostResult}'");
     }
 
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task CrashDump_TesthostAndChildBothCrash_CollectsAllDumps(string tfm)
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--crashdump --results-directory {resultDirectory}",
+            new Dictionary<string, string?>
+            {
+                { "CRASHDUMP_SPAWN_CHILD_THAT_CRASHES", "1" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+
+        // Both the testhost and its child process crash with FailFast and must produce a dump each.
+        // Without the fix for https://github.com/microsoft/testfx/issues/4186, only the dump matching
+        // the testhost's PID was reported as an artifact and the child dump was silently dropped.
+        string[] dumpFiles = Directory.GetFiles(resultDirectory, "CrashDump_*.dmp", SearchOption.AllDirectories);
+        Assert.HasCount(2, dumpFiles, $"Expected dumps for both the testhost and the child process '{tfm}'.\n{testHostResult}");
+
+        // Both dumps must also be reported as out-of-process file artifacts so they show up to the user.
+        testHostResult.AssertOutputContains("Out of process file artifacts produced:");
+        foreach (string dumpFile in dumpFiles)
+        {
+            testHostResult.AssertOutputContains(Path.GetFileName(dumpFile));
+        }
+    }
+
     [TestMethod]
     public async Task CrashDump_CustomDumpName_CreateDump()
     {
@@ -81,6 +110,8 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
 
 #file Program.cs
 using System;
+using System.Diagnostics;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
@@ -97,6 +128,14 @@ public class Startup
 {
     public static async Task<int> Main(string[] args)
     {
+        // When invoked as a child process spawned by the testhost, just crash so we produce
+        // an additional dump in the same directory using the dump env vars inherited from the parent.
+        if (args.Length > 0 && args[0] == "--child-crash")
+        {
+            Environment.FailFast("ChildCrashDump");
+            return 0; // unreachable
+        }
+
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestFramework());
         builder.AddCrashDumpProvider();
@@ -125,6 +164,25 @@ public class DummyTestFramework : ITestFramework
 
     public Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        // Optionally spawn a child process that also crashes (and produces its own dump) so we can
+        // exercise the crashdump extension's ability to collect dumps from child processes.
+        if (Environment.GetEnvironmentVariable("CRASHDUMP_SPAWN_CHILD_THAT_CRASHES") == "1")
+        {
+            Process self = Process.GetCurrentProcess();
+            string path = self.MainModule!.FileName!;
+            string argPrefix = path.EndsWith("dotnet") || path.EndsWith("dotnet.exe")
+                ? $"exec \"{Assembly.GetEntryAssembly()!.Location}\" "
+                : string.Empty;
+
+            Process child = Process.Start(new ProcessStartInfo(path, $"{argPrefix}--child-crash")
+            {
+                UseShellExecute = false,
+            })!;
+
+            // Wait for the child to fully exit so its crash dump is written before we crash too.
+            child.WaitForExit();
+        }
+
         Environment.FailFast("CrashDump");
         context.Complete();
         return Task.CompletedTask;
