@@ -112,6 +112,30 @@ public sealed class CommandLineParseResultTests
     }
 
     [TestMethod]
+    public void TryGetOptionArgumentList_IsCaseSensitive()
+    {
+        var result = new CommandLineParseResult(null, [new CommandLineParseOption("output", ["file.txt"])], []);
+
+        bool found = result.TryGetOptionArgumentList("OUTPUT", out string[]? args);
+
+        Assert.IsFalse(found);
+        Assert.IsNull(args);
+    }
+
+    [TestMethod]
+    public void TryGetOptionArgumentList_StripsLeadingDashes()
+    {
+        var result = new CommandLineParseResult(null, [new CommandLineParseOption("output", ["file.txt"])], []);
+
+        bool found = result.TryGetOptionArgumentList("--output", out string[]? args);
+
+        Assert.IsTrue(found);
+        Assert.IsNotNull(args);
+        Assert.HasCount(1, args);
+        Assert.AreEqual("file.txt", args[0]);
+    }
+
+    [TestMethod]
     public void TryGetOptionArgumentList_CombinesArgumentsFromMultipleOccurrences()
     {
         var result = new CommandLineParseResult(
@@ -200,6 +224,7 @@ public sealed class CommandLineParseResultTests
     {
         string text = CommandLineParseResult.Empty.ToString();
 
-        Assert.IsTrue(text.Contains("None", StringComparison.Ordinal));
+        Assert.IsTrue(text.Contains($"Errors:{Environment.NewLine}    None", StringComparison.Ordinal));
+        Assert.IsTrue(text.Contains($"Options:{Environment.NewLine}    None", StringComparison.Ordinal));
     }
 }
