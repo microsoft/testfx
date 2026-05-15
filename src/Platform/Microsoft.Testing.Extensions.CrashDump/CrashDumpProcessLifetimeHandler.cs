@@ -65,21 +65,62 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         ApplicationStateGuard.Ensure(_netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern is not null);
         await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpFileCreated, testHostProcessInformation.PID)), cancellationToken).ConfigureAwait(false);
 
-        // TODO: Crash dump supports more placeholders that we don't handle here.
+        // The crash dump file name pattern can contain placeholders such as %p (PID), %e (process exe name),
+        // %h (hostname), %t (timestamp), etc. that are expanded by the .NET runtime when it writes the dump.
         // See "Dump name formatting" in:
-        // https://github.com/dotnet/runtime/blob/82742628310076fff22d7e7ee216a74384352056/docs/design/coreclr/botr/xplat-minidump-generation.md
-        string expectedDumpFile = _netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern.Replace("%p", testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
-        if (File.Exists(expectedDumpFile))
+        // https://github.com/dotnet/runtime/blob/main/docs/design/coreclr/botr/xplat-minidump-generation.md
+        // We replace every placeholder with a wildcard so we can collect not just the testhost dump but also
+        // dumps produced by any of its child processes that may have crashed alongside it.
+        string dumpFileNamePattern = _netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern;
+        string? dumpDirectory = Path.GetDirectoryName(dumpFileNamePattern);
+        string searchPattern = ReplaceCrashDumpPlaceholdersWithWildcard(Path.GetFileName(dumpFileNamePattern));
+
+        bool publishedAny = false;
+        if (dumpDirectory is not null && Directory.Exists(dumpDirectory))
         {
-            await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(expectedDumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
-        }
-        else
-        {
-            await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashDumpFile, expectedDumpFile)), cancellationToken).ConfigureAwait(false);
-            foreach (string dumpFile in Directory.GetFiles(Path.GetDirectoryName(expectedDumpFile)!, "*.dmp"))
+            foreach (string dumpFile in Directory.EnumerateFiles(dumpDirectory, searchPattern))
             {
-                await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
+                await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
+                publishedAny = true;
             }
         }
+
+        if (!publishedAny)
+        {
+            string expectedDumpFile = dumpFileNamePattern.Replace("%p", testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
+            await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashDumpFile, expectedDumpFile)), cancellationToken).ConfigureAwait(false);
+            if (dumpDirectory is not null && Directory.Exists(dumpDirectory))
+            {
+                foreach (string dumpFile in Directory.EnumerateFiles(dumpDirectory, "*.dmp"))
+                {
+                    await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
+                }
+            }
+        }
+    }
+
+    internal static string ReplaceCrashDumpPlaceholdersWithWildcard(string fileName)
+    {
+        var sb = new StringBuilder(fileName.Length);
+        for (int i = 0; i < fileName.Length; i++)
+        {
+            if (fileName[i] == '%' && i + 1 < fileName.Length)
+            {
+                // Replace any %X placeholder with '*'. Collapse consecutive wildcards to keep the search
+                // pattern minimal and avoid confusing search engines with redundant '**' sequences.
+                if (sb.Length == 0 || sb[sb.Length - 1] != '*')
+                {
+                    sb.Append('*');
+                }
+
+                i++;
+            }
+            else
+            {
+                sb.Append(fileName[i]);
+            }
+        }
+
+        return sb.ToString();
     }
 }

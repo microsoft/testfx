@@ -46,4 +46,17 @@ public sealed class CrashDumpTests
         Assert.IsTrue(validateOptionsResult.IsValid);
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
+
+    [TestMethod]
+    [DataRow("MyApp_%p_crash.dmp", "MyApp_*_crash.dmp")]
+    [DataRow("%e_%p_crash.dmp", "*_*_crash.dmp")]
+    [DataRow("%p%t_crash.dmp", "*_crash.dmp")]
+    [DataRow("customdumpname.dmp", "customdumpname.dmp")]
+    [DataRow("dump_%p_%t_%h.dmp", "dump_*_*_*.dmp")]
+    [DataRow("trailing%", "trailing%")]
+    public void ReplaceCrashDumpPlaceholdersWithWildcard_ConvertsPlaceholdersToWildcards(string fileName, string expected)
+    {
+        string actual = CrashDumpProcessLifetimeHandler.ReplaceCrashDumpPlaceholdersWithWildcard(fileName);
+        Assert.AreEqual(expected, actual);
+    }
 }
