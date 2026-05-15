@@ -420,4 +420,13 @@ Actual: {2}</value>
   <data name="IsNotNullFailedSummary" xml:space="preserve">
     <value>Expected value to not be null.</value>
   </data>
+  <data name="HasCountFailedSummary" xml:space="preserve">
+    <value>Expected collection to contain a specific number of elements.</value>
+  </data>
+  <data name="IsEmptyFailedSummary" xml:space="preserve">
+    <value>Expected collection to be empty.</value>
+  </data>
+  <data name="IsNotEmptyFailedSummary" xml:space="preserve">
+    <value>Expected collection to not be empty.</value>
+  </data>
 </root>

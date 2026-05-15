@@ -262,6 +262,11 @@ Tatsächlich: {2}</target>
         <target state="translated">Es wurde eine Sammlung mit einer Größe {1} erwartet. Tatsächlich: {2}. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="HasCountFailedSummary">
+        <source>Expected collection to contain a specific number of elements.</source>
+        <target state="new">Expected collection to contain a specific number of elements.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidAccessToTestContextProperty">
         <source>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</source>
         <target state="translated">Die Eigenschaft „TestContext.{0}“ im Zusammenhang mit dem aktuellen Test steht während Assembly- oder Klassenfixierungen nicht zur Verfügung.</target>
@@ -270,6 +275,11 @@ Tatsächlich: {2}</target>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
         <target state="translated">Ungültige GitHub-Ticket-URL.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsEmptyFailedSummary">
+        <source>Expected collection to be empty.</source>
+        <target state="new">Expected collection to be empty.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsFalseFailedSummary">
@@ -300,6 +310,11 @@ Tatsächlich: {2}</target>
       <trans-unit id="IsNotEmptyFailMsg">
         <source>Expected collection to contain any item but it is empty. {0}</source>
         <target state="translated">Es wurde erwartet, dass die Sammlung ein beliebiges Element enthält, aber leer ist. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsNotEmptyFailedSummary">
+        <source>Expected collection to not be empty.</source>
+        <target state="new">Expected collection to not be empty.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">

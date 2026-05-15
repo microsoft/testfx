@@ -47,8 +47,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
-                ReportAssertCountFailed(assertionName, _expectedCount, _actualCount, _builder.ToString());
+                ReportAssertCountFailed(assertionName, _expectedCount, _actualCount, _builder.ToString(), collectionExpression);
             }
         }
 
@@ -115,8 +114,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
-                ReportAssertIsNotEmptyFailed(_builder.ToString());
+                ReportAssertIsNotEmptyFailed(_builder.ToString(), collectionExpression);
             }
         }
 
@@ -202,8 +200,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-        ReportAssertIsNotEmptyFailed(userMessage);
+        ReportAssertIsNotEmptyFailed(message, collectionExpression);
     }
 
     /// <summary>
@@ -222,8 +219,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-        ReportAssertIsNotEmptyFailed(userMessage);
+        ReportAssertIsNotEmptyFailed(message, collectionExpression);
     }
     #endregion // IsNotEmpty
 
@@ -326,32 +322,47 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-        ReportAssertCountFailed(assertionName, expected, actualCount, userMessage);
+        ReportAssertCountFailed(assertionName, expected, actualCount, message, collectionExpression);
     }
 
     private static void HasCount(string assertionName, int expected, IEnumerable collection, string? message, string collectionExpression)
         => HasCount(assertionName, expected, collection.Cast<object>(), message, collectionExpression);
 
     [DoesNotReturn]
-    private static void ReportAssertCountFailed(string assertionName, int expectedCount, int actualCount, string userMessage)
+    private static void ReportAssertCountFailed(string assertionName, int expectedCount, int actualCount, string? userMessage, string collectionExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.HasCountFailMsg,
-            userMessage,
-            expectedCount,
-            actualCount);
-        ReportAssertFailed($"Assert.{assertionName}", finalMessage);
+        string summary = assertionName == "IsEmpty"
+            ? FrameworkMessages.IsEmptyFailedSummary
+            : FrameworkMessages.HasCountFailedSummary;
+
+        string expectedText = expectedCount.ToString(CultureInfo.CurrentCulture);
+        string actualText = actualCount.ToString(CultureInfo.CurrentCulture);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected count:", expectedText)
+            .AddLine("actual count:", actualText);
+
+        StructuredAssertionMessage structured = new(summary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedText, actualText);
+        structured.WithCallSiteExpression(assertionName == "IsEmpty"
+            ? FormatCallSiteExpression($"Assert.{assertionName}", collectionExpression, "<collection>")
+            : FormatCallSiteExpression($"Assert.{assertionName}", expectedText, collectionExpression, "<expected>", "<collection>"));
+
+        ReportAssertFailed(structured);
     }
 
     [DoesNotReturn]
-    private static void ReportAssertIsNotEmptyFailed(string userMessage)
+    private static void ReportAssertIsNotEmptyFailed(string? userMessage, string collectionExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.IsNotEmptyFailMsg,
-            userMessage);
-        ReportAssertFailed("Assert.IsNotEmpty", finalMessage);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("actual count:", "0");
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.IsNotEmptyFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotEmpty", collectionExpression, "<collection>"));
+
+        ReportAssertFailed(structured);
     }
 }

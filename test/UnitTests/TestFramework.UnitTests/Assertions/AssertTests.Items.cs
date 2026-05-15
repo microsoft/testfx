@@ -25,7 +25,15 @@ public partial class AssertTests
         var collection = new List<int> { 1 };
         Action action = () => Assert.HasCount(3, collection);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.HasCount failed. Expected collection of size 3. Actual: 1. 'collection' expression: 'collection'.");
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to contain a specific number of elements.
+
+                expected count: 3
+                actual count:   1
+
+                Assert.HasCount(3, collection)
+                """);
     }
 
     public async Task Count_InterpolatedString_WhenCountIsNotSame_ShouldFail()
@@ -34,7 +42,16 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.HasCount(1, Array.Empty<int>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.HasCount failed. Expected collection of size 1. Actual: 0. 'collection' expression: 'Array.Empty<int>()'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage(
+                $$"""
+                Assertion failed. Expected collection to contain a specific number of elements.
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {{string.Format(null, "{0:tt}", dateTime)}}, {{string.Format(null, "{0,5:tt}", dateTime)}}
+
+                expected count: 1
+                actual count:   0
+
+                Assert.HasCount(1, Array.Empty<int>())
+                """);
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -53,7 +70,15 @@ public partial class AssertTests
         var collection = new List<int> { 1 };
         Action action = () => Assert.IsEmpty(collection);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsEmpty failed. Expected collection of size 0. Actual: 1. 'collection' expression: 'collection'.");
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to be empty.
+
+                expected count: 0
+                actual count:   1
+
+                Assert.IsEmpty(collection)
+                """);
     }
 
     public async Task NotAny_InterpolatedString_WhenNotEmpty_ShouldFail()
@@ -63,7 +88,16 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsEmpty(collection, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.IsEmpty failed. Expected collection of size 0. Actual: 1. 'collection' expression: 'collection'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage(
+                $$"""
+                Assertion failed. Expected collection to be empty.
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {{string.Format(null, "{0:tt}", dateTime)}}, {{string.Format(null, "{0,5:tt}", dateTime)}}
+
+                expected count: 0
+                actual count:   1
+
+                Assert.IsEmpty(collection)
+                """);
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -194,7 +228,14 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsNotEmpty(Array.Empty<int>());
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsNotEmpty failed. Expected collection to contain any item but it is empty. 'collection' expression: 'Array.Empty<int>()'.");
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to not be empty.
+
+                actual count: 0
+
+                Assert.IsNotEmpty(Array.Empty<int>())
+                """);
     }
 
     public async Task Any_InterpolatedString_WhenNoItem_ShouldFail()
@@ -203,7 +244,15 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsNotEmpty(Array.Empty<string>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.IsNotEmpty failed. Expected collection to contain any item but it is empty. 'collection' expression: 'Array.Empty<string>()'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage(
+                $$"""
+                Assertion failed. Expected collection to not be empty.
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {{string.Format(null, "{0:tt}", dateTime)}}, {{string.Format(null, "{0,5:tt}", dateTime)}}
+
+                actual count: 0
+
+                Assert.IsNotEmpty(Array.Empty<string>())
+                """);
         o.WasToStringCalled.Should().BeTrue();
     }
 }
