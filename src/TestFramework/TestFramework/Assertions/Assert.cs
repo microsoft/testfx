@@ -307,9 +307,6 @@ public sealed partial class Assert
     private static string BuildUserMessageForNotExpectedPrefixExpressionAndValueExpression(string? format, string notExpectedPrefixExpression, string valueExpression)
         => BuildUserMessageForTwoExpressions(format, notExpectedPrefixExpression, "notExpectedPrefix", valueExpression, "value");
 
-    private static string BuildUserMessageForPatternExpressionAndValueExpression(string? format, string patternExpression, string valueExpression)
-        => BuildUserMessageForTwoExpressions(format, patternExpression, "pattern", valueExpression, "value");
-
     private static string BuildUserMessageForLowerBoundExpressionAndValueExpression(string? format, string lowerBoundExpression, string valueExpression)
         => BuildUserMessageForTwoExpressions(format, lowerBoundExpression, "lowerBound", valueExpression, "value");
 

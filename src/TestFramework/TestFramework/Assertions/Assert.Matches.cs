@@ -44,10 +44,26 @@ public sealed partial class Assert
 
         if (!pattern.IsMatch(value))
         {
-            string userMessage = BuildUserMessageForPatternExpressionAndValueExpression(message, patternExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsMatchFail, value, pattern, userMessage);
-            ReportAssertFailed("Assert.MatchesRegex", finalMessage);
+            ReportAssertMatchesRegexFailed(pattern, value, message, patternExpression, valueExpression);
         }
+    }
+
+    [DoesNotReturn]
+    private static void ReportAssertMatchesRegexFailed(Regex pattern, string value, string? userMessage, string patternExpression, string valueExpression)
+    {
+        string patternText = AssertionValueRenderer.RenderValue(pattern.ToString());
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected pattern:", patternText)
+            .AddLine("actual:", actualText);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.MatchesRegexFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(patternText, actualText);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.MatchesRegex", patternExpression, valueExpression, "<pattern>", "<value>"));
+
+        ReportAssertFailed(structured);
     }
 
     /// <summary>
@@ -120,10 +136,26 @@ public sealed partial class Assert
 
         if (pattern.IsMatch(value))
         {
-            string userMessage = BuildUserMessageForPatternExpressionAndValueExpression(message, patternExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsNotMatchFail, value, pattern, userMessage);
-            ReportAssertFailed("Assert.DoesNotMatchRegex", finalMessage);
+            ReportAssertDoesNotMatchRegexFailed(pattern, value, message, patternExpression, valueExpression);
         }
+    }
+
+    [DoesNotReturn]
+    private static void ReportAssertDoesNotMatchRegexFailed(Regex pattern, string value, string? userMessage, string patternExpression, string valueExpression)
+    {
+        string patternText = AssertionValueRenderer.RenderValue(pattern.ToString());
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("unexpected pattern:", patternText)
+            .AddLine("actual:", actualText);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.DoesNotMatchRegexFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(patternText, actualText);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.DoesNotMatchRegex", patternExpression, valueExpression, "<pattern>", "<value>"));
+
+        ReportAssertFailed(structured);
     }
 
     /// <summary>

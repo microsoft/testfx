@@ -203,6 +203,11 @@
         <target state="translated">'{0}' dizesi '{1}' dizesi ile bitiyor. {2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoesNotMatchRegexFailedSummary">
+        <source>Expected string to not match the specified regular expression.</source>
+        <target state="new">Expected string to not match the specified regular expression.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
         <source>String '{0}' starts with string '{1}'. {2}</source>
         <target state="translated">'{0}' dizesi '{1}' dizesi ile başlıyor. {2}</target>
@@ -335,6 +340,11 @@ Gerçekte olan: {2}</target>
       <trans-unit id="IsTrueFailedSummary">
         <source>Expected condition to be true.</source>
         <target state="new">Expected condition to be true.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MatchesRegexFailedSummary">
+        <source>Expected string to match the specified regular expression.</source>
+        <target state="new">Expected string to match the specified regular expression.</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
