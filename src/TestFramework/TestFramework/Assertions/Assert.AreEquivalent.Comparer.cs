@@ -11,6 +11,7 @@ public sealed partial class Assert
     private sealed class EquivalenceComparer
     {
         // Member info caches keyed by runtime type.
+        private const int MaxComparisonDepth = 256;
         private static readonly ConcurrentDictionary<Type, MemberLookup> MemberCache = new();
         private static readonly ConcurrentDictionary<Type, MethodInfo?> IEquatableEqualsCache = new();
         private static readonly ConcurrentDictionary<Type, bool> IsPrimitiveLikeCache = new();
@@ -31,9 +32,9 @@ public sealed partial class Assert
             => _strict = strict;
 
         internal EquivalenceMismatch? Compare<T>(T? expected, T? actual)
-            => Compare(expected, actual, typeof(T), path: string.Empty);
+            => Compare(expected, actual, typeof(T), path: string.Empty, depth: 0);
 
-        private EquivalenceMismatch? Compare(object? expected, object? actual, Type declaredType, string path)
+        private EquivalenceMismatch? Compare(object? expected, object? actual, Type declaredType, string path, int depth)
         {
             if (ReferenceEquals(expected, actual))
             {
@@ -45,15 +46,32 @@ public sealed partial class Assert
                 return EquivalenceMismatch.NullMismatch(path, expected, actual);
             }
 
+            if (depth > MaxComparisonDepth)
+            {
+                return EquivalenceMismatch.MaxDepthExceeded(path, MaxComparisonDepth);
+            }
+
             Type expectedRuntimeType = expected.GetType();
             Type actualRuntimeType = actual.GetType();
 
-            // Primitive-ish types: trust Equals.
+            if (expected is Type || actual is Type)
+            {
+                return expected is Type && actual is Type
+                    ? Equals(expected, actual)
+                        ? null
+                        : EquivalenceMismatch.ValueMismatch(path, expected, actual)
+                    : EquivalenceMismatch.TypeMismatch(path, expectedRuntimeType, actualRuntimeType);
+            }
+
+            // Primitive-ish types: trust Equals, but report runtime-type mismatches explicitly when
+            // boxed through a wider declared type such as object.
             if (IsPrimitiveLike(expectedRuntimeType) || IsPrimitiveLike(actualRuntimeType))
             {
-                return Equals(expected, actual)
-                    ? null
-                    : EquivalenceMismatch.ValueMismatch(path, expected, actual);
+                return expectedRuntimeType == actualRuntimeType
+                    ? Equals(expected, actual)
+                        ? null
+                        : EquivalenceMismatch.ValueMismatch(path, expected, actual)
+                    : EquivalenceMismatch.TypeMismatch(path, expectedRuntimeType, actualRuntimeType);
             }
 
             // IEquatable<T> shortcut on the declared (compile-time) type, when it is more specific
@@ -79,6 +97,9 @@ public sealed partial class Assert
             // Skip value types: they cannot form reference cycles, and boxing them into the topology
             // maps would both miss subsequent visits (each box is a fresh reference) and grow the
             // dictionaries unnecessarily.
+            // These mappings are intentionally not unwound when a deeper comparison later fails.
+            // Comparison is fail-fast, so a non-null mismatch immediately aborts traversal and the
+            // comparer instance is never reused to continue from a sibling branch.
             if (!expectedRuntimeType.IsValueType && !actualRuntimeType.IsValueType)
             {
                 if (_expectedToActual.TryGetValue(expected, out object? mappedActual))
@@ -105,7 +126,7 @@ public sealed partial class Assert
             if (expectedIsDictionary && actualIsDictionary)
             {
                 Type valueDeclaredType = GetDictionaryValueType(declaredType, expectedRuntimeType, actualRuntimeType);
-                return CompareDictionaries(expectedDict!, actualDict!, valueDeclaredType, path);
+                return CompareDictionaries(expectedDict!, actualDict!, valueDeclaredType, path, depth);
             }
 
             // If exactly one side is a dictionary, treat as a structural mismatch rather than
@@ -118,13 +139,13 @@ public sealed partial class Assert
             if (expected is IEnumerable expectedEnum && actual is IEnumerable actualEnum)
             {
                 Type elementDeclaredType = GetEnumerableElementType(declaredType, expectedRuntimeType, actualRuntimeType);
-                return CompareEnumerables(expectedEnum, actualEnum, elementDeclaredType, path);
+                return CompareEnumerables(expectedEnum, actualEnum, elementDeclaredType, path, depth);
             }
 
-            return CompareMembers(expected, actual, expectedRuntimeType, actualRuntimeType, path);
+            return CompareMembers(expected, actual, expectedRuntimeType, actualRuntimeType, path, depth);
         }
 
-        private EquivalenceMismatch? CompareDictionaries(DictionaryView expected, DictionaryView actual, Type valueDeclaredType, string path)
+        private EquivalenceMismatch? CompareDictionaries(DictionaryView expected, DictionaryView actual, Type valueDeclaredType, string path, int depth)
         {
             EquivalenceMismatch? failure = ForEachEntry(expected, isExpected: true, path, kvp =>
             {
@@ -140,7 +161,7 @@ public sealed partial class Assert
                     ? lookup
                     : !lookupResult.Found
                         ? EquivalenceMismatch.MissingKey(childPath, kvp.Key)
-                        : Compare(kvp.Value, lookupResult.Value, valueDeclaredType, childPath);
+                        : Compare(kvp.Value, lookupResult.Value, valueDeclaredType, childPath, depth + 1);
             });
             if (failure is not null)
             {
@@ -247,11 +268,20 @@ public sealed partial class Assert
             }
         }
 
-        private EquivalenceMismatch? CompareEnumerables(IEnumerable expected, IEnumerable actual, Type elementDeclaredType, string path)
+        private EquivalenceMismatch? CompareEnumerables(IEnumerable expected, IEnumerable actual, Type elementDeclaredType, string path, int depth)
         {
             // Materialize once so we can report length and walk in parallel.
-            List<object?> expectedItems = ToList(expected);
-            List<object?> actualItems = ToList(actual);
+            EquivalenceMismatch? failure = TryToList(expected, isExpected: true, path, out List<object?> expectedItems);
+            if (failure is not null)
+            {
+                return failure;
+            }
+
+            failure = TryToList(actual, isExpected: false, path, out List<object?> actualItems);
+            if (failure is not null)
+            {
+                return failure;
+            }
 
             if (expectedItems.Count != actualItems.Count)
             {
@@ -260,7 +290,7 @@ public sealed partial class Assert
 
             for (int i = 0; i < expectedItems.Count; i++)
             {
-                EquivalenceMismatch? nested = Compare(expectedItems[i], actualItems[i], elementDeclaredType, AppendIndex(path, i));
+                EquivalenceMismatch? nested = Compare(expectedItems[i], actualItems[i], elementDeclaredType, AppendIndex(path, i), depth + 1);
                 if (nested is not null)
                 {
                     return nested;
@@ -270,7 +300,7 @@ public sealed partial class Assert
             return null;
         }
 
-        private EquivalenceMismatch? CompareMembers(object expected, object actual, Type expectedType, Type actualType, string path)
+        private EquivalenceMismatch? CompareMembers(object expected, object actual, Type expectedType, Type actualType, string path, int depth)
         {
             MemberLookup expectedMembers = GetMembers(expectedType);
 
@@ -291,7 +321,6 @@ public sealed partial class Assert
 
                 if (extras is { Count: > 0 })
                 {
-                    extras.Sort(StringComparer.Ordinal);
                     return EquivalenceMismatch.ExtraMembers(path, extras);
                 }
             }
@@ -334,7 +363,7 @@ public sealed partial class Assert
                     return EquivalenceMismatch.MemberAccessFailure(childPath, isExpected: false, ex);
                 }
 
-                EquivalenceMismatch? nested = Compare(expectedValue, actualValue, member.MemberType, childPath);
+                EquivalenceMismatch? nested = Compare(expectedValue, actualValue, member.MemberType, childPath, depth + 1);
                 if (nested is not null)
                 {
                     return nested;
@@ -344,19 +373,32 @@ public sealed partial class Assert
             return null;
         }
 
-        private static List<object?> ToList(IEnumerable source)
+        private static EquivalenceMismatch? TryToList(IEnumerable source, bool isExpected, string path, out List<object?> list)
         {
-#pragma warning disable IDE0028 // Collection initialization can be simplified - we want the capacity-aware ctor when ICollection is available.
-            List<object?> list = source is ICollection collection
-                ? new List<object?>(collection.Count)
-                : [];
-#pragma warning restore IDE0028
-            foreach (object? item in source)
+            try
             {
-                list.Add(item);
-            }
+#pragma warning disable IDE0028 // Collection initialization can be simplified - we want the capacity-aware ctor when ICollection is available.
+                list = source is ICollection collection
+                    ? new List<object?>(collection.Count)
+                    : [];
+#pragma warning restore IDE0028
+                foreach (object? item in source)
+                {
+                    list.Add(item);
+                }
 
-            return list;
+                return null;
+            }
+            catch (TargetInvocationException tie)
+            {
+                list = [];
+                return EquivalenceMismatch.EnumerationFailure(path, isExpected, tie.InnerException ?? tie);
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+            {
+                list = [];
+                return EquivalenceMismatch.EnumerationFailure(path, isExpected, ex);
+            }
         }
 
         private enum IEquatableOutcome
@@ -521,13 +563,7 @@ public sealed partial class Assert
 
                 // DateOnly / TimeOnly / Half / Int128 exist only on newer TFMs; match by full name to avoid #if.
                 string? fullName = t.FullName;
-                if (fullName is "System.DateOnly" or "System.TimeOnly" or "System.Half" or "System.Int128" or "System.UInt128")
-                {
-                    return true;
-                }
-
-                // Compare reflection types as primitive (they all derive from System.Type).
-                return typeof(Type).IsAssignableFrom(t);
+                return fullName is "System.DateOnly" or "System.TimeOnly" or "System.Half" or "System.Int128" or "System.UInt128";
             });
 
         private static bool TryCreateDictionaryView(object value, out DictionaryView? view)
@@ -633,10 +669,7 @@ public sealed partial class Assert
 
         private static string AppendDictionaryKey(string parent, object key)
         {
-            string rendered = key is string s
-                ? $"\"{s}\""
-                : Convert.ToString(key, CultureInfo.InvariantCulture) ?? key.GetType().Name;
-            string keyPart = $"[{rendered}]";
+            string keyPart = $"[{AssertionValueRenderer.RenderValue(key)}]";
             return parent.Length == 0 ? keyPart : parent + keyPart;
         }
     }
@@ -889,12 +922,13 @@ public sealed partial class Assert
     /// </summary>
     private sealed class EquivalenceMismatch
     {
-        private EquivalenceMismatch(string path, string reason, string? expectedText, string? actualText)
+        private EquivalenceMismatch(string path, string reason, string? expectedText, string? actualText, bool isComparisonFailure)
         {
             Path = path;
             Reason = reason;
             ExpectedText = expectedText;
             ActualText = actualText;
+            IsComparisonFailure = isComparisonFailure;
         }
 
         internal string Path { get; }
@@ -905,68 +939,79 @@ public sealed partial class Assert
 
         internal string? ActualText { get; }
 
+        internal bool IsComparisonFailure { get; }
+
         internal static EquivalenceMismatch ValueMismatch(string path, object? expected, object? actual)
             => new(
                 path,
                 FrameworkMessages.AreEquivalentMismatchValue,
                 AssertionValueRenderer.RenderValue(expected),
-                AssertionValueRenderer.RenderValue(actual));
+                AssertionValueRenderer.RenderValue(actual),
+                isComparisonFailure: false);
 
         internal static EquivalenceMismatch NullMismatch(string path, object? expected, object? actual)
             => new(
                 path,
                 FrameworkMessages.AreEquivalentMismatchNull,
                 AssertionValueRenderer.RenderValue(expected),
-                AssertionValueRenderer.RenderValue(actual));
+                AssertionValueRenderer.RenderValue(actual),
+                isComparisonFailure: false);
 
         internal static EquivalenceMismatch TypeMismatch(string path, Type expectedType, Type actualType)
             => new(
                 path,
                 string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEquivalentMismatchType, expectedType.FullName ?? expectedType.Name, actualType.FullName ?? actualType.Name),
                 expectedType.FullName ?? expectedType.Name,
-                actualType.FullName ?? actualType.Name);
+                actualType.FullName ?? actualType.Name,
+                isComparisonFailure: false);
 
         internal static EquivalenceMismatch TopologyMismatch(string path)
             => new(
                 path,
                 FrameworkMessages.AreEquivalentMismatchTopology,
                 expectedText: null,
-                actualText: null);
+                actualText: null,
+                isComparisonFailure: false);
 
         internal static EquivalenceMismatch LengthMismatch(string path, int expectedCount, int actualCount)
             => new(
                 path,
                 string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEquivalentMismatchLength, expectedCount, actualCount),
                 expectedCount.ToString(CultureInfo.InvariantCulture),
-                actualCount.ToString(CultureInfo.InvariantCulture));
+                actualCount.ToString(CultureInfo.InvariantCulture),
+                isComparisonFailure: false);
 
         internal static EquivalenceMismatch MissingKey(string path, object key)
             => new(
                 path,
                 string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEquivalentMismatchMissingKey, AssertionValueRenderer.RenderValue(key)),
                 expectedText: null,
-                actualText: null);
+                actualText: null,
+                isComparisonFailure: false);
 
         internal static EquivalenceMismatch UnexpectedKey(string path, object key)
             => new(
                 path,
                 string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEquivalentMismatchUnexpectedKey, AssertionValueRenderer.RenderValue(key)),
                 expectedText: null,
-                actualText: null);
+                actualText: null,
+                isComparisonFailure: false);
 
         internal static EquivalenceMismatch MissingMember(string path, string memberName)
             => new(
                 path,
                 string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEquivalentMismatchMissingMember, memberName),
                 expectedText: null,
-                actualText: null);
+                actualText: null,
+                isComparisonFailure: false);
 
         internal static EquivalenceMismatch ExtraMembers(string path, IReadOnlyList<string> extras)
             => new(
                 path,
                 string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEquivalentMismatchExtraMembers, string.Join(", ", extras)),
                 expectedText: null,
-                actualText: null);
+                actualText: null,
+                isComparisonFailure: false);
 
         internal static EquivalenceMismatch IEquatableThrew(string path, Exception thrown)
             => new(
@@ -977,7 +1022,8 @@ public sealed partial class Assert
                     thrown.GetType().Name,
                     thrown.Message),
                 expectedText: null,
-                actualText: null);
+                actualText: null,
+                isComparisonFailure: true);
 
         internal static EquivalenceMismatch DictionaryAccessFailure(string path, bool isExpected, Exception inner)
             => new(
@@ -988,7 +1034,20 @@ public sealed partial class Assert
                     inner.GetType().Name,
                     inner.Message),
                 expectedText: null,
-                actualText: null);
+                actualText: null,
+                isComparisonFailure: true);
+
+        internal static EquivalenceMismatch EnumerationFailure(string path, bool isExpected, Exception inner)
+            => new(
+                path,
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    isExpected ? FrameworkMessages.AreEquivalentMismatchExpectedEnumerationThrew : FrameworkMessages.AreEquivalentMismatchActualEnumerationThrew,
+                    inner.GetType().Name,
+                    inner.Message),
+                expectedText: null,
+                actualText: null,
+                isComparisonFailure: true);
 
         internal static EquivalenceMismatch MemberAccessFailure(string path, bool isExpected, Exception inner)
             => new(
@@ -999,6 +1058,15 @@ public sealed partial class Assert
                     inner.GetType().Name,
                     inner.Message),
                 expectedText: null,
-                actualText: null);
+                actualText: null,
+                isComparisonFailure: true);
+
+        internal static EquivalenceMismatch MaxDepthExceeded(string path, int maxDepth)
+            => new(
+                path,
+                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEquivalentMismatchMaxDepth, maxDepth),
+                expectedText: null,
+                actualText: null,
+                isComparisonFailure: true);
     }
 }

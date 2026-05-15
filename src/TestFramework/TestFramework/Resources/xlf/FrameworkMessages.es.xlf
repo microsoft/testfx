@@ -83,6 +83,11 @@
         <target state="new">reading the actual dictionary threw {0}: {1}.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AreEquivalentMismatchActualEnumerationThrew">
+        <source>enumerating the actual collection threw {0}: {1}.</source>
+        <target state="new">enumerating the actual collection threw {0}: {1}.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreEquivalentMismatchActualMemberThrew">
         <source>reading the actual member threw {0}: {1}.</source>
         <target state="new">reading the actual member threw {0}: {1}.</target>
@@ -96,6 +101,11 @@
       <trans-unit id="AreEquivalentMismatchExpectedDictionaryThrew">
         <source>reading the expected dictionary threw {0}: {1}.</source>
         <target state="new">reading the expected dictionary threw {0}: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExpectedEnumerationThrew">
+        <source>enumerating the expected collection threw {0}: {1}.</source>
+        <target state="new">enumerating the expected collection threw {0}: {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchExpectedMemberThrew">
@@ -116,6 +126,11 @@
       <trans-unit id="AreEquivalentMismatchLength">
         <source>collections differ in length (expected {0} elements, actual {1}).</source>
         <target state="new">collections differ in length (expected {0} elements, actual {1}).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchMaxDepth">
+        <source>comparison exceeded the maximum supported depth of {0}.</source>
+        <target state="new">comparison exceeded the maximum supported depth of {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchMissingKey">
@@ -167,6 +182,16 @@
         <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
         <target state="translated">Se esperaba una diferencia mayor que &lt;{3}&gt; entre el valor esperado &lt;{1}&gt; y el valor actual &lt;{2}&gt;. {0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentComparisonFailedSummary">
+        <source>Could not complete structural comparison.</source>
+        <target state="new">Could not complete structural comparison.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentComparisonFailedSummaryStrict">
+        <source>Could not complete structural comparison (strict mode).</source>
+        <target state="new">Could not complete structural comparison (strict mode).</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreNotEquivalentFailedSummary">
         <source>Expected values to NOT be structurally equivalent.</source>

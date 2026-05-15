@@ -43,6 +43,22 @@ public partial class AssertTests : TestContainer
         Assert.AreEquivalent('z', 'z');
     }
 
+    public void AreEquivalent_BoxedTypeValues_UseTypeEquality()
+    {
+        object expected = typeof(string);
+        object actual = typeof(string);
+        Assert.AreEquivalent(expected, actual);
+    }
+
+    public void AreEquivalent_BoxedPrimitiveLikeAndReferenceType_FailsWithTypeMismatch()
+    {
+        object expected = 42;
+        object actual = new Person("Ada", 36);
+        Action act = () => Assert.AreEquivalent(expected, actual);
+        act.Should().Throw<AssertFailedException>()
+            .And.Message.Should().Contain("incompatible types");
+    }
+
     public void AreEquivalent_DifferentInts_Fails()
     {
         Action act = () => Assert.AreEquivalent(1, 2);
@@ -231,6 +247,16 @@ public partial class AssertTests : TestContainer
             .And.Message.Should().Contain("Mismatch at '[42]'");
     }
 
+    public void AreEquivalent_Dictionary_KeyPath_UsesRenderedValue()
+    {
+        string key = "line1\nline2";
+        var a = new Dictionary<string, int> { [key] = 1 };
+        var b = new Dictionary<string, int> { [key] = 2 };
+        Action act = () => Assert.AreEquivalent(a, b);
+        act.Should().Throw<AssertFailedException>()
+            .And.Message.Should().Contain("Mismatch at '[\"line1\\nline2\"]'");
+    }
+
     public void AreEquivalent_Dictionary_CaseInsensitiveComparer_RespectsSourceComparer()
     {
         // The source dictionaries use OrdinalIgnoreCase. The comparer must defer to the source's
@@ -339,6 +365,15 @@ public partial class AssertTests : TestContainer
             .And.Message.Should().Contain("reading the actual dictionary threw").And.Contain("InvalidOperationException");
     }
 
+    public void AreEquivalent_EnumerableThrows_FailsWithExpectedDiagnostic()
+    {
+        IEnumerable<int> expected = [1];
+        IEnumerable<int> actual = new ThrowingEnumerable();
+        Action act = () => Assert.AreEquivalent(expected, actual);
+        act.Should().Throw<AssertFailedException>()
+            .And.Message.Should().Contain("enumerating the actual collection threw").And.Contain("InvalidOperationException");
+    }
+
     public void AreEquivalent_ReadOnlyDictionaryOnly_RespectsSourceComparer()
     {
         // Custom IReadOnlyDictionary<,>-only type backed by a case-insensitive Dictionary should
@@ -394,6 +429,15 @@ public partial class AssertTests : TestContainer
         EquatableMoney b = new(100m, "EUR");
         Action act = () => Assert.AreNotEquivalent(a, b);
         act.Should().Throw<AssertFailedException>();
+    }
+
+    public void AreNotEquivalent_IEquatableThrows_FailsWithComparisonFailure()
+    {
+        ThrowingEquatable a = new();
+        ThrowingEquatable b = new();
+        Action act = () => Assert.AreNotEquivalent(a, b);
+        act.Should().Throw<AssertFailedException>()
+            .And.Message.Should().Contain("Could not complete structural comparison").And.Contain("IEquatable").And.Contain("InvalidOperationException");
     }
 
     public void AreNotEquivalent_CallSiteExpression_IsRendered()
@@ -460,6 +504,15 @@ public partial class AssertTests : TestContainer
         a.Next = b;
         b.Next = a;
         Assert.AreEquivalent(a, b);
+    }
+
+    public void AreEquivalent_DeepGraph_ReportsMaxDepthExceeded()
+    {
+        DeepNode expected = CreateDeepNodeChain(300);
+        DeepNode actual = CreateDeepNodeChain(300);
+        Action act = () => Assert.AreEquivalent(expected, actual);
+        act.Should().Throw<AssertFailedException>()
+            .And.Message.Should().Contain("maximum supported depth of 256");
     }
 
     #endregion
@@ -569,6 +622,19 @@ public partial class AssertTests : TestContainer
             .And.Message.Should().Contain("Assert.AreEquivalent(x, y)");
     }
 
+    public void AreEquivalent_FailureMessage_FollowsRfc012Layout()
+    {
+        int expected = 1;
+        int actual = 2;
+        Action act = () => Assert.AreEquivalent(expected, actual, "numbers should match");
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().StartWith("Assertion failed. Expected values to be structurally equivalent.");
+        ex.Message.Should().Contain($"{Environment.NewLine}Mismatch at '<root>': values are not equal.");
+        ex.Message.Should().Contain($"{Environment.NewLine}numbers should match");
+        ex.Message.Should().Contain($"{Environment.NewLine}{Environment.NewLine}expected: 1{Environment.NewLine}actual:   2");
+        ex.Message.Should().Contain($"{Environment.NewLine}{Environment.NewLine}Assert.AreEquivalent(expected, actual)");
+    }
+
     #endregion
 
     #region AreNotEquivalent
@@ -610,6 +676,19 @@ public partial class AssertTests : TestContainer
     #endregion
 
     #region Test helpers
+
+    private static DeepNode CreateDeepNodeChain(int length)
+    {
+        DeepNode root = new();
+        DeepNode current = root;
+        for (int i = 1; i < length; i++)
+        {
+            current.Next = new DeepNode();
+            current = current.Next!;
+        }
+
+        return root;
+    }
 
     private sealed class Person
     {
@@ -728,6 +807,11 @@ public partial class AssertTests : TestContainer
         public string Label { get; }
 
         public Node? Next { get; set; }
+    }
+
+    private sealed class DeepNode
+    {
+        public DeepNode? Next { get; set; }
     }
 
     private sealed class NodeWithField
@@ -866,6 +950,13 @@ public partial class AssertTests : TestContainer
             get => throw new InvalidOperationException("actual side boom");
             set { }
         }
+    }
+
+    private sealed class ThrowingEnumerable : IEnumerable<int>
+    {
+        public IEnumerator<int> GetEnumerator() => throw new InvalidOperationException("enumeration boom");
+
+        IEnumerator IEnumerable.GetEnumerator() => throw new InvalidOperationException("enumeration boom");
     }
 
     private sealed class ThrowingDictionary : IDictionary<string, int>

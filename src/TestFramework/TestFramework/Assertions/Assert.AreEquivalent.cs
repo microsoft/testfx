@@ -39,6 +39,11 @@ public sealed partial class Assert
     /// </exception>
     /// <remarks>
     /// <para>
+    /// This assertion performs a deep, order-sensitive structural comparison of two object graphs.
+    /// It differs from <see cref="CollectionAssert.AreEquivalent(System.Collections.ICollection?, System.Collections.ICollection?)"/>,
+    /// which checks only top-level collection equivalence without regard to element order.
+    /// </para>
+    /// <para>
     /// The comparison rules are:
     /// </para>
     /// <list type="bullet">
@@ -98,6 +103,12 @@ public sealed partial class Assert
     ///     If a user-defined <see cref="IEquatable{T}.Equals(T)"/>, member getter, or dictionary
     ///     access (<c>TryGetValue</c>, <c>ContainsKey</c>, or enumeration) throws while being
     ///     evaluated, the assertion fails with a message describing the exception type and message.
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///     Comparison stops after a bounded recursion depth to avoid <see cref="StackOverflowException"/>
+    ///     on unusually deep object graphs, and reports that condition as an assertion failure.
     ///     </description>
     ///   </item>
     /// </list>
@@ -182,7 +193,8 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> and <paramref name="actual"/> are structurally equivalent.
+    /// Thrown if <paramref name="notExpected"/> and <paramref name="actual"/> are structurally equivalent,
+    /// or if the structural comparison cannot be completed.
     /// </exception>
     /// <remarks>
     /// See <see cref="AreEquivalent{T}(T, T, string, string, string)"/> and
@@ -223,32 +235,70 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> and <paramref name="actual"/> are structurally equivalent.
+    /// Thrown if <paramref name="notExpected"/> and <paramref name="actual"/> are structurally equivalent,
+    /// or if the structural comparison cannot be completed.
     /// </exception>
     public static void AreNotEquivalent<T>(T? notExpected, T? actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         EquivalenceComparer comparer = new(strict);
         EquivalenceMismatch? mismatch = comparer.Compare(notExpected, actual);
-        if (mismatch is not null)
+        if (mismatch is null)
         {
-            return;
+            ReportAssertAreNotEquivalentFailed(notExpected, actual, strict, message, notExpectedExpression, actualExpression);
         }
 
-        ReportAssertAreNotEquivalentFailed(notExpected, actual, strict, message, notExpectedExpression, actualExpression);
+        if (mismatch.IsComparisonFailure)
+        {
+            ReportAssertAreNotEquivalentComparisonFailed(mismatch, strict, message, notExpectedExpression, actualExpression);
+        }
+
+        return;
     }
 
     [DoesNotReturn]
     private static void ReportAssertAreEquivalentFailed(EquivalenceMismatch mismatch, bool strict, string? userMessage, string expectedExpression, string actualExpression)
+    {
+        string summary = strict
+            ? FrameworkMessages.AreEquivalentFailedSummaryStrict
+            : FrameworkMessages.AreEquivalentFailedSummary;
+
+        ReportAssertEquivalenceMismatch(
+            mismatch,
+            summary,
+            userMessage,
+            "Assert.AreEquivalent",
+            expectedExpression,
+            actualExpression,
+            "<expected>",
+            "<actual>");
+    }
+
+    [DoesNotReturn]
+    private static void ReportAssertAreNotEquivalentComparisonFailed(EquivalenceMismatch mismatch, bool strict, string? userMessage, string notExpectedExpression, string actualExpression)
+    {
+        string summary = strict
+            ? FrameworkMessages.AreNotEquivalentComparisonFailedSummaryStrict
+            : FrameworkMessages.AreNotEquivalentComparisonFailedSummary;
+
+        ReportAssertEquivalenceMismatch(
+            mismatch,
+            summary,
+            userMessage,
+            "Assert.AreNotEquivalent",
+            notExpectedExpression,
+            actualExpression,
+            "<notExpected>",
+            "<actual>");
+    }
+
+    [DoesNotReturn]
+    private static void ReportAssertEquivalenceMismatch(EquivalenceMismatch mismatch, string summary, string? userMessage, string assertionMethodName, string leftExpression, string rightExpression, string leftPlaceholder, string rightPlaceholder)
     {
         string locationLine = string.Format(
             CultureInfo.CurrentCulture,
             FrameworkMessages.AreEquivalentMismatchAt,
             mismatch.Path.Length == 0 ? FrameworkMessages.AreEquivalentRootPath : mismatch.Path,
             mismatch.Reason);
-
-        string summary = strict
-            ? FrameworkMessages.AreEquivalentFailedSummaryStrict
-            : FrameworkMessages.AreEquivalentFailedSummary;
 
         StructuredAssertionMessage structured = new(summary);
         structured.WithAdditionalSummaryLine(locationLine);
@@ -263,7 +313,7 @@ public sealed partial class Assert
             structured.WithExpectedAndActual(mismatch.ExpectedText, mismatch.ActualText);
         }
 
-        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreEquivalent", expectedExpression, actualExpression, "<expected>", "<actual>"));
+        structured.WithCallSiteExpression(FormatCallSiteExpression(assertionMethodName, leftExpression, rightExpression, leftPlaceholder, rightPlaceholder));
 
         ReportAssertFailed(structured);
     }
