@@ -46,7 +46,7 @@ public sealed partial class Assert
                 return EquivalenceMismatch.NullMismatch(path, expected, actual);
             }
 
-            if (depth > MaxComparisonDepth)
+            if (depth >= MaxComparisonDepth)
             {
                 return EquivalenceMismatch.MaxDepthExceeded(path, MaxComparisonDepth);
             }
@@ -270,34 +270,84 @@ public sealed partial class Assert
 
         private EquivalenceMismatch? CompareEnumerables(IEnumerable expected, IEnumerable actual, Type elementDeclaredType, string path, int depth)
         {
-            // Materialize once so we can report length and walk in parallel.
-            EquivalenceMismatch? failure = TryToList(expected, isExpected: true, path, out List<object?> expectedItems);
+            EquivalenceMismatch? failure = TryGetEnumerator(expected, isExpected: true, path, out IEnumerator expectedEnumerator);
             if (failure is not null)
             {
                 return failure;
             }
 
-            failure = TryToList(actual, isExpected: false, path, out List<object?> actualItems);
+            failure = TryGetEnumerator(actual, isExpected: false, path, out IEnumerator actualEnumerator);
             if (failure is not null)
             {
+                DisposeEnumerator(expectedEnumerator);
                 return failure;
             }
 
-            if (expectedItems.Count != actualItems.Count)
+            try
             {
-                return EquivalenceMismatch.LengthMismatch(path, expectedItems.Count, actualItems.Count);
-            }
-
-            for (int i = 0; i < expectedItems.Count; i++)
-            {
-                EquivalenceMismatch? nested = Compare(expectedItems[i], actualItems[i], elementDeclaredType, AppendIndex(path, i), depth + 1);
-                if (nested is not null)
+                int index = 0;
+                while (true)
                 {
-                    return nested;
+                    failure = TryMoveNext(expectedEnumerator, isExpected: true, path, out bool expectedHasNext);
+                    if (failure is not null)
+                    {
+                        return failure;
+                    }
+
+                    failure = TryMoveNext(actualEnumerator, isExpected: false, path, out bool actualHasNext);
+                    if (failure is not null)
+                    {
+                        return failure;
+                    }
+
+                    if (!expectedHasNext || !actualHasNext)
+                    {
+                        if (expectedHasNext != actualHasNext)
+                        {
+                            failure = TryGetEnumerableCount(expectedEnumerator, expectedHasNext, isExpected: true, path, index, out int expectedCount);
+                            if (failure is not null)
+                            {
+                                return failure;
+                            }
+
+                            failure = TryGetEnumerableCount(actualEnumerator, actualHasNext, isExpected: false, path, index, out int actualCount);
+                            if (failure is not null)
+                            {
+                                return failure;
+                            }
+
+                            return EquivalenceMismatch.LengthMismatch(path, expectedCount, actualCount);
+                        }
+
+                        return null;
+                    }
+
+                    failure = TryGetCurrent(expectedEnumerator, isExpected: true, path, out object? expectedItem);
+                    if (failure is not null)
+                    {
+                        return failure;
+                    }
+
+                    failure = TryGetCurrent(actualEnumerator, isExpected: false, path, out object? actualItem);
+                    if (failure is not null)
+                    {
+                        return failure;
+                    }
+
+                    EquivalenceMismatch? nested = Compare(expectedItem, actualItem, elementDeclaredType, AppendIndex(path, index), depth + 1);
+                    if (nested is not null)
+                    {
+                        return nested;
+                    }
+
+                    index++;
                 }
             }
-
-            return null;
+            finally
+            {
+                DisposeEnumerator(expectedEnumerator);
+                DisposeEnumerator(actualEnumerator);
+            }
         }
 
         private EquivalenceMismatch? CompareMembers(object expected, object actual, Type expectedType, Type actualType, string path, int depth)
@@ -373,31 +423,109 @@ public sealed partial class Assert
             return null;
         }
 
-        private static EquivalenceMismatch? TryToList(IEnumerable source, bool isExpected, string path, out List<object?> list)
+        private static EquivalenceMismatch? TryGetEnumerator(IEnumerable source, bool isExpected, string path, out IEnumerator enumerator)
         {
             try
             {
-#pragma warning disable IDE0028 // Collection initialization can be simplified - we want the capacity-aware ctor when ICollection is available.
-                list = source is ICollection collection
-                    ? new List<object?>(collection.Count)
-                    : [];
-#pragma warning restore IDE0028
-                foreach (object? item in source)
-                {
-                    list.Add(item);
-                }
-
+                enumerator = source.GetEnumerator();
                 return null;
             }
             catch (TargetInvocationException tie)
             {
-                list = [];
+                enumerator = default!;
                 return EquivalenceMismatch.EnumerationFailure(path, isExpected, tie.InnerException ?? tie);
             }
             catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
             {
-                list = [];
+                enumerator = default!;
                 return EquivalenceMismatch.EnumerationFailure(path, isExpected, ex);
+            }
+        }
+
+        private static EquivalenceMismatch? TryMoveNext(IEnumerator enumerator, bool isExpected, string path, out bool hasNext)
+        {
+            try
+            {
+                hasNext = enumerator.MoveNext();
+                return null;
+            }
+            catch (TargetInvocationException tie)
+            {
+                hasNext = false;
+                return EquivalenceMismatch.EnumerationFailure(path, isExpected, tie.InnerException ?? tie);
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+            {
+                hasNext = false;
+                return EquivalenceMismatch.EnumerationFailure(path, isExpected, ex);
+            }
+        }
+
+        private static EquivalenceMismatch? TryGetCurrent(IEnumerator enumerator, bool isExpected, string path, out object? current)
+        {
+            try
+            {
+                current = enumerator.Current;
+                return null;
+            }
+            catch (TargetInvocationException tie)
+            {
+                current = default;
+                return EquivalenceMismatch.EnumerationFailure(path, isExpected, tie.InnerException ?? tie);
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+            {
+                current = default;
+                return EquivalenceMismatch.EnumerationFailure(path, isExpected, ex);
+            }
+        }
+
+        private static EquivalenceMismatch? TryGetEnumerableCount(IEnumerator enumerator, bool hasCurrent, bool isExpected, string path, int matchedItemCount, out int count)
+        {
+            count = matchedItemCount;
+            if (!hasCurrent)
+            {
+                return null;
+            }
+
+            EquivalenceMismatch? failure = TryGetCurrent(enumerator, isExpected, path, out _);
+            if (failure is not null)
+            {
+                count = 0;
+                return failure;
+            }
+
+            count++;
+            while (true)
+            {
+                failure = TryMoveNext(enumerator, isExpected, path, out bool hasNext);
+                if (failure is not null)
+                {
+                    count = 0;
+                    return failure;
+                }
+
+                if (!hasNext)
+                {
+                    return null;
+                }
+
+                failure = TryGetCurrent(enumerator, isExpected, path, out _);
+                if (failure is not null)
+                {
+                    count = 0;
+                    return failure;
+                }
+
+                count++;
+            }
+        }
+
+        private static void DisposeEnumerator(IEnumerator enumerator)
+        {
+            if (enumerator is IDisposable disposable)
+            {
+                disposable.Dispose();
             }
         }
 

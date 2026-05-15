@@ -374,6 +374,15 @@ public partial class AssertTests : TestContainer
             .And.Message.Should().Contain("enumerating the actual collection threw").And.Contain("InvalidOperationException");
     }
 
+    public void AreEquivalent_EnumerableMismatch_FailsFastWithoutEnumeratingPastMismatch()
+    {
+        IEnumerable<int> expected = [1, 2, 3];
+        IEnumerable<int> actual = new FailIfEnumeratedPastIndexEnumerable(1, 1, 999, 3);
+        Action act = () => Assert.AreEquivalent(expected, actual);
+        act.Should().Throw<AssertFailedException>()
+            .And.Message.Should().Contain("Mismatch at '[1]'").And.NotContain("enumerating the actual collection threw");
+    }
+
     public void AreEquivalent_ReadOnlyDictionaryOnly_RespectsSourceComparer()
     {
         // Custom IReadOnlyDictionary<,>-only type backed by a case-insensitive Dictionary should
@@ -506,10 +515,17 @@ public partial class AssertTests : TestContainer
         Assert.AreEquivalent(a, b);
     }
 
+    public void AreEquivalent_DeepGraph_AtMaximumSupportedDepth_Passes()
+    {
+        DeepNode expected = CreateDeepNodeChain(256);
+        DeepNode actual = CreateDeepNodeChain(256);
+        Assert.AreEquivalent(expected, actual);
+    }
+
     public void AreEquivalent_DeepGraph_ReportsMaxDepthExceeded()
     {
-        DeepNode expected = CreateDeepNodeChain(300);
-        DeepNode actual = CreateDeepNodeChain(300);
+        DeepNode expected = CreateDeepNodeChain(257);
+        DeepNode actual = CreateDeepNodeChain(257);
         Action act = () => Assert.AreEquivalent(expected, actual);
         act.Should().Throw<AssertFailedException>()
             .And.Message.Should().Contain("maximum supported depth of 256");
@@ -963,6 +979,33 @@ public partial class AssertTests : TestContainer
         public IEnumerator<int> GetEnumerator() => throw new InvalidOperationException("enumeration boom");
 
         IEnumerator IEnumerable.GetEnumerator() => throw new InvalidOperationException("enumeration boom");
+    }
+
+    private sealed class FailIfEnumeratedPastIndexEnumerable : IEnumerable<int>
+    {
+        private readonly int[] _items;
+        private readonly int _maxIndex;
+
+        public FailIfEnumeratedPastIndexEnumerable(int maxIndex, params int[] items)
+        {
+            _maxIndex = maxIndex;
+            _items = items;
+        }
+
+        public IEnumerator<int> GetEnumerator()
+        {
+            for (int i = 0; i < _items.Length; i++)
+            {
+                if (i > _maxIndex)
+                {
+                    throw new InvalidOperationException("enumerated past mismatch");
+                }
+
+                yield return _items[i];
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
     private sealed class ThrowingDictionary : IDictionary<string, int>

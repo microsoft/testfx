@@ -246,13 +246,10 @@ public sealed partial class Assert
         {
             ReportAssertAreNotEquivalentFailed(notExpected, actual, strict, message, notExpectedExpression, actualExpression);
         }
-
-        if (mismatch.IsComparisonFailure)
+        else if (mismatch.IsComparisonFailure)
         {
             ReportAssertAreNotEquivalentComparisonFailed(mismatch, strict, message, notExpectedExpression, actualExpression);
         }
-
-        return;
     }
 
     [DoesNotReturn]
