@@ -172,9 +172,13 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
 
     private static CompilationUnitSyntax AddSystemThreadingTasksUsing(CompilationUnitSyntax compilationUnit, SyntaxNode methodNode)
     {
+        // Match the file's existing line endings to avoid producing mixed CR/LF + LF output (which would
+        // both look ugly and break analyzer-test verifiers that diff text byte-for-byte on Linux/macOS).
+        SyntaxTrivia endOfLineTrivia = DetectEndOfLineTrivia(compilationUnit);
+
         UsingDirectiveSyntax newUsing = SyntaxFactory
             .UsingDirective(SyntaxFactory.ParseName(SystemThreadingTasksNamespace).WithLeadingTrivia(SyntaxFactory.Space))
-            .WithTrailingTrivia(SyntaxFactory.ElasticCarriageReturnLineFeed);
+            .WithTrailingTrivia(endOfLineTrivia);
 
         // Add the using to the smallest enclosing block-scoped namespace (preserving the file's existing
         // namespace-scoped style when applicable). For file-scoped namespaces (no NamespaceDeclarationSyntax
@@ -229,5 +233,21 @@ public sealed class AvoidUsingAssertsInAsyncVoidContextFixer : CodeFixProvider
         // Roslyn 3.11 package does not need to expose UsingDirectiveSyntax.GlobalKeyword.
         SyntaxToken firstToken = usingDirective.GetFirstToken();
         return firstToken.Text == "global";
+    }
+
+    private static SyntaxTrivia DetectEndOfLineTrivia(CompilationUnitSyntax compilationUnit)
+    {
+        foreach (SyntaxTrivia trivia in compilationUnit.DescendantTrivia())
+        {
+            if (trivia.IsKind(SyntaxKind.EndOfLineTrivia))
+            {
+                // Use an elastic end-of-line so the formatter can still add the conventional blank line
+                // between the inserted using directive and the following content, while preserving the
+                // file's existing line-ending convention (LF on Unix, CR/LF on Windows).
+                return SyntaxFactory.ElasticEndOfLine(trivia.ToFullString());
+            }
+        }
+
+        return SyntaxFactory.ElasticEndOfLine(Environment.NewLine);
     }
 }
