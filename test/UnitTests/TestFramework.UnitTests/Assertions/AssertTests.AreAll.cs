@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
@@ -210,11 +210,11 @@ public partial class AssertTests : TestContainer
     }
 
     public void AreAllDistinct_Generic_WithComparer_AllDistinct_ShouldPass()
-        => Assert.AreAllDistinct(new[] { "a", "B", "c" }, StringComparer.OrdinalIgnoreCase);
+        => Assert.AreAllDistinct(new[] { "a", "B", "c" }, new CaseInsensitiveStringComparer());
 
     public void AreAllDistinct_Generic_WithComparer_HasDuplicate_ShouldFail()
     {
-        Action action = () => Assert.AreAllDistinct(new[] { "A", "B", "a" }, StringComparer.OrdinalIgnoreCase);
+        Action action = () => Assert.AreAllDistinct(new[] { "A", "B", "a" }, new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -222,6 +222,7 @@ public partial class AssertTests : TestContainer
 
                 duplicates: ["a"]
                 collection: ["A", "B", "a"]
+                comparer:   CaseInsensitiveStringComparer
 
                 Assert.AreAllDistinct(new[] { "A", "B", "a" }, <comparer>)
                 """);
@@ -266,7 +267,7 @@ public partial class AssertTests : TestContainer
     public void AreAllDistinct_NonGeneric_WithComparer_HasDuplicate_ShouldFail()
     {
         ArrayList list = ["A", "B", "a"];
-        Action action = () => Assert.AreAllDistinct(list, StringComparer.OrdinalIgnoreCase);
+        Action action = () => Assert.AreAllDistinct(list, new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -274,6 +275,7 @@ public partial class AssertTests : TestContainer
 
                 duplicates: ["a"]
                 collection: ["A", "B", "a"]
+                comparer:   CaseInsensitiveStringComparer
 
                 Assert.AreAllDistinct(list, <comparer>)
                 """);
@@ -373,6 +375,17 @@ public partial class AssertTests : TestContainer
     public void AreAllDistinct_Generic_ComparerThrowsOnNull_WithNulls_ShouldNotInvokeComparerForNull()
         => Assert.AreAllDistinct(new string?[] { null, "a", "b" }, new ThrowOnNullStringComparer());
 
+    private sealed class CaseInsensitiveStringComparer : IEqualityComparer<string?>, IEqualityComparer
+    {
+        public bool Equals(string? x, string? y) => StringComparer.OrdinalIgnoreCase.Equals(x, y);
+
+        public int GetHashCode(string? obj) => obj is null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(obj);
+
+        bool IEqualityComparer.Equals(object? x, object? y) => Equals(x as string, y as string);
+
+        int IEqualityComparer.GetHashCode(object obj) => obj is string value ? GetHashCode(value) : 0;
+    }
+
     private sealed class NullEqualsEmptyStringComparer : IEqualityComparer<string?>
     {
         public bool Equals(string? x, string? y) => (x ?? string.Empty) == (y ?? string.Empty);
@@ -456,6 +469,24 @@ public partial class AssertTests : TestContainer
 
                 Assert.AreAllOfType<TExpected>(new object[] { 1 })
                 """);
+    }
+
+    public void AreAllOfType_Generic_HasMismatch_ShouldPopulateExpectedAndActualPayload()
+    {
+        try
+        {
+            Assert.AreAllOfType<string>(new object[] { 1 });
+        }
+        catch (AssertFailedException ex)
+        {
+            ex.ExpectedText.Should().Be("System.String (or derived)");
+            ex.ActualText.Should().Be("[1]");
+            ex.Data["assert.expected"].Should().Be("System.String (or derived)");
+            ex.Data["assert.actual"].Should().Be("[1]");
+            return;
+        }
+
+        throw new AssertFailedException("Expected AssertFailedException was not thrown.");
     }
 
     public void AreAllOfType_Generic_NullCollection_ShouldFail()

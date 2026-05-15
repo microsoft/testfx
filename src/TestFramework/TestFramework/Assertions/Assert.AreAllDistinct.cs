@@ -37,7 +37,7 @@ public sealed partial class Assert
     public static void AreAllDistinct<T>([NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
-        AreAllDistinctImpl(collection, EqualityComparer<T>.Default, hasUserComparer: false, message, collectionExpression);
+        AreAllDistinctImpl(collection, EqualityComparer<T>.Default, comparerTypeName: null, message, collectionExpression);
     }
 
     /// <summary>
@@ -67,7 +67,7 @@ public sealed partial class Assert
     {
         CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
         CheckParameterNotNull(comparer, "Assert.AreAllDistinct", "comparer");
-        AreAllDistinctImpl(collection, comparer, hasUserComparer: true, message, collectionExpression);
+        AreAllDistinctImpl(collection, comparer, comparerTypeName: comparer.GetType().Name, message, collectionExpression);
     }
 
     /// <summary>
@@ -92,7 +92,7 @@ public sealed partial class Assert
     public static void AreAllDistinct([NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
-        AreAllDistinctImpl(collection.Cast<object?>(), EqualityComparer<object?>.Default, hasUserComparer: false, message, collectionExpression);
+        AreAllDistinctImpl(collection.Cast<object?>(), EqualityComparer<object?>.Default, comparerTypeName: null, message, collectionExpression);
     }
 
     /// <summary>
@@ -121,17 +121,15 @@ public sealed partial class Assert
     {
         CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
         CheckParameterNotNull(comparer, "Assert.AreAllDistinct", "comparer");
-        AreAllDistinctImpl(collection.Cast<object?>(), new NonGenericEqualityComparerAdapter(comparer), hasUserComparer: true, message, collectionExpression);
+        AreAllDistinctImpl(collection.Cast<object?>(), new NonGenericEqualityComparerAdapter(comparer), comparerTypeName: comparer.GetType().Name, message, collectionExpression);
     }
 
 #pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
-    private static void AreAllDistinctImpl<T>(IEnumerable<T> collection, IEqualityComparer<T> comparer, bool hasUserComparer, string? message, string collectionExpression)
+    private static void AreAllDistinctImpl<T>(IEnumerable<T> collection, IEqualityComparer<T> comparer, string? comparerTypeName, string? message, string collectionExpression)
     {
         List<T> snapshot = collection is List<T> list ? list : [.. collection];
 
-#pragma warning disable IDE0028 // Collection initialization can be simplified - target-typed new with constructor argument is preferred over collection expression here
         HashSet<T> seen = new(comparer);
-#pragma warning restore IDE0028
 
         bool seenNull = false;
         List<T>? duplicates = null;
@@ -160,9 +158,7 @@ public sealed partial class Assert
 
             if (!seen.Add(item))
             {
-#pragma warning disable IDE0028
-                duplicatesSeen ??= new HashSet<T>(comparer);
-#pragma warning restore IDE0028
+                duplicatesSeen ??= new(comparer);
                 if (duplicatesSeen.Add(item))
                 {
                     duplicates ??= [];
@@ -173,13 +169,13 @@ public sealed partial class Assert
 
         if (duplicates is not null)
         {
-            ReportAssertAreAllDistinctFailed(snapshot, duplicates, hasUserComparer, message, collectionExpression);
+            ReportAssertAreAllDistinctFailed(snapshot, duplicates, comparerTypeName, message, collectionExpression);
         }
     }
 #pragma warning restore CS8714
 
     [DoesNotReturn]
-    private static void ReportAssertAreAllDistinctFailed<T>(IEnumerable<T> collection, List<T> duplicates, bool hasUserComparer, string? message, string collectionExpression)
+    private static void ReportAssertAreAllDistinctFailed<T>(IEnumerable<T> collection, List<T> duplicates, string? comparerTypeName, string? message, string collectionExpression)
     {
         string collectionText = AssertionValueRenderer.RenderValue(collection);
         string duplicatesText = AssertionValueRenderer.RenderValue(duplicates);
@@ -188,11 +184,16 @@ public sealed partial class Assert
             .AddLine("duplicates:", duplicatesText)
             .AddLine("collection:", collectionText);
 
+        if (comparerTypeName is not null)
+        {
+            evidence.AddLine("comparer:", comparerTypeName);
+        }
+
         StructuredAssertionMessage structured = new(FrameworkMessages.AreAllDistinctFailedSummary);
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
         structured.WithExpectedAndActual(expectedText: null, actualText: collectionText);
-        structured.WithCallSiteExpression(BuildCallSiteWithComparerForCollection("Assert.AreAllDistinct", collectionExpression, hasUserComparer));
+        structured.WithCallSiteExpression(BuildCallSiteWithComparerForCollection("Assert.AreAllDistinct", collectionExpression, comparerTypeName is not null));
 
         ReportAssertFailed(structured);
     }
@@ -224,7 +225,7 @@ public sealed partial class Assert
         public NonGenericEqualityComparerAdapter(IEqualityComparer comparer)
             => _comparer = comparer;
 
-        public new bool Equals(object? x, object? y) => _comparer.Equals(x, y);
+        public bool Equals(object? x, object? y) => _comparer.Equals(x, y);
 
         public int GetHashCode(object? obj) => obj is null ? 0 : _comparer.GetHashCode(obj);
     }

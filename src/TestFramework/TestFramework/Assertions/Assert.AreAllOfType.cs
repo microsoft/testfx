@@ -151,7 +151,7 @@ public sealed partial class Assert
         StructuredAssertionMessage structured = new(FrameworkMessages.AreAllOfTypeFailedSummary);
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
-        structured.WithExpectedAndActual(expectedText: null, actualText: collectionText);
+        structured.WithExpectedAndActual(expectedTypeText, collectionText);
         structured.WithCallSiteExpression(callSite);
 
         ReportAssertFailed(structured);
