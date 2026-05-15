@@ -26,7 +26,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal sealed class MSTestTelemetryDataCollector
 {
     private readonly ConcurrentDictionary<string, long> _attributeCounts = new();
+#if NET9_0_OR_GREATER
+    private readonly Lock _customTypesGate = new();
+#else
     private readonly object _customTypesGate = new();
+#endif
     private readonly HashSet<string> _customTestMethodTypes = [];
     private readonly HashSet<string> _customTestClassTypes = [];
 
