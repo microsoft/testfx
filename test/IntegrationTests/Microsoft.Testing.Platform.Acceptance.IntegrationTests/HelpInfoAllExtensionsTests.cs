@@ -52,6 +52,7 @@ Options:
         Display .NET test application information.
     --list-tests
         List available tests.
+        Optionally accepts 'json' to print the discovered tests as a JSON document on standard output.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
     --results-directory
@@ -238,9 +239,10 @@ Built-in command line providers:
         Hidden: True
         Description: For testing purposes
       --list-tests
-        Arity: 0
+        Arity: 0..1
         Hidden: False
         Description: List available tests.
+        Optionally accepts 'json' to print the discovered tests as a JSON document on standard output.
       --minimum-expected-tests
         Arity: 0..1
         Hidden: False

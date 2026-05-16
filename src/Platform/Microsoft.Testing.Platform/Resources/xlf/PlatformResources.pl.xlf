@@ -511,9 +511,15 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
 Dostępne wartości to „Trace”, „Debug”, „Information”, „Warning”, „Error” i „Critical”.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
+        <source>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="new">'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
-        <source>List available tests.</source>
-        <target state="translated">Wyświetl listę dostępnych testów.</target>
+        <source>List available tests.
+Optionally accepts 'json' to print the discovered tests as a JSON document on standard output.</source>
+        <target state="needs-review-translation">Wyświetl listę dostępnych testów.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">

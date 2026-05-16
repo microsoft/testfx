@@ -511,9 +511,15 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
 사용 가능한 값은 'Trace', 'Debug', 'Information', 'Warning', 'Error' 및 'Critical'입니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
+        <source>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="new">'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
-        <source>List available tests.</source>
-        <target state="translated">사용 가능한 테스트를 나열합니다.</target>
+        <source>List available tests.
+Optionally accepts 'json' to print the discovered tests as a JSON document on standard output.</source>
+        <target state="needs-review-translation">사용 가능한 테스트를 나열합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">

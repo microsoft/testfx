@@ -52,9 +52,16 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private readonly string? _targetFramework;
     private readonly string _assemblyName;
 
+    // Buffer for discovered test nodes when --list-tests json is active. Writes happen only from
+    // the message bus pump in ConsumeAsync (single-producer per consumer) and are fully drained
+    // by the platform before DisplayAfterSessionEndRunInternalAsync runs, so no extra locking is
+    // required. The list stays empty (and effectively unused) outside JSON mode.
+    private readonly List<TestNode> _discoveredTestsForJson = [];
+
     private TerminalTestReporter? _terminalTestReporter;
     private bool _bannerDisplayed;
     private bool _isListTests;
+    private bool _isListTestsJson;
     private bool _isServerMode;
     private ILogger? _logger;
     private TestProcessRole? _processRole;
@@ -105,19 +112,33 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public async Task InitializeAsync()
     {
-        await _policiesService.RegisterOnAbortCallbackAsync(
-            () =>
-            {
-                _terminalTestReporter?.StartCancelling();
-                return Task.CompletedTask;
-            }).ConfigureAwait(false);
-
         if (_fileLoggerInformation is not null)
         {
             _logger = _loggerFactory.CreateLogger(GetType().ToString());
         }
 
         _isListTests = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
+        _isListTestsJson = PlatformCommandLineProvider.IsListTestsJsonOutput(_commandLineOptions);
+
+        if (_isListTestsJson)
+        {
+            // In JSON discovery mode the standard abort callback would call
+            // TerminalTestReporter.StartCancelling which writes "Cancelling test session" to
+            // stdout, corrupting the JSON document. Route a single-line cancellation notice
+            // to stderr instead so the user still gets feedback on Ctrl+C.
+            await _policiesService.RegisterOnAbortCallbackAsync(
+                async () => await Console.Error.WriteLineAsync(PlatformResources.CancellingTestSession).ConfigureAwait(false)).ConfigureAwait(false);
+        }
+        else
+        {
+            await _policiesService.RegisterOnAbortCallbackAsync(
+                () =>
+                {
+                    _terminalTestReporter?.StartCancelling();
+                    return Task.CompletedTask;
+                }).ConfigureAwait(false);
+        }
+
         _isServerMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
         bool noAnsi = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
 
@@ -234,6 +255,16 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
+        if (_isListTestsJson)
+        {
+            // Machine-readable mode: keep stdout clean, suppress banner & file logger notice.
+            // The env var propagates to any child test host the controller spawns so they also
+            // stay quiet — important because the JSON document must be the sole stdout content.
+            _bannerDisplayed = true;
+            _environment.SetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
+            return;
+        }
+
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
             if (!_bannerDisplayed && !_isServerMode)
@@ -298,7 +329,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public async Task DisplayBeforeSessionStartAsync(CancellationToken cancellationToken)
     {
-        if (_isServerMode)
+        if (_isServerMode || _isListTestsJson)
         {
             return;
         }
@@ -339,6 +370,19 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
+        if (_isListTestsJson)
+        {
+            using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
+            {
+                if (_processRole == TestProcessRole.TestHost)
+                {
+                    _console.WriteLine(DiscoveredTestsJsonSerializer.Serialize(_discoveredTestsForJson));
+                }
+            }
+
+            return;
+        }
+
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
             if (_processRole == TestProcessRole.TestHost)
@@ -362,6 +406,28 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
+
+        if (_isListTestsJson)
+        {
+            // Machine-readable mode: keep stdout reserved for the JSON document so consumers can
+            // pipe it directly. Errors and exceptions still need surfacing somewhere, so route
+            // them to stderr (bypassing IConsole, which does not abstract stderr today). Warnings
+            // and informational text are dropped to keep stdout strictly JSON.
+            switch (data)
+            {
+                case ErrorMessageOutputDeviceData errorData:
+                    await LogDebugAsync(errorData.Message).ConfigureAwait(false);
+                    await Console.Error.WriteLineAsync(errorData.Message).ConfigureAwait(false);
+                    break;
+
+                case ExceptionOutputDeviceData exceptionData:
+                    await LogDebugAsync(exceptionData.Exception.ToString()).ConfigureAwait(false);
+                    await Console.Error.WriteLineAsync(exceptionData.Exception.ToString()).ConfigureAwait(false);
+                    break;
+            }
+
+            return;
+        }
 
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
@@ -401,6 +467,18 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         cancellationToken.ThrowIfCancellationRequested();
         if (_isServerMode)
         {
+            return Task.CompletedTask;
+        }
+
+        if (_isListTestsJson)
+        {
+            // Machine-readable mode: only buffer discovered tests, do not write anything to the terminal.
+            if (value is TestNodeUpdateMessage testNodeUpdate
+                && testNodeUpdate.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>() is DiscoveredTestNodeStateProperty)
+            {
+                _discoveredTestsForJson.Add(testNodeUpdate.TestNode);
+            }
+
             return Task.CompletedTask;
         }
 
