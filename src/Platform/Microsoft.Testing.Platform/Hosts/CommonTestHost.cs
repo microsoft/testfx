@@ -29,6 +29,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
     public async Task<int> RunAsync()
     {
         CancellationToken testApplicationCancellationToken = ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
+        List<object> alreadyDisposed = [];
 
         int exitCode = (int)ExitCode.GenericFailure;
         IPlatformOpenTelemetryService? platformOTelService = null;
@@ -41,7 +42,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
             if (PushOnlyProtocol is null || PushOnlyProtocol?.IsServerMode == false)
             {
-                exitCode = await RunTestAppAsync(platformOTelService, testApplicationCancellationToken).ConfigureAwait(false);
+                exitCode = await RunTestAppAsync(platformOTelService, testApplicationCancellationToken, alreadyDisposed).ConfigureAwait(false);
 
                 if (testApplicationCancellationToken.IsCancellationRequested)
                 {
@@ -58,7 +59,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
                 bool isValidProtocol = await PushOnlyProtocol.IsCompatibleProtocolAsync(hostType).ConfigureAwait(false);
 
                 exitCode = isValidProtocol
-                    ? await RunTestAppAsync(platformOTelService, testApplicationCancellationToken).ConfigureAwait(false)
+                    ? await RunTestAppAsync(platformOTelService, testApplicationCancellationToken, alreadyDisposed).ConfigureAwait(false)
                     : (int)ExitCode.IncompatibleProtocolVersion;
             }
             finally
@@ -78,9 +79,12 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             // Dispose the activity
             activity?.Dispose();
 
-            await DisposeServiceProviderAsync(ServiceProvider, isProcessShutdown: true).ConfigureAwait(false);
+            await DisposeServiceProviderAsync(ServiceProvider, alreadyDisposed: alreadyDisposed, isProcessShutdown: true).ConfigureAwait(false);
             await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>()).ConfigureAwait(false);
-            await DisposeHelper.DisposeAsync(PushOnlyProtocol).ConfigureAwait(false);
+            if (PushOnlyProtocol is not null && !alreadyDisposed.Contains(PushOnlyProtocol))
+            {
+                await DisposeHelper.DisposeAsync(PushOnlyProtocol).ConfigureAwait(false);
+            }
 
             // This is intentional that we are not disposing the CTS.
             // An unobserved task exception could be raised after the dispose, and we want to use OutputDevice there
@@ -96,20 +100,23 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         return exitCode;
     }
 
-    private string GetHostType()
-    {
-        // For now, we don't  inherit TestHostOrchestratorHost from CommonHost one so we don't connect when we orchestrate
-        string hostType = this switch
+    protected virtual string HostType
+        => this switch
         {
             ConsoleTestHost => "TestHost",
             TestHostControllersTestHost => "TestHostController",
             ServerTestHost => "ServerTestHost",
             _ => throw new InvalidOperationException($"Unknown host type '{GetType().FullName}'"),
         };
+
+    private string GetHostType()
+    {
+        // For now, we don't  inherit TestHostOrchestratorHost from CommonHost one so we don't connect when we orchestrate
+        string hostType = HostType;
         return hostType;
     }
 
-    private async Task<int> RunTestAppAsync(IPlatformOpenTelemetryService? platformOTelService, CancellationToken testApplicationCancellationToken)
+    private async Task<int> RunTestAppAsync(IPlatformOpenTelemetryService? platformOTelService, CancellationToken testApplicationCancellationToken, List<object> alreadyDisposed)
     {
         if (RunTestApplicationLifeCycleCallbacks)
         {
@@ -139,6 +146,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
                     using IPlatformActivity? activity = platformOTelService?.StartActivity(testApplicationLifecycleCallbacks.Uid, testApplicationLifecycleCallbacks.ToOTelTags());
                     await testApplicationLifecycleCallbacks.AfterRunAsync(exitCode, testApplicationCancellationToken).ConfigureAwait(false);
                     await DisposeHelper.DisposeAsync(testApplicationLifecycleCallbacks).ConfigureAwait(false);
+                    alreadyDisposed.Add(testApplicationLifecycleCallbacks);
                 }
             }
         }
@@ -323,7 +331,6 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 #pragma warning disable CS0618 // Type or member is obsolete
             if (!isProcessShutdown &&
                 service is ITelemetryCollector or
-                 ITestHostApplicationLifetime or
                  ITestHostApplicationLifetime or
                  IPushOnlyProtocol or
                  IPlatformOpenTelemetryService or

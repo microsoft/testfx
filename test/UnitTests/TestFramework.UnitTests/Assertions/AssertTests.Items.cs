@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
@@ -151,14 +151,14 @@ public partial class AssertTests
     {
         Action action = () => Assert.ContainsSingle(Array.Empty<int>());
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). 'collection' expression: 'Array.Empty<int>()'.");
+            .WithMessage("*Expected collection to contain exactly one element.*expected count:*1*actual count:*0*Assert.ContainsSingle(Array.Empty<int>())*");
     }
 
     public void Single_WhenMultipleItems_ShouldFail()
     {
         Action action = () => Assert.ContainsSingle([1, 2, 3]);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). 'collection' expression: '[1, 2, 3]'.");
+            .WithMessage("*Expected collection to contain exactly one element.*expected count:*1*actual count:*3*Assert.ContainsSingle([1, 2, 3])*");
     }
 
     public async Task Single_InterpolatedString_WhenNoItem_ShouldFail()
@@ -167,7 +167,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.ContainsSingle(Array.Empty<int>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). 'collection' expression: 'Array.Empty<int>()'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage($"*Expected collection to contain exactly one element.*User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}*expected count:*1*actual count:*0*Assert.ContainsSingle(Array.Empty<int>())*");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -177,7 +177,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.ContainsSingle([1, 2, 3], $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). 'collection' expression: '[1, 2, 3]'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage($"*Expected collection to contain exactly one element.*User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}*expected count:*1*actual count:*3*Assert.ContainsSingle([1, 2, 3])*");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -202,7 +202,7 @@ public partial class AssertTests
         var collection = new List<int> { 1, 3, 5 };
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 0 item(s). 'predicate' expression: 'x => x % 2 == 0', 'collection' expression: 'collection'.");
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*expected matches:*1*actual matches:*0*Assert.ContainsSingle(x => x % 2 == 0, collection)*");
     }
 
     public void SinglePredicate_WhenMultipleItemsMatch_ShouldFail()
@@ -210,7 +210,7 @@ public partial class AssertTests
         var collection = new List<int> { 2, 4, 6 };
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 3 item(s). 'predicate' expression: 'x => x % 2 == 0', 'collection' expression: 'collection'.");
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*expected matches:*1*actual matches:*3*Assert.ContainsSingle(x => x % 2 == 0, collection)*");
     }
 
     public void SinglePredicate_Message_WhenNoItemMatches_ShouldFail()
@@ -218,7 +218,7 @@ public partial class AssertTests
         var collection = new List<int> { 1, 3, 5 };
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, "No even numbers found: test");
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 0 item(s). 'predicate' expression: 'x => x % 2 == 0', 'collection' expression: 'collection'. No even numbers found: test");
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*No even numbers found: test*expected matches:*1*actual matches:*0*Assert.ContainsSingle(x => x % 2 == 0, collection)*");
     }
 
     public void SinglePredicate_Message_WhenMultipleItemsMatch_ShouldFail()
@@ -226,7 +226,7 @@ public partial class AssertTests
         var collection = new List<int> { 2, 4, 6 };
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, "Too many even numbers: test");
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 3 item(s). 'predicate' expression: 'x => x % 2 == 0', 'collection' expression: 'collection'. Too many even numbers: test");
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*Too many even numbers: test*expected matches:*1*actual matches:*3*Assert.ContainsSingle(x => x % 2 == 0, collection)*");
     }
 
     public void Any_WhenOneItem_ShouldPass()

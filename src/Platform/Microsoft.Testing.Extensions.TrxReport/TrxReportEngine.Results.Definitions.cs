@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 internal sealed partial class TrxReportEngine
 {
-    private static XElement CreateUnitTestElementForTestDefinition(string testDefinitionName, string testAppModule, string id, TestNode testNode, string executionId)
+    private static XElement CreateUnitTestElementForTestDefinition(string testDefinitionName, string testAppModule, string id, TrxTestResult testResult, string executionId)
     {
         var unitTest = new XElement(
             "UnitTest",
@@ -15,10 +15,9 @@ internal sealed partial class TrxReportEngine
             new XAttribute("storage", testAppModule.ToLowerInvariant()),
             new XAttribute("id", id));
 
-        TrxCategoriesProperty? trxCategories = testNode.Properties.SingleOrDefault<TrxCategoriesProperty>();
-        if (trxCategories?.Categories.Length > 0)
+        if (testResult.Categories is { Count: > 0 } categories)
         {
-            unitTest.Add(new XElement("TestCategory", trxCategories.Categories.Select(c => new XElement("TestCategoryItem", new XAttribute("TestCategory", c)))));
+            unitTest.Add(new XElement("TestCategory", categories.Select(c => new XElement("TestCategoryItem", new XAttribute("TestCategory", c)))));
         }
 
         unitTest.Add(new XElement("Execution", new XAttribute("id", executionId)));
@@ -26,7 +25,7 @@ internal sealed partial class TrxReportEngine
         XElement? properties = null;
         XElement? owners = null;
         XElement? description = null;
-        foreach (TestMetadataProperty property in testNode.Properties.OfType<TestMetadataProperty>())
+        foreach (TrxTestMetadata property in testResult.Metadata ?? [])
         {
             switch (property.Key)
             {

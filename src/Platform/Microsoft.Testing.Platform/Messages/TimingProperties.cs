@@ -42,11 +42,11 @@ public readonly struct TimingInfo : IEquatable<TimingInfo>
         var builder = new StringBuilder();
         builder.Append($"{nameof(TimingInfo)} {{ ");
         builder.Append($"{nameof(StartTime)} = ");
-        builder.Append(StartTime);
+        builder.Append(StartTime.ToString(CultureInfo.InvariantCulture));
         builder.Append($", {nameof(EndTime)} = ");
-        builder.Append(EndTime);
+        builder.Append(EndTime.ToString(CultureInfo.InvariantCulture));
         builder.Append($", {nameof(Duration)} = ");
-        builder.Append(Duration);
+        builder.Append(Duration.ToString("c", CultureInfo.InvariantCulture));
         builder.Append(" }");
         return builder.ToString();
     }

@@ -181,7 +181,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter
     public static void IsNotEmpty<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertIsNotEmptyInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(collectionExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
+        message.ComputeAssertion(collectionExpression);
+    }
 
     /// <summary>
     /// Tests that the collection is not empty.
@@ -195,6 +198,8 @@ public sealed partial class Assert
     /// </param>
     public static void IsNotEmpty<T>(IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
+
         if (collection.Any())
         {
             return;
@@ -214,6 +219,8 @@ public sealed partial class Assert
     /// </param>
     public static void IsNotEmpty(IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
+
         if (collection.Cast<object>().Any())
         {
             return;
@@ -239,7 +246,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter
     public static void HasCount<T>(int expected, IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(expected), nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(nameof(HasCount), collectionExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.HasCount");
+        message.ComputeAssertion(nameof(HasCount), collectionExpression);
+    }
 
     /// <summary>
     /// Tests whether the collection has the expected count/length.
@@ -285,7 +295,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter
     public static void IsEmpty<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(nameof(IsEmpty), collectionExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsEmpty");
+        message.ComputeAssertion(nameof(IsEmpty), collectionExpression);
+    }
 
     /// <summary>
     /// Tests that the collection is empty.
@@ -316,6 +329,10 @@ public sealed partial class Assert
 
     private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, string? message, string collectionExpression)
     {
+        // assertionName is one of a small fixed set ("HasCount", "IsEmpty"); use a cached prefixed
+        // string instead of allocating "Assert." + assertionName on every call.
+        TelemetryCollector.TrackAssertionCall(GetTrackedAssertionName(assertionName));
+
         int actualCount = collection.Count();
         if (actualCount == expected)
         {
@@ -327,6 +344,14 @@ public sealed partial class Assert
 
     private static void HasCount(string assertionName, int expected, IEnumerable collection, string? message, string collectionExpression)
         => HasCount(assertionName, expected, collection.Cast<object>(), message, collectionExpression);
+
+    private static string GetTrackedAssertionName(string assertionName)
+        => assertionName switch
+        {
+            "HasCount" => "Assert.HasCount",
+            "IsEmpty" => "Assert.IsEmpty",
+            _ => string.Concat("Assert.", assertionName),
+        };
 
     [DoesNotReturn]
     private static void ReportAssertCountFailed(string assertionName, int expectedCount, int actualCount, string? userMessage, string collectionExpression)
