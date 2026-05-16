@@ -10,7 +10,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
 /// <summary>
 /// The test run directories.
 /// </summary>
+#if NETFRAMEWORK
 [Serializable]
+#endif
 internal sealed class TestRunDirectories
 {
     /// <summary>

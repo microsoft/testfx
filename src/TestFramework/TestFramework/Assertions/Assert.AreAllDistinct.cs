@@ -67,7 +67,7 @@ public sealed partial class Assert
     {
         CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
         CheckParameterNotNull(comparer, "Assert.AreAllDistinct", "comparer");
-        AreAllDistinctImpl(collection, comparer, comparerTypeName: comparer.GetType().Name, message, collectionExpression);
+        AreAllDistinctImpl(collection, comparer, comparerTypeName: comparer.GetType().ToString(), message, collectionExpression);
     }
 
     /// <summary>
@@ -121,7 +121,7 @@ public sealed partial class Assert
     {
         CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
         CheckParameterNotNull(comparer, "Assert.AreAllDistinct", "comparer");
-        AreAllDistinctImpl(collection.Cast<object?>(), new NonGenericEqualityComparerAdapter(comparer), comparerTypeName: comparer.GetType().Name, message, collectionExpression);
+        AreAllDistinctImpl(collection.Cast<object?>(), new NonGenericEqualityComparerAdapter(comparer), comparerTypeName: comparer.GetType().ToString(), message, collectionExpression);
     }
 
 #pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
@@ -129,7 +129,7 @@ public sealed partial class Assert
     {
         List<T> snapshot = collection is List<T> list ? list : [.. collection];
 
-        HashSet<T> seen = new(comparer);
+        HashSet<T> seen = new HashSet<T>(comparer);
 
         bool seenNull = false;
         List<T>? duplicates = null;
@@ -158,7 +158,7 @@ public sealed partial class Assert
 
             if (!seen.Add(item))
             {
-                duplicatesSeen ??= new(comparer);
+                duplicatesSeen ??= new HashSet<T>(comparer);
                 if (duplicatesSeen.Add(item))
                 {
                     duplicates ??= [];
@@ -208,10 +208,8 @@ public sealed partial class Assert
 
         // FormatCallSiteExpression has no overload accepting a third argument expression; insert
         // the <comparer> placeholder so the rendered call-site reflects the overload that was actually invoked.
-        // Note: range/index syntax (callSite[..^1]) is not used because System.Range/System.Index are unavailable
-        // on net462 / netstandard2.0, the lowest TFMs targeted by this project.
         Debug.Assert(callSite.Length > 0 && callSite[callSite.Length - 1] == ')', "FormatCallSiteExpression contract: rendered call-site must end with ')'.");
-        return string.Concat(callSite.Substring(0, callSite.Length - 1), ", <comparer>)");
+        return string.Concat(callSite[..^1], ", <comparer>)");
     }
 
     #endregion // AreAllDistinct
@@ -225,8 +223,8 @@ public sealed partial class Assert
         public NonGenericEqualityComparerAdapter(IEqualityComparer comparer)
             => _comparer = comparer;
 
-        public bool Equals(object? x, object? y) => _comparer.Equals(x, y);
+        bool IEqualityComparer<object?>.Equals(object? x, object? y) => _comparer.Equals(x, y);
 
-        public int GetHashCode(object? obj) => obj is null ? 0 : _comparer.GetHashCode(obj);
+        int IEqualityComparer<object?>.GetHashCode(object? obj) => obj is null ? 0 : _comparer.GetHashCode(obj);
     }
 }

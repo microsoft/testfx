@@ -37,6 +37,11 @@
         <target state="translated">Удалите модификаторы "out" и "ref"</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextFix">
+        <source>Change return type to 'Task'</source>
+        <target state="new">Change return type to 'Task'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">Изменить доступность метода на "private"</target>
@@ -164,7 +169,7 @@
       </trans-unit>
       <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
         <source>Use MSTest 'Description' attribute instead</source>
-        <target state="new">Use MSTest 'Description' attribute instead</target>
+        <target state="translated">Вместо этого используйте атрибут MSTest "Description"</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">

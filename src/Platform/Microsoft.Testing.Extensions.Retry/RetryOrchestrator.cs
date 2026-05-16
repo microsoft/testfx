@@ -124,6 +124,16 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             indexToCleanup.Add(argIndex + 1);
         }
 
+        argIndex = GetOptionArgumentIndex(RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName, executableArguments);
+        if (argIndex > -1)
+        {
+            indexToCleanup.Add(argIndex);
+            if (argIndex + 1 < executableArguments.Length)
+            {
+                indexToCleanup.Add(argIndex + 1);
+            }
+        }
+
         argIndex = GetOptionArgumentIndex(PlatformCommandLineProvider.ResultDirectoryOptionKey, executableArguments);
         if (argIndex > -1)
         {
@@ -145,9 +155,25 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         bool thresholdPolicyKickedIn = false;
         string retryRootFolder = CreateRetriesDirectory(resultDirectory);
         bool retryInterrupted = false;
+
+        // Parse the delay once before the loop since command-line options don't change.
+        TimeSpan? retryDelay = null;
+        if (_commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName, out string[]? retryDelayArgs)
+            && retryDelayArgs is { Length: > 0 }
+            && TimeSpanParser.TryParse(retryDelayArgs[0], out TimeSpan parsedDelay))
+        {
+            retryDelay = parsedDelay;
+        }
+
         while (attemptCount < userMaxRetryCount + 1)
         {
             attemptCount++;
+
+            if (attemptCount > 1 && retryDelay is { } delay)
+            {
+                await logger.LogDebugAsync($"Waiting {delay:c} before retry attempt {attemptCount}").ConfigureAwait(false);
+                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+            }
 
             // Cleanup the arguments
             for (int i = 0; i < executableArguments.Length; i++)

@@ -42,7 +42,16 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsGreaterThan failed. Actual value <5> is not greater than expected value <10>. 'lowerBound' expression: '10', 'value' expression: '5'. A Message");
+            .WithMessage(
+                """
+                Assertion failed. Expected value to be greater than the lower bound.
+                A Message
+
+                lower bound: 10
+                actual:      5
+
+                Assert.IsGreaterThan(10, 5)
+                """);
     }
 
     public void IsGreaterThanShouldWorkWithDoubles() =>
@@ -86,7 +95,16 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsGreaterThanOrEqualTo failed. Actual value <5> is not greater than or equal to expected value <10>. 'lowerBound' expression: '10', 'value' expression: '5'. A Message");
+            .WithMessage(
+                """
+                Assertion failed. Expected value to be greater than or equal to the lower bound.
+                A Message
+
+                lower bound: 10
+                actual:      5
+
+                Assert.IsGreaterThanOrEqualTo(10, 5)
+                """);
     }
 
     public void IsGreaterThanOrEqualToShouldWorkWithDoubles() =>
@@ -130,7 +148,16 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsLessThan failed. Actual value <10> is not less than expected value <5>. 'upperBound' expression: '5', 'value' expression: '10'. A Message");
+            .WithMessage(
+                """
+                Assertion failed. Expected value to be less than the upper bound.
+                A Message
+
+                upper bound: 5
+                actual:      10
+
+                Assert.IsLessThan(5, 10)
+                """);
     }
 
     public void IsLessThanShouldWorkWithDoubles() =>
@@ -174,7 +201,16 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsLessThanOrEqualTo failed. Actual value <10> is not less than or equal to expected value <5>. 'upperBound' expression: '5', 'value' expression: '10'. A Message");
+            .WithMessage(
+                """
+                Assertion failed. Expected value to be less than or equal to the upper bound.
+                A Message
+
+                upper bound: 5
+                actual:      10
+
+                Assert.IsLessThanOrEqualTo(5, 10)
+                """);
     }
 
     public void IsLessThanOrEqualToShouldWorkWithDoubles() =>
@@ -233,7 +269,16 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsPositive failed. Expected value <-5> to be positive. 'value' expression: '-5'. A Message");
+            .WithMessage(
+                """
+                Assertion failed. Expected value to be positive.
+                A Message
+
+                expected: > 0
+                actual:   -5
+
+                Assert.IsPositive(-5)
+                """);
     }
 
     public void IsPositiveShouldWorkWithDoubles() =>
@@ -298,7 +343,16 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsNegative failed. Expected value <5> to be negative. 'value' expression: '5'. A Message");
+            .WithMessage(
+                """
+                Assertion failed. Expected value to be negative.
+                A Message
+
+                expected: < 0
+                actual:   5
+
+                Assert.IsNegative(5)
+                """);
     }
 
     public void IsNegativeShouldWorkWithDoubles() =>

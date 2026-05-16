@@ -10,3 +10,7 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreAllNotNull(System.
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreAllNotNull<T>(System.Collections.Generic.IEnumerable<T>? collection, string? message = "", string! collectionExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreAllOfType(System.Type? expectedType, System.Collections.IEnumerable? collection, string? message = "", string! expectedTypeExpression = "", string! collectionExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreAllOfType<TExpected>(System.Collections.IEnumerable? collection, string? message = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEquivalent<T>(T? expected, T? actual, bool strict, string? message = "", string! expectedExpression = "", string! actualExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEquivalent<T>(T? expected, T? actual, string? message = "", string! expectedExpression = "", string! actualExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEquivalent<T>(T? notExpected, T? actual, bool strict, string? message = "", string! notExpectedExpression = "", string! actualExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEquivalent<T>(T? notExpected, T? actual, string? message = "", string! notExpectedExpression = "", string! actualExpression = "") -> void
