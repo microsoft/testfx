@@ -248,7 +248,15 @@ public partial class AssertTests
             .Which;
 
         innerException.InnerExceptions.Should().HaveCount(2);
-        innerException.InnerExceptions[0].Message.Should().Be("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). 'collection' expression: 'items'.");
+        innerException.InnerExceptions[0].Message.Should().Be(
+            """
+            Assertion failed. Expected collection to contain exactly one element.
+
+            expected count: 1
+            actual count:   3
+
+            Assert.ContainsSingle(items)
+            """);
         innerException.InnerExceptions[1].Message.Should().Be(AreEqual1And2StructuredMessage);
     }
 }

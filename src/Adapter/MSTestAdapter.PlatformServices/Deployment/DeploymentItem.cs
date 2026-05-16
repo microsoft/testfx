@@ -10,7 +10,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
 /// <summary>
 /// Specifies type of deployment item origin, where the item comes from.
 /// </summary>
+#if NETFRAMEWORK
 [Serializable]
+#endif
 internal enum DeploymentItemOriginType
 {
     /// <summary>
@@ -37,7 +39,9 @@ internal enum DeploymentItemOriginType
 /// <summary>
 /// The deployment item for a test class or a test method.
 /// </summary>
+#if NETFRAMEWORK
 [Serializable]
+#endif
 internal sealed class DeploymentItem
 {
     /// <summary>

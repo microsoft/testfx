@@ -138,7 +138,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreSame<T>(T? expected, T? actual, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual))] ref AssertAreSameInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(expectedExpression, actualExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreSame");
+        message.ComputeAssertion(expectedExpression, actualExpression);
+    }
 
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
@@ -174,6 +177,8 @@ public sealed partial class Assert
     /// </exception>
     public static void AreSame<T>(T? expected, T? actual, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreSame");
+
         if (!IsAreSameFailing(expected, actual))
         {
             return;
@@ -216,7 +221,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotSame<T>(T? notExpected, T? actual, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual))] ref AssertAreNotSameInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(notExpectedExpression, actualExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreNotSame");
+        message.ComputeAssertion(notExpectedExpression, actualExpression);
+    }
 
     /// <summary>
     /// Tests whether the specified objects refer to different objects and
@@ -251,6 +259,8 @@ public sealed partial class Assert
     /// </exception>
     public static void AreNotSame<T>(T? notExpected, T? actual, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreNotSame");
+
         if (IsAreNotSameFailing(notExpected, actual))
         {
             ReportAssertAreNotSameFailed(notExpected, actual, message, notExpectedExpression, actualExpression);
