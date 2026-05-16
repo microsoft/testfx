@@ -68,7 +68,7 @@ public sealed class AzureDevOpsTests
         // check would happily accept the framework frame if we did not skip it.
         string stackTrace = string.Join(
             Environment.NewLine,
-            "   at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType[T](T value, String message) in /_/src/TestFramework/TestFramework/Assertions/Assert.IComparable.cs:line 99",
+            "   at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThan[T](T upperBound, T value, String message) in /_/src/TestFramework/TestFramework/Assertions/Assert.IComparable.cs:line 138",
             $"   at Microsoft.Testing.Extensions.UnitTests.AzureDevOpsTests.SkipsMSTestAssertImplementationFrameInPartialClassFile() in {userFile}:line {userLine}");
 
         var error = new SyntheticStackTraceException("boom", stackTrace);
