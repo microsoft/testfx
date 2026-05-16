@@ -60,7 +60,7 @@ public partial class AssertTests
     public void Count_WhenCurrentCultureUsesCustomNegativeSign_ShouldUseInvariantCallSiteValue()
     {
         CultureInfo originalCulture = CultureInfo.CurrentCulture;
-        CultureInfo customCulture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
+        var customCulture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
         customCulture.NumberFormat.NegativeSign = "−";
 
         try
