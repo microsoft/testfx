@@ -128,7 +128,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message, [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(conditionExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsTrue");
+        message.ComputeAssertion(conditionExpression);
+    }
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -150,6 +153,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string? message = "", [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsTrue");
+
         if (IsTrueFailing(condition))
         {
             ReportAssertIsTrueFailed(condition, message, conditionExpression);
@@ -179,7 +184,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message, [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(conditionExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsFalse");
+        message.ComputeAssertion(conditionExpression);
+    }
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -201,6 +209,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string? message = "", [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsFalse");
+
         if (IsFalseFailing(condition))
         {
             ReportAssertIsFalseFailed(condition, message, conditionExpression);

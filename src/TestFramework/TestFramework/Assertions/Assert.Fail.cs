@@ -22,5 +22,8 @@ public sealed partial class Assert
     /// </exception>
     [DoesNotReturn]
     public static void Fail(string message = "")
-        => ThrowAssertFailed("Assert.Fail", BuildUserMessage(message));
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.Fail");
+        ThrowAssertFailed("Assert.Fail", BuildUserMessage(message));
+    }
 }

@@ -5,7 +5,9 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
+#if NETFRAMEWORK
 [Serializable]
+#endif
 internal sealed class TestAssemblySettings
 {
     public TestAssemblySettings() => Workers = -1;
