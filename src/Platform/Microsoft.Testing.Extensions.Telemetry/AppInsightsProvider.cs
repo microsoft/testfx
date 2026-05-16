@@ -5,7 +5,9 @@
 using System.Threading.Channels;
 #endif
 
+#if DEBUG
 using Microsoft.Testing.Platform;
+#endif
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
