@@ -380,8 +380,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                 //       Reaching this code for instance means that we're trying to process / operator
                 //       in the middle of a ( expression ).
                 throw new InvalidOperationException(
-                    $"{PlatformResources.TreeNodeFilterUnexpectedSlashOperatorErrorMessage} "
-                    + $"Filter: '{filter}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.");
+                    string.Format(CultureInfo.InvariantCulture, PlatformResources.TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage, filter));
         }
     }
 
