@@ -129,7 +129,9 @@ public sealed partial class Assert
     {
         List<T> snapshot = collection is List<T> list ? list : [.. collection];
 
-        HashSet<T> seen = new HashSet<T>(comparer);
+#pragma warning disable IDE0028 // Collection initialization can be simplified - target-typed `new` cannot pass the comparer in the same syntactic form expected.
+        var seen = new HashSet<T>(comparer);
+#pragma warning restore IDE0028
 
         bool seenNull = false;
         List<T>? duplicates = null;
@@ -158,7 +160,9 @@ public sealed partial class Assert
 
             if (!seen.Add(item))
             {
-                duplicatesSeen ??= new HashSet<T>(comparer);
+#pragma warning disable IDE0028 // Collection initialization can be simplified - target-typed `new` cannot pass the comparer in the same syntactic form expected.
+                duplicatesSeen ??= new(comparer);
+#pragma warning restore IDE0028
                 if (duplicatesSeen.Add(item))
                 {
                     duplicates ??= [];
@@ -209,7 +213,7 @@ public sealed partial class Assert
         // FormatCallSiteExpression has no overload accepting a third argument expression; insert
         // the <comparer> placeholder so the rendered call-site reflects the overload that was actually invoked.
         Debug.Assert(callSite.Length > 0 && callSite[callSite.Length - 1] == ')', "FormatCallSiteExpression contract: rendered call-site must end with ')'.");
-        return string.Concat(callSite[..^1], ", <comparer>)");
+        return string.Concat(callSite.Remove(callSite.Length - 1), ", <comparer>)");
     }
 
     #endregion // AreAllDistinct
