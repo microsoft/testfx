@@ -93,7 +93,7 @@ internal sealed partial class TrxReportEngine
             string trxFileName;
             if (_commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
             {
-                trxFileName = ReplaceInvalidFileNameChars(fileName[0]);
+                trxFileName = ReplaceInvalidFileNameChars(ResolveTrxFileNamePlaceholders(fileName[0]));
                 isFileNameExplicitlyProvided = true;
             }
             else
@@ -173,6 +173,14 @@ internal sealed partial class TrxReportEngine
                 throwIOException = true;
             }
         }
+    }
+
+    private string ResolveTrxFileNamePlaceholders(string template)
+    {
+        string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+        string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
+        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(processName, processId, _clock.UtcNow);
+        return ArtifactNamingHelper.ResolveTemplate(template, replacements);
     }
 
     private readonly record struct SummaryCounts(int Passed, int Failed, int Skipped, int Timedout);

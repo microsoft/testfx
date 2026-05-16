@@ -15,9 +15,9 @@ public sealed class HelpInfoAllExtensionsTests : AcceptanceTestBase<HelpInfoAllE
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
-        string wildcardPattern = $"""
+        string wildcardPattern = $$"""
 Microsoft.Testing.Platform v*
-Usage {TestAssetFixture.AllExtensionsAssetName}* [option providers] [extension option providers]
+Usage {{TestAssetFixture.AllExtensionsAssetName}}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
     --config-file
@@ -103,7 +103,9 @@ Extension options:
     --report-trx
         Enable generating TRX report
     --report-trx-filename
-        The name of the generated TRX report
+        The name of the generated TRX report.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+        Example: MyReport_{tfm}.trx
     --show-stderr
         Determines when to show captured error output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All'.
@@ -124,9 +126,9 @@ Extension options:
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
-        string wildcardPattern = $"""
+        string wildcardPattern = $$"""
 Microsoft.Testing.Platform v*
-Usage {TestAssetFixture.AllExtensionsAssetName}* [option providers] [extension option providers]
+Usage {{TestAssetFixture.AllExtensionsAssetName}}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
 """;
@@ -143,14 +145,14 @@ Options:
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
-        string wildcardPattern = $"""
+        string wildcardPattern = $$"""
 Microsoft.Testing.Platform v* [*]
 Microsoft Testing Platform:
   Version: *
   Dynamic Code Supported: True
   Runtime information: *
-  {(tfm != TargetFrameworks.NetFramework[0] ? "###SKIP###" : "Runtime location: *")}
-  Test module: *{TestAssetFixture.AllExtensionsAssetName}*
+  {{(tfm != TargetFrameworks.NetFramework[0] ? "###SKIP###" : "Runtime location: *")}}
+  Test module: *{{TestAssetFixture.AllExtensionsAssetName}}*
 Built-in command line providers:
   PlatformCommandLineProvider
     Name: Platform command line provider
@@ -384,7 +386,9 @@ Registered command line providers:
       --report-trx-filename
         Arity: 1
         Hidden: False
-        Description: The name of the generated TRX report
+        Description: The name of the generated TRX report.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+        Example: MyReport_{tfm}.trx
 Registered tools:
   TrxCompareTool
     Command: ms-trxcompare
