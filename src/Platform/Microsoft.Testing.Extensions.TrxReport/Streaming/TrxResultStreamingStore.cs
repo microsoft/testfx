@@ -66,7 +66,10 @@ internal sealed class TrxResultStreamingStore : IDisposable
         _logger = logger;
         _batchSize = batchSize;
         _flushIntervalMs = flushIntervalMs;
-        _writerTask = task.Run(WriteLoopAsync, CancellationToken.None);
+        // BlockingCollection<T>.TryTake blocks the calling thread for up to _flushIntervalMs when
+        // the queue is idle. Running the writer on a dedicated long-running thread instead of the
+        // shared threadpool keeps it from starving threadpool consumers while it sleeps on the queue.
+        _writerTask = task.RunLongRunning(WriteLoopAsync, "TRX streaming store writer", CancellationToken.None);
     }
 
     /// <summary>
@@ -357,7 +360,7 @@ internal sealed class TrxResultStreamingStore : IDisposable
             }
             catch
             {
-                ExceptionDispatchInfo.Capture(lastError).Throw();
+                ExceptionDispatchInfo.Capture(lastError!).Throw();
             }
 
             try
@@ -366,7 +369,7 @@ internal sealed class TrxResultStreamingStore : IDisposable
             }
             catch (OperationCanceledException)
             {
-                ExceptionDispatchInfo.Capture(lastError).Throw();
+                ExceptionDispatchInfo.Capture(lastError!).Throw();
             }
         }
 
