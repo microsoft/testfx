@@ -18,6 +18,7 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
     private readonly IMessageBus _messageBus;
     private readonly IOutputDevice _outputDisplay;
     private readonly CrashDumpConfiguration _netCoreCrashDumpGeneratorConfiguration;
+    private HashSet<string> _preExistingDumpFiles = new(StringComparer.OrdinalIgnoreCase);
 
     public CrashDumpProcessLifetimeHandler(
         ICommandLineOptions commandLineOptions,
@@ -51,7 +52,21 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
 
     public Task BeforeTestHostProcessStartAsync(CancellationToken _) => Task.CompletedTask;
 
-    public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
+    {
+        // Snapshot any pre-existing files in the dump directory so we can later restrict dump publication
+        // to files that appeared during this run. Without this, when the results/dump directory is reused
+        // across runs, stale dumps from a previous crash whose names also match the configured pattern
+        // would be surfaced as artifacts of the current failure.
+        ApplicationStateGuard.Ensure(_netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern is not null);
+        string dumpDirectory = GetDumpDirectory(_netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern);
+        if (Directory.Exists(dumpDirectory))
+        {
+            _preExistingDumpFiles = new HashSet<string>(Directory.EnumerateFiles(dumpDirectory), StringComparer.OrdinalIgnoreCase);
+        }
+
+        return Task.CompletedTask;
+    }
 
     public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
@@ -85,7 +100,8 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         {
             foreach (string dumpFile in Directory.EnumerateFiles(dumpDirectory))
             {
-                if (dumpFileNameRegex.IsMatch(Path.GetFileName(dumpFile)))
+                if (dumpFileNameRegex.IsMatch(Path.GetFileName(dumpFile))
+                    && !_preExistingDumpFiles.Contains(dumpFile))
                 {
                     await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
                     publishedAny = true;
@@ -101,7 +117,10 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
             {
                 foreach (string dumpFile in Directory.EnumerateFiles(dumpDirectory, "*.dmp"))
                 {
-                    await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
+                    if (!_preExistingDumpFiles.Contains(dumpFile))
+                    {
+                        await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
+                    }
                 }
             }
         }
@@ -109,8 +128,14 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
 
     internal static string GetDumpDirectory(string dumpFileNamePattern)
     {
-        // Path.GetDirectoryName returns "" (not null) for a bare filename on .NET Core/5+; treat that as
-        // the current working directory so the dump enumeration is not silently skipped.
+        // Path.GetDirectoryName returns "" (not null) for a bare filename on .NET Core/5+ but throws
+        // ArgumentException for an empty string on .NET Framework; treat both as the current working
+        // directory so the dump enumeration is not silently skipped.
+        if (dumpFileNamePattern is null or "")
+        {
+            return ".";
+        }
+
         string? rawDirectory = Path.GetDirectoryName(dumpFileNamePattern);
         return rawDirectory is null or "" ? "." : rawDirectory;
     }

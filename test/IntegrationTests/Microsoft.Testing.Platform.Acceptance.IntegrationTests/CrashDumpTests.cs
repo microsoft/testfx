@@ -111,6 +111,7 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
 #file Program.cs
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -170,7 +171,9 @@ public class DummyTestFramework : ITestFramework
         {
             Process self = Process.GetCurrentProcess();
             string path = self.MainModule!.FileName!;
-            string argPrefix = path.EndsWith("dotnet") || path.EndsWith("dotnet.exe")
+            string fileName = Path.GetFileName(path);
+            string argPrefix = string.Equals(fileName, "dotnet", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(fileName, "dotnet.exe", StringComparison.OrdinalIgnoreCase)
                 ? $"exec \"{Assembly.GetEntryAssembly()!.Location}\" "
                 : string.Empty;
 
@@ -179,8 +182,21 @@ public class DummyTestFramework : ITestFramework
                 UseShellExecute = false,
             })!;
 
-            // Wait for the child to fully exit so its crash dump is written before we crash too.
-            child.WaitForExit();
+            // Wait for the child to fully exit (with a bounded timeout to avoid hanging the test run)
+            // so its crash dump is written before we crash too.
+            if (!child.WaitForExit(60_000))
+            {
+                try
+                {
+                    child.Kill();
+                }
+                catch
+                {
+                    // Best effort: process may have just exited.
+                }
+
+                throw new InvalidOperationException("Child process did not exit within the expected timeout (60s).");
+            }
         }
 
         Environment.FailFast("CrashDump");
