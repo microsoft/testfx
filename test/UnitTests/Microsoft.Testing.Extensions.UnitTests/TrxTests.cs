@@ -205,6 +205,159 @@ public class TrxTests
     }
 
     [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithPlaceholderInTrxReportFileName_PlaceholdersAreResolved()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        string[]? argumentTrxReportFileName = ["report_{pname}_{pid}.trx"];
+        _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
+        _ = _environmentMock.SetupGet(_ => _.ProcessId).Returns(1234);
+        PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        // {pname} resolves to the test app name (without extension), {pid} resolves to the process id from IEnvironment.
+        Assert.AreEqual("report_TestAppPath_1234.trx", fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithUnknownPlaceholder_PlaceholderIsPreserved()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        string[]? argumentTrxReportFileName = ["report_{unknown}.trx"];
+        _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
+        PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        // Unknown placeholders are preserved as-is by ArtifactNamingHelper.
+        Assert.AreEqual("report_{unknown}.trx", fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithoutPlaceholderInFileName_FileNameUnchanged()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        string[]? argumentTrxReportFileName = ["plain_report.trx"];
+        _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
+        PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        Assert.AreEqual("plain_report.trx", fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithTimePlaceholder_TimeIsResolvedFromClock()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        string[]? argumentTrxReportFileName = ["report_{time}.trx"];
+        _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
+        _ = _clockMock.SetupGet(_ => _.UtcNow).Returns(new DateTimeOffset(2025, 9, 22, 13, 49, 34, TimeSpan.Zero));
+        PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        Assert.AreEqual("report_2025-09-22_13-49-34.0000000.trx", fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithPlaceholderResolvingToInvalidChars_InvalidCharsAreSanitized()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        string[]? argumentTrxReportFileName = ["report_{pname}.trx"];
+        _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
+        PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+        // Override the test app path setup from GenerateTrxReportEngine to one whose file name part contains characters
+        // (parentheses and a space) that are in InvalidFileNameChars and should be replaced with '_'.
+        _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns(Path.Combine(Path.GetTempPath(), "bad (name).dll"));
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        // The resolved {pname} is "bad (name)" (Path.GetFileNameWithoutExtension), and the invalid characters '(', ')' and ' ' are replaced by '_'.
+        Assert.AreEqual("report_bad__name_.trx", fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithAsmPlaceholder_PlaceholderIsResolved()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        string[]? argumentTrxReportFileName = ["report_{asm}.trx"];
+        _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
+        PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        // {asm} resolves to the entry assembly name (or "unknown" if there is no entry assembly).
+        // We do not assert the exact value because the entry assembly differs across runners and TFMs;
+        // we only verify that the placeholder was replaced with a non-empty token and is sanitized as a valid file name.
+        Assert.IsTrue(fileName.StartsWith("report_", StringComparison.Ordinal), $"Expected fileName to start with 'report_' but was '{fileName}'.");
+        Assert.IsTrue(fileName.EndsWith(".trx", StringComparison.Ordinal), $"Expected fileName to end with '.trx' but was '{fileName}'.");
+        Assert.DoesNotContain("{asm}", fileName, $"Expected '{{asm}}' to be resolved but was still present in '{fileName}'.");
+        Assert.AreNotEqual("report_.trx", fileName, "Expected {asm} to resolve to a non-empty value.");
+        Assert.IsNotNull(memoryStream.TrxContent);
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithTfmPlaceholder_PlaceholderIsResolved()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        string[]? argumentTrxReportFileName = ["report_{tfm}.trx"];
+        _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
+        PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        // {tfm} resolves via TargetFrameworkAttribute or RuntimeInformation.FrameworkDescription
+        // (e.g. "net462", "net8.0", "net9.0"). We only assert the placeholder was replaced with a non-empty
+        // token rather than the exact value, because the test runs on multiple TFMs.
+        Assert.IsTrue(fileName.StartsWith("report_", StringComparison.Ordinal), $"Expected fileName to start with 'report_' but was '{fileName}'.");
+        Assert.IsTrue(fileName.EndsWith(".trx", StringComparison.Ordinal), $"Expected fileName to end with '.trx' but was '{fileName}'.");
+        Assert.DoesNotContain("{tfm}", fileName, $"Expected '{{tfm}}' to be resolved but was still present in '{fileName}'.");
+        Assert.AreNotEqual("report_.trx", fileName, "Expected {tfm} to resolve to a non-empty value.");
+        Assert.IsNotNull(memoryStream.TrxContent);
+    }
+
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithTestHostCrash_ResultSummaryOutcomeIsFailed()
     {
         // Arrange
