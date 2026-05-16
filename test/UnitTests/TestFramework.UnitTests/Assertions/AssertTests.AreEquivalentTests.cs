@@ -298,13 +298,17 @@ public partial class AssertTests : TestContainer
         // A property getter that calls Assert.Fail() throws AssertFailedException wrapped in a
         // TargetInvocationException by Reflection. The equivalence comparer must NOT rewrite the
         // framework exception as a structured "comparison failure" — it must propagate so the user's
-        // assertion surfaces with its original message.
+        // assertion surfaces with its original message AND original stack trace.
         AssertFailingGetter a = new();
         AssertFailingGetter b = new();
         Action act = () => Assert.AreEquivalent(a, b);
-        act.Should().Throw<AssertFailedException>()
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>()
             .WithMessage("*nested-assert-fail*")
-            .And.Message.Should().NotContain("Mismatch at");
+            .Which;
+        ex.Message.Should().NotContain("Mismatch at");
+        // The stack trace must point back to the user property getter (via ExceptionDispatchInfo);
+        // a naive `throw assertEx;` rethrow would replace this frame with the rethrow site.
+        ex.StackTrace.Should().NotBeNullOrEmpty().And.Contain(nameof(AssertFailingGetter));
     }
 
     public void AreEquivalent_IEquatableThrows_FailsWithExpectedDiagnostic()

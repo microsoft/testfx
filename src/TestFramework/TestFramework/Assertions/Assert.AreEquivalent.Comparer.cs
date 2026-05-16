@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.ExceptionServices;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public sealed partial class Assert
@@ -702,12 +704,13 @@ public sealed partial class Assert
         /// Rethrows a framework assertion exception (e.g., from a user-defined property getter or
         /// IEquatable.Equals that called <c>Assert.Fail</c>) unwrapped from <see cref="TargetInvocationException"/>,
         /// so user assertions propagate untouched instead of being rewritten as a structured equivalence failure.
+        /// Uses <see cref="ExceptionDispatchInfo"/> to preserve the original throw site in the stack trace.
         /// </summary>
         private static void ThrowIfAssertException(Exception? inner)
         {
-            if (inner is UnitTestAssertException assertEx)
+            if (inner is UnitTestAssertException)
             {
-                throw assertEx;
+                ExceptionDispatchInfo.Capture(inner).Throw();
             }
         }
 
