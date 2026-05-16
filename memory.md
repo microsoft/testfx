@@ -41,6 +41,7 @@
 - MSTest.Engine TestFixtureManager.RegisterFixtureUsage: uses LINQ Select to create FixtureId[], but this is one-time registration (not per-execution), low priority.
 - MSTest.Engine: PropertyBag.Any<T>() has fast-path for TestNodeStateProperty, no LINQ, already well-optimized.
 - MSTest.Engine, Platform/: scanned on 2026-05-15 - no new high-confidence hot-path targets found beyond backlog items.
+- MSTest.SourceGeneration: scanned 2026-05-16 - ~20 files, mostly uses EquatableArray<T> and incremental generators (already well-designed for incremental compilation perf), no obvious hot-path allocation issues.
 
 ## Optimization Backlog
 1. **[In main]** ValidSourceExtensions static cache + ReflectionTestMethodInfo deduplication
@@ -53,6 +54,7 @@
 8. Scanned Execution/, Discovery/, Helpers/ on 2026-05-06 - no new high-confidence targets beyond backlog items
 9. Scanned Platform/ briefly on 2026-05-14 - LINQ usage found but in non-hot-path areas (CommandLine, ServerMode)
 10. Scanned MSTest.Engine/ and Platform/ deeper on 2026-05-15 - no new high-confidence targets
+11. Scanned MSTest.SourceGeneration on 2026-05-16 - no new high-confidence targets (incremental generator design already perf-conscious)
 
 ## Completed Work
 - Branch: perf-assist/reduce-allocations-discovery-execution (changes applied to main by maintainer, issue #7815 still open - suggest closing)
@@ -68,16 +70,17 @@
 - IMPORTANT: Do NOT create a new monthly activity issue - maintainer closed #7981 as not_planned on 2026-05-13
 
 ## Last Run
+- 2026-05-16: Scanned MSTest.SourceGeneration - already well-designed for incremental compilation perf, no new targets. All backlog items exhausted. Noop.
 - 2026-05-15: Task 2/6 (deeper scan MSTest.Engine + Platform - no new high-confidence targets); noop
 - 2026-05-14: Task 2/5 (scanned Platform/ briefly - no new high-confidence targets), noop (monthly issue closed by maintainer)
 - 2026-05-13: Task 4/2 (PR #8095 merged!), Task 7 (monthly summary updated - but issue subsequently closed by Evangelink)
-- 2026-05-12: Task 4 (fixed Windows CI in PR #8095), Task 7 (monthly summary updated)
 
 ## Round Robin Status
 - 2026-05-13: Tasks 4, 2, 7 done
 - 2026-05-14: Tasks 2, 5 attempted; noop
 - 2026-05-15: Tasks 2, 6 attempted; noop (no new high-confidence targets)
-- Next run: Consider looking at new areas - maybe MSBuild targets, source generators, or waiting for profiler evidence from maintainers
+- 2026-05-16: Task 2 (SourceGeneration scan); noop (backlog exhausted, waiting for profiler evidence from maintainers)
+- Next run: Consider waiting for maintainer feedback or new issues before attempting more work. May want to scan test/ directory for perf test infrastructure gaps.
 
 ## IMPORTANT NOTES FOR FUTURE RUNS
 - **DO NOT create more IsIgnored issues/PRs** - PR #8095 is MERGED.
@@ -86,4 +89,4 @@
 - **DO NOT change ConfigureAwait(true) in TestMethodInfo.Execution.cs** - intentional for WinUI UI thread requirement
 - If stuck, look at NEW opportunities in test execution/discovery code using profiler evidence
 - The maintainers want profiler evidence before accepting allocation-optimization issues
-- Consider looking at source generators (MSTest.SourceGeneration) or analyzers for perf next
+- Consider looking at test/ directory perf test infrastructure next, or wait for new issues
