@@ -63,25 +63,20 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
-        bool crashDumpEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName);
+        // IsEnabledAsync gates this method, so at least one of --crashdump / --crash-report is set here.
         bool crashReportEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
-
-        if (crashDumpEnabled || crashReportEnabled)
-        {
-            foreach (string prefix in Prefixes)
-            {
-                environmentVariables.SetVariable(new($"{prefix}{EnableMiniDumpVariable}", EnabledValue, false, true));
-            }
-        }
 
         foreach (string prefix in Prefixes)
         {
+            environmentVariables.SetVariable(new($"{prefix}{EnableMiniDumpVariable}", EnabledValue, false, true));
             environmentVariables.SetVariable(new($"{prefix}{CreateDumpDiagnosticsVariable}", EnabledValue, false, true));
             environmentVariables.SetVariable(new($"{prefix}{CreateDumpVerboseDiagnosticsVariable}", EnabledValue, false, true));
         }
 
         if (crashReportEnabled)
         {
+            bool crashDumpEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName);
+
             // When a dump is also requested, emit a crash report alongside it.
             // Otherwise emit only the crash report (no dump file).
             string reportVariable = crashDumpEnabled ? EnableCrashReportVariable : EnableCrashReportOnlyVariable;
@@ -159,19 +154,17 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         return ValidationResult.InvalidTask(CrashDumpResources.CrashDumpNotSupportedInNonNetCoreErrorMessage);
 #else
         StringBuilder errors = new();
-        bool crashDumpEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName);
+
+        // IsEnabledAsync gates this method, so at least one of --crashdump / --crash-report is set here.
         bool crashReportEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
 
-        if (crashDumpEnabled || crashReportEnabled)
-        {
-            ValidateBothPrefixes(EnableMiniDumpVariable, EnabledValue);
-        }
-
+        ValidateBothPrefixes(EnableMiniDumpVariable, EnabledValue);
         ValidateBothPrefixes(CreateDumpDiagnosticsVariable, EnabledValue);
         ValidateBothPrefixes(CreateDumpVerboseDiagnosticsVariable, EnabledValue);
 
         if (crashReportEnabled)
         {
+            bool crashDumpEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName);
             string reportVariable = crashDumpEnabled ? EnableCrashReportVariable : EnableCrashReportOnlyVariable;
             ValidateBothPrefixes(reportVariable, EnabledValue);
         }

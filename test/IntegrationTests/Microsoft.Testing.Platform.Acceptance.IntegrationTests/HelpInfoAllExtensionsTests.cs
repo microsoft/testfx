@@ -70,6 +70,8 @@ Options:
         A global test execution timeout.
         Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
 Extension options:
+    --crash-report
+        [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).
     --crashdump
         [net6.0+ only] Generate a dump file if the test process crashes
     --crashdump-filename
@@ -78,8 +80,6 @@ Extension options:
         Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
         For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps
-    --crash-report
-        Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'.
     --hangdump
         Generate a dump file if the test process hangs
     --hangdump-filename
@@ -272,6 +272,10 @@ Registered command line providers:
     Version: *
     Description: [net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly
     Options:
+      --crash-report
+        Arity: 0
+        Hidden: False
+        Description: [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).
       --crashdump
         Arity: 0
         Hidden: False
@@ -286,10 +290,6 @@ Registered command line providers:
         Description: Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
         For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps
-      --crash-report
-        Arity: 0
-        Hidden: False
-        Description: Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'.
   HangDumpCommandLineProvider
     Name: Hang dump
     Version: *

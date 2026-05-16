@@ -110,7 +110,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
         {
             string optionNameIndent = new(' ', indentLevel * 2);
             string optionInfoIndent = new(' ', (indentLevel + 1) * 2);
-            foreach (CommandLineOption option in options.OrderBy(x => x.Name))
+            foreach (CommandLineOption option in options.OrderBy(x => x.Name, StringComparer.Ordinal))
             {
                 string optionName = $"{optionNameIndent}--{option.Name}";
                 await outputDevice.DisplayAsync(this, new TextOutputDeviceData(optionName), cancellationToken).ConfigureAwait(false);
@@ -249,7 +249,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
                 [.. optionProviders
                .SelectMany(provider => provider.GetCommandLineOptions())
                .Where(option => !option.IsHidden && option.IsBuiltIn == builtInOnly)
-               .OrderBy(option => option.Name)];
+               .OrderBy(option => option.Name, StringComparer.Ordinal)];
 
             if (options.Length == 0)
             {

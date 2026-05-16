@@ -71,20 +71,31 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         bool generateDump = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName);
         bool generateCrashReport = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
 
-        string processCrashedMessage = generateDump && generateCrashReport
-            ? string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpAndReportFileCreated, testHostProcessInformation.PID)
-            : generateCrashReport
-                ? string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedReportFileCreated, testHostProcessInformation.PID)
-                : string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpFileCreated, testHostProcessInformation.PID);
-        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(processCrashedMessage), cancellationToken).ConfigureAwait(false);
-
         // TODO: Crash dump supports more placeholders that we don't handle here.
         // See "Dump name formatting" in:
         // https://github.com/dotnet/runtime/blob/82742628310076fff22d7e7ee216a74384352056/docs/design/coreclr/botr/xplat-minidump-generation.md
         string expectedDumpFile = _netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern.Replace("%p", testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
+        string expectedCrashReportFile = $"{expectedDumpFile}{CrashReportFileExtension}";
+
+        // Inspect the disk before emitting the crash banner so the message reflects
+        // what was actually produced, not what was requested. The runtime may fail
+        // to emit one (or both) of the artifacts, e.g. when EnableCrashReport is
+        // unsupported on the current platform/version.
+        bool dumpFileFound = generateDump && File.Exists(expectedDumpFile);
+        bool crashReportFileFound = generateCrashReport && File.Exists(expectedCrashReportFile);
+
+        string? processCrashedMessage = (dumpFileFound, crashReportFileFound) switch
+        {
+            (true, true) => string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpAndReportFileCreated, testHostProcessInformation.PID),
+            (false, true) => string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedReportFileCreated, testHostProcessInformation.PID),
+            (true, false) => string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpFileCreated, testHostProcessInformation.PID),
+            (false, false) => string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashed, testHostProcessInformation.PID),
+        };
+        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(processCrashedMessage), cancellationToken).ConfigureAwait(false);
+
         if (generateDump)
         {
-            if (File.Exists(expectedDumpFile))
+            if (dumpFileFound)
             {
                 await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(expectedDumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
             }
@@ -100,8 +111,7 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
 
         if (generateCrashReport)
         {
-            string expectedCrashReportFile = $"{expectedDumpFile}{CrashReportFileExtension}";
-            if (File.Exists(expectedCrashReportFile))
+            if (crashReportFileFound)
             {
                 await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(expectedCrashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
             }
