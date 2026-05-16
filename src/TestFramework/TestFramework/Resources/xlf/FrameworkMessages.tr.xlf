@@ -459,7 +459,7 @@ Gerçekte olan: {2}</target>
       </trans-unit>
       <trans-unit id="IsFalseFailedSummary">
         <source>Expected condition to be false.</source>
-        <target state="new">Expected condition to be false.</target>
+        <target state="translated">Koşulun yanlış olması bekleniyordu.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsGreaterThanFailedSummary">
@@ -554,7 +554,7 @@ Gerçekte olan: {2}</target>
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">
         <source>Expected condition to be true.</source>
-        <target state="new">Expected condition to be true.</target>
+        <target state="translated">Koşulun doğru olması bekleniyordu.</target>
         <note />
       </trans-unit>
       <trans-unit id="MatchesRegexFailedSummary">
