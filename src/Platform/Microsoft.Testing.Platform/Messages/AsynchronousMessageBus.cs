@@ -11,6 +11,10 @@ namespace Microsoft.Testing.Platform.Messages;
 
 internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
 {
+    // Maximum number of drain rounds before we consider that a publisher/consumer cycle exists
+    // and we throw to surface the bug rather than spin forever.
+    private const int MaxDrainAttempts = 5;
+
     private readonly ITask _task;
     private readonly ILogger<AsynchronousMessageBus> _logger;
     private readonly bool _isTraceLoggingEnabled;
@@ -121,13 +125,43 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
     public override async Task DrainDataAsync()
     {
-        foreach (List<IAsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
+        // Iterate the distinct processors (a consumer that subscribes to multiple data types
+        // shares a single processor and we don't want to drain it more than once per round).
+        // We keep draining until every processor reports that no data was processed during
+        // the current round. If we still keep processing data after `MaxDrainAttempts`, we
+        // consider that a publisher/consumer cycle exists and surface it as an error.
+        var stopwatch = Stopwatch.StartNew();
+        for (int attempt = 0; attempt < MaxDrainAttempts; attempt++)
         {
-            foreach (IAsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
+            if (_testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested)
             {
-                await asyncMultiProducerMultiConsumerDataProcessor.DrainDataAsync().ConfigureAwait(false);
+                return;
+            }
+
+            bool anyProcessed = false;
+            foreach (IAsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in _consumerProcessor.Values)
+            {
+                if (await asyncMultiProducerMultiConsumerDataProcessor.DrainDataAsync().ConfigureAwait(false))
+                {
+                    anyProcessed = true;
+                }
+            }
+
+            if (!anyProcessed)
+            {
+                return;
             }
         }
+
+        StringBuilder builder = new();
+        builder.Append(CultureInfo.InvariantCulture, $"Publisher/Consumer loop detected during the drain after {stopwatch.Elapsed}.");
+        foreach (IAsyncConsumerDataProcessor processor in _consumerProcessor.Values)
+        {
+            builder.AppendLine();
+            builder.Append(CultureInfo.InvariantCulture, $"Consumer '{processor.DataConsumer}'.");
+        }
+
+        throw new InvalidOperationException(builder.ToString());
     }
 
     public override async Task DisableAsync()

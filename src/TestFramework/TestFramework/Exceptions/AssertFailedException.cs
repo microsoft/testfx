@@ -40,6 +40,20 @@ public partial class AssertFailedException : UnitTestAssertException
     }
 
     /// <summary>
+    /// Gets the pre-formatted text representation of the expected value, as displayed
+    /// in the <c>expected:</c> line of the structured assertion message. Returns <see langword="null"/>
+    /// when the assertion has no natural expected value (e.g. <see cref="Assert.Fail"/>).
+    /// </summary>
+    public string? ExpectedText { get; internal set; }
+
+    /// <summary>
+    /// Gets the pre-formatted text representation of the actual value, as displayed
+    /// in the <c>actual:</c> line of the structured assertion message. Returns <see langword="null"/>
+    /// when the assertion has no natural actual value.
+    /// </summary>
+    public string? ActualText { get; internal set; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="AssertFailedException"/> class.
     /// </summary>
     /// <param name="info">Serialization info.</param>

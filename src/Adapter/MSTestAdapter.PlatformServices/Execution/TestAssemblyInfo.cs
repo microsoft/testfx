@@ -24,7 +24,12 @@ internal sealed class TestAssemblyInfo
     /// </summary>
     /// <param name="assembly">Sets the <see cref="Assembly"/> this class is representing. </param>
     internal TestAssemblyInfo(Assembly assembly)
-        => Assembly = assembly;
+    {
+        Assembly = assembly;
+        DiscoversInternals = assembly.GetCustomAttribute<DiscoverInternalsAttribute>() is not null;
+    }
+
+    internal bool DiscoversInternals { get; }
 
     internal List<(MethodInfo Method, TimeoutInfo? TimeoutInfo)> GlobalTestInitializations { get; } = [];
 
@@ -86,7 +91,7 @@ internal sealed class TestAssemblyInfo
     /// <summary>
     /// Gets or sets the assembly initialization exception.
     /// </summary>
-    public Exception? AssemblyInitializationException { get; internal set; }
+    public TestFailedException? AssemblyInitializationException { get; internal set; }
 
     /// <summary>
     /// Gets the assembly cleanup exception.
@@ -110,15 +115,19 @@ internal sealed class TestAssemblyInfo
     /// <summary>
     /// Runs assembly initialize method.
     /// </summary>
-    /// <param name="testContext"> The test context. </param>
-    /// <exception cref="TestFailedException"> Throws a test failed exception if the initialization method throws an exception. </exception>
-    public async Task RunAssemblyInitializeAsync(TestContext testContext)
+    /// <param name="testContext">The test context.</param>
+    /// <returns>
+    /// A <see cref="TestResult"/> whose <see cref="TestResult.Outcome"/> is <see cref="UnitTestOutcome.Passed"/>
+    /// when the assembly initialization succeeds, or the failure outcome with
+    /// <see cref="TestResult.TestFailureException"/> set when the initialization fails.
+    /// </returns>
+    public async Task<TestResult> RunAssemblyInitializeAsync(TestContext testContext)
     {
         // No assembly initialize => nothing to do.
         if (AssemblyInitializeMethod == null)
         {
             IsAssemblyInitializeExecuted = true;
-            return;
+            return new TestResult { Outcome = UnitTestOutcome.Passed };
         }
 
         // If assembly initialization is not done, then do it.
@@ -161,7 +170,7 @@ internal sealed class TestAssemblyInfo
                     }
                     catch (Exception ex)
                     {
-                        AssemblyInitializationException = ex;
+                        AssemblyInitializationException = GetTestFailedExceptionFromAssemblyInitializeException(ex, AssemblyInitializeMethod);
                     }
                     finally
                     {
@@ -176,37 +185,30 @@ internal sealed class TestAssemblyInfo
         }
 
         // If assemblyInitialization was successful, then don't do anything
-        if (AssemblyInitializationException == null)
-        {
-            return;
-        }
+        return AssemblyInitializationException is null
+            ? new TestResult { Outcome = UnitTestOutcome.Passed }
+            : new TestResult { TestFailureException = AssemblyInitializationException, Outcome = AssemblyInitializationException.Outcome };
+    }
 
-        // If the exception is already a `TestFailedException` we throw it as-is
-        if (AssemblyInitializationException is TestFailedException)
-        {
-            throw AssemblyInitializationException;
-        }
-
-        Exception realException = AssemblyInitializationException.GetRealException();
+    private static TestFailedException GetTestFailedExceptionFromAssemblyInitializeException(Exception ex, MethodInfo assemblyInitializeMethod)
+    {
+        Exception realException = ex.GetRealException();
 
         UnitTestOutcome outcome = realException is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed;
 
         // Do not use StackTraceHelper.GetFormattedExceptionMessage(realException) as it prefixes the message with the exception type name.
         string exceptionMessage = realException.TryGetMessage();
-        DebugEx.Assert(AssemblyInitializeMethod.DeclaringType?.FullName is not null, "AssemblyInitializeMethod.DeclaringType.FullName is null");
+        DebugEx.Assert(assemblyInitializeMethod.DeclaringType?.FullName is not null, "AssemblyInitializeMethod.DeclaringType.FullName is null");
         string errorMessage = string.Format(
             CultureInfo.CurrentCulture,
             Resource.UTA_AssemblyInitMethodThrows,
-            AssemblyInitializeMethod.DeclaringType.FullName,
-            AssemblyInitializeMethod.Name,
+            assemblyInitializeMethod.DeclaringType.FullName,
+            assemblyInitializeMethod.Name,
             realException.GetType().ToString(),
             exceptionMessage);
         StackTraceInformation? exceptionStackTraceInfo = realException.GetStackTraceInformation();
 
-        var testFailedException = new TestFailedException(outcome, errorMessage, exceptionStackTraceInfo, realException);
-        AssemblyInitializationException = testFailedException;
-
-        throw testFailedException;
+        return new TestFailedException(outcome, errorMessage, exceptionStackTraceInfo, realException);
     }
 
     /// <summary>

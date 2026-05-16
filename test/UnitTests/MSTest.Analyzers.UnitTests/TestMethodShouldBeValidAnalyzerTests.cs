@@ -3,7 +3,7 @@
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.TestMethodShouldBeValidAnalyzer,
-    MSTest.Analyzers.TestMethodShouldBeValidCodeFixProvider>;
+    MSTest.Analyzers.TestMethodShouldBeValidFixer>;
 
 namespace MSTest.Analyzers.Test;
 

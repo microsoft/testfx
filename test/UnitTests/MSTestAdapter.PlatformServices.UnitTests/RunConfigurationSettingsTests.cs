@@ -89,7 +89,7 @@ public class RunConfigurationSettingsTests : TestContainer
             """
             <RunSettings>
               <FooUnit>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <TestTimeout>12</TestTimeout>
               </FooUnit>
             </RunSettings>
             """;
@@ -151,6 +151,26 @@ public class RunConfigurationSettingsTests : TestContainer
         // Assert
         settings.Should().NotBeNull();
         settings.ExecutionApartmentState.Should().Be(ApartmentState.STA);
+    }
+
+    #endregion
+
+    #region GetSettings error path tests
+
+    public void GetSettingsShouldThrowFormatExceptionWhenRootElementIsNotRunSettings()
+    {
+        string runSettingsXml =
+            """
+            <NotRunSettings>
+              <RunConfiguration />
+            </NotRunSettings>
+            """;
+
+        Action action = () => RunConfigurationSettings.GetSettings(runSettingsXml);
+
+        FormatException exception = action.Should().Throw<FormatException>().Which;
+        exception.Message.Should().Contain("<NotRunSettings>");
+        exception.Message.Should().Contain("<RunSettings>");
     }
 
     #endregion

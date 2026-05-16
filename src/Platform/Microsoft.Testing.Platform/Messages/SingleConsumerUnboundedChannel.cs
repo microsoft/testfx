@@ -2,8 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !NETCOREAPP
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.Messages;
 
+[Embedded]
 internal sealed class SingleConsumerUnboundedChannel<T>
 {
     // On .NET Framework, these are not cached internally.

@@ -46,7 +46,7 @@ internal static class CommandLineParser
         {
             string? currentArg = args[i];
 
-            if (currentArg.StartsWith('@') && ResponseFileHelper.TryReadResponseFile(currentArg.Substring(1), errors, out string[]? newArguments))
+            if (currentArg.StartsWith("@", StringComparison.Ordinal) && ResponseFileHelper.TryReadResponseFile(currentArg.Substring(1), errors, out string[]? newArguments))
             {
                 args.InsertRange(i + 1, newArguments);
                 continue;
@@ -54,7 +54,7 @@ internal static class CommandLineParser
 
             // If it's the first argument and it doesn't start with - then it's the tool name
             // TODO: This won't work correctly if the first argument provided is a response file that contains the tool name.
-            if (isFirstRealArgument && currentArg[0] != '-')
+            if (isFirstRealArgument && currentArg.Length > 0 && currentArg[0] != '-')
             {
                 toolName = currentArg;
                 isFirstRealArgument = false;
@@ -121,7 +121,7 @@ internal static class CommandLineParser
 
             // Enclosing characters in single-quotes ( '' ) shall preserve the literal value of each character within the single-quotes.
             // A single-quote cannot occur within single-quotes.
-            if (input.StartsWith('\'') && input.EndsWith('\''))
+            if (input.StartsWith("\'", StringComparison.Ordinal) && input.EndsWith("\'", StringComparison.Ordinal))
             {
                 if (input.IndexOf('\'', 1, input.Length - 2) != -1)
                 {
@@ -141,7 +141,7 @@ internal static class CommandLineParser
             //  * The <dollar-sign> shall retain its special meaning introducing parameter expansion. [NOT SUPPORTED]
             //  * The backslash shall retain its special meaning as an escape character only when followed by one of the following characters when considered special:
             //    $   `   "   \   <newline>
-            if (input.StartsWith('"') && input.EndsWith('"'))
+            if (input.StartsWith("\"", StringComparison.Ordinal) && input.EndsWith("\"", StringComparison.Ordinal))
             {
                 unescapedArg = input[1..^1].Replace(@"\\", "\\")
                     .Replace(@"\""", "\"")

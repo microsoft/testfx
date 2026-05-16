@@ -99,7 +99,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
     public string Uid => GetType().Name;
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     /// <inheritdoc />
     public abstract string DisplayName { get; }
@@ -342,9 +342,9 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
                         OnFailedTest(testNodeStateChanged, timeoutState, timeoutState.Exception, duration);
                         break;
 
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
                     case CancelledTestNodeStateProperty cancelledState:
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
                         OnFailedTest(testNodeStateChanged, cancelledState, cancelledState.Exception, duration);
                         break;
 
@@ -357,21 +357,21 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
                         break;
                 }
 
-                // TODO:
-                // foreach (FileArtifactProperty testFileArtifact in testNodeStateChanged.TestNode.Properties.OfType<FileArtifactProperty>())
-                // {
-                // }
+                // Tracked by https://github.com/microsoft/testfx/issues/8086:
+                // surface per-test file artifacts in the simplified console output once the format is defined.
                 break;
 
             case SessionFileArtifact:
                 {
-                    // TODO
+                    // Tracked by https://github.com/microsoft/testfx/issues/8086:
+                    // session-level artifacts are currently ignored by this output device.
                 }
 
                 break;
             case FileArtifact:
                 {
-                    // TODO
+                    // Tracked by https://github.com/microsoft/testfx/issues/8086:
+                    // file artifacts are currently ignored by this output device.
                 }
 
                 break;

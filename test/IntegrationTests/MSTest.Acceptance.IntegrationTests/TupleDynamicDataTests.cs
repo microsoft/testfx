@@ -18,7 +18,7 @@ public sealed class TupleDynamicDataTests : AcceptanceTestBase<TupleDynamicDataT
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName=CanUseLongTuplesAndValueTuplesForAllFrameworks --settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         // Assert
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContains("""
             1, 2, 3, 4, 5, 6, 7, 8
             9, 10, 11, 12, 13, 14, 15, 16
@@ -44,7 +44,7 @@ public sealed class TupleDynamicDataTests : AcceptanceTestBase<TupleDynamicDataT
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName=TupleSupportDoesNotBreakObjectArraySupport --settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         // Assert
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContains("""
             Length: 1
             (Hello, World)
@@ -52,19 +52,16 @@ public sealed class TupleDynamicDataTests : AcceptanceTestBase<TupleDynamicDataT
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "TupleDynamicDataTests";
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (ProjectName, ProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file TupleDynamicDataTests.csproj

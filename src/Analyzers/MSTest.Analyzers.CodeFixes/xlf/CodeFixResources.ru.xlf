@@ -37,6 +37,11 @@
         <target state="translated">Удалите модификаторы "out" и "ref"</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextFix">
+        <source>Change return type to 'Task'</source>
+        <target state="new">Change return type to 'Task'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">Изменить доступность метода на "private"</target>
@@ -65,6 +70,16 @@
       <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
         <source>Remove 'ClassCleanupBehavior' argument</source>
         <target state="translated">Удалить аргумент "ClassCleanupBehavior"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveDuplicateDataRowFix">
+        <source>Remove duplicate 'DataRow'</source>
+        <target state="translated">Удалить дубликат DataRow</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveDuplicateTestMethodAttributeFix">
+        <source>Remove duplicate TestMethod attribute</source>
+        <target state="translated">Удалить дублирующий атрибут TestMethod</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -150,6 +165,11 @@
       <trans-unit id="UseDisplayNamePropertyInsteadOfStringArgumentFix">
         <source>Use 'DisplayName' property instead of string argument</source>
         <target state="translated">Использовать свойство "DisplayName" вместо строкового аргумента</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
+        <source>Use MSTest 'Description' attribute instead</source>
+        <target state="translated">Вместо этого используйте атрибут MSTest "Description"</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">

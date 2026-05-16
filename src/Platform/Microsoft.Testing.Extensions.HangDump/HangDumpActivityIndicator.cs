@@ -40,7 +40,6 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         ICommandLineOptions commandLineOptions,
         IEnvironment environment,
         ITask task,
-        ITestApplicationModuleInfo testApplicationModuleInfo,
         ILoggerFactory loggerFactory,
         IClock clock)
     {
@@ -52,12 +51,8 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         _clock = clock;
         if (_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName))
         {
-            string namedPipeSuffix = _environment.GetEnvironmentVariable(HangDumpConfiguration.NamedPipeNameSuffixEnvironmentVariable)
-                ?? throw new InvalidOperationException($"Expected {HangDumpConfiguration.NamedPipeNameSuffixEnvironmentVariable} environment variable set.");
-            // @Marco: Why do we need to duplicate logic here instead of using HangDumpConfiguration.PipeNameKey?
-            string pipeNameEnvironmentVariable = $"{HangDumpConfiguration.PipeNameEnvironmentVariableNamePrefix}_{FNV_1aHashHelper.ComputeStringHash(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_{namedPipeSuffix}";
-            string namedPipeName = _environment.GetEnvironmentVariable(pipeNameEnvironmentVariable)
-                ?? throw new InvalidOperationException($"Expected {pipeNameEnvironmentVariable} environment variable set.");
+            string namedPipeName = _environment.GetEnvironmentVariable(HangDumpEnvironmentVariableProvider.PipeNameEnvironmentVariableName)
+                ?? throw new InvalidOperationException($"Expected {HangDumpEnvironmentVariableProvider.PipeNameEnvironmentVariableName} environment variable set.");
             _namedPipeClient = new NamedPipeClient(namedPipeName, _environment);
             _namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
             _namedPipeClient.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
@@ -69,7 +64,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
     public string Uid => nameof(HangDumpActivityIndicator);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => ExtensionResources.HangDumpExtensionDisplayName;
 
@@ -91,12 +86,11 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             await _logger.LogTraceAsync("Connected to the process lifetime handler").ConfigureAwait(false);
 
             // Setup the server channel with the testhost controller
-            _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), _environment);
+            _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
             _logger.LogTrace($"Hang dump pipe name: '{_pipeNameDescription.Name}'");
             _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
             _singleConnectionNamedPipeServer.RegisterSerializer(new GetInProgressTestsResponseSerializer(), typeof(GetInProgressTestsResponse));
             _singleConnectionNamedPipeServer.RegisterSerializer(new GetInProgressTestsRequestSerializer(), typeof(GetInProgressTestsRequest));
-            _singleConnectionNamedPipeServer.RegisterSerializer(new ExitSignalActivityIndicatorTaskRequestSerializer(), typeof(ExitSignalActivityIndicatorTaskRequest));
             _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
             await _logger.LogTraceAsync($"Send consumer pipe name to the test controller '{_pipeNameDescription.Name}'").ConfigureAwait(false);
             await _namedPipeClient.RequestReplyAsync<ConsumerPipeNameRequest, VoidResponse>(new ConsumerPipeNameRequest(_pipeNameDescription.Name), cancellationToken)
@@ -117,13 +111,8 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         if (request is GetInProgressTestsRequest)
         {
             await _logger.LogDebugAsync($"Received '{nameof(GetInProgressTestsRequest)}'").ConfigureAwait(false);
-            return new GetInProgressTestsResponse([.. _testsCurrentExecutionState.Select(x => (x.Value.Name, (int)_clock.UtcNow.Subtract(x.Value.StartTime).TotalSeconds))]);
-        }
-        else if (request is ExitSignalActivityIndicatorTaskRequest)
-        {
-            await _logger.LogDebugAsync($"Received '{nameof(ExitSignalActivityIndicatorTaskRequest)}'").ConfigureAwait(false);
             _exitSignalActivityIndicatorAsync = true;
-            return VoidResponse.CachedInstance;
+            return new GetInProgressTestsResponse([.. _testsCurrentExecutionState.Select(x => (x.Value.Name, (int)_clock.UtcNow.Subtract(x.Value.StartTime).TotalSeconds))]);
         }
         else
         {
@@ -149,9 +138,9 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
             _testsCurrentExecutionState.TryAdd(nodeChangedMessage.TestNode.Uid, (nodeChangedMessage.TestNode.DisplayName, typeof(InProgressTestNodeStateProperty), _clock.UtcNow));
         }
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
         else if (state is PassedTestNodeStateProperty or ErrorTestNodeStateProperty or CancelledTestNodeStateProperty
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
             or FailedTestNodeStateProperty or TimeoutTestNodeStateProperty or SkippedTestNodeStateProperty
             && _testsCurrentExecutionState.TryRemove(nodeChangedMessage.TestNode.Uid, out (string Name, Type Type, DateTimeOffset StartTime) record)
             && _traceLevelEnabled)

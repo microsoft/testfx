@@ -1,8 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// Note: System.Runtime.Serialization is intentionally unconditional — SerializationException is caught
+// outside the #if NETFRAMEWORK block (see catch in EnumerateAssembly).
 using System.Runtime.Serialization;
+#if NETFRAMEWORK
 using System.Security;
+#endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -16,7 +20,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 /// Enumerates through all types in the assembly in search of valid test methods.
 /// </summary>
 [SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
-internal class AssemblyEnumerator : MarshalByRefObject
+internal class AssemblyEnumerator
+#if NETFRAMEWORK
+    : MarshalByRefObject
+#endif
 {
     /// <summary>
     /// Helper for reflection API's.
@@ -45,6 +52,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
 
+#if NETFRAMEWORK
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>
@@ -52,17 +60,16 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// The <see cref="object"/>.
     /// </returns>
     [SecurityCritical]
-#if NET5_0_OR_GREATER
-    [Obsolete]
+    public override object? InitializeLifetimeService() => null;
 #endif
-    public override object InitializeLifetimeService() => null!;
 
     /// <summary>
     /// Enumerates through all types in the assembly in search of valid test methods.
     /// </summary>
     /// <param name="assemblyFileName">The assembly file name.</param>
+    /// <param name="mustSerialize">Flag set to true when parameterized test data must be serialized.</param>
     /// <returns>A collection of Test Elements.</returns>
-    internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName)
+    internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName, bool mustSerialize)
     {
         List<string> warnings = [];
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
@@ -71,7 +78,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName);
 
         Type[] types = GetTypes(assembly);
-        bool discoverInternals = ReflectHelper.GetDiscoverInternalsAttribute(assembly) != null;
+        bool discoverInternals = ReflectHelper.HasDiscoverInternalsAttribute(assembly);
 
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = ReflectHelper.GetTestDataSourceOptions(assembly)?.UnfoldingStrategy switch
         {
@@ -90,7 +97,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         foreach (Type type in types)
         {
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, type, warnings, discoverInternals,
-                dataSourcesUnfoldingStrategy);
+                dataSourcesUnfoldingStrategy, mustSerialize);
             tests.AddRange(testsInType);
         }
 
@@ -153,7 +160,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
         Type type,
         List<string> warningMessages,
         bool discoverInternals,
-        TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy)
+        TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy,
+        bool mustSerialize)
     {
         string? typeFullName = null;
         var tests = new List<UnitTestElement>();
@@ -170,7 +178,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 {
                     if (_typeCache.GetTestMethodInfoForDiscovery(test.TestMethod) is { } testMethodInfo)
                     {
-                        if (TryUnfoldITestDataSources(test, testMethodInfo, dataSourcesUnfoldingStrategy, tests))
+                        if (TryUnfoldITestDataSources(test, testMethodInfo, dataSourcesUnfoldingStrategy, tests, mustSerialize))
                         {
                             continue;
                         }
@@ -196,7 +204,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return tests;
     }
 
-    private static bool TryUnfoldITestDataSources(UnitTestElement test, DiscoveryTestMethodInfo testMethodInfo, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, List<UnitTestElement> tests)
+    private static bool TryUnfoldITestDataSources(UnitTestElement test, DiscoveryTestMethodInfo testMethodInfo, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, List<UnitTestElement> tests, bool mustSerialize)
     {
         // It should always be `true`, but if any part of the chain is obsolete; it might not contain those.
         // Since we depend on those properties, if they don't exist, we bail out early.
@@ -218,10 +226,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return false;
         }
 
-        // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
-        // attributes and filter them. We don't have to care if there is one, because this method is only entered when
-        // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
-        IEnumerable<ITestDataSource> testDataSources = ReflectHelper.Instance.GetAttributes<Attribute>(testMethodInfo.MethodInfo).OfType<ITestDataSource>();
+        // PERF: Access the cached attribute array directly to avoid allocating two iterator state machines
+        // for GetAttributes<Attribute>().OfType<ITestDataSource>() on every data-driven test during discovery.
+        Attribute[] allAttributes = ReflectHelper.GetCustomAttributesCached(testMethodInfo.MethodInfo);
 
         // We need to use a temporary list to avoid adding tests to the main list if we fail to expand any data source.
         List<UnitTestElement> tempListOfTests = [];
@@ -230,10 +237,15 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             bool isDataDriven = false;
             int globalTestCaseIndex = 0;
-            foreach (ITestDataSource dataSource in testDataSources)
+            foreach (Attribute attribute in allAttributes)
             {
+                if (attribute is not ITestDataSource dataSource)
+                {
+                    continue;
+                }
+
                 isDataDriven = true;
-                if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.TestMethod.DisplayName), tempListOfTests, ref globalTestCaseIndex))
+                if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.TestMethod.DisplayName), tempListOfTests, ref globalTestCaseIndex, mustSerialize))
                 {
                     // TODO: Improve multi-source design!
                     // Ideally we would want to consider each data source separately but when one source cannot be expanded,
@@ -266,37 +278,21 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests, ref int globalTestCaseIndex)
+    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests, ref int globalTestCaseIndex, bool mustSerialize)
     {
         // Otherwise, unfold the data source and verify it can be serialized.
-        IEnumerable<object?[]>? data;
 
-        // This code is to discover tests. To run the tests code is in TestMethodRunner.ExecuteDataSourceBasedTests.
-        // Any change made here should be reflected in TestMethodRunner.ExecuteDataSourceBasedTests as well.
-        data = dataSource.GetData(methodInfo);
+        // This code is to discover tests. To run the tests code is in TestMethodRunner.TryExecuteFoldedDataDrivenTestsAsync.
+        // Any change made here should be reflected in TestMethodRunner.TryExecuteFoldedDataDrivenTestsAsync as well.
+        IEnumerable<object?[]> dataEnumerable = dataSource.GetData(methodInfo);
         string? testDataSourceIgnoreMessage = (dataSource as ITestDataSourceIgnoreCapability)?.IgnoreMessage;
 
-        if (!data.Any())
-        {
-            if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
-            {
-                throw dataSource.GetExceptionForEmptyDataSource(methodInfo);
-            }
-
-            UnitTestElement discoveredTest = test.Clone();
-            // Make the test not data driven, because it had no data.
-            discoveredTest.TestMethod.DataType = DynamicDataType.None;
-            discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
-            discoveredTest.TestMethod.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.TestMethod.DisplayName;
-            tests.Add(discoveredTest);
-
-            return true;
-        }
-
         var discoveredTests = new List<UnitTestElement>();
+        bool dataSourceHasData = false;
 
-        foreach (object?[] dataOrTestDataRow in data)
+        foreach (object?[] dataOrTestDataRow in dataEnumerable)
         {
+            dataSourceHasData = true;
             object?[] d = dataOrTestDataRow;
             ParameterInfo[] parameters = methodInfo.GetParameters();
             if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out IList<string>? testCategoriesFromTestDataRow))
@@ -340,7 +336,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             try
             {
-                discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
+                if (mustSerialize)
+                {
+                    discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
+                }
+
                 discoveredTest.TestMethod.ActualData = d;
                 discoveredTest.TestMethod.TestCaseIndex = globalTestCaseIndex;
                 discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
@@ -363,6 +363,23 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             discoveredTests.Add(discoveredTest);
             globalTestCaseIndex++;
+        }
+
+        if (!dataSourceHasData)
+        {
+            if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+            {
+                throw dataSource.GetExceptionForEmptyDataSource(methodInfo);
+            }
+
+            UnitTestElement discoveredTest = test.Clone();
+            // Make the test not data driven, because it had no data.
+            discoveredTest.TestMethod.DataType = DynamicDataType.None;
+            discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
+            discoveredTest.TestMethod.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.TestMethod.DisplayName;
+            tests.Add(discoveredTest);
+
+            return true;
         }
 
         tests.AddRange(discoveredTests);

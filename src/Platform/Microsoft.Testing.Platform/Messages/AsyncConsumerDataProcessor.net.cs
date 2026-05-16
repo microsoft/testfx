@@ -13,16 +13,29 @@ namespace Microsoft.Testing.Platform.Messages;
 [DebuggerDisplay("DataConsumer = {DataConsumer.Uid}")]
 internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
 {
-    private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
 
-    private Channel<(IDataProducer DataProducer, IData Data)> _channel = CreateChannel();
-    private Task _consumeTask;
+    private readonly Channel<AsyncConsumerDataProcessorMessage> _channel = Channel.CreateUnbounded<AsyncConsumerDataProcessorMessage>(new UnboundedChannelOptions
+    {
+        // We process only 1 data at a time
+        SingleReader = true,
+
+        // We don't know how many threads will call the publish on the message bus
+        SingleWriter = false,
+
+        // We want to unlink the publish that's the message bus
+        AllowSynchronousContinuations = false,
+    });
+
+    private readonly Task _consumeTask;
+
+    // Number of data payloads dequeued by the consumer. Used by DrainDataAsync to detect publisher/consumer loops.
+    // Only the single consumer task increments this field; other threads read it via Volatile.Read.
+    private long _processedCount;
 
     public AsyncConsumerDataProcessor(IDataConsumer consumer, ITask task, CancellationToken cancellationToken)
     {
         DataConsumer = consumer;
-        _task = task;
         _cancellationToken = cancellationToken;
         _consumeTask = task.Run(ConsumeAsync, cancellationToken);
     }
@@ -30,7 +43,7 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
     public IDataConsumer DataConsumer { get; }
 
     public async Task PublishAsync(IDataProducer dataProducer, IData data)
-        => await _channel.Writer.WriteAsync((dataProducer, data), _cancellationToken).ConfigureAwait(false);
+        => await _channel.Writer.WriteAsync(AsyncConsumerDataProcessorMessage.CreateData(dataProducer, data), _cancellationToken).ConfigureAwait(false);
 
     private async Task ConsumeAsync()
     {
@@ -38,17 +51,26 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
         {
             while (await _channel.Reader.WaitToReadAsync(_cancellationToken).ConfigureAwait(false))
             {
-                (IDataProducer dataProducer, IData data) = await _channel.Reader.ReadAsync(_cancellationToken).ConfigureAwait(false);
+                AsyncConsumerDataProcessorMessage message = await _channel.Reader.ReadAsync(_cancellationToken).ConfigureAwait(false);
+
+                if (message.DrainMarker is { } drainMarker)
+                {
+                    // The drain marker passed all the data items previously enqueued so we can signal the drain caller.
+                    drainMarker.TrySetResult(true);
+                    continue;
+                }
+
+                Interlocked.Increment(ref _processedCount);
 
                 // We don't enqueue the data if the consumer is the producer of the data.
                 // We could optimize this if and make a get with type/all but producers, but it
                 // could be over-engineering.
-                if (dataProducer.Uid == DataConsumer.Uid)
+                if (message.DataProducer!.Uid == DataConsumer.Uid)
                 {
                     continue;
                 }
 
-                await DataConsumer.ConsumeAsync(dataProducer, data, _cancellationToken).ConfigureAwait(false);
+                await DataConsumer.ConsumeAsync(message.DataProducer, message.Data!, _cancellationToken).ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException oc) when (oc.CancellationToken == _cancellationToken)
@@ -61,38 +83,46 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
     {
         // Signal that no more items will be added to the collection
         // It's possible that we call this method multiple times
-        _channel.Writer.Complete();
+        _channel.Writer.TryComplete();
 
         // Wait for the consumer to complete
         await _consumeTask.ConfigureAwait(false);
     }
 
-    public async Task DrainDataAsync()
+    public async Task<bool> DrainDataAsync()
     {
-        _channel.Writer.Complete();
-        await _consumeTask.ConfigureAwait(false);
+        long before = Volatile.Read(ref _processedCount);
+        var drainMarker = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        _channel = CreateChannel();
-        _consumeTask = _task.Run(ConsumeAsync, _cancellationToken);
+        try
+        {
+            await _channel.Writer.WriteAsync(AsyncConsumerDataProcessorMessage.CreateDrainMarker(drainMarker), _cancellationToken).ConfigureAwait(false);
+        }
+        catch (ChannelClosedException)
+        {
+            // The channel was already completed (e.g., by DisableAsync). Nothing left to drain.
+            return false;
+        }
+
+        // Wait either for the drain marker to be dequeued, or for the consume task to finish/fault.
+        // If the consume task ends before the marker is reached, propagate any failure it surfaced.
+        Task completed = await Task.WhenAny(drainMarker.Task, _consumeTask).ConfigureAwait(false);
+        if (completed == _consumeTask)
+        {
+            await _consumeTask.ConfigureAwait(false);
+        }
+        else
+        {
+            await drainMarker.Task.ConfigureAwait(false);
+        }
+
+        return Volatile.Read(ref _processedCount) != before;
     }
 
     // At this point we simply signal the channel as complete and we don't wait for the consumer to complete.
     // We expect that the CompleteAddingAsync() is already done correctly and so we prefer block the loop and in
     // case get exception inside the PublishAsync()
     public void Dispose()
-        => _channel.Writer.Complete();
-
-    private static Channel<(IDataProducer DataProducer, IData Data)> CreateChannel()
-        => Channel.CreateUnbounded<(IDataProducer DataProducer, IData Data)>(new UnboundedChannelOptions
-        {
-            // We process only 1 data at a time
-            SingleReader = true,
-
-            // We don't know how many threads will call the publish on the message bus
-            SingleWriter = false,
-
-            // We want to unlink the publish that's the message bus
-            AllowSynchronousContinuations = false,
-        });
+        => _channel.Writer.TryComplete();
 }
 #endif

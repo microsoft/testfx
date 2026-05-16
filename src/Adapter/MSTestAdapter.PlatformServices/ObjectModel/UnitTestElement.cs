@@ -11,7 +11,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// <summary>
 /// The unit test element.
 /// </summary>
+#if NETFRAMEWORK
 [Serializable]
+#endif
 [DebuggerDisplay("{TestMethod.DisplayName} ({TestMethod.ManagedTypeName})")]
 internal sealed class UnitTestElement
 {
@@ -27,7 +29,10 @@ internal sealed class UnitTestElement
     /// <exception cref="ArgumentNullException"> Thrown when method is null. </exception>
     public UnitTestElement(TestMethod testMethod)
     {
-        Ensure.NotNull(testMethod);
+        if (testMethod is null)
+        {
+            throw new ArgumentNullException(nameof(testMethod));
+        }
 
         DebugEx.Assert(testMethod.FullClassName != null, "Full className cannot be empty");
         TestMethod = testMethod;
@@ -171,10 +176,8 @@ internal sealed class UnitTestElement
         // Store resolved data if any
         if (TestMethod.DataType != DynamicDataType.None)
         {
-            string?[]? data = TestMethod.SerializedData;
-
             testCase.SetPropertyValue(EngineConstants.TestDynamicDataTypeProperty, (int)TestMethod.DataType);
-            testCase.SetPropertyValue(EngineConstants.TestDynamicDataProperty, data);
+            testCase.SetPropertyValue(EngineConstants.TestDynamicDataProperty, TestMethod.SerializedData);
             testCase.SetPropertyValue(EngineConstants.TestCaseIndexProperty, TestMethod.TestCaseIndex);
             // VSTest serialization doesn't handle null so instead don't set the property so that it's deserialized as null
             if (TestMethod.TestDataSourceIgnoreMessage is not null)
@@ -227,7 +230,7 @@ internal sealed class UnitTestElement
             hash.Append(CloseParen);
         }
 
-        if (TestMethod.SerializedData != null)
+        if (TestMethod.DataType != DynamicDataType.None)
         {
             hash.Append(OpenBracket);
             hash.Append(Encoding.Unicode.GetBytes(TestMethod.TestCaseIndex.ToString(CultureInfo.InvariantCulture)));

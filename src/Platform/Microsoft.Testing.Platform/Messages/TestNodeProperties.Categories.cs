@@ -19,9 +19,9 @@ internal static class TestNodePropertiesCategories
             typeof(FailedTestNodeStateProperty),
             typeof(ErrorTestNodeStateProperty),
             typeof(TimeoutTestNodeStateProperty),
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
             typeof(CancelledTestNodeStateProperty),
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
         ];
 
     public static Type[] WellKnownTestNodeTestRunOutcomeFailedProperties { get; } =
@@ -29,8 +29,8 @@ internal static class TestNodePropertiesCategories
             typeof(FailedTestNodeStateProperty),
             typeof(ErrorTestNodeStateProperty),
             typeof(TimeoutTestNodeStateProperty),
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
             typeof(CancelledTestNodeStateProperty),
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
         ];
 }

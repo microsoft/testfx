@@ -458,11 +458,11 @@ public sealed class TerminalTestReporterTests
               Error output
                 Oh no!
             ␛[m
-            [␛[32m✓1␛[m/␛[31mx0␛[m/␛[33m↓0␛[m] assembly.dll (net8.0|x64)␛[2147483640G(1m 31s)
-              SkippedTest1␛[2147483640G(1m 31s)
-              InProgressTest1␛[2147483640G(1m 31s)
-              InProgressTest2␛[2147483643G(31s)
-              InProgressTest3␛[2147483644G(1s)
+            [␛[32m✓1␛[m/␛[31mx0␛[m/␛[33m↓0␛[m] assembly.dll (net8.0|x64)␛[242G(1m 31s)
+              SkippedTest1␛[242G(1m 31s)
+              InProgressTest1␛[242G(1m 31s)
+              InProgressTest2␛[245G(31s)
+              InProgressTest3␛[246G(1s)
             ␛[7F
             ␛[J␛[33mskipped␛[m SkippedTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
@@ -470,10 +470,10 @@ public sealed class TerminalTestReporterTests
               Error output
                 Oh no!
             ␛[m
-            [␛[32m✓1␛[m/␛[31mx0␛[m/␛[33m↓1␛[m] assembly.dll (net8.0|x64)␛[2147483640G(1m 31s)
-              InProgressTest1␛[2147483640G(1m 31s)
-              InProgressTest2␛[2147483643G(31s)
-              InProgressTest3␛[2147483644G(1s)
+            [␛[32m✓1␛[m/␛[31mx0␛[m/␛[33m↓1␛[m] assembly.dll (net8.0|x64)␛[242G(1m 31s)
+              InProgressTest1␛[242G(1m 31s)
+              InProgressTest2␛[245G(31s)
+              InProgressTest3␛[246G(1s)
 
             """;
 
@@ -510,6 +510,85 @@ public sealed class TerminalTestReporterTests
 
         int stopUpdateIndex = terminal.Events.FindIndex(renderIndex + 1, e => e == "StopUpdate");
         Assert.IsGreaterThan(renderIndex, stopUpdateIndex, "StopUpdate should be called after rendering progress.");
+    }
+
+    [TestMethod]
+    public void NonAnsiTerminal_ShowOutputNone_DoesNotShowOutput()
+    {
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowStdout = OutputShowMode.None,
+            ShowStderr = OutputShowMode.None,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+        terminalReporter.AssemblyRunStarted();
+
+        terminalReporter.TestCompleted(testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: "Hello!", errorOutput: "Oh no!");
+        terminalReporter.TestCompleted(testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: "Tests failed", exception: null, expected: null, actual: null, standardOutput: "Hello!", errorOutput: "Oh no!");
+
+        terminalReporter.AssemblyRunCompleted();
+        terminalReporter.TestExecutionCompleted(endTime);
+
+        string output = stringBuilderConsole.Output;
+
+        Assert.DoesNotContain("Standard output", output);
+        Assert.DoesNotContain("Error output", output);
+        Assert.DoesNotContain("Hello!", output);
+        Assert.DoesNotContain("Oh no!", output);
+    }
+
+    [TestMethod]
+    public void NonAnsiTerminal_ShowOutputFailed_ShowsOutputOnlyForFailedTests()
+    {
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowStdout = OutputShowMode.Failed,
+            ShowStderr = OutputShowMode.Failed,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+        terminalReporter.AssemblyRunStarted();
+
+        terminalReporter.TestCompleted(testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: "passed-stdout", errorOutput: "passed-stderr");
+        terminalReporter.TestCompleted(testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: "Tests failed", exception: null, expected: null, actual: null, standardOutput: "failed-stdout", errorOutput: "failed-stderr");
+
+        terminalReporter.AssemblyRunCompleted();
+        terminalReporter.TestExecutionCompleted(endTime);
+
+        string output = stringBuilderConsole.Output;
+
+        // stdout/stderr for passed tests should NOT appear
+        Assert.DoesNotContain("passed-stdout", output);
+        Assert.DoesNotContain("passed-stderr", output);
+
+        // stdout/stderr for failed tests SHOULD appear
+        Assert.Contains("failed-stdout", output);
+        Assert.Contains("failed-stderr", output);
     }
 
     private static string? ShowEscape(string? text)
@@ -556,7 +635,11 @@ public sealed class TerminalTestReporterTests
 
         public int BufferHeight => int.MaxValue;
 
-        public int BufferWidth => int.MinValue;
+        public int BufferWidth => int.MaxValue;
+
+        public int WindowHeight => int.MaxValue;
+
+        public int WindowWidth => int.MaxValue;
 
         public bool IsOutputRedirected => false;
 
@@ -902,5 +985,179 @@ public sealed class TerminalTestReporterTests
 
         // Assert - should contain information about 2 tests discovered
         Assert.IsTrue(output.Contains('2') || output.Contains("TestMethod1"), "Output should contain information about discovered tests");
+    }
+
+    [TestMethod]
+    public void SimpleTerminal_UsesWindowWidthNotBufferWidth()
+    {
+        // Arrange - Create a console where BufferWidth and WindowWidth are different
+        var console = new TestConsoleWithDifferentBufferAndWindowWidth
+        {
+            BufferWidth = 4096,
+            WindowWidth = 120,
+        };
+
+        var terminal = new NonAnsiTerminal(console);
+
+        // Assert - Width should use WindowWidth, not BufferWidth
+        Assert.AreEqual(120, terminal.Width);
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_UsesWindowWidthNotBufferWidth()
+    {
+        // Arrange - Create a console where BufferWidth and WindowWidth are different
+        var console = new TestConsoleWithDifferentBufferAndWindowWidth
+        {
+            BufferWidth = 4096,
+            WindowWidth = 120,
+        };
+
+        var terminal = new AnsiTerminal(console);
+
+        // Assert - Width should use WindowWidth, not BufferWidth
+        Assert.AreEqual(120, terminal.Width);
+    }
+
+    /// <summary>
+    /// Reproduces the bug from issue #7240: when Console.BufferWidth > Console.WindowWidth,
+    /// the ANSI cursor positioning places timings off-screen because it was using BufferWidth
+    /// (capped to 250) instead of WindowWidth.
+    ///
+    /// Before fix: cursor goes to column 242 (= MaxColumn 250 - 8), off-screen for 120-col window.
+    /// After fix:  cursor goes to column 112 (= WindowWidth 120 - 8), visible in window.
+    /// </summary>
+    [TestMethod]
+    public void AnsiTerminal_ProgressFrame_UseWindowWidthForCursorPositioning_WhenBufferWidthIsLarger()
+    {
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        // Console with BufferWidth=4096 but WindowWidth=120, mimicking the bug scenario.
+        var stringBuilderConsole = new StringBuilderConsoleWithCustomWidths(bufferWidth: 4096, windowWidth: 120);
+        var stopwatchFactory = new StopwatchFactory();
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = AnsiMode.ForceAnsi,
+            ShowActiveTests = true,
+            ShowProgress = () => true,
+        })
+        {
+            CreateStopwatch = stopwatchFactory.CreateStopwatch,
+        };
+
+        var startHandle = new AutoResetEvent(initialState: false);
+        var stopHandle = new AutoResetEvent(initialState: false);
+
+        terminalReporter.OnProgressStartUpdate += (sender, args) => startHandle.WaitOne();
+        terminalReporter.OnProgressStopUpdate += (sender, args) => stopHandle.Set();
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+        terminalReporter.AssemblyRunStarted();
+
+        terminalReporter.TestInProgress(testNodeUid: "Test1", displayName: "Test1");
+        stopwatchFactory.AddTime(TimeSpan.FromMinutes(1) + TimeSpan.FromSeconds(31));
+
+        terminalReporter.TestCompleted(testNodeUid: "Test1", "Test1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+
+        string output = stringBuilderConsole.Output;
+        startHandle.Set();
+        stopHandle.WaitOne();
+
+        string escapedOutput = ShowEscape(output)!;
+
+        // With WindowWidth=120, cursor for "(1m 31s)" (8 chars) should be at column 120-8=112.
+        // Before the fix, BufferWidth=4096 was capped to MaxColumn=250, giving column 250-8=242.
+        Assert.Contains("␛[112G(1m 31s)", escapedOutput,
+            "Cursor should be positioned at column 112 (WindowWidth=120 minus duration length), not at 242 (MaxColumn=250 minus duration length)");
+        Assert.DoesNotContain("␛[242G", escapedOutput,
+            "Cursor must NOT be positioned at column 242 which would happen if BufferWidth (4096, capped to 250) was used instead of WindowWidth");
+    }
+
+    internal class TestConsoleWithDifferentBufferAndWindowWidth : IConsole
+    {
+        public int BufferHeight { get; set; } = 300;
+
+        public int BufferWidth { get; set; } = 4096;
+
+        public int WindowHeight { get; set; } = 30;
+
+        public int WindowWidth { get; set; } = 120;
+
+        public bool IsOutputRedirected => false;
+
+        public event ConsoleCancelEventHandler? CancelKeyPress = (sender, e) => { };
+
+        public void Clear() => throw new NotImplementedException();
+
+        public ConsoleColor GetForegroundColor() => ConsoleColor.White;
+
+        public void SetForegroundColor(ConsoleColor color)
+        {
+        }
+
+        public void Write(string? value)
+        {
+        }
+
+        public void Write(char value)
+        {
+        }
+
+        public void WriteLine()
+        {
+        }
+
+        public void WriteLine(string? value)
+        {
+        }
+    }
+
+    /// <summary>
+    /// A StringBuilderConsole variant that captures output and allows custom Buffer/Window dimensions.
+    /// </summary>
+    internal sealed class StringBuilderConsoleWithCustomWidths : IConsole
+    {
+        private readonly StringBuilder _output = new();
+
+        public StringBuilderConsoleWithCustomWidths(int bufferWidth, int windowWidth)
+        {
+            BufferWidth = bufferWidth;
+            WindowWidth = windowWidth;
+        }
+
+        public int BufferHeight => int.MaxValue;
+
+        public int BufferWidth { get; }
+
+        public int WindowHeight => int.MaxValue;
+
+        public int WindowWidth { get; }
+
+        public bool IsOutputRedirected => false;
+
+        public string Output => _output.ToString();
+
+        public event ConsoleCancelEventHandler? CancelKeyPress = (sender, e) => { };
+
+        public void Clear() => throw new NotImplementedException();
+
+        public ConsoleColor GetForegroundColor() => ConsoleColor.White;
+
+        public void SetForegroundColor(ConsoleColor color)
+        {
+        }
+
+        public void Write(string? value) => _output.Append(value);
+
+        public void Write(char value) => _output.Append(value);
+
+        public void WriteLine() => _output.AppendLine();
+
+        public void WriteLine(string? value) => _output.AppendLine(value);
     }
 }

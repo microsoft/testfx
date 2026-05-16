@@ -14,11 +14,12 @@ internal sealed class RetryCommandLineOptionsProvider : ICommandLineOptionsProvi
     public const string RetryFailedTestsOptionName = "retry-failed-tests";
     public const string RetryFailedTestsMaxPercentageOptionName = "retry-failed-tests-max-percentage";
     public const string RetryFailedTestsMaxTestsOptionName = "retry-failed-tests-max-tests";
+    public const string RetryFailedTestsDelayOptionName = "retry-failed-tests-delay";
     public const string RetryFailedTestsPipeNameOptionName = "internal-retry-pipename";
 
     public string Uid => nameof(RetryCommandLineOptionsProvider);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => ExtensionResources.RetryFailedTestsExtensionDisplayName;
 
@@ -31,6 +32,7 @@ internal sealed class RetryCommandLineOptionsProvider : ICommandLineOptionsProvi
             new(RetryFailedTestsOptionName, ExtensionResources.RetryFailedTestsOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
             new(RetryFailedTestsMaxPercentageOptionName, ExtensionResources.RetryFailedTestsMaxPercentageOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
             new(RetryFailedTestsMaxTestsOptionName, ExtensionResources.RetryFailedTestsMaxTestsOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+            new(RetryFailedTestsDelayOptionName, ExtensionResources.RetryFailedTestsDelayOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
 
             // Hidden internal args
             new(RetryFailedTestsPipeNameOptionName, "Communication between the test host and the retry infra.", ArgumentArity.ExactlyOne, isHidden: true, isBuiltIn: true)
@@ -55,6 +57,11 @@ internal sealed class RetryCommandLineOptionsProvider : ICommandLineOptionsProvi
             return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionIsMissingErrorMessage, RetryFailedTestsMaxTestsOptionName, RetryFailedTestsOptionName));
         }
 
+        if (commandLineOptions.IsOptionSet(RetryFailedTestsDelayOptionName) && !commandLineOptions.IsOptionSet(RetryFailedTestsOptionName))
+        {
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionIsMissingErrorMessage, RetryFailedTestsDelayOptionName, RetryFailedTestsOptionName));
+        }
+
         // No problem found
         return ValidationResult.ValidTask;
     }
@@ -74,6 +81,14 @@ internal sealed class RetryCommandLineOptionsProvider : ICommandLineOptionsProvi
         if (commandOption.Name == RetryFailedTestsMaxTestsOptionName && !int.TryParse(arguments[0], out int _))
         {
             return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionSingleIntegerArgumentErrorMessage, RetryFailedTestsMaxTestsOptionName));
+        }
+
+        if (commandOption.Name == RetryFailedTestsDelayOptionName
+            && (!TimeSpanParser.TryParse(arguments[0], out TimeSpan delay)
+                || delay < TimeSpan.Zero
+                || delay.TotalMilliseconds > int.MaxValue))
+        {
+            return ValidationResult.InvalidTask(ExtensionResources.RetryFailedTestsDelayOptionInvalidArgument);
         }
 
         // No problem found

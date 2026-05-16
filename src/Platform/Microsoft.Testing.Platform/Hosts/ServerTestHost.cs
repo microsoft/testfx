@@ -29,7 +29,6 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
     private readonly IMessageHandlerFactory _messageHandlerFactory;
     private readonly TestFrameworkManager _testFrameworkManager;
     private readonly TestHostManager _testSessionManager;
-    private readonly ServerTelemetry _telemetryService;
     private readonly IAsyncMonitor _messageMonitor;
     private readonly IEnvironment _environment;
     private readonly ILogger<ServerTestHost> _logger;
@@ -66,7 +65,6 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
         _messageHandlerFactory = messageHandlerFactory;
         _testFrameworkManager = testFrameworkManager;
         _testSessionManager = testSessionManager;
-        _telemetryService = new ServerTelemetry(this);
         _clientToServerRequests = new();
         _serverToClientRequests = new();
 
@@ -93,7 +91,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
     public string Uid => nameof(ServerTestHost);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => PlatformResources.ServerTestHostDisplayName;
 
@@ -170,8 +168,8 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
         // If the global cancellation is called together with the server closing one the server exited gracefully.
         return !cancellationToken.IsCancellationRequested && _serverClosingTokenSource.IsCancellationRequested
-            ? ExitCodes.Success
-            : ExitCodes.TestSessionAborted;
+            ? (int)ExitCode.Success
+            : (int)ExitCode.TestSessionAborted;
     }
 
     /// <summary>
@@ -205,7 +203,9 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
                     if (!_serverClosingTokenSource.IsCancellationRequested)
                     {
                         await _logger.LogDebugAsync("Server requested to shutdown").ConfigureAwait(false);
-                        await _serverClosingTokenSource.CancelAsync().ConfigureAwait(false);
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
+                        _serverClosingTokenSource.Cancel();
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
                     }
 
                     // Signal the exit call
@@ -214,7 +214,9 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
                     // If there're no in-flight request we can close the server
                     if (_clientToServerRequests.IsEmpty)
                     {
-                        await _stopMessageHandler.CancelAsync().ConfigureAwait(false);
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
+                        _stopMessageHandler.Cancel();
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
                     }
 
                     continue;
@@ -567,7 +569,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
                     requestExecuteStart, (DateTimeOffset)requestExecuteStop,
                     testNodeUpdateProcessor.GetTestNodeStatistics().TotalDiscoveredTests);
 
-        await _telemetryService.LogEventAsync(isRunRequest ? TelemetryEvents.TestsRunEventName : TelemetryEvents.TestsDiscoveryEventName, metadata, cancellationToken).ConfigureAwait(false);
+        await ServiceProvider.GetTelemetryCollector().LogEventAsync(isRunRequest ? TelemetryEvents.TestsRunEventName : TelemetryEvents.TestsDiscoveryEventName, metadata, cancellationToken).ConfigureAwait(false);
 
         return isRunRequest
             ? new RunResponseArgs([.. testNodeUpdateProcessor.Artifacts])
@@ -711,7 +713,11 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
     private sealed class RpcInvocationState : IDisposable
     {
+#if NET9_0_OR_GREATER
         private readonly Lock _cancellationTokenSourceLock = new();
+#else
+        private readonly object _cancellationTokenSourceLock = new();
+#endif
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private volatile bool _isDisposed;
 

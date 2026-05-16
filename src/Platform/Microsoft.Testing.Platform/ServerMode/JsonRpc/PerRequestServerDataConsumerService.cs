@@ -45,7 +45,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
     public string Uid => nameof(PerRequestServerDataConsumer);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     /// <inheritdoc />
     public string DisplayName => string.Empty;
@@ -131,7 +131,6 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         using CancellationTokenRegistration registration = cancellationToken.Register(_testSessionEnd.SetCanceled);
 
         // When batch timer expire or we're at the end of the session we can unblock the message drain
-        Ensure.NotNull(_task);
         await Task.WhenAny(_task.Delay(TimeSpan.FromMilliseconds(TestNodeUpdateDelayInMs), cancellationToken), _testSessionEnd.Task).ConfigureAwait(false);
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -227,9 +226,9 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
             case FailedTestNodeStateProperty:
             case ErrorTestNodeStateProperty:
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
             case CancelledTestNodeStateProperty:
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
             case TimeoutTestNodeStateProperty:
                 AddOrUpdateTestNodeStateStatistics(testNodeUid, hasPassed: false);
                 break;

@@ -37,6 +37,11 @@
         <target state="translated">Entfernen der Modifizierer „out“ und „ref“</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextFix">
+        <source>Change return type to 'Task'</source>
+        <target state="new">Change return type to 'Task'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">Methodenzugriff auf „privat“ ändern</target>
@@ -65,6 +70,16 @@
       <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
         <source>Remove 'ClassCleanupBehavior' argument</source>
         <target state="translated">Entfernen Sie das Argument „ClassCleanupBehavior“.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveDuplicateDataRowFix">
+        <source>Remove duplicate 'DataRow'</source>
+        <target state="translated">Duplizierte „DataRow“ entfernen</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveDuplicateTestMethodAttributeFix">
+        <source>Remove duplicate TestMethod attribute</source>
+        <target state="translated">Doppelte TestMethod-Attribute entfernen</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -150,6 +165,11 @@
       <trans-unit id="UseDisplayNamePropertyInsteadOfStringArgumentFix">
         <source>Use 'DisplayName' property instead of string argument</source>
         <target state="translated">Verwenden Sie die Eigenschaft „DisplayName“ anstelle eines Zeichenfolgenarguments.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
+        <source>Use MSTest 'Description' attribute instead</source>
+        <target state="translated">Verwenden Sie stattdessen das MSTest-Attribut „Description“.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">

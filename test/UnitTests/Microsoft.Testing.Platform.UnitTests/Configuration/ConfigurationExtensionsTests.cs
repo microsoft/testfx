@@ -42,6 +42,7 @@ public sealed class ConfigurationExtensionsTests
             .Setup(configuration => configuration[key])
             .Returns(value: null);
 
-        Assert.ThrowsExactly<ArgumentNullException>(() => GetActualValueFromConfiguration(configuration.Object, key));
+        // This should never happen in practice. We always have AggregatedConfiguration which will ensure non-null values.
+        Assert.ThrowsExactly<InvalidOperationException>(() => GetActualValueFromConfiguration(configuration.Object, key));
     }
 }

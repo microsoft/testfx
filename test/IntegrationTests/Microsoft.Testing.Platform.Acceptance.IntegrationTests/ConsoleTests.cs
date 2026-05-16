@@ -49,7 +49,7 @@ public class ConsoleTests : AcceptanceTestBase<ConsoleTests.TestAssetFixture>
             $"\"{testHost.FullName}\" --ignore-exit-code 8",
             cancellationToken: TestContext.CancellationToken);
 
-        Assert.AreEqual(ExitCodes.Success, exitCode);
+        Assert.AreEqual((int)ExitCode.Success, exitCode);
         Assert.Contains("Slowest 10 tests", commandLine.StandardOutput);
     }
 
@@ -68,11 +68,11 @@ public class ConsoleTests : AcceptanceTestBase<ConsoleTests.TestAssetFixture>
         }
 
         TestHostResult testHostResult = await testHost.ExecuteAsync("--ignore-exit-code 8", environmentVariables, cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContains("ABCDEF123");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
 #file ConsoleTests.csproj
@@ -560,12 +560,9 @@ internal class Capabilities : ITestFrameworkCapabilities
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
     }
 }

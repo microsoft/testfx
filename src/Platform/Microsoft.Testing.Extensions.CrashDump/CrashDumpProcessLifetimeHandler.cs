@@ -35,7 +35,7 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
     public string Uid => nameof(CrashDumpProcessLifetimeHandler);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName => CrashDumpResources.CrashDumpDisplayName;

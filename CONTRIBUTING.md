@@ -31,6 +31,14 @@ The MSTest project follows the same rules as the runtime repository [developer g
 The repository includes [.editorconfig](http://editorconfig.org) files to help enforce this convention.
 Contributors should ensure they follow these guidelines when making submissions.
 
+## TODO Comment Policy
+
+To keep technical debt visible and tracked, the project enforces the following policy for `TODO` comments in code:
+
+- **DO** reference a GitHub issue in every `TODO` comment (e.g., `// TODO(#1234): Refactor this once the new API is available`).
+- **DO** convert any `TODO` that does not warrant a tracking issue into a regular comment that explains the rationale.
+- **DO NOT** leave `TODO` comments without an associated GitHub issue link. These should be caught during code review.
+
 ## Developing
 
 Please see our [Dev Guide](./docs/dev-guide.md) which explains how to develop, build, and test.

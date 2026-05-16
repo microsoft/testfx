@@ -50,7 +50,7 @@ public class Program
             // testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
 
             // Enable Trx
-            // testApplicationBuilder.AddTrxReportProvider();
+            testApplicationBuilder.AddTrxReportProvider();
 
             // Enable Telemetry
             // testApplicationBuilder.AddAppInsightsTelemetryProvider();

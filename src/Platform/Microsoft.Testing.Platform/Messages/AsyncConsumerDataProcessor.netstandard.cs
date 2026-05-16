@@ -10,16 +10,18 @@ namespace Microsoft.Testing.Platform.Messages;
 
 internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
 {
-    private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
 
-    private SingleConsumerUnboundedChannel<(IDataProducer DataProducer, IData Data)> _channel = new();
-    private Task _consumeTask;
+    private readonly SingleConsumerUnboundedChannel<AsyncConsumerDataProcessorMessage> _channel = new();
+    private readonly Task _consumeTask;
+
+    // Number of data payloads dequeued by the consumer. Used by DrainDataAsync to detect publisher/consumer loops.
+    // Only the single consumer task increments this field; other threads read it via Volatile.Read.
+    private long _processedCount;
 
     public AsyncConsumerDataProcessor(IDataConsumer dataConsumer, ITask task, CancellationToken cancellationToken)
     {
         DataConsumer = dataConsumer;
-        _task = task;
         _cancellationToken = cancellationToken;
         _consumeTask = task.Run(ConsumeAsync, cancellationToken);
     }
@@ -29,7 +31,7 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
     public Task PublishAsync(IDataProducer dataProducer, IData data)
     {
         _cancellationToken.ThrowIfCancellationRequested();
-        _channel.Write((dataProducer, data));
+        _channel.Write(AsyncConsumerDataProcessorMessage.CreateData(dataProducer, data));
         return Task.CompletedTask;
     }
 
@@ -39,17 +41,26 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
         {
             while (await _channel.WaitToReadAsync(_cancellationToken).ConfigureAwait(false))
             {
-                while (_channel.TryRead(out (IDataProducer DataProducer, IData Data) item))
+                while (_channel.TryRead(out AsyncConsumerDataProcessorMessage message))
                 {
+                    if (message.DrainMarker is { } drainMarker)
+                    {
+                        // The drain marker passed all the data items previously enqueued so we can signal the drain caller.
+                        drainMarker.TrySetResult(true);
+                        continue;
+                    }
+
+                    Interlocked.Increment(ref _processedCount);
+
                     // We don't enqueue the data if the consumer is the producer of the data.
                     // We could optimize this if and make a get with type/all but producers, but it
                     // could be over-engineering.
-                    if (item.DataProducer.Uid == DataConsumer.Uid)
+                    if (message.DataProducer!.Uid == DataConsumer.Uid)
                     {
                         continue;
                     }
 
-                    await DataConsumer.ConsumeAsync(item.DataProducer, item.Data, _cancellationToken).ConfigureAwait(false);
+                    await DataConsumer.ConsumeAsync(message.DataProducer, message.Data!, _cancellationToken).ConfigureAwait(false);
                 }
             }
         }
@@ -69,13 +80,34 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
         await _consumeTask.ConfigureAwait(false);
     }
 
-    public async Task DrainDataAsync()
+    public async Task<bool> DrainDataAsync()
     {
-        _channel.Complete();
-        await _consumeTask.ConfigureAwait(false);
+        long before = Volatile.Read(ref _processedCount);
+        var drainMarker = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        _channel = new();
-        _consumeTask = _task.Run(ConsumeAsync, _cancellationToken);
+        try
+        {
+            _channel.Write(AsyncConsumerDataProcessorMessage.CreateDrainMarker(drainMarker));
+        }
+        catch (InvalidOperationException)
+        {
+            // The channel was already completed (e.g., by DisableAsync). Nothing left to drain.
+            return false;
+        }
+
+        // Wait either for the drain marker to be dequeued, or for the consume task to finish/fault.
+        // If the consume task ends before the marker is reached, propagate any failure it surfaced.
+        Task completed = await Task.WhenAny(drainMarker.Task, _consumeTask).ConfigureAwait(false);
+        if (completed == _consumeTask)
+        {
+            await _consumeTask.ConfigureAwait(false);
+        }
+        else
+        {
+            await drainMarker.Task.ConfigureAwait(false);
+        }
+
+        return Volatile.Read(ref _processedCount) != before;
     }
 
     public void Dispose()

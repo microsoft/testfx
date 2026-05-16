@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
+using Microsoft.Testing.Platform.TestHostOrchestrator;
 
 namespace Microsoft.Testing.Platform.Builder;
 
@@ -25,6 +26,12 @@ public interface ITestApplicationBuilder
     /// Gets the test host controllers manager.
     /// </summary>
     ITestHostControllersManager TestHostControllers { get; }
+
+    /// <summary>
+    /// Gets the test host orchestrator manager.
+    /// </summary>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    ITestHostOrchestratorManager TestHostOrchestrator { get; }
 
     /// <summary>
     /// Gets the command line manager.

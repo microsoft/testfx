@@ -19,10 +19,5 @@ builder.AddTrxReportProvider();
 builder.AddAppInsightsTelemetryProvider();
 builder.AddAzureDevOpsProvider();
 
-// Custom suite tools
-CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory
-    = new(_ => new SlowestTestsConsumer());
-builder.TestHost.AddDataConsumer(slowestTestCompositeServiceFactory);
-builder.TestHost.AddTestSessionLifetimeHandler(slowestTestCompositeServiceFactory);
 ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();

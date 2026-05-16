@@ -37,4 +37,23 @@ internal static class IOperationExtensions
 
         return operation;
     }
+
+    /// <summary>
+    /// Walks down consecutive built-in conversion operations, stopping at user-defined
+    /// conversions or non-conversion operands.
+    /// </summary>
+    /// <param name="operation">The starting operation.</param>
+    /// <returns>
+    /// The first operand that is either a user-defined conversion or not a conversion at all,
+    /// or the starting operation if it was already one of those.
+    /// </returns>
+    public static IOperation WalkDownBuiltInConversion(this IOperation operation)
+    {
+        while (operation is IConversionOperation conversionOperation && !conversionOperation.Conversion.IsUserDefined)
+        {
+            operation = conversionOperation.Operand;
+        }
+
+        return operation;
+    }
 }

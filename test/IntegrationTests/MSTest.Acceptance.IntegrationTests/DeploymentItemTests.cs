@@ -21,10 +21,10 @@ public class DeploymentItemTests : AcceptanceTestBase<DeploymentItemTests.TestAs
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetFramework[0]);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runsettings}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
 #file DeploymentItemTests.csproj
@@ -103,13 +103,10 @@ public sealed class Test1
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.NetFramework[0])
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
     }
 
     public TestContext TestContext { get; set; }

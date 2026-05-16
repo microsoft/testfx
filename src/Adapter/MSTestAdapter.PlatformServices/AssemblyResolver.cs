@@ -82,7 +82,11 @@ internal
     /// <summary>
     /// lock for the loaded assemblies cache.
     /// </summary>
+#if NET9_0_OR_GREATER
     private readonly Lock _syncLock = new();
+#else
+    private readonly object _syncLock = new();
+#endif
 
     private static List<string>? s_currentlyLoading;
     private bool _disposed;
@@ -99,7 +103,16 @@ internal
     /// </remarks>
     public AssemblyResolver(IList<string> directories)
     {
-        Ensure.NotNullOrEmpty(directories);
+        if (directories is null)
+        {
+            throw new ArgumentNullException(nameof(directories));
+        }
+
+        // Caller always ensures non-empty.
+        if (directories.Count == 0)
+        {
+            throw ApplicationStateGuard.Unreachable();
+        }
 
         _searchDirectories = [.. directories];
         _directoryList = new Queue<RecursiveDirectoryPath>();

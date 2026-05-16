@@ -1,16 +1,22 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
 using System.Security;
+#endif
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
-internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
+internal sealed class TestAssemblySettingsProvider
+#if NETFRAMEWORK
+    : MarshalByRefObject
+#endif
 {
+#if NETFRAMEWORK
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>
@@ -18,10 +24,8 @@ internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
     /// The <see cref="object"/>.
     /// </returns>
     [SecurityCritical]
-#if NET5_0_OR_GREATER
-    [Obsolete]
+    public override object? InitializeLifetimeService() => null;
 #endif
-    public override object InitializeLifetimeService() => null!;
 
     [SuppressMessage(
         "Performance",
@@ -34,9 +38,10 @@ internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
         // Load the source.
         Assembly testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source);
 
-        ParallelizeAttribute? parallelizeAttribute = ReflectHelper.GetParallelizeAttribute(testAssembly);
+        IReflectionOperations reflectionOperations = PlatformServiceProvider.Instance.ReflectionOperations;
+        ParallelizeAttribute? parallelizeAttribute = reflectionOperations.GetSingleAttributeOrDefault<ParallelizeAttribute>(testAssembly);
 
-        if (parallelizeAttribute != null)
+        if (parallelizeAttribute is not null)
         {
             testAssemblySettings.Workers = parallelizeAttribute.Workers;
             testAssemblySettings.Scope = parallelizeAttribute.Scope;
@@ -47,7 +52,7 @@ internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
             }
         }
 
-        testAssemblySettings.CanParallelizeAssembly = !ReflectHelper.IsDoNotParallelizeSet(testAssembly);
+        testAssemblySettings.CanParallelizeAssembly = !reflectionOperations.IsAttributeDefined<DoNotParallelizeAttribute>(testAssembly);
 
         return testAssemblySettings;
     }

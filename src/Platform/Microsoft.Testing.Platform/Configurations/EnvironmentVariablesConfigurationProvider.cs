@@ -74,7 +74,8 @@ internal sealed class EnvironmentVariablesConfigurationProvider : IConfiguration
 
     public bool TryGet(string key, out string? value)
     {
-        Ensure.NotNullOrEmpty(key, nameof(key));
+        _ = key ?? throw new ArgumentNullException(nameof(key));
+        Ensure.NotEmpty(key);
         return _data.TryGetValue(key, out value);
     }
 

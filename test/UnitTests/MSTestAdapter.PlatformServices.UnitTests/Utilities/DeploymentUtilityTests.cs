@@ -4,8 +4,9 @@
 #if !WINDOWS_UWP && !WIN_UI
 using AwesomeAssertions;
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -25,6 +26,7 @@ public class DeploymentUtilityTests : TestContainer
     private const string DefaultDeploymentItemPath = @"c:\temp";
     private const string DefaultDeploymentItemOutputDirectory = "out";
 
+    private readonly Mock<IReflectionOperations> _mockReflectionOperations;
     private readonly Mock<FileUtility> _mockFileUtility;
     private readonly Mock<AssemblyUtility> _mockAssemblyUtility;
     private readonly Mock<IRunContext> _mockRunContext;
@@ -40,12 +42,13 @@ public class DeploymentUtilityTests : TestContainer
 
     public DeploymentUtilityTests()
     {
+        _mockReflectionOperations = new Mock<IReflectionOperations>();
         _mockFileUtility = new Mock<FileUtility>();
         _mockAssemblyUtility = new Mock<AssemblyUtility>();
         _warnings = [];
 
         _deploymentUtility = new DeploymentUtility(
-            new DeploymentItemUtility(new ReflectHelper()),
+            new DeploymentItemUtility(_mockReflectionOperations.Object),
             _mockAssemblyUtility.Object,
             _mockFileUtility.Object);
 

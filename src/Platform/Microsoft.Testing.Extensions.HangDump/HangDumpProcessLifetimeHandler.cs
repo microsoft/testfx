@@ -16,6 +16,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
 
 #if NETCOREAPP
 using Microsoft.Diagnostics.NETCore.Client;
@@ -83,7 +84,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     public string Uid => nameof(HangDumpProcessLifetimeHandler);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => ExtensionResources.HangDumpExtensionDisplayName;
 
@@ -118,10 +119,10 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         _waitConnectionTask = _task.Run(
             async () =>
-        {
-            await _logger.LogDebugAsync($"Waiting for connection to {_singleConnectionNamedPipeServer.PipeName.Name}").ConfigureAwait(false);
-            await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
-        }, cancellationToken);
+            {
+                await _logger.LogDebugAsync($"Waiting for connection to {_singleConnectionNamedPipeServer.PipeName.Name}").ConfigureAwait(false);
+                await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
+            }, cancellationToken);
     }
 
     private async Task<IResponse> CallbackAsync(IRequest request)
@@ -132,7 +133,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             _namedPipeClient = new NamedPipeClient(consumerPipeNameRequest.PipeName, _environment);
             _namedPipeClient.RegisterSerializer(new GetInProgressTestsResponseSerializer(), typeof(GetInProgressTestsResponse));
             _namedPipeClient.RegisterSerializer(new GetInProgressTestsRequestSerializer(), typeof(GetInProgressTestsRequest));
-            _namedPipeClient.RegisterSerializer(new ExitSignalActivityIndicatorTaskRequestSerializer(), typeof(ExitSignalActivityIndicatorTaskRequest));
             _namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
             _waitConsumerPipeName.Set();
             return VoidResponse.CachedInstance;
@@ -308,15 +308,40 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
         ApplicationStateGuard.Ensure(_dumpType is not null);
 
-        string finalDumpFileName = (_dumpFileNamePattern ?? $"{process.Name}_%p_hang.dmp").Replace("%p", process.Id.ToString(CultureInfo.InvariantCulture));
-        finalDumpFileName = Path.Combine(_configuration.GetTestResultDirectory(), finalDumpFileName);
+        string processId = process.Id.ToString(CultureInfo.InvariantCulture);
+        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(process.Name, processId, _clock.UtcNow);
+
+        string pattern = _dumpFileNamePattern ?? $"{process.Name}_%p_hang.dmp";
+
+        // First resolve {placeholder} templates, then handle legacy %p pattern for backward compatibility.
+        string finalDumpFileName = ArtifactNamingHelper.ResolveTemplate(pattern, replacements)
+            .Replace("%p", processId);
+        string resultsDirectory = Path.GetFullPath(_configuration.GetTestResultDirectory());
+        finalDumpFileName = Path.GetFullPath(Path.Combine(resultsDirectory, finalDumpFileName));
+
+        // Reject resolved paths that escape the results directory (e.g. rooted paths or ".." segments).
+        // Append a trailing separator to prevent sibling-directory bypass (e.g. "/tmp/results" vs "/tmp/results-evil").
+        // Use case-insensitive comparison on Windows where paths are case-insensitive.
+        StringComparison pathComparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        string separatorStr = Path.DirectorySeparatorChar.ToString();
+        string resultsDirectoryGuard = resultsDirectory.EndsWith(separatorStr, StringComparison.Ordinal)
+            ? resultsDirectory
+            : resultsDirectory + separatorStr;
+        if (!finalDumpFileName.StartsWith(resultsDirectoryGuard, pathComparison))
+        {
+            throw new InvalidOperationException($"The resolved dump file path '{finalDumpFileName}' is outside the results directory '{resultsDirectory}'. Ensure --hangdump-filename is a relative path without '..' segments.");
+        }
+
+        // Ensure the destination directory exists (templates may include directory separators, e.g. {asm}/{pname}).
+        Directory.CreateDirectory(Path.GetDirectoryName(finalDumpFileName)!);
 
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
         GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), cancellationToken).ConfigureAwait(false);
-        await _namedPipeClient.RequestReplyAsync<ExitSignalActivityIndicatorTaskRequest, VoidResponse>(new ExitSignalActivityIndicatorTaskRequest(), cancellationToken).ConfigureAwait(false);
         if (tests.Tests.Length > 0)
         {
-            string hangTestsFileName = Path.Combine(_configuration.GetTestResultDirectory(), Path.ChangeExtension(Path.GetFileName(finalDumpFileName), ".log"));
+            string hangTestsFileName = Path.ChangeExtension(finalDumpFileName, ".log");
             using (FileStream fs = File.OpenWrite(hangTestsFileName))
             using (StreamWriter sw = new(fs))
             {

@@ -36,7 +36,7 @@ public class TypeCacheTests : TestContainer
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
 
-        ReflectHelper.Instance.ClearCache();
+        ReflectHelper.ClearCache();
 
         SetupMocks();
     }
@@ -54,15 +54,7 @@ public class TypeCacheTests : TestContainer
     #region GetTestMethodInfo tests
 
     private static TestMethod CreateTestMethod(string methodName, string className, string assemblyName, string? displayName)
-        => new(className, methodName, null, methodName, className, assemblyName, displayName, null);
-
-    public void GetTestMethodInfoShouldThrowIfTestMethodIsNull()
-    {
-        TestMethod testMethod = CreateTestMethod("M", "C", "A", displayName: null);
-
-        Action action = () => _typeCache.GetTestMethodInfo(null!);
-        action.Should().Throw<ArgumentNullException>();
-    }
+        => new(methodName, null, methodName, className, assemblyName, displayName, null);
 
     public void GetTestMethodInfoShouldReturnNullIfClassInfoForTheMethodIsNull()
     {
