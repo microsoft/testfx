@@ -286,6 +286,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsInstanceOfType");
+
         if (IsInstanceOfTypeFailing(value, expectedType))
         {
             ReportAssertIsInstanceOfTypeFailed(value, expectedType, message, valueExpression);
@@ -297,7 +299,10 @@ public sealed partial class Assert
     public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, [InterpolatedStringHandlerArgument(nameof(value), nameof(expectedType))] ref AssertIsInstanceOfTypeInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Deliberately keeping [NotNull] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
-        => message.ComputeAssertion(valueExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsInstanceOfType");
+        message.ComputeAssertion(valueExpression);
+    }
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <summary>
@@ -318,6 +323,7 @@ public sealed partial class Assert
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Deliberately keeping [NotNull] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsInstanceOfType");
         message.ComputeAssertion(valueExpression);
         return (T)value!;
     }
@@ -375,6 +381,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotInstanceOfType");
+
         if (IsNotInstanceOfTypeFailing(value, wrongType))
         {
             ReportAssertIsNotInstanceOfTypeFailed(value, wrongType, message, valueExpression);
@@ -386,7 +394,10 @@ public sealed partial class Assert
     public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, [InterpolatedStringHandlerArgument(nameof(value), nameof(wrongType))] ref AssertIsNotInstanceOfTypeInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
-        => message.ComputeAssertion(valueExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotInstanceOfType");
+        message.ComputeAssertion(valueExpression);
+    }
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <summary>
@@ -402,7 +413,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsNotInstanceOfType<T>(object? value, [InterpolatedStringHandlerArgument(nameof(value))] AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(valueExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotInstanceOfType");
+        message.ComputeAssertion(valueExpression);
+    }
 
     private static bool IsNotInstanceOfTypeFailing(object? value, [NotNullWhen(false)] Type? wrongType)
         => wrongType is null ||

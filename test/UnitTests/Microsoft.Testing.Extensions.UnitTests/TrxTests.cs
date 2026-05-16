@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
+using Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -75,7 +76,7 @@ public class TrxTests
         // Arrange
         using var memoryStream = new MemoryFileStream();
 
-        TestNodeUpdateMessage[] messages = [
+        TrxTestResult[] messages = [
             CreateTestNodeUpdate("1", "Test1", new PropertyBag(new FailedTestNodeStateProperty())),
             CreateTestNodeUpdate("2", "Test2", new PropertyBag(SkippedTestNodeStateProperty.CachedInstance))
         ];
@@ -99,7 +100,7 @@ public class TrxTests
         // Arrange
         using var memoryStream = new MemoryFileStream();
 
-        TestNodeUpdateMessage[] messages = [
+        TrxTestResult[] messages = [
             CreateTestNodeUpdate("1", "Test1", new PropertyBag(SkippedTestNodeStateProperty.CachedInstance)),
             CreateTestNodeUpdate("2", "Test2", new PropertyBag(new FailedTestNodeStateProperty())),
         ];
@@ -650,7 +651,7 @@ public class TrxTests
     {
         // Arrange
         using MemoryFileStream memoryStream = new();
-        TestNodeUpdateMessage[] messages = [
+        TrxTestResult[] messages = [
             CreateTestNodeUpdate("same-uid", "DisplayName1", new PropertyBag(new PassedTestNodeStateProperty(), new TrxTestDefinitionName("ExplicitName1"))),
             CreateTestNodeUpdate("same-uid", "DisplayName2", new PropertyBag(new PassedTestNodeStateProperty(), new TrxTestDefinitionName("ExplicitName2"))),
         ];
@@ -668,7 +669,7 @@ public class TrxTests
 
         // First result has no TrxTestDefinitionName, so it falls back to the display name "MethodName".
         // Second result provides an explicit TrxTestDefinitionName "MethodName" that matches the fallback.
-        TestNodeUpdateMessage[] messages = [
+        TrxTestResult[] messages = [
             CreateTestNodeUpdate("same-uid", "MethodName", new PropertyBag(new PassedTestNodeStateProperty())),
             CreateTestNodeUpdate("same-uid", "MethodName", new PropertyBag(new PassedTestNodeStateProperty(), new TrxTestDefinitionName("MethodName"))),
         ];
@@ -700,16 +701,17 @@ public class TrxTests
     private static void AssertExpectedTrxFileName(string fileName)
            => Assert.IsTrue(fileName.Equals("_MachineName_0001-01-01_00_00_00.0000000.trx", StringComparison.Ordinal));
 
-    private static TestNodeUpdateMessage CreateTestNodeUpdate(string uid, string displayName, PropertyBag propertyBag)
+    private static TrxTestResult CreateTestNodeUpdate(string uid, string displayName, PropertyBag propertyBag)
     {
         if (!propertyBag.Any<TrxFullyQualifiedTypeNameProperty>())
         {
             propertyBag.Add(new TrxFullyQualifiedTypeNameProperty("MyNamespace.MyClass"));
         }
 
-        return new TestNodeUpdateMessage(
+        var message = new TestNodeUpdateMessage(
                 new SessionUid("1"),
                 new TestNode { Uid = uid, DisplayName = displayName, Properties = propertyBag });
+        return TrxTestResultExtractor.Extract(message).Result;
     }
 
     private TrxReportEngine GenerateTrxReportEngine(MemoryFileStream memoryStream, bool isExplicitFileName = false)

@@ -203,6 +203,11 @@
         <target state="translated">Ciąg „{0}” kończy się ciągiem „{1}”. {2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoesNotEndWithFailedSummary">
+        <source>Expected string to not end with the specified suffix.</source>
+        <target state="new">Expected string to not end with the specified suffix.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoesNotMatchRegexFailedSummary">
         <source>Expected string to not match the specified regular expression.</source>
         <target state="new">Expected string to not match the specified regular expression.</target>
@@ -211,6 +216,11 @@
       <trans-unit id="DoesNotStartWithFail">
         <source>String '{0}' starts with string '{1}'. {2}</source>
         <target state="translated">Ciąg „{0}” rozpoczyna się od ciągu „{1}”. {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotStartWithFailedSummary">
+        <source>Expected string to not start with the specified prefix.</source>
+        <target state="new">Expected string to not start with the specified prefix.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidFieldLayout">
@@ -260,6 +270,11 @@ Rzeczywiste: {2}</target>
       <trans-unit id="AssertionFailed">
         <source>{0} failed.</source>
         <target state="translated">Niepowodzenie asercji {0}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="EndsWithFailedSummary">
+        <source>Expected string to end with the specified suffix.</source>
+        <target state="new">Expected string to end with the specified suffix.</target>
         <note />
       </trans-unit>
       <trans-unit id="HasCountFailMsg">
@@ -412,6 +427,11 @@ Rzeczywiste: {2}</target>
         <source>(object)</source>
         <target state="translated">(obiekt)</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="StartsWithFailedSummary">
+        <source>Expected string to start with the specified prefix.</source>
+        <target state="new">Expected string to start with the specified prefix.</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>

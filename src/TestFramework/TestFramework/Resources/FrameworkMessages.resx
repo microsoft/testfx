@@ -426,4 +426,16 @@ Actual: {2}</value>
   <data name="DoesNotMatchRegexFailedSummary" xml:space="preserve">
     <value>Expected string to not match the specified regular expression.</value>
   </data>
+  <data name="StartsWithFailedSummary" xml:space="preserve">
+    <value>Expected string to start with the specified prefix.</value>
+  </data>
+  <data name="DoesNotStartWithFailedSummary" xml:space="preserve">
+    <value>Expected string to not start with the specified prefix.</value>
+  </data>
+  <data name="EndsWithFailedSummary" xml:space="preserve">
+    <value>Expected string to end with the specified suffix.</value>
+  </data>
+  <data name="DoesNotEndWithFailedSummary" xml:space="preserve">
+    <value>Expected string to not end with the specified suffix.</value>
+  </data>
 </root>

@@ -21,7 +21,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 #pragma warning disable CA1852 // Seal internal types - This class is inherited in tests.
 internal class TestExecutionManager
 {
-    private sealed class RemotingMessageLogger : MarshalByRefObject, IMessageLogger
+    private sealed class RemotingMessageLogger :
+#if NETFRAMEWORK
+        MarshalByRefObject,
+#endif
+        IMessageLogger
     {
         private readonly IMessageLogger _realMessageLogger;
 

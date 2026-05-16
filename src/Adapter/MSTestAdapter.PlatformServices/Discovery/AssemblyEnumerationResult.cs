@@ -10,5 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 /// </summary>
 /// <param name="TestElements">The test elements that were discovered.</param>
 /// <param name="Warnings">Warnings that happened during discovery.</param>
+#if NETFRAMEWORK
 [Serializable]
+#endif
 internal sealed record AssemblyEnumerationResult(List<UnitTestElement> TestElements, List<string> Warnings);
