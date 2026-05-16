@@ -19,6 +19,8 @@ public sealed class TimeoutWhenExpiresTests : AcceptanceTestBase<TimeoutWhenExpi
         ["baseClassCleanup"] = ("TestClassBase.ClassCleanupBase", "Class cleanup", "BASE_CLASSCLEANUP", "ClassCleanupTimeout"),
         ["testInit"] = ("TestClass.TestInit", "Test initialize", "TESTINIT", "TestInitializeTimeout"),
         ["testCleanup"] = ("TestClass.TestCleanupMethod", "Test cleanup", "TESTCLEANUP", "TestCleanupTimeout"),
+        ["globalTestInit"] = ("TestClass.GlobalTestInit", "Test initialize", "GLOBALTESTINIT", "TestInitializeTimeout"),
+        ["globalTestCleanup"] = ("TestClass.GlobalTestCleanupMethod", "Test cleanup", "GLOBALTESTCLEANUP", "TestCleanupTimeout"),
     };
 
     [TestMethod]
@@ -115,6 +117,36 @@ public sealed class TimeoutWhenExpiresTests : AcceptanceTestBase<TimeoutWhenExpi
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TestCleanup_WhenTimeoutExpires_TestCleanupIsCanceled_AttributeTakesPrecedence(string tfm)
         => await RunAndAssertAttributeTakesPrecedenceAsync(tfm, "testCleanup");
+
+    [TestMethod]
+    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/6198. The TestFailedException returned by InvokeGlobalInitializeMethodAsync is currently discarded in TestMethodInfo.Execution.cs, so timeouts on global test initialize methods do not fail the test.")]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task GlobalTestInitialize_WhenTimeoutExpires_GlobalTestInitializeTaskIsCanceled(string tfm)
+        => await RunAndAssertTestTimedOutAsync(tfm, "LONG_WAIT_", "globalTestInit");
+
+    [TestMethod]
+    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/6198. The TestFailedException returned by InvokeGlobalInitializeMethodAsync is currently discarded in TestMethodInfo.Execution.cs, so timeouts on global test initialize methods do not fail the test.")]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task GlobalTestInitialize_WhenTimeoutExpiresAndTestContextTokenIsUsed_GlobalTestInitializeExits(string tfm)
+        => await RunAndAssertTestTimedOutAsync(tfm, "TIMEOUT_", "globalTestInit");
+
+    [TestMethod]
+    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/6198. The TestFailedException returned by InvokeGlobalInitializeMethodAsync is currently discarded in TestMethodInfo.Execution.cs, so timeouts on global test initialize methods do not fail the test.")]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task GlobalTestInitialize_WhenTimeoutExpires_GlobalTestInitializeIsCanceled_AttributeTakesPrecedence(string tfm)
+        => await RunAndAssertAttributeTakesPrecedenceAsync(tfm, "globalTestInit");
+
+    [TestMethod]
+    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/6198. The TestFailedException returned by InvokeGlobalCleanupMethodAsync is currently discarded in TestMethodInfo.Lifecycle.cs, so timeouts on global test cleanup methods do not fail the test.")]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task GlobalTestCleanup_WhenTimeoutExpires_GlobalTestCleanupTaskIsCanceled(string tfm)
+        => await RunAndAssertTestTimedOutAsync(tfm, "LONG_WAIT_", "globalTestCleanup");
+
+    [TestMethod]
+    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/6198. The TestFailedException returned by InvokeGlobalCleanupMethodAsync is currently discarded in TestMethodInfo.Lifecycle.cs, so timeouts on global test cleanup methods do not fail the test.")]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task GlobalTestCleanup_WhenTimeoutExpires_GlobalTestCleanupIsCanceled_AttributeTakesPrecedence(string tfm)
+        => await RunAndAssertAttributeTakesPrecedenceAsync(tfm, "globalTestCleanup");
 
     private static async Task RunAndAssertTestTimedOutAsync(string tfm, string envVarPrefix, string entryKind)
     {
@@ -324,6 +356,42 @@ public class TestClass : TestClassBase
         if (Environment.GetEnvironmentVariable("LONG_WAIT_TESTCLEANUP") == "1" || Environment.GetEnvironmentVariable("TIMEOUT_TESTCLEANUP") == "1")
         {
             await Task.Delay(10_000);
+        }
+        else
+        {
+            await Task.CompletedTask;
+        }
+    }
+
+    $TimeoutAttribute$
+    [GlobalTestInitialize]
+    public static async Task GlobalTestInit(TestContext testContext)
+    {
+        if (Environment.GetEnvironmentVariable("LONG_WAIT_GLOBALTESTINIT") == "1")
+        {
+            await Task.Delay(10_000);
+        }
+        else if (Environment.GetEnvironmentVariable("TIMEOUT_GLOBALTESTINIT") == "1")
+        {
+            await Task.Delay(10_000, testContext.CancellationTokenSource.Token);
+        }
+        else
+        {
+            await Task.CompletedTask;
+        }
+    }
+
+    $TimeoutAttribute$
+    [GlobalTestCleanup]
+    public static async Task GlobalTestCleanupMethod(TestContext testContext)
+    {
+        if (Environment.GetEnvironmentVariable("LONG_WAIT_GLOBALTESTCLEANUP") == "1")
+        {
+            await Task.Delay(10_000);
+        }
+        else if (Environment.GetEnvironmentVariable("TIMEOUT_GLOBALTESTCLEANUP") == "1")
+        {
+            await Task.Delay(10_000, testContext.CancellationTokenSource.Token);
         }
         else
         {

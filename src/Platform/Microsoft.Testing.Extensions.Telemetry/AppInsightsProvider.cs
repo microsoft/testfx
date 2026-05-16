@@ -62,7 +62,17 @@ internal sealed partial class AppInsightsProvider :
         TelemetryProperties.HostProperties.RuntimeIdentifierPropertyName,
         TelemetryProperties.HostProperties.ApplicationModePropertyName,
         TelemetryProperties.HostProperties.ExitCodePropertyName,
-        TelemetryProperties.HostProperties.ExtensionsPropertyName
+        TelemetryProperties.HostProperties.ExtensionsPropertyName,
+
+        // MSTest session telemetry (see MSTestTelemetryDataCollector). These carry aggregated
+        // counts, anonymized SHA256 type hashes inside JSON envelopes, and well-known enum/string
+        // values - none of them contain unhashed user-identifying data.
+        "mstest.config_source",
+        "mstest.attribute_usage",
+        "mstest.custom_test_method_types",
+        "mstest.custom_test_class_types",
+        "mstest.assertion_usage",
+        "mstest.setting.parallelization_scope",
     ];
 #endif
 

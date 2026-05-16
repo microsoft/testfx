@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -22,9 +22,11 @@ public sealed partial class Assert
     public readonly struct AssertIsNullInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
+        private readonly object? _value;
 
         public AssertIsNullInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend)
         {
+            _value = value;
             shouldAppend = IsNullFailing(value);
             if (shouldAppend)
             {
@@ -36,8 +38,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ReportAssertIsNullFailed(_builder.ToString());
+                ReportAssertIsNullFailed(_value, _builder.ToString(), valueExpression);
             }
         }
 
@@ -90,8 +91,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ReportAssertIsNotNullFailed(_builder.ToString());
+                ReportAssertIsNotNullFailed(_builder.ToString(), valueExpression, "value");
             }
         }
 
@@ -128,7 +128,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsNull(object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNullInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(valueExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNull");
+        message.ComputeAssertion(valueExpression);
+    }
 
     /// <summary>
     /// Tests whether the specified object is null and throws an exception
@@ -150,23 +153,41 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNull(object? value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNull");
+
         if (IsNullFailing(value))
         {
-            ReportAssertIsNullFailed(BuildUserMessageForValueExpression(message, valueExpression));
+            ReportAssertIsNullFailed(value, message, valueExpression);
         }
     }
 
     private static bool IsNullFailing(object? value) => value is not null;
 
-    private static void ReportAssertIsNullFailed(string? message)
-        => ReportAssertFailed("Assert.IsNull", message);
+    [DoesNotReturn]
+    private static void ReportAssertIsNullFailed(object? value, string? message, string valueExpression)
+    {
+        string actualValue = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("actual:", actualValue);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.IsNullFailedSummary);
+        structured.WithUserMessage(message);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(AssertionValueRenderer.RenderValue(null), actualValue);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNull", valueExpression, nameof(value)));
+
+        ReportAssertFailed(structured);
+    }
 
     /// <inheritdoc cref="IsNull(object?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsNotNull([NotNull] object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNotNullInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Deliberately keeping [NotNull] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
-        => message.ComputeAssertion(valueExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotNull");
+        message.ComputeAssertion(valueExpression);
+    }
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <summary>
@@ -189,15 +210,29 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNotNull([NotNull] object? value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotNull");
+
         if (IsNotNullFailing(value))
         {
-            ReportAssertIsNotNullFailed(BuildUserMessageForValueExpression(message, valueExpression));
+            ReportAssertIsNotNullFailed(message, valueExpression, nameof(value));
         }
     }
 
     private static bool IsNotNullFailing([NotNullWhen(false)] object? value) => value is null;
 
     [DoesNotReturn]
-    private static void ReportAssertIsNotNullFailed(string? message)
-        => ReportAssertFailed("Assert.IsNotNull", message);
+    private static void ReportAssertIsNotNullFailed(string? message, string valueExpression, string paramName)
+    {
+        string actualValue = AssertionValueRenderer.RenderValue(null);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("actual:", actualValue);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.IsNotNullFailedSummary);
+        structured.WithUserMessage(message);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual("not null", actualValue);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotNull", valueExpression, paramName));
+
+        ReportAssertFailed(structured);
+    }
 }

@@ -9,7 +9,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// <summary>
 /// Adapter Settings for the run.
 /// </summary>
+#if NETFRAMEWORK
 [Serializable]
+#endif
 internal sealed partial class MSTestSettings
 {
     /// <summary>
@@ -23,16 +25,6 @@ internal sealed partial class MSTestSettings
     public const string SettingsNameAlias = "MSTestV2";
 
     private const string ParallelizeSettingsName = "Parallelize";
-
-    /// <summary>
-    /// Member variable for Adapter settings.
-    /// </summary>
-    private static MSTestSettings? s_currentSettings;
-
-    /// <summary>
-    /// Member variable for RunConfiguration settings.
-    /// </summary>
-    private static RunConfigurationSettings? s_runConfigurationSettings;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MSTestSettings"/> class.
@@ -60,21 +52,25 @@ internal sealed partial class MSTestSettings
     /// <summary>
     /// Gets the current settings.
     /// </summary>
+    [field: AllowNull]
+    [field: MaybeNull]
     [AllowNull]
     public static MSTestSettings CurrentSettings
     {
-        get => s_currentSettings ??= new MSTestSettings();
-        private set => s_currentSettings = value;
+        get => field ??= new MSTestSettings();
+        private set;
     }
 
     /// <summary>
     /// Gets the current configuration settings.
     /// </summary>
+    [field: AllowNull]
+    [field: MaybeNull]
     [AllowNull]
     public static RunConfigurationSettings RunConfigurationSettings
     {
-        get => s_runConfigurationSettings ??= new RunConfigurationSettings();
-        private set => s_runConfigurationSettings = value;
+        get => field ??= new RunConfigurationSettings();
+        private set;
     }
 
     /// <summary>

@@ -54,7 +54,7 @@ public class UnitTestDiscovererTests : TestContainer
     }
 
     private TestMethod CreateTestMethod(string methodName, string typeFullName, string assemblyName, string? displayName)
-        => new(typeFullName, methodName, null, methodName, typeFullName, assemblyName, displayName, null);
+        => new(methodName, null, methodName, typeFullName, assemblyName, displayName, null);
 
     protected override void Dispose(bool disposing)
     {

@@ -39,10 +39,7 @@ Review pull request #${{ github.event.pull_request.number || github.event.issue.
 ## Instructions
 
 1. Fetch the full diff for the pull request.
-2. Call the `expert-reviewer` agent. Make sure to call it as subagent (`task` tool, `agent_type: "general-purpose"`, `model: "claude-opus-4.6"`). And make sure to follow the guidance on subagent calls from within the `expert-reviewer` agent. We expect 2+ levels of agents to be called.
-3. Do **not** post comments or reviews yourself, except for the fallback in step 4 if the subagent posts nothing. The subagent will post its own comments using the available safe-output tools:
-   - **Inline review comments** on specific diff lines via `create_pull_request_review_comment`
-   - **Design-level concerns** (not tied to a line) via `add_comment`
-   - **Final review verdict** (COMMENT or REQUEST_CHANGES) via `submit_pull_request_review`
-   - **Never use APPROVE** — the agent must not count as a PR approval. Use COMMENT for clean reviews.
-4. If the subagent does not post anything (e.g. no issues found), this is the only exception to step 3: post a brief fallback review using `submit_pull_request_review` with event `COMMENT` (not `APPROVE`). Do not use `add_comment` for this fallback.
+2. Call the `expert-reviewer` agent as a **background** task (`task` tool, `agent_type: "general-purpose"`, `model: "claude-opus-4.6"`, `mode: "background"`). Include the PR number, repository owner/name, and the full diff content in the subagent prompt. Also remind the subagent in its prompt that the `submit_pull_request_review` safe-output only accepts `event: "COMMENT"` or `event: "REQUEST_CHANGES"` — `APPROVE` is not allowed and will cause the entire review to be dropped.
+3. **Immediately after launching the background task** — do NOT wait for it to finish and do NOT read its result — call `noop` with a brief status message such as `"Expert-reviewer launched in background for PR #N. It will post the review directly."`. Then stop. The subagent has direct access to the safe-output tools and will post its own review (`create_pull_request_review_comment`, `add_comment`, `submit_pull_request_review`) without any further action from you.
+
+> **Important**: Reading the background agent result would pull its entire conversation (2+ million tokens from spawning 21 dimension sub-agents) into your context, causing a server error. Do not call `read_agent` or any equivalent after calling `noop`.

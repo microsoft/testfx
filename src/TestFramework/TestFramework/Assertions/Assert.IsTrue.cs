@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -22,9 +22,11 @@ public sealed partial class Assert
     public readonly struct AssertIsTrueInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
+        private readonly bool? _condition;
 
         public AssertIsTrueInterpolatedStringHandler(int literalLength, int formattedCount, bool? condition, out bool shouldAppend)
         {
+            _condition = condition;
             shouldAppend = IsTrueFailing(condition);
             if (shouldAppend)
             {
@@ -36,8 +38,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "condition", conditionExpression) + " ");
-                ReportAssertIsTrueFailed(_builder.ToString());
+                ReportAssertIsTrueFailed(_condition, _builder.ToString(), conditionExpression);
             }
         }
 
@@ -74,9 +75,11 @@ public sealed partial class Assert
     public readonly struct AssertIsFalseInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
+        private readonly bool? _condition;
 
         public AssertIsFalseInterpolatedStringHandler(int literalLength, int formattedCount, bool? condition, out bool shouldAppend)
         {
+            _condition = condition;
             shouldAppend = IsFalseFailing(condition);
             if (shouldAppend)
             {
@@ -88,8 +91,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "condition", conditionExpression) + " ");
-                ReportAssertIsFalseFailed(_builder.ToString());
+                ReportAssertIsFalseFailed(_condition, _builder.ToString(), conditionExpression);
             }
         }
 
@@ -126,7 +128,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message, [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(conditionExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsTrue");
+        message.ComputeAssertion(conditionExpression);
+    }
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -148,23 +153,41 @@ public sealed partial class Assert
     /// </exception>
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string? message = "", [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsTrue");
+
         if (IsTrueFailing(condition))
         {
-            ReportAssertIsTrueFailed(BuildUserMessageForConditionExpression(message, conditionExpression));
+            ReportAssertIsTrueFailed(condition, message, conditionExpression);
         }
     }
 
     private static bool IsTrueFailing(bool? condition)
         => condition is false or null;
 
-    private static void ReportAssertIsTrueFailed(string? message)
-        => ReportAssertFailed("Assert.IsTrue", message);
+    [DoesNotReturn]
+    private static void ReportAssertIsTrueFailed(bool? condition, string? message, string conditionExpression)
+    {
+        string actualValue = AssertionValueRenderer.RenderValue(condition);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("actual:", actualValue);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.IsTrueFailedSummary);
+        structured.WithUserMessage(message);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(AssertionValueRenderer.RenderValue(true), actualValue);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsTrue", conditionExpression, nameof(condition)));
+
+        ReportAssertFailed(structured);
+    }
 
     /// <inheritdoc cref="IsFalse(bool?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message, [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(conditionExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsFalse");
+        message.ComputeAssertion(conditionExpression);
+    }
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -186,9 +209,11 @@ public sealed partial class Assert
     /// </exception>
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string? message = "", [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsFalse");
+
         if (IsFalseFailing(condition))
         {
-            ReportAssertIsFalseFailed(BuildUserMessageForConditionExpression(message, conditionExpression));
+            ReportAssertIsFalseFailed(condition, message, conditionExpression);
         }
     }
 
@@ -196,6 +221,18 @@ public sealed partial class Assert
         => condition is true or null;
 
     [DoesNotReturn]
-    private static void ReportAssertIsFalseFailed(string userMessage)
-        => ReportAssertFailed("Assert.IsFalse", userMessage);
+    private static void ReportAssertIsFalseFailed(bool? condition, string? message, string conditionExpression)
+    {
+        string actualValue = AssertionValueRenderer.RenderValue(condition);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("actual:", actualValue);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.IsFalseFailedSummary);
+        structured.WithUserMessage(message);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(AssertionValueRenderer.RenderValue(false), actualValue);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsFalse", conditionExpression, nameof(condition)));
+
+        ReportAssertFailed(structured);
+    }
 }

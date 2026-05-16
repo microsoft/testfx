@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -39,8 +39,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
-                ReportAssertContainsSingleFailed(_actualCount, _builder.ToString());
+                ReportAssertContainsSingleFailed(_actualCount, _builder.ToString(), collectionExpression);
             }
 
             return _item!;
@@ -121,7 +120,30 @@ public sealed partial class Assert
     /// </param>
     /// <returns>The item.</returns>
     public static T ContainsSingle<T>(IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => ContainsSingle(static _ => true, collection, message, predicateExpression: string.Empty, collectionExpression);
+    {
+        T item = default!;
+        int count = 0;
+
+        foreach (T current in collection)
+        {
+            if (count == 0)
+            {
+                item = current;
+            }
+
+            count++;
+        }
+
+        if (count == 1)
+        {
+            return item;
+        }
+
+        ReportAssertContainsSingleFailed(count, message, collectionExpression);
+
+        // Unreachable code but compiler cannot work it out
+        return default!;
+    }
 
     /// <summary>
     /// Tests whether the specified collection contains exactly one element.
@@ -134,7 +156,30 @@ public sealed partial class Assert
     /// </param>
     /// <returns>The item.</returns>
     public static object? ContainsSingle(IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => ContainsSingle(static _ => true, collection, message, predicateExpression: string.Empty, collectionExpression);
+    {
+        object? item = null;
+        int count = 0;
+
+        foreach (object? current in collection)
+        {
+            if (count == 0)
+            {
+                item = current;
+            }
+
+            count++;
+        }
+
+        if (count == 1)
+        {
+            return item;
+        }
+
+        ReportAssertContainsSingleFailed(count, message, collectionExpression);
+
+        // Unreachable code but compiler cannot work it out
+        return default;
+    }
 
     /// <summary>
     /// Tests whether the specified collection contains exactly one element that matches the given predicate.
@@ -154,6 +199,8 @@ public sealed partial class Assert
     /// <returns>The item that matches the predicate.</returns>
     public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.ContainsSingle");
+
         T firstMatch = default!;
         int matchCount = 0;
 
@@ -177,19 +224,10 @@ public sealed partial class Assert
             return firstMatch;
         }
 
-        if (string.IsNullOrEmpty(predicateExpression))
-        {
-            string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-            ReportAssertContainsSingleFailed(matchCount, userMessage);
-        }
-        else
-        {
-            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
-            ReportAssertSingleMatchFailed(matchCount, userMessage);
-        }
+        ReportAssertSingleMatchFailed(matchCount, message, predicateExpression, collectionExpression);
 
         // Unreachable code but compiler cannot work it out
-        return default;
+        return default!;
     }
 
     /// <summary>
@@ -209,6 +247,8 @@ public sealed partial class Assert
     /// <returns>The item that matches the predicate.</returns>
     public static object? ContainsSingle(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.ContainsSingle");
+
         object? firstMatch = null;
         int matchCount = 0;
 
@@ -225,12 +265,6 @@ public sealed partial class Assert
             }
 
             matchCount++;
-
-            // Early exit optimization - no need to continue if we already have more than one match
-            if (matchCount > 1)
-            {
-                break;
-            }
         }
 
         if (matchCount == 1)
@@ -238,17 +272,9 @@ public sealed partial class Assert
             return firstMatch;
         }
 
-        if (string.IsNullOrEmpty(predicateExpression))
-        {
-            string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-            ReportAssertContainsSingleFailed(matchCount, userMessage);
-        }
-        else
-        {
-            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
-            ReportAssertSingleMatchFailed(matchCount, userMessage);
-        }
+        ReportAssertSingleMatchFailed(matchCount, message, predicateExpression, collectionExpression);
 
+        // Unreachable code but compiler cannot work it out
         return default;
     }
 
@@ -273,10 +299,11 @@ public sealed partial class Assert
     /// </param>
     public static void Contains<T>(T expected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.Contains");
+
         if (!collection.Contains(expected))
         {
-            string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
-            ReportAssertContainsItemFailed(userMessage);
+            ReportAssertContainsItemFailed(expected, message, expectedExpression, collectionExpression);
         }
     }
 
@@ -296,6 +323,8 @@ public sealed partial class Assert
     /// </param>
     public static void Contains(object? expected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.Contains");
+
         CheckParameterNotNull(collection, "Assert.Contains", "collection");
 
         foreach (object? item in collection)
@@ -306,8 +335,7 @@ public sealed partial class Assert
             }
         }
 
-        string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
-        ReportAssertContainsItemFailed(userMessage);
+        ReportAssertContainsItemFailed(expected, message, expectedExpression, collectionExpression);
     }
 
     /// <summary>
@@ -328,10 +356,11 @@ public sealed partial class Assert
     /// </param>
     public static void Contains<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.Contains");
+
         if (!collection.Contains(expected, comparer))
         {
-            string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
-            ReportAssertContainsItemFailed(userMessage);
+            ReportAssertContainsItemFailed(expected, message, expectedExpression, collectionExpression, comparer);
         }
     }
 
@@ -352,6 +381,8 @@ public sealed partial class Assert
     /// </param>
     public static void Contains(object? expected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.Contains");
+
         CheckParameterNotNull(collection, "Assert.Contains", "collection");
         CheckParameterNotNull(comparer, "Assert.Contains", "comparer");
 
@@ -363,8 +394,7 @@ public sealed partial class Assert
             }
         }
 
-        string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
-        ReportAssertContainsItemFailed(userMessage);
+        ReportAssertContainsItemFailed(expected, message, expectedExpression, collectionExpression, comparer);
     }
 
     /// <summary>
@@ -384,10 +414,11 @@ public sealed partial class Assert
     /// </param>
     public static void Contains<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.Contains");
+
         if (!collection.Any(predicate))
         {
-            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
-            ReportAssertContainsPredicateFailed(userMessage);
+            ReportAssertContainsPredicateFailed(message, predicateExpression, collectionExpression);
         }
     }
 
@@ -407,6 +438,8 @@ public sealed partial class Assert
     /// </param>
     public static void Contains(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.Contains");
+
         CheckParameterNotNull(collection, "Assert.Contains", "collection");
         CheckParameterNotNull(predicate, "Assert.Contains", "predicate");
 
@@ -418,8 +451,7 @@ public sealed partial class Assert
             }
         }
 
-        string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
-        ReportAssertContainsPredicateFailed(userMessage);
+        ReportAssertContainsPredicateFailed(message, predicateExpression, collectionExpression);
     }
 
     /// <summary>
@@ -486,6 +518,8 @@ public sealed partial class Assert
     /// </exception>
     public static void Contains(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.Contains");
+
         CheckParameterNotNull(value, "Assert.Contains", "value");
         CheckParameterNotNull(substring, "Assert.Contains", "substring");
 
@@ -495,9 +529,7 @@ public sealed partial class Assert
         if (value.IndexOf(substring, comparisonType) < 0)
 #endif
         {
-            string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
-            ReportAssertFailed("Assert.Contains", finalMessage);
+            ReportAssertContainsSubstringFailed(substring, value, comparisonType, message, substringExpression, valueExpression);
         }
     }
 
@@ -522,10 +554,11 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
+
         if (collection.Contains(notExpected))
         {
-            string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, notExpectedExpression, collectionExpression);
-            ReportAssertDoesNotContainItemFailed(userMessage);
+            ReportAssertDoesNotContainItemFailed(notExpected, message, notExpectedExpression, collectionExpression);
         }
     }
 
@@ -545,14 +578,15 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain(object? notExpected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
+
         CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
 
         foreach (object? item in collection)
         {
             if (object.Equals(notExpected, item))
             {
-                string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, notExpectedExpression, collectionExpression);
-                ReportAssertDoesNotContainItemFailed(userMessage);
+                ReportAssertDoesNotContainItemFailed(notExpected, message, notExpectedExpression, collectionExpression);
             }
         }
     }
@@ -575,10 +609,11 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
+
         if (collection.Contains(notExpected, comparer))
         {
-            string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, notExpectedExpression, collectionExpression);
-            ReportAssertDoesNotContainItemFailed(userMessage);
+            ReportAssertDoesNotContainItemFailed(notExpected, message, notExpectedExpression, collectionExpression, comparer);
         }
     }
 
@@ -599,6 +634,8 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain(object? notExpected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
+
         CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
         CheckParameterNotNull(comparer, "Assert.DoesNotContain", "comparer");
 
@@ -606,8 +643,7 @@ public sealed partial class Assert
         {
             if (comparer.Equals(item, notExpected))
             {
-                string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, notExpectedExpression, collectionExpression);
-                ReportAssertDoesNotContainItemFailed(userMessage);
+                ReportAssertDoesNotContainItemFailed(notExpected, message, notExpectedExpression, collectionExpression, comparer);
             }
         }
     }
@@ -629,10 +665,11 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
+
         if (collection.Any(predicate))
         {
-            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
-            ReportAssertDoesNotContainPredicateFailed(userMessage);
+            ReportAssertDoesNotContainPredicateFailed(message, predicateExpression, collectionExpression);
         }
     }
 
@@ -652,6 +689,8 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
+
         CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
         CheckParameterNotNull(predicate, "Assert.DoesNotContain", "predicate");
 
@@ -659,8 +698,7 @@ public sealed partial class Assert
         {
             if (predicate(item))
             {
-                string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
-                ReportAssertDoesNotContainPredicateFailed(userMessage);
+                ReportAssertDoesNotContainPredicateFailed(message, predicateExpression, collectionExpression);
             }
         }
     }
@@ -729,6 +767,8 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
+
         CheckParameterNotNull(value, "Assert.DoesNotContain", "value");
         CheckParameterNotNull(substring, "Assert.DoesNotContain", "substring");
 
@@ -738,9 +778,7 @@ public sealed partial class Assert
         if (value.IndexOf(substring, comparisonType) >= 0)
 #endif
         {
-            string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotContainFail, value, substring, userMessage);
-            ReportAssertFailed("Assert.DoesNotContain", finalMessage);
+            ReportAssertDoesNotContainSubstringFailed(substring, value, comparisonType, message, substringExpression, valueExpression);
         }
     }
 
@@ -772,6 +810,8 @@ public sealed partial class Assert
     public static void IsInRange<T>(T minValue, T maxValue, T value, string? message = "", [CallerArgumentExpression(nameof(minValue))] string minValueExpression = "", [CallerArgumentExpression(nameof(maxValue))] string maxValueExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsInRange");
+
         if (maxValue.CompareTo(minValue) < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(maxValue), FrameworkMessages.IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue);
@@ -779,73 +819,175 @@ public sealed partial class Assert
 
         if (value.CompareTo(minValue) < 0 || value.CompareTo(maxValue) > 0)
         {
-            string userMessage = BuildUserMessageForMinValueExpressionAndMaxValueExpressionAndValueExpression(message, minValueExpression, maxValueExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsInRangeFail, value, minValue, maxValue, userMessage);
-            ReportAssertFailed("IsInRange", finalMessage);
+            ReportAssertIsInRangeFailed(minValue, maxValue, value, message, minValueExpression, maxValueExpression, valueExpression);
         }
     }
 
     #endregion // IsInRange
 
     [DoesNotReturn]
-    private static void ReportAssertSingleMatchFailed(int actualCount, string userMessage)
+    private static void ReportAssertContainsSingleFailed(int actualCount, string? userMessage, string collectionExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.ContainsSingleMatchFailMsg,
-            userMessage,
-            actualCount);
-        ReportAssertFailed("Assert.ContainsSingle", finalMessage);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected count:", "1")
+            .AddLine("actual count:", actualCount.ToString(CultureInfo.CurrentCulture));
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.ContainsSingleFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual("1", actualCount.ToString(CultureInfo.CurrentCulture));
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.ContainsSingle", collectionExpression, "<collection>"));
+
+        ReportAssertFailed(structured);
     }
 
     [DoesNotReturn]
-    private static void ReportAssertContainsSingleFailed(int actualCount, string userMessage)
+    private static void ReportAssertSingleMatchFailed(int actualCount, string? userMessage, string predicateExpression, string collectionExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.ContainsSingleFailMsg,
-            userMessage,
-            actualCount);
-        ReportAssertFailed("Assert.ContainsSingle", finalMessage);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected matches:", "1")
+            .AddLine("actual matches:", actualCount.ToString(CultureInfo.CurrentCulture));
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.ContainsSingleMatchFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual("1", actualCount.ToString(CultureInfo.CurrentCulture));
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.ContainsSingle", predicateExpression, collectionExpression, "<predicate>", "<collection>"));
+
+        ReportAssertFailed(structured);
     }
 
     [DoesNotReturn]
-    private static void ReportAssertContainsItemFailed(string userMessage)
+    private static void ReportAssertContainsItemFailed(object? expected, string? userMessage, string expectedExpression, string collectionExpression, object? comparer = null)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.ContainsItemFailMsg,
-            userMessage);
-        ReportAssertFailed("Assert.Contains", finalMessage);
+        string expectedText = AssertionValueRenderer.RenderValue(expected);
+        EvidenceBlock evidence = EvidenceBlock.Create().AddLine("expected:", expectedText);
+        if (comparer is not null)
+        {
+            evidence.AddLine("comparer:", comparer.GetType().Name);
+        }
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.ContainsItemFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedText, null);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.Contains", expectedExpression, collectionExpression, "<expected>", "<collection>"));
+
+        ReportAssertFailed(structured);
     }
 
     [DoesNotReturn]
-    private static void ReportAssertContainsPredicateFailed(string userMessage)
+    private static void ReportAssertContainsPredicateFailed(string? userMessage, string predicateExpression, string collectionExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.ContainsPredicateFailMsg,
-            userMessage);
-        ReportAssertFailed("Assert.Contains", finalMessage);
+        StructuredAssertionMessage structured = new(FrameworkMessages.ContainsPredicateFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.Contains", predicateExpression, collectionExpression, "<predicate>", "<collection>"));
+
+        ReportAssertFailed(structured);
     }
 
     [DoesNotReturn]
-    private static void ReportAssertDoesNotContainItemFailed(string userMessage)
+    private static void ReportAssertContainsSubstringFailed(string substring, string value, StringComparison comparisonType, string? userMessage, string substringExpression, string valueExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.DoesNotContainItemFailMsg,
-            userMessage);
-        ReportAssertFailed("Assert.DoesNotContain", finalMessage);
+        string expectedText = AssertionValueRenderer.RenderValue(substring);
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected substring:", expectedText)
+            .AddLine("actual:", actualText)
+            .AddLine("comparison:", comparisonType.ToString());
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.ContainsSubstringFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedText, actualText);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.Contains", substringExpression, valueExpression, "<substring>", "<value>"));
+
+        ReportAssertFailed(structured);
     }
 
     [DoesNotReturn]
-    private static void ReportAssertDoesNotContainPredicateFailed(string userMessage)
+    private static void ReportAssertDoesNotContainItemFailed(object? notExpected, string? userMessage, string notExpectedExpression, string collectionExpression, object? comparer = null)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.DoesNotContainPredicateFailMsg,
-            userMessage);
-        ReportAssertFailed("Assert.DoesNotContain", finalMessage);
+        string notExpectedText = AssertionValueRenderer.RenderValue(notExpected);
+        EvidenceBlock evidence = EvidenceBlock.Create().AddLine("unexpected:", notExpectedText);
+        if (comparer is not null)
+        {
+            evidence.AddLine("comparer:", comparer.GetType().Name);
+        }
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.DoesNotContainItemFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(notExpectedText, null);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.DoesNotContain", notExpectedExpression, collectionExpression, "<notExpected>", "<collection>"));
+
+        ReportAssertFailed(structured);
+    }
+
+    [DoesNotReturn]
+    private static void ReportAssertDoesNotContainPredicateFailed(string? userMessage, string predicateExpression, string collectionExpression)
+    {
+        StructuredAssertionMessage structured = new(FrameworkMessages.DoesNotContainPredicateFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.DoesNotContain", predicateExpression, collectionExpression, "<predicate>", "<collection>"));
+
+        ReportAssertFailed(structured);
+    }
+
+    [DoesNotReturn]
+    private static void ReportAssertDoesNotContainSubstringFailed(string substring, string value, StringComparison comparisonType, string? userMessage, string substringExpression, string valueExpression)
+    {
+        string notExpectedText = AssertionValueRenderer.RenderValue(substring);
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("unexpected substring:", notExpectedText)
+            .AddLine("actual:", actualText)
+            .AddLine("comparison:", comparisonType.ToString());
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.DoesNotContainSubstringFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(notExpectedText, actualText);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.DoesNotContain", substringExpression, valueExpression, "<substring>", "<value>"));
+
+        ReportAssertFailed(structured);
+    }
+
+    [DoesNotReturn]
+    private static void ReportAssertIsInRangeFailed<T>(T minValue, T maxValue, T value, string? userMessage, string minValueExpression, string maxValueExpression, string valueExpression)
+    {
+        string minText = AssertionValueRenderer.RenderValue(minValue);
+        string maxText = AssertionValueRenderer.RenderValue(maxValue);
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected:", $"[{minText}, {maxText}]")
+            .AddLine("actual:", actualText);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.IsInRangeFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual($"[{minText}, {maxText}]", actualText);
+        // The middle "value" arg comes after minValue, maxValue — keep all three in the call-site for clarity.
+        string? callSite = FormatIsInRangeCallSite(minValueExpression, maxValueExpression, valueExpression);
+        structured.WithCallSiteExpression(callSite);
+
+        ReportAssertFailed(structured);
+    }
+
+    private static string? FormatIsInRangeCallSite(string minValueExpression, string maxValueExpression, string valueExpression)
+    {
+        bool emptyMin = string.IsNullOrWhiteSpace(minValueExpression);
+        bool emptyMax = string.IsNullOrWhiteSpace(maxValueExpression);
+        bool emptyValue = string.IsNullOrWhiteSpace(valueExpression);
+        if (emptyMin && emptyMax && emptyValue)
+        {
+            return null;
+        }
+
+        string minArg = emptyMin || IsMultiline(minValueExpression) ? "<minValue>" : minValueExpression;
+        string maxArg = emptyMax || IsMultiline(maxValueExpression) ? "<maxValue>" : maxValueExpression;
+        string valueArg = emptyValue || IsMultiline(valueExpression) ? "<value>" : valueExpression;
+
+        return $"Assert.IsInRange({minArg}, {maxArg}, {valueArg})";
     }
 }

@@ -72,6 +72,31 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
         return true;
     }
 
+    /// <summary>
+    /// Replaces the first registered service instance that is an instance of <typeparamref name="T"/> with the new service.
+    /// If no such service is found, the new service is added at the end of the list.
+    /// </summary>
+    /// <typeparam name="T">The type of service to replace.</typeparam>
+    internal void ReplaceService<T>(T newService)
+        where T : class
+    {
+        _ = newService ?? throw new ArgumentNullException(nameof(newService));
+        ArgumentGuard.Ensure(
+            newService is not ITestFramework || AllowTestAdapterFrameworkRegistration,
+            nameof(newService),
+            PlatformResources.ServiceProviderShouldNotRegisterTestFramework);
+
+        int index = _services.FindIndex(s => s is T);
+        if (index >= 0)
+        {
+            _services[index] = newService;
+        }
+        else
+        {
+            _services.Add(newService);
+        }
+    }
+
     public IEnumerable<object> GetServicesInternal(
         Type serviceType,
         bool stopAtFirst = false,
