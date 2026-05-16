@@ -68,6 +68,31 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     }
 
     [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_WithDelay_StripsDelayFromChildArgs(string tfm)
+    {
+        // The retry asset has AddRetryProvider() registered. If --retry-failed-tests-delay is NOT stripped from
+        // child-process arguments, the child will receive --retry-failed-tests-delay without --retry-failed-tests
+        // (the orchestrator strips the latter), causing validation to fail. A successful run therefore proves
+        // arg-stripping is working.
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 3 --retry-failed-tests-delay 0 --results-directory {resultDirectory}",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "METHOD1", "1" },
+                { "FAIL", "0" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
+    }
+
+    [TestMethod]
     [DynamicData(nameof(GetMatrix))]
     public async Task RetryFailedTests_MaxPercentage_Succeeds(string tfm, bool fail)
     {

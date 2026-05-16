@@ -203,9 +203,19 @@
         <target state="translated">La stringa '{0}' termina con la stringa '{1}'. {2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoesNotEndWithFailedSummary">
+        <source>Expected string to not end with the specified suffix.</source>
+        <target state="new">Expected string to not end with the specified suffix.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
         <source>String '{0}' starts with string '{1}'. {2}</source>
         <target state="translated">La stringa '{0}' inizia con la stringa '{1}'. {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotStartWithFailedSummary">
+        <source>Expected string to not start with the specified prefix.</source>
+        <target state="new">Expected string to not start with the specified prefix.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidFieldLayout">
@@ -257,6 +267,11 @@ Effettivo: {2}</target>
         <target state="translated">{0} non riuscito.</target>
         <note />
       </trans-unit>
+      <trans-unit id="EndsWithFailedSummary">
+        <source>Expected string to end with the specified suffix.</source>
+        <target state="new">Expected string to end with the specified suffix.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HasCountFailMsg">
         <source>Expected collection of size {1}. Actual: {2}. {0}</source>
         <target state="translated">Prevista raccolta di dimensioni {1}. Effettivo: {2}. {0}</target>
@@ -274,7 +289,7 @@ Effettivo: {2}</target>
       </trans-unit>
       <trans-unit id="IsFalseFailedSummary">
         <source>Expected condition to be false.</source>
-        <target state="new">Expected condition to be false.</target>
+        <target state="translated">La condizione prevista deve essere false.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsGreaterThanFailedSummary">
@@ -349,12 +364,12 @@ Effettivo: {2}</target>
       </trans-unit>
       <trans-unit id="IsNotNullFailedSummary">
         <source>Expected value to not be null.</source>
-        <target state="new">Expected value to not be null.</target>
+        <target state="translated">Il valore previsto non è null.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
-        <target state="new">Expected value to be null.</target>
+        <target state="translated">Il valore previsto dovrebbe essere null.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsPositiveFailedSummary">
@@ -364,7 +379,7 @@ Effettivo: {2}</target>
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">
         <source>Expected condition to be true.</source>
-        <target state="new">Expected condition to be true.</target>
+        <target state="translated">La condizione prevista deve essere true.</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
@@ -432,6 +447,11 @@ Effettivo: {2}</target>
         <source>(object)</source>
         <target state="translated">(oggetto)</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="StartsWithFailedSummary">
+        <source>Expected string to start with the specified prefix.</source>
+        <target state="new">Expected string to start with the specified prefix.</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>

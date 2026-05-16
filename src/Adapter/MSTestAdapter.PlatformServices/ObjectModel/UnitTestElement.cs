@@ -11,7 +11,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// <summary>
 /// The unit test element.
 /// </summary>
+#if NETFRAMEWORK
 [Serializable]
+#endif
 [DebuggerDisplay("{TestMethod.DisplayName} ({TestMethod.ManagedTypeName})")]
 internal sealed class UnitTestElement
 {

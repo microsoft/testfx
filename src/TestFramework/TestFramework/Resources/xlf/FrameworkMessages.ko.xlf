@@ -203,9 +203,19 @@
         <target state="translated">문자열 '{0}'은 문자열 '{1}'(으)로 끝납니다. {2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoesNotEndWithFailedSummary">
+        <source>Expected string to not end with the specified suffix.</source>
+        <target state="new">Expected string to not end with the specified suffix.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
         <source>String '{0}' starts with string '{1}'. {2}</source>
         <target state="translated">문자열 '{0}'은 문자열 '{1}'(으)로 시작합니다. {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotStartWithFailedSummary">
+        <source>Expected string to not start with the specified prefix.</source>
+        <target state="new">Expected string to not start with the specified prefix.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidFieldLayout">
@@ -257,6 +267,11 @@ Actual: {2}</source>
         <target state="translated">{0}이(가) 실패했습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="EndsWithFailedSummary">
+        <source>Expected string to end with the specified suffix.</source>
+        <target state="new">Expected string to end with the specified suffix.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HasCountFailMsg">
         <source>Expected collection of size {1}. Actual: {2}. {0}</source>
         <target state="translated">{1} 크기 컬렉션이 필요합니다. 실제: {2}. {0}</target>
@@ -274,7 +289,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsFalseFailedSummary">
         <source>Expected condition to be false.</source>
-        <target state="new">Expected condition to be false.</target>
+        <target state="translated">조건이 false여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsGreaterThanFailedSummary">
@@ -349,12 +364,12 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsNotNullFailedSummary">
         <source>Expected value to not be null.</source>
-        <target state="new">Expected value to not be null.</target>
+        <target state="translated">값이 null이 아니어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
-        <target state="new">Expected value to be null.</target>
+        <target state="translated">값이 null이어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsPositiveFailedSummary">
@@ -364,7 +379,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">
         <source>Expected condition to be true.</source>
-        <target state="new">Expected condition to be true.</target>
+        <target state="translated">조건이 true여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
@@ -432,6 +447,11 @@ Actual: {2}</source>
         <source>(object)</source>
         <target state="translated">(개체)</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="StartsWithFailedSummary">
+        <source>Expected string to start with the specified prefix.</source>
+        <target state="new">Expected string to start with the specified prefix.</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
