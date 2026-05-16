@@ -382,12 +382,14 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ReportAssertIsNotEmptyFailed(string? userMessage, string collectionExpression)
     {
+        string actualText = 0.ToString(CultureInfo.CurrentCulture);
         EvidenceBlock evidence = EvidenceBlock.Create()
-            .AddLine("actual count:", "0");
+            .AddLine("actual count:", actualText);
 
         StructuredAssertionMessage structured = new(FrameworkMessages.IsNotEmptyFailedSummary);
         structured.WithUserMessage(userMessage);
         structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual("> 0", actualText);
         structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotEmpty", collectionExpression, "<collection>"));
 
         ReportAssertFailed(structured);
