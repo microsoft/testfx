@@ -29,7 +29,20 @@ public static class AzureDevOpsExtensions
                    serviceProvider.GetOutputDevice(),
                    serviceProvider.GetLoggerFactory()));
 
+        var compositeArtifactUploader =
+            new CompositeExtensionFactory<AzureDevOpsArtifactUploader>(serviceProvider =>
+                new AzureDevOpsArtifactUploader(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetConfiguration(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetFileSystem(),
+                    serviceProvider.GetOutputDevice(),
+                    serviceProvider.GetTestApplicationModuleInfo(),
+                    serviceProvider.GetLoggerFactory()));
+
         builder.TestHost.AddDataConsumer(compositeTestSessionAzDoService);
+        builder.TestHost.AddDataConsumer(compositeArtifactUploader);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeArtifactUploader);
 
         builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());
     }

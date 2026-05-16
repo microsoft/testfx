@@ -100,6 +100,18 @@ Extension options:
     --output
         Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+    --report-azdo
+        Enable Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.
+    --report-azdo-severity
+        Severity to use for the reported event. Options are: error (default) and warning.
+    --report-azdo-upload-artifact-exclude
+        Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.
+    --report-azdo-upload-artifact-include
+        Include files in Azure DevOps artifact upload using glob patterns relative to the test results directory. Defaults to '**/*'.
+    --report-azdo-upload-artifact-name
+        Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.
+    --report-azdo-upload-artifacts
+        Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.
     --report-trx
         Enable generating TRX report
     --report-trx-filename
@@ -265,6 +277,35 @@ Built-in command line providers:
         Description: A global test execution timeout.
         Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
 Registered command line providers:
+  AzureDevOpsCommandLineProvider
+    Name: Azure DevOps report generator
+    Version: *
+    Description: Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.
+    Options:
+      --report-azdo
+        Arity: 0
+        Hidden: False
+        Description: Enable Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.
+      --report-azdo-severity
+        Arity: 1
+        Hidden: False
+        Description: Severity to use for the reported event. Options are: error (default) and warning.
+      --report-azdo-upload-artifact-exclude
+        Arity: 0..N
+        Hidden: False
+        Description: Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.
+      --report-azdo-upload-artifact-include
+        Arity: 0..N
+        Hidden: False
+        Description: Include files in Azure DevOps artifact upload using glob patterns relative to the test results directory. Defaults to '**/*'.
+      --report-azdo-upload-artifact-name
+        Arity: 1
+        Hidden: False
+        Description: Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.
+      --report-azdo-upload-artifacts
+        Arity: 1
+        Hidden: False
+        Description: Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.
   CrashDumpCommandLineProvider
     Name: Crash dump
     Version: *
@@ -431,6 +472,7 @@ Registered tools:
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingPlatformVersion$" />

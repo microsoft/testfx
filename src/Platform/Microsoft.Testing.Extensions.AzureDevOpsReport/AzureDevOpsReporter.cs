@@ -42,7 +42,7 @@ internal sealed class AzureDevOpsReporter :
         _fileSystem = fileSystem;
         _outputDisplay = outputDisplay;
         _logger = loggerFactory.CreateLogger<AzureDevOpsReporter>();
-        _targetFrameworkMoniker = GetTargetFrameworkMoniker();
+        _targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
     }
 
     public Type[] DataTypesConsumed { get; } =
@@ -306,10 +306,6 @@ internal sealed class AzureDevOpsReporter :
 
         return null;
     }
-
-    private static string GetTargetFrameworkMoniker()
-        => TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
-            ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
 
     private static (string Code, string File, int LineNumber)? GetStackFrameLocation(string stackTraceLine)
     {
