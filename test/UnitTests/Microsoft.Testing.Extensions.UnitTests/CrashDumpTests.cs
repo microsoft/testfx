@@ -48,15 +48,54 @@ public sealed class CrashDumpTests
     }
 
     [TestMethod]
-    [DataRow("MyApp_%p_crash.dmp", "MyApp_*_crash.dmp")]
-    [DataRow("%e_%p_crash.dmp", "*_*_crash.dmp")]
-    [DataRow("%p%t_crash.dmp", "*_crash.dmp")]
-    [DataRow("customdumpname.dmp", "customdumpname.dmp")]
-    [DataRow("dump_%p_%t_%h.dmp", "dump_*_*_*.dmp")]
-    [DataRow("trailing%", "trailing%")]
-    public void ReplaceCrashDumpPlaceholdersWithWildcard_ConvertsPlaceholdersToWildcards(string fileName, string expected)
+    [DataRow("MyApp_%p_crash.dmp", @"^MyApp_.*_crash\.dmp$")]
+    [DataRow("%e_%p_crash.dmp", @"^.*_.*_crash\.dmp$")]
+    [DataRow("%p%t_crash.dmp", @"^.*_crash\.dmp$")]
+    [DataRow("customdumpname.dmp", @"^customdumpname\.dmp$")]
+    [DataRow("dump_%p_%t_%h.dmp", @"^dump_.*_.*_.*\.dmp$")]
+    [DataRow("trailing%", "^trailing%$")]
+    // Glob metacharacters that may appear literally in a user-supplied filename must be escaped so they are
+    // matched literally, not treated as wildcards. This guards against picking up unrelated dump files on
+    // file systems that allow these characters in file names (e.g. Linux/macOS).
+    [DataRow("my*dump_%p.dmp", @"^my\*dump_.*\.dmp$")]
+    [DataRow("dump?_%p.dmp", @"^dump\?_.*\.dmp$")]
+    public void BuildDumpFileNameRegexPattern_ConvertsPlaceholdersToRegex(string fileName, string expected)
     {
-        string actual = CrashDumpProcessLifetimeHandler.ReplaceCrashDumpPlaceholdersWithWildcard(fileName);
+        string actual = CrashDumpProcessLifetimeHandler.BuildDumpFileNameRegexPattern(fileName);
         Assert.AreEqual(expected, actual);
+    }
+
+    [TestMethod]
+    public void BuildDumpFileNameRegex_LiteralGlobMetacharactersInName_DoesNotOverMatch()
+    {
+        Regex regex = CrashDumpProcessLifetimeHandler.BuildDumpFileNameRegex("my*dump_%p.dmp");
+        Assert.IsTrue(regex.IsMatch("my*dump_123.dmp"), "Literal '*' must be matched literally.");
+        Assert.IsFalse(regex.IsMatch("myXYZdump_123.dmp"), "Literal '*' must not act as a wildcard.");
+        Assert.IsFalse(regex.IsMatch("mydump_123.dmp"), "Literal '*' must require at least the '*' character to be present.");
+    }
+
+    [TestMethod]
+    [DataRow("dump_%p.dmp")]
+    [DataRow("")]
+    [DataRow("customdumpname.dmp")]
+    public void GetDumpDirectory_WhenPatternHasNoDirectoryComponent_ReturnsCurrentDirectory(string pattern)
+    {
+        // The CrashDump runtime writes dumps to the current working directory when the configured pattern
+        // contains no directory prefix. Previously the extension's enumeration was silently skipped in that
+        // case because Path.GetDirectoryName returns "" (not null), and Directory.Exists("") is false.
+        string actual = CrashDumpProcessLifetimeHandler.GetDumpDirectory(pattern);
+
+        Assert.AreEqual(".", actual);
+    }
+
+    [TestMethod]
+    public void GetDumpDirectory_WhenPatternHasDirectoryComponent_ReturnsDirectory()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "dumps");
+        string pattern = Path.Combine(directory, "dump_%p.dmp");
+
+        string actual = CrashDumpProcessLifetimeHandler.GetDumpDirectory(pattern);
+
+        Assert.AreEqual(directory, actual);
     }
 }

@@ -69,19 +69,27 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         // %h (hostname), %t (timestamp), etc. that are expanded by the .NET runtime when it writes the dump.
         // See "Dump name formatting" in:
         // https://github.com/dotnet/runtime/blob/main/docs/design/coreclr/botr/xplat-minidump-generation.md
-        // We replace every placeholder with a wildcard so we can collect not just the testhost dump but also
-        // dumps produced by any of its child processes that may have crashed alongside it.
+        // We convert the file name part of the pattern into a regular expression (escaping literal characters
+        // and turning %X placeholders into '.*') so we can collect not just the testhost dump but also dumps
+        // produced by any of its child processes that may have crashed alongside it. Using a regex (instead
+        // of passing the pattern as a glob to Directory.EnumerateFiles) ensures that any literal glob
+        // metacharacter (e.g. '*' or '?') in the configured file name is matched literally and not as a
+        // wildcard, which would otherwise cause unrelated files to be picked up on file systems that allow
+        // these characters in file names (e.g. Linux/macOS).
         string dumpFileNamePattern = _netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern;
-        string? dumpDirectory = Path.GetDirectoryName(dumpFileNamePattern);
-        string searchPattern = ReplaceCrashDumpPlaceholdersWithWildcard(Path.GetFileName(dumpFileNamePattern));
+        string dumpDirectory = GetDumpDirectory(dumpFileNamePattern);
+        Regex dumpFileNameRegex = BuildDumpFileNameRegex(Path.GetFileName(dumpFileNamePattern));
 
         bool publishedAny = false;
-        if (dumpDirectory is not null && Directory.Exists(dumpDirectory))
+        if (Directory.Exists(dumpDirectory))
         {
-            foreach (string dumpFile in Directory.EnumerateFiles(dumpDirectory, searchPattern))
+            foreach (string dumpFile in Directory.EnumerateFiles(dumpDirectory))
             {
-                await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
-                publishedAny = true;
+                if (dumpFileNameRegex.IsMatch(Path.GetFileName(dumpFile)))
+                {
+                    await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
+                    publishedAny = true;
+                }
             }
         }
 
@@ -89,7 +97,7 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         {
             string expectedDumpFile = dumpFileNamePattern.Replace("%p", testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
             await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashDumpFile, expectedDumpFile)), cancellationToken).ConfigureAwait(false);
-            if (dumpDirectory is not null && Directory.Exists(dumpDirectory))
+            if (Directory.Exists(dumpDirectory))
             {
                 foreach (string dumpFile in Directory.EnumerateFiles(dumpDirectory, "*.dmp"))
                 {
@@ -99,28 +107,43 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         }
     }
 
-    internal static string ReplaceCrashDumpPlaceholdersWithWildcard(string fileName)
+    internal static string GetDumpDirectory(string dumpFileNamePattern)
     {
-        var sb = new StringBuilder(fileName.Length);
+        // Path.GetDirectoryName returns "" (not null) for a bare filename on .NET Core/5+; treat that as
+        // the current working directory so the dump enumeration is not silently skipped.
+        string? rawDirectory = Path.GetDirectoryName(dumpFileNamePattern);
+        return rawDirectory is null or "" ? "." : rawDirectory;
+    }
+
+    internal static Regex BuildDumpFileNameRegex(string fileName)
+        => new(BuildDumpFileNameRegexPattern(fileName), RegexOptions.CultureInvariant);
+
+    internal static string BuildDumpFileNameRegexPattern(string fileName)
+    {
+        var sb = new StringBuilder("^");
+        bool lastWasWildcard = false;
         for (int i = 0; i < fileName.Length; i++)
         {
             if (fileName[i] == '%' && i + 1 < fileName.Length)
             {
-                // Replace any %X placeholder with '*'. Collapse consecutive wildcards to keep the search
-                // pattern minimal and avoid confusing search engines with redundant '**' sequences.
-                if (sb.Length == 0 || sb[sb.Length - 1] != '*')
+                // Replace any %X placeholder with ".*". Collapse consecutive wildcards to keep the regex
+                // simple and to avoid backtracking on patterns like "%p%t".
+                if (!lastWasWildcard)
                 {
-                    sb.Append('*');
+                    sb.Append(".*");
+                    lastWasWildcard = true;
                 }
 
                 i++;
             }
             else
             {
-                sb.Append(fileName[i]);
+                sb.Append(Regex.Escape(fileName[i].ToString()));
+                lastWasWildcard = false;
             }
         }
 
+        sb.Append('$');
         return sb.ToString();
     }
 }
