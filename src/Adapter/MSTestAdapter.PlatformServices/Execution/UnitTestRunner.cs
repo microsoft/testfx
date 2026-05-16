@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
 using System.Security;
+#endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -18,7 +20,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// The runner that runs a single unit test. Also manages the assembly and class cleanup methods at the end of the run.
 /// </summary>
-internal sealed class UnitTestRunner : MarshalByRefObject
+internal sealed class UnitTestRunner
+#if NETFRAMEWORK
+    : MarshalByRefObject
+#endif
 {
     private readonly TypeCache _typeCache;
     private readonly ClassCleanupManager _classCleanupManager;
@@ -75,6 +80,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         => PlatformServiceProvider.Instance.TestRunCancellationToken?.Cancel();
 #pragma warning restore CA1822 // Mark members as static
 
+#if NETFRAMEWORK
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>
@@ -82,10 +88,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// The <see cref="object"/>.
     /// </returns>
     [SecurityCritical]
-#if NET5_0_OR_GREATER
-    [Obsolete("MarshalByRefObject.InitializeLifetimeService is obsolete in .NET 5+. This override is required to maintain infinite lifetime service.")]
+    public override object? InitializeLifetimeService() => null;
 #endif
-    public override object InitializeLifetimeService() => null!;
 
     // Task cannot cross app domains.
     // For now, TestExecutionManager will call this sync method which is hacky.

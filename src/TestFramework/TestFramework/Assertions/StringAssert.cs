@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -116,6 +116,8 @@ public sealed class StringAssert
     /// </exception>
     public static void Contains([NotNull] string? value, [NotNull] string? substring, StringComparison comparisonType, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("StringAssert.Contains");
+
         Assert.CheckParameterNotNull(value, "StringAssert.Contains", "value");
         Assert.CheckParameterNotNull(substring, "StringAssert.Contains", "substring");
         if (value.IndexOf(substring, comparisonType) < 0)
@@ -213,6 +215,8 @@ public sealed class StringAssert
     /// </exception>
     public static void StartsWith([NotNull] string? value, [NotNull] string? substring, StringComparison comparisonType, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("StringAssert.StartsWith");
+
         Assert.CheckParameterNotNull(value, "StringAssert.StartsWith", "value");
         Assert.CheckParameterNotNull(substring, "StringAssert.StartsWith", "substring");
         if (!value.StartsWith(substring, comparisonType))
@@ -310,6 +314,8 @@ public sealed class StringAssert
     /// </exception>
     public static void EndsWith([NotNull] string? value, [NotNull] string? substring, StringComparison comparisonType, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("StringAssert.EndsWith");
+
         Assert.CheckParameterNotNull(value, "StringAssert.EndsWith", "value");
         Assert.CheckParameterNotNull(substring, "StringAssert.EndsWith", "substring");
         if (!value.EndsWith(substring, comparisonType))
@@ -364,6 +370,8 @@ public sealed class StringAssert
     /// </exception>
     public static void Matches([NotNull] string? value, [NotNull] Regex? pattern, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("StringAssert.Matches");
+
         Assert.CheckParameterNotNull(value, "StringAssert.Matches", "value");
         Assert.CheckParameterNotNull(pattern, "StringAssert.Matches", "pattern");
 
@@ -415,6 +423,8 @@ public sealed class StringAssert
     /// </exception>
     public static void DoesNotMatch([NotNull] string? value, [NotNull] Regex? pattern, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("StringAssert.DoesNotMatch");
+
         Assert.CheckParameterNotNull(value, "StringAssert.DoesNotMatch", "value");
         Assert.CheckParameterNotNull(pattern, "StringAssert.DoesNotMatch", "pattern");
 
@@ -439,11 +449,25 @@ public sealed class StringAssert
     /// <param name="objB"> Object B. </param>
     /// <returns> Never returns. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
+#if DEBUG && NET8_0_OR_GREATER
     [Obsolete(
         FrameworkConstants.DoNotUseStringAssertEquals,
-#if DEBUG
+        error: false,
+        DiagnosticId = "MSTEST0102",
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
+#elif DEBUG
+    [Obsolete(
+        FrameworkConstants.DoNotUseStringAssertEquals,
         error: false)]
+#elif NET8_0_OR_GREATER
+    [Obsolete(
+        FrameworkConstants.DoNotUseStringAssertEquals,
+        error: true,
+        DiagnosticId = "MSTEST0102",
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 #else
+    [Obsolete(
+        FrameworkConstants.DoNotUseStringAssertEquals,
         error: true)]
 #endif
     [DoesNotReturn]
@@ -462,11 +486,25 @@ public sealed class StringAssert
     /// <param name="objB"> Object B. </param>
     /// <returns> Never returns. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
+#if DEBUG && NET8_0_OR_GREATER
     [Obsolete(
         FrameworkConstants.DoNotUseStringAssertReferenceEquals,
-#if DEBUG
+        error: false,
+        DiagnosticId = "MSTEST0103",
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
+#elif DEBUG
+    [Obsolete(
+        FrameworkConstants.DoNotUseStringAssertReferenceEquals,
         error: false)]
+#elif NET8_0_OR_GREATER
+    [Obsolete(
+        FrameworkConstants.DoNotUseStringAssertReferenceEquals,
+        error: true,
+        DiagnosticId = "MSTEST0103",
+        UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 #else
+    [Obsolete(
+        FrameworkConstants.DoNotUseStringAssertReferenceEquals,
         error: true)]
 #endif
     [DoesNotReturn]

@@ -51,4 +51,6 @@
     </ItemGroup>
   </Target>
 
+  <Import Project="$(MSBuildThisFileDirectory)Parallelize.targets" />
+
 </Project>

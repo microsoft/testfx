@@ -88,10 +88,15 @@ internal static class TestCaseExtensions
                 : unitTestElement.CloneWithUpdatedSource(source);
         }
 
-        string? testClassName = testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string;
+        string? managedTypeName = testCase.GetManagedType();
+        string? legacyTestClassName = testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string;
+        string? testClassName = testCase.GetClassNameWhenFullyQualifiedNameStartsWith(managedTypeName)
+            ?? testCase.GetClassNameWhenFullyQualifiedNameStartsWith(legacyTestClassName)
+            ?? managedTypeName
+            ?? legacyTestClassName;
         string name = testCase.GetTestName(testClassName);
 
-        var testMethod = new TestMethod(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy(), name, testClassName!, source, testCase.DisplayName, testCase.GetPropertyValue<string>(EngineConstants.ParameterTypesProperty, null));
+        var testMethod = new TestMethod(testCase.GetManagedMethod(), testCase.GetHierarchy(), name, testClassName!, source, testCase.DisplayName, testCase.GetPropertyValue<string>(EngineConstants.ParameterTypesProperty, null));
 
         var dataType = (DynamicDataType)testCase.GetPropertyValue(EngineConstants.TestDynamicDataTypeProperty, (int)DynamicDataType.None);
         if (dataType != DynamicDataType.None)
@@ -138,6 +143,11 @@ internal static class TestCaseExtensions
     internal static string? GetManagedType(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedTypeProperty, null);
 
     internal static string? GetManagedMethod(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedMethodProperty, null);
+
+    private static string? GetClassNameWhenFullyQualifiedNameStartsWith(this TestCase testCase, string? testClassName)
+        => testClassName is not null && testCase.FullyQualifiedName.StartsWith($"{testClassName}.", StringComparison.Ordinal)
+            ? testClassName
+            : null;
 
     internal static string[]? GetHierarchy(this TestCase testCase) => testCase.GetPropertyValue<string[]>(HierarchyProperty, null);
 

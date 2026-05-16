@@ -23,6 +23,8 @@ public sealed partial class Assert
     [DoesNotReturn]
     public static void Inconclusive(string message = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.Inconclusive");
+
         string userMessage = BuildUserMessage(message);
         throw new AssertInconclusiveException(
             FormatAssertionFailed("Assert.Inconclusive", userMessage));

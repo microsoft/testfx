@@ -6,7 +6,11 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.VSTestAdapter;
 
-internal sealed class EqtTraceLogger : MarshalByRefObject, ITraceLogger
+internal sealed class EqtTraceLogger :
+#if NETFRAMEWORK
+    MarshalByRefObject,
+#endif
+    ITraceLogger
 {
     private EqtTraceLogger()
     {

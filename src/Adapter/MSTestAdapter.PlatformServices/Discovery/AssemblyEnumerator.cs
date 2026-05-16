@@ -1,8 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// Note: System.Runtime.Serialization is intentionally unconditional — SerializationException is caught
+// outside the #if NETFRAMEWORK block (see catch in EnumerateAssembly).
 using System.Runtime.Serialization;
+#if NETFRAMEWORK
 using System.Security;
+#endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -16,7 +20,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 /// Enumerates through all types in the assembly in search of valid test methods.
 /// </summary>
 [SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
-internal class AssemblyEnumerator : MarshalByRefObject
+internal class AssemblyEnumerator
+#if NETFRAMEWORK
+    : MarshalByRefObject
+#endif
 {
     /// <summary>
     /// Helper for reflection API's.
@@ -45,6 +52,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
 
+#if NETFRAMEWORK
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>
@@ -52,10 +60,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// The <see cref="object"/>.
     /// </returns>
     [SecurityCritical]
-#if NET5_0_OR_GREATER
-    [Obsolete("MarshalByRefObject.InitializeLifetimeService is obsolete in .NET 5+. This override is required to maintain infinite lifetime service.")]
+    public override object? InitializeLifetimeService() => null;
 #endif
-    public override object InitializeLifetimeService() => null!;
 
     /// <summary>
     /// Enumerates through all types in the assembly in search of valid test methods.
@@ -222,7 +228,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         // PERF: Access the cached attribute array directly to avoid allocating two iterator state machines
         // for GetAttributes<Attribute>().OfType<ITestDataSource>() on every data-driven test during discovery.
-        Attribute[] allAttributes = ReflectHelper.Instance.GetCustomAttributesCached(testMethodInfo.MethodInfo);
+        Attribute[] allAttributes = ReflectHelper.GetCustomAttributesCached(testMethodInfo.MethodInfo);
 
         // We need to use a temporary list to avoid adding tests to the main list if we fail to expand any data source.
         List<UnitTestElement> tempListOfTests = [];

@@ -42,7 +42,20 @@ When making change to resource files, you MUST:
 - Tests for MTP and MSTest analyzers MUST use MSTest.
 - Unit tests for MSTest MUST use the internal test framework defined in [`TestFramework.ForTestingMSTest`](../test/Utilities/TestFramework.ForTestingMSTest).
 - All assertions must be written using FluentAssertions style of assertion.
-- When running acceptance tests, you must first run `./build.sh -pack`
+- When running acceptance tests, you must first run `./build.sh -pack` on Linux/macOS or `.\build.cmd -pack` on Windows.
+
+## CLI options guidelines
+
+When you add a new CLI option, rename an existing one, or change the description/arguments of an existing one (typically by editing an `ICommandLineOptionsProvider` implementation such as `PlatformCommandLineProvider`, `TerminalTestReporterCommandLineOptionsProvider`, `MSTestExtension`'s options provider, or a `*CommandLineOptionsProvider`), you MUST update the corresponding `--help` and `--info` acceptance test expectations so they keep matching the actual output.
+
+The wildcard-match expectations live in:
+
+- [`test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/HelpInfoTests.cs`](../test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/HelpInfoTests.cs) — MTP help/info with no extensions registered.
+- [`test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/HelpInfoAllExtensionsTests.cs`](../test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/HelpInfoAllExtensionsTests.cs) — MTP help/info with all platform extensions registered.
+- [`test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuild.KnownExtensionRegistration.cs`](../test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuild.KnownExtensionRegistration.cs) — MSBuild known-extension registration help assertions.
+- [`test/IntegrationTests/MSTest.Acceptance.IntegrationTests/HelpInfoTests.cs`](../test/IntegrationTests/MSTest.Acceptance.IntegrationTests/HelpInfoTests.cs) — MSTest help/info.
+
+Keep options sorted alphabetically as they appear in the existing expectation strings, preserve the indentation, and update both the `--help` and the `--info` blocks where the option surfaces. Run the acceptance tests for these files (after `./build.sh -pack` on Linux/macOS or `.\build.cmd -pack` on Windows) to confirm the patterns still match.
 
 ## Agentic workflow guidelines
 
