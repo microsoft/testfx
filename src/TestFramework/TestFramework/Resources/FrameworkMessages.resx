@@ -488,6 +488,12 @@ Actual: {2}</value>
   <data name="AreAllOfTypeFailedSummary" xml:space="preserve">
     <value>Expected all items in collection to be of the specified type.</value>
   </data>
+  <data name="MatchesRegexFailedSummary" xml:space="preserve">
+    <value>Expected string to match the specified regular expression.</value>
+  </data>
+  <data name="DoesNotMatchRegexFailedSummary" xml:space="preserve">
+    <value>Expected string to not match the specified regular expression.</value>
+  </data>
   <data name="ContainsSingleFailedSummary" xml:space="preserve">
     <value>Expected collection to contain exactly one element.</value>
   </data>
