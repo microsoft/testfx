@@ -21,6 +21,19 @@ internal sealed class AzureDevOpsReporter :
 {
     private const string DeterministicBuildRoot = "/_/";
 
+    // Fully-qualified type prefixes for MSTest assertion implementations. A stack frame whose
+    // 'code' (i.e., the "Namespace.Type.Method(args)" portion) starts with any of these is treated
+    // as framework internals and skipped when looking for the user's call site to annotate.
+    // Matching on the type name (rather than the source file name) is robust to partial-class
+    // splits (e.g. Assert.AreEqual.cs, Assert.IComparable.cs) and avoids false positives on user
+    // files innocently named *Assert.cs. See https://github.com/microsoft/testfx/issues/6925.
+    private static readonly string[] AssertionImplementationCodePrefixes =
+    [
+        "Microsoft.VisualStudio.TestTools.UnitTesting.Assert.",
+        "Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.",
+        "Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.",
+    ];
+
     private readonly IOutputDevice _outputDisplay;
     private readonly ILogger _logger;
     private static readonly char[] NewlineCharacters = ['\r', '\n'];
@@ -210,13 +223,13 @@ internal sealed class AzureDevOpsReporter :
             }
 
             string file = location.Value.File;
+            string code = location.Value.Code;
 
-            // TODO: We need better rule for stackframes to opt out from being interesting.
-            if (file.EndsWith("Assert.cs", StringComparison.Ordinal))
+            if (IsAssertionImplementationFrame(code))
             {
                 if (logger.IsEnabled(LogLevel.Trace))
                 {
-                    logger.LogTrace("StackFrame location ends with 'Assert.cs' this is a special pattern that we skip, continuing to next.");
+                    logger.LogTrace($"StackFrame code '{code}' is an MSTest assertion implementation, continuing to next.");
                 }
 
                 continue;
@@ -310,6 +323,19 @@ internal sealed class AzureDevOpsReporter :
     private static string GetTargetFrameworkMoniker()
         => TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
             ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
+
+    private static bool IsAssertionImplementationFrame(string code)
+    {
+        foreach (string prefix in AssertionImplementationCodePrefixes)
+        {
+            if (code.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private static (string Code, string File, int LineNumber)? GetStackFrameLocation(string stackTraceLine)
     {
