@@ -100,6 +100,10 @@ Extension options:
     --output
         Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+    --report-html
+        Enable generating an HTML report
+    --report-html-filename
+        The name of the generated HTML report
     --report-trx
         Enable generating TRX report
     --report-trx-filename
@@ -312,6 +316,19 @@ Registered command line providers:
         Description: Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
         Default type is 'Full'
+  HtmlReportGeneratorCommandLine
+    Name: HTML report generator
+    Version: *
+    Description: Produce a self-contained HTML report for the current test session
+    Options:
+      --report-html
+        Arity: 0
+        Hidden: False
+        Description: Enable generating an HTML report
+      --report-html-filename
+        Arity: 1
+        Hidden: False
+        Description: The name of the generated HTML report
   MSBuildCommandLineProvider
     Name: MSBuildCommandLineProvider
     Version: *
@@ -434,6 +451,7 @@ Registered tools:
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>

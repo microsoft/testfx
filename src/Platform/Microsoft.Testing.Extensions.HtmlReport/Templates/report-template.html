@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="generator" content="Microsoft.Testing.Extensions.HtmlReport __MTP_GENERATOR_VERSION__" />
+<title>Test report</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --bg-alt: #f6f8fa;
+  --bg-card: #ffffff;
+  --fg: #1f2328;
+  --fg-muted: #57606a;
+  --border: #d0d7de;
+  --border-strong: #afb8c1;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+
+  --accent: #0969da;
+  --pass: #1a7f37;
+  --pass-bg: #dafbe1;
+  --fail: #d1242f;
+  --fail-bg: #ffebe9;
+  --skip: #9a6700;
+  --skip-bg: #fff8c5;
+  --timeout: #bc4c00;
+  --timeout-bg: #fff1e5;
+  --error: #d1242f;
+  --error-bg: #ffebe9;
+
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --bg-alt: #161b22;
+    --bg-card: #161b22;
+    --fg: #e6edf3;
+    --fg-muted: #8b949e;
+    --border: #30363d;
+    --border-strong: #484f58;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+
+    --accent: #2f81f7;
+    --pass: #3fb950;
+    --pass-bg: rgba(46, 160, 67, 0.15);
+    --fail: #f85149;
+    --fail-bg: rgba(248, 81, 73, 0.15);
+    --skip: #d29922;
+    --skip-bg: rgba(187, 128, 9, 0.2);
+    --timeout: #db6d28;
+    --timeout-bg: rgba(219, 109, 40, 0.2);
+    --error: #f85149;
+    --error-bg: rgba(248, 81, 73, 0.15);
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+a { color: var(--accent); }
+
+header {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-alt);
+  padding: 16px 24px;
+}
+
+.header-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: baseline;
+}
+
+h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.subtitle {
+  color: var(--fg-muted);
+  font-size: 13px;
+}
+
+main {
+  padding: 16px 24px 64px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 16px 0 24px;
+}
+
+.summary-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 16px;
+  box-shadow: var(--shadow);
+}
+
+.summary-card .label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+}
+
+.summary-card .value {
+  font-size: 24px;
+  font-weight: 600;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-card.passed .value  { color: var(--pass); }
+.summary-card.failed .value  { color: var(--fail); }
+.summary-card.skipped .value { color: var(--skip); }
+.summary-card.timedOut .value { color: var(--timeout); }
+.summary-card.errored .value { color: var(--error); }
+
+.meta {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--fg-muted);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 4px 24px;
+}
+
+.meta b { color: var(--fg); font-weight: 600; }
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.toolbar input[type=search] {
+  flex: 1 1 220px;
+  min-width: 220px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.toolbar select, .toolbar button {
+  padding: 6px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.toolbar .filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toolbar .filter-pill.active {
+  border-color: var(--accent);
+  background: var(--bg-alt);
+}
+
+.toolbar .filter-pill .count {
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.results {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.results-header,
+.test-row {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) 110px 32px;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.results-header {
+  background: var(--bg-alt);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+  user-select: none;
+}
+
+.results-header .sortable { cursor: pointer; }
+.results-header .sortable.active { color: var(--accent); }
+
+.test-row { cursor: pointer; }
+.test-row:hover { background: var(--bg-alt); }
+.test-row:last-child { border-bottom: none; }
+
+.test-row .duration {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--fg-muted);
+  font-size: 12px;
+}
+
+.test-row .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.test-row .name .display { font-weight: 500; }
+.test-row .name .qualified {
+  display: block;
+  font-size: 12px;
+  color: var(--fg-muted);
+  font-family: var(--mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.outcome {
+  display: inline-block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.outcome.passed   { color: var(--pass);    background: var(--pass-bg); }
+.outcome.failed   { color: var(--fail);    background: var(--fail-bg); }
+.outcome.skipped  { color: var(--skip);    background: var(--skip-bg); }
+.outcome.timedOut { color: var(--timeout); background: var(--timeout-bg); }
+.outcome.errored  { color: var(--error);   background: var(--error-bg); }
+
+.chevron {
+  text-align: center;
+  color: var(--fg-muted);
+  transition: transform 0.15s ease;
+}
+.test-row.expanded .chevron { transform: rotate(90deg); }
+
+.detail {
+  padding: 12px 16px 18px 110px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-alt);
+  font-size: 13px;
+}
+
+.detail h4 {
+  margin: 12px 0 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+}
+
+.detail h4:first-child { margin-top: 0; }
+
+.detail pre {
+  margin: 0;
+  padding: 8px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  max-height: 360px;
+}
+
+.empty {
+  padding: 32px;
+  text-align: center;
+  color: var(--fg-muted);
+  font-size: 13px;
+}
+
+.pager {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-alt);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.pager button {
+  padding: 4px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--bg-card);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.pager button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.group-header {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+}
+.group-header:first-child { border-top: none; }
+.group-header .chevron { transition: transform 0.15s ease; color: var(--fg-muted); }
+.group-header.collapsed .chevron { transform: rotate(-90deg); }
+.group-header .title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.group-header .group-counts { display: flex; gap: 6px; font-size: 11px; font-weight: 400; }
+.group-header .group-counts .count {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+.group-header .group-counts .count.passed   { color: var(--pass);    background: var(--pass-bg); }
+.group-header .group-counts .count.failed   { color: var(--fail);    background: var(--fail-bg); }
+.group-header .group-counts .count.skipped  { color: var(--skip);    background: var(--skip-bg); }
+.group-header .group-counts .count.timedOut { color: var(--timeout); background: var(--timeout-bg); }
+.group-header .group-counts .count.errored  { color: var(--error);   background: var(--error-bg); }
+.group-header .group-counts .count.total    { color: var(--fg-muted); background: transparent; border: 1px solid var(--border); }
+
+.badge {
+  display: inline-block;
+  font-size: 10px;
+  padding: 1px 6px;
+  margin-left: 6px;
+  border-radius: 999px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  vertical-align: middle;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.trait {
+  display: inline-block;
+  font-size: 10px;
+  padding: 1px 6px;
+  margin-left: 4px;
+  border-radius: 4px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  font-family: var(--mono);
+}
+
+footer {
+  text-align: center;
+  color: var(--fg-muted);
+  font-size: 12px;
+  padding: 16px;
+}
+
+@media (max-width: 640px) {
+  .results-header,
+  .test-row {
+    grid-template-columns: 80px minmax(0, 1fr) 24px;
+  }
+
+  .results-header .duration,
+  .test-row .duration { display: none; }
+
+  .detail { padding-left: 16px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-row">
+    <h1>Test report</h1>
+    <span class="subtitle" id="subtitle">Loading…</span>
+  </div>
+</header>
+
+<main>
+  <section class="summary-cards" id="summary-cards"></section>
+  <section class="meta" id="meta"></section>
+
+  <div class="toolbar">
+    <input type="search" id="search" placeholder="Search by name, class, error…" autocomplete="off" />
+    <span class="filter-pill" data-filter="all">All <span class="count" id="count-all">0</span></span>
+    <span class="filter-pill" data-filter="failed">Failed <span class="count" id="count-failed">0</span></span>
+    <span class="filter-pill" data-filter="errored">Errored <span class="count" id="count-errored">0</span></span>
+    <span class="filter-pill" data-filter="timedOut">Timed out <span class="count" id="count-timedOut">0</span></span>
+    <span class="filter-pill" data-filter="skipped">Skipped <span class="count" id="count-skipped">0</span></span>
+    <span class="filter-pill" data-filter="passed">Passed <span class="count" id="count-passed">0</span></span>
+    <label for="group-by" style="font-size:12px;color:var(--fg-muted);margin-left:8px">Group by:</label>
+    <select id="group-by" title="Group tests"></select>
+  </div>
+
+  <div class="results" id="results">
+    <div class="results-header">
+      <div class="sortable" data-sort="outcome">Outcome</div>
+      <div class="sortable" data-sort="name">Test</div>
+      <div class="sortable duration" data-sort="duration" style="text-align:right">Duration</div>
+      <div></div>
+    </div>
+    <div id="rows"></div>
+    <div id="empty" class="empty" hidden>No tests match the current filter.</div>
+    <div class="pager" id="pager" hidden></div>
+  </div>
+</main>
+
+<footer>
+  Generated by <a href="https://github.com/microsoft/testfx" target="_blank" rel="noreferrer">Microsoft.Testing.Extensions.HtmlReport</a>
+  __MTP_GENERATOR_VERSION__
+</footer>
+
+<script id="mtp-data" type="application/json">/*__MTP_DATA__*/null</script>
+<script>
+(function () {
+  "use strict";
+
+  // The data is embedded as a JSON island so we don't need to worry about JS
+  // parsing it; JSON.parse is also stricter than eval which is good for safety.
+  var rawData = document.getElementById("mtp-data").textContent;
+  var report = JSON.parse(rawData);
+  var tests = report.tests || [];
+
+  // Outcome ordering: failed first, then errored, timed out, skipped, passed.
+  var OUTCOME_ORDER = { failed: 0, errored: 1, timedOut: 2, skipped: 3, passed: 4 };
+
+  var state = {
+    filter: "all",
+    sort: "outcome",
+    sortDir: "asc",
+    search: "",
+    groupBy: "none",
+    page: 0,
+    pageSize: 200,
+    expanded: Object.create(null),
+    collapsedGroups: Object.create(null)
+  };
+
+  // Restore persisted UI state per report file (best-effort).
+  try {
+    var saved = JSON.parse(sessionStorage.getItem("mtp-state") || "{}");
+    if (saved.filter)   state.filter = saved.filter;
+    if (saved.sort)     state.sort = saved.sort;
+    if (saved.sortDir)  state.sortDir = saved.sortDir;
+    if (saved.search)   state.search = saved.search;
+    if (saved.groupBy)  state.groupBy = saved.groupBy;
+    if (typeof saved.pageSize === "number") state.pageSize = saved.pageSize;
+  } catch (e) { /* ignored */ }
+
+  // Default filter: if there's any failure, scope to "failed" first.
+  if (state.filter === "all" && (report.summary.failed || report.summary.errored || report.summary.timedOut)) {
+    state.filter = "failed";
+  }
+
+  function persist() {
+    try {
+      sessionStorage.setItem("mtp-state", JSON.stringify({
+        filter: state.filter, sort: state.sort, sortDir: state.sortDir,
+        search: state.search, groupBy: state.groupBy, pageSize: state.pageSize
+      }));
+    } catch (e) { /* ignored */ }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Grouping
+  // ---------------------------------------------------------------------------
+
+  // Duration buckets (ms) for "Group by Duration".
+  var DURATION_BUCKETS = [
+    { id: "lt10",       label: "< 10 ms",     max: 10 },
+    { id: "lt100",      label: "10 ms – 100 ms", max: 100 },
+    { id: "lt1s",       label: "100 ms – 1 s", max: 1000 },
+    { id: "lt10s",      label: "1 s – 10 s",   max: 10000 },
+    { id: "lt60s",      label: "10 s – 1 min", max: 60000 },
+    { id: "gt60s",      label: "≥ 1 min",      max: Infinity }
+  ];
+
+  function durationBucket(ms) {
+    ms = ms || 0;
+    for (var i = 0; i < DURATION_BUCKETS.length; i++) {
+      if (ms < DURATION_BUCKETS[i].max) return DURATION_BUCKETS[i];
+    }
+    return DURATION_BUCKETS[DURATION_BUCKETS.length - 1];
+  }
+
+  // Returns the list of available trait keys across all tests, in stable order.
+  function traitKeys() {
+    var seen = Object.create(null);
+    var keys = [];
+    for (var i = 0; i < tests.length; i++) {
+      var ts = tests[i].traits;
+      if (!ts) continue;
+      for (var j = 0; j < ts.length; j++) {
+        if (seen[ts[j].key]) continue;
+        seen[ts[j].key] = true;
+        keys.push(ts[j].key);
+      }
+    }
+    keys.sort();
+    return keys;
+  }
+
+  // Computes the group key(s) for one test under the current groupBy.
+  function groupKeysFor(t) {
+    if (state.groupBy === "none")  return ["__all__"];
+    if (state.groupBy === "class") return [t.className || "(no class)"];
+    if (state.groupBy === "duration") {
+      var b = durationBucket(t.durationMs);
+      return [b.id];
+    }
+    if (state.groupBy.indexOf("trait:") === 0) {
+      var k = state.groupBy.substring(6);
+      if (!t.traits || t.traits.length === 0) return ["(none)"];
+      var values = [];
+      for (var i = 0; i < t.traits.length; i++) {
+        if (t.traits[i].key === k) values.push(t.traits[i].value || "(empty)");
+      }
+      return values.length ? values : ["(none)"];
+    }
+    return ["__all__"];
+  }
+
+  function groupLabel(id) {
+    if (id === "__all__") return null;
+    if (state.groupBy === "duration") {
+      for (var i = 0; i < DURATION_BUCKETS.length; i++) {
+        if (DURATION_BUCKETS[i].id === id) return DURATION_BUCKETS[i].label;
+      }
+    }
+    return id;
+  }
+
+  function groupSortIndex(id) {
+    if (state.groupBy === "duration") {
+      for (var i = 0; i < DURATION_BUCKETS.length; i++) {
+        if (DURATION_BUCKETS[i].id === id) return i;
+      }
+      return 99;
+    }
+    return 0;
+  }
+
+  function buildGroupSelector() {
+    var sel = document.getElementById("group-by");
+    var options = [
+      { v: "none",     l: "None" },
+      { v: "class",    l: "Class" },
+      { v: "duration", l: "Duration" }
+    ];
+    traitKeys().forEach(function (k) {
+      options.push({ v: "trait:" + k, l: "Trait: " + k });
+    });
+    sel.innerHTML = "";
+    var match = false;
+    options.forEach(function (o) {
+      var opt = document.createElement("option");
+      opt.value = o.v;
+      opt.textContent = o.l;
+      if (o.v === state.groupBy) { opt.selected = true; match = true; }
+      sel.appendChild(opt);
+    });
+    if (!match) state.groupBy = "none";
+  }
+
+  function fmtDuration(ms) {
+    if (ms == null || isNaN(ms)) return "";
+    if (ms < 1)        return "<1 ms";
+    if (ms < 1000)     return ms.toFixed(0) + " ms";
+    if (ms < 60000)    return (ms / 1000).toFixed(2) + " s";
+    var m = Math.floor(ms / 60000);
+    var s = ((ms % 60000) / 1000).toFixed(0);
+    return m + "m " + s + "s";
+  }
+
+  function fmtDateTime(s) {
+    if (!s) return "";
+    var d = new Date(s);
+    if (isNaN(d.getTime())) return s;
+    return d.toLocaleString();
+  }
+
+  function renderHeader() {
+    var subtitle = document.getElementById("subtitle");
+    subtitle.textContent =
+      report.testApplication
+      + " — " + fmtDateTime(report.endTime);
+
+    var summary = report.summary;
+    var cards = [
+      { key: "total",    label: "Total" },
+      { key: "passed",   label: "Passed",    cls: "passed"   },
+      { key: "failed",   label: "Failed",    cls: "failed"   },
+      { key: "errored",  label: "Errored",   cls: "errored"  },
+      { key: "timedOut", label: "Timed out", cls: "timedOut" },
+      { key: "skipped",  label: "Skipped",   cls: "skipped"  },
+      { key: "duration", label: "Duration", value: fmtDuration(summary.totalDurationMs) }
+    ];
+
+    var html = "";
+    cards.forEach(function (c) {
+      var v = c.value != null ? c.value : (summary[c.key] || 0);
+      var cls = c.cls ? " " + c.cls : "";
+      html += '<div class="summary-card' + cls + '"><div class="label"></div><div class="value"></div></div>';
+    });
+    var container = document.getElementById("summary-cards");
+    container.innerHTML = html;
+    var nodes = container.querySelectorAll(".summary-card");
+    cards.forEach(function (c, i) {
+      var v = c.value != null ? c.value : (summary[c.key] || 0);
+      nodes[i].querySelector(".label").textContent = c.label;
+      nodes[i].querySelector(".value").textContent = v;
+    });
+
+    var meta = document.getElementById("meta");
+    meta.innerHTML = "";
+    function addMeta(label, value) {
+      if (value == null || value === "") return;
+      var div = document.createElement("div");
+      var b = document.createElement("b");
+      b.textContent = label + ": ";
+      div.appendChild(b);
+      div.appendChild(document.createTextNode(value));
+      meta.appendChild(div);
+    }
+    addMeta("Test framework", (report.framework || "") + (report.frameworkVersion ? " (" + report.frameworkVersion + ")" : ""));
+    addMeta("Machine", report.machineName);
+    addMeta("User", report.userName);
+    addMeta("Started", fmtDateTime(report.startTime));
+    addMeta("Finished", fmtDateTime(report.endTime));
+    addMeta("Exit code", report.exitCode);
+
+    document.getElementById("count-all").textContent      = summary.total || 0;
+    document.getElementById("count-failed").textContent   = summary.failed || 0;
+    document.getElementById("count-errored").textContent  = summary.errored || 0;
+    document.getElementById("count-timedOut").textContent = summary.timedOut || 0;
+    document.getElementById("count-skipped").textContent  = summary.skipped || 0;
+    document.getElementById("count-passed").textContent   = summary.passed || 0;
+  }
+
+  function applyFilters() {
+    var q = state.search.trim().toLowerCase();
+    var filter = state.filter;
+    var filtered = [];
+    for (var i = 0; i < tests.length; i++) {
+      var t = tests[i];
+      if (filter !== "all" && t.outcome !== filter) continue;
+      if (q) {
+        var hay =
+          (t.displayName || "") + "\n" +
+          (t.className || "") + "\n" +
+          (t.methodName || "") + "\n" +
+          (t.errorMessage || "") + "\n" +
+          (t.exceptionType || "");
+        if (hay.toLowerCase().indexOf(q) === -1) continue;
+      }
+      filtered.push(t);
+    }
+
+    var dir = state.sortDir === "desc" ? -1 : 1;
+    if (state.sort === "duration") {
+      filtered.sort(function (a, b) { return ((a.durationMs || 0) - (b.durationMs || 0)) * dir; });
+    } else if (state.sort === "name") {
+      filtered.sort(function (a, b) {
+        var an = (a.displayName || "").toLowerCase();
+        var bn = (b.displayName || "").toLowerCase();
+        return (an < bn ? -1 : an > bn ? 1 : 0) * dir;
+      });
+    } else { // outcome
+      filtered.sort(function (a, b) {
+        var ao = OUTCOME_ORDER[a.outcome] != null ? OUTCOME_ORDER[a.outcome] : 99;
+        var bo = OUTCOME_ORDER[b.outcome] != null ? OUTCOME_ORDER[b.outcome] : 99;
+        if (ao !== bo) return (ao - bo) * dir;
+        var an = (a.displayName || "").toLowerCase();
+        var bn = (b.displayName || "").toLowerCase();
+        return an < bn ? -1 : an > bn ? 1 : 0;
+      });
+    }
+
+    return filtered;
+  }
+
+  function renderRows() {
+    var rowsContainer = document.getElementById("rows");
+    var pager = document.getElementById("pager");
+    var empty = document.getElementById("empty");
+    var filtered = applyFilters();
+
+    rowsContainer.innerHTML = "";
+
+    if (filtered.length === 0) {
+      empty.hidden = false;
+      pager.hidden = true;
+      return;
+    }
+    empty.hidden = true;
+
+    if (state.groupBy === "none") {
+      renderFlat(rowsContainer, pager, filtered);
+    } else {
+      renderGrouped(rowsContainer, pager, filtered);
+    }
+  }
+
+  function renderFlat(rowsContainer, pager, filtered) {
+    var totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+    if (state.page >= totalPages) state.page = totalPages - 1;
+    if (state.page < 0) state.page = 0;
+
+    var startIdx = state.page * state.pageSize;
+    var endIdx = Math.min(filtered.length, startIdx + state.pageSize);
+
+    var frag = document.createDocumentFragment();
+    for (var i = startIdx; i < endIdx; i++) {
+      frag.appendChild(buildRow(filtered[i]));
+    }
+    rowsContainer.appendChild(frag);
+
+    if (filtered.length > state.pageSize) {
+      buildPager(pager, totalPages, startIdx, endIdx, filtered.length);
+    } else {
+      pager.hidden = true;
+    }
+  }
+
+  function renderGrouped(rowsContainer, pager, filtered) {
+    // Bucket the filtered tests into groups.
+    var buckets = Object.create(null);
+    var order = [];
+    for (var i = 0; i < filtered.length; i++) {
+      var keys = groupKeysFor(filtered[i]);
+      for (var k = 0; k < keys.length; k++) {
+        var id = keys[k];
+        if (!buckets[id]) {
+          buckets[id] = { id: id, tests: [], counts: { passed:0, failed:0, skipped:0, timedOut:0, errored:0 } };
+          order.push(id);
+        }
+        buckets[id].tests.push(filtered[i]);
+        var o = filtered[i].outcome;
+        if (buckets[id].counts[o] != null) buckets[id].counts[o]++;
+      }
+    }
+
+    // Sort groups: duration buckets keep their natural order; otherwise by id.
+    order.sort(function (a, b) {
+      if (state.groupBy === "duration") {
+        return groupSortIndex(a) - groupSortIndex(b);
+      }
+      var ai = (a || "").toLowerCase();
+      var bi = (b || "").toLowerCase();
+      return ai < bi ? -1 : ai > bi ? 1 : 0;
+    });
+
+    pager.hidden = true;
+    var frag = document.createDocumentFragment();
+    for (var g = 0; g < order.length; g++) {
+      var bucket = buckets[order[g]];
+      frag.appendChild(buildGroupHeader(bucket));
+      if (!state.collapsedGroups[bucket.id]) {
+        for (var j = 0; j < bucket.tests.length; j++) {
+          frag.appendChild(buildRow(bucket.tests[j]));
+        }
+      }
+    }
+    rowsContainer.appendChild(frag);
+  }
+
+  function buildGroupHeader(bucket) {
+    var hdr = document.createElement("div");
+    hdr.className = "group-header" + (state.collapsedGroups[bucket.id] ? " collapsed" : "");
+
+    var chev = document.createElement("div");
+    chev.className = "chevron";
+    chev.textContent = "▾";
+    hdr.appendChild(chev);
+
+    var title = document.createElement("div");
+    title.className = "title";
+    title.textContent = groupLabel(bucket.id) || bucket.id;
+    hdr.appendChild(title);
+
+    var counts = document.createElement("div");
+    counts.className = "group-counts";
+    var total = bucket.tests.length;
+    var totalSpan = document.createElement("span");
+    totalSpan.className = "count total";
+    totalSpan.textContent = total + (total === 1 ? " test" : " tests");
+    counts.appendChild(totalSpan);
+    ["failed","errored","timedOut","skipped","passed"].forEach(function (k) {
+      var n = bucket.counts[k] || 0;
+      if (n === 0) return;
+      var c = document.createElement("span");
+      c.className = "count " + k;
+      c.textContent = n + " " + k;
+      counts.appendChild(c);
+    });
+    hdr.appendChild(counts);
+
+    hdr.addEventListener("click", function () {
+      if (state.collapsedGroups[bucket.id]) {
+        delete state.collapsedGroups[bucket.id];
+      } else {
+        state.collapsedGroups[bucket.id] = true;
+      }
+      renderRows();
+    });
+
+    return hdr;
+  }
+
+  function buildPager(pager, totalPages, startIdx, endIdx, totalItems) {
+    pager.hidden = false;
+    pager.innerHTML = "";
+
+    var info = document.createElement("span");
+    info.textContent = "Showing " + (startIdx + 1) + "–" + endIdx + " of " + totalItems;
+    pager.appendChild(info);
+
+    var prev = document.createElement("button");
+    prev.textContent = "Previous";
+    prev.disabled = state.page === 0;
+    prev.onclick = function () { state.page--; renderRows(); };
+    pager.appendChild(prev);
+
+    var pageInfo = document.createElement("span");
+    pageInfo.textContent = "Page " + (state.page + 1) + " of " + totalPages;
+    pager.appendChild(pageInfo);
+
+    var next = document.createElement("button");
+    next.textContent = "Next";
+    next.disabled = state.page >= totalPages - 1;
+    next.onclick = function () { state.page++; renderRows(); };
+    pager.appendChild(next);
+  }
+
+  function buildRow(t) {
+    var row = document.createElement("div");
+    row.className = "test-row";
+    // For frameworks that emit multiple results for the same UID we need a key that is
+    // unique per row, not per UID, otherwise expanding one would expand all of them.
+    var rowKey = (t.attemptOf && t.attemptOf > 1) ? (t.uid + "#" + t.attemptIndex) : t.uid;
+    if (state.expanded[rowKey]) row.classList.add("expanded");
+
+    var outcome = document.createElement("div");
+    var pill = document.createElement("span");
+    pill.className = "outcome " + (t.outcome || "");
+    pill.textContent = t.outcome || "unknown";
+    outcome.appendChild(pill);
+    row.appendChild(outcome);
+
+    var name = document.createElement("div");
+    name.className = "name";
+    var display = document.createElement("span");
+    display.className = "display";
+    display.textContent = t.displayName || "(no display name)";
+    name.appendChild(display);
+
+    if (t.attemptOf && t.attemptOf > 1) {
+      var badge = document.createElement("span");
+      badge.className = "badge";
+      badge.title = "Result " + t.attemptIndex + " of " + t.attemptOf + " seen for this test UID";
+      badge.textContent = "#" + t.attemptIndex + " of " + t.attemptOf;
+      name.appendChild(badge);
+    }
+
+    if (t.traits && t.traits.length) {
+      for (var ti = 0; ti < t.traits.length; ti++) {
+        var trait = t.traits[ti];
+        var chip = document.createElement("span");
+        chip.className = "trait";
+        chip.textContent = trait.value ? (trait.key + "=" + trait.value) : trait.key;
+        name.appendChild(chip);
+      }
+    }
+
+    if (t.className || t.methodName) {
+      var qual = document.createElement("span");
+      qual.className = "qualified";
+      qual.textContent = (t.className || "")
+        + (t.className && t.methodName ? "." : "")
+        + (t.methodName || "");
+      name.appendChild(qual);
+    }
+    row.appendChild(name);
+
+    var dur = document.createElement("div");
+    dur.className = "duration";
+    dur.textContent = fmtDuration(t.durationMs);
+    row.appendChild(dur);
+
+    var chev = document.createElement("div");
+    chev.className = "chevron";
+    chev.textContent = "›";
+    row.appendChild(chev);
+
+    var hasDetail = !!(t.errorMessage || t.stackTrace || t.standardOutput || t.standardError || t.exceptionType);
+    row.style.cursor = hasDetail ? "pointer" : "default";
+
+    var detailEl = null;
+    function toggle() {
+      if (!hasDetail) return;
+      if (detailEl) {
+        detailEl.parentNode.removeChild(detailEl);
+        detailEl = null;
+        row.classList.remove("expanded");
+        delete state.expanded[rowKey];
+      } else {
+        detailEl = buildDetail(t);
+        row.parentNode.insertBefore(detailEl, row.nextSibling);
+        row.classList.add("expanded");
+        state.expanded[rowKey] = true;
+      }
+    }
+
+    row.addEventListener("click", toggle);
+
+    // If previously expanded, re-create the panel.
+    if (state.expanded[rowKey] && hasDetail) {
+      // We can't insert here (row not yet in DOM); defer.
+      setTimeout(function () {
+        if (!row.parentNode) return;
+        detailEl = buildDetail(t);
+        row.parentNode.insertBefore(detailEl, row.nextSibling);
+      }, 0);
+    }
+
+    return row;
+  }
+
+  function buildDetail(t) {
+    var detail = document.createElement("div");
+    detail.className = "detail";
+
+    function addBlock(title, content) {
+      if (content == null || content === "") return;
+      var h = document.createElement("h4");
+      h.textContent = title;
+      detail.appendChild(h);
+      var pre = document.createElement("pre");
+      // Always use textContent — never innerHTML — to be immune to HTML
+      // injection from test-controlled output.
+      pre.textContent = content;
+      detail.appendChild(pre);
+    }
+
+    if (t.exceptionType) {
+      addBlock("Exception type", t.exceptionType);
+    }
+    addBlock("Error message", t.errorMessage);
+    addBlock("Stack trace",   t.stackTrace);
+    addBlock("Standard output", t.standardOutput);
+    addBlock("Standard error",  t.standardError);
+
+    if (detail.childNodes.length === 0) {
+      var empty = document.createElement("div");
+      empty.style.color = "var(--fg-muted)";
+      empty.textContent = "No additional details captured.";
+      detail.appendChild(empty);
+    }
+
+    return detail;
+  }
+
+  function bindToolbar() {
+    document.querySelectorAll(".filter-pill").forEach(function (el) {
+      el.addEventListener("click", function () {
+        state.filter = el.getAttribute("data-filter");
+        state.page = 0;
+        updateFilterButtons();
+        persist();
+        renderRows();
+      });
+    });
+
+    var search = document.getElementById("search");
+    search.value = state.search;
+    var debounce = null;
+    search.addEventListener("input", function () {
+      if (debounce) clearTimeout(debounce);
+      debounce = setTimeout(function () {
+        state.search = search.value;
+        state.page = 0;
+        persist();
+        renderRows();
+      }, 120);
+    });
+
+    document.querySelectorAll(".sortable").forEach(function (el) {
+      el.addEventListener("click", function () {
+        var key = el.getAttribute("data-sort");
+        if (state.sort === key) {
+          state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+        } else {
+          state.sort = key;
+          state.sortDir = "asc";
+        }
+        updateSortHeaders();
+        persist();
+        renderRows();
+      });
+    });
+
+    var groupSelect = document.getElementById("group-by");
+    groupSelect.addEventListener("change", function () {
+      state.groupBy = groupSelect.value;
+      state.page = 0;
+      state.collapsedGroups = Object.create(null);
+      persist();
+      renderRows();
+    });
+  }
+
+  function updateFilterButtons() {
+    document.querySelectorAll(".filter-pill").forEach(function (el) {
+      el.classList.toggle("active", el.getAttribute("data-filter") === state.filter);
+    });
+  }
+
+  function updateSortHeaders() {
+    document.querySelectorAll(".sortable").forEach(function (el) {
+      var active = el.getAttribute("data-sort") === state.sort;
+      el.classList.toggle("active", active);
+      var label = el.textContent.replace(/[ ▲▼]+$/, "");
+      el.textContent = active
+        ? label + " " + (state.sortDir === "asc" ? "▲" : "▼")
+        : label;
+    });
+  }
+
+  // Public hook for future "live" mode (e.g. OpenTelemetry / SSE driven).
+  // A future extension can call window.mtpRender(updatedReport) to refresh
+  // the page in place without reloading.
+  window.mtpRender = function (newReport) {
+    if (newReport && typeof newReport === "object") {
+      report = newReport;
+      tests = report.tests || [];
+    }
+    renderHeader();
+    buildGroupSelector();
+    updateFilterButtons();
+    updateSortHeaders();
+    renderRows();
+  };
+
+  renderHeader();
+  buildGroupSelector();
+  bindToolbar();
+  updateFilterButtons();
+  updateSortHeaders();
+  renderRows();
+})();
+</script>
+</body>
+</html>
