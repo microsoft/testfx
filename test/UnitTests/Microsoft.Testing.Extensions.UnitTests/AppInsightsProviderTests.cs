@@ -15,6 +15,8 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class AppInsightsProviderTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void Platform_CancellationToken_Cancellation_Should_Exit_Gracefully()
     {
@@ -164,7 +166,7 @@ public sealed class AppInsightsProviderTests
         Mock<ILoggerFactory> loggerFactory = new();
         loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
 
-        Dictionary<string, string> capturedProperties = new();
+        Dictionary<string, string> capturedProperties = [];
         using ManualResetEventSlim trackEventCalled = new(initialState: false);
         Mock<ITelemetryClient> testTelemetryClient = new();
         testTelemetryClient.Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
@@ -204,7 +206,7 @@ public sealed class AppInsightsProviderTests
         // Wait for the consumer loop to actually invoke TrackEvent before disposing,
         // otherwise the dispose-time flush window can elapse on slower runners (notably net472)
         // before the payload is processed.
-        Assert.IsTrue(trackEventCalled.Wait(TimeSpan.FromSeconds(30)), "Telemetry consumer did not invoke TrackEvent within the timeout.");
+        Assert.IsTrue(trackEventCalled.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Telemetry consumer did not invoke TrackEvent within the timeout.");
 
 #if NETCOREAPP
         await appInsightsProvider.DisposeAsync();
