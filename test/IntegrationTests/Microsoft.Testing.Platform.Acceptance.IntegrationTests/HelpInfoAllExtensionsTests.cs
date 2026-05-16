@@ -100,6 +100,14 @@ Extension options:
     --output
         Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+    --publish-azdo-run-name
+        Custom Azure DevOps test run name for live test-result publishing.
+    --publish-azdo-test-results
+        Publish test results live to the Azure DevOps Tests tab.
+    --report-azdo
+        Enable Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.
+    --report-azdo-severity
+        Severity to use for the reported event. Options are: error (default) and warning.
     --report-trx
         Enable generating TRX report
     --report-trx-filename
@@ -346,6 +354,27 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Disable retry mechanism if the number of failed tests is greater than the specified value
+  AzureDevOpsCommandLineProvider
+    Name: Azure DevOps report generator
+    Version: *
+    Description: Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.
+    Options:
+      --publish-azdo-run-name
+        Arity: 1
+        Hidden: False
+        Description: Custom Azure DevOps test run name for live test-result publishing.
+      --publish-azdo-test-results
+        Arity: 0
+        Hidden: False
+        Description: Publish test results live to the Azure DevOps Tests tab.
+      --report-azdo
+        Arity: 0
+        Hidden: False
+        Description: Enable Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.
+      --report-azdo-severity
+        Arity: 1
+        Hidden: False
+        Description: Severity to use for the reported event. Options are: error (default) and warning.
   TerminalTestReporterCommandLineOptionsProvider
     Name: Terminal test reporter
     Version: *

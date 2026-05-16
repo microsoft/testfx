@@ -15,13 +15,13 @@ namespace Microsoft.Testing.Extensions;
 public static class AzureDevOpsExtensions
 {
     /// <summary>
-    /// Adds  support to the test application builder.
+    /// Adds support to the test application builder.
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     public static void AddAzureDevOpsProvider(this ITestApplicationBuilder builder)
     {
         var compositeTestSessionAzDoService =
-           new CompositeExtensionFactory<AzureDevOpsReporter>(serviceProvider =>
+            new CompositeExtensionFactory<AzureDevOpsReporter>(serviceProvider =>
                new AzureDevOpsReporter(
                    serviceProvider.GetCommandLineOptions(),
                    serviceProvider.GetEnvironment(),
@@ -29,7 +29,23 @@ public static class AzureDevOpsExtensions
                    serviceProvider.GetOutputDevice(),
                    serviceProvider.GetLoggerFactory()));
 
+        var compositeTestResultsPublisher =
+            new CompositeExtensionFactory<AzureDevOpsTestResultsPublisher>(serviceProvider =>
+               new AzureDevOpsTestResultsPublisher(
+                   serviceProvider.GetCommandLineOptions(),
+                   serviceProvider.GetConfiguration(),
+                   serviceProvider.GetEnvironment(),
+                   serviceProvider.GetFileSystem(),
+                   serviceProvider.GetTestApplicationModuleInfo(),
+                   serviceProvider.GetTestApplicationProcessExitCode(),
+                   new AzureDevOpsTestResultsClient(serviceProvider.GetTask(), serviceProvider.GetClock()),
+                   serviceProvider.GetTask(),
+                   serviceProvider.GetClock(),
+                   serviceProvider.GetLoggerFactory()));
+
         builder.TestHost.AddDataConsumer(compositeTestSessionAzDoService);
+        builder.TestHost.AddDataConsumer(compositeTestResultsPublisher);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeTestResultsPublisher);
 
         builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());
     }
