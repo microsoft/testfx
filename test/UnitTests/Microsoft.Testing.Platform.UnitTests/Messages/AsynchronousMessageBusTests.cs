@@ -23,7 +23,8 @@ public sealed class AsynchronousMessageBusTests
             [consumer],
             new CTRLPlusCCancellationTokenSource(),
             new SystemTask(),
-            new NopLoggerFactory());
+            new NopLoggerFactory(),
+            new SystemEnvironment());
         await asynchronousMessageBus.InitAsync();
         proxy.SetBuiltMessageBus(asynchronousMessageBus);
 
@@ -43,7 +44,8 @@ public sealed class AsynchronousMessageBusTests
             [consumerA, consumerB],
             new CTRLPlusCCancellationTokenSource(),
             new SystemTask(),
-            new NopLoggerFactory());
+            new NopLoggerFactory(),
+            new SystemEnvironment());
         await asynchronousMessageBus.InitAsync();
         proxy.SetBuiltMessageBus(asynchronousMessageBus);
 
@@ -67,7 +69,8 @@ public sealed class AsynchronousMessageBusTests
             [consumerA, consumerB],
             new CTRLPlusCCancellationTokenSource(),
             new SystemTask(),
-            new NopLoggerFactory());
+            new NopLoggerFactory(),
+            new SystemEnvironment());
         await asynchronousMessageBus.InitAsync();
         proxy.SetBuiltMessageBus(asynchronousMessageBus);
 
@@ -105,7 +108,8 @@ public sealed class AsynchronousMessageBusTests
             dummyConsumers.ToArray(),
             new CTRLPlusCCancellationTokenSource(),
             new SystemTask(),
-            new NopLoggerFactory());
+            new NopLoggerFactory(),
+            new SystemEnvironment());
         await asynchronousMessageBus.InitAsync();
 
         proxy.SetBuiltMessageBus(asynchronousMessageBus);

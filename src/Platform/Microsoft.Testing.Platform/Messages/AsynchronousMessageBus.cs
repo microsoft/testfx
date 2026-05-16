@@ -11,11 +11,13 @@ namespace Microsoft.Testing.Platform.Messages;
 
 internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
 {
-    // Maximum number of drain rounds before we consider that a publisher/consumer cycle exists
-    // and we throw to surface the bug rather than spin forever.
-    private const int MaxDrainAttempts = 5;
+    // Default maximum number of drain rounds before we consider that a publisher/consumer cycle
+    // exists and we throw to surface the bug rather than spin forever. Can be overridden via the
+    // TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS environment variable.
+    private const int DefaultMaxDrainAttempts = 5;
 
     private readonly ITask _task;
+    private readonly IEnvironment _environment;
     private readonly ILogger<AsynchronousMessageBus> _logger;
     private readonly bool _isTraceLoggingEnabled;
     private readonly Dictionary<IDataConsumer, IAsyncConsumerDataProcessor> _consumerProcessor = [];
@@ -28,11 +30,13 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
         IDataConsumer[] dataConsumers,
         ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
         ITask task,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        IEnvironment environment)
     {
         _dataConsumers = dataConsumers;
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _task = task;
+        _environment = environment;
         _logger = loggerFactory.CreateLogger<AsynchronousMessageBus>();
         _isTraceLoggingEnabled = _logger.IsEnabled(LogLevel.Trace);
     }
@@ -127,27 +131,47 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
     {
         // Iterate the distinct processors (a consumer that subscribes to multiple data types
         // shares a single processor and we don't want to drain it more than once per round).
-        // We keep draining until every processor reports that no data was processed during
-        // the current round. If we still keep processing data after `MaxDrainAttempts`, we
-        // consider that a publisher/consumer cycle exists and surface it as an error.
+        // We keep draining until no processor has received new items between rounds. If we still
+        // keep receiving new payloads after `maxAttempts`, we consider that a publisher/consumer
+        // cycle exists and surface it as an error. The limit can be overridden via the
+        // TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS environment variable.
+        string? customAttempts = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS);
+        if (!int.TryParse(customAttempts, NumberStyles.Integer, CultureInfo.InvariantCulture, out int maxAttempts) || maxAttempts <= 0)
+        {
+            maxAttempts = DefaultMaxDrainAttempts;
+        }
+
         var stopwatch = Stopwatch.StartNew();
-        for (int attempt = 0; attempt < MaxDrainAttempts; attempt++)
+        var lastReceived = new Dictionary<IAsyncConsumerDataProcessor, long>();
+        foreach (IAsyncConsumerDataProcessor processor in _consumerProcessor.Values)
+        {
+            lastReceived[processor] = processor.ReceivedCount;
+        }
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
             if (_testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested)
             {
                 return;
             }
 
-            bool anyProcessed = false;
-            foreach (IAsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in _consumerProcessor.Values)
+            foreach (IAsyncConsumerDataProcessor processor in _consumerProcessor.Values)
             {
-                if (await asyncMultiProducerMultiConsumerDataProcessor.DrainDataAsync().ConfigureAwait(false))
+                await processor.DrainDataAsync().ConfigureAwait(false);
+            }
+
+            bool anyNewlyReceived = false;
+            foreach (IAsyncConsumerDataProcessor processor in _consumerProcessor.Values)
+            {
+                long currentReceived = processor.ReceivedCount;
+                if (currentReceived != lastReceived[processor])
                 {
-                    anyProcessed = true;
+                    lastReceived[processor] = currentReceived;
+                    anyNewlyReceived = true;
                 }
             }
 
-            if (!anyProcessed)
+            if (!anyNewlyReceived)
             {
                 return;
             }
@@ -158,7 +182,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
         foreach (IAsyncConsumerDataProcessor processor in _consumerProcessor.Values)
         {
             builder.AppendLine();
-            builder.Append(CultureInfo.InvariantCulture, $"Consumer '{processor.DataConsumer}'.");
+            builder.Append(CultureInfo.InvariantCulture, $"Consumer '{processor.DataConsumer}' payload received {processor.ReceivedCount}.");
         }
 
         throw new InvalidOperationException(builder.ToString());

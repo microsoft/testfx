@@ -29,9 +29,9 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
 
     private readonly Task _consumeTask;
 
-    // Number of data payloads dequeued by the consumer. Used by DrainDataAsync to detect publisher/consumer loops.
-    // Only the single consumer task increments this field; other threads read it via Volatile.Read.
-    private long _processedCount;
+    // Number of data payloads enqueued via PublishAsync. The message bus reads this via
+    // ReceivedCount to detect publisher/consumer cycles across drain rounds.
+    private long _receivedCount;
 
     public AsyncConsumerDataProcessor(IDataConsumer consumer, ITask task, CancellationToken cancellationToken)
     {
@@ -42,8 +42,13 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
 
     public IDataConsumer DataConsumer { get; }
 
+    public long ReceivedCount => Volatile.Read(ref _receivedCount);
+
     public async Task PublishAsync(IDataProducer dataProducer, IData data)
-        => await _channel.Writer.WriteAsync(AsyncConsumerDataProcessorMessage.CreateData(dataProducer, data), _cancellationToken).ConfigureAwait(false);
+    {
+        Interlocked.Increment(ref _receivedCount);
+        await _channel.Writer.WriteAsync(AsyncConsumerDataProcessorMessage.CreateData(dataProducer, data), _cancellationToken).ConfigureAwait(false);
+    }
 
     private async Task ConsumeAsync()
     {
@@ -59,8 +64,6 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
                     drainMarker.TrySetResult(true);
                     continue;
                 }
-
-                Interlocked.Increment(ref _processedCount);
 
                 // We don't enqueue the data if the consumer is the producer of the data.
                 // We could optimize this if and make a get with type/all but producers, but it
@@ -89,9 +92,8 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
         await _consumeTask.ConfigureAwait(false);
     }
 
-    public async Task<bool> DrainDataAsync()
+    public async Task DrainDataAsync()
     {
-        long before = Volatile.Read(ref _processedCount);
         var drainMarker = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         try
@@ -101,7 +103,13 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
         catch (ChannelClosedException)
         {
             // The channel was already completed (e.g., by DisableAsync). Nothing left to drain.
-            return false;
+            return;
+        }
+        catch (OperationCanceledException oc) when (oc.CancellationToken == _cancellationToken)
+        {
+            // The application is shutting down. Treat the drain as a graceful no-op,
+            // matching the previous behavior of bailing out of DrainDataAsync on cancellation.
+            return;
         }
 
         // Wait either for the drain marker to be dequeued, or for the consume task to finish/fault.
@@ -115,8 +123,6 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
         {
             await drainMarker.Task.ConfigureAwait(false);
         }
-
-        return Volatile.Read(ref _processedCount) != before;
     }
 
     // At this point we simply signal the channel as complete and we don't wait for the consumer to complete.

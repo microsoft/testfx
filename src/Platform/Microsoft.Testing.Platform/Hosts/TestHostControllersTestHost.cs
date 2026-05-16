@@ -174,7 +174,8 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 [.. dataConsumersBuilder],
                 ServiceProvider.GetTestApplicationCancellationTokenSource(),
                 ServiceProvider.GetTask(),
-                ServiceProvider.GetLoggerFactory());
+                ServiceProvider.GetLoggerFactory(),
+                ServiceProvider.GetEnvironment());
             await concreteMessageBusService.InitAsync().ConfigureAwait(false);
             ((MessageBusProxy)ServiceProvider.GetMessageBus()).SetBuiltMessageBus(concreteMessageBusService);
 

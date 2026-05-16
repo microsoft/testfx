@@ -10,16 +10,20 @@ internal interface IAsyncConsumerDataProcessor : IDisposable
 {
     IDataConsumer DataConsumer { get; }
 
+    /// <summary>
+    /// Gets the total number of data payloads enqueued through <see cref="PublishAsync"/>.
+    /// The message bus uses this to detect publisher/consumer cycles across drain rounds:
+    /// if a round of drains increases this counter on any processor, another round is needed.
+    /// </summary>
+    long ReceivedCount { get; }
+
     Task CompleteAddingAsync();
 
     /// <summary>
-    /// Drains any items that have been enqueued before this call so that the caller can synchronize with the consumer.
+    /// Waits for the consumer to finish processing every item that was already enqueued in the
+    /// processor's channel at the moment this method is invoked.
     /// </summary>
-    /// <returns>
-    /// <see langword="true"/> when at least one data payload was processed during the drain; otherwise <see langword="false"/>.
-    /// The message bus uses this to detect publisher/consumer cycles.
-    /// </returns>
-    Task<bool> DrainDataAsync();
+    Task DrainDataAsync();
 
     Task PublishAsync(IDataProducer dataProducer, IData data);
 }
