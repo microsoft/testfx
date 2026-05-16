@@ -386,7 +386,7 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
   </data>
   <data name="PlatformCommandLineDiscoverTestsOptionDescription" xml:space="preserve">
     <value>List available tests.
-Optionally accepts 'json' to print the discovered tests as a JSON document on standard output.</value>
+Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</value>
   </data>
   <data name="PlatformCommandLineDiscoverTestsInvalidArgument" xml:space="preserve">
     <value>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</value>

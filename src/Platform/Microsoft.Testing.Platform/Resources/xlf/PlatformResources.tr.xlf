@@ -518,7 +518,7 @@ Kullanılabilir değerler: 'Trace', 'Debug', 'Information', 'Warning', 'Error' v
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.
-Optionally accepts 'json' to print the discovered tests as a JSON document on standard output.</source>
+Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</source>
         <target state="needs-review-translation">Kullanılabilir testleri listeler.</target>
         <note />
       </trans-unit>
