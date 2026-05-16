@@ -534,12 +534,12 @@ Gerçekte olan: {2}</target>
       </trans-unit>
       <trans-unit id="IsNotNullFailedSummary">
         <source>Expected value to not be null.</source>
-        <target state="new">Expected value to not be null.</target>
+        <target state="translated">Beklenen değer null olmamalı.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
-        <target state="new">Expected value to be null.</target>
+        <target state="translated">Beklenen değer null olmalı.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsPositiveFailedSummary">
