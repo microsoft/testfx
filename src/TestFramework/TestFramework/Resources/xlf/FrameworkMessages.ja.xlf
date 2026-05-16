@@ -373,6 +373,11 @@
         <target state="new">Expected string to not end with the specified suffix.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoesNotMatchRegexFailedSummary">
+        <source>Expected string to not match the specified regular expression.</source>
+        <target state="new">Expected string to not match the specified regular expression.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
         <source>String '{0}' starts with string '{1}'. {2}</source>
         <target state="translated">文字列 '{0}' は文字列 '{1}' で始まります。 {2}</target>
@@ -454,7 +459,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsFalseFailedSummary">
         <source>Expected condition to be false.</source>
-        <target state="translated">予期される条件は false です。</target>
+        <target state="new">Expected condition to be false.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsGreaterThanFailedSummary">
@@ -534,7 +539,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsNotNullFailedSummary">
         <source>Expected value to not be null.</source>
-        <target state="new">Expected value to not be null.</target>
+        <target state="translated">予期される値は null ではありません。</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEqualFailedSummary">
@@ -559,7 +564,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
-        <target state="new">Expected value to be null.</target>
+        <target state="translated">予期される値は null です。</target>
         <note />
       </trans-unit>
       <trans-unit id="IsPositiveFailedSummary">
@@ -569,7 +574,12 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">
         <source>Expected condition to be true.</source>
-        <target state="translated">予想される条件は true です。</target>
+        <target state="new">Expected condition to be true.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MatchesRegexFailedSummary">
+        <source>Expected string to match the specified regular expression.</source>
+        <target state="new">Expected string to match the specified regular expression.</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">

@@ -373,6 +373,11 @@
         <target state="new">Expected string to not end with the specified suffix.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoesNotMatchRegexFailedSummary">
+        <source>Expected string to not match the specified regular expression.</source>
+        <target state="new">Expected string to not match the specified regular expression.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
         <source>String '{0}' starts with string '{1}'. {2}</source>
         <target state="translated">La chaîne '{0}' commence par la chaîne '{1}'. {2}</target>
@@ -454,7 +459,7 @@ Réel : {2}</target>
       </trans-unit>
       <trans-unit id="IsFalseFailedSummary">
         <source>Expected condition to be false.</source>
-        <target state="translated">La condition attendue doit être false.</target>
+        <target state="new">Expected condition to be false.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsGreaterThanFailedSummary">
@@ -569,7 +574,12 @@ Réel : {2}</target>
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">
         <source>Expected condition to be true.</source>
-        <target state="translated">Condition attendue pour être true.</target>
+        <target state="new">Expected condition to be true.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MatchesRegexFailedSummary">
+        <source>Expected string to match the specified regular expression.</source>
+        <target state="new">Expected string to match the specified regular expression.</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">

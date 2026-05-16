@@ -491,6 +491,12 @@ Actual: {2}</value>
   <data name="AreNotEqualFailedSummary" xml:space="preserve">
     <value>Expected values to not be equal.</value>
   </data>
+  <data name="MatchesRegexFailedSummary" xml:space="preserve">
+    <value>Expected string to match the specified regular expression.</value>
+  </data>
+  <data name="DoesNotMatchRegexFailedSummary" xml:space="preserve">
+    <value>Expected string to not match the specified regular expression.</value>
+  </data>
   <data name="ContainsSingleFailedSummary" xml:space="preserve">
     <value>Expected collection to contain exactly one element.</value>
   </data>
