@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming;
 using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -65,7 +66,7 @@ internal sealed partial class TrxReportEngine
         _fileSystem = fileSystem;
     }
 
-    public async Task<(string FileName, string? Warning)> GenerateReportAsync(TestNodeUpdateMessage[] testNodeUpdateMessages, string testHostCrashInfo = "", bool isTestHostCrashed = false)
+    public async Task<(string FileName, string? Warning)> GenerateReportAsync(IReadOnlyList<TrxTestResult> testResults, string testHostCrashInfo = "", bool isTestHostCrashed = false)
         => await RetryWhenIOExceptionAsync(async () =>
         {
             string testAppModule = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
@@ -92,7 +93,7 @@ internal sealed partial class TrxReportEngine
             string trxFileName;
             if (_commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
             {
-                trxFileName = ReplaceInvalidFileNameChars(fileName[0]);
+                trxFileName = ReplaceInvalidFileNameChars(ResolveTrxFileNamePlaceholders(fileName[0]));
                 isFileNameExplicitlyProvided = true;
             }
             else
@@ -103,7 +104,7 @@ internal sealed partial class TrxReportEngine
 
             var testDefinitions = new XElement("TestDefinitions");
             var testEntries = new XElement("TestEntries");
-            SummaryCounts summaryCounts = AddResults(testNodeUpdateMessages, testAppModule, testRun, runDeploymentRoot, testDefinitions, testEntries);
+            SummaryCounts summaryCounts = AddResults(testResults, testAppModule, testRun, runDeploymentRoot, testDefinitions, testEntries);
             testRun.Add(testDefinitions);
             testRun.Add(testEntries);
             AddTestLists(testRun);
@@ -172,6 +173,14 @@ internal sealed partial class TrxReportEngine
                 throwIOException = true;
             }
         }
+    }
+
+    private string ResolveTrxFileNamePlaceholders(string template)
+    {
+        string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+        string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
+        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(processName, processId, _clock.UtcNow);
+        return ArtifactNamingHelper.ResolveTemplate(template, replacements);
     }
 
     private readonly record struct SummaryCounts(int Passed, int Failed, int Skipped, int Timedout);

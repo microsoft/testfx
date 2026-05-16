@@ -58,6 +58,8 @@ public sealed partial class CollectionAssert
     /// </exception>
     public static void AreEqual(ICollection? expected, ICollection? actual, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AreEqual");
+
         string reason = string.Empty;
         if (!AreCollectionsEqual(expected, actual, new ObjectComparer(), ref reason))
         {
@@ -112,6 +114,8 @@ public sealed partial class CollectionAssert
     /// </exception>
     public static void AreNotEqual(ICollection? notExpected, ICollection? actual, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AreNotEqual");
+
         string reason = string.Empty;
         if (AreCollectionsEqual(notExpected, actual, new ObjectComparer(), ref reason))
         {
@@ -170,6 +174,8 @@ public sealed partial class CollectionAssert
     /// </exception>
     public static void AreEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AreEqual");
+
         string reason = string.Empty;
         if (!AreCollectionsEqual(expected, actual, comparer, ref reason))
         {
@@ -228,6 +234,8 @@ public sealed partial class CollectionAssert
     /// </exception>
     public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [NotNull] IComparer? comparer, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AreNotEqual");
+
         string reason = string.Empty;
         if (AreCollectionsEqual(notExpected, actual, comparer, ref reason))
         {

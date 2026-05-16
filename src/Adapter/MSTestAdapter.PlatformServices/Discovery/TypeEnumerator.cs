@@ -50,6 +50,17 @@ internal class TypeEnumerator
             return null;
         }
 
+        // Track class-level attributes for telemetry (read Current per call so a session reset
+        // between TypeEnumerator construction and use cannot cause writes to land on an
+        // orphaned collector).
+#if !WINDOWS_UWP && !WIN_UI
+        if (Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector.Current is { } telemetryDataCollector)
+        {
+            Attribute[] classAttributes = ReflectHelper.GetCustomAttributesCached(_type);
+            telemetryDataCollector.TrackDiscoveredClass(classAttributes);
+        }
+#endif
+
         // If test class is valid, then get the tests
         return GetTests(warnings);
     }
@@ -151,6 +162,9 @@ internal class TypeEnumerator
         };
 
         Attribute[] attributes = reflectionOperations.GetCustomAttributesCached(method);
+#if !WINDOWS_UWP && !WIN_UI
+        Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector.Current?.TrackDiscoveredMethod(attributes);
+#endif
         TestMethodAttribute? testMethodAttribute = null;
         List<string>? workItemIds = null;
 

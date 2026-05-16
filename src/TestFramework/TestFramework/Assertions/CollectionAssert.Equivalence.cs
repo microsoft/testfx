@@ -118,6 +118,8 @@ public sealed partial class CollectionAssert
         [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AreEquivalent");
+
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer");
 
         // Check whether one is null while the other is not.
@@ -284,6 +286,8 @@ public sealed partial class CollectionAssert
         [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? notExpected, [NotNullIfNotNull(nameof(notExpected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AreNotEquivalent");
+
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer");
 
         // Check whether one is null while the other is not.
