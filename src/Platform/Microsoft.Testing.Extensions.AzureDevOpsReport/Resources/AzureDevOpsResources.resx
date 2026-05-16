@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -121,7 +121,7 @@
     <value>'--report-azdo-severity' requires '--report-azdo' to be enabled</value>
   </data>
   <data name="Description" xml:space="preserve">
-    <value>Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</value>
+    <value>Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</value>
   </data>
   <data name="DisplayName" xml:space="preserve">
     <value>Azure DevOps report generator</value>
@@ -130,10 +130,76 @@
     <value>Invalid option {0}.</value>
   </data>
   <data name="OptionDescription" xml:space="preserve">
-    <value>Eanble Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</value>
+    <value>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</value>
   </data>
   <data name="SeverityOptionDescription" xml:space="preserve">
     <value>Severity to use for the reported event. Options are: error (default) and warning.</value>
     <comment>{Locked="error"}{Locked="warning"}</comment>
+  </data>
+  <data name="AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps" xml:space="preserve">
+    <value>'--report-azdo-demote-known-flaky' requires '--report-azdo' to be enabled</value>
+  </data>
+  <data name="AzureDevOpsDemoteKnownFlakyRequiresFlakyHistory" xml:space="preserve">
+    <value>'--report-azdo-demote-known-flaky' requires '--report-azdo-flaky-history' to be enabled</value>
+  </data>
+  <data name="AzureDevOpsFlakyHistoryRequiresAzureDevOps" xml:space="preserve">
+    <value>'--report-azdo-flaky-history' requires '--report-azdo' to be enabled</value>
+  </data>
+  <data name="AzureDevOpsQuarantineFileRequiresAzureDevOps" xml:space="preserve">
+    <value>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</value>
+  </data>
+  <data name="DemoteKnownFlakyOptionDescription" xml:space="preserve">
+    <value>Demote failures with an Azure DevOps flaky history of at least 25% in the selected window to warnings.</value>
+  </data>
+  <data name="FlakyHistoryFailureAnnotation" xml:space="preserve">
+    <value>[flaky: failed {0}/{1} in last {2}d]</value>
+    <comment>{Locked="[flaky: failed {0}/{1} in last {2}d]"}</comment>
+  </data>
+  <data name="FlakyHistoryLoadFailedWarning" xml:space="preserve">
+    <value>Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</value>
+    <comment>{Locked='--report-azdo-flaky-history'}</comment>
+  </data>
+  <data name="FlakyHistoryLoadTimedOutInfo" xml:space="preserve">
+    <value>Azure DevOps flaky history did not finish loading within {0} seconds. Continuing without history annotations.</value>
+  </data>
+  <data name="FlakyHistoryMissingEnvironmentWarning" xml:space="preserve">
+    <value>Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</value>
+    <comment>{Locked='--report-azdo-flaky-history'}</comment>
+  </data>
+  <data name="FlakyHistoryOptionDescription" xml:space="preserve">
+    <value>Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.</value>
+  </data>
+  <data name="FlakyHistoryRegressionAnnotation" xml:space="preserve">
+    <value>[REGRESSION]</value>
+    <comment>{Locked="[REGRESSION]"}</comment>
+  </data>
+  <data name="FlakyHistoryRunsCappedInfo" xml:space="preserve">
+    <value>Azure DevOps flaky history returned {0} runs. Only the first {1} runs will be inspected.</value>
+  </data>
+  <data name="FlakyHistoryResultsPagingStoppedWarning" xml:space="preserve">
+    <value>Azure DevOps flaky history for run '{0}' exceeded {1} pages or returned an unchanged continuation token. Remaining results will be ignored.</value>
+  </data>
+  <data name="InvalidFlakyHistoryDays" xml:space="preserve">
+    <value>Invalid value '{0}' for '--report-azdo-flaky-history'. Provide an integer between 1 and 90.</value>
+  </data>
+  <data name="QuarantinedAnnotation" xml:space="preserve">
+    <value>[quarantined]</value>
+    <comment>{Locked="[quarantined]"}</comment>
+  </data>
+  <data name="QuarantineFileLoadFailedWarning" xml:space="preserve">
+    <value>Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</value>
+    <comment>{Locked='--report-azdo-quarantine-file'}</comment>
+  </data>
+  <data name="QuarantineFileMissingWarning" xml:space="preserve">
+    <value>Azure DevOps quarantine file '{0}' does not exist. Continuing without quarantine awareness.</value>
+  </data>
+  <data name="QuarantineFileOptionDescription" xml:space="preserve">
+    <value>Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.</value>
+  </data>
+  <data name="QuarantinePatternTooLongWarning" xml:space="preserve">
+    <value>Azure DevOps quarantine pattern exceeds the {0} character limit and will be ignored.</value>
+  </data>
+  <data name="QuarantinePatternsCappedWarning" xml:space="preserve">
+    <value>Azure DevOps quarantine file contains more than {0} patterns. Remaining patterns will be ignored.</value>
   </data>
 </root>
