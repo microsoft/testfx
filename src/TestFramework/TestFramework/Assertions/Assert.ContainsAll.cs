@@ -532,7 +532,12 @@ public sealed partial class Assert
 
     private static string? BuildCallSiteWithComparer(string assertionMethodName, string expectedExpression, string collectionExpression, bool hasComparer)
         => hasComparer
-            ? FormatCallSiteExpression(assertionMethodName, expectedExpression, collectionExpression, expression3: string.Empty, "<expected>", "<collection>", "<comparer>")
+            // No [CallerArgumentExpression] is captured for the comparer parameter, so the third
+            // expression slot is always unavailable. Pass the "<comparer>" placeholder directly as
+            // the third expression to ensure the call site is rendered (e.g. as
+            // "Assert.ContainsAll(<expected>, <collection>, <comparer>)") even when callers do not
+            // support [CallerArgumentExpression] and the other expressions are also empty.
+            ? FormatCallSiteExpression(assertionMethodName, expectedExpression, collectionExpression, expression3: "<comparer>", "<expected>", "<collection>", "<comparer>")
             : FormatCallSiteExpression(assertionMethodName, expectedExpression, collectionExpression, "<expected>", "<collection>");
 
     private sealed class NonGenericEqualityComparerAdapter : IEqualityComparer<object?>

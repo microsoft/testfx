@@ -391,6 +391,54 @@ public partial class AssertTests : TestContainer
     public void ContainsAll_Generic_NullInCollectionButNotInExpected_ShouldPass()
         => Assert.ContainsAll(new string?[] { "a" }, new string?[] { "a", null });
 
+    public void ContainsAll_Generic_WithComparer_NoCallerArgumentExpression_ShouldRenderPlaceholderCallSite()
+    {
+        // Simulate a caller (e.g. another language or a wrapper) that does not propagate
+        // [CallerArgumentExpression] values. The call site must still render with placeholders,
+        // including a "<comparer>" placeholder, so the failure shows which overload was invoked.
+        Action action = () => Assert.ContainsAll(
+            new[] { "A", "C" },
+            new[] { "a", "b" },
+            new CaseInsensitiveStringComparer(),
+            message: null,
+            expectedExpression: string.Empty,
+            collectionExpression: string.Empty);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to contain all specified items.
+
+                missing:    ["C"]
+                expected:   ["A", "C"]
+                collection: ["a", "b"]
+                comparer:   CaseInsensitiveStringComparer
+
+                Assert.ContainsAll(<expected>, <collection>, <comparer>)
+                """);
+    }
+
+    public void DoesNotContainAll_Generic_WithComparer_NoCallerArgumentExpression_ShouldRenderPlaceholderCallSite()
+    {
+        Action action = () => Assert.DoesNotContainAll(
+            new[] { "A" },
+            new[] { "a", "b" },
+            new CaseInsensitiveStringComparer(),
+            message: null,
+            expectedExpression: string.Empty,
+            collectionExpression: string.Empty);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to not contain all specified items.
+
+                expected:   ["A"]
+                collection: ["a", "b"]
+                comparer:   CaseInsensitiveStringComparer
+
+                Assert.DoesNotContainAll(<expected>, <collection>, <comparer>)
+                """);
+    }
+
     public void ContainsAll_AssertFailedException_PopulatesExpectedAndActual()
     {
         Action action = () => Assert.ContainsAll(new[] { 1, 2, 3 }, new[] { 1, 2 });
