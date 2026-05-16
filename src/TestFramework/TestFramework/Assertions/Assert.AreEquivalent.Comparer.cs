@@ -311,12 +311,7 @@ public sealed partial class Assert
                             }
 
                             failure = TryGetEnumerableCount(actualEnumerator, actualHasNext, isExpected: false, path, index, out int actualCount);
-                            if (failure is not null)
-                            {
-                                return failure;
-                            }
-
-                            return EquivalenceMismatch.LengthMismatch(path, expectedCount, actualCount);
+                            return failure ?? EquivalenceMismatch.LengthMismatch(path, expectedCount, actualCount);
                         }
 
                         return null;

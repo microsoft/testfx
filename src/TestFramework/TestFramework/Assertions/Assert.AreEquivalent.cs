@@ -329,7 +329,7 @@ public sealed partial class Assert
         structured.WithUserMessage(userMessage);
 
         EvidenceBlock evidence = EvidenceBlock.Create()
-            .AddLine("notExpected:", notExpectedText)
+            .AddLine("not expected:", notExpectedText)
             .AddLine("actual:", actualText);
         structured.WithEvidence(evidence);
         structured.WithExpectedAndActual($"not equivalent to {notExpectedText}", actualText);

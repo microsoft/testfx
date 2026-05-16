@@ -996,12 +996,9 @@ public partial class AssertTests : TestContainer
         {
             for (int i = 0; i < _items.Length; i++)
             {
-                if (i > _maxIndex)
-                {
-                    throw new InvalidOperationException("enumerated past mismatch");
-                }
-
-                yield return _items[i];
+                yield return i > _maxIndex
+                    ? throw new InvalidOperationException("enumerated past mismatch")
+                    : _items[i];
             }
         }
 
