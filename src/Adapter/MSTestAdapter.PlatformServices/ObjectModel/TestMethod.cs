@@ -13,7 +13,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// <summary>
 /// TestMethod contains information about a unit test method that needs to be executed.
 /// </summary>
+#if NETFRAMEWORK
 [Serializable]
+#endif
 internal sealed class TestMethod : ITestMethod
 {
     /// <summary>
@@ -100,10 +102,14 @@ internal sealed class TestMethod : ITestMethod
     // This holds user types that may not be serializable.
     // If app domains are enabled, we have no choice other than losing the original data.
     // In that case, we fallback to deserializing the SerializedData.
+#if NETFRAMEWORK
     [field: NonSerialized]
+#endif
     internal object?[]? ActualData { get; set; }
 
+#if NETFRAMEWORK
     [field: NonSerialized]
+#endif
     internal MethodInfo? MethodInfo { get; set; }
 
     private static string GetManagedTypeName(string fullClassName)

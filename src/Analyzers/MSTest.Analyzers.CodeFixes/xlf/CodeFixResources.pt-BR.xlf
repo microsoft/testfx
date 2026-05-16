@@ -37,6 +37,11 @@
         <target state="translated">Remova os modificadores ''out'' e ''ref''</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextFix">
+        <source>Change return type to 'Task'</source>
+        <target state="new">Change return type to 'Task'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">Alterar a acessibilidade do método para 'privado'</target>

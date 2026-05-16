@@ -37,6 +37,11 @@
         <target state="translated">'out' 修飾子と 'ref' 修飾子を削除する</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextFix">
+        <source>Change return type to 'Task'</source>
+        <target state="new">Change return type to 'Task'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">メソッドのアクセシビリティを 'private' に変更する</target>
