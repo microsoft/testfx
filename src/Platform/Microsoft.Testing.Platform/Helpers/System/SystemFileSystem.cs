@@ -30,6 +30,8 @@ internal sealed class SystemFileSystem : IFileSystem
 
     public IFileStream NewFileStream(string path, FileMode mode, FileAccess access) => new SystemFileStream(path, mode, access);
 
+    public IFileStream NewFileStream(string path, FileMode mode, FileAccess access, FileShare share) => new SystemFileStream(path, mode, access, share);
+
     public string ReadAllText(string path) => File.ReadAllText(path);
 
 #if NETCOREAPP

@@ -199,6 +199,8 @@ public sealed partial class Assert
     /// <returns>The item that matches the predicate.</returns>
     public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.ContainsSingle");
+
         T firstMatch = default!;
         int matchCount = 0;
 
@@ -245,6 +247,8 @@ public sealed partial class Assert
     /// <returns>The item that matches the predicate.</returns>
     public static object? ContainsSingle(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.ContainsSingle");
+
         object? firstMatch = null;
         int matchCount = 0;
 
@@ -295,6 +299,8 @@ public sealed partial class Assert
     /// </param>
     public static void Contains<T>(T expected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.Contains");
+
         if (!collection.Contains(expected))
         {
             ReportAssertContainsItemFailed(expected, message, expectedExpression, collectionExpression);
@@ -317,6 +323,8 @@ public sealed partial class Assert
     /// </param>
     public static void Contains(object? expected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.Contains");
+
         CheckParameterNotNull(collection, "Assert.Contains", "collection");
 
         foreach (object? item in collection)
@@ -348,6 +356,8 @@ public sealed partial class Assert
     /// </param>
     public static void Contains<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.Contains");
+
         if (!collection.Contains(expected, comparer))
         {
             ReportAssertContainsItemFailed(expected, message, expectedExpression, collectionExpression, comparer);
@@ -371,6 +381,8 @@ public sealed partial class Assert
     /// </param>
     public static void Contains(object? expected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.Contains");
+
         CheckParameterNotNull(collection, "Assert.Contains", "collection");
         CheckParameterNotNull(comparer, "Assert.Contains", "comparer");
 
@@ -402,6 +414,8 @@ public sealed partial class Assert
     /// </param>
     public static void Contains<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.Contains");
+
         if (!collection.Any(predicate))
         {
             ReportAssertContainsPredicateFailed(message, predicateExpression, collectionExpression);
@@ -424,6 +438,8 @@ public sealed partial class Assert
     /// </param>
     public static void Contains(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.Contains");
+
         CheckParameterNotNull(collection, "Assert.Contains", "collection");
         CheckParameterNotNull(predicate, "Assert.Contains", "predicate");
 
@@ -502,6 +518,8 @@ public sealed partial class Assert
     /// </exception>
     public static void Contains(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.Contains");
+
         CheckParameterNotNull(value, "Assert.Contains", "value");
         CheckParameterNotNull(substring, "Assert.Contains", "substring");
 
@@ -536,6 +554,8 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
+
         if (collection.Contains(notExpected))
         {
             ReportAssertDoesNotContainItemFailed(notExpected, message, notExpectedExpression, collectionExpression);
@@ -558,6 +578,8 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain(object? notExpected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
+
         CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
 
         foreach (object? item in collection)
@@ -587,6 +609,8 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
+
         if (collection.Contains(notExpected, comparer))
         {
             ReportAssertDoesNotContainItemFailed(notExpected, message, notExpectedExpression, collectionExpression, comparer);
@@ -610,6 +634,8 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain(object? notExpected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
+
         CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
         CheckParameterNotNull(comparer, "Assert.DoesNotContain", "comparer");
 
@@ -639,6 +665,8 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
+
         if (collection.Any(predicate))
         {
             ReportAssertDoesNotContainPredicateFailed(message, predicateExpression, collectionExpression);
@@ -661,6 +689,8 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
+
         CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
         CheckParameterNotNull(predicate, "Assert.DoesNotContain", "predicate");
 
@@ -737,6 +767,8 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
+
         CheckParameterNotNull(value, "Assert.DoesNotContain", "value");
         CheckParameterNotNull(substring, "Assert.DoesNotContain", "substring");
 
@@ -778,6 +810,8 @@ public sealed partial class Assert
     public static void IsInRange<T>(T minValue, T maxValue, T value, string? message = "", [CallerArgumentExpression(nameof(minValue))] string minValueExpression = "", [CallerArgumentExpression(nameof(maxValue))] string maxValueExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsInRange");
+
         if (maxValue.CompareTo(minValue) < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(maxValue), FrameworkMessages.IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue);

@@ -54,6 +54,8 @@ public sealed partial class CollectionAssert
     /// </exception>
     public static void IsSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.IsSubsetOf");
+
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsSubsetOf", "subset");
         Assert.CheckParameterNotNull(superset, "CollectionAssert.IsSubsetOf", "superset");
         Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
@@ -114,6 +116,8 @@ public sealed partial class CollectionAssert
     /// </exception>
     public static void IsNotSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.IsNotSubsetOf");
+
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsNotSubsetOf", "subset");
         Assert.CheckParameterNotNull(superset, "CollectionAssert.IsNotSubsetOf", "superset");
         Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);

@@ -50,6 +50,8 @@ public sealed partial class CollectionAssert
     /// </exception>
     public static void Contains([NotNull] ICollection? collection, object? element, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.Contains");
+
         Assert.CheckParameterNotNull(collection, "CollectionAssert.Contains", "collection");
 
         foreach (object? current in collection)
@@ -101,6 +103,8 @@ public sealed partial class CollectionAssert
     /// </exception>
     public static void DoesNotContain([NotNull] ICollection? collection, object? element, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.DoesNotContain");
+
         Assert.CheckParameterNotNull(collection, "CollectionAssert.DoesNotContain", "collection");
 
         foreach (object? current in collection)
@@ -141,6 +145,8 @@ public sealed partial class CollectionAssert
     /// </exception>
     public static void AllItemsAreNotNull([NotNull] ICollection? collection, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AllItemsAreNotNull");
+
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreNotNull", "collection");
         foreach (object? current in collection)
         {
@@ -183,6 +189,8 @@ public sealed partial class CollectionAssert
     /// </exception>
     public static void AllItemsAreUnique([NotNull] ICollection? collection, string? message)
     {
+        TelemetryCollector.TrackAssertionCall("CollectionAssert.AllItemsAreUnique");
+
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreUnique", "collection");
 
         message = Assert.ReplaceNulls(message);
