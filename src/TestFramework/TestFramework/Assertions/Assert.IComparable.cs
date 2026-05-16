@@ -51,8 +51,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForLowerBoundExpressionAndValueExpression(message, lowerBoundExpression, valueExpression);
-        ReportAssertIsGreaterThanFailed(lowerBound, value, userMessage);
+        ReportAssertIsGreaterThanFailed(lowerBound, value, message, lowerBoundExpression, valueExpression);
     }
 
     #endregion // IsGreaterThan
@@ -98,8 +97,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForLowerBoundExpressionAndValueExpression(message, lowerBoundExpression, valueExpression);
-        ReportAssertIsGreaterThanOrEqualToFailed(lowerBound, value, userMessage);
+        ReportAssertIsGreaterThanOrEqualToFailed(lowerBound, value, message, lowerBoundExpression, valueExpression);
     }
 
     #endregion // IsGreaterThanOrEqualTo
@@ -145,8 +143,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForUpperBoundExpressionAndValueExpression(message, upperBoundExpression, valueExpression);
-        ReportAssertIsLessThanFailed(upperBound, value, userMessage);
+        ReportAssertIsLessThanFailed(upperBound, value, message, upperBoundExpression, valueExpression);
     }
 
     #endregion // IsLessThan
@@ -192,8 +189,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForUpperBoundExpressionAndValueExpression(message, upperBoundExpression, valueExpression);
-        ReportAssertIsLessThanOrEqualToFailed(upperBound, value, userMessage);
+        ReportAssertIsLessThanOrEqualToFailed(upperBound, value, message, upperBoundExpression, valueExpression);
     }
 
     #endregion // IsLessThanOrEqualTo
@@ -229,17 +225,9 @@ public sealed partial class Assert
         var zero = default(T);
 
         // Handle special case for floating point NaN values
-        if (value is float.NaN)
+        if (value is float.NaN or double.NaN)
         {
-            string userMessage = BuildUserMessageForValueExpression(message, valueExpression);
-            ReportAssertIsPositiveFailed(value, userMessage);
-            return;
-        }
-
-        if (value is double.NaN)
-        {
-            string userMessage = BuildUserMessageForValueExpression(message, valueExpression);
-            ReportAssertIsPositiveFailed(value, userMessage);
+            ReportAssertIsPositiveFailed(value, message, valueExpression);
             return;
         }
 
@@ -248,8 +236,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage2 = BuildUserMessageForValueExpression(message, valueExpression);
-        ReportAssertIsPositiveFailed(value, userMessage2);
+        ReportAssertIsPositiveFailed(value, message, valueExpression);
     }
 
     #endregion // IsPositive
@@ -285,17 +272,9 @@ public sealed partial class Assert
         var zero = default(T);
 
         // Handle special case for floating point NaN values
-        if (value is float.NaN)
+        if (value is float.NaN or double.NaN)
         {
-            string userMessage = BuildUserMessageForValueExpression(message, valueExpression);
-            ReportAssertIsNegativeFailed(value, userMessage);
-            return;
-        }
-
-        if (value is double.NaN)
-        {
-            string userMessage = BuildUserMessageForValueExpression(message, valueExpression);
-            ReportAssertIsNegativeFailed(value, userMessage);
+            ReportAssertIsNegativeFailed(value, message, valueExpression);
             return;
         }
 
@@ -304,79 +283,67 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage2 = BuildUserMessageForValueExpression(message, valueExpression);
-        ReportAssertIsNegativeFailed(value, userMessage2);
+        ReportAssertIsNegativeFailed(value, message, valueExpression);
     }
 
     #endregion // IsNegative
 
     [DoesNotReturn]
-    private static void ReportAssertIsGreaterThanFailed<T>(T lowerBound, T value, string userMessage)
+    private static void ReportAssertIsGreaterThanFailed<T>(T lowerBound, T value, string? userMessage, string lowerBoundExpression, string valueExpression)
+        => ReportComparisonFailed("Assert.IsGreaterThan", FrameworkMessages.IsGreaterThanFailedSummary, "lower bound:", lowerBound, value, userMessage, lowerBoundExpression, valueExpression, "<lowerBound>");
+
+    [DoesNotReturn]
+    private static void ReportAssertIsGreaterThanOrEqualToFailed<T>(T lowerBound, T value, string? userMessage, string lowerBoundExpression, string valueExpression)
+        => ReportComparisonFailed("Assert.IsGreaterThanOrEqualTo", FrameworkMessages.IsGreaterThanOrEqualToFailedSummary, "lower bound:", lowerBound, value, userMessage, lowerBoundExpression, valueExpression, "<lowerBound>");
+
+    [DoesNotReturn]
+    private static void ReportAssertIsLessThanFailed<T>(T upperBound, T value, string? userMessage, string upperBoundExpression, string valueExpression)
+        => ReportComparisonFailed("Assert.IsLessThan", FrameworkMessages.IsLessThanFailedSummary, "upper bound:", upperBound, value, userMessage, upperBoundExpression, valueExpression, "<upperBound>");
+
+    [DoesNotReturn]
+    private static void ReportAssertIsLessThanOrEqualToFailed<T>(T upperBound, T value, string? userMessage, string upperBoundExpression, string valueExpression)
+        => ReportComparisonFailed("Assert.IsLessThanOrEqualTo", FrameworkMessages.IsLessThanOrEqualToFailedSummary, "upper bound:", upperBound, value, userMessage, upperBoundExpression, valueExpression, "<upperBound>");
+
+    [DoesNotReturn]
+    private static void ReportComparisonFailed<T>(string assertionName, string summary, string boundLabel, T bound, T value, string? userMessage, string boundExpression, string valueExpression, string boundPlaceholder)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.IsGreaterThanFailMsg,
-            userMessage,
-            ReplaceNulls(lowerBound),
-            ReplaceNulls(value));
-        ReportAssertFailed("Assert.IsGreaterThan", finalMessage);
+        string boundText = AssertionValueRenderer.RenderValue(bound);
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine(boundLabel, boundText)
+            .AddLine("actual:", actualText);
+
+        StructuredAssertionMessage structured = new(summary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(boundText, actualText);
+        structured.WithCallSiteExpression(FormatCallSiteExpression(assertionName, boundExpression, valueExpression, boundPlaceholder, "<value>"));
+
+        ReportAssertFailed(structured);
     }
 
     [DoesNotReturn]
-    private static void ReportAssertIsGreaterThanOrEqualToFailed<T>(T lowerBound, T value, string userMessage)
-    {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.IsGreaterThanOrEqualToFailMsg,
-            userMessage,
-            ReplaceNulls(lowerBound),
-            ReplaceNulls(value));
-        ReportAssertFailed("Assert.IsGreaterThanOrEqualTo", finalMessage);
-    }
+    private static void ReportAssertIsPositiveFailed<T>(T value, string? userMessage, string valueExpression)
+        => ReportSignFailed("Assert.IsPositive", FrameworkMessages.IsPositiveFailedSummary, "> 0", value, userMessage, valueExpression);
 
     [DoesNotReturn]
-    private static void ReportAssertIsLessThanFailed<T>(T upperBound, T value, string userMessage)
-    {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.IsLessThanFailMsg,
-            userMessage,
-            ReplaceNulls(upperBound),
-            ReplaceNulls(value));
-        ReportAssertFailed("Assert.IsLessThan", finalMessage);
-    }
+    private static void ReportAssertIsNegativeFailed<T>(T value, string? userMessage, string valueExpression)
+        => ReportSignFailed("Assert.IsNegative", FrameworkMessages.IsNegativeFailedSummary, "< 0", value, userMessage, valueExpression);
 
     [DoesNotReturn]
-    private static void ReportAssertIsLessThanOrEqualToFailed<T>(T upperBound, T value, string userMessage)
+    private static void ReportSignFailed<T>(string assertionName, string summary, string expectedText, T value, string? userMessage, string valueExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.IsLessThanOrEqualToFailMsg,
-            userMessage,
-            ReplaceNulls(upperBound),
-            ReplaceNulls(value));
-        ReportAssertFailed("Assert.IsLessThanOrEqualTo", finalMessage);
-    }
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected:", expectedText)
+            .AddLine("actual:", actualText);
 
-    [DoesNotReturn]
-    private static void ReportAssertIsPositiveFailed<T>(T value, string userMessage)
-    {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.IsPositiveFailMsg,
-            userMessage,
-            ReplaceNulls(value));
-        ReportAssertFailed("Assert.IsPositive", finalMessage);
-    }
+        StructuredAssertionMessage structured = new(summary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedText, actualText);
+        structured.WithCallSiteExpression(FormatCallSiteExpression(assertionName, valueExpression, nameof(value)));
 
-    [DoesNotReturn]
-    private static void ReportAssertIsNegativeFailed<T>(T value, string userMessage)
-    {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.IsNegativeFailMsg,
-            userMessage,
-            ReplaceNulls(value));
-        ReportAssertFailed("Assert.IsNegative", finalMessage);
+        ReportAssertFailed(structured);
     }
 }

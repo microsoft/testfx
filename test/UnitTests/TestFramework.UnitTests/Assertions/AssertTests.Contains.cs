@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -338,7 +338,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.ContainsSingle(collection, ref handler);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). 'collection' expression: 'collection'. ");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to contain exactly one element.*expected count:*1*actual count:*3*Assert.ContainsSingle(collection)*");
     }
 
     /// <summary>
@@ -368,7 +368,22 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.ContainsSingle(collection);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). 'collection' expression: 'collection'.");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to contain exactly one element.*expected count: 1*actual count:   0*Assert.ContainsSingle(collection)*");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method without message parameters where the collection has multiple elements.
+    /// </summary>
+    public void ContainsSingle_InNonGenericCollection_NoMessage_WithMultipleElements_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 1, 2, 3 };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to contain exactly one element.*expected count: 1*actual count:   3*Assert.ContainsSingle(collection)*");
     }
 
     /// <summary>
@@ -383,7 +398,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.ContainsSingle(collection, "my custom message");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). 'collection' expression: 'collection'. my custom message");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to contain exactly one element.*my custom message*expected count: 1*actual count:   0*Assert.ContainsSingle(collection)*");
     }
     #endregion
 
@@ -417,7 +432,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.Contains(20, collection, "Item 20 not found");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.Contains failed. Expected collection to contain the specified item. 'expected' expression: '20', 'collection' expression: 'collection'. Item 20 not found");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to contain the specified element.*Item 20 not found*expected:*Assert.Contains(20, collection)*");
     }
 
     /// <summary>
@@ -528,7 +543,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.Contains("cherry", collection, comparer, "Missing cherry");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.Contains failed. Expected collection to contain the specified item. 'expected' expression: '\"cherry\"', 'collection' expression: 'collection'. Missing cherry");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to contain the specified element.*Missing cherry*expected:*Assert.Contains(\"cherry\", collection)*");
     }
 
     /// <summary>
@@ -574,7 +589,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.Contains(IsEven, collection, "No even number found");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.Contains failed. Expected at least one item to match the predicate. 'predicate' expression: 'IsEven', 'collection' expression: 'collection'. No even number found");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to contain an element matching the predicate.*No even number found*Assert.Contains(IsEven, collection)*");
     }
 
     /// <summary>
@@ -590,7 +605,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.Contains(IsEven, collection, "No even number found");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.Contains failed. Expected at least one item to match the predicate. 'predicate' expression: 'IsEven', 'collection' expression: 'collection'. No even number found");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to contain an element matching the predicate.*No even number found*Assert.Contains(IsEven, collection)*");
     }
 
     /// <summary>
@@ -623,7 +638,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.Contains(substring, value, StringComparison.Ordinal, "Missing substring");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.Contains failed. String 'The quick brown fox' does not contain string 'lazy'. 'substring' expression: 'substring', 'value' expression: 'value'. Missing substring.");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected string to contain the specified substring.*Missing substring*expected substring: \"lazy\"*actual:*\"The quick brown fox\"*Assert.Contains(substring, value)*");
     }
 
     public void Contains_HashSetWithCustomComparer_ItemExists_DoesNotThrow()
@@ -699,7 +714,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.Contains("banana", collection, comparer);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.Contains failed. Expected collection to contain the specified item. 'expected' expression: '\"banana\"', 'collection' expression: 'collection'.");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to contain the specified element.*expected:*Assert.Contains(\"banana\", collection)*");
     }
 
     /// <summary>
@@ -834,7 +849,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.Contains(substring, value);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.Contains failed. String '' does not contain string 'test'. 'substring' expression: 'substring', 'value' expression: 'value'..");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected string to contain the specified substring.*expected substring: \"test\"*actual:*\"\"*Assert.Contains(substring, value)*");
     }
 
     /// <summary>
@@ -937,7 +952,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.DoesNotContain(10, collection, "Item 10 should not be found");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.DoesNotContain failed. Expected collection to not contain the specified item. 'notExpected' expression: '10', 'collection' expression: 'collection'. Item 10 should not be found");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to not contain the specified element.*Item 10 should not be found*unexpected:*Assert.DoesNotContain(10, collection)*");
     }
 
     /// <summary>
@@ -968,7 +983,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.DoesNotContain(10, collection, "Assert.DoesNotContain failed. Expected collection to not contain the specified item. Item {0} should not be found");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.DoesNotContain failed. Expected collection to not contain the specified item. 'notExpected' expression: '10', 'collection' expression: 'collection'. Assert.DoesNotContain failed. Expected collection to not contain the specified item. Item {0} should not be found");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to not contain the specified element.*Assert.DoesNotContain failed. Expected collection to not contain the specified item. Item {0} should not be found*unexpected:*Assert.DoesNotContain(10, collection)*");
     }
 
     /// <summary>
@@ -1017,7 +1032,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.DoesNotContain("APPLE", collection, comparer, "Unexpected \"APPLE\"");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.DoesNotContain failed. Expected collection to not contain the specified item. 'notExpected' expression: '\"APPLE\"', 'collection' expression: 'collection'. Unexpected \"APPLE\"");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to not contain the specified element.*Unexpected \"APPLE\"*unexpected:*Assert.DoesNotContain(\"APPLE\", collection)*");
     }
 
     /// <summary>
@@ -1034,7 +1049,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.DoesNotContain("APPLE", collection, comparer, "APPLE");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.DoesNotContain failed. Expected collection to not contain the specified item. 'notExpected' expression: '\"APPLE\"', 'collection' expression: 'collection'. APPLE");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to not contain the specified element.*APPLE*unexpected:*Assert.DoesNotContain(\"APPLE\", collection)*");
     }
 
     /// <summary>
@@ -1080,7 +1095,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.DoesNotContain(IsEven, collection, "An even number exists");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.DoesNotContain failed. Expected no items to match the predicate. 'predicate' expression: 'IsEven', 'collection' expression: 'collection'. An even number exists");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to not contain an element matching the predicate.*An even number exists*Assert.DoesNotContain(IsEven, collection)*");
     }
 
     /// <summary>
@@ -1096,7 +1111,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.DoesNotContain(IsEven, collection, "An even number exists");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.DoesNotContain failed. Expected no items to match the predicate. 'predicate' expression: 'IsEven', 'collection' expression: 'collection'. An even number exists");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to not contain an element matching the predicate.*An even number exists*Assert.DoesNotContain(IsEven, collection)*");
     }
 
     /// <summary>
@@ -1129,7 +1144,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.DoesNotContain(substring, value, StringComparison.Ordinal, "Unexpected substring");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.DoesNotContain failed. String 'The quick brown fox' does contain string 'brown'. 'substring' expression: 'substring', 'value' expression: 'value'. Unexpected substring.");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected string to not contain the specified substring*Unexpected substring*unexpected substring: \"brown\"*actual:*\"The quick brown fox\"*Assert.DoesNotContain(substring, value)*");
     }
 
     /// <summary>
@@ -1164,7 +1179,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.DoesNotContain(substring, value, StringComparison.OrdinalIgnoreCase, "Found unexpected substring");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.DoesNotContain failed. String 'The quick brown fox' does contain string 'BROWN'. 'substring' expression: 'substring', 'value' expression: 'value'. Found unexpected substring.");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected string to not contain the specified substring.*Found unexpected substring*unexpected substring: \"BROWN\"*actual:*\"The quick brown fox\"*Assert.DoesNotContain(substring, value)*");
     }
 
     /// <summary>
@@ -1197,7 +1212,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.DoesNotContain(substring, value);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.DoesNotContain failed. String 'The quick brown fox' does contain string 'brown'. 'substring' expression: 'substring', 'value' expression: 'value'..");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected string to not contain the specified substring.*unexpected substring: \"brown\"*actual:*\"The quick brown fox\"*Assert.DoesNotContain(substring, value)*");
     }
 
     /// <summary>
@@ -1230,7 +1245,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.DoesNotContain(substring, value, "Found unexpected substring");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.DoesNotContain failed. String 'The quick brown fox' does contain string 'brown'. 'substring' expression: 'substring', 'value' expression: 'value'. Found unexpected substring.");
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected string to not contain the specified substring.*Found unexpected substring*unexpected substring: \"brown\"*actual:*\"The quick brown fox\"*Assert.DoesNotContain(substring, value)*");
     }
 
     /// <summary>
@@ -1473,7 +1488,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 0 item(s). 'predicate' expression: 'x => x % 2 == 0', 'collection' expression: 'collection'.");
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*expected matches: 1*actual matches:   0*Assert.ContainsSingle(x => x % 2 == 0, collection)*");
     }
 
     /// <summary>
@@ -1490,7 +1505,41 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 0 item(s). 'predicate' expression: 'x => x is int i && i % 2 == 0', 'collection' expression: 'collection'.");
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*expected matches: 1*actual matches:   0*Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection)*");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate when the predicate expression is unavailable.
+    /// Expects a predicate-specific exception using placeholders.
+    /// </summary>
+    public void ContainsSinglePredicate_EmptyPredicateExpression_UsesPredicateFailureMessage()
+    {
+        // Arrange
+        var collection = new List<int> { 1, 3, 5 };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(static x => x % 2 == 0, collection, predicateExpression: string.Empty);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*expected matches: 1*actual matches:   0*Assert.ContainsSingle(<predicate>, collection)*");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate when the predicate expression is unavailable in non-generic collections.
+    /// Expects a predicate-specific exception using placeholders.
+    /// </summary>
+    public void ContainsSinglePredicate_InNonGenericCollection_EmptyPredicateExpression_UsesPredicateFailureMessage()
+    {
+        // Arrange
+        var collection = new ArrayList { 1, 3, 5, "a" };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(static x => x is int i && i % 2 == 0, collection, predicateExpression: string.Empty);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*expected matches: 1*actual matches:   0*Assert.ContainsSingle(<predicate>, collection)*");
     }
 
     /// <summary>
@@ -1507,7 +1556,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 4 item(s). 'predicate' expression: 'x => x % 2 == 0', 'collection' expression: 'collection'.");
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*expected matches: 1*actual matches:   4*Assert.ContainsSingle(x => x % 2 == 0, collection)*");
     }
 
     /// <summary>
@@ -1517,14 +1566,14 @@ public partial class AssertTests : TestContainer
     public void ContainsSinglePredicate_InNonGenericCollection_MultipleItemsMatch_ThrowsException()
     {
         // Arrange
-        var collection = new ArrayList { 2, 4, "a" };
+        var collection = new ArrayList { 2, 4, 6, 8, "a" };
 
         // Act
         Action action = () => Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection);
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 2 item(s). 'predicate' expression: 'x => x is int i && i % 2 == 0', 'collection' expression: 'collection'.");
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*expected matches: 1*actual matches:   4*Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection)*");
     }
 
     /// <summary>
@@ -1541,7 +1590,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 0 item(s). 'predicate' expression: 'x => x % 2 == 0', 'collection' expression: 'collection'. No even numbers found in collection with 3 items");
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*No even numbers found in collection with 3 items*expected matches: 1*actual matches:   0*Assert.ContainsSingle(x => x % 2 == 0, collection)*");
     }
 
     /// <summary>
@@ -1558,7 +1607,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 0 item(s). 'predicate' expression: 'x => x is int i && i % 2 == 0', 'collection' expression: 'collection'. No even numbers found in collection with 3 items");
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*No even numbers found in collection with 3 items*expected matches: 1*actual matches:   0*Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection)*");
     }
 
     /// <summary>
@@ -1575,7 +1624,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 3 item(s). 'predicate' expression: 'x => x % 2 == 0', 'collection' expression: 'collection'. Too many even numbers found: 3");
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*Too many even numbers found: 3*expected matches: 1*actual matches:   3*Assert.ContainsSingle(x => x % 2 == 0, collection)*");
     }
 
     /// <summary>
@@ -1592,7 +1641,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 2 item(s). 'predicate' expression: 'x => x is int i && i % 2 == 0', 'collection' expression: 'collection'. Too many even numbers found: 2");
+            .WithMessage("*Expected collection to contain exactly one element matching the predicate.*Too many even numbers found: 2*expected matches: 1*actual matches:   2*Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection)*");
     }
 
     /// <summary>
@@ -1684,7 +1733,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.Contains failed. Expected collection to contain the specified item. 'expected' expression: '5', 'collection' expression: 'collection'.");
+            .WithMessage("*Expected collection to contain the specified element.*expected:*Assert.Contains(5, collection)*");
     }
 
     /// <summary>
@@ -1700,7 +1749,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.Contains failed. Expected collection to contain the specified item. 'expected' expression: '5', 'collection' expression: 'collection'.");
+            .WithMessage("*Expected collection to contain the specified element.*expected:*Assert.Contains(5, collection)*");
     }
 
     /// <summary>
@@ -1716,7 +1765,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.Contains failed. Expected at least one item to match the predicate. 'predicate' expression: 'x => x % 2 == 0', 'collection' expression: 'collection'.");
+            .WithMessage("*Expected collection to contain an element matching the predicate.*Assert.Contains(x => x % 2 == 0, collection)*");
     }
 
     /// <summary>
@@ -1732,7 +1781,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.DoesNotContain failed. Expected collection to not contain the specified item. 'notExpected' expression: '2', 'collection' expression: 'collection'.");
+            .WithMessage("*Expected collection to not contain the specified element.*unexpected:*Assert.DoesNotContain(2, collection)*");
     }
 
     /// <summary>
@@ -1748,7 +1797,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.DoesNotContain failed. Expected no items to match the predicate. 'predicate' expression: 'x => x % 2 == 0', 'collection' expression: 'collection'.");
+            .WithMessage("*Expected collection to not contain an element matching the predicate.*Assert.DoesNotContain(x => x % 2 == 0, collection)*");
     }
 
     public void DoesNotContains_HashSetWithCustomComparer_ItemDoesNotExist_DoesNotThrow()
