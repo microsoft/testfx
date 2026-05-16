@@ -24,9 +24,9 @@ public sealed class HtmlReportGeneratorCommandLineTests
     }
 
     [TestMethod]
-    [DataRow("report.txt")]              // wrong extension
-    [DataRow("report")]                   // no extension
-    [DataRow("REPORT.HTM")]               // wrong extension (htm vs html)
+    [DataRow("report.txt")] // wrong extension
+    [DataRow("report")] // no extension
+    [DataRow("REPORT.HTM")] // wrong extension (htm vs html)
     public async Task IsInvalid_If_FileName_Does_Not_End_With_Html(string fileName)
     {
         var provider = new HtmlReportGeneratorCommandLine();
@@ -44,10 +44,10 @@ public sealed class HtmlReportGeneratorCommandLineTests
     [DataRow("sub\\report.html")]
     [DataRow("..\\report.html")]
     [DataRow("../report.html")]
-    [DataRow("..report.html")]            // contains ".."
-    [DataRow("C:report.html")]            // drive letter
-    [DataRow(" report.html")]             // leading whitespace
-    [DataRow("report.html ")]             // trailing whitespace
+    [DataRow("..report.html")] // contains ".."
+    [DataRow("C:report.html")] // drive letter
+    [DataRow(" report.html")] // leading whitespace
+    [DataRow("report.html ")] // trailing whitespace
     public async Task IsInvalid_If_FileName_Contains_Path_Or_Invalid_Chars(string fileName)
     {
         var provider = new HtmlReportGeneratorCommandLine();
@@ -101,6 +101,58 @@ public sealed class HtmlReportGeneratorCommandLineTests
         };
 
         ValidationResult result = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+
+        Assert.IsTrue(result.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow("report*.html")] // * is Windows-invalid even though Linux allows it
+    [DataRow("report?.html")] // ? same
+    [DataRow("report\".html")]
+    [DataRow("report<.html")]
+    [DataRow("report>.html")]
+    [DataRow("report|.html")]
+    public async Task IsInvalid_When_FileName_Contains_WindowsInvalidChars_OnAnyOS(string fileName)
+    {
+        var provider = new HtmlReportGeneratorCommandLine();
+        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions()
+            .First(x => x.Name == HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [fileName]).ConfigureAwait(false);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(HtmlReport.Resources.ExtensionResources.HtmlReportFileNameShouldNotContainPath, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("CON.html")]
+    [DataRow("con.html")] // case insensitive
+    [DataRow("NUL.html")]
+    [DataRow("PRN.html")]
+    [DataRow("AUX.html")]
+    [DataRow("COM1.html")]
+    [DataRow("LPT9.html")]
+    public async Task IsInvalid_When_FileName_Is_Reserved_Windows_Device_Name(string fileName)
+    {
+        var provider = new HtmlReportGeneratorCommandLine();
+        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions()
+            .First(x => x.Name == HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [fileName]).ConfigureAwait(false);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(HtmlReport.Resources.ExtensionResources.HtmlReportFileNameShouldNotContainPath, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsValid_When_FileName_Starts_With_Reserved_Name_But_Has_Extra_Chars()
+    {
+        // "CONfig.html" is not a reserved device name (only the bare "CON" base name is).
+        var provider = new HtmlReportGeneratorCommandLine();
+        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions()
+            .First(x => x.Name == HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, ["CONfig.html"]).ConfigureAwait(false);
 
         Assert.IsTrue(result.IsValid);
     }

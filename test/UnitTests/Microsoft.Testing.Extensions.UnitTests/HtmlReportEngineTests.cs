@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.HtmlReport;
@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 using Moq;
 
@@ -28,20 +27,17 @@ public class HtmlReportEngineTests
     [TestMethod]
     public async Task GenerateReportAsync_WritesValidHtml_WithEmbeddedJson()
     {
-        // Arrange
         using var memoryStream = new MemoryFileStream();
         HtmlReportEngine engine = CreateEngine(memoryStream);
-        TestNodeUpdateMessage[] tests =
+        CapturedTestResult[] tests =
         [
-            CreateTestNode("p1", "Passing test", PassedTestNodeStateProperty.CachedInstance),
-            CreateTestNode("f1", "Failing test", new FailedTestNodeStateProperty("expected 1, got 2")),
-            CreateTestNode("s1", "Skipped test", new SkippedTestNodeStateProperty("not relevant")),
+            Captured("p1", "Passing test", "passed"),
+            Captured("f1", "Failing test", "failed", errorMessage: "expected 1, got 2"),
+            Captured("s1", "Skipped test", "skipped", errorMessage: "not relevant"),
         ];
 
-        // Act
         (string fileName, string? warning) = await engine.GenerateReportAsync(tests);
 
-        // Assert
         Assert.IsNotNull(fileName);
         Assert.IsNull(warning);
         string html = memoryStream.GetUtf8Content();
@@ -55,76 +51,145 @@ public class HtmlReportEngineTests
     [TestMethod]
     public async Task GenerateReportAsync_EscapesScriptInjection_InDisplayName()
     {
-        // Arrange
         using var memoryStream = new MemoryFileStream();
         HtmlReportEngine engine = CreateEngine(memoryStream);
         const string Hostile = "evil</script><img src=x onerror=alert(1)>";
-        TestNodeUpdateMessage[] tests =
+        CapturedTestResult[] tests =
         [
-            CreateTestNode("hostile", Hostile, new FailedTestNodeStateProperty(Hostile)),
+            Captured("hostile", Hostile, "failed", errorMessage: Hostile),
         ];
 
-        // Act
         (string fileName, _) = await engine.GenerateReportAsync(tests);
 
-        // Assert
         Assert.IsNotNull(fileName);
         string html = memoryStream.GetUtf8Content();
 
         // The literal hostile sequence MUST NOT appear in the HTML — it must be escaped to
         // \u003C / \u003E / \u0026 etc. so the browser parser cannot escape the JSON island.
-        Assert.IsFalse(
-            html.Contains("</script><img"),
-            "Unescaped hostile content found in the report HTML, which would allow XSS.");
+        Assert.DoesNotContain("</script><img", html, "Unescaped hostile content found in the report HTML, which would allow XSS.");
 
         // The hostile content MUST be present in escaped form.
         Assert.Contains("evil\\u003C/script\\u003E", html);
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_TruncatesOverLongStandardOutput()
+    [DataRow('<', "\\u003C")]
+    [DataRow('>', "\\u003E")]
+    [DataRow('&', "\\u0026")]
+    [DataRow('\'', "\\u0027")]
+    public async Task GenerateReportAsync_EscapesHtmlUnsafeCharacters_AsUnicode(char raw, string expected)
     {
-        // Arrange
         using var memoryStream = new MemoryFileStream();
         HtmlReportEngine engine = CreateEngine(memoryStream);
-        string huge = new string('a', HtmlReportEngine.MaxStandardStreamLength + 5_000);
+        string display = "x" + raw + "y";
+        CapturedTestResult[] tests = [Captured("u", display, "passed")];
+
+        await engine.GenerateReportAsync(tests);
+
+        string html = memoryStream.GetUtf8Content();
+        Assert.Contains("x" + expected + "y", html);
+        Assert.DoesNotContain("\"x" + raw + "y\"", html);
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_EscapesLineSeparators_U2028_AndU2029()
+    {
+        using var memoryStream = new MemoryFileStream();
+        HtmlReportEngine engine = CreateEngine(memoryStream);
+        string display = "line1\u2028line2\u2029line3";
+        CapturedTestResult[] tests = [Captured("ls", display, "passed")];
+
+        await engine.GenerateReportAsync(tests);
+
+        string html = memoryStream.GetUtf8Content();
+        Assert.Contains("line1\\u2028line2\\u2029line3", html);
+        Assert.DoesNotContain("\u2028", html);
+        Assert.DoesNotContain("\u2029", html);
+    }
+
+    [TestMethod]
+    public void TestResultCapture_Truncates_OverLength_StandardOutput_AtBoundary()
+    {
+        string huge = new('a', TestResultCapture.MaxStandardStreamLength + 7);
 
         var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
         bag.Add(new StandardOutputProperty(huge));
-        TestNodeUpdateMessage[] tests =
-        [
-            new TestNodeUpdateMessage(
-                new SessionUid("1"),
-                new TestNode { Uid = "id", DisplayName = "Test", Properties = bag }),
-        ];
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = bag };
 
-        // Act
-        await engine.GenerateReportAsync(tests);
+        CapturedTestResult result = TestResultCapture.TryCapture(node)!;
 
-        // Assert
-        string html = memoryStream.GetUtf8Content();
-        Assert.Contains("[truncated, original length:", html);
+        Assert.IsNotNull(result);
+        Assert.IsNotNull(result.StandardOutput);
+        Assert.StartsWith(new string('a', TestResultCapture.MaxStandardStreamLength), result.StandardOutput!);
+        Assert.Contains("[truncated, original length:", result.StandardOutput);
+        Assert.Contains((TestResultCapture.MaxStandardStreamLength + 7).ToString(CultureInfo.InvariantCulture), result.StandardOutput);
+    }
+
+    [TestMethod]
+    public void TestResultCapture_Does_Not_Truncate_When_Exactly_At_MaxLength()
+    {
+        string atMax = new('a', TestResultCapture.MaxStandardStreamLength);
+
+        var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
+        bag.Add(new StandardOutputProperty(atMax));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = bag };
+
+        CapturedTestResult result = TestResultCapture.TryCapture(node)!;
+
+        Assert.AreEqual(atMax, result.StandardOutput);
+    }
+
+    [TestMethod]
+    public void TestResultCapture_Returns_Null_For_NonTerminalStates()
+    {
+        TestNode discovered = new() { Uid = "a", DisplayName = "x", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) };
+        TestNode inProgress = new() { Uid = "b", DisplayName = "y", Properties = new(InProgressTestNodeStateProperty.CachedInstance) };
+
+        Assert.IsNull(TestResultCapture.TryCapture(discovered));
+        Assert.IsNull(TestResultCapture.TryCapture(inProgress));
+    }
+
+    [TestMethod]
+    [DataRow("passed", typeof(PassedTestNodeStateProperty))]
+    [DataRow("skipped", typeof(SkippedTestNodeStateProperty))]
+    [DataRow("failed", typeof(FailedTestNodeStateProperty))]
+    [DataRow("errored", typeof(ErrorTestNodeStateProperty))]
+    [DataRow("timedOut", typeof(TimeoutTestNodeStateProperty))]
+    public void TestResultCapture_ClassifiesEveryWellKnownTerminalOutcome(string expected, Type stateType)
+    {
+        TestNodeStateProperty state = stateType switch
+        {
+            Type t when t == typeof(PassedTestNodeStateProperty) => PassedTestNodeStateProperty.CachedInstance,
+            Type t when t == typeof(SkippedTestNodeStateProperty) => SkippedTestNodeStateProperty.CachedInstance,
+            Type t when t == typeof(FailedTestNodeStateProperty) => new FailedTestNodeStateProperty("x"),
+            Type t when t == typeof(ErrorTestNodeStateProperty) => new ErrorTestNodeStateProperty("x"),
+            Type t when t == typeof(TimeoutTestNodeStateProperty) => new TimeoutTestNodeStateProperty("x"),
+            _ => throw new InvalidOperationException(),
+        };
+
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = new(state) };
+
+        CapturedTestResult result = TestResultCapture.TryCapture(node)!;
+
+        Assert.AreEqual(expected, result.Outcome);
     }
 
     [TestMethod]
     public async Task GenerateReportAsync_CountsAllOutcomeKindsSeparately()
     {
-        // Arrange
         using var memoryStream = new MemoryFileStream();
         HtmlReportEngine engine = CreateEngine(memoryStream);
-        TestNodeUpdateMessage[] tests =
+        CapturedTestResult[] tests =
         [
-            CreateTestNode("p1", "Passed", PassedTestNodeStateProperty.CachedInstance),
-            CreateTestNode("f1", "Failed", new FailedTestNodeStateProperty("x")),
-            CreateTestNode("s1", "Skipped", new SkippedTestNodeStateProperty("x")),
-            CreateTestNode("e1", "Errored", new ErrorTestNodeStateProperty("x")),
-            CreateTestNode("t1", "Timed out", new TimeoutTestNodeStateProperty("x")),
+            Captured("p1", "Passed", "passed"),
+            Captured("f1", "Failed", "failed"),
+            Captured("s1", "Skipped", "skipped"),
+            Captured("e1", "Errored", "errored"),
+            Captured("t1", "Timed out", "timedOut"),
         ];
 
-        // Act
         await engine.GenerateReportAsync(tests);
 
-        // Assert
         string html = memoryStream.GetUtf8Content();
         Assert.Contains("\"total\":5", html);
         Assert.Contains("\"passed\":1", html);
@@ -139,18 +204,15 @@ public class HtmlReportEngineTests
     {
         using var memoryStream = new MemoryFileStream();
         HtmlReportEngine engine = CreateEngine(memoryStream);
-
-        // Same UID, three distinct results (parameterized rows / framework that doesn't
-        // give unique UIDs / in-process retries — we must surface all of them).
-        TestNodeUpdateMessage[] nodes =
+        CapturedTestResult[] tests =
         [
-            CreateTestNode("dup", "Row A", new FailedTestNodeStateProperty("first failure")),
-            CreateTestNode("dup", "Row B", new FailedTestNodeStateProperty("second failure")),
-            CreateTestNode("dup", "Row C", PassedTestNodeStateProperty.CachedInstance),
-            CreateTestNode("unique", "Solo", PassedTestNodeStateProperty.CachedInstance),
+            Captured("dup", "Row A", "failed", errorMessage: "first failure"),
+            Captured("dup", "Row B", "failed", errorMessage: "second failure"),
+            Captured("dup", "Row C", "passed"),
+            Captured("unique", "Solo", "passed"),
         ];
 
-        await engine.GenerateReportAsync(nodes);
+        await engine.GenerateReportAsync(tests);
 
         string html = memoryStream.GetUtf8Content();
 
@@ -171,26 +233,56 @@ public class HtmlReportEngineTests
 
         // The unique UID row does not get an attempts annotation.
         int soloIdx = html.IndexOf("\"displayName\":\"Solo\"", StringComparison.Ordinal);
-        Assert.IsTrue(soloIdx >= 0);
+        Assert.IsGreaterThanOrEqualTo(0, soloIdx);
         string soloFragment = html.Substring(soloIdx, Math.Min(400, html.Length - soloIdx));
-        Assert.IsFalse(soloFragment.Contains("\"attemptOf\""), "Unique UIDs should not carry attemptOf annotation.");
+        Assert.DoesNotContain("\"attemptOf\"", soloFragment, "Unique UIDs should not carry attemptOf annotation.");
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_IncludesTraits_FromTestMetadataProperty()
+    public async Task GenerateReportAsync_EmitsStableRowKey_Per_Result()
     {
         using var memoryStream = new MemoryFileStream();
         HtmlReportEngine engine = CreateEngine(memoryStream);
-
-        var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
-        bag.Add(new TestMetadataProperty("Category", "FastTest"));
-        bag.Add(new TestMetadataProperty("Owner", "alice"));
-        TestNodeUpdateMessage[] nodes =
+        CapturedTestResult[] tests =
         [
-            new TestNodeUpdateMessage(new SessionUid("1"), new TestNode { Uid = "id", DisplayName = "T", Properties = bag }),
+            Captured("a", "A", "passed"),
+            Captured("a", "A2", "passed"),
+            Captured("b", "B", "passed"),
         ];
 
-        await engine.GenerateReportAsync(nodes);
+        await engine.GenerateReportAsync(tests);
+
+        string html = memoryStream.GetUtf8Content();
+        // The engine must emit a unique row key per result (used by the UI for expand
+        // state), independent of UID, so multiple rows sharing the same UID never
+        // collide and a UID like "a#1" can never collide with a derived key.
+        Assert.Contains("\"rowKey\":0", html);
+        Assert.Contains("\"rowKey\":1", html);
+        Assert.Contains("\"rowKey\":2", html);
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_IncludesTraits()
+    {
+        using var memoryStream = new MemoryFileStream();
+        HtmlReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests =
+        [
+            new CapturedTestResult
+            {
+                Uid = "id",
+                DisplayName = "T",
+                Outcome = "passed",
+                Duration = TimeSpan.Zero,
+                Traits =
+                [
+                    new KeyValuePair<string, string>("Category", "FastTest"),
+                    new KeyValuePair<string, string>("Owner", "alice"),
+                ],
+            },
+        ];
+
+        await engine.GenerateReportAsync(tests);
 
         string html = memoryStream.GetUtf8Content();
         Assert.Contains("\"traits\":[", html);
@@ -200,8 +292,61 @@ public class HtmlReportEngineTests
         Assert.Contains("\"value\":\"alice\"", html);
     }
 
-    private static TestNodeUpdateMessage CreateTestNode(string uid, string name, TestNodeStateProperty state)
-        => new(new SessionUid("1"), new TestNode { Uid = uid, DisplayName = name, Properties = new PropertyBag(state) });
+    [TestMethod]
+    public async Task GenerateReportAsync_AppendsDisambiguatingSuffix_When_DefaultFileExists()
+    {
+        // Set up file system: pretend the default file already exists, then succeed on
+        // the second name. The engine must retry rather than throwing IOException.
+        var bytesSeen = new List<string>();
+        int callCount = 0;
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.CreateNew))
+            .Returns<string, FileMode>((path, _) =>
+            {
+                callCount++;
+                bytesSeen.Add(path);
+                return callCount == 1
+                    ? throw new IOException("file exists")
+                    : new MemoryFileStream();
+            });
+
+        _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
+        _ = _environmentMock.SetupGet(_ => _.MachineName).Returns("M");
+        _ = _environmentMock.Setup(_ => _.GetEnvironmentVariable(It.IsAny<string>())).Returns("u");
+        _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns("app");
+        _ = _testFrameworkMock.SetupGet(_ => _.Uid).Returns("uid");
+        _ = _testFrameworkMock.SetupGet(_ => _.Version).Returns("0.0");
+        _ = _testFrameworkMock.SetupGet(_ => _.DisplayName).Returns("F");
+        _ = _clockMock.SetupGet(_ => _.UtcNow).Returns(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+
+        var engine = new HtmlReportEngine(
+            _fileSystem.Object,
+            _testApplicationModuleInfoMock.Object,
+            _environmentMock.Object,
+            _commandLineOptionsMock.Object,
+            _configurationMock.Object,
+            _clockMock.Object,
+            _testFrameworkMock.Object,
+            DateTimeOffset.UtcNow,
+            0,
+            CancellationToken.None);
+
+        (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
+
+        Assert.AreEqual(2, callCount);
+        Assert.AreEqual(bytesSeen[1], finalPath);
+        Assert.Contains("_1.html", finalPath);
+    }
+
+    private static CapturedTestResult Captured(string uid, string name, string outcome,
+        TimeSpan? duration = null, string? errorMessage = null)
+        => new()
+        {
+            Uid = uid,
+            DisplayName = name,
+            Outcome = outcome,
+            Duration = duration ?? TimeSpan.Zero,
+            ErrorMessage = errorMessage,
+        };
 
     private HtmlReportEngine CreateEngine(MemoryFileStream stream)
     {
@@ -239,11 +384,7 @@ public class HtmlReportEngineTests
 
         string IFileStream.Name => string.Empty;
 
-        public string GetUtf8Content()
-        {
-            // We don't dispose the underlying stream here, just read the content.
-            return Encoding.UTF8.GetString(Stream.ToArray());
-        }
+        public string GetUtf8Content() => Encoding.UTF8.GetString(Stream.ToArray());
 
         void IDisposable.Dispose() => Stream.Dispose();
 

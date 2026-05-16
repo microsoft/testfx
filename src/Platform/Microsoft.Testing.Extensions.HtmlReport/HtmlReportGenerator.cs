@@ -34,7 +34,7 @@ internal sealed class HtmlReportGenerator :
     private readonly ITestFramework _testFramework;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
     private readonly ILogger<HtmlReportGenerator> _logger;
-    private readonly List<TestNodeUpdateMessage> _tests = [];
+    private readonly List<CapturedTestResult> _tests = [];
     private readonly bool _isEnabled;
 
     private DateTimeOffset? _testStartTime;
@@ -94,17 +94,17 @@ internal sealed class HtmlReportGenerator :
 
         if (value is TestNodeUpdateMessage update)
         {
-            TestNodeStateProperty? state = update.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
-            if (state is null or DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
+            // Project to a capped DTO immediately so we don't retain the original
+            // TestNode (and its potentially huge stdout/stderr/stack trace strings)
+            // for the whole session. We never deduplicate on TestNode.Uid: some
+            // frameworks emit several distinct results sharing the same UID
+            // (parameterized rows, theory data, in-process retries, framework
+            // misbehaviour). The engine surfaces all of them so no data is dropped.
+            CapturedTestResult? captured = TestResultCapture.TryCapture(update.TestNode);
+            if (captured is not null)
             {
-                return Task.CompletedTask;
+                _tests.Add(captured);
             }
-
-            // Append every terminal-state result. We intentionally do NOT deduplicate on
-            // TestNode.Uid: some test frameworks emit several distinct results sharing the
-            // same UID (parameterized rows, theory data, in-process retries, framework
-            // misbehavior). The engine surfaces all of them so no data is silently dropped.
-            _tests.Add(update);
         }
 
         return Task.CompletedTask;

@@ -2,25 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.HtmlReport.Resources;
-using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.HtmlReport;
 
 internal sealed class HtmlReportEngine
 {
-    // Cap individual fields to keep the report HTML/JSON payload usable even on huge runs.
-    // Truncation is surfaced in the UI.
-    internal const int MaxStandardStreamLength = 32 * 1024;
-    internal const int MaxStackTraceLength = 32 * 1024;
-    internal const int MaxMessageLength = 16 * 1024;
-
     private const string TemplateResourceName = "Microsoft.Testing.Extensions.HtmlReport.Templates.report-template.html";
     private const string DataPlaceholder = "/*__MTP_DATA__*/null";
     private const string GeneratorVersionPlaceholder = "__MTP_GENERATOR_VERSION__";
@@ -60,11 +51,13 @@ internal sealed class HtmlReportEngine
         _cancellationToken = cancellationToken;
     }
 
-    public async Task<(string FileName, string? Warning)> GenerateReportAsync(TestNodeUpdateMessage[] testNodes)
+    public Task<(string FileName, string? Warning)> GenerateReportAsync(CapturedTestResult[] results)
+        => GenerateReportCoreAsync(results, _clock.UtcNow);
+
+    private async Task<(string FileName, string? Warning)> GenerateReportCoreAsync(CapturedTestResult[] results, DateTimeOffset finishTime)
     {
         _cancellationToken.ThrowIfCancellationRequested();
 
-        DateTimeOffset finishTime = _clock.UtcNow;
         bool fileNameExplicitlyProvided = _commandLineOptions.TryGetOptionArgumentList(
             HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName,
             out string[]? providedFileName);
@@ -75,10 +68,9 @@ internal sealed class HtmlReportEngine
 
         string outputDirectory = _configuration.GetTestResultDirectory();
         string finalPath = Path.Combine(outputDirectory, fileName);
-        bool willOverwrite = fileNameExplicitlyProvided && _fileSystem.ExistFile(finalPath);
 
         string template = LoadTemplate();
-        string json = BuildJson(testNodes, finishTime);
+        string json = BuildJson(results, finishTime);
 
         string html = template
             .Replace(GeneratorVersionPlaceholder, ExtensionVersion.DefaultSemVer)
@@ -86,20 +78,65 @@ internal sealed class HtmlReportEngine
 
         byte[] bytes = Encoding.UTF8.GetBytes(html);
 
+        return await WriteWithRetryAsync(finalPath, bytes, fileNameExplicitlyProvided).ConfigureAwait(false);
+    }
+
+    private async Task<(string FileName, string? Warning)> WriteWithRetryAsync(string finalPath, byte[] bytes, bool fileNameExplicitlyProvided)
+    {
+        // Explicit file names: use FileMode.Create (overwrite). Default-generated file
+        // names: use FileMode.CreateNew but retry with disambiguating suffixes when the
+        // file already exists, so concurrent runs (or two runs within the same second
+        // sharing the result directory) don't fail with IOException.
+        if (fileNameExplicitlyProvided)
+        {
+            bool willOverwrite = _fileSystem.ExistFile(finalPath);
+            await WriteAsync(finalPath, FileMode.Create, bytes).ConfigureAwait(false);
+            return (
+                finalPath,
+                willOverwrite
+                    ? string.Format(CultureInfo.InvariantCulture, ExtensionResources.HtmlReportFileExistsAndWillBeOverwritten, finalPath)
+                    : null);
+        }
+
+        DateTimeOffset firstTry = _clock.UtcNow;
+        string directory = Path.GetDirectoryName(finalPath) ?? string.Empty;
+        string baseName = Path.GetFileNameWithoutExtension(finalPath);
+        string extension = Path.GetExtension(finalPath);
+        string candidate = finalPath;
+        int attempt = 0;
+
+        while (true)
+        {
+            _cancellationToken.ThrowIfCancellationRequested();
+
+            try
+            {
+                await WriteAsync(candidate, FileMode.CreateNew, bytes).ConfigureAwait(false);
+                return (candidate, null);
+            }
+            catch (IOException)
+            {
+                if (_clock.UtcNow - firstTry > TimeSpan.FromSeconds(5))
+                {
+                    throw;
+                }
+
+                attempt++;
+                candidate = Path.Combine(directory, $"{baseName}_{attempt}{extension}");
+            }
+        }
+    }
+
+    private async Task WriteAsync(string path, FileMode mode, byte[] bytes)
+    {
         // Note that we need to dispose the IFileStream, not the inner stream.
         // IFileStream implementations will be responsible to dispose their inner stream.
-        using IFileStream stream = _fileSystem.NewFileStream(finalPath, fileNameExplicitlyProvided ? FileMode.Create : FileMode.CreateNew);
+        using IFileStream stream = _fileSystem.NewFileStream(path, mode);
 #if NETCOREAPP
         await stream.Stream.WriteAsync(bytes.AsMemory(), _cancellationToken).ConfigureAwait(false);
 #else
         await stream.Stream.WriteAsync(bytes, 0, bytes.Length, _cancellationToken).ConfigureAwait(false);
 #endif
-
-        string? warning = willOverwrite
-            ? string.Format(CultureInfo.InvariantCulture, ExtensionResources.HtmlReportFileExistsAndWillBeOverwritten, finalPath)
-            : null;
-
-        return (finalPath, warning);
     }
 
     private string BuildDefaultFileName(DateTimeOffset finishTime)
@@ -132,7 +169,7 @@ internal sealed class HtmlReportEngine
         return reader.ReadToEnd();
     }
 
-    private string BuildJson(TestNodeUpdateMessage[] testNodes, DateTimeOffset finishTime)
+    private string BuildJson(CapturedTestResult[] results, DateTimeOffset finishTime)
     {
         int passed = 0;
         int failed = 0;
@@ -146,16 +183,15 @@ internal sealed class HtmlReportEngine
         // UI surface frameworks that emit multiple terminal results for the same UID
         // (parameterized rows, in-process retries, broken UID generators, etc.) without
         // silently dropping any data.
-        Dictionary<string, int> countByUid = new(testNodes.Length);
-        foreach (TestNodeUpdateMessage n in testNodes)
+        Dictionary<string, int> countByUid = [];
+        foreach (CapturedTestResult r in results)
         {
-            string uid = n.TestNode.Uid.Value;
-            countByUid[uid] = countByUid.TryGetValue(uid, out int existing) ? existing + 1 : 1;
+            countByUid[r.Uid] = countByUid.TryGetValue(r.Uid, out int existing) ? existing + 1 : 1;
         }
 
-        Dictionary<string, int> emittedByUid = new(countByUid.Count);
+        Dictionary<string, int> emittedByUid = [];
 
-        var sb = new StringBuilder(8 * 1024);
+        StringBuilder sb = new(8 * 1024);
         sb.Append('{');
         AppendStringPair(sb, "schemaVersion", "1");
         sb.Append(',');
@@ -185,8 +221,9 @@ internal sealed class HtmlReportEngine
         sb.Append('[');
 
         bool first = true;
-        foreach (TestNodeUpdateMessage update in testNodes)
+        for (int i = 0; i < results.Length; i++)
         {
+            CapturedTestResult r = results[i];
             if (!first)
             {
                 sb.Append(',');
@@ -194,50 +231,23 @@ internal sealed class HtmlReportEngine
 
             first = false;
 
-            TestNode node = update.TestNode;
-            TestNodeStateProperty state = node.Properties.Single<TestNodeStateProperty>();
-            string outcome = ClassifyOutcome(state, ref passed, ref failed, ref skipped, ref timedout, ref errored);
+            CountOutcome(r.Outcome, ref passed, ref failed, ref skipped, ref timedout, ref errored);
+            totalDuration += r.Duration;
 
-            TimingProperty? timing = node.Properties.SingleOrDefault<TimingProperty>();
-            TimeSpan duration = timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
-            totalDuration += duration;
-
-            (string? className, string? methodName) = GetClassAndMethodName(node);
-
-            string? errorMessage = state.Explanation;
-            string? stackTrace = null;
-            string? exceptionType = null;
-            Exception? exception = state switch
-            {
-                FailedTestNodeStateProperty f => f.Exception,
-                ErrorTestNodeStateProperty e => e.Exception,
-                TimeoutTestNodeStateProperty t => t.Exception,
-                _ => null,
-            };
-
-            if (exception is not null)
-            {
-                errorMessage ??= exception.Message;
-                stackTrace = exception.StackTrace;
-                exceptionType = exception.GetType().FullName;
-            }
-
-            string? stdout = node.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
-            string? stderr = node.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
-
-            string uid = node.Uid.Value;
-            int attemptOf = countByUid[uid];
-            int attemptIndex = emittedByUid.TryGetValue(uid, out int alreadyEmitted) ? alreadyEmitted + 1 : 1;
-            emittedByUid[uid] = attemptIndex;
+            int attemptOf = countByUid[r.Uid];
+            int attemptIndex = emittedByUid.TryGetValue(r.Uid, out int alreadyEmitted) ? alreadyEmitted + 1 : 1;
+            emittedByUid[r.Uid] = attemptIndex;
 
             sb.Append('{');
-            AppendStringPair(sb, "uid", uid);
+            AppendNumberPair(sb, "rowKey", i.ToString(CultureInfo.InvariantCulture));
             sb.Append(',');
-            AppendStringPair(sb, "displayName", node.DisplayName);
+            AppendStringPair(sb, "uid", r.Uid);
             sb.Append(',');
-            AppendStringPair(sb, "outcome", outcome);
+            AppendStringPair(sb, "displayName", r.DisplayName);
             sb.Append(',');
-            AppendNumberPair(sb, "durationMs", duration.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture));
+            AppendStringPair(sb, "outcome", r.Outcome);
+            sb.Append(',');
+            AppendNumberPair(sb, "durationMs", r.Duration.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture));
 
             if (attemptOf > 1)
             {
@@ -247,84 +257,81 @@ internal sealed class HtmlReportEngine
                 AppendNumberPair(sb, "attemptOf", attemptOf.ToString(CultureInfo.InvariantCulture));
             }
 
-            if (timing is not null)
+            if (r.StartTime is { } startTime)
             {
                 sb.Append(',');
-                AppendStringPair(sb, "startTime", timing.GlobalTiming.StartTime.ToString("O", CultureInfo.InvariantCulture));
-                sb.Append(',');
-                AppendStringPair(sb, "endTime", timing.GlobalTiming.EndTime.ToString("O", CultureInfo.InvariantCulture));
+                AppendStringPair(sb, "startTime", startTime.ToString("O", CultureInfo.InvariantCulture));
             }
 
-            if (className is not null)
+            if (r.EndTime is { } endTime)
             {
                 sb.Append(',');
-                AppendStringPair(sb, "className", className);
+                AppendStringPair(sb, "endTime", endTime.ToString("O", CultureInfo.InvariantCulture));
             }
 
-            if (methodName is not null)
+            if (r.ClassName is not null)
             {
                 sb.Append(',');
-                AppendStringPair(sb, "methodName", methodName);
+                AppendStringPair(sb, "className", r.ClassName);
             }
 
-            // Traits / categories: every TestMetadataProperty becomes a {key, value} entry.
-            // VSTest categories appear as TestMetadataProperty(category, "") and arbitrary
-            // traits appear as TestMetadataProperty(key, value).
-            bool firstTrait = true;
-            foreach (TestMetadataProperty meta in node.Properties.OfType<TestMetadataProperty>())
+            if (r.MethodName is not null)
             {
-                if (firstTrait)
+                sb.Append(',');
+                AppendStringPair(sb, "methodName", r.MethodName);
+            }
+
+            if (r.Traits is { Count: > 0 })
+            {
+                sb.Append(',');
+                AppendKey(sb, "traits");
+                sb.Append('[');
+                for (int t = 0; t < r.Traits.Count; t++)
                 {
+                    if (t > 0)
+                    {
+                        sb.Append(',');
+                    }
+
+                    KeyValuePair<string, string> trait = r.Traits[t];
+                    sb.Append('{');
+                    AppendStringPair(sb, "key", trait.Key);
                     sb.Append(',');
-                    AppendKey(sb, "traits");
-                    sb.Append('[');
-                    firstTrait = false;
-                }
-                else
-                {
-                    sb.Append(',');
+                    AppendStringPair(sb, "value", trait.Value);
+                    sb.Append('}');
                 }
 
-                sb.Append('{');
-                AppendStringPair(sb, "key", meta.Key);
-                sb.Append(',');
-                AppendStringPair(sb, "value", meta.Value);
-                sb.Append('}');
-            }
-
-            if (!firstTrait)
-            {
                 sb.Append(']');
             }
 
-            if (errorMessage is not null)
+            if (r.ErrorMessage is not null)
             {
                 sb.Append(',');
-                AppendTruncatedStringPair(sb, "errorMessage", errorMessage, MaxMessageLength);
+                AppendStringPair(sb, "errorMessage", r.ErrorMessage);
             }
 
-            if (exceptionType is not null)
+            if (r.ExceptionType is not null)
             {
                 sb.Append(',');
-                AppendStringPair(sb, "exceptionType", exceptionType);
+                AppendStringPair(sb, "exceptionType", r.ExceptionType);
             }
 
-            if (stackTrace is not null)
+            if (r.StackTrace is not null)
             {
                 sb.Append(',');
-                AppendTruncatedStringPair(sb, "stackTrace", stackTrace, MaxStackTraceLength);
+                AppendStringPair(sb, "stackTrace", r.StackTrace);
             }
 
-            if (stdout is not null)
+            if (r.StandardOutput is not null)
             {
                 sb.Append(',');
-                AppendTruncatedStringPair(sb, "standardOutput", stdout, MaxStandardStreamLength);
+                AppendStringPair(sb, "standardOutput", r.StandardOutput);
             }
 
-            if (stderr is not null)
+            if (r.StandardError is not null)
             {
                 sb.Append(',');
-                AppendTruncatedStringPair(sb, "standardError", stderr, MaxStandardStreamLength);
+                AppendStringPair(sb, "standardError", r.StandardError);
             }
 
             sb.Append('}');
@@ -354,55 +361,17 @@ internal sealed class HtmlReportEngine
         return sb.ToString();
     }
 
-    private static string ClassifyOutcome(
-        TestNodeStateProperty state,
-        ref int passed,
-        ref int failed,
-        ref int skipped,
-        ref int timedout,
-        ref int errored)
+    private static void CountOutcome(string outcome, ref int passed, ref int failed, ref int skipped, ref int timedout, ref int errored)
     {
-        switch (state)
+        switch (outcome)
         {
-            case PassedTestNodeStateProperty:
-                passed++;
-                return "passed";
-            case SkippedTestNodeStateProperty:
-                skipped++;
-                return "skipped";
-            case TimeoutTestNodeStateProperty:
-                timedout++;
-                return "timedOut";
-            case ErrorTestNodeStateProperty:
-                errored++;
-                return "errored";
-            case FailedTestNodeStateProperty:
-                failed++;
-                return "failed";
-            default:
-                if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, state.GetType()) >= 0)
-                {
-                    failed++;
-                    return "failed";
-                }
-
-                throw ApplicationStateGuard.Unreachable();
+            case "passed": passed++; break;
+            case "failed": failed++; break;
+            case "skipped": skipped++; break;
+            case "timedOut": timedout++; break;
+            case "errored": errored++; break;
+            default: throw ApplicationStateGuard.Unreachable();
         }
-    }
-
-    private static (string? ClassName, string? MethodName) GetClassAndMethodName(TestNode node)
-    {
-        TestMethodIdentifierProperty? identifier = node.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
-        if (identifier is null)
-        {
-            return (null, null);
-        }
-
-        string className = RoslynString.IsNullOrEmpty(identifier.Namespace)
-            ? identifier.TypeName
-            : $"{identifier.Namespace}.{identifier.TypeName}";
-
-        return (className, identifier.MethodName);
     }
 
     // ------------------------------------------------------------------
@@ -431,20 +400,6 @@ internal sealed class HtmlReportEngine
     {
         AppendKey(sb, key);
         sb.Append(number);
-    }
-
-    private static void AppendTruncatedStringPair(StringBuilder sb, string key, string value, int maxLength)
-    {
-        AppendKey(sb, key);
-        if (value.Length <= maxLength)
-        {
-            AppendString(sb, value);
-        }
-        else
-        {
-            string truncated = value.Substring(0, maxLength) + $"\n…[truncated, original length: {value.Length}]";
-            AppendString(sb, truncated);
-        }
     }
 
     private static void AppendString(StringBuilder sb, string value)
