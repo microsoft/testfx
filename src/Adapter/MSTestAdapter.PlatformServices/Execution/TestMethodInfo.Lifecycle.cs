@@ -38,6 +38,8 @@ internal partial class TestMethodInfo
         _isTestCleanupInvoked = true;
         MethodInfo? testCleanupMethod = Parent.TestCleanupMethod;
         Exception? testCleanupException;
+        TestFailedException? globalTestCleanupException = null;
+        MethodInfo? globalTestCleanupFailingMethod = null;
         try
         {
             try
@@ -79,13 +81,27 @@ internal partial class TestMethodInfo
 
                 foreach ((MethodInfo method, TimeoutInfo? timeoutInfo) in Parent.Parent.GlobalTestCleanups)
                 {
-                    await InvokeGlobalCleanupMethodAsync(method, timeoutInfo, timeoutTokenSource).ConfigureAwait(false);
+                    globalTestCleanupException = await InvokeGlobalCleanupMethodAsync(method, timeoutInfo, timeoutTokenSource).ConfigureAwait(false);
+                    if (globalTestCleanupException is not null)
+                    {
+                        // Stop on first global cleanup failure, mirroring the local test cleanup loop above.
+                        globalTestCleanupFailingMethod = method;
+                        break;
+                    }
                 }
             }
         }
         catch (Exception ex)
         {
             testCleanupException = ex;
+        }
+
+        // If no earlier cleanup failure was recorded but a global test cleanup failed, surface it
+        // so the wrapping logic below produces a TestFailedException with the per-method message.
+        if (testCleanupException is null && globalTestCleanupException is not null)
+        {
+            testCleanupException = globalTestCleanupException;
+            testCleanupMethod = globalTestCleanupFailingMethod;
         }
 
         // If testCleanup was successful, then don't do anything

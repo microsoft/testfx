@@ -78,7 +78,14 @@ internal partial class TestMethodInfo
                 // After that, we invoke local cleanups (including Dispose) and finally global cleanups at last.
                 foreach ((MethodInfo method, TimeoutInfo? timeoutInfo) in Parent.Parent.GlobalTestInitializations)
                 {
-                    await InvokeGlobalInitializeMethodAsync(method, timeoutInfo, timeoutTokenSource).ConfigureAwait(false);
+                    TestFailedException? globalTestInitException = await InvokeGlobalInitializeMethodAsync(method, timeoutInfo, timeoutTokenSource).ConfigureAwait(false);
+                    if (globalTestInitException is not null)
+                    {
+                        // The returned TestFailedException already carries the per-method timeout/cancellation
+                        // message produced by FixtureMethodRunner; throwing it lets the outer catch record it
+                        // as the test failure (HandleMethodException returns TestFailedException instances as-is).
+                        throw globalTestInitException;
+                    }
                 }
 
                 // TODO remove dry violation with TestMethodRunner
