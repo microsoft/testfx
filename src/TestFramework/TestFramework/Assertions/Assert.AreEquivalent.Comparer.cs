@@ -205,6 +205,7 @@ public sealed partial class Assert
             }
             catch (TargetInvocationException tie)
             {
+                ThrowIfAssertException(tie.InnerException);
                 return EquivalenceMismatch.DictionaryAccessFailure(path, isExpected, tie.InnerException ?? tie);
             }
             catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
@@ -228,6 +229,7 @@ public sealed partial class Assert
                     }
                     catch (TargetInvocationException tie)
                     {
+                        ThrowIfAssertException(tie.InnerException);
                         return EquivalenceMismatch.DictionaryAccessFailure(path, isExpected, tie.InnerException ?? tie);
                     }
                     catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
@@ -258,6 +260,7 @@ public sealed partial class Assert
             }
             catch (TargetInvocationException tie)
             {
+                ThrowIfAssertException(tie.InnerException);
                 result = default!;
                 return EquivalenceMismatch.DictionaryAccessFailure(path, isExpected, tie.InnerException ?? tie);
             }
@@ -388,6 +391,7 @@ public sealed partial class Assert
                 }
                 catch (TargetInvocationException ex)
                 {
+                    ThrowIfAssertException(ex.InnerException);
                     return EquivalenceMismatch.MemberAccessFailure(childPath, isExpected: true, ex.InnerException ?? ex);
                 }
                 catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
@@ -401,6 +405,7 @@ public sealed partial class Assert
                 }
                 catch (TargetInvocationException ex)
                 {
+                    ThrowIfAssertException(ex.InnerException);
                     return EquivalenceMismatch.MemberAccessFailure(childPath, isExpected: false, ex.InnerException ?? ex);
                 }
                 catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
@@ -427,6 +432,7 @@ public sealed partial class Assert
             }
             catch (TargetInvocationException tie)
             {
+                ThrowIfAssertException(tie.InnerException);
                 enumerator = default!;
                 return EquivalenceMismatch.EnumerationFailure(path, isExpected, tie.InnerException ?? tie);
             }
@@ -446,6 +452,7 @@ public sealed partial class Assert
             }
             catch (TargetInvocationException tie)
             {
+                ThrowIfAssertException(tie.InnerException);
                 hasNext = false;
                 return EquivalenceMismatch.EnumerationFailure(path, isExpected, tie.InnerException ?? tie);
             }
@@ -465,6 +472,7 @@ public sealed partial class Assert
             }
             catch (TargetInvocationException tie)
             {
+                ThrowIfAssertException(tie.InnerException);
                 current = default;
                 return EquivalenceMismatch.EnumerationFailure(path, isExpected, tie.InnerException ?? tie);
             }
@@ -558,6 +566,7 @@ public sealed partial class Assert
             }
             catch (TargetInvocationException ex)
             {
+                ThrowIfAssertException(ex.InnerException);
                 thrown = ex.InnerException ?? ex;
                 return IEquatableOutcome.Threw;
             }
@@ -688,6 +697,19 @@ public sealed partial class Assert
                 string? fullName = t.FullName;
                 return fullName is "System.DateOnly" or "System.TimeOnly" or "System.Half" or "System.Int128" or "System.UInt128";
             });
+
+        /// <summary>
+        /// Rethrows a framework assertion exception (e.g., from a user-defined property getter or
+        /// IEquatable.Equals that called <c>Assert.Fail</c>) unwrapped from <see cref="TargetInvocationException"/>,
+        /// so user assertions propagate untouched instead of being rewritten as a structured equivalence failure.
+        /// </summary>
+        private static void ThrowIfAssertException(Exception? inner)
+        {
+            if (inner is UnitTestAssertException assertEx)
+            {
+                throw assertEx;
+            }
+        }
 
         private static bool TryCreateDictionaryView(object value, out DictionaryView? view)
         {

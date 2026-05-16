@@ -293,6 +293,20 @@ public partial class AssertTests : TestContainer
             .And.Message.Should().Contain("Mismatch at 'BadProperty'").And.Contain("InvalidOperationException");
     }
 
+    public void AreEquivalent_MemberGetterCallsAssertFail_PropagatesAsAssertFailedException()
+    {
+        // A property getter that calls Assert.Fail() throws AssertFailedException wrapped in a
+        // TargetInvocationException by Reflection. The equivalence comparer must NOT rewrite the
+        // framework exception as a structured "comparison failure" — it must propagate so the user's
+        // assertion surfaces with its original message.
+        AssertFailingGetter a = new();
+        AssertFailingGetter b = new();
+        Action act = () => Assert.AreEquivalent(a, b);
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("*nested-assert-fail*")
+            .And.Message.Should().NotContain("Mismatch at");
+    }
+
     public void AreEquivalent_IEquatableThrows_FailsWithExpectedDiagnostic()
     {
         ThrowingEquatable a = new();
@@ -714,6 +728,10 @@ public partial class AssertTests : TestContainer
 
     public void AreEquivalent_NewShadowedProperty_UsesMostDerivedDeclaration()
     {
+        // The derived class shadows the base `int Value` with `string Value`.
+        // If the comparer ever picked the base accessor, it would compare base.Value (always 0 on both
+        // sides) and silently pass — masking the genuine derived-value mismatch. The expected outcome
+        // is a failure that mentions the derived string values.
         var expected = new ShadowedDerived { Value = "derived-expected" };
         var actual = new ShadowedDerived { Value = "derived-actual" };
 
@@ -722,15 +740,18 @@ public partial class AssertTests : TestContainer
             .WithMessage("*Value*derived-expected*derived-actual*");
     }
 
-    public void AreEquivalent_NewShadowedProperty_EquivalentDerivedValues_Passes()
+    public void AreEquivalent_NewShadowedProperty_SameType_DetectsDerivedMismatch()
     {
-        var expected = new ShadowedDerived { Value = "same" };
-        var actual = new ShadowedDerived { Value = "same" };
+        // Same-type `new` shadowing (int → int with different defaults). If the comparer picked the
+        // base accessor, both sides would resolve to the base default (100) and the mismatch on the
+        // derived value (200 vs 999) would be silently swallowed. The expected outcome is a failure
+        // that mentions the derived integers.
+        var expected = new SameTypeShadowDerived { Value = 200 };
+        var actual = new SameTypeShadowDerived { Value = 999 };
 
-        // The base sets BaseValueAsString = "base"; the derived `new` Value shadows it as a string.
-        // If the comparer ever picked the base accessor for one side, the comparison would compare
-        // the string "base" against the derived `Value` and fail.
-        Assert.AreEquivalent(expected, actual);
+        Action act = () => Assert.AreEquivalent(expected, actual);
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("*Value*200*999*");
     }
 
     private class ShadowedBase
@@ -741,6 +762,16 @@ public partial class AssertTests : TestContainer
     private sealed class ShadowedDerived : ShadowedBase
     {
         public new string Value { get; set; } = "default";
+    }
+
+    private class SameTypeShadowBase
+    {
+        public int Value { get; set; } = 100;
+    }
+
+    private sealed class SameTypeShadowDerived : SameTypeShadowBase
+    {
+        public new int Value { get; set; } = 200;
     }
 
     private sealed class Person
@@ -911,6 +942,18 @@ public partial class AssertTests : TestContainer
     private sealed class ThrowingGetter
     {
         public string BadProperty => throw new InvalidOperationException("nope");
+    }
+
+    private sealed class AssertFailingGetter
+    {
+        public string Value
+        {
+            get
+            {
+                Assert.Fail("nested-assert-fail");
+                return string.Empty;
+            }
+        }
     }
 
     private sealed class ThrowingEquatable : IEquatable<ThrowingEquatable>
