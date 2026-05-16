@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
@@ -48,6 +49,17 @@ internal class TypeEnumerator
         {
             return null;
         }
+
+        // Track class-level attributes for telemetry (read Current per call so a session reset
+        // between TypeEnumerator construction and use cannot cause writes to land on an
+        // orphaned collector).
+#if !WINDOWS_UWP && !WIN_UI
+        if (Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector.Current is { } telemetryDataCollector)
+        {
+            Attribute[] classAttributes = ReflectHelper.GetCustomAttributesCached(_type);
+            telemetryDataCollector.TrackDiscoveredClass(classAttributes);
+        }
+#endif
 
         // If test class is valid, then get the tests
         return GetTests(warnings);
@@ -124,29 +136,41 @@ internal class TypeEnumerator
         // null if the current instance represents a generic type parameter.
         DebugEx.Assert(_type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
 
-        ManagedNameHelper.GetManagedNameAndHierarchy(method, out string managedType, out string managedMethod, out string?[] hierarchyValues);
-        var testMethod = new TestMethod(managedType, managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, null, string.Join(",", method.GetParameters().Select(p => p.ParameterType.ToString())))
+        // Note: We pass _type.FullName (the closed-generic CLR name) as FullClassName because TypeCache.LoadType
+        // calls assembly.GetType(FullClassName) which requires the closed-generic form to instantiate the type.
+        // The managed type name (open-generic form, used for VSTest ManagedType property) is derived from
+        // FullClassName by TestMethod.ManagedTypeName via stripping the generic argument list.
+        ManagedNameHelper.GetManagedNameAndHierarchy(method, out _, out string managedMethod, out string?[] hierarchyValues);
+        ParameterInfo[] parameters = method.GetParameters();
+        var testMethod = new TestMethod(managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, null,
+            parameters.Length == 0 ? string.Empty : string.Join(",", Array.ConvertAll(parameters, static p => p.ParameterType.ToString())))
         {
             MethodInfo = method,
         };
 
         // TODO: For every test method in a class, we are asking reflect helper multiple times for the same
         // information (like test categories, traits, deployment items) which is not optimal.
+        IReflectionOperations reflectionOperations = PlatformServiceProvider.Instance.ReflectionOperations;
         var testElement = new UnitTestElement(testMethod)
         {
-            TestCategory = _reflectHelper.GetTestCategories(method, _type),
+            TestCategory = reflectionOperations.GetTestCategories(method, _type),
             DoNotParallelize = classDisablesParallelization || _reflectHelper.IsAttributeDefined<DoNotParallelizeAttribute>(method),
 #if !WINDOWS_UWP && !WIN_UI
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
 #endif
-            Traits = [.. _reflectHelper.GetTestPropertiesAsTraits(method)],
+            Traits = [.. reflectionOperations.GetTestPropertiesAsTraits(method)],
         };
 
-        Attribute[] attributes = _reflectHelper.GetCustomAttributesCached(method);
+        Attribute[] attributes = reflectionOperations.GetCustomAttributesCached(method);
+#if !WINDOWS_UWP && !WIN_UI
+        Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector.Current?.TrackDiscoveredMethod(attributes);
+#endif
         TestMethodAttribute? testMethodAttribute = null;
+        List<string>? workItemIds = null;
 
         // Backward looping for backcompat. This used to be calls to _reflectHelper.GetFirstAttributeOrDefault
         // So, to make sure the first attribute always wins, we loop from end to start.
+        // WorkItemAttribute is also collected here to avoid a second pass with OfType + Any + Select.
         for (int i = attributes.Length - 1; i >= 0; i--)
         {
             if (attributes[i] is TestMethodAttribute tma)
@@ -157,12 +181,16 @@ internal class TypeEnumerator
             {
                 testElement.Priority = priorityAttribute.Priority;
             }
+            else if (attributes[i] is WorkItemAttribute workItem)
+            {
+                (workItemIds ??= []).Add(workItem.Id.ToString(CultureInfo.InvariantCulture));
+            }
         }
 
-        IEnumerable<WorkItemAttribute> workItemAttributes = attributes.OfType<WorkItemAttribute>();
-        if (workItemAttributes.Any())
+        if (workItemIds is not null)
         {
-            testElement.WorkItemIds = [.. workItemAttributes.Select(x => x.Id.ToString(CultureInfo.InvariantCulture))];
+            workItemIds.Reverse();
+            testElement.WorkItemIds = [.. workItemIds];
         }
 
         // In production, we always have a TestMethod attribute because GetTestFromMethod is called under IsValidTestMethod

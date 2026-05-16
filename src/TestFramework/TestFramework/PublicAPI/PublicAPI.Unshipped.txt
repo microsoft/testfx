@@ -1,1 +1,8 @@
 #nullable enable
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Scope() -> System.IDisposable!
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ActualText.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ExpectedText.get -> string?
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEquivalent<T>(T? expected, T? actual, bool strict, string? message = "", string! expectedExpression = "", string! actualExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEquivalent<T>(T? expected, T? actual, string? message = "", string! expectedExpression = "", string! actualExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEquivalent<T>(T? notExpected, T? actual, bool strict, string? message = "", string! notExpectedExpression = "", string! actualExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEquivalent<T>(T? notExpected, T? actual, string? message = "", string! notExpectedExpression = "", string! actualExpression = "") -> void

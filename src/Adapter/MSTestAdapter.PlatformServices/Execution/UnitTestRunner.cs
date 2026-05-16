@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
 using System.Security;
+#endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -18,7 +20,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// The runner that runs a single unit test. Also manages the assembly and class cleanup methods at the end of the run.
 /// </summary>
-internal sealed class UnitTestRunner : MarshalByRefObject
+internal sealed class UnitTestRunner
+#if NETFRAMEWORK
+    : MarshalByRefObject
+#endif
 {
     private readonly TypeCache _typeCache;
     private readonly ClassCleanupManager _classCleanupManager;
@@ -75,6 +80,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         => PlatformServiceProvider.Instance.TestRunCancellationToken?.Cancel();
 #pragma warning restore CA1822 // Mark members as static
 
+#if NETFRAMEWORK
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>
@@ -82,10 +88,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// The <see cref="object"/>.
     /// </returns>
     [SecurityCritical]
-#if NET5_0_OR_GREATER
-    [Obsolete]
+    public override object? InitializeLifetimeService() => null;
 #endif
-    public override object InitializeLifetimeService() => null!;
 
     // Task cannot cross app domains.
     // For now, TestExecutionManager will call this sync method which is hacky.
@@ -101,8 +105,15 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// <returns> The <see cref="TestResult"/>. </returns>
     internal async Task<TestResult[]> RunSingleTestAsync(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
     {
-        Ensure.NotNull(unitTestElement);
-        Ensure.NotNull(testContextProperties);
+        if (unitTestElement is null)
+        {
+            throw new ArgumentNullException(nameof(unitTestElement));
+        }
+
+        if (testContextProperties is null)
+        {
+            throw new ArgumentNullException(nameof(testContextProperties));
+        }
 
         TestMethod testMethod = unitTestElement.TestMethod;
         ITestContext? testContextForTestExecution = null;
@@ -244,15 +255,11 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
     private static async Task<TestResult> RunAssemblyInitializeIfNeededAsync(TestMethodInfo testMethodInfo, ITestContext testContext)
     {
-        var result = new TestResult { Outcome = UnitTestOutcome.Passed };
+        TestResult? result = null;
 
         try
         {
-            await testMethodInfo.Parent.Parent.RunAssemblyInitializeAsync(testContext.Context).ConfigureAwait(false);
-        }
-        catch (TestFailedException ex)
-        {
-            result = new TestResult { TestFailureException = ex, Outcome = ex.Outcome };
+            result = await testMethodInfo.Parent.Parent.RunAssemblyInitializeAsync(testContext.Context).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -262,9 +269,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         finally
         {
             var testContextImpl = testContext.Context as TestContextImplementation;
-            result.LogOutput = testContextImpl?.GetOut();
-            result.LogError = testContextImpl?.GetErr();
-            result.DebugTrace = testContextImpl?.GetTrace();
+            result!.LogOutput = testContextImpl?.GetAndClearOutput();
+            result.LogError = testContextImpl?.GetAndClearError();
+            result.DebugTrace = testContextImpl?.GetAndClearTrace();
             result.TestContextMessages = testContext.GetAndClearDiagnosticMessages();
         }
 
@@ -273,21 +280,21 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
     private static async Task<TestResult?> RunAssemblyCleanupAsync(ITestContext testContext, TypeCache typeCache, TestResult[] results)
     {
+        var testContextImpl = testContext as TestContextImplementation;
         IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
         foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
         {
             TestFailedException? ex = await assemblyInfo.ExecuteAssemblyCleanupAsync(testContext.Context).ConfigureAwait(false);
 
-            var testContextImpl = testContext as TestContextImplementation;
             if (ex is not null)
             {
                 return new TestResult()
                 {
                     Outcome = UnitTestOutcome.Failed,
                     TestFailureException = ex,
-                    LogOutput = testContextImpl?.GetOut(),
-                    LogError = testContextImpl?.GetErr(),
-                    DebugTrace = testContextImpl?.GetTrace(),
+                    LogOutput = testContextImpl?.GetAndClearOutput(),
+                    LogError = testContextImpl?.GetAndClearError(),
+                    DebugTrace = testContextImpl?.GetAndClearTrace(),
                     TestContextMessages = testContext.GetAndClearDiagnosticMessages(),
                 };
             }
@@ -295,9 +302,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             if (results.Length > 0)
             {
                 TestResult lastResult = results[results.Length - 1];
-                lastResult.LogOutput += testContextImpl?.GetOut();
-                lastResult.LogError += testContextImpl?.GetErr();
-                lastResult.DebugTrace += testContextImpl?.GetTrace();
+                lastResult.LogOutput += testContextImpl?.GetAndClearOutput();
+                lastResult.LogError += testContextImpl?.GetAndClearError();
+                lastResult.DebugTrace += testContextImpl?.GetAndClearTrace();
                 lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
             }
         }
@@ -318,32 +325,25 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         [NotNullWhen(false)] out TestResult[]? notRunnableResult)
     {
         // If the specified TestMethod could not be found, return a NotFound result.
-        if (testMethodInfo == null)
+        if (testMethodInfo is null)
         {
-            {
-                notRunnableResult =
-                [
-                    new TestResult
-                    {
-                        Outcome = UnitTestOutcome.NotFound,
-                        IgnoreReason = string.Format(CultureInfo.CurrentCulture, Resource.TestNotFound, testMethod.Name),
-                    },
-                ];
-                return false;
-            }
+            notRunnableResult =
+            [
+                new TestResult
+                {
+                    Outcome = UnitTestOutcome.NotFound,
+                    IgnoreReason = string.Format(CultureInfo.CurrentCulture, Resource.TestNotFound, testMethod.Name),
+                },
+            ];
+            return false;
         }
 
         bool shouldIgnoreClass = testMethodInfo.Parent.ClassType.IsIgnored(out string? ignoreMessageOnClass);
         bool shouldIgnoreMethod = testMethodInfo.MethodInfo.IsIgnored(out string? ignoreMessageOnMethod);
 
-        string? ignoreMessage = ignoreMessageOnClass;
-        if (StringEx.IsNullOrEmpty(ignoreMessage) && shouldIgnoreMethod)
-        {
-            ignoreMessage = ignoreMessageOnMethod;
-        }
-
         if (shouldIgnoreClass || shouldIgnoreMethod)
         {
+            string? ignoreMessage = shouldIgnoreMethod && StringEx.IsNullOrEmpty(ignoreMessageOnClass) ? ignoreMessageOnMethod : ignoreMessageOnClass;
             notRunnableResult =
                 [TestResult.CreateIgnoredResult(ignoreMessage)];
             return false;

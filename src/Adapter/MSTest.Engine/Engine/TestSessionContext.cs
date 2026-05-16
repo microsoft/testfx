@@ -12,8 +12,11 @@ internal sealed class TestSessionContext : ITestSessionContext
     private readonly SessionUid _sessionUid;
     private readonly Func<IData, Task> _publishDataAsync;
 
-    public TestSessionContext(IConfiguration configuration, ITestFixtureManager _, ITestArgumentsManager _2,
-        SessionUid sessionUid, Func<IData, Task> publishDataAsync, CancellationToken cancellationToken)
+    public TestSessionContext(
+        IConfiguration configuration,
+        SessionUid sessionUid,
+        Func<IData, Task> publishDataAsync,
+        CancellationToken cancellationToken)
     {
         Configuration = configuration;
 

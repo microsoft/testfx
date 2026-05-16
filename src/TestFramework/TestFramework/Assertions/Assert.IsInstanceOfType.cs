@@ -38,8 +38,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsInstanceOfTypeFailed(_value, _expectedType, _builder.ToString());
+                ReportAssertIsInstanceOfTypeFailed(_value, _expectedType, _builder.ToString(), valueExpression);
             }
         }
 
@@ -98,8 +97,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
+                ReportAssertIsInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString(), valueExpression);
             }
         }
 
@@ -160,8 +158,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsNotInstanceOfTypeFailed(_value, _wrongType, _builder.ToString());
+                ReportAssertIsNotInstanceOfTypeFailed(_value, _wrongType, _builder.ToString(), valueExpression);
             }
         }
 
@@ -220,8 +217,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsNotInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
+                ReportAssertIsNotInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString(), valueExpression);
             }
         }
 
@@ -290,9 +286,11 @@ public sealed partial class Assert
     /// </exception>
     public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsInstanceOfType");
+
         if (IsInstanceOfTypeFailing(value, expectedType))
         {
-            ThrowAssertIsInstanceOfTypeFailed(value, expectedType, BuildUserMessageForValueExpression(message, valueExpression));
+            ReportAssertIsInstanceOfTypeFailed(value, expectedType, message, valueExpression);
         }
     }
 
@@ -300,8 +298,11 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, [InterpolatedStringHandlerArgument(nameof(value), nameof(expectedType))] ref AssertIsInstanceOfTypeInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
-        => message.ComputeAssertion(valueExpression);
+#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Deliberately keeping [NotNull] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsInstanceOfType");
+        message.ComputeAssertion(valueExpression);
+    }
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <summary>
@@ -320,8 +321,9 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static T IsInstanceOfType<T>([NotNull] object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertGenericIsInstanceOfTypeInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
+#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Deliberately keeping [NotNull] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsInstanceOfType");
         message.ComputeAssertion(valueExpression);
         return (T)value!;
     }
@@ -331,20 +333,25 @@ public sealed partial class Assert
         => expectedType == null || value == null || !expectedType.IsInstanceOfType(value);
 
     [DoesNotReturn]
-    private static void ThrowAssertIsInstanceOfTypeFailed(object? value, Type? expectedType, string userMessage)
+    private static void ReportAssertIsInstanceOfTypeFailed(object? value, Type? expectedType, string? userMessage, string valueExpression)
     {
-        string finalMessage = userMessage;
-        if (expectedType is not null && value is not null)
+        StructuredAssertionMessage msg = expectedType is null
+            ? new("Cannot check type because the expected type argument is null.")
+            : new($"Expected value to be of type {expectedType.Name} (or derived).");
+        msg.WithUserMessage(userMessage);
+
+        if (expectedType is not null)
         {
-            finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.IsInstanceOfFailMsg,
-                userMessage,
-                expectedType.ToString(),
-                value.GetType().ToString());
+            string actualTypeText = value?.GetType().ToString() ?? "null";
+            EvidenceBlock evidence = EvidenceBlock.Create()
+                .AddLine("expected type:", $"{expectedType} (or derived)")
+                .AddLine(value is null ? "actual:" : "actual type:", actualTypeText);
+            msg.WithEvidence(evidence)
+               .WithExpectedAndActual($"{expectedType} (or derived)", actualTypeText);
         }
 
-        ThrowAssertFailed("Assert.IsInstanceOfType", finalMessage);
+        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsInstanceOfType", valueExpression, "<value>"));
+        ReportAssertFailed(msg);
     }
 
     /// <summary>
@@ -374,9 +381,11 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotInstanceOfType");
+
         if (IsNotInstanceOfTypeFailing(value, wrongType))
         {
-            ThrowAssertIsNotInstanceOfTypeFailed(value, wrongType, BuildUserMessageForValueExpression(message, valueExpression));
+            ReportAssertIsNotInstanceOfTypeFailed(value, wrongType, message, valueExpression);
         }
     }
 
@@ -385,7 +394,10 @@ public sealed partial class Assert
     public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, [InterpolatedStringHandlerArgument(nameof(value), nameof(wrongType))] ref AssertIsNotInstanceOfTypeInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
-        => message.ComputeAssertion(valueExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotInstanceOfType");
+        message.ComputeAssertion(valueExpression);
+    }
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <summary>
@@ -401,7 +413,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsNotInstanceOfType<T>(object? value, [InterpolatedStringHandlerArgument(nameof(value))] AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(valueExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotInstanceOfType");
+        message.ComputeAssertion(valueExpression);
+    }
 
     private static bool IsNotInstanceOfTypeFailing(object? value, [NotNullWhen(false)] Type? wrongType)
         => wrongType is null ||
@@ -409,19 +424,24 @@ public sealed partial class Assert
             (value is not null && wrongType.IsInstanceOfType(value));
 
     [DoesNotReturn]
-    private static void ThrowAssertIsNotInstanceOfTypeFailed(object? value, Type? wrongType, string userMessage)
+    private static void ReportAssertIsNotInstanceOfTypeFailed(object? value, Type? wrongType, string? userMessage, string valueExpression)
     {
-        string finalMessage = userMessage;
+        StructuredAssertionMessage msg = wrongType is null
+            ? new("Cannot check type because the not-expected type argument is null.")
+            : new($"Expected value to not be of type {wrongType.Name} (or derived).");
+        msg.WithUserMessage(userMessage);
+
         if (wrongType is not null)
         {
-            finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.IsNotInstanceOfFailMsg,
-                userMessage,
-                wrongType.ToString(),
-                value!.GetType().ToString());
+            string actualTypeText = value?.GetType().ToString() ?? "null";
+            EvidenceBlock evidence = EvidenceBlock.Create()
+                .AddLine("not expected type:", $"{wrongType} (or derived)")
+                .AddLine("actual type:", actualTypeText);
+            msg.WithEvidence(evidence)
+               .WithExpectedAndActual($"{wrongType} (or derived)", actualTypeText);
         }
 
-        ThrowAssertFailed("Assert.IsNotInstanceOfType", finalMessage);
+        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotInstanceOfType", valueExpression, "<value>"));
+        ReportAssertFailed(msg);
     }
 }

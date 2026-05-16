@@ -37,7 +37,7 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicatio
     public string Uid => nameof(TrxTestApplicationLifecycleCallbacks);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = ExtensionResources.TrxReportGeneratorDisplayName;
@@ -63,6 +63,7 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicatio
         NamedPipeClient = new NamedPipeClient(namedPipeName, _environment);
         NamedPipeClient.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
         NamedPipeClient.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
+        NamedPipeClient.RegisterSerializer(new TrxStreamLocationRequestSerializer(), typeof(TrxStreamLocationRequest));
         NamedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
 
         // Connect to the named pipe server

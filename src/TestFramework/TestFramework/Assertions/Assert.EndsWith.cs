@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -72,14 +72,33 @@ public sealed partial class Assert
     /// </exception>
     public static void EndsWith([NotNull] string? expectedSuffix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(expectedSuffix))] string expectedSuffixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.EndsWith");
+
         CheckParameterNotNull(value, "Assert.EndsWith", "value");
         CheckParameterNotNull(expectedSuffix, "Assert.EndsWith", "expectedSuffix");
         if (!value.EndsWith(expectedSuffix, comparisonType))
         {
-            string userMessage = BuildUserMessageForExpectedSuffixExpressionAndValueExpression(message, expectedSuffixExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.EndsWithFail, value, expectedSuffix, userMessage);
-            ThrowAssertFailed("Assert.EndsWith", finalMessage);
+            ReportAssertEndsWithFailed(expectedSuffix, value, comparisonType, message, expectedSuffixExpression, valueExpression);
         }
+    }
+
+    [DoesNotReturn]
+    private static void ReportAssertEndsWithFailed(string expectedSuffix, string value, StringComparison comparisonType, string? userMessage, string expectedSuffixExpression, string valueExpression)
+    {
+        string expectedText = AssertionValueRenderer.RenderValue(expectedSuffix);
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected suffix:", expectedText)
+            .AddLine("actual:", actualText)
+            .AddLine("comparison:", comparisonType.ToString());
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.EndsWithFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedText, actualText);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.EndsWith", expectedSuffixExpression, valueExpression, "<expectedSuffix>", "<value>"));
+
+        ReportAssertFailed(structured);
     }
 
     /// <summary>
@@ -146,13 +165,32 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotEndWith([NotNull] string? notExpectedSuffix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(notExpectedSuffix))] string notExpectedSuffixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotEndWith");
+
         CheckParameterNotNull(value, "Assert.DoesNotEndWith", "value");
         CheckParameterNotNull(notExpectedSuffix, "Assert.DoesNotEndWith", "notExpectedSuffix");
         if (value.EndsWith(notExpectedSuffix, comparisonType))
         {
-            string userMessage = BuildUserMessageForNotExpectedSuffixExpressionAndValueExpression(message, notExpectedSuffixExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotEndWithFail, value, notExpectedSuffix, userMessage);
-            ThrowAssertFailed("Assert.DoesNotEndWith", finalMessage);
+            ReportAssertDoesNotEndWithFailed(notExpectedSuffix, value, comparisonType, message, notExpectedSuffixExpression, valueExpression);
         }
+    }
+
+    [DoesNotReturn]
+    private static void ReportAssertDoesNotEndWithFailed(string notExpectedSuffix, string value, StringComparison comparisonType, string? userMessage, string notExpectedSuffixExpression, string valueExpression)
+    {
+        string notExpectedText = AssertionValueRenderer.RenderValue(notExpectedSuffix);
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("unexpected suffix:", notExpectedText)
+            .AddLine("actual:", actualText)
+            .AddLine("comparison:", comparisonType.ToString());
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.DoesNotEndWithFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(notExpectedText, actualText);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.DoesNotEndWith", notExpectedSuffixExpression, valueExpression, "<notExpectedSuffix>", "<value>"));
+
+        ReportAssertFailed(structured);
     }
 }

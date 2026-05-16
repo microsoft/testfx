@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Framework;
 
-internal sealed class TestFixtureManager : ITestFixtureManager
+internal sealed class TestFixtureManager
 {
     private readonly Dictionary<FixtureId, Dictionary<Type, AsyncLazy<object>>> _fixtureInstancesByFixtureId = [];
     private readonly Dictionary<TestNode, FixtureId[]> _fixtureIdsUsedByTestNode = [];
@@ -15,55 +15,7 @@ internal sealed class TestFixtureManager : ITestFixtureManager
     // We use a dictionary as performance improvement because we know that when the registration is complete
     // we will only read the collection (so no need for concurrency handling).
     private readonly Dictionary<FixtureId, CountHolder> _fixtureUses = [];
-    private readonly CancellationToken _cancellationToken;
-    private bool _isRegistrationFrozen;
     private bool _isUsageRegistrationFrozen;
-
-    public TestFixtureManager(CancellationToken cancellationToken)
-        => _cancellationToken = cancellationToken;
-
-    public void RegisterFixture<TFixture>(string fixtureId, Func<TFixture> factory)
-        where TFixture : notnull
-        => TryRegisterFixture(fixtureId, () => Task.FromResult(factory()),
-            () => throw new InvalidOperationException($"Fixture with ID '{fixtureId}' is already registering a fixture of type {typeof(TFixture)}"));
-
-    public void RegisterFixture<TFixture>(string fixtureId, Func<Task<TFixture>> asyncFactory)
-        where TFixture : notnull
-        => TryRegisterFixture(fixtureId, asyncFactory,
-            () => throw new InvalidOperationException($"Fixture with ID '{fixtureId}' is already registering a fixture of type {typeof(TFixture)}"));
-
-    public void TryRegisterFixture<TFixture>(string fixtureId, Func<TFixture> factory)
-        where TFixture : notnull
-        => TryRegisterFixture(fixtureId, () => Task.FromResult(factory()), () => { });
-
-    public void TryRegisterFixture<TFixture>(string fixtureId, Func<Task<TFixture>> asyncFactory)
-        where TFixture : notnull
-        => TryRegisterFixture(fixtureId, asyncFactory, () => { });
-
-    public async Task<TFixture> GetFixtureAsync<TFixture>(string fixtureId)
-        where TFixture : notnull
-    {
-        Ensure.NotNullOrWhiteSpace(fixtureId);
-        if (!_fixtureInstancesByFixtureId.TryGetValue(fixtureId, out Dictionary<Type, AsyncLazy<object>>? fixtureInstancesPerType))
-        {
-            throw new InvalidOperationException($"Fixture with ID '{fixtureId}' is not registered");
-        }
-
-        if (!fixtureInstancesPerType.TryGetValue(typeof(TFixture), out AsyncLazy<object>? fixture))
-        {
-            throw new InvalidOperationException($"Fixture with ID '{fixtureId}' is not registered for type {typeof(TFixture)}");
-        }
-
-        if (!fixture.IsValueCreated || !fixture.Value.IsCompleted)
-        {
-            await fixture.Value.ConfigureAwait(false);
-        }
-
-        // We can safely cast here because we know that the fixture is of type TFixture and is awaited.
-#pragma warning disable VSTHRD103 // Call async methods when in an async method
-        return (TFixture)fixture.Value.Result;
-#pragma warning restore VSTHRD103 // Call async methods when in an async method
-    }
 
     internal void RegisterFixtureUsage(TestNode testNode, string[] fixtureIds)
     {
@@ -89,8 +41,6 @@ internal sealed class TestFixtureManager : ITestFixtureManager
             uses.Value++;
         }
     }
-
-    internal void FreezeRegistration() => _isRegistrationFrozen = true;
 
     internal void FreezeUsageRegistration() => _isUsageRegistrationFrozen = true;
 
@@ -142,48 +92,6 @@ internal sealed class TestFixtureManager : ITestFixtureManager
             {
                 await CleanupAndDisposeFixtureAsync(fixtureId).ConfigureAwait(false);
             }
-        }
-    }
-
-    private void TryRegisterFixture<TFixture>(string fixtureId, Func<Task<TFixture>> asyncFactory, Action onTypeExist)
-        where TFixture : notnull
-    {
-        Ensure.NotNullOrWhiteSpace(fixtureId);
-
-        if (_isRegistrationFrozen)
-        {
-            throw new InvalidOperationException("Cannot register fixture usage after registration is frozen");
-        }
-
-        if (_fixtureInstancesByFixtureId.TryGetValue(fixtureId, out Dictionary<Type, AsyncLazy<object>>? fixtureInstancesPerType))
-        {
-            if (fixtureInstancesPerType.ContainsKey(typeof(TFixture)))
-            {
-                onTypeExist();
-            }
-            else
-            {
-                fixtureInstancesPerType.Add(
-                    typeof(TFixture),
-                    new(async () => await CreateAndInitializeFixtureAsync(asyncFactory, _cancellationToken).ConfigureAwait(false), LazyThreadSafetyMode.ExecutionAndPublication));
-            }
-        }
-        else
-        {
-            _fixtureInstancesByFixtureId.Add(
-                fixtureId,
-                new()
-                {
-                    [typeof(TFixture)] = new(
-                        async () => await CreateAndInitializeFixtureAsync(asyncFactory, _cancellationToken).ConfigureAwait(false),
-                        LazyThreadSafetyMode.ExecutionAndPublication),
-                });
-        }
-
-        static async Task<TFixture> CreateAndInitializeFixtureAsync(Func<Task<TFixture>> asyncFactory, CancellationToken cancellationToken)
-        {
-            TFixture fixture = await asyncFactory().ConfigureAwait(false);
-            return fixture;
         }
     }
 

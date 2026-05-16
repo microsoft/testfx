@@ -17,7 +17,7 @@ public class GenericTestMethodTests : AcceptanceTestBase<GenericTestMethodTests.
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputMatchesRegex(
             """
             failed AMethodWithBadConstraints \(0\) \((\d+s )?\d+ms\)
@@ -78,15 +78,12 @@ public class GenericTestMethodTests : AcceptanceTestBase<GenericTestMethodTests.
             """, RegexOptions.Singleline);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return ("GenericTestMethodTests", "GenericTestMethodTests",
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => ("GenericTestMethodTests", "GenericTestMethodTests",
                 SourceGenericTestMethod
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceGenericTestMethod = """
 #file GenericTestMethodTests.csproj

@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -39,17 +38,15 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
         // messages to Test Explorer as well.
         _serverTestHost = serverTestHost;
 
-        foreach (ServerLogMessage message in _messages)
+        while (_messages.TryTake(out ServerLogMessage? message))
         {
             await LogAsync(message, serverTestHost.ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken).ConfigureAwait(false);
         }
-
-        _messages.Clear();
     }
 
     public string Uid => nameof(ServerModePerCallOutputDevice);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => nameof(ServerModePerCallOutputDevice);
 

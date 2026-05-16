@@ -135,9 +135,6 @@ public class TestAsset : IDisposable
         <add key="dotnet10" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json" />
         <add key="dotnet11" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11/nuget/v3/index.json" />
     </packageSources>
-    <config>
-        <add key="globalPackagesFolder" value=".packages" />
-    </config>
     <packageSourceMapping>
         {publicFeedsMapping}
         <packageSource key="local-nonshipping">

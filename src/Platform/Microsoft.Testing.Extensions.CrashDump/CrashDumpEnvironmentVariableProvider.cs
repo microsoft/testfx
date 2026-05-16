@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
 
@@ -24,7 +23,6 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     private static readonly string[] Prefixes = ["DOTNET_", "COMPlus_"];
     private readonly IConfiguration _configuration;
     private readonly ICommandLineOptions _commandLineOptions;
-    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly CrashDumpConfiguration _crashDumpGeneratorConfiguration;
     private readonly ILogger<CrashDumpEnvironmentVariableProvider> _logger;
 
@@ -33,14 +31,12 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     public CrashDumpEnvironmentVariableProvider(
         IConfiguration configuration,
         ICommandLineOptions commandLineOptions,
-        ITestApplicationModuleInfo testApplicationModuleInfo,
         CrashDumpConfiguration crashDumpGeneratorConfiguration,
         ILoggerFactory loggerFactory)
     {
         _logger = loggerFactory.CreateLogger<CrashDumpEnvironmentVariableProvider>();
         _configuration = configuration;
         _commandLineOptions = commandLineOptions;
-        _testApplicationModuleInfo = testApplicationModuleInfo;
         _crashDumpGeneratorConfiguration = crashDumpGeneratorConfiguration;
     }
 
@@ -48,7 +44,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     public string Uid => nameof(CrashDumpEnvironmentVariableProvider);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName => CrashDumpResources.CrashDumpDisplayName;
@@ -112,9 +108,10 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             environmentVariables.SetVariable(new($"{prefix}{MiniDumpTypeVariable}", miniDumpTypeValue, false, true));
         }
 
+        string testAppName = Assembly.GetEntryAssembly()?.GetName().Name ?? throw ApplicationStateGuard.Unreachable();
         _miniDumpNameValue = _commandLineOptions.TryGetOptionArgumentList(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, out string[]? dumpFileName)
             ? Path.Combine(_configuration.GetTestResultDirectory(), dumpFileName[0])
-            : Path.Combine(_configuration.GetTestResultDirectory(), $"{Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_%p_crash.dmp");
+            : Path.Combine(_configuration.GetTestResultDirectory(), $"{testAppName}_%p_crash.dmp");
         _crashDumpGeneratorConfiguration.DumpFileNamePattern = _miniDumpNameValue;
         foreach (string prefix in Prefixes)
         {

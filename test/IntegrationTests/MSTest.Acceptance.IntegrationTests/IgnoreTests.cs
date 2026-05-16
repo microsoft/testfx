@@ -17,7 +17,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter ClassName!~TestClassWithAssemblyInitialize", cancellationToken: TestContext.CancellationToken);
 
         // Assert
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 11, skipped: 8);
 
         testHostResult.AssertOutputContains("SubClass.Method");
@@ -32,7 +32,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithAssemblyInitialize", cancellationToken: TestContext.CancellationToken);
 
         // Assert
-        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1);
         testHostResult.AssertOutputDoesNotContain("AssemblyInitialize");
         testHostResult.AssertOutputDoesNotContain("AssemblyCleanup");
@@ -45,7 +45,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithDataSourcesUsingIgnoreMessage", cancellationToken: TestContext.CancellationToken);
 
         // Assert
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContains("TestInitialize: TestMethod1 (0)");
         testHostResult.AssertOutputContains("TestCleanup: TestMethod1 (0)");
 
@@ -106,19 +106,16 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 10, skipped: 6);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "TestIgnore";
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (ProjectName, ProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file TestIgnore.csproj

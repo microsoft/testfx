@@ -29,8 +29,7 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
     /// <param name="capabilities">The test framework capabilities.</param>
     protected VSTestBridgedTestFrameworkBase(IServiceProvider serviceProvider, ITestFrameworkCapabilities capabilities)
     {
-        Ensure.NotNull(serviceProvider);
-        ServiceProvider = serviceProvider;
+        ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         // NOTE: It's too early to determine from the capability at this point whether or not trx is enabled.
         // We store the capability and check it later when IsTrxEnabled is accessed.
         _trxReportCapability = capabilities.GetCapability<ITrxReportCapability>();

@@ -27,6 +27,24 @@ internal sealed class SystemConsole : IConsole
     public int BufferWidth => Console.BufferWidth;
 
     /// <summary>
+    /// Gets the height of the console window area.
+    /// </summary>
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    public int WindowHeight => Console.WindowHeight;
+
+    /// <summary>
+    /// Gets the width of the console window area.
+    /// </summary>
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    public int WindowWidth => Console.WindowWidth;
+
+    /// <summary>
     /// Gets a value indicating whether output has been redirected from the standard output stream.
     /// </summary>
     public bool IsOutputRedirected => Console.IsOutputRedirected;

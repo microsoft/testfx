@@ -20,10 +20,7 @@ public static class VSTestConsoleLocator
     /// <returns>Full path to <c>vstest.console.exe</c>.</returns>
     public static string GetConsoleRunnerPath()
     {
-        string testPlatformNuGetPackageFolder = Path.Combine(
-            GetNugetPackageFolder(),
-            TestPlatformPackageName,
-            GetTestPlatformVersion());
+        string testPlatformNuGetPackageFolder = GetNugetPackageFolder(TestPlatformPackageName, GetTestPlatformVersion());
         if (!Directory.Exists(testPlatformNuGetPackageFolder))
         {
             throw new DirectoryNotFoundException($"Test platform NuGet package folder '{testPlatformNuGetPackageFolder}' does not exist");
@@ -51,14 +48,17 @@ public static class VSTestConsoleLocator
         }
     }
 
-    private static string GetNugetPackageFolder()
+    private static string GetNugetPackageFolder(string packageName, string packageVersion)
     {
         string? nugetPackagesFolderPath = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
         if (!string.IsNullOrEmpty(nugetPackagesFolderPath))
         {
             Assert.IsTrue(Directory.Exists(nugetPackagesFolderPath), $"Found environment variable 'NUGET_PACKAGES' and NuGet package folder '{nugetPackagesFolderPath}' should exist");
-
-            return nugetPackagesFolderPath;
+            string fullPackagePath = Path.Combine(nugetPackagesFolderPath, packageName, packageVersion);
+            if (Directory.Exists(fullPackagePath))
+            {
+                return fullPackagePath;
+            }
         }
 
         string? userProfile = Environment.GetEnvironmentVariable("USERPROFILE");
@@ -70,7 +70,9 @@ public static class VSTestConsoleLocator
         nugetPackagesFolderPath = Path.Combine(userProfile, ".nuget", "packages");
         Assert.IsTrue(Directory.Exists(nugetPackagesFolderPath), $"NuGet package folder '{nugetPackagesFolderPath}' should exist");
 
-        return nugetPackagesFolderPath;
+        string fullPackagePathFromUserProfile = Path.Combine(nugetPackagesFolderPath, packageName, packageVersion);
+        Assert.IsTrue(Directory.Exists(fullPackagePathFromUserProfile), $"NuGet package folder '{fullPackagePathFromUserProfile}' should exist");
+        return fullPackagePathFromUserProfile;
     }
 
     private static string GetTestPlatformVersion()

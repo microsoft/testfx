@@ -11,10 +11,7 @@ internal sealed class LoggingManager : ILoggingManager
     private readonly List<Func<LogLevel, IServiceProvider, ILoggerProvider>> _loggerProviderFullFactories = [];
 
     public void AddProvider(Func<LogLevel, IServiceProvider, ILoggerProvider> loggerProviderFactory)
-    {
-        Ensure.NotNull(loggerProviderFactory);
-        _loggerProviderFullFactories.Add(loggerProviderFactory);
-    }
+        => _loggerProviderFullFactories.Add(loggerProviderFactory ?? throw new ArgumentNullException(nameof(loggerProviderFactory)));
 
     internal async Task<ILoggerFactory> BuildAsync(IServiceProvider serviceProvider, LogLevel logLevel, IMonitor monitor)
     {

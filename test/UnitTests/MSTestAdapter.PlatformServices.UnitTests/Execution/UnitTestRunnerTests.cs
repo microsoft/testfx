@@ -31,7 +31,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     }
 
     private TestMethod CreateTestMethod(string methodName, string typeFullName, string assemblyName, string? displayName)
-        => new(typeFullName, methodName, null, methodName, typeFullName, assemblyName, displayName, null);
+        => new(methodName, null, methodName, typeFullName, assemblyName, displayName, null);
 
     private UnitTestRunner CreateUnitTestRunner(UnitTestElement[] testsToRun)
         => new(GetSettingsWithDebugTrace(false), testsToRun);
@@ -53,7 +53,7 @@ public sealed class UnitTestRunnerTests : TestContainer
             """
             <RunSettings>
               <MSTest>
-                <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
+                <TestTimeout>12</TestTimeout>
               </MSTest>
             </RunSettings>
             """;
@@ -69,7 +69,7 @@ public sealed class UnitTestRunnerTests : TestContainer
         adapterSettings.Should().NotBeNull();
         var assemblyEnumerator = new UnitTestRunner(adapterSettings, []);
 
-        MSTestSettings.CurrentSettings.TestSettingsFile.Should().Be("DummyPath\\TestSettings1.testsettings");
+        MSTestSettings.CurrentSettings.TestTimeout.Should().Be(12);
     }
 
     #endregion

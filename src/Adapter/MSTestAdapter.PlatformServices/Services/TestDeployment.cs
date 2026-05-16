@@ -4,7 +4,6 @@
 #if !WINDOWS_UWP && !WIN_UI
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -35,7 +34,7 @@ internal sealed class TestDeployment : ITestDeployment
     /// Initializes a new instance of the <see cref="TestDeployment"/> class.
     /// </summary>
     public TestDeployment()
-        : this(new DeploymentItemUtility(ReflectHelper.Instance), new DeploymentUtility(), new FileUtility())
+        : this(new DeploymentItemUtility(PlatformServiceProvider.Instance.ReflectionOperations), new DeploymentUtility(), new FileUtility())
     {
     }
 
@@ -127,6 +126,7 @@ internal sealed class TestDeployment : ITestDeployment
             return false;
         }
 
+#if NETFRAMEWORK
         string? firstTestSource = testCases.FirstOrDefault()?.Source;
         RunDirectories = _deploymentUtility.CreateDeploymentDirectories(runContext, firstTestSource);
 
@@ -136,6 +136,16 @@ internal sealed class TestDeployment : ITestDeployment
         {
             return false;
         }
+#else
+        // On .NET Core, avoid creating empty deployment folders when no deployment items are used.
+        if (!hasDeploymentItems)
+        {
+            return false;
+        }
+
+        string? firstTestSource = testCases.FirstOrDefault()?.Source;
+        RunDirectories = _deploymentUtility.CreateDeploymentDirectories(runContext, firstTestSource);
+#endif
 
         // Object model currently does not have support for SuspendCodeCoverage. We can remove this once support is added
 #if NETFRAMEWORK

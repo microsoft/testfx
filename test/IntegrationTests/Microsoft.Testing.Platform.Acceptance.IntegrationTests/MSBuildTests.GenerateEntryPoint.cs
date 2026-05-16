@@ -19,10 +19,9 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase<NopAssetFixture>
             CSharpSourceCode
             .PatchCodeWithReplace("$TargetFrameworks$", tfm)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj ", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
-        compilationResult = await DotnetCli.RunAsync(
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -p:GenerateTestingPlatformEntryPoint=False {testAsset.TargetAssetPath} -v:n",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
         SL.Build binLog = SL.Serialization.Read(compilationResult.BinlogPath!);
@@ -133,8 +132,8 @@ module MicrosoftTestingPlatformEntryPoint =
             .PatchCodeWithReplace("$TargetFrameworks$", tfm)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, finalSourceCode);
-        await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.{languageFileExtension}proj", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
-        DotnetMuxerResult buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} {testAsset.TargetAssetPath} -v:n", cancellationToken: TestContext.CancellationToken);
         SL.Build binLog = SL.Serialization.Read(buildResult.BinlogPath!);
         SL.Target[] generateTestingPlatformEntryPointTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "_GenerateTestingPlatformEntryPoint").ToArray();
         Assert.HasCount(1, generateTestingPlatformEntryPointTargets, "Expected exactly one _GenerateTestingPlatformEntryPoint target");
@@ -146,7 +145,7 @@ module MicrosoftTestingPlatformEntryPoint =
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         Assert.Contains("Passed!", testHostResult.StandardOutput);
 
         SL.Target[] coreCompileTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "CoreCompile" && t.Children.Count > 0).ToArray();
@@ -162,7 +161,7 @@ module MicrosoftTestingPlatformEntryPoint =
         Assert.IsNotNull(sourceFilePathInObj);
 
         File.Delete(buildResult.BinlogPath!);
-        buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} {testAsset.TargetAssetPath} -v:n", cancellationToken: TestContext.CancellationToken);
         binLog = SL.Serialization.Read(buildResult.BinlogPath!);
         generateTestingPlatformEntryPointTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "_GenerateTestingPlatformEntryPoint" && t.Children.Count > 0).ToArray();
         Assert.HasCount(1, generateTestingPlatformEntryPointTargets, "Expected exactly one _GenerateTestingPlatformEntryPoint target with children on rebuild");
@@ -172,7 +171,7 @@ module MicrosoftTestingPlatformEntryPoint =
 
         testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        Assert.AreEqual(ExitCodes.Success, testHostResult.ExitCode);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         Assert.Contains("Passed!", testHostResult.StandardOutput);
     }
 

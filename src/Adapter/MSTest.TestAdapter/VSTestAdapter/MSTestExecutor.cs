@@ -20,6 +20,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal sealed class MSTestExecutor : ITestExecutor
 {
     private readonly CancellationToken _cancellationToken;
+#if !WINDOWS_UWP && !WIN_UI
+    private readonly Func<string, IDictionary<string, object>, Task>? _telemetrySender;
+#endif
 
     /// <summary>
     /// Token for canceling the test run.
@@ -35,10 +38,15 @@ internal sealed class MSTestExecutor : ITestExecutor
         _cancellationToken = CancellationToken.None;
     }
 
-    internal MSTestExecutor(CancellationToken cancellationToken)
+    internal MSTestExecutor(CancellationToken cancellationToken, Func<string, IDictionary<string, object>, Task>? telemetrySender = null)
     {
         TestExecutionManager = new TestExecutionManager();
         _cancellationToken = cancellationToken;
+#if !WINDOWS_UWP && !WIN_UI
+        _telemetrySender = telemetrySender;
+#else
+        _ = telemetrySender;
+#endif
     }
 
     /// <summary>
@@ -77,7 +85,9 @@ internal sealed class MSTestExecutor : ITestExecutor
     /// <param name="tests">The collection of test cases to run.</param>
     /// <param name="runContext">The run context.</param>
     /// <param name="frameworkHandle">The handle to the framework.</param>
-#if DEBUG
+#if DEBUG && NET8_0_OR_GREATER
+    [Obsolete("Use RunTestsAsync instead.", DiagnosticId = "MSTEST0106", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
+#elif DEBUG
     [Obsolete("Use RunTestsAsync instead.")]
 #endif
     public void RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
@@ -89,11 +99,13 @@ internal sealed class MSTestExecutor : ITestExecutor
     /// <param name="sources">The collection of assemblies to run.</param>
     /// <param name="runContext">The run context.</param>
     /// <param name="frameworkHandle">The handle to the framework.</param>
-#if DEBUG
+#if DEBUG && NET8_0_OR_GREATER
+    [Obsolete("Use RunTestsAsync instead.", DiagnosticId = "MSTEST0106", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
+#elif DEBUG
     [Obsolete("Use RunTestsAsync instead.")]
 #endif
     public void RunTests(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
-        => RunTestsAsync(sources, runContext, frameworkHandle, null).GetAwaiter().GetResult();
+        => RunTestsAsync(sources, runContext, frameworkHandle, null, false).GetAwaiter().GetResult();
 
     internal async Task RunTestsAsync(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
     {
@@ -102,35 +114,85 @@ internal sealed class MSTestExecutor : ITestExecutor
             PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor.RunTests: Running tests from testcases.");
         }
 
-        Ensure.NotNull(frameworkHandle);
-        Ensure.NotNullOrEmpty(tests);
-
-        if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
+        if (frameworkHandle is null)
         {
-            return;
+            throw new ArgumentNullException(nameof(frameworkHandle));
         }
 
-        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(tests, runContext, frameworkHandle, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+        // TODO: Verify why VSTest annotates the IEnumerable as nullable.
+        if (tests is null)
+        {
+            throw new ArgumentNullException(nameof(tests));
+        }
+
+        Ensure.NotEmpty(tests);
+
+        // Initialize telemetry collection if not already set
+#if !WINDOWS_UWP && !WIN_UI
+        if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
+        {
+            _ = MSTestTelemetryDataCollector.EnsureInitialized();
+        }
+#endif
+
+        try
+        {
+            if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
+            {
+                return;
+            }
+
+            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(tests, runContext, frameworkHandle, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+        }
+        finally
+        {
+            await SendTelemetryAsync().ConfigureAwait(false);
+        }
     }
 
-    internal async Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
+    internal async Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration, bool isMTP)
     {
         if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
             PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor.RunTests: Running tests from sources.");
         }
 
-        Ensure.NotNull(frameworkHandle);
-        Ensure.NotNullOrEmpty(sources);
-
-        TestSourceHandler testSourceHandler = new();
-        if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))
+        if (frameworkHandle is null)
         {
-            return;
+            throw new ArgumentNullException(nameof(frameworkHandle));
         }
 
-        sources = testSourceHandler.GetTestSources(sources);
-        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testSourceHandler, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+        // TODO: Verify why VSTest annotates the IEnumerable as nullable.
+        if (sources is null)
+        {
+            throw new ArgumentNullException(nameof(sources));
+        }
+
+        Ensure.NotEmpty(sources);
+
+        // Initialize telemetry collection if not already set
+#if !WINDOWS_UWP && !WIN_UI
+        if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
+        {
+            _ = MSTestTelemetryDataCollector.EnsureInitialized();
+        }
+#endif
+
+        try
+        {
+            TestSourceHandler testSourceHandler = new();
+            if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))
+            {
+                return;
+            }
+
+            sources = testSourceHandler.GetTestSources(sources);
+            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testSourceHandler, isMTP, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+        }
+        finally
+        {
+            await SendTelemetryAsync().ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -138,6 +200,14 @@ internal sealed class MSTestExecutor : ITestExecutor
     /// </summary>
     public void Cancel()
         => _testRunCancellationToken?.Cancel();
+
+#if !WINDOWS_UWP && !WIN_UI
+    private Task SendTelemetryAsync()
+        => MSTestTelemetryDataCollector.SendExecutionTelemetryAndResetAsync(_telemetrySender);
+#else
+    private static Task SendTelemetryAsync()
+        => Task.CompletedTask;
+#endif
 
     private async Task RunTestsFromRightContextAsync(IFrameworkHandle frameworkHandle, Func<TestRunCancellationToken, Task> runTestsAction)
     {

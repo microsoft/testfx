@@ -5,7 +5,6 @@ using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
 
@@ -15,7 +14,7 @@ internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
 
     public string Uid => nameof(CrashDumpCommandLineProvider);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => CrashDumpResources.CrashDumpDisplayName;
 
@@ -41,6 +40,7 @@ internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
             }
         }
 
+        // TODO: Validate that the file name ends with '.dmp'?
         return ValidationResult.ValidTask;
     }
 

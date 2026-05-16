@@ -989,6 +989,143 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
     }
 
     [TestMethod]
+    public async Task UserDefinedExplicitConversionOperator_ShouldNotFlag()
+    {
+        string code = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private sealed class Foo : IEquatable<Foo>
+                {
+                    private readonly string _value;
+                    public Foo(string value) { _value = value; }
+                    public static explicit operator Foo(string s) => new Foo(s);
+                    public override bool Equals(object? obj) => Equals(obj as Foo);
+                    public bool Equals(Foo? other) => other is not null && _value.Equals(other._value);
+                    public override int GetHashCode() => HashCode.Combine(_value);
+                }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    // User-defined conversion operator should not be treated as a constant
+                    Assert.AreEqual(new Foo("Hello"), (Foo)"Hello");
+                    Assert.AreNotEqual(new Foo("Hello"), (Foo)"World");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task UserDefinedImplicitConversionOperator_ShouldNotFlag()
+    {
+        string code = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private sealed class Bar : IEquatable<Bar>
+                {
+                    private readonly string _value;
+                    public Bar(string value) { _value = value; }
+                    public static implicit operator Bar(string s) => new Bar(s);
+                    public override bool Equals(object? obj) => Equals(obj as Bar);
+                    public bool Equals(Bar? other) => other is not null && _value.Equals(other._value);
+                    public override int GetHashCode() => HashCode.Combine(_value);
+                }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    // Implicit user-defined conversion should not be treated as a constant
+                    Bar b = "Hello";
+                    Assert.AreEqual(new Bar("Hello"), b);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task BuiltInConversionWrappingUserDefined_ShouldNotFlag()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private sealed class Foo
+                {
+                    private readonly string _value;
+                    public Foo(string value) { _value = value; }
+                    public static explicit operator Foo(string s) => new Foo(s);
+                }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    // A built-in conversion wrapping a user-defined conversion should still stop
+                    Assert.AreEqual(new Foo("Hello"), (object)(Foo)"Hello");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task BuiltInCastWithLiteral_ShouldStillFlag()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    long x = 42;
+
+                    // Built-in cast on a literal should still be walked through and flagged
+                    [|Assert.AreEqual(x, (long)42)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    long x = 42;
+
+                    // Built-in cast on a literal should still be walked through and flagged
+                    Assert.AreEqual((long)42, x);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenUsingLiterals_MultiLineWithDifferentIndentation()
     {
         string code = """

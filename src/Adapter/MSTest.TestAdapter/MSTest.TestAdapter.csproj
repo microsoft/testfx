@@ -51,6 +51,11 @@
     <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
   </PropertyGroup>
 
+  <!-- Properties specific to WinUI -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
+    <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.VSTestBridge\Microsoft.Testing.Extensions.VSTestBridge.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
@@ -66,7 +71,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
+    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup Label="NuGet">
@@ -82,6 +87,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="buildTransitive\uwp\*" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="buildTransitive\Parallelize.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="PACKAGE.md">

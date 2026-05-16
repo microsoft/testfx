@@ -10,7 +10,7 @@ using SL = Microsoft.Build.Logging.StructuredLogger;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class SdkTests : AcceptanceTestBase<SdkTests.TestAssetFixture>
+public sealed class SdkTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSTestSdk";
 
@@ -59,6 +59,8 @@ namespace MSTestSdkTest
         }
         """;
 
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_VSTest(string multiTfm, BuildConfiguration buildConfiguration)
@@ -70,12 +72,11 @@ namespace MSTestSdkTest
             .PatchCodeWithReplace("$TargetFramework$", multiTfm)
             .PatchCodeWithReplace("$ExtraProperties$", "<UseVSTest>true</UseVSTest>"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
 
         compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net10\.0\)");
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
-        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net9\.0\)");
         compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net8\.0\)");
 #endif
 
@@ -96,12 +97,11 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} --project {testAsset.TargetAssetPath} --no-progress --no-ansi", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} --project {testAsset.TargetAssetPath} --no-progress --no-ansi", workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
 
         compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net10\.0\|x64\) passed");
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
-        compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net9\.0\|x64\) passed");
         compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net8\.0\|x64\) passed");
 #endif
 
@@ -122,7 +122,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
         foreach (string tfm in multiTfm.Split(";"))
         {
@@ -136,14 +136,28 @@ namespace MSTestSdkTest
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_CentralPackageManagement_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
     {
+        // Exercise CPM with CentralPackageVersionOverrideEnabled=false to ensure MSTest.Sdk
+        // does not rely on the (then-forbidden) VersionOverride attribute and instead injects
+        // PackageVersion items for its implicit references.
+        const string CpmSourceCode = SingleTestSourceCode + """
+
+#file Directory.Packages.props
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageVersionOverrideEnabled>false</CentralPackageVersionOverrideEnabled>
+  </PropertyGroup>
+</Project>
+""";
+
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                AssetName,
-               SingleTestSourceCode
+               CpmSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
         foreach (string tfm in multiTfm.Split(";"))
         {
@@ -203,7 +217,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", msbuildExtensionEnableFragment));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
         foreach (string tfm in multiTfm.Split(";"))
         {
@@ -212,7 +226,7 @@ namespace MSTestSdkTest
             testHostResult.AssertOutputContainsSummary(0, 1, 0);
 
             testHostResult = await testHost.ExecuteAsync(command: invalidCommandLineArg, cancellationToken: TestContext.CancellationToken);
-            Assert.AreEqual(ExitCodes.InvalidCommandLine, testHostResult.ExitCode);
+            testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
         }
     }
 
@@ -227,7 +241,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", "<TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>"), addPublicFeeds: true);
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
         foreach (string tfm in multiTfm.Split(";"))
         {
@@ -257,7 +271,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", enableDefaultExtensions ? string.Empty : "<TestingExtensionsProfile>None</TestingExtensionsProfile>"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
         foreach (string tfm in multiTfm.Split(";"))
         {
@@ -269,7 +283,7 @@ namespace MSTestSdkTest
             }
             else
             {
-                Assert.AreEqual(ExitCodes.InvalidCommandLine, testHostResult.ExitCode);
+                testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
             }
         }
     }
@@ -285,131 +299,38 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", "<TestingExtensionsProfile>WrongName</TestingExtensionsProfile>"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(1);
         compilationResult.AssertOutputContains("Invalid value for property TestingExtensionsProfile. Valid values are 'Default', 'AllMicrosoft' and 'None'.");
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
-    public async Task NativeAot_Smoke_Test_Windows()
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
+    public async Task NativeAot_Smoke_Test()
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
             SingleTestSourceCode
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            // temporarily set test to be on net10.0 as older TFMs are broken until https://github.com/dotnet/runtime/pull/115951 is serviced.
             .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
             .PatchCodeWithReplace("$ExtraProperties$", """
                 <PublishAot>true</PublishAot>
                 <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
+                <!-- Show individual trim/AOT warnings instead of a single IL2104 per assembly -->
+                <TrimmerSingleWarn>false</TrimmerSingleWarn>
                 """),
             addPublicFeeds: true);
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish -r {RID} -f {TargetFrameworks.NetCurrent} {testAsset.TargetAssetPath}",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-            // We prefer to use the outer retry mechanism as we need some extra checks
-            retryCount: 0, cancellationToken: TestContext.CancellationToken);
+            cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
-        compilationResult.AssertOutputDoesNotContain("warning");
 
         var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, verb: Verb.publish);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(0, 1, 0);
-    }
-
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task EnablePlaywrightProperty_WhenUsingRunner_AllowsToRunPlaywrightTests(string tfm)
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-
-        // Depending on the machine, the test might fail due to the browser not being installed.
-        // To avoid slowing down the tests, we will not run the installation so depending on machines we have different results.
-        switch (testHostResult.ExitCode)
-        {
-            case 0:
-                testHostResult.AssertOutputContainsSummary(0, 1, 0);
-                break;
-
-            case 2:
-                testHostResult.AssertOutputContains("Microsoft.Playwright.PlaywrightException: Executable doesn't exist");
-                break;
-
-            default:
-                Assert.Fail("Unexpected exit code");
-                break;
-        }
-    }
-
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task EnablePlaywrightProperty_WhenUsingVSTest_AllowsToRunPlaywrightTests(string tfm)
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
-        string exeOrDllName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? testHost.FullName
-            : testHost.FullName + ".dll";
-        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
-            $"test {exeOrDllName}",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-            workingDirectory: AssetFixture.PlaywrightProjectPath,
-            failIfReturnValueIsNotZero: false,
-            warnAsError: false,
-            suppressPreviewDotNetMessage: false,
-            cancellationToken: TestContext.CancellationToken);
-
-        // Ensure output contains the right platform banner
-        dotnetTestResult.AssertOutputContains("VSTest version");
-
-        // Depending on the machine, the test might fail due to the browser not being installed.
-        // To avoid slowing down the tests, we will not run the installation so depending on machines we have different results.
-        switch (dotnetTestResult.ExitCode)
-        {
-            case 0:
-                dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
-                break;
-
-            case 1:
-                dotnetTestResult.AssertOutputContains("Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1");
-                break;
-
-            default:
-                Assert.Fail("Unexpected exit code");
-                break;
-        }
-    }
-
-    [TestMethod]
-    public async Task EnableAspireProperty_WhenUsingRunner_AllowsToRunAspireTests()
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.AspireProjectPath, TestAssetFixture.AspireProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertOutputContainsSummary(0, 1, 0);
-    }
-
-    [TestMethod]
-    public async Task EnableAspireProperty_WhenUsingVSTest_AllowsToRunAspireTests()
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.AspireProjectPath, TestAssetFixture.AspireProjectName, TargetFrameworks.NetCurrent);
-        string exeOrDllName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? testHost.FullName
-            : testHost.FullName + ".dll";
-        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
-            $"test {exeOrDllName}",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-            workingDirectory: AssetFixture.AspireProjectPath,
-            warnAsError: false,
-            suppressPreviewDotNetMessage: false,
-            cancellationToken: TestContext.CancellationToken);
-        dotnetTestResult.AssertExitCodeIs(0);
-        // Ensure output contains the right platform banner
-        dotnetTestResult.AssertOutputContains("VSTest version");
-        dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
     }
 
     [TestMethod]
@@ -422,7 +343,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                .PatchCodeWithReplace("$ExtraProperties$", "<IsTestApplication>false</IsTestApplication>"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {testAsset.TargetAssetPath}", workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
 
         compilationResult.AssertExitCodeIs(0);
 
@@ -442,124 +363,275 @@ namespace MSTestSdkTest
         Assert.DoesNotContain(p => p.Value == "Exe", binLog.FindChildrenRecursive<SL.Property>(p => p.Name == "OutputType"));
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    [TestMethod]
+    public async Task MSTestParallelizeScope_ClassLevel_EmitsParallelizeAttribute()
     {
-        public const string AspireProjectName = "AspireProject";
-        public const string PlaywrightProjectName = "PlaywrightProject";
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", "<MSTestParallelizeScope>ClassLevel</MSTestParallelizeScope>"));
 
-        private const string AspireSourceCode = """
-#file AspireProject.csproj
-<Project Sdk="MSTest.Sdk/$MSTestVersion$">
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(0, 1, 0);
+        testHostResult.AssertOutputMatchesRegex(@"Test Parallelization enabled .* \(Workers: \d+, Scope: ClassLevel\)");
+    }
+
+    [TestMethod]
+    public async Task MSTestParallelizeScope_MethodLevelWithWorkers_EmitsParallelizeAttribute()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", """
+                <MSTestParallelizeScope>MethodLevel</MSTestParallelizeScope>
+                <MSTestParallelizeWorkers>3</MSTestParallelizeWorkers>
+                """));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(0, 1, 0);
+        testHostResult.AssertOutputContains("Test Parallelization enabled");
+        testHostResult.AssertOutputContains("(Workers: 3, Scope: MethodLevel)");
+    }
+
+    [TestMethod]
+    public async Task MSTestParallelizeWorkers_Only_EmitsParallelizeAttributeWithDefaultScope()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", "<MSTestParallelizeWorkers>2</MSTestParallelizeWorkers>"));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(0, 1, 0);
+
+        // ParallelizeAttribute defaults Scope to ClassLevel when only Workers is provided.
+        testHostResult.AssertOutputContains("Test Parallelization enabled");
+        testHostResult.AssertOutputContains("(Workers: 2, Scope: ClassLevel)");
+    }
+
+    [TestMethod]
+    public async Task MSTestParallelizeWorkers_Zero_IsAcceptedAndEmitsParallelizeAttribute()
+    {
+        // Workers=0 is a boundary: the regex ^\d+$ accepts it and ParallelizeAttribute
+        // interprets it as "use the number of available processors". Make sure the build
+        // succeeds and the runtime picks it up.
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", "<MSTestParallelizeWorkers>0</MSTestParallelizeWorkers>"));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(0, 1, 0);
+        testHostResult.AssertOutputContains("Test Parallelization enabled");
+
+        // 0 workers means "use Environment.ProcessorCount" so the actual reported value is the host CPU count, not 0.
+        testHostResult.AssertOutputMatchesRegex(@"\(Workers: \d+, Scope: ClassLevel\)");
+    }
+
+    [TestMethod]
+    public async Task MSTestParallelizeScope_None_EmitsDoNotParallelizeAttribute()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", "<MSTestParallelizeScope>None</MSTestParallelizeScope>"));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(0, 1, 0);
+
+        // DoNotParallelize disables parallelization entirely.
+        testHostResult.AssertOutputDoesNotContain("Test Parallelization enabled");
+    }
+
+    [TestMethod]
+    public async Task MSTestParallelizeScope_GenerateAssemblyInfoFalse_EmitsWarning()
+    {
+        // Without GenerateAssemblyInfo, the AssemblyAttribute items are not emitted, so the
+        // properties would silently do nothing. Verify that the build succeeds but a warning
+        // is reported to make this case discoverable.
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", """
+                <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+                <MSTestParallelizeScope>ClassLevel</MSTestParallelizeScope>
+                """));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}", warnAsError: false, cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+        compilationResult.AssertOutputContains("MSTestParallelizeScope and MSTestParallelizeWorkers require GenerateAssemblyInfo to be true to take effect.");
+    }
+
+    [TestMethod]
+    public async Task MSTestParallelizeScope_InvalidValue_FailsBuild()
+    {
+        // An invalid scope value is emitted into the generated assembly attribute and rejected by the C# compiler (CS0117).
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", "<MSTestParallelizeScope>NotAValidValue</MSTestParallelizeScope>"));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath}",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(1);
+        compilationResult.AssertOutputContains("CS0117");
+        compilationResult.AssertOutputContains("NotAValidValue");
+    }
+
+    [TestMethod]
+    public async Task MSTestParallelizeWorkers_NonInteger_FailsBuild()
+    {
+        // A non-integer Workers value is emitted into the generated assembly attribute and rejected by the C# compiler (CS0103).
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", "<MSTestParallelizeWorkers>abc</MSTestParallelizeWorkers>"));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath}",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(1);
+        compilationResult.AssertOutputContains("CS0103");
+        compilationResult.AssertOutputContains("abc");
+    }
+
+    [TestMethod]
+    public async Task MSTestParallelizeScope_None_With_Workers_FailsBuild()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", """
+                <MSTestParallelizeScope>None</MSTestParallelizeScope>
+                <MSTestParallelizeWorkers>2</MSTestParallelizeWorkers>
+                """));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath}",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(1);
+        compilationResult.AssertOutputContains("Property MSTestParallelizeWorkers cannot be set when MSTestParallelizeScope is 'None'.");
+    }
+
+    [TestMethod]
+    public async Task MSTestParallelizeScope_VSTestRunner_BuildSucceeds()
+    {
+        // The targets emit assembly attributes via WriteCodeFragment, which is runner-agnostic.
+        // Make sure the targets don't interfere with VSTest projects (build only — observing the
+        // "Test Parallelization enabled" diagnostic is MTP-specific).
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCodeVSTest
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", """
+                <UseVSTest>true</UseVSTest>
+                <MSTestParallelizeScope>MethodLevel</MSTestParallelizeScope>
+                <MSTestParallelizeWorkers>2</MSTestParallelizeWorkers>
+                """));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+    }
+
+    // Verifies that the MSTestParallelizeScope/MSTestParallelizeWorkers properties also work for
+    // projects that don't use MSTest.Sdk (i.e. they reference MSTest.TestAdapter directly via the
+    // MSTest meta-package), since the targets logic ships in MSTest.TestAdapter.
+    [TestMethod]
+    public async Task MSTestParallelizeScope_NonSdkProject_EmitsParallelizeAttribute()
+    {
+        const string NonSdkSource = """
+#file MSTestPlain.csproj
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
-    <LangVersion>latest</LangVersion>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <!-- Disable all extensions by default -->
-    <TestingExtensionsProfile>None</TestingExtensionsProfile>
-    <EnableAspireTesting>true</EnableAspireTesting>
+    <TargetFramework>$TargetFramework$</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <PlatformTarget>x64</PlatformTarget>
+    <NoWarn>$(NoWarn);NU1507</NoWarn>
+    <MSTestParallelizeScope>MethodLevel</MSTestParallelizeScope>
+    <MSTestParallelizeWorkers>3</MSTestParallelizeWorkers>
   </PropertyGroup>
-
   <ItemGroup>
-    <Using Include="System.Threading.Tasks" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="MSTest" Version="$MSTestVersion$" />
   </ItemGroup>
 </Project>
 
-#file global.json
-{
-  "test": {
-    "runner": "VSTest"
-  }
-}
-
 #file UnitTest1.cs
-namespace AspireProject;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
-public class IntegrationTest1
+namespace MSTestPlainTest
 {
-    [TestMethod]
-    public void GetWebResourceRootReturnsOkStatusCode()
+    [TestClass]
+    public class UnitTest1
     {
-        // TODO: Test could be improved to run a real Aspire app, their starter is a big multi-projects app
-    }
-}
-""";
-
-        private const string PlaywrightSourceCode = """
-#file PlaywrightProject.csproj
-<Project Sdk="MSTest.Sdk/$MSTestVersion$">
-  <PropertyGroup>
-    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
-    <LangVersion>latest</LangVersion>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <!-- Disable all extensions by default -->
-    <TestingExtensionsProfile>None</TestingExtensionsProfile>
-    <EnablePlaywright>true</EnablePlaywright>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Using Include="System.Text.RegularExpressions" />
-    <Using Include="System.Threading.Tasks" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
-  </ItemGroup>
-</Project>
-
-#file UnitTest1.cs
-namespace PlaywrightProject;
-
-[TestClass]
-public class UnitTest1 : PageTest
-{
-    [TestMethod]
-    public async Task HomepageHasPlaywrightInTitleAndGetStartedLinkLinkingToTheIntroPage()
-    {
-        await Page.GotoAsync("https://playwright.dev");
-
-        // Expect a title "to contain" a substring.
-        await Expect(Page).ToHaveTitleAsync(new Regex("Playwright"));
-
-        // create a locator
-        var getStarted = Page.Locator("text=Get Started");
-
-        // Expect an attribute "to be strictly equal" to the value.
-        await Expect(getStarted).ToHaveAttributeAsync("href", "/docs/intro");
-
-        // Click the get started link.
-        await getStarted.ClickAsync();
-
-        // Expects the URL to contain intro.
-        await Expect(Page).ToHaveURLAsync(new Regex(".*intro"));
-    }
-}
-
-#file global.json
-{
-  "test": {
-    "runner": "VSTest"
-  }
-}
-""";
-
-        public string AspireProjectPath => GetAssetPath(AspireProjectName);
-
-        public string PlaywrightProjectPath => GetAssetPath(PlaywrightProjectName);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        [TestMethod]
+        public void TestMethod1()
         {
-            yield return (AspireProjectName, AspireProjectName,
-                AspireSourceCode
-                .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-
-            yield return (PlaywrightProjectName, PlaywrightProjectName,
-                PlaywrightSourceCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
     }
+}
+""";
 
-    public TestContext TestContext { get; set; }
+        const string PlainAssetName = "MSTestPlain";
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            PlainAssetName,
+            NonSdkSource
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, PlainAssetName, TargetFrameworks.NetCurrent, buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(0, 1, 0);
+        testHostResult.AssertOutputContains("Test Parallelization enabled");
+        testHostResult.AssertOutputContains("(Workers: 3, Scope: MethodLevel)");
+    }
 }

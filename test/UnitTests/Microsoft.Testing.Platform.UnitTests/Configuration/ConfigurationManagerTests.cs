@@ -27,7 +27,7 @@ public sealed class ConfigurationManagerTests
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read))
             .Returns(new MemoryFileStream(Encoding.UTF8.GetBytes(jsonFileConfig)));
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
-        ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo);
+        ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo, new SystemEnvironment());
         configurationManager.AddConfigurationSource(() => new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
         IConfiguration configuration = await configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), []));
         Assert.AreEqual(result, configuration[key], $"Expected '{result}' found '{configuration[key]}'");
@@ -57,7 +57,7 @@ public sealed class ConfigurationManagerTests
         fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read)).Returns(() => new MemoryFileStream(Encoding.UTF8.GetBytes(string.Empty)));
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
-        ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo);
+        ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo, new SystemEnvironment());
         configurationManager.AddConfigurationSource(() =>
             new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
 
@@ -87,7 +87,7 @@ public sealed class ConfigurationManagerTests
         loggerProviderMock.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(loggerMock.Object);
 
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
-        ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo);
+        ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo, new SystemEnvironment());
         configurationManager.AddConfigurationSource(() =>
             new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
 
@@ -101,7 +101,7 @@ public sealed class ConfigurationManagerTests
     public async ValueTask BuildAsync_EmptyConfigurationSources_ThrowsException()
     {
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
-        ConfigurationManager configurationManager = new(new SystemFileSystem(), testApplicationModuleInfo);
+        ConfigurationManager configurationManager = new(new SystemFileSystem(), testApplicationModuleInfo, new SystemEnvironment());
         await Assert.ThrowsAsync<InvalidOperationException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), [])));
     }
 
@@ -112,7 +112,7 @@ public sealed class ConfigurationManagerTests
         mockConfigurationSource.Setup(x => x.IsEnabledAsync()).ReturnsAsync(false);
 
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
-        ConfigurationManager configurationManager = new(new SystemFileSystem(), testApplicationModuleInfo);
+        ConfigurationManager configurationManager = new(new SystemFileSystem(), testApplicationModuleInfo, new SystemEnvironment());
         configurationManager.AddConfigurationSource(() => mockConfigurationSource.Object);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), [])));
@@ -132,7 +132,7 @@ public sealed class ConfigurationManagerTests
         };
 
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
-        ConfigurationManager configurationManager = new(new SystemFileSystem(), testApplicationModuleInfo);
+        ConfigurationManager configurationManager = new(new SystemFileSystem(), testApplicationModuleInfo, new SystemEnvironment());
         configurationManager.AddConfigurationSource(() => fakeConfigurationSource);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), [])));

@@ -24,14 +24,22 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
 
     internal TreeNodeFilter(string filter)
     {
-        Filter = Ensure.NotNull(filter);
+        Filter = filter ?? throw new ArgumentNullException(nameof(filter));
         _filters = ParseFilter(filter);
+        ContainsPropertyFilters = _filters.Any(HasPropertyFilterExpression);
     }
 
     /// <summary>
     /// Gets the filter string.
     /// </summary>
     public string Filter { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether any filter segment contains a property expression (e.g., <c>Method[Trait=Foo]</c>).
+    /// When <see langword="false"/>, the <see cref="PropertyBag"/> argument to <see cref="MatchesFilter"/> is never
+    /// inspected, and callers may safely pass an empty bag to avoid per-node allocation.
+    /// </summary>
+    internal bool ContainsPropertyFilters { get; }
 
     /// <remarks>
     /// The current grammar for the filter looks as follows:
@@ -491,8 +499,8 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     /// <param name="filterableProperties">The URL encoded node properties.</param>
     public bool MatchesFilter(string testNodeFullPath, PropertyBag filterableProperties)
     {
-        Ensure.NotNullOrEmpty(testNodeFullPath);
-        ArgumentGuard.Ensure(testNodeFullPath[0] == PathSeparator, nameof(testNodeFullPath),
+        _ = testNodeFullPath ?? throw new ArgumentNullException(nameof(testNodeFullPath));
+        ArgumentGuard.Ensure(testNodeFullPath.Length > 0 && testNodeFullPath[0] == PathSeparator, nameof(testNodeFullPath),
             string.Format(CultureInfo.InvariantCulture, PlatformResources.TreeNodeFilterPathShouldStartWithSlashErrorMessage, PathSeparator));
 
         int currentCharIndex = 1;
@@ -587,4 +595,8 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         => prop is TestMetadataProperty testMetadataProperty &&
             propExpr.Regex.IsMatch(testMetadataProperty.Key) &&
             valueExpr.Regex.IsMatch(testMetadataProperty.Value);
+
+    private static bool HasPropertyFilterExpression(FilterExpression expression)
+        => expression is ValueAndPropertyExpression ||
+           (expression is OperatorExpression op && op.SubExpressions.Any(HasPropertyFilterExpression));
 }

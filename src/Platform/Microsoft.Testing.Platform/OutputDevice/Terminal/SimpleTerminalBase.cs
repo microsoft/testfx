@@ -17,12 +17,12 @@ internal abstract class SimpleTerminal : ITerminal
     public int Width
         => Console.IsOutputRedirected || OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS()
             ? int.MaxValue
-            : Console.BufferWidth;
+            : Console.WindowWidth;
 
     public int Height
         => Console.IsOutputRedirected || OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS()
             ? int.MaxValue
-            : Console.BufferHeight;
+            : Console.WindowHeight;
 
     protected IConsole Console { get; }
 

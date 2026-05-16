@@ -30,7 +30,7 @@ public sealed class AsynchronousMessageBusTests
 
         // Fire consume with a good message
         await proxy.PublishAsync(new DummyProducer("DummyProducer", typeof(InvalidTypePublished.ValidDataToProduce)), new InvalidTypePublished.ValidDataToProduce());
-        consumer.Published.WaitOne(TimeoutHelper.DefaultHangTimeoutMilliseconds);
+        consumer.Published.WaitOne();
         await Assert.ThrowsAsync<InvalidOperationException>(proxy.DrainDataAsync);
     }
 
@@ -152,7 +152,7 @@ public sealed class AsynchronousMessageBusTests
 
         public string Uid => nameof(DummyConsumer);
 
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         public string DisplayName => nameof(DummyConsumer);
 
@@ -186,7 +186,7 @@ public sealed class AsynchronousMessageBusTests
 
             public string Uid => nameof(DummyProducer);
 
-            public string Version => AppVersion.DefaultSemVer;
+            public string Version => PlatformVersion.Version;
 
             public string DisplayName => nameof(DummyProducer);
 

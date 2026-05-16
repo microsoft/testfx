@@ -45,7 +45,11 @@ internal sealed class SystemProcess : IProcess, IDisposable
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
     public void Kill()
+#if NETCOREAPP
         => _process.Kill(entireProcessTree: true);
+#else
+        => _process.Kill();
+#endif
 
     public void Dispose() => _process.Dispose();
 }

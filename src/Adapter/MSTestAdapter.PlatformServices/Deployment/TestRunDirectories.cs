@@ -10,7 +10,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
 /// <summary>
 /// The test run directories.
 /// </summary>
+#if NETFRAMEWORK
 [Serializable]
+#endif
 internal sealed class TestRunDirectories
 {
     /// <summary>
@@ -45,9 +47,13 @@ internal sealed class TestRunDirectories
         RootDeploymentDirectory = rootDirectory;
         InDirectory = Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix);
 
-        OutDirectory = isAppDomainCreationDisabled && firstTestSource is not null
-            ? Path.GetDirectoryName(firstTestSource)!
-            : Path.Combine(RootDeploymentDirectory, DeploymentOutDirectorySuffix);
+        string? testSourceDirectory = isAppDomainCreationDisabled && !StringEx.IsNullOrEmpty(firstTestSource)
+            ? Path.GetDirectoryName(firstTestSource)
+            : null;
+
+        OutDirectory = StringEx.IsNullOrEmpty(testSourceDirectory)
+            ? Path.Combine(RootDeploymentDirectory, DeploymentOutDirectorySuffix)
+            : testSourceDirectory;
 
         InMachineNameDirectory = Path.Combine(InDirectory, Environment.MachineName);
     }
