@@ -194,13 +194,13 @@
         <note />
       </trans-unit>
       <trans-unit id="AreNotEquivalentFailedSummary">
-        <source>Expected values to NOT be structurally equivalent.</source>
-        <target state="new">Expected values to NOT be structurally equivalent.</target>
+        <source>Expected values to be structurally different.</source>
+        <target state="new">Expected values to be structurally different.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEquivalentFailedSummaryStrict">
-        <source>Expected values to NOT be structurally equivalent (strict mode).</source>
-        <target state="new">Expected values to NOT be structurally equivalent (strict mode).</target>
+        <source>Expected values to be structurally different (strict mode).</source>
+        <target state="new">Expected values to be structurally different (strict mode).</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotSameBothNull">

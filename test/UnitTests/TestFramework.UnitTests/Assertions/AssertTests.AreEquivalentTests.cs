@@ -668,7 +668,7 @@ public partial class AssertTests : TestContainer
     {
         Action act = () => Assert.AreNotEquivalent(new Person("Ada", 36), new Person("Ada", 36));
         act.Should().Throw<AssertFailedException>()
-            .WithMessage("*NOT be structurally equivalent*");
+            .WithMessage("*structurally different*");
     }
 
     public void AreNotEquivalent_BothNull_Fails()
@@ -710,6 +710,37 @@ public partial class AssertTests : TestContainer
         }
 
         return root;
+    }
+
+    public void AreEquivalent_NewShadowedProperty_UsesMostDerivedDeclaration()
+    {
+        var expected = new ShadowedDerived { Value = "derived-expected" };
+        var actual = new ShadowedDerived { Value = "derived-actual" };
+
+        Action act = () => Assert.AreEquivalent(expected, actual);
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("*Value*derived-expected*derived-actual*");
+    }
+
+    public void AreEquivalent_NewShadowedProperty_EquivalentDerivedValues_Passes()
+    {
+        var expected = new ShadowedDerived { Value = "same" };
+        var actual = new ShadowedDerived { Value = "same" };
+
+        // The base sets BaseValueAsString = "base"; the derived `new` Value shadows it as a string.
+        // If the comparer ever picked the base accessor for one side, the comparison would compare
+        // the string "base" against the derived `Value` and fail.
+        Assert.AreEquivalent(expected, actual);
+    }
+
+    private class ShadowedBase
+    {
+        public int Value { get; set; }
+    }
+
+    private sealed class ShadowedDerived : ShadowedBase
+    {
+        public new string Value { get; set; } = "default";
     }
 
     private sealed class Person

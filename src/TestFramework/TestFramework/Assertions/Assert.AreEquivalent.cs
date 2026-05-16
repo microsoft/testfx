@@ -57,7 +57,9 @@ public sealed partial class Assert
     ///     Primitive-like types (numerics, <see cref="bool"/>, <see cref="char"/>, <see cref="string"/>,
     ///     enums, <see cref="DateTime"/>, <see cref="DateTimeOffset"/>, <see cref="TimeSpan"/>,
     ///     <see cref="Guid"/>, <see cref="Uri"/>, <see cref="Type"/>, <see cref="Version"/>) are compared with
-    ///     <see cref="object.Equals(object?)"/>.
+    ///     <see cref="object.Equals(object?)"/>. On target frameworks that ship them,
+    ///     <c>DateOnly</c>, <c>TimeOnly</c>, <c>Half</c>, <c>Int128</c>, and <c>UInt128</c> are also
+    ///     treated as primitive-like.
     ///     </description>
     ///   </item>
     ///   <item>
@@ -267,7 +269,9 @@ public sealed partial class Assert
             expectedExpression,
             actualExpression,
             "<expected>",
-            "<actual>");
+            "<actual>",
+            "expected:",
+            "actual:");
     }
 
     [DoesNotReturn]
@@ -285,11 +289,13 @@ public sealed partial class Assert
             notExpectedExpression,
             actualExpression,
             "<notExpected>",
-            "<actual>");
+            "<actual>",
+            "not expected:",
+            "actual:");
     }
 
     [DoesNotReturn]
-    private static void ReportAssertEquivalenceMismatch(EquivalenceMismatch mismatch, string summary, string? userMessage, string assertionMethodName, string leftExpression, string rightExpression, string leftPlaceholder, string rightPlaceholder)
+    private static void ReportAssertEquivalenceMismatch(EquivalenceMismatch mismatch, string summary, string? userMessage, string assertionMethodName, string leftExpression, string rightExpression, string leftPlaceholder, string rightPlaceholder, string leftLabel, string rightLabel)
     {
         string locationLine = string.Format(
             CultureInfo.CurrentCulture,
@@ -304,8 +310,8 @@ public sealed partial class Assert
         if (mismatch.ExpectedText is not null && mismatch.ActualText is not null)
         {
             EvidenceBlock evidence = EvidenceBlock.Create()
-                .AddLine("expected:", mismatch.ExpectedText)
-                .AddLine("actual:", mismatch.ActualText);
+                .AddLine(leftLabel, mismatch.ExpectedText)
+                .AddLine(rightLabel, mismatch.ActualText);
             structured.WithEvidence(evidence);
             structured.WithExpectedAndActual(mismatch.ExpectedText, mismatch.ActualText);
         }

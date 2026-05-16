@@ -234,10 +234,10 @@
     <value>Could not complete structural comparison (strict mode).</value>
   </data>
   <data name="AreNotEquivalentFailedSummary" xml:space="preserve">
-    <value>Expected values to NOT be structurally equivalent.</value>
+    <value>Expected values to be structurally different.</value>
   </data>
   <data name="AreNotEquivalentFailedSummaryStrict" xml:space="preserve">
-    <value>Expected values to NOT be structurally equivalent (strict mode).</value>
+    <value>Expected values to be structurally different (strict mode).</value>
   </data>
   <data name="AreSameExpectedIsNull" xml:space="preserve">
     <value>Expected is &lt;null&gt;. {0}</value>

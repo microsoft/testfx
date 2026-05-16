@@ -207,7 +207,7 @@ public sealed partial class Assert
             {
                 return EquivalenceMismatch.DictionaryAccessFailure(path, isExpected, tie.InnerException ?? tie);
             }
-            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
             {
                 return EquivalenceMismatch.DictionaryAccessFailure(path, isExpected, ex);
             }
@@ -230,7 +230,7 @@ public sealed partial class Assert
                     {
                         return EquivalenceMismatch.DictionaryAccessFailure(path, isExpected, tie.InnerException ?? tie);
                     }
-                    catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+                    catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
                     {
                         return EquivalenceMismatch.DictionaryAccessFailure(path, isExpected, ex);
                     }
@@ -261,7 +261,7 @@ public sealed partial class Assert
                 result = default!;
                 return EquivalenceMismatch.DictionaryAccessFailure(path, isExpected, tie.InnerException ?? tie);
             }
-            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
             {
                 result = default!;
                 return EquivalenceMismatch.DictionaryAccessFailure(path, isExpected, ex);
@@ -390,7 +390,7 @@ public sealed partial class Assert
                 {
                     return EquivalenceMismatch.MemberAccessFailure(childPath, isExpected: true, ex.InnerException ?? ex);
                 }
-                catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+                catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
                 {
                     return EquivalenceMismatch.MemberAccessFailure(childPath, isExpected: true, ex);
                 }
@@ -403,7 +403,7 @@ public sealed partial class Assert
                 {
                     return EquivalenceMismatch.MemberAccessFailure(childPath, isExpected: false, ex.InnerException ?? ex);
                 }
-                catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+                catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
                 {
                     return EquivalenceMismatch.MemberAccessFailure(childPath, isExpected: false, ex);
                 }
@@ -430,7 +430,7 @@ public sealed partial class Assert
                 enumerator = default!;
                 return EquivalenceMismatch.EnumerationFailure(path, isExpected, tie.InnerException ?? tie);
             }
-            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
             {
                 enumerator = default!;
                 return EquivalenceMismatch.EnumerationFailure(path, isExpected, ex);
@@ -449,7 +449,7 @@ public sealed partial class Assert
                 hasNext = false;
                 return EquivalenceMismatch.EnumerationFailure(path, isExpected, tie.InnerException ?? tie);
             }
-            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
             {
                 hasNext = false;
                 return EquivalenceMismatch.EnumerationFailure(path, isExpected, ex);
@@ -468,7 +468,7 @@ public sealed partial class Assert
                 current = default;
                 return EquivalenceMismatch.EnumerationFailure(path, isExpected, tie.InnerException ?? tie);
             }
-            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
             {
                 current = default;
                 return EquivalenceMismatch.EnumerationFailure(path, isExpected, ex);
@@ -561,7 +561,7 @@ public sealed partial class Assert
                 thrown = ex.InnerException ?? ex;
                 return IEquatableOutcome.Threw;
             }
-            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+            catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not UnitTestAssertException)
             {
                 thrown = ex;
                 return IEquatableOutcome.Threw;
@@ -670,7 +670,7 @@ public sealed partial class Assert
         private static bool IsPrimitiveLike(Type type)
             => IsPrimitiveLikeCache.GetOrAdd(type, static t =>
             {
-                if (t.IsPrimitive || t.IsEnum || t.IsPointer)
+                if (t.IsPrimitive || t.IsEnum)
                 {
                     return true;
                 }
@@ -691,6 +691,11 @@ public sealed partial class Assert
 
         private static bool TryCreateDictionaryView(object value, out DictionaryView? view)
         {
+            // Non-generic IDictionary takes precedence over IDictionary<,> / IReadOnlyDictionary<,>:
+            // most BCL dictionaries implement both and route both surfaces to the same backing store
+            // (so the choice is observationally equivalent), while custom hybrid types are expected
+            // to keep their non-generic surface consistent with the generic one. Picking the non-
+            // generic path first avoids reflection-based dispatch where possible.
             if (value is IDictionary nonGeneric)
             {
                 view = new NonGenericDictionaryView(nonGeneric);
@@ -738,7 +743,13 @@ public sealed partial class Assert
         private static MemberLookup GetMembers(Type type)
             => MemberCache.GetOrAdd(type, static t =>
             {
-                List<MemberAccessor> list = [];
+                // Collect candidates per name, preferring the most-derived declaration so that
+                // `new`-shadowed properties/fields are deterministically resolved to the most-derived
+                // member regardless of metadata ordering.
+#pragma warning disable IDE0028 // Collection initialization can be simplified — target-typed `new` cannot pass the comparer in the same syntactic form expected.
+                Dictionary<string, MemberAccessor> byName = new(StringComparer.Ordinal);
+                Dictionary<string, Type> declaringTypes = new(StringComparer.Ordinal);
+#pragma warning restore IDE0028
 
                 foreach (PropertyInfo p in t.GetProperties(BindingFlags.Public | BindingFlags.Instance))
                 {
@@ -753,7 +764,7 @@ public sealed partial class Assert
                         continue;
                     }
 
-                    list.Add(new MemberAccessor(p.Name, p.PropertyType, p));
+                    TryRegisterMostDerived(byName, declaringTypes, p, new MemberAccessor(p.Name, p.PropertyType, p));
                 }
 
                 foreach (FieldInfo f in t.GetFields(BindingFlags.Public | BindingFlags.Instance))
@@ -763,23 +774,38 @@ public sealed partial class Assert
                         continue;
                     }
 
-                    list.Add(new MemberAccessor(f.Name, f.FieldType, f));
+                    TryRegisterMostDerived(byName, declaringTypes, f, new MemberAccessor(f.Name, f.FieldType, f));
                 }
 
-                // Sort alphabetically for stable diagnostics across runtimes.
-                list.Sort(static (a, b) => StringComparer.Ordinal.Compare(a.Name, b.Name));
-
-                MemberAccessor[] sorted = list.ToArray();
-                Dictionary<string, MemberAccessor> byName = new(sorted.Length, StringComparer.Ordinal);
-                foreach (MemberAccessor m in sorted)
+                var sorted = new MemberAccessor[byName.Count];
+                int i = 0;
+                foreach (MemberAccessor accessor in byName.Values)
                 {
-                    // Property/field name shadowing is rare; keep the first one we encounter
-                    // (alphabetical order is deterministic).
-                    byName[m.Name] = m;
+                    sorted[i++] = accessor;
                 }
+
+                Array.Sort(sorted, static (a, b) => StringComparer.Ordinal.Compare(a.Name, b.Name));
 
                 return new MemberLookup(sorted, byName);
             });
+
+        private static void TryRegisterMostDerived(Dictionary<string, MemberAccessor> byName, Dictionary<string, Type> declaringTypes, MemberInfo member, MemberAccessor accessor)
+        {
+            if (byName.ContainsKey(member.Name)
+                && !IsMoreDerivedThan(member.DeclaringType, declaringTypes[member.Name]))
+            {
+                return;
+            }
+
+            byName[member.Name] = accessor;
+            declaringTypes[member.Name] = member.DeclaringType ?? typeof(object);
+        }
+
+        private static bool IsMoreDerivedThan(Type? candidate, Type? incumbent)
+            => candidate is not null
+                && incumbent is not null
+                && candidate != incumbent
+                && incumbent.IsAssignableFrom(candidate);
 
         private static MemberAccessor? FindMember(Type type, string name)
             => GetMembers(type).ByName.TryGetValue(name, out MemberAccessor? found) ? found : null;
@@ -986,6 +1012,8 @@ public sealed partial class Assert
         {
             foreach (object? item in (IEnumerable)source)
             {
+                // KeyValuePair<,> is a value type, so `item` cannot be null when iterated as object;
+                // we still dereference defensively in case a custom IEnumerable yields a boxed null.
                 if (item is null)
                 {
                     continue;
