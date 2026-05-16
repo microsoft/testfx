@@ -61,7 +61,9 @@
         <source>The name of the generated TRX report.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
 Example: MyReport_{tfm}.trx</source>
-        <target state="needs-review-translation">Имя созданного отчета TRX</target>
+        <target state="new">The name of the generated TRX report.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Example: MyReport_{tfm}.trx</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameRequiresTrxReport">

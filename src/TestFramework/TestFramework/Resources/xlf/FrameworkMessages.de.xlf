@@ -332,6 +332,16 @@ Tatsächlich: {2}</target>
         <target state="translated">Es wurde erwartet, dass die Bedingung „falsch“ lautet.</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsGreaterThanFailedSummary">
+        <source>Expected value to be greater than the lower bound.</source>
+        <target state="new">Expected value to be greater than the lower bound.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsGreaterThanOrEqualToFailedSummary">
+        <source>Expected value to be greater than or equal to the lower bound.</source>
+        <target state="new">Expected value to be greater than or equal to the lower bound.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
         <target state="translated">Der Wert „{0}“ liegt nicht im erwarteten Bereich [{1}..{2}]. {3}</target>
@@ -352,9 +362,24 @@ Tatsächlich: {2}</target>
         <target state="translated">{0}Erwarteter Typ:&lt;{1}&gt;. Tatsächlicher Typ:&lt;{2}&gt;.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="IsLessThanFailedSummary">
+        <source>Expected value to be less than the upper bound.</source>
+        <target state="new">Expected value to be less than the upper bound.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsLessThanOrEqualToFailedSummary">
+        <source>Expected value to be less than or equal to the upper bound.</source>
+        <target state="new">Expected value to be less than or equal to the upper bound.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsMatchFail">
         <source>String '{0}' does not match pattern '{1}'. {2}</source>
         <target state="translated">Die Zeichenfolge „{0}“ stimmt nicht mit dem Muster „{1}“ überein. {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsNegativeFailedSummary">
+        <source>Expected value to be negative.</source>
+        <target state="new">Expected value to be negative.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
@@ -390,6 +415,11 @@ Tatsächlich: {2}</target>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
         <target state="translated">Erwarteter Wert ist null.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsPositiveFailedSummary">
+        <source>Expected value to be positive.</source>
+        <target state="new">Expected value to be positive.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">
@@ -506,36 +536,6 @@ Tatsächlich: {2}</target>
       <trans-unit id="DynamicDataIEnumerableEmpty">
         <source>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</source>
         <target state="translated">Eigenschaft oder Methode "{0}" in "{1}" gibt leeres IEnumerable&lt;object[]&gt; zurück.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsGreaterThanFailMsg">
-        <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">Der tatsächliche Wert &lt;{2}&gt; ist nicht größer als der erwartete Wert &lt;{1}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsGreaterThanOrEqualToFailMsg">
-        <source>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">Der tatsächliche Wert &lt;{2}&gt; ist nicht größer oder gleich dem erwarteten Wert &lt;{1}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsLessThanFailMsg">
-        <source>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">Der tatsächliche Wert &lt;{2}&gt; ist nicht kleiner als der erwartete Wert &lt;{1}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsLessThanOrEqualToFailMsg">
-        <source>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">Der tatsächliche Wert &lt;{2}&gt; ist nicht kleiner oder gleich dem erwarteten Wert &lt;{1}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsPositiveFailMsg">
-        <source>Expected value &lt;{1}&gt; to be positive. {0}</source>
-        <target state="translated">Es wurde erwartet, dass der Wert &lt;{1}&gt; positiv ist. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsNegativeFailMsg">
-        <source>Expected value &lt;{1}&gt; to be negative. {0}</source>
-        <target state="translated">Es wurde erwartet, dass der Wert &lt;{1}&gt; negativ ist. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">

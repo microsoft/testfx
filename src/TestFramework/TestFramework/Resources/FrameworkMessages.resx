@@ -328,24 +328,6 @@ Actual: {2}</value>
   <data name="DoesNotContainFail" xml:space="preserve">
     <value>String '{0}' does contain string '{1}'. {2}.</value>
   </data>
-  <data name="IsGreaterThanFailMsg" xml:space="preserve">
-    <value>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</value>
-  </data>
-  <data name="IsGreaterThanOrEqualToFailMsg" xml:space="preserve">
-    <value>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</value>
-  </data>
-  <data name="IsLessThanFailMsg" xml:space="preserve">
-    <value>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</value>
-  </data>
-  <data name="IsLessThanOrEqualToFailMsg" xml:space="preserve">
-    <value>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</value>
-  </data>
-  <data name="IsPositiveFailMsg" xml:space="preserve">
-    <value>Expected value &lt;{1}&gt; to be positive. {0}</value>
-  </data>
-  <data name="IsNegativeFailMsg" xml:space="preserve">
-    <value>Expected value &lt;{1}&gt; to be negative. {0}</value>
-  </data>
   <data name="DoesNotEndWithFail" xml:space="preserve">
     <value>String '{0}' ends with string '{1}'. {2}</value>
   </data>
@@ -446,6 +428,24 @@ Actual: {2}</value>
   </data>
   <data name="IsInRangeFailedSummary" xml:space="preserve">
     <value>Expected value to be within the inclusive range.</value>
+  </data>
+  <data name="IsGreaterThanFailedSummary" xml:space="preserve">
+    <value>Expected value to be greater than the lower bound.</value>
+  </data>
+  <data name="IsGreaterThanOrEqualToFailedSummary" xml:space="preserve">
+    <value>Expected value to be greater than or equal to the lower bound.</value>
+  </data>
+  <data name="IsLessThanFailedSummary" xml:space="preserve">
+    <value>Expected value to be less than the upper bound.</value>
+  </data>
+  <data name="IsLessThanOrEqualToFailedSummary" xml:space="preserve">
+    <value>Expected value to be less than or equal to the upper bound.</value>
+  </data>
+  <data name="IsPositiveFailedSummary" xml:space="preserve">
+    <value>Expected value to be positive.</value>
+  </data>
+  <data name="IsNegativeFailedSummary" xml:space="preserve">
+    <value>Expected value to be negative.</value>
   </data>
   <data name="StartsWithFailedSummary" xml:space="preserve">
     <value>Expected string to start with the specified prefix.</value>
