@@ -70,7 +70,7 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
             targetMethod.Name is not ("Throws" or "ThrowsExactly") ||
             context.ContainingSymbol is not IMethodSymbol containingMethod ||
             !containingMethod.GetAttributes().Any(attr => attr.AttributeClass.Inherits(testMethodAttributeSymbol)) ||
-            IsInsideNestedFunction(operation) ||
+            IsInsideUnsupportedAwaitContext(operation) ||
             !TryGetActionArgument(operation, out IArgumentOperation? actionArgument) ||
             !TryGetBlockedTaskOperationFromArgument(actionArgument.Value, out IOperation? asyncOperation))
         {
@@ -101,11 +101,12 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    private static bool IsInsideNestedFunction(IOperation operation)
+    private static bool IsInsideUnsupportedAwaitContext(IOperation operation)
     {
         for (IOperation? current = operation.Parent; current is not null; current = current.Parent)
         {
-            if (current is IAnonymousFunctionOperation or ILocalFunctionOperation)
+            if (current is IAnonymousFunctionOperation or ILocalFunctionOperation ||
+                current.Kind == OperationKind.Lock)
             {
                 return true;
             }
@@ -133,11 +134,15 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
 
         foreach (IOperation childOperation in blockOperation.Operations)
         {
+            if (childOperation.IsImplicit)
+            {
+                continue;
+            }
+
             IOperation? candidateOperation = childOperation switch
             {
                 IExpressionStatementOperation expressionStatementOperation => expressionStatementOperation.Operation,
                 IReturnOperation { ReturnedValue: { } returnedValue } => returnedValue,
-                IReturnOperation { IsImplicit: true } => null,
                 _ => childOperation,
             };
 
