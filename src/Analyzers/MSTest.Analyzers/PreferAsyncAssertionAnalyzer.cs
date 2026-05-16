@@ -134,15 +134,24 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
 
         foreach (IOperation childOperation in blockOperation.Operations)
         {
-            if (childOperation.IsImplicit)
-            {
-                continue;
-            }
-
             IOperation? candidateOperation = childOperation switch
             {
                 IExpressionStatementOperation expressionStatementOperation => expressionStatementOperation.Operation,
-                IReturnOperation { ReturnedValue: { } returnedValue } => returnedValue,
+
+                // For any return-with-value, treat the returned value as the candidate, except for the
+                // synthetic implicit return that VB 'Function' lambdas emit: it returns an implicit
+                // ILocalReferenceOperation to the function-name local. Treating that as a candidate
+                // would cause single-statement VB Function lambdas to look as if they contain
+                // multiple operations, and the diagnostic would be missed.
+                IReturnOperation { ReturnedValue: { } returnedValue }
+                    => GetExplicitReturnedValue(returnedValue),
+
+                // Implicit return with no value contributes no candidate (e.g. end of void lambda).
+                IReturnOperation => null,
+
+                // Skip any other compiler-synthesized operation (e.g. VB exit-function labels).
+                _ when childOperation.IsImplicit => null,
+
                 _ => childOperation,
             };
 
@@ -161,6 +170,16 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
         }
 
         return operation is not null;
+    }
+
+    private static IOperation? GetExplicitReturnedValue(IOperation returnedValue)
+    {
+        // The synthetic implicit return that VB Function lambdas emit returns the (also implicit)
+        // function-name local. Detect that case via the unwrapped operation.
+        IOperation unwrapped = returnedValue.WalkDownConversion();
+        return unwrapped is ILocalReferenceOperation { IsImplicit: true }
+            ? null
+            : returnedValue;
     }
 
     private static bool TryGetBlockedTaskOperation(IOperation operation, [NotNullWhen(true)] out IOperation? asyncOperation)
