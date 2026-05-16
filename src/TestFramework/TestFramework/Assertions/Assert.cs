@@ -272,46 +272,17 @@ public sealed partial class Assert
             : $"{callerArgMessagePart} {userMessage}";
     }
 
-    private static string BuildUserMessageForThreeExpressions(string? format, string callerArgExpression1, string parameterName1, string callerArgExpression2, string parameterName2, string callerArgExpression3, string parameterName3)
-    {
-        string userMessage = BuildUserMessage(format);
-        if (string.IsNullOrEmpty(callerArgExpression1) || string.IsNullOrEmpty(callerArgExpression2) || string.IsNullOrEmpty(callerArgExpression3))
-        {
-            return userMessage;
-        }
-
-        string callerArgMessagePart = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.CallerArgumentExpressionThreeParametersMessage, parameterName1, callerArgExpression1, parameterName2, callerArgExpression2, parameterName3, callerArgExpression3);
-        return string.IsNullOrEmpty(userMessage)
-            ? callerArgMessagePart
-            : $"{callerArgMessagePart} {userMessage}";
-    }
-
     private static string BuildUserMessageForCollectionExpression(string? format, string collectionExpression)
         => BuildUserMessageForSingleExpression(format, collectionExpression, "collection");
 
-    private static string BuildUserMessageForSubstringExpressionAndValueExpression(string? format, string substringExpression, string valueExpression)
-        => BuildUserMessageForTwoExpressions(format, substringExpression, "substring", valueExpression, "value");
-
     private static string BuildUserMessageForPatternExpressionAndValueExpression(string? format, string patternExpression, string valueExpression)
         => BuildUserMessageForTwoExpressions(format, patternExpression, "pattern", valueExpression, "value");
-
-    private static string BuildUserMessageForExpectedExpressionAndCollectionExpression(string? format, string expectedExpression, string collectionExpression)
-        => BuildUserMessageForTwoExpressions(format, expectedExpression, "expected", collectionExpression, "collection");
-
-    private static string BuildUserMessageForNotExpectedExpressionAndCollectionExpression(string? format, string notExpectedExpression, string collectionExpression)
-        => BuildUserMessageForTwoExpressions(format, notExpectedExpression, "notExpected", collectionExpression, "collection");
-
-    private static string BuildUserMessageForPredicateExpressionAndCollectionExpression(string? format, string predicateExpression, string collectionExpression)
-        => BuildUserMessageForTwoExpressions(format, predicateExpression, "predicate", collectionExpression, "collection");
 
     private static string BuildUserMessageForExpectedExpressionAndActualExpression(string? format, string expectedExpression, string actualExpression)
         => BuildUserMessageForTwoExpressions(format, expectedExpression, "expected", actualExpression, "actual");
 
     private static string BuildUserMessageForNotExpectedExpressionAndActualExpression(string? format, string notExpectedExpression, string actualExpression)
         => BuildUserMessageForTwoExpressions(format, notExpectedExpression, "notExpected", actualExpression, "actual");
-
-    private static string BuildUserMessageForMinValueExpressionAndMaxValueExpressionAndValueExpression(string? format, string minValueExpression, string maxValueExpression, string valueExpression)
-        => BuildUserMessageForThreeExpressions(format, minValueExpression, "minValue", maxValueExpression, "maxValue", valueExpression, "value");
 
     /// <summary>
     /// Checks the parameter for valid conditions.
