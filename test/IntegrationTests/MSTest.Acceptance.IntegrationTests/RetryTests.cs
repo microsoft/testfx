@@ -26,7 +26,7 @@ public sealed class RetryTests : AcceptanceTestBase<RetryTests.TestAssetFixture>
             """);
 
         testHostResult.AssertOutputContains("failed TestMethod5");
-        testHostResult.AssertOutputContains("Assert.Fail failed. Failing TestMethod4. Attempts: 4 (from TestContext: 4)");
+        testHostResult.AssertOutputContains("Assertion failed.\r\nFailing TestMethod4. Attempts: 4 (from TestContext: 4)");
         testHostResult.AssertOutputContainsSummary(failed: 1, passed: 4, skipped: 0);
     }
 

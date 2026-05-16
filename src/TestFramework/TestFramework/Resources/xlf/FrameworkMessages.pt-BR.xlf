@@ -442,6 +442,11 @@ Real: {2}</target>
         <target state="translated">Coleção esperada de tamanho {1}. Real: {2}. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="InconclusivePrefix">
+        <source>Assert.Inconclusive.</source>
+        <target state="new">Assert.Inconclusive.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidAccessToTestContextProperty">
         <source>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</source>
         <target state="translated">A propriedade "TestContext.{0}" está relacionada ao teste atual não está disponível durante os acessórios de assembly ou classe.</target>

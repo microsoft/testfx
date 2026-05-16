@@ -26,7 +26,13 @@ public sealed partial class Assert
         TelemetryCollector.TrackAssertionCall("Assert.Inconclusive");
 
         string userMessage = BuildUserMessage(message);
-        throw new AssertInconclusiveException(
-            FormatAssertionFailed("Assert.Inconclusive", userMessage));
+        throw new AssertInconclusiveException(FormatInconclusive(userMessage));
     }
+
+    private static string FormatInconclusive(string? message)
+        => string.IsNullOrWhiteSpace(message)
+            ? FrameworkMessages.InconclusivePrefix
+            : message![0] is '\n' or '\r'
+                ? string.Concat(FrameworkMessages.InconclusivePrefix, message)
+                : $"{FrameworkMessages.InconclusivePrefix} {message}";
 }

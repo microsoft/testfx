@@ -122,7 +122,11 @@ public partial class AssertTests
 
         // Assert.Fail is a hard assertion — it throws immediately, even within a scope.
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.Fail failed. first failure");
+            .WithMessage(
+                """
+                Assertion failed.
+                first failure
+                """);
     }
 
     public void Scope_AssertIsNotNull_IsSoftFailure()

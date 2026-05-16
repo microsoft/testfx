@@ -442,6 +442,11 @@ Gerçekte olan: {2}</target>
         <target state="translated">Beklenen boyut {1}. Gerçek: {2}. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="InconclusivePrefix">
+        <source>Assert.Inconclusive.</source>
+        <target state="new">Assert.Inconclusive.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidAccessToTestContextProperty">
         <source>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</source>
         <target state="translated">'TestContext.{0}' özelliği, derleme veya sınıf sabitlemeleri sırasında mevcut testle ilişkili değildir.</target>

@@ -289,6 +289,9 @@ Actual: {2}</value>
   <data name="AssertionFailed" xml:space="preserve">
     <value>{0} failed.</value>
   </data>
+  <data name="InconclusivePrefix" xml:space="preserve">
+    <value>Assert.Inconclusive.</value>
+  </data>
   <data name="IsInstanceOfFailMsg" xml:space="preserve">
     <value>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</value>
   </data>
