@@ -4,7 +4,6 @@
 #if NETFRAMEWORK
 using System.Data;
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using StringEx = Microsoft.VisualStudio.TestTools.UnitTesting.StringEx;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
