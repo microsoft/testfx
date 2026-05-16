@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-05-15T18:00:59Z",
+  "last_run": "2026-05-16T17:47:20Z",
   "last_tasks": ["task2_scan", "task4_maintain_prs"],
   "validated_commands": {
     "build": "export PATH=\"$PWD/.dotnet:$PATH\" && dotnet build <project.csproj> -p:SignAssembly=false --nologo",
@@ -57,7 +57,7 @@
     "build_env_2026-05-12": "Local build succeeds for net9.0 with .NET 11 preview SDK. MSTestAdapter.PlatformServices builds with 0 warnings/errors.",
     "test_env_issue": "MSTestAdapter.PlatformServices.UnitTests can't run locally — restore fails (net462/net48 TFM mismatch) + AwesomeAssertions path error for net8.0.",
     "sa1503_warning": "SA1503: braces must not be omitted — always use braces even for single-statement if bodies.",
-    "scan_status_2026-05-15": "Comprehensive hot-path scan complete. All major allocation issues in test execution, discovery, and property filtering paths have been addressed by merged PRs. Remaining backlog is all low-priority (cold paths, public API constraints). ExceptionExtensions.IsOperationCanceledExceptionFromToken has LINQ on error path (cold). OpenTelemetry path has some yield/LINQ but it's opt-in telemetry path. Consider fresh scan in future runs after new features are added.",
+    "scan_status_2026-05-16": "Comprehensive hot-path scan complete (again). All major allocation issues in test execution, discovery, and property filtering paths have been addressed by merged PRs. New commits since last scan (AreEquivalent deep comparer, TRX streaming, retry delay, TestDataConnectionSql refactor) do not introduce hot-path inefficiencies. Assert.AreEquivalent uses proper caching (ConcurrentDictionary) for reflection. Remaining backlog is all low-priority (cold paths, public API constraints).",
     "monthly_summary_issue": "IMPORTANT: Issue #7975 (May 2026 activity summary) was closed as 'not_planned' by Evangelink on 2026-05-13. Do NOT create new monthly activity summary issues — maintainer has signalled they don't want them.",
     "issue_access": "Many issues are access-restricted in lockdown mode — cannot read body/comments."
   }
