@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
+[DoNotParallelize] // VSTest tests rebuild the shared VSTestProjectPath; running them in parallel races on obj/Release/<tfm>/.
 public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture>
 {
     private const string MTPAssetName = "TelemetryMTPProject";
