@@ -8,7 +8,16 @@ using Microsoft.Testing.Platform.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
+<<<<<<< HEAD
 [DoNotParallelize] // VSTest tests rebuild the shared VSTestProjectPath; running them in parallel races on obj/Release/<tfm>/.
+=======
+// The VSTest_* tests below invoke `dotnet test` against the same shared VSTest project
+// path for every target framework. Running them in parallel races on MSBuild outputs
+// such as `bin/Release/<tfm>/TelemetryVSTestProject.runtimeconfig.json` and shared
+// `obj/` files, which causes intermittent `GenerateRuntimeConfigurationFiles` failures.
+// Serialize all tests in this class to keep the suite deterministic.
+[DoNotParallelize]
+>>>>>>> origin/main
 public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture>
 {
     private const string MTPAssetName = "TelemetryMTPProject";

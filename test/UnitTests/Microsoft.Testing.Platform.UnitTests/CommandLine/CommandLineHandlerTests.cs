@@ -151,7 +151,11 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual("Option '--diagnostic-verbosity' has invalid arguments: '--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')", result.ErrorMessage);
+        Assert.AreEqual(
+            """
+            Option '--diagnostic-verbosity' has invalid arguments: '--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')
+            Command line: --diagnostic-verbosity r
+            """, result.ErrorMessage);
     }
 
     [TestMethod]
@@ -167,7 +171,31 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual("Option '--help' from provider 'Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments", result.ErrorMessage);
+        Assert.AreEqual(
+            """
+            Option '--help' from provider 'Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments
+            Command line: --help arg
+            """, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_InvalidArgumentArityWithToolName_IncludesFullCommandLine()
+    {
+        // Arrange
+        string[] args = ["TestProject.dll", "--dotnet-test-pipe", "pipe", "extra"];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+
+        // Act
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+
+        // Assert
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(
+            """
+            Option '--dotnet-test-pipe' from provider 'Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments
+            Command line: TestProject.dll --dotnet-test-pipe pipe extra
+            """, result.ErrorMessage);
     }
 
     [TestMethod]
@@ -228,7 +256,11 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual("Unknown option '--x'", result.ErrorMessage);
+        Assert.AreEqual(
+            """
+            Unknown option '--x'
+            Command line: --x
+            """, result.ErrorMessage);
     }
 
     [TestMethod]
