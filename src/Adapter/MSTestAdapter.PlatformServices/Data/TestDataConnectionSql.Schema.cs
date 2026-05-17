@@ -111,8 +111,7 @@ internal partial class TestDataConnectionSql
                     WriteDiagnostics("Table {0}{1} found", tableSchema != null ? tableSchema + "." : string.Empty, tableName);
 
                     // If schema is defined and is not equal to default, prepend table schema in front of the table.
-                    string? qualifiedTableName = tableName;
-                    qualifiedTableName = isDefaultSchema
+                    string qualifiedTableName = isDefaultSchema
                         ? FormatTableNameForDisplay(null, tableName)
                         : FormatTableNameForDisplay(tableSchema, tableName);
 
@@ -162,7 +161,7 @@ internal partial class TestDataConnectionSql
                 WriteDiagnostics("GetColumns for {0} failed to get column metadata, exception {1}", tableName, e);
             }
 
-            if (columns != null)
+            if (columns is not null)
             {
                 List<string> result = [];
 
@@ -177,10 +176,8 @@ internal partial class TestDataConnectionSql
                 // must be found in a single metadata collection
                 return result;
             }
-            else
-            {
-                WriteDiagnostics("Column metadata is null");
-            }
+
+            WriteDiagnostics("Column metadata is null");
         }
         catch (Exception e)
         {
