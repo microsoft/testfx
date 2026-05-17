@@ -53,7 +53,9 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
             new CreateTestRunRequest(configuration.RunName, true, new BuildReference(configuration.BuildId), AzureDevOpsLivePublishingConstants.InProgressTestRunState));
 
         CreateTestRunResponse response = await SendAsync<CreateTestRunResponse>(request, cancellationToken).ConfigureAwait(false);
-        return response.Id;
+        return response.Id > 0
+            ? response.Id
+            : throw new InvalidOperationException(AzureDevOpsResources.AzureDevOpsLivePublishingInvalidResponse);
     }
 
     public Task PublishTestResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken)
@@ -141,36 +143,46 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
     {
         Exception? lastException = null;
 
-        for (int attempt = 1; attempt <= MaxAttempts; attempt++)
+        try
         {
-            using HttpRequestMessage currentRequest = await CloneAsync(request, requestCancellationToken).ConfigureAwait(false);
-            using var attemptTimeoutSource = CancellationTokenSource.CreateLinkedTokenSource(requestCancellationToken);
-            attemptTimeoutSource.CancelAfter(AttemptTimeout);
-
-            try
+            for (int attempt = 1; attempt <= MaxAttempts; attempt++)
             {
-                HttpResponseMessage response = await _httpClient.SendAsync(currentRequest, attemptTimeoutSource.Token).ConfigureAwait(false);
-                if (response.IsSuccessStatusCode)
-                {
-                    return response;
-                }
+                using HttpRequestMessage currentRequest = await CloneAsync(request, requestCancellationToken).ConfigureAwait(false);
+                using var attemptTimeoutSource = CancellationTokenSource.CreateLinkedTokenSource(requestCancellationToken);
+                attemptTimeoutSource.CancelAfter(AttemptTimeout);
 
-                if (!ShouldRetry(response.StatusCode, attempt))
+                try
                 {
-                    string responseBody = await ReadAsStringAsync(response.Content, requestCancellationToken).ConfigureAwait(false);
+                    HttpResponseMessage response = await _httpClient.SendAsync(currentRequest, attemptTimeoutSource.Token).ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return response;
+                    }
+
+                    if (!ShouldRetry(response.StatusCode, attempt))
+                    {
+                        string responseBody = await ReadAsStringAsync(response.Content, requestCancellationToken).ConfigureAwait(false);
+                        response.Dispose();
+                        throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingHttpError, (int)response.StatusCode, responseBody));
+                    }
+
+                    TimeSpan delay = GetDelay(response, attempt);
                     response.Dispose();
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingHttpError, (int)response.StatusCode, responseBody));
+                    await _task.Delay(delay, requestCancellationToken).ConfigureAwait(false);
                 }
-
-                TimeSpan delay = GetDelay(response, attempt);
-                response.Dispose();
-                await _task.Delay(delay, requestCancellationToken).ConfigureAwait(false);
+                catch (Exception ex) when (ShouldRetry(ex, userCancellationToken, requestCancellationToken, attempt))
+                {
+                    lastException = ex;
+                    await _task.Delay(GetExponentialBackoffDelay(attempt), requestCancellationToken).ConfigureAwait(false);
+                }
             }
-            catch (Exception ex) when (ShouldRetry(ex, userCancellationToken, requestCancellationToken, attempt))
-            {
-                lastException = ex;
-                await _task.Delay(GetExponentialBackoffDelay(attempt), requestCancellationToken).ConfigureAwait(false);
-            }
+        }
+        catch (OperationCanceledException) when (!userCancellationToken.IsCancellationRequested)
+        {
+            // An internal timeout (per-attempt or request-level) fired on the final retry attempt.
+            // Convert to a non-cancellation exception so publishing failures never propagate as
+            // OperationCanceledException and fault the data consumer.
+            throw new InvalidOperationException(AzureDevOpsResources.AzureDevOpsLivePublishingRequestFailed, lastException);
         }
 
         throw new InvalidOperationException(AzureDevOpsResources.AzureDevOpsLivePublishingRequestFailed, lastException);

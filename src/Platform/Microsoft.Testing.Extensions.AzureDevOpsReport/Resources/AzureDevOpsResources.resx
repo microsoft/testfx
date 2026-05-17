@@ -122,7 +122,7 @@
     <comment>{Locked='--report-azdo-severity'}{Locked='--report-azdo'}</comment>
   </data>
   <data name="Description" xml:space="preserve">
-    <value>Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</value>
+    <value>Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</value>
   </data>
   <data name="DisplayName" xml:space="preserve">
     <value>Azure DevOps report generator</value>
@@ -131,7 +131,7 @@
     <value>Invalid option {0}.</value>
   </data>
   <data name="OptionDescription" xml:space="preserve">
-    <value>Enable Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</value>
+    <value>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</value>
   </data>
   <data name="SeverityOptionDescription" xml:space="preserve">
     <value>Severity to use for the reported event. Options are: error (default) and warning.</value>

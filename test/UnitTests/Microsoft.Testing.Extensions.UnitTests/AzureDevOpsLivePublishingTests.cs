@@ -436,7 +436,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
         testApplicationModuleInfo ??= new Mock<ITestApplicationModuleInfo>();
         testApplicationModuleInfo.Setup(x => x.TryGetAssemblyName()).Returns("MyTests");
-        testApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns("Q:\\src\\testfx-worktrees\\azdo-live\\artifacts\\MyTests.dll");
+        testApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns(Path.Combine("testfx-worktrees", "azdo-live", "artifacts", "MyTests.dll"));
 
         Mock<ITestApplicationProcessExitCode> processExitCode = new();
         processExitCode.Setup(x => x.GetProcessExitCode()).Returns(0);

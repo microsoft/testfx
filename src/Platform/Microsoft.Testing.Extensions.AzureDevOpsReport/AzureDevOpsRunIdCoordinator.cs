@@ -90,8 +90,12 @@ internal sealed class AzureDevOpsRunIdCoordinator
         catch
         {
             TryDeleteFile(participantFilePath);
-            TryDeleteFile(runIdFilePath);
-            TryDeleteFile(ownerFilePath);
+            if (ownsOwnerFile)
+            {
+                TryDeleteFile(runIdFilePath);
+                TryDeleteFile(ownerFilePath);
+            }
+
             throw;
         }
     }

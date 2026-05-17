@@ -73,8 +73,8 @@
         <note>{Locked='--report-azdo-severity'}{Locked='--report-azdo'}</note>
       </trans-unit>
       <trans-unit id="Description">
-        <source>Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</source>
-        <target state="translated">Gerador de relatórios do Azure DevOps para gravar erros na saída de uma forma que o Azure DevOps entenda.</target>
+        <source>Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
+        <target state="needs-review-translation">Gerador de relatórios do Azure DevOps para gravar erros na saída de uma forma que o Azure DevOps entenda.</target>
         <note />
       </trans-unit>
       <trans-unit id="DisplayName">
@@ -88,7 +88,7 @@
         <note />
       </trans-unit>
       <trans-unit id="OptionDescription">
-        <source>Enable Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</source>
+        <source>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
         <target state="needs-review-translation">Habilitar o gerador de relatórios do Azure DevOps para gravar erros na saída de uma forma que o Azure DevOps entenda.</target>
         <note />
       </trans-unit>

@@ -193,10 +193,13 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
 
         try
         {
+            // Use a fresh, non-canceled token so finalization (marking the run Aborted/Completed)
+            // succeeds even when the test session itself has been canceled.
+            using var cleanupCts = new CancellationTokenSource(_options.CoordinationFinalizeTimeout + TimeSpan.FromSeconds(60));
             await _runIdCoordinator.FinalizeRunAsync(
                 _coordinatedRun,
                 cancellationToken => _client.UpdateTestRunStateAsync(_publishConfiguration, CurrentRunId.Value, finalState, cancellationToken),
-                testSessionContext.CancellationToken).ConfigureAwait(false);
+                cleanupCts.Token).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
