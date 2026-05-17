@@ -1,7 +1,7 @@
 # TestFX Test Improver Memory
 
 ## Last Updated
-2026-05-15
+2026-05-17
 
 ## Build/Test Commands
 
@@ -71,33 +71,33 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 8. ✅ **DONE** MSTEST0031 code fix tests → confirmed merged via #7898 (2026-05-12)
 9. ✅ **DONE** Quality improvements to `LoggingManagerTests.cs` → merged via #8129 (2026-05-14)
 10. ✅ **DONE** `StopPoliciesService` unit tests → patch in 2026-05-14 run (StopPoliciesServiceTests.cs already exists at 176 lines)
-11. 🔄 `CommandLineParseResult` unit tests — patch created 2026-05-15 (branch: test-assist/commandline-parse-result-tests, 20 tests × 2 TFMs = 40)
-12. `ResponseFileHelper.SplitCommandLine` — complex quote/whitespace state-machine, no dedicated tests
-13. Code fix test coverage for MSTEST0040 when `AvoidUsingAssertsInAsyncVoidContextFixer` lands (#7891)
-14. `TestFramework.UnitTests` assertion edge cases
+11. ✅ **DONE** `CommandLineParseResult` unit tests → PR #8249 merged 2026-05-15
+12. 🔄 `ResponseFileHelper.SplitCommandLine` — patch created 2026-05-17 (branch: test-assist/response-file-helper-tests, 14 tests × 2 TFMs = 28)
+13. `ResponseFileHelper.TryReadResponseFile` — file I/O paths (FileNotFoundException, IOException)
+14. Code fix test coverage for MSTEST0040 when `AvoidUsingAssertsInAsyncVoidContextFixer` lands (#7891)
+15. `TestFramework.UnitTests` assertion edge cases
 
 ## Completed Work
 
+### 2026-05-17
+- **Task 3**: Implemented 14 unit tests for `ResponseFileHelper.SplitCommandLine` covering empty/whitespace/single/multi-token/quoted strings/tabs/real-world patterns. All 28 pass. PR push fell back to patch artifact (branch: test-assist/response-file-helper-tests).
+- **Task 7**: Created new Monthly Summary issue for May 2026.
+
 ### 2026-05-15
-- **Task 3**: Created 20 unit tests for `CommandLineParseResult` covering HasTool, HasError, IsOptionSet, TryGetOptionArgumentList, Equals, ToString. All 40 tests pass. PR push fell back to patch artifact.
-- **Task 7**: Created new Monthly Summary issue for May 2026 (previous #8206 closed as "completed" by Evangelink on 2026-05-14).
+- **Task 3**: Created 20 unit tests for `CommandLineParseResult` → PR #8249 merged same day.
+- **Task 7**: Created new Monthly Summary issue for May 2026.
 
 ### 2026-05-14
-- **Task 3**: Implemented 10 unit tests for `StopPoliciesService`. 1352→1374 tests passing. PR push fell back to patch artifact. (Note: StopPoliciesServiceTests.cs now exists at 176 lines)
-- **Task 7**: Created new Monthly Summary issue #8206 (previous #7969 closed by Evangelink as "not_planned").
+- **Task 3**: Implemented 10 unit tests for `StopPoliciesService`. PR push fell back to patch artifact.
+- **Task 7**: Created new Monthly Summary issue #8206 (closed by Evangelink as "completed").
 
 ### 2026-05-13
-- **Task 3**: Created quality improvements PR for `LoggingManagerTests.cs` — `_ =` discards on all `factory.CreateLogger()` calls + new `BuildAsync_MultipleProviders_OnlyIncludesEnabledOnes` test. All 22 tests pass (net8.0+net9.0). Closes #8140.
+- **Task 3**: Created quality improvements PR for `LoggingManagerTests.cs`. Closes #8140.
 - **Task 7**: Updated Monthly Summary issue #7969.
 
 ### 2026-05-12
-- **Task 4**: Discovered PRs #8124, #8128, #8130 merged on 2026-05-11. Commented on 5 duplicate PRs (#8104, #8125, #8126, #8127, #8131) and #8129 suggesting closure paths.
-- **Task 3**: Prepared quality improvements patch for `LoggingManagerTests.cs`. PR creation didn't push branch.
+- **Task 4**: PRs #8124, #8128, #8130 merged. Commented on duplicate PRs.
 - **Task 7**: Updated Monthly Summary issue #7969.
-
-### 2026-05-11
-- **Task 3**: Re-implemented LoggingManager.BuildAsync tests (10) + ExtensionValidationHelper tests (15) + TestExtension uid parameter. Combined PR attempt (v11). All 675 pass.
-- Multiple PRs created due to tool calling multiple times: #8104, #8125, #8126, #8127, #8129, #8131 opened; #8124, #8128, #8130 merged!
 
 ## Round-Robin Task Status
 
@@ -105,11 +105,11 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 |------|----------|
 | Task 1: Discover commands | 2026-04-24 |
 | Task 2: Identify opportunities | 2026-05-15 |
-| Task 3: Implement tests | 2026-05-15 |
+| Task 3: Implement tests | 2026-05-17 |
 | Task 4: Maintain PRs | 2026-05-12 |
 | Task 5: Comment on issues | 2026-05-08 |
 | Task 6: Test infrastructure | 2026-04-29 |
-| Task 7: Monthly summary | 2026-05-15 |
+| Task 7: Monthly summary | 2026-05-17 |
 
 ## Maintainer Priorities
 - PRs merged quickly by Evangelink — receptive to focused test PRs for MTP and MSTest
