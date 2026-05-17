@@ -54,7 +54,7 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         // Assert.Fail is a hard assertion — it throws immediately, even within a scope.
         // The second Assert.Fail should not be reached.
         testHostResult.AssertOutputMatchesRegex(
-            """failed AssertFailIsHardFailure \(\d+ms\)[\s\S]+Assert\.Fail failed\. hard failure""");
+            """failed AssertFailIsHardFailure \(\d+ms\)[\s\S]+Assertion failed\.[\r\n]+\s+hard failure""");
         testHostResult.AssertOutputDoesNotContain("second failure");
     }
 

@@ -45,5 +45,4 @@ public partial class AssertTests
         action.Should().Throw<AssertInconclusiveException>()
             .WithMessage("Assert.Inconclusive. db unavailable");
     }
-
 }

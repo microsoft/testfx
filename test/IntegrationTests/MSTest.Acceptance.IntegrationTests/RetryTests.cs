@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
@@ -28,7 +26,8 @@ public sealed class RetryTests : AcceptanceTestBase<RetryTests.TestAssetFixture>
             """);
 
         testHostResult.AssertOutputContains("failed TestMethod5");
-        testHostResult.AssertOutputContains($"Assertion failed.{Environment.NewLine}Failing TestMethod4. Attempts: 4 (from TestContext: 4)");
+        testHostResult.AssertOutputMatchesRegex(
+            """Assertion failed\.[\r\n]+\s+Failing TestMethod4\. Attempts: 4 \(from TestContext: 4\)""");
         testHostResult.AssertOutputContainsSummary(failed: 1, passed: 4, skipped: 0);
     }
 
