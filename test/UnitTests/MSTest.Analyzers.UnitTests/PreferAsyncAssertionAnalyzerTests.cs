@@ -324,6 +324,48 @@ public sealed class PreferAsyncAssertionAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenAssertionActionIsExplicitlyCast_CodeFixUsesAsyncAssertionAndRemovesCast()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    [|Assert.ThrowsExactly<InvalidOperationException>(((Action)(() => BarAsync().GetAwaiter().GetResult())))|];
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => BarAsync());
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenAssertionIsInsideLockStatement_NoDiagnostic()
     {
         string code = """
@@ -342,6 +384,36 @@ public sealed class PreferAsyncAssertionAnalyzerTests
                     lock (_gate)
                     {
                         Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult());
+                    }
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertionIsInsideExceptionFilter_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    try
+                    {
+                        throw new Exception();
+                    }
+                    catch (Exception) when (Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult()) is not null)
+                    {
                     }
                 }
 

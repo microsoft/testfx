@@ -106,7 +106,8 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
         for (IOperation? current = operation.Parent; current is not null; current = current.Parent)
         {
             if (current is IAnonymousFunctionOperation or ILocalFunctionOperation ||
-                current.Kind == OperationKind.Lock)
+                current.Kind == OperationKind.Lock ||
+                (current.Parent is ICatchClauseOperation catchClauseOperation && ReferenceEquals(catchClauseOperation.Filter, current)))
             {
                 return true;
             }

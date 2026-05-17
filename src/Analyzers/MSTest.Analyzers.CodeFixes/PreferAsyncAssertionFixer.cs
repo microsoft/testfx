@@ -134,10 +134,36 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
 
     private static bool TryReplaceLambda(ArgumentSyntax argument, [NotNullWhen(true)] out ArgumentSyntax? newArgument)
     {
-        if (argument.Expression is not LambdaExpressionSyntax lambdaExpression ||
-            !TryGetBlockedTaskExpressionFromLambda(lambdaExpression, out ExpressionSyntax? asyncExpression))
+        if (!TryReplaceLambdaExpression(argument.Expression, out ExpressionSyntax? newExpression))
         {
             newArgument = null;
+            return false;
+        }
+
+        newArgument = argument.WithExpression(newExpression);
+        return true;
+    }
+
+    private static bool TryReplaceLambdaExpression(ExpressionSyntax expression, [NotNullWhen(true)] out ExpressionSyntax? newExpression)
+    {
+        if (expression is ParenthesizedExpressionSyntax parenthesizedExpression &&
+            TryReplaceLambdaExpression(parenthesizedExpression.Expression, out ExpressionSyntax? parenthesizedNewExpression))
+        {
+            newExpression = parenthesizedNewExpression.WithTriviaFrom(expression);
+            return true;
+        }
+
+        if (expression is CastExpressionSyntax castExpression &&
+            TryReplaceLambdaExpression(castExpression.Expression, out ExpressionSyntax? castNewExpression))
+        {
+            newExpression = castNewExpression.WithTriviaFrom(expression);
+            return true;
+        }
+
+        if (expression is not LambdaExpressionSyntax lambdaExpression ||
+            !TryGetBlockedTaskExpressionFromLambda(lambdaExpression, out ExpressionSyntax? asyncExpression))
+        {
+            newExpression = null;
             return false;
         }
 
@@ -148,7 +174,7 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
             _ => lambdaExpression,
         };
 
-        newArgument = argument.WithExpression(newLambdaExpression);
+        newExpression = newLambdaExpression;
         return true;
     }
 
@@ -196,14 +222,8 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
             SymbolEqualityComparer.Default.Equals(semanticModel.GetTypeInfo(methodDeclaration.ReturnType, cancellationToken).Type, taskSymbol);
     }
 
-    private static bool TryGetBlockedTaskExpressionFromLambda(ExpressionSyntax expression, [NotNullWhen(true)] out ExpressionSyntax? asyncExpression)
+    private static bool TryGetBlockedTaskExpressionFromLambda(LambdaExpressionSyntax lambdaExpression, [NotNullWhen(true)] out ExpressionSyntax? asyncExpression)
     {
-        if (WalkDownParentheses(expression) is not LambdaExpressionSyntax lambdaExpression)
-        {
-            asyncExpression = null;
-            return false;
-        }
-
         if (lambdaExpression.Body is ExpressionSyntax expressionBody)
         {
             return TryGetBlockedTaskExpression(expressionBody, out asyncExpression);
