@@ -36,6 +36,8 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
     private AzureDevOpsRunIdCoordinator? _runIdCoordinator;
     private AzureDevOpsCoordinatedRun? _coordinatedRun;
     private DateTimeOffset _lastFlushTime;
+    private CancellationTokenSource? _backgroundFlushCts;
+    private Task? _backgroundFlushTask;
 
     private int? CurrentRunId { get; set; }
 
@@ -94,7 +96,11 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
     internal int? RunId => CurrentRunId;
 
     public void Dispose()
-        => _flushSemaphore.Dispose();
+    {
+        _backgroundFlushCts?.Cancel();
+        _backgroundFlushCts?.Dispose();
+        _flushSemaphore.Dispose();
+    }
 
     public Task<bool> IsEnabledAsync()
     {
@@ -133,6 +139,11 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                 cancellationToken => _client.CreateTestRunAsync(_publishConfiguration, cancellationToken),
                 testSessionContext.CancellationToken).ConfigureAwait(false);
             CurrentRunId = _coordinatedRun.RunId;
+
+            // Start a background loop that flushes pending results on the time-based interval even
+            // when no new TestNodeUpdateMessages arrive (e.g. at the tail end of a slow test run).
+            _backgroundFlushCts = new CancellationTokenSource();
+            _backgroundFlushTask = Task.Run(() => BackgroundFlushLoopAsync(_backgroundFlushCts.Token));
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -177,12 +188,33 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
             return;
         }
 
+        // Stop the background flush loop before doing the session-end forced flush so there is no
+        // concurrent flush in flight when we drain the last batch.
+        if (_backgroundFlushCts is not null && _backgroundFlushTask is not null)
+        {
+#pragma warning disable VSTHRD103 // CancelAsync is only available on .NET 8+; multi-target sync cancel is acceptable here.
+            _backgroundFlushCts.Cancel();
+#pragma warning restore VSTHRD103
+            try
+            {
+                await _backgroundFlushTask.ConfigureAwait(false);
+            }
+            catch
+            {
+                // Ignore any exception from the background task — it's best-effort.
+            }
+        }
+
         try
         {
             await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, testSessionContext.CancellationToken).ConfigureAwait(false);
             await FlushPendingResultsAsync(force: true, testSessionContext.CancellationToken).ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (OperationCanceledException)
+        {
+            // Best-effort flush: session was canceled; finalization still runs below with a fresh token.
+        }
+        catch (Exception ex)
         {
             _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
         }
@@ -230,6 +262,34 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
             _ => null,
         };
+    }
+
+    private async Task BackgroundFlushLoopAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await Task.Delay(_options.FlushInterval, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            try
+            {
+                await FlushPendingResultsAsync(force: false, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+            }
+        }
     }
 
     private async Task FlushPendingResultsAsync(bool force, CancellationToken cancellationToken)

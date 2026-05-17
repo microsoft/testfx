@@ -105,7 +105,7 @@ Extension options:
     --publish-azdo-test-results
         Publish test results live to the Azure DevOps Tests tab.
     --report-azdo
-        Enable Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.
+        Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.
     --report-azdo-severity
         Severity to use for the reported event. Options are: error (default) and warning.
     --report-trx
@@ -357,7 +357,7 @@ Registered command line providers:
   AzureDevOpsCommandLineProvider
     Name: Azure DevOps report generator
     Version: *
-    Description: Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.
+    Description: Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.
     Options:
       --publish-azdo-run-name
         Arity: 1
@@ -370,7 +370,7 @@ Registered command line providers:
       --report-azdo
         Arity: 0
         Hidden: False
-        Description: Enable Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.
+        Description: Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.
       --report-azdo-severity
         Arity: 1
         Hidden: False
