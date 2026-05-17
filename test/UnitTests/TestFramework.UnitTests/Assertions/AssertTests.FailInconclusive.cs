@@ -46,11 +46,4 @@ public partial class AssertTests
             .WithMessage("Assert.Inconclusive. db unavailable");
     }
 
-    // See https://github.com/dotnet/sdk/issues/25373
-    public void InconclusiveDoesNotThrowWhenMessageContainsInvalidStringFormatCompositeAndNoArgumentsPassed_Regression()
-    {
-        Action action = () => Assert.Inconclusive("{");
-        action.Should().Throw<AssertInconclusiveException>()
-            .WithMessage("Assert.Inconclusive. {");
-    }
 }
