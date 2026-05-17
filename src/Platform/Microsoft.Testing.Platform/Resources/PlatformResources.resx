@@ -304,6 +304,10 @@
   <data name="InvalidCommandLineArguments" xml:space="preserve">
     <value>Invalid command line arguments:</value>
   </data>
+  <data name="CommandLineValidationCommandLine" xml:space="preserve">
+    <value>Command line: {0}</value>
+    <comment>{0} is the command line used to run the application.</comment>
+  </data>
   <data name="CommandLineInvalidArityErrorMessage" xml:space="preserve">
     <value>Invalid arity, maximum must be greater than minimum</value>
   </data>
