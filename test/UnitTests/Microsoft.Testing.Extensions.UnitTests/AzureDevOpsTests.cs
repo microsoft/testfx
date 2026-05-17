@@ -125,6 +125,27 @@ public sealed class AzureDevOpsTests
     }
 
     [TestMethod]
+    public void SkipsMSTestAssertThatImplementationFrame()
+    {
+        (string userFile, int userLine) = GetCurrentLocation();
+
+        string stackTrace = string.Join(
+            Environment.NewLine,
+            "   at Microsoft.VisualStudio.TestTools.UnitTesting.AssertExtensions.That(Expression`1 condition, String message, String conditionExpression) in /_/src/TestFramework/TestFramework/Assertions/Assert.That.cs:line 27",
+            $"   at Microsoft.Testing.Extensions.UnitTests.AzureDevOpsTests.SkipsMSTestAssertThatImplementationFrame() in {userFile}:line {userLine}");
+
+        var error = new SyntheticStackTraceException("boom", stackTrace);
+
+        var logger = new TextLogger();
+        string? text = AzureDevOpsReporter.GetErrorText("MyTestDisplayName", null, error, "severity", new SystemFileSystem(), logger, "net9.0")?.TrimStart('#');
+
+        Assert.AreEqual(
+            $"vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber={userLine};columnnumber=1][MyTestDisplayName] [net9.0] boom",
+            text,
+            $"\nLogs:\n{string.Join("\n", logger.Logs)}");
+    }
+
+    [TestMethod]
     public void DoesNotSkipUserFrameWhoseFileNameEndsWithAssertCs()
     {
         // The previous heuristic skipped any frame whose file path ended with "Assert.cs",

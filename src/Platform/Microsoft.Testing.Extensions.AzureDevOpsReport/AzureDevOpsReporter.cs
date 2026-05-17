@@ -25,11 +25,13 @@ internal sealed class AzureDevOpsReporter :
     // 'code' (i.e., the "Namespace.Type.Method(args)" portion) starts with any of these is treated
     // as framework internals and skipped when looking for the user's call site to annotate.
     // Matching on the type name (rather than the source file name) is robust to partial-class
-    // splits (e.g. Assert.AreEqual.cs, Assert.IComparable.cs) and avoids false positives on user
+    // splits (e.g. Assert.AreEqual.cs, Assert.IComparable.cs) and extension-based assertion
+    // implementations such as Assert.That in Assert.That.cs, and it avoids false positives on user
     // files innocently named *Assert.cs. See https://github.com/microsoft/testfx/issues/6925.
     private static readonly string[] AssertionImplementationCodePrefixes =
     [
         "Microsoft.VisualStudio.TestTools.UnitTesting.Assert.",
+        "Microsoft.VisualStudio.TestTools.UnitTesting.AssertExtensions.",
         "Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.",
         "Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.",
     ];
