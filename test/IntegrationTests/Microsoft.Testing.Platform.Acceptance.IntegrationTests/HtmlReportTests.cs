@@ -15,9 +15,10 @@ public class HtmlReportTests : AcceptanceTestBase<HtmlReportTests.TestAssetFixtu
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
+        // The HTML report is published as an in-process artifact; check the correct block.
         string outputPattern = """
-Out of process file artifacts produced:
-- .+?\.html
+  In process file artifacts produced:
+    - .+?\.html
 """;
         testHostResult.AssertOutputDoesNotMatchRegex(outputPattern);
     }
@@ -44,6 +45,37 @@ Out of process file artifacts produced:
         Assert.IsTrue(match.Success, $"HTML report path not found in output:\n{testHostResult.StandardOutput}");
 
         string htmlContent = File.ReadAllText(match.Value);
+        Assert.Contains("<!DOCTYPE html>", htmlContent, "Generated file does not appear to be a valid HTML report.");
+        Assert.Contains("id=\"mtp-data\"", htmlContent, "Generated HTML report does not contain embedded JSON data.");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Html_WhenReportHtmlFilenameIsSpecified_HtmlReportIsGeneratedWithThatName(string tfm)
+    {
+        const string customFileName = "my-custom-report.html";
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, "TestResults");
+        string customFilePath = Path.Combine(testResultsPath, customFileName);
+        string expectedFilePath = Regex.Escape(customFilePath);
+
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-html --report-html-filename {customFileName}",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+
+        string outputPattern = $"""
+  In process file artifacts produced:
+    - {expectedFilePath}
+""";
+        testHostResult.AssertOutputMatchesRegex(outputPattern);
+
+        Assert.IsTrue(
+            File.Exists(customFilePath),
+            $"Expected custom HTML report file '{customFileName}' was not found in '{testResultsPath}'.");
+
+        string htmlContent = File.ReadAllText(customFilePath);
         Assert.Contains("<!DOCTYPE html>", htmlContent, "Generated file does not appear to be a valid HTML report.");
         Assert.Contains("id=\"mtp-data\"", htmlContent, "Generated HTML report does not contain embedded JSON data.");
     }

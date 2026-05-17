@@ -40,6 +40,9 @@ internal static class TestResultCapture
             FailedTestNodeStateProperty f => f.Exception,
             ErrorTestNodeStateProperty e => e.Exception,
             TimeoutTestNodeStateProperty t => t.Exception,
+#pragma warning disable CS0618, MTP0001 // CancelledTestNodeStateProperty is obsolete
+            CancelledTestNodeStateProperty c => c.Exception,
+#pragma warning restore CS0618, MTP0001
             _ => null,
         };
 
