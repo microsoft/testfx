@@ -39,6 +39,8 @@ internal static partial class PlatformResources
 #if IS_MTP_UNIT_TESTS
     internal static string @PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage => GetResourceString("PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage");
 
+    internal static string @PlatformCommandLineDiscoverTestsInvalidArgument => GetResourceString("PlatformCommandLineDiscoverTestsInvalidArgument");
+
     internal static string @PlatformCommandLineExitOnProcessExitSingleArgument => GetResourceString("PlatformCommandLineExitOnProcessExitSingleArgument");
 
     internal static string @PlatformCommandLineDiagnosticOptionIsMissing => GetResourceString("PlatformCommandLineDiagnosticOptionIsMissing");
