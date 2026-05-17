@@ -66,7 +66,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProv
         ArgumentSyntax? actualArg = arguments.FirstOrDefault(IsActualArgument);
 
         // Handle positional arguments if named arguments are not found
-        if (expectedArg == null || actualArg == null)
+        if (expectedArg is null || actualArg is null)
         {
             expectedArg = arguments[0];
             actualArg = arguments[1];
@@ -79,7 +79,8 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProv
         newArguments[expectedIndex] = expectedArg.WithExpression(actualArg.Expression);
         newArguments[actualIndex] = actualArg.WithExpression(expectedArg.Expression);
 
-        InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(newArguments)));
+        ArgumentListSyntax newArgumentList = invocationExpr.ArgumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments));
+        InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(newArgumentList);
         SyntaxNode newRoot = root.ReplaceNode(invocationExpr, newInvocationExpr);
 
         return Task.FromResult(document.WithSyntaxRoot(newRoot));

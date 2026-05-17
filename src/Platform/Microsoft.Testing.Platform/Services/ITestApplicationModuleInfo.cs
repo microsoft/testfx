@@ -7,8 +7,6 @@ internal interface ITestApplicationModuleInfo
 {
     bool IsCurrentTestApplicationHostDotnetMuxer { get; }
 
-    bool IsCurrentTestApplicationModuleExecutable { get; }
-
     bool IsAppHostOrSingleFileOrNativeAot { get; }
 
     string GetCurrentTestApplicationFullPath();

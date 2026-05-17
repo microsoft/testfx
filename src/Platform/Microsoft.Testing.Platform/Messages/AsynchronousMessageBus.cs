@@ -11,9 +11,11 @@ namespace Microsoft.Testing.Platform.Messages;
 
 internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
 {
-    // This is an arbitrary number of attempts to drain the message bus.
-    // The number of attempts is configurable via the environment variable TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS.
-    private const int DefaultDrainAttempt = 5;
+    // Default maximum number of drain rounds before we consider that a publisher/consumer cycle
+    // exists and we throw to surface the bug rather than spin forever. Can be overridden via the
+    // TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS environment variable.
+    private const int DefaultMaxDrainAttempts = 5;
+
     private readonly ITask _task;
     private readonly IEnvironment _environment;
     private readonly ILogger<AsynchronousMessageBus> _logger;
@@ -22,9 +24,6 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
     private readonly Dictionary<Type, List<IAsyncConsumerDataProcessor>> _dataTypeConsumers = [];
     private readonly IDataConsumer[] _dataConsumers;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
-#if !NETCOREAPP
-    private readonly bool _forceBlockingCollection;
-#endif
     private bool _disabled;
 
     public AsynchronousMessageBus(
@@ -40,12 +39,6 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
         _environment = environment;
         _logger = loggerFactory.CreateLogger<AsynchronousMessageBus>();
         _isTraceLoggingEnabled = _logger.IsEnabled(LogLevel.Trace);
-#if !NETCOREAPP
-        // Note: This env variable is only present temporarily.
-        // Please, don't use it except for working around an issue that was reported to microsoft/testfx repo **and** a team member instructs you to do so.
-        // This env variable is undocumented and we will remove it in a soon release.
-        _forceBlockingCollection = _environment.GetEnvironmentVariable("MicrosoftTestingPlatform.MessageBus.UseBlockingCollection") == "1";
-#endif
     }
 
     public override IDataConsumer[] DataConsumerServices
@@ -75,13 +68,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
                 if (!_consumerProcessor.TryGetValue(consumer, out IAsyncConsumerDataProcessor? asyncMultiProducerMultiConsumerDataProcessor))
                 {
-#if !NETCOREAPP
-                    asyncMultiProducerMultiConsumerDataProcessor = _forceBlockingCollection
-                        ? new BlockingCollectionConsumerDataProcessor(consumer, _task, _testApplicationCancellationTokenSource.CancellationToken)
-                        : new AsyncConsumerDataProcessor(consumer, _task, _testApplicationCancellationTokenSource.CancellationToken);
-#else
                     asyncMultiProducerMultiConsumerDataProcessor = new AsyncConsumerDataProcessor(consumer, _task, _testApplicationCancellationTokenSource.CancellationToken);
-#endif
                     _consumerProcessor.Add(consumer, asyncMultiProducerMultiConsumerDataProcessor);
                 }
 
@@ -142,53 +129,63 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
     public override async Task DrainDataAsync()
     {
-        Dictionary<IAsyncConsumerDataProcessor, long> consumerToDrain = [];
-        bool anotherRound = true;
+        // Iterate the distinct processors (a consumer that subscribes to multiple data types
+        // shares a single processor and we don't want to drain it more than once per round).
+        // We keep draining until no processor has received new items between rounds. If we still
+        // keep receiving new payloads after `maxAttempts`, we consider that a publisher/consumer
+        // cycle exists and surface it as an error. The limit can be overridden via the
+        // TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS environment variable.
         string? customAttempts = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS);
-        if (!int.TryParse(customAttempts, out int totalNumberOfDrainAttempt))
+        if (!int.TryParse(customAttempts, NumberStyles.Integer, CultureInfo.InvariantCulture, out int maxAttempts) || maxAttempts <= 0)
         {
-            totalNumberOfDrainAttempt = DefaultDrainAttempt;
+            maxAttempts = DefaultMaxDrainAttempts;
         }
 
         var stopwatch = Stopwatch.StartNew();
-        CancellationToken cancellationToken = _testApplicationCancellationTokenSource.CancellationToken;
-        while (anotherRound)
+        var lastReceived = new Dictionary<IAsyncConsumerDataProcessor, long>();
+        foreach (IAsyncConsumerDataProcessor processor in _consumerProcessor.Values)
         {
-            if (cancellationToken.IsCancellationRequested)
+            lastReceived[processor] = processor.ReceivedCount;
+        }
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            if (_testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested)
             {
                 return;
             }
 
-            if (totalNumberOfDrainAttempt == 0)
+            foreach (IAsyncConsumerDataProcessor processor in _consumerProcessor.Values)
             {
-                StringBuilder builder = new();
-                builder.Append(CultureInfo.InvariantCulture, $"Publisher/Consumer loop detected during the drain after {stopwatch.Elapsed}.\n{builder}");
-
-                foreach ((IAsyncConsumerDataProcessor key, long value) in consumerToDrain)
-                {
-                    builder.AppendLine(CultureInfo.InvariantCulture, $"Consumer '{key.DataConsumer}' payload received {value}.");
-                }
-
-                throw new InvalidOperationException(builder.ToString());
+                await processor.DrainDataAsync().ConfigureAwait(false);
             }
 
-            totalNumberOfDrainAttempt--;
-            anotherRound = false;
-            foreach (List<IAsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
+            bool anyNewlyReceived = false;
+            foreach (IAsyncConsumerDataProcessor processor in _consumerProcessor.Values)
             {
-                foreach (IAsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
+                long currentReceived = processor.ReceivedCount;
+                if (currentReceived != lastReceived[processor])
                 {
-                    consumerToDrain.TryAdd(asyncMultiProducerMultiConsumerDataProcessor, 0);
-
-                    long totalPayloadReceived = await asyncMultiProducerMultiConsumerDataProcessor.DrainDataAsync().ConfigureAwait(false);
-                    if (consumerToDrain[asyncMultiProducerMultiConsumerDataProcessor] != totalPayloadReceived)
-                    {
-                        consumerToDrain[asyncMultiProducerMultiConsumerDataProcessor] = totalPayloadReceived;
-                        anotherRound = true;
-                    }
+                    lastReceived[processor] = currentReceived;
+                    anyNewlyReceived = true;
                 }
+            }
+
+            if (!anyNewlyReceived)
+            {
+                return;
             }
         }
+
+        StringBuilder builder = new();
+        builder.Append(CultureInfo.InvariantCulture, $"Publisher/Consumer loop detected during the drain after {stopwatch.Elapsed}.");
+        foreach (IAsyncConsumerDataProcessor processor in _consumerProcessor.Values)
+        {
+            builder.AppendLine();
+            builder.Append(CultureInfo.InvariantCulture, $"Consumer '{processor.DataConsumer}' payload received {processor.ReceivedCount}.");
+        }
+
+        throw new InvalidOperationException(builder.ToString());
     }
 
     public override async Task DisableAsync()

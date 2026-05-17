@@ -1,8 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.Helpers;
 
+[Embedded]
 [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1310:Field names should not contain underscore", Justification = "Use nameof pattern")]
 internal static class EnvironmentVariableConstants
 {
@@ -36,6 +39,7 @@ internal static class EnvironmentVariableConstants
 
     // dotnet test
     public const string TESTINGPLATFORM_DOTNETTEST_EXECUTIONID = nameof(TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
+    public const string DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY = nameof(DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY);
 
     // Unhandled Exception
     public const string TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION = nameof(TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION);

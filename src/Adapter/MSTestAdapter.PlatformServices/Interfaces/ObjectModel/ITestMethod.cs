@@ -16,16 +16,9 @@ internal interface ITestMethod
     string Name { get; }
 
     /// <summary>
-    /// Gets the full class name of the test method.
+    /// Gets the semantic full class name of the test method.
     /// </summary>
     string FullClassName { get; }
-
-    /// <summary>
-    /// Gets the declaring class full name. This will be used while getting navigation data.
-    /// This will be null if AssemblyName is same as DeclaringAssemblyName.
-    /// Reason to set to null in the above case is to minimize the transfer of data across appdomains and not have a performance hit.
-    /// </summary>
-    string? DeclaringClassFullName { get; }
 
     /// <summary>
     /// Gets the name of the test assembly.
@@ -38,6 +31,10 @@ internal interface ITestMethod
     /// <example>
     ///     <c>NamespaceA.NamespaceB.ClassName`1+InnerClass`2</c>.
     /// </example>
+    /// <remarks>
+    /// This value is derived from <see cref="FullClassName"/>. Closed generic type arguments are omitted because
+    /// managed type metadata uses the open generic type definition.
+    /// </remarks>
     string? ManagedTypeName { get; }
 
     /// <summary>
@@ -49,7 +46,8 @@ internal interface ITestMethod
     string? ManagedMethodName { get; }
 
     /// <summary>
-    /// Gets a value indicating whether both <see cref="ManagedTypeName"/> and <see cref="ManagedMethodName"/> are not null or whitespace.
+    /// Gets a value indicating whether the managed method metadata is available.
+    /// <see cref="ManagedTypeName"/> is derived from <see cref="FullClassName"/>.
     /// </summary>
     bool HasManagedMethodAndTypeProperties { get; }
 
@@ -59,5 +57,5 @@ internal interface ITestMethod
     /// <remarks>
     /// Contains four items in order: Namespace, class name, test group, display name.
     /// </remarks>
-    IReadOnlyCollection<string?> Hierarchy { get; }
+    IReadOnlyCollection<string?>? Hierarchy { get; }
 }

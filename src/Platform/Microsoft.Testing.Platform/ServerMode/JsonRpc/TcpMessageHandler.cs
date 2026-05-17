@@ -124,7 +124,11 @@ internal sealed class TcpMessageHandler(
         await _writer.WriteLineAsync("Content-Type: application/testingplatform").ConfigureAwait(false);
         await _writer.WriteLineAsync().ConfigureAwait(false);
         await _writer.WriteAsync(messageStr).ConfigureAwait(false);
+#if NETCOREAPP
         await _writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+#else
+        await _writer.FlushAsync().ConfigureAwait(false);
+#endif
     }
 
     public void Dispose()
@@ -143,8 +147,9 @@ internal sealed class TcpMessageHandler(
             // The stream writer is currently in use by a previous write operation.
         }
 
-#pragma warning disable CA1416 // Validate platform compatibility
-        _client.Dispose();
-#pragma warning restore CA1416
+        if (!OperatingSystem.IsBrowser())
+        {
+            _client.Dispose();
+        }
     }
 }

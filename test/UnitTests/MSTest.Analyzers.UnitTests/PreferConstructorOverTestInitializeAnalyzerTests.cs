@@ -403,4 +403,50 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenTestClassHasTestInitializeWithMultiLineBody_PreservesIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private int _x;
+
+                [TestInitialize]
+                public void [|MyTestInit|]()
+                {
+                    _x = SomeMethod(
+                        1,
+                        2,
+                        3);
+                }
+
+                private int SomeMethod(int a, int b, int c) => a + b + c;
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private int _x;
+
+                public MyTestClass()
+                {
+                    _x = SomeMethod(
+                        1,
+                        2,
+                        3);
+                }
+
+                private int SomeMethod(int a, int b, int c) => a + b + c;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

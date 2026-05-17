@@ -34,9 +34,9 @@ internal sealed class ExceptionFlattener
             while (currentException is not null)
             {
                 flatExceptions.Add(new FlatException(
-                    aggregate?.Message,
-                    aggregate?.GetType().FullName,
-                    aggregate?.StackTrace));
+                    currentException.Message,
+                    currentException.GetType().FullName,
+                    currentException.StackTrace));
 
                 currentException = currentException.InnerException;
             }

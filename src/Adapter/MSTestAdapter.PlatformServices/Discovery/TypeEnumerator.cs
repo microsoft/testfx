@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.TestPlatform.AdapterUtilities;
-using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
@@ -50,6 +50,17 @@ internal class TypeEnumerator
             return null;
         }
 
+        // Track class-level attributes for telemetry (read Current per call so a session reset
+        // between TypeEnumerator construction and use cannot cause writes to land on an
+        // orphaned collector).
+#if !WINDOWS_UWP && !WIN_UI
+        if (Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector.Current is { } telemetryDataCollector)
+        {
+            Attribute[] classAttributes = ReflectHelper.GetCustomAttributesCached(_type);
+            telemetryDataCollector.TrackDiscoveredClass(classAttributes);
+        }
+#endif
+
         // If test class is valid, then get the tests
         return GetTests(warnings);
     }
@@ -65,24 +76,19 @@ internal class TypeEnumerator
         var foundTests = new HashSet<string>();
         var tests = new List<UnitTestElement>();
 
+        // Instead of asking reflect helper to query the type for every method we have, we ask once for the type.
+        bool classDisablesParallelization = _reflectHelper.IsAttributeDefined<DoNotParallelizeAttribute>(_type);
+
         // Test class is already valid. Verify methods.
         // PERF: GetRuntimeMethods is used here to get all methods, including non-public, and static methods.
         // if we rely on analyzers to identify all invalid methods on build, we can change this to fit the current settings.
         foreach (MethodInfo method in PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethods(_type))
         {
-            bool isMethodDeclaredInTestTypeAssembly = _reflectHelper.IsMethodDeclaredInSameAssemblyAsType(method, _type);
-            bool enableMethodsFromOtherAssemblies = MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies;
-
-            if (!isMethodDeclaredInTestTypeAssembly && !enableMethodsFromOtherAssemblies)
-            {
-                continue;
-            }
-
             if (_testMethodValidator.IsValidTestMethod(method, _type, warnings))
             {
                 // ToString() outputs method name and its signature. This is necessary for overloaded methods to be recognized as distinct tests.
                 foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.ToString() ?? method.Name);
-                UnitTestElement testMethod = GetTestFromMethod(method, warnings);
+                UnitTestElement testMethod = GetTestFromMethod(method, classDisablesParallelization, warnings);
 
                 tests.Add(testMethod);
             }
@@ -109,60 +115,82 @@ internal class TypeEnumerator
         return [.. tests.GroupBy(
             t => t.TestMethod.Name,
             (_, elements) =>
-                elements.OrderBy(t => inheritanceDepths[t.TestMethod.DeclaringClassFullName ?? t.TestMethod.FullClassName]).First())];
+                // Note: null suppression for MethodInfo here is safe.
+                // The property is marked as null because it's not serializable and will be null when crossing appdomain.
+                // But in this context, we are accessing MethodInfo in the same appdomain that created it, so we are not crossing appdomain boundaries.
+                // The GetTestFromMethod call above guarantees that it's non-null.
+                // The null suppression for DeclaringType is also safe, there is no reason for a test method to have null declaring type.
+                // FullName is also guaranteed to be non-null.
+                elements.OrderBy(t => inheritanceDepths[t.TestMethod.MethodInfo!.DeclaringType!.FullName!]).First())];
     }
 
     /// <summary>
     /// Gets a UnitTestElement from a MethodInfo object filling it up with appropriate values.
     /// </summary>
     /// <param name="method">The reflected method.</param>
+    /// <param name="classDisablesParallelization">Whether the test class disables parallelization.</param>
     /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns> Returns a UnitTestElement.</returns>
-    internal UnitTestElement GetTestFromMethod(MethodInfo method, ICollection<string> warnings)
+    internal UnitTestElement GetTestFromMethod(MethodInfo method, bool classDisablesParallelization, ICollection<string> warnings)
     {
         // null if the current instance represents a generic type parameter.
         DebugEx.Assert(_type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
 
-        ManagedNameHelper.GetManagedName(method, out string managedType, out string managedMethod, out string?[]? hierarchyValues);
-        hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = null; // This one will be set by test windows to current test project name.
-        var testMethod = new TestMethod(managedType, managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, null, string.Join(",", method.GetParameters().Select(p => p.ParameterType.ToString())))
+        // Note: We pass _type.FullName (the closed-generic CLR name) as FullClassName because TypeCache.LoadType
+        // calls assembly.GetType(FullClassName) which requires the closed-generic form to instantiate the type.
+        // The managed type name (open-generic form, used for VSTest ManagedType property) is derived from
+        // FullClassName by TestMethod.ManagedTypeName via stripping the generic argument list.
+        ManagedNameHelper.GetManagedNameAndHierarchy(method, out _, out string managedMethod, out string?[] hierarchyValues);
+        ParameterInfo[] parameters = method.GetParameters();
+        var testMethod = new TestMethod(managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, null,
+            parameters.Length == 0 ? string.Empty : string.Join(",", Array.ConvertAll(parameters, static p => p.ParameterType.ToString())))
         {
             MethodInfo = method,
         };
 
-        if (!string.Equals(method.DeclaringType!.FullName, _type.FullName, StringComparison.Ordinal))
-        {
-            testMethod.DeclaringClassFullName = method.DeclaringType.FullName;
-        }
-
+        // TODO: For every test method in a class, we are asking reflect helper multiple times for the same
+        // information (like test categories, traits, deployment items) which is not optimal.
+        IReflectionOperations reflectionOperations = PlatformServiceProvider.Instance.ReflectionOperations;
         var testElement = new UnitTestElement(testMethod)
         {
-            TestCategory = _reflectHelper.GetTestCategories(method, _type),
-            DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
-            Priority = _reflectHelper.GetPriority(method),
+            TestCategory = reflectionOperations.GetTestCategories(method, _type),
+            DoNotParallelize = classDisablesParallelization || _reflectHelper.IsAttributeDefined<DoNotParallelizeAttribute>(method),
 #if !WINDOWS_UWP && !WIN_UI
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
 #endif
-            Traits = [.. _reflectHelper.GetTestPropertiesAsTraits(method)],
+            Traits = [.. reflectionOperations.GetTestPropertiesAsTraits(method)],
         };
 
-        Attribute[] attributes = _reflectHelper.GetCustomAttributesCached(method);
+        Attribute[] attributes = reflectionOperations.GetCustomAttributesCached(method);
+#if !WINDOWS_UWP && !WIN_UI
+        Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector.Current?.TrackDiscoveredMethod(attributes);
+#endif
         TestMethodAttribute? testMethodAttribute = null;
+        List<string>? workItemIds = null;
 
         // Backward looping for backcompat. This used to be calls to _reflectHelper.GetFirstAttributeOrDefault
         // So, to make sure the first attribute always wins, we loop from end to start.
+        // WorkItemAttribute is also collected here to avoid a second pass with OfType + Any + Select.
         for (int i = attributes.Length - 1; i >= 0; i--)
         {
             if (attributes[i] is TestMethodAttribute tma)
             {
                 testMethodAttribute = tma;
             }
+            else if (attributes[i] is PriorityAttribute priorityAttribute)
+            {
+                testElement.Priority = priorityAttribute.Priority;
+            }
+            else if (attributes[i] is WorkItemAttribute workItem)
+            {
+                (workItemIds ??= []).Add(workItem.Id.ToString(CultureInfo.InvariantCulture));
+            }
         }
 
-        IEnumerable<WorkItemAttribute> workItemAttributes = attributes.OfType<WorkItemAttribute>();
-        if (workItemAttributes.Any())
+        if (workItemIds is not null)
         {
-            testElement.WorkItemIds = [.. workItemAttributes.Select(x => x.Id.ToString(CultureInfo.InvariantCulture))];
+            workItemIds.Reverse();
+            testElement.WorkItemIds = [.. workItemIds];
         }
 
         // In production, we always have a TestMethod attribute because GetTestFromMethod is called under IsValidTestMethod

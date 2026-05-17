@@ -10,6 +10,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.IPC;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 {
     private readonly DotnetTestConnection? _dotnetTestConnection;
@@ -31,7 +32,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
     public string Uid => nameof(DotnetTestDataConsumer);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => nameof(DotnetTestDataConsumer);
 
@@ -241,9 +242,9 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 exceptions = FlattenToExceptionMessages(reason, timeoutTestNodeStateProperty.Exception);
                 break;
 
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
             case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
                 state = TestStates.Cancelled;
                 duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;

@@ -41,7 +41,7 @@ public sealed class RemoveClassCleanupBehaviorArgumentFixerTests
                 public void TestMethod2()
                 {
                 }
-            
+
                 [{|CS1729:ClassCleanup(InheritanceBehavior.None, {|CS0103:ClassCleanupBehavior|}.EndOfClass)|}]
                 public void ClassClean()
                 {
@@ -75,11 +75,69 @@ public sealed class RemoveClassCleanupBehaviorArgumentFixerTests
                 public void TestMethod2()
                 {
                 }
-            
+
                 [ClassCleanup(InheritanceBehavior.None)]
                 public void ClassClean()
                 {
                 }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenClassCleanupBehaviorWithMultiLineBody_PreservesIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace TestProject;
+
+            [TestClass]
+            public class UnitTest1
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+
+                [ClassCleanup({|CS0103:ClassCleanupBehavior|}.EndOfClass)]
+                public void ClassClean()
+                {
+                    Cleanup(
+                        1,
+                        2,
+                        3);
+                }
+
+                private void Cleanup(int a, int b, int c) { }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace TestProject;
+
+            [TestClass]
+            public class UnitTest1
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+
+                [ClassCleanup]
+                public void ClassClean()
+                {
+                    Cleanup(
+                        1,
+                        2,
+                        3);
+                }
+
+                private void Cleanup(int a, int b, int c) { }
             }
             """;
 

@@ -17,8 +17,8 @@ internal sealed class ConsumerPipeNameRequestSerializer : BaseSerializer, INamed
 
     public object Deserialize(Stream stream)
     {
-        string mutexName = ReadString(stream);
-        return new ConsumerPipeNameRequest(mutexName);
+        string pipeName = ReadString(stream);
+        return new ConsumerPipeNameRequest(pipeName);
     }
 
     public void Serialize(object objectToSerialize, Stream stream)

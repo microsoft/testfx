@@ -38,8 +38,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "expected", expectedExpression, "actual", actualExpression) + " ");
-                ThrowAssertAreSameFailed(_expected, _actual, _builder.ToString());
+                ReportAssertAreSameFailed(_expected, _actual, _builder.ToString(), expectedExpression, actualExpression);
             }
         }
 
@@ -80,9 +79,13 @@ public sealed partial class Assert
     public readonly struct AssertAreNotSameInterpolatedStringHandler<TArgument>
     {
         private readonly StringBuilder? _builder;
+        private readonly TArgument? _notExpected;
+        private readonly TArgument? _actual;
 
         public AssertAreNotSameInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? notExpected, TArgument? actual, out bool shouldAppend)
         {
+            _notExpected = notExpected;
+            _actual = actual;
             shouldAppend = IsAreNotSameFailing(notExpected, actual);
             if (shouldAppend)
             {
@@ -94,8 +97,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "notExpected", notExpectedExpression, "actual", actualExpression) + " ");
-                ThrowAssertAreNotSameFailed(_builder.ToString());
+                ReportAssertAreNotSameFailed(_notExpected, _actual, _builder.ToString(), notExpectedExpression, actualExpression);
             }
         }
 
@@ -136,7 +138,10 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreSame<T>(T? expected, T? actual, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual))] ref AssertAreSameInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(expectedExpression, actualExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreSame");
+        message.ComputeAssertion(expectedExpression, actualExpression);
+    }
 
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
@@ -172,38 +177,54 @@ public sealed partial class Assert
     /// </exception>
     public static void AreSame<T>(T? expected, T? actual, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreSame");
+
         if (!IsAreSameFailing(expected, actual))
         {
             return;
         }
 
-        string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
-        ThrowAssertAreSameFailed(expected, actual, userMessage);
+        ReportAssertAreSameFailed(expected, actual, message, expectedExpression, actualExpression);
     }
 
     private static bool IsAreSameFailing<T>(T? expected, T? actual)
         => !object.ReferenceEquals(expected, actual);
 
     [DoesNotReturn]
-    private static void ThrowAssertAreSameFailed<T>(T? expected, T? actual, string userMessage)
+    private static void ReportAssertAreSameFailed<T>(T? expected, T? actual, string? userMessage, string expectedExpression, string actualExpression)
     {
-        string finalMessage = userMessage;
+        StructuredAssertionMessage msg = new("Expected both values to refer to the same object.");
+
         if (expected is ValueType && actual is ValueType)
         {
-            finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreSameGivenValues,
-                userMessage);
+            msg.WithAdditionalSummaryLine("Do not pass value types to AreSame \u2014 value types are boxed on each call, so references will never be the same.");
         }
 
-        ThrowAssertFailed("Assert.AreSame", finalMessage);
+        msg.WithUserMessage(userMessage);
+
+        if (expected is not ValueType || actual is not ValueType)
+        {
+            string expectedText = expected is null ? "null" : $"{expected.GetType()} (hash: 0x{RuntimeHelpers.GetHashCode(expected):X})";
+            string actualText = actual is null ? "null" : $"{actual.GetType()} (hash: 0x{RuntimeHelpers.GetHashCode(actual):X})";
+            EvidenceBlock evidence = EvidenceBlock.Create()
+                .AddLine("expected:", expectedText)
+                .AddLine("actual:", actualText);
+            msg.WithEvidence(evidence).WithExpectedAndActual(expectedText, actualText);
+        }
+
+        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreSame", expectedExpression, actualExpression, "<expected>", "<actual>"));
+
+        ReportAssertFailed(msg);
     }
 
     /// <inheritdoc cref="AreNotSame{T}(T, T, string?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotSame<T>(T? notExpected, T? actual, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual))] ref AssertAreNotSameInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion(notExpectedExpression, actualExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreNotSame");
+        message.ComputeAssertion(notExpectedExpression, actualExpression);
+    }
 
     /// <summary>
     /// Tests whether the specified objects refer to different objects and
@@ -238,9 +259,11 @@ public sealed partial class Assert
     /// </exception>
     public static void AreNotSame<T>(T? notExpected, T? actual, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreNotSame");
+
         if (IsAreNotSameFailing(notExpected, actual))
         {
-            ThrowAssertAreNotSameFailed(BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression));
+            ReportAssertAreNotSameFailed(notExpected, actual, message, notExpectedExpression, actualExpression);
         }
     }
 
@@ -248,6 +271,19 @@ public sealed partial class Assert
         => object.ReferenceEquals(notExpected, actual);
 
     [DoesNotReturn]
-    private static void ThrowAssertAreNotSameFailed(string userMessage)
-        => ThrowAssertFailed("Assert.AreNotSame", userMessage);
+    private static void ReportAssertAreNotSameFailed<T>(T? notExpected, T? actual, string? userMessage, string notExpectedExpression, string actualExpression)
+    {
+        StructuredAssertionMessage msg = new("Expected values to refer to different objects.");
+
+        msg.WithAdditionalSummaryLine(
+            notExpected is null && actual is null
+                ? "Both values are null."
+                : "Both values refer to the same object.");
+
+        msg.WithUserMessage(userMessage);
+
+        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreNotSame", notExpectedExpression, actualExpression, "<notExpected>", "<actual>"));
+
+        ReportAssertFailed(msg);
+    }
 }

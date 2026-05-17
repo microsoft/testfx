@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !NETCOREAPP
 using Microsoft.Win32.SafeHandles;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
@@ -111,3 +112,4 @@ internal static class MiniDumpWriteDump
         Mini,
     }
 }
+#endif

@@ -16,12 +16,17 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
     public const string OutputOption = "output";
     public const string OutputOptionNormalArgument = "normal";
     public const string OutputOptionDetailedArgument = "detailed";
+    public const string ShowStdoutOption = "show-stdout";
+    public const string ShowStderrOption = "show-stderr";
+    public const string ShowOutputAllArgument = "all";
+    public const string ShowOutputFailedArgument = "failed";
+    public const string ShowOutputNoneArgument = "none";
 
     /// <inheritdoc />
     public string Uid => nameof(TerminalTestReporterCommandLineOptionsProvider);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     /// <inheritdoc />
     public string DisplayName { get; } = PlatformResources.TerminalTestReporterDisplayName;
@@ -38,6 +43,8 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
             new(NoProgressOption, PlatformResources.TerminalNoProgressOptionDescription, ArgumentArity.Zero, isHidden: false),
             new(NoAnsiOption, PlatformResources.TerminalNoAnsiOptionDescription, ArgumentArity.Zero, isHidden: false),
             new(OutputOption, PlatformResources.TerminalOutputOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
+            new(ShowStdoutOption, PlatformResources.TerminalShowStdoutOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
+            new(ShowStderrOption, PlatformResources.TerminalShowStderrOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
         ];
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
@@ -48,8 +55,16 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
             OutputOption => OutputOptionNormalArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase) || OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(PlatformResources.TerminalOutputOptionInvalidArgument),
+            ShowStdoutOption or ShowStderrOption => IsValidShowOutputArgument(arguments[0])
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(PlatformResources.TerminalShowOutputOptionInvalidArgument),
             _ => throw ApplicationStateGuard.Unreachable(),
         };
+
+    private static bool IsValidShowOutputArgument(string argument)
+        => ShowOutputAllArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)
+            || ShowOutputFailedArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)
+            || ShowOutputNoneArgument.Equals(argument, StringComparison.OrdinalIgnoreCase);
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
         => // No problem found

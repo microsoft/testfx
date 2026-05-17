@@ -31,7 +31,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assert.That(() => False) failed.
+                Assert.That(() => false) failed.
                 Message: Boolean condition failed
                 """);
     }
@@ -339,14 +339,14 @@ public partial class AssertTests : TestContainer
     public void That_StaticPropertyAccess_FailsAsExpected()
     {
         Action act = () => Assert.That(() => DateTime.Now.Year < 2000, "Current year should be before 2000");
-
+        int year = DateTime.Now.Year;
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
-                """
+                $"""
             Assert.That(() => DateTime.Now.Year < 2000) failed.
             Message: Current year should be before 2000
             Details:
-              DateTime.Now.Year = 2025
+              DateTime.Now.Year = {year}
             """);
     }
 
@@ -763,7 +763,7 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => condition == True) failed.
+            Assert.That(() => condition == true) failed.
             Details:
               condition = False
             """);
@@ -861,7 +861,7 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => dynamicValue.Length == ConstValue && flag == True) failed.
+            Assert.That(() => dynamicValue.Length == ConstValue && flag == true) failed.
             Details:
               dynamicValue.Length = 7
               flag = False
@@ -982,7 +982,7 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => name == "Admin" && age == 30 && isActive == False && grade == 'A') failed.
+            Assert.That(() => name == "Admin" && age == 30 && isActive == false && grade == 'A') failed.
             Details:
               age = 25
               grade = B

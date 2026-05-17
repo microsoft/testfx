@@ -17,23 +17,16 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
-using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 public class TestContextImplementationTests : TestContainer
 {
-    private readonly Mock<ITestMethod> _testMethod;
+    private readonly Mock<ITestMethod> _testMethod = new();
 
-    private readonly IDictionary<string, object?> _properties;
+    private readonly IDictionary<string, object?> _properties = new Dictionary<string, object?>();
 
     private TestContextImplementation _testContextImplementation = null!;
-
-    public TestContextImplementationTests()
-    {
-        _testMethod = new Mock<ITestMethod>();
-        _properties = new Dictionary<string, object?>();
-    }
 
     private TestContextImplementation CreateTestContextImplementation(IMessageLogger? messageLogger = null)
         => new(_testMethod.Object, null, _properties, messageLogger, null);
@@ -54,8 +47,8 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.Properties.Should().NotBeNull();
 
-        _testContextImplementation.Properties["FullyQualifiedTestClassName"]!.Should().Be("A.C.M");
-        _testContextImplementation.Properties["TestName"]!.Should().Be("M");
+        _testContextImplementation.Properties["FullyQualifiedTestClassName"].Should().Be("A.C.M");
+        _testContextImplementation.Properties["TestName"].Should().Be("M");
     }
 
     public void CurrentTestOutcomeShouldReturnDefaultOutcome()
@@ -140,7 +133,7 @@ public class TestContextImplementationTests : TestContainer
         var property = new KeyValuePair<string, string>("SomeNewProperty", "SomeValue");
         _testContextImplementation.AddProperty(property.Key, property.Value);
 
-        _testContextImplementation.Properties[property.Key]!.Should().Be(property.Value);
+        _testContextImplementation.Properties[property.Key].Should().Be(property.Value);
     }
 
     public void AddResultFileShouldThrowIfFileNameIsNull()
@@ -167,7 +160,7 @@ public class TestContextImplementationTests : TestContainer
 
         IList<string>? resultsFiles = _testContextImplementation.GetResultFiles();
 
-        resultsFiles!.Should().Contain("C:\\temp.txt");
+        resultsFiles.Should().Contain("C:\\temp.txt");
     }
 
     public void AddResultFileShouldAddMultipleFilesToResultsFiles()
@@ -179,7 +172,7 @@ public class TestContextImplementationTests : TestContainer
 
         IList<string>? resultsFiles = _testContextImplementation.GetResultFiles();
 
-        resultsFiles!.Should().Contain("C:\\files\\file1.txt");
+        resultsFiles.Should().Contain("C:\\files\\file1.txt");
         resultsFiles.Should().Contain("C:\\files\\files2.html");
     }
 
@@ -187,28 +180,28 @@ public class TestContextImplementationTests : TestContainer
     {
         _testContextImplementation = CreateTestContextImplementation();
         _testContextImplementation.Write("{0} Testing write", 1);
-        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing write");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing write");
     }
 
     public void WriteShouldWriteToStringWriterForNullCharacters()
     {
         _testContextImplementation = CreateTestContextImplementation();
         _testContextImplementation.Write("{0} Testing \0 write \0", 1);
-        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing \\0 write \\0");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing \\0 write \\0");
     }
 
     public void WriteWithMessageShouldWriteToStringWriter()
     {
         _testContextImplementation = CreateTestContextImplementation();
         _testContextImplementation.Write("1 Testing write");
-        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing write");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing write");
     }
 
     public void WriteWithMessageShouldWriteToStringWriterForNullCharacters()
     {
         _testContextImplementation = CreateTestContextImplementation();
         _testContextImplementation.Write("1 Testing \0 write \0");
-        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing \\0 write \\0");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing \\0 write \\0");
     }
 
     public void WriteWithMessageShouldWriteToStringWriterForReturnCharacters()
@@ -225,7 +218,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.WriteLine("{0} Testing write", 1);
 
-        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing write");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing write");
     }
 
     public void WriteLineShouldWriteToStringWriterForNullCharacters()
@@ -234,7 +227,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.WriteLine("{0} Testing \0 write \0", 1);
 
-        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing \\0 write \\0");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing \\0 write \\0");
     }
 
     public void WriteLineWithMessageShouldWriteToStringWriter()
@@ -243,7 +236,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.WriteLine("1 Testing write");
 
-        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing write");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing write");
     }
 
     public void WriteLineWithMessageShouldWriteToStringWriterForNullCharacters()
@@ -252,7 +245,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.WriteLine("1 Testing \0 write \0");
 
-        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing \\0 write \\0");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing \\0 write \\0");
     }
 
     public void GetDiagnosticMessagesShouldReturnMessagesFromWriteLine()
@@ -354,6 +347,42 @@ public class TestContextImplementationTests : TestContainer
         messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Error, "ErrorMessage"), Times.Once);
     }
 
+    public void GetAndClearOutput_ShouldReturnContentThenClearBuffer()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.WriteConsoleOut("hello");
+
+        string? first = _testContextImplementation.GetAndClearOutput();
+        string? second = _testContextImplementation.GetAndClearOutput();
+
+        first.Should().Be("hello");
+        second.Should().BeEmpty();
+    }
+
+    public void GetAndClearError_ShouldReturnContentThenClearBuffer()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.WriteConsoleErr("hello");
+
+        string? first = _testContextImplementation.GetAndClearError();
+        string? second = _testContextImplementation.GetAndClearError();
+
+        first.Should().Be("hello");
+        second.Should().BeEmpty();
+    }
+
+    public void GetAndClearTrace_ShouldReturnContentThenClearBuffer()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.WriteTrace("hello");
+
+        string? first = _testContextImplementation.GetAndClearTrace();
+        string? second = _testContextImplementation.GetAndClearTrace();
+
+        first.Should().Be("hello");
+        second.Should().BeEmpty();
+    }
+
     public void WritesFromBackgroundThreadShouldNotThrow()
     {
         TestContextImplementation testContextImplementation = CreateTestContextImplementation(new Mock<IMessageLogger>().Object);
@@ -367,8 +396,9 @@ public class TestContextImplementationTests : TestContainer
         });
 
         t.Start();
-        _ = testContextImplementation.GetOut();
-        _ = testContextImplementation.GetErr();
+        _ = testContextImplementation.GetAndClearOutput();
+        _ = testContextImplementation.GetAndClearError();
+        _ = testContextImplementation.GetAndClearTrace();
         t.Join();
     }
 }

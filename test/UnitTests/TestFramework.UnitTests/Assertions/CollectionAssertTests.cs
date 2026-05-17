@@ -187,6 +187,17 @@ public class CollectionAssertTests : TestContainer
         action.Should().Throw<Exception>();
     }
 
+    public void CollectionAssertAreEqual_WithMismatchedElements_CallsComparerOncePerElement()
+    {
+        int[] expected = [1];
+        int[] actual = [2];
+        var comparer = new CountingComparer();
+
+        Action action = () => CollectionAssert.AreEqual(expected, actual, comparer);
+        action.Should().Throw<AssertFailedException>();
+        comparer.CompareCallCount.Should().Be(1);
+    }
+
     public void CollectionAssertAreEqualComparerMessageNullabilityPostConditions()
     {
         ICollection? collection1 = GetCollection();
@@ -486,6 +497,17 @@ public class CollectionAssertTests : TestContainer
         int IComparer.Compare(object? x, object? y) => Equals(x, y) ? 0 : -1;
     }
 
+    private sealed class CountingComparer : IComparer
+    {
+        public int CompareCallCount { get; private set; }
+
+        int IComparer.Compare(object? x, object? y)
+        {
+            CompareCallCount++;
+            return Equals(x, y) ? 0 : -1;
+        }
+    }
+
     private class CaseInsensitiveEqualityComparer : IEqualityComparer<string>
     {
         public bool Equals(string? x, string? y) => string.Equals(x, y, StringComparison.OrdinalIgnoreCase);
@@ -504,9 +526,9 @@ public class CollectionAssertTests : TestContainer
 #if DEBUG
     public void ObsoleteEqualsMethodThrowsAssertFailedException()
     {
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MSTEST0104 // Type or member is obsolete
         Action action = () => CollectionAssert.Equals("test", "test");
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MSTEST0104 // Type or member is obsolete
         action.Should().Throw<AssertFailedException>()
             .WithMessage("*CollectionAssert.Equals should not be used for Assertions*");
     }
@@ -514,9 +536,9 @@ public class CollectionAssertTests : TestContainer
     public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
     {
         object obj = new();
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MSTEST0105 // Type or member is obsolete
         Action action = () => CollectionAssert.ReferenceEquals(obj, obj);
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MSTEST0105 // Type or member is obsolete
         action.Should().Throw<AssertFailedException>()
             .WithMessage("*CollectionAssert.ReferenceEquals should not be used for Assertions*");
     }

@@ -32,6 +32,11 @@
         <target state="translated">テスト セッションを取り消しています...</target>
         <note />
       </trans-unit>
+      <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
+        <source>Browser platform is only supported on .NET 7.0 or greater.</source>
+        <target state="translated">ブラウザー プラットフォームは、.NET 7.0 以降でのみサポートされています。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
         <target state="translated">テスト実行フィルターを作成できませんでした</target>
@@ -113,8 +118,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsReserved">
-        <source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</source>
-        <target state="translated">オプション '--{0}' は予約されており、プロバイダーでは使用できません: '{0}'</target>
+        <source>Option '--{0}' is reserved and cannot be used by providers: '{1}'</source>
+        <target state="translated">オプション '--{0}' は予約されており、プロバイダーでは使用できません: '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
@@ -142,11 +147,6 @@
         <target state="translated">予期しない引数 {0}</target>
         <note />
       </trans-unit>
-      <trans-unit id="CommandLineParserUnexpectedNullArgument">
-        <source>Unexpected null argument at index {0}</source>
-        <target state="translated">インデックス {0} に予期しない null 引数があります</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
         <source>Unexpected single quote in argument: {0}</source>
         <target state="translated">引数に予期しない単一引用符が含まれています: {0}</target>
@@ -162,9 +162,14 @@
         <target state="translated">不明なオプション: '--{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineValidationCommandLine">
+        <source>Command line: {0}</source>
+        <target state="new">Command line: {0}</target>
+        <note>{0} is the command line used to run the application.</note>
+      </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
-        <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
-        <target state="translated">'CompositeExtensonFactory' の同じインスタンスが既に登録されています</target>
+        <source>The same instance of 'CompositeExtensionFactory' is already registered</source>
+        <target state="translated">'CompositeExtensionFactory' の同じインスタンスが既に登録されています</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
@@ -416,16 +421,6 @@
         <target state="translated">{0} テストを実行しています</target>
         <note />
       </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">ID '{0}' で登録されたシリアライザーがありません</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">型 '{0}' で登録されたシリアライザーがありません</target>
-        <note />
-      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">利用できません</target>
@@ -521,9 +516,15 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
 使用可能な値は、'Trace'、'Debug'、'Information'、'Warning'、'Error'、'Critical' です。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
+        <source>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="new">'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
-        <source>List available tests.</source>
-        <target state="translated">使用可能なテストを一覧表示します。</target>
+        <source>List available tests.
+Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</source>
+        <target state="needs-review-translation">使用可能なテストを一覧表示します。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
@@ -537,6 +538,11 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
         <target state="translated">PID '{0}'
  が無効です
 {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser">
+        <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
+        <target state="translated">'--exit-on-process-exit' オプションは、ブラウザー環境ではサポートされていません。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
@@ -769,6 +775,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">成功</target>
         <note />
       </trans-unit>
+      <trans-unit id="SyncFlushNotSupportedInBrowserErrorMessage">
+        <source>Synchronous flush is not supported in browser environments.</source>
+        <target state="translated">同期フラッシュは、ブラウザー環境ではサポートされていません。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">'ITestExecutionFilterFactory' ファクトリは既に設定されています</target>
@@ -814,6 +825,25 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
         <target state="translated">--output には、値が 'Normal' または 'Detailed' の単一のパラメーターが必要です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="translated">--show-stdout と --show-stderr には、値が 'All'、'Failed'、または 'None' の 1 つのパラメーターが必要です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">テストのキャプチャされたエラー出力を表示するタイミングを決定します。
+有効な値は 'All'、'Failed'、'None' です。既定値は 'All' です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">テストのキャプチャされた標準の出力を表示するタイミングを決定します。
+有効な値は 'All'、'Failed'、'None' です。既定値は 'All' です。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
@@ -886,6 +916,11 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">テスト アダプターのテスト セッション エラー</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
+        <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
+        <target state="translated">プロセスの再起動を必要とするテスト ホスト コントローラー拡張機能は、ブラウザー/WebAssembly プラットフォームではサポートされていません。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
         <target state="translated">テスト アプリケーション プロセスが正常に終了しませんでした。終了コードは '{0}' です</target>
@@ -956,11 +991,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">予期しないテレメトリ呼び出しです。テレメトリは無効になっています。</target>
         <note />
       </trans-unit>
-      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occurred during byte conversion</source>
-        <target state="translated">バイト変換中に予期しない例外が発生しました</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
@@ -983,6 +1013,11 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">このプログラムの場所に到達できないと考えられます。ファイル='{0}'、行={1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
+        <target state="translated">デバッガーのアタッチの待機 (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) は、ブラウザー環境ではサポートされていません。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">0 件のテストが実行されました</target>
@@ -996,11 +1031,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
         <target state="translated">チャット クライアント プロバイダーは既に登録されています。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">AI 拡張機能は、種類が 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' のビルダーでのみ機能します</target>
         <note />
       </trans-unit>
     </body>

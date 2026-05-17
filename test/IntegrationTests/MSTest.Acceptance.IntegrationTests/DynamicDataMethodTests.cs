@@ -17,7 +17,7 @@ public sealed class DynamicDataMethodTests : AcceptanceTestBase<DynamicDataMetho
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputContainsSummary(failed: 3, passed: 9, skipped: 0);
 
         // failed TestMethodSingleParameterIntCountMismatchSmaller (0ms)
@@ -51,19 +51,16 @@ public sealed class DynamicDataMethodTests : AcceptanceTestBase<DynamicDataMetho
         testHostResult.AssertOutputContains("TestMethodSingleParameterIntArray called with: 9");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "DynamicDataMethodTests";
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (ProjectName, ProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file DynamicDataMethodTests.csproj

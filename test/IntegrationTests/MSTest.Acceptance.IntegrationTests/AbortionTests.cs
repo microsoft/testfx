@@ -10,19 +10,15 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
 {
-    private const string AssetName = "Abort";
+    private const string AssetName = "AbortMSTestAsset";
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task AbortWithCTRLPlusC_CancellingTests(string tfm)
     {
         // We expect the same semantic for Linux, the test setup is not cross and we're using specific
         // Windows API because this gesture is not easy xplat.
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
         string fileCreationPath = Path.Combine(testHost.DirectoryName, "fileCreation");
@@ -35,15 +31,15 @@ public sealed class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFi
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);
+        testHostResult.AssertExitCodeIs(ExitCode.TestSessionAborted);
 
         testHostResult.AssertOutputMatchesRegex("Canceling the test session.*");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
-#file Abort.csproj
+#file AbortMSTestAsset.csproj
 <Project Sdk="Microsoft.NET.Sdk">
    <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
@@ -145,21 +141,11 @@ public class UnitTest1
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            // We expect the same semantic for Linux, the test setup is not cross and we're using specific
-            // Windows API because this gesture is not easy xplat.
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                yield break;
-            }
-
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
     }
 
     public TestContext TestContext { get; set; }

@@ -46,9 +46,13 @@ public static partial class AssertExtensions
         /// <param name="conditionExpression">The source code of the condition expression. This parameter is automatically populated by the compiler.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="condition"/> is <see langword="null"/>.</exception>
         /// <exception cref="AssertFailedException">Thrown if the evaluated condition is <see langword="false"/>.</exception>
+#if NET7_0_OR_GREATER
         [RequiresDynamicCode("Calls Microsoft.VisualStudio.TestTools.UnitTesting.AssertExtensions.EvaluateExpression(Expression, Dictionary<Expression, Object>)")]
+#endif
         public static void That(Expression<Func<bool>> condition, string? message = null, [CallerArgumentExpression(nameof(condition))] string? conditionExpression = null)
         {
+            TelemetryCollector.TrackAssertionCall("Assert.That");
+
             if (condition == null)
             {
                 throw new ArgumentNullException(nameof(condition));
@@ -70,20 +74,25 @@ public static partial class AssertExtensions
             var sb = new StringBuilder();
             string expressionText = conditionExpression
                 ?? throw new ArgumentNullException(nameof(conditionExpression));
-            sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatFailedFormat, expressionText));
             if (!string.IsNullOrWhiteSpace(message))
             {
+                sb.AppendLine();
                 sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatMessageFormat, message));
             }
 
             string details = ExtractDetails(condition.Body, evaluationCache);
             if (!string.IsNullOrWhiteSpace(details))
             {
+                if (sb.Length == 0)
+                {
+                    sb.AppendLine();
+                }
+
                 sb.AppendLine(FrameworkMessages.AssertThatDetailsPrefix);
                 sb.AppendLine(details);
             }
 
-            throw new AssertFailedException(sb.ToString().TrimEnd());
+            Assert.ReportAssertFailed($"Assert.That({expressionText})", sb.ToString().TrimEnd());
         }
     }
 
@@ -91,7 +100,9 @@ public static partial class AssertExtensions
     /// Evaluates an expression tree and caches all sub-expression values to avoid re-evaluation.
     /// This ensures expressions with side effects (like method calls) are only executed once.
     /// </summary>
+#if NET7_0_OR_GREATER
     [RequiresDynamicCode("Calls Microsoft.VisualStudio.TestTools.UnitTesting.AssertExtensions.EvaluateAllSubExpressions(Expression, Dictionary<Expression, Object>)")]
+#endif
     private static bool EvaluateExpression(Expression expr, Dictionary<Expression, object?> cache)
     {
         // Use a single-pass evaluation that only evaluates each expression once
@@ -112,7 +123,9 @@ public static partial class AssertExtensions
     /// Uses a bottom-up approach: evaluate children first, then replace them with constants
     /// before evaluating the parent. This prevents side effects from being executed multiple times.
     /// </summary>
+#if NET7_0_OR_GREATER
     [RequiresDynamicCode("Calls System.Linq.Expressions.Expression.Lambda(Expression, params ParameterExpression[])")]
+#endif
     private static void EvaluateAllSubExpressions(Expression expr, Dictionary<Expression, object?> cache)
     {
         // If already evaluated, skip to avoid duplicate work
@@ -348,12 +361,12 @@ public static partial class AssertExtensions
         IOrderedEnumerable<KeyValuePair<string, object?>> sortedDetails = details.OrderBy(kvp => kvp.Key, StringComparer.Ordinal);
 
         var sb = new StringBuilder();
-        foreach ((string name, object? value) in sortedDetails)
+        foreach (KeyValuePair<string, object?> kvp in sortedDetails)
         {
 #if NET
-            sb.AppendLine(CultureInfo.InvariantCulture, $"  {name} = {FormatValue(value)}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"  {kvp.Key} = {FormatValue(kvp.Value)}");
 #else
-            sb.AppendLine($"  {name} = {FormatValue(value)}");
+            sb.AppendLine($"  {kvp.Key} = {FormatValue(kvp.Value)}");
 #endif
         }
 
@@ -1027,7 +1040,7 @@ public static partial class AssertExtensions
     /// </summary>
     private static string RemoveOuterParentheses(string input)
     {
-        if (input.Length < 2 || !input.StartsWith('(') || !input.EndsWith(')'))
+        if (input.Length < 2 || !input.StartsWith("(", StringComparison.Ordinal) || !input.EndsWith(")", StringComparison.Ordinal))
         {
             return input;
         }
@@ -1084,7 +1097,7 @@ public static partial class AssertExtensions
 
                 // Keep at most 2 consecutive parentheses
                 int keepCount = Math.Min(count, MaxConsecutiveParentheses);
-                result.Append(new string(currentChar, keepCount));
+                result.Append(currentChar, keepCount);
                 i += count;
             }
             else

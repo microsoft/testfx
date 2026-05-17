@@ -19,17 +19,15 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
             throw new InvalidOperationException("Cannot register TestArgumentsEntry provider after registration is frozen.");
         }
 
-        if (!_testArgumentsEntryProviders.TryAdd(testNodeStableUid, argumentPropertiesProviderCallback))
-        {
-            throw new InvalidOperationException($"TestArgumentsEntry provider is already registered for test node with UID '{testNodeStableUid}'.");
-        }
+        // Add will throw an exception if the key already exists, which is intended.
+        _testArgumentsEntryProviders.Add(testNodeStableUid, argumentPropertiesProviderCallback);
     }
 
     internal void FreezeRegistration() => _isRegistrationFrozen = true;
 
     internal static bool IsExpandableTestNode(TestNode testNode)
         => testNode is IExpandableTestNode
-        && !testNode.Properties.OfType<FrameworkEngineMetadataProperty>().SingleOrDefault().PreventArgumentsExpansion;
+        && !FrameworkEngineMetadataProperty.GetFromProperties(testNode.Properties).PreventArgumentsExpansion;
 
     internal async Task<TestNode> ExpandTestNodeAsync(TestNode currentNode)
     {
@@ -110,7 +108,7 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
             if (arguments is not ITestArgumentsEntry testArgumentsEntry)
             {
                 shouldWrapInParenthesis = !isIndexArgumentPropertiesProvider;
-                testArgumentsEntry = argumentPropertiesProvider(new(arguments, testNode))!;
+                testArgumentsEntry = argumentPropertiesProvider(new(arguments, testNode));
             }
 
             string argumentFragmentUid = GetArgumentFragmentUid(testArgumentsEntry, shouldWrapInParenthesis);
@@ -133,22 +131,6 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
             => CreateWrappedName(testArgumentsEntry.DisplayNameFragment ?? testArgumentsEntry.UidFragment, shouldWrapInParenthesis);
 
         static string CreateWrappedName(string name, bool shouldWrapInParenthesis)
-        {
-            StringBuilder displayNameBuilder = new();
-
-            if (shouldWrapInParenthesis)
-            {
-                displayNameBuilder.Append('(');
-            }
-
-            displayNameBuilder.Append(name);
-
-            if (shouldWrapInParenthesis)
-            {
-                displayNameBuilder.Append(')');
-            }
-
-            return displayNameBuilder.ToString();
-        }
+            => shouldWrapInParenthesis ? string.Concat("(", name, ")") : name;
     }
 }

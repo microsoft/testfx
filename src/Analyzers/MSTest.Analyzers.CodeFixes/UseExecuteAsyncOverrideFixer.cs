@@ -127,7 +127,7 @@ public sealed class UseExecuteAsyncOverrideFixer : CodeFixProvider
     {
         // Transform all return statements to return Task.FromResult<TestResult[]>(...)
         var transformer = new ReturnStatementTransformer();
-        return (BlockSyntax)transformer.Visit(body)!;
+        return (BlockSyntax)transformer.Visit(body);
     }
 
     private static ArrowExpressionClauseSyntax TransformExpressionBody(ArrowExpressionClauseSyntax expressionBody)

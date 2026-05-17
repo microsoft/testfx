@@ -113,18 +113,18 @@ The timeout value is specified in one of the following formats:
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
+Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
 Default type is 'Full'</source>
         <target state="translated">指定转储的类型。
-有效值为 "Mini"、"Heap"、"Triage" (仅适用于 .NET 6+)或 "Full"。
+有效值为 "Mini"、"Heap"、"Triage"(仅适用于 .NET 6+)或 "Full"。
 默认类型为 "Full"</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
-Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
+Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</source>
         <target state="translated">“{0}”不是有效的转储类型。
-有效选项为 "Mini"、"Heap"、"Triage" (仅适用于 .NET 6+)和 "Full"</target>
+有效选项为 "Mini"、"Heap"、"Triage"(仅适用于 .NET 6+)和 "Full"</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
@@ -145,16 +145,6 @@ Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full
       <trans-unit id="MissingHangDumpMainOption">
         <source>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</source>
         <target state="translated">你指定了一个或多个挂起转储参数，但未启用它，请将 --hangdump 添加到命令行</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexDoesNotExistErrorMessage">
-        <source>Cannot find mutex '{0}'</source>
-        <target state="translated">找不到互斥“{0}”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
-        <source>Mutex name wasn't received after '{0}' seconds</source>
-        <target state="translated">“{0}”秒后未收到互斥名称</target>
         <note />
       </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">

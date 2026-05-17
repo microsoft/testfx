@@ -113,8 +113,6 @@ internal sealed class RuntimeTypeHelper
     [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "Reviewed. Suppression is OK here.")]
     internal static MethodBase? SelectMethod(MethodBase[] match, Type[] types)
     {
-        Guard.NotNull(match);
-
         int i;
         int j;
 

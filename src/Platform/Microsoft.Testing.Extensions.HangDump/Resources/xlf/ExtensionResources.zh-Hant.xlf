@@ -113,18 +113,18 @@ The timeout value is specified in one of the following formats:
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
+Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
 Default type is 'Full'</source>
         <target state="translated">指定傾印的類型。
-有效值為 'Mini'、'Heap'、'Triage' (只有在 .NET 6+ 可供使用) 或 'Full'。
+有效值為 'Mini'、'Heap'、'Triage'、'None' (僅適用 .NET 6+) 或 'Full'。
 預設類型為 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
-Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
+Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</source>
         <target state="translated">'{0}' 不是有效的傾印類型。
-有效的選項為 'Mini'、'Heap'、'Triage' (只有在 .NET 6+ 可供使用) 和 'Full'</target>
+有效的選項為 'Mini'、'Heap'、'Triage'、'None' (僅適用 .NET 6+) 和 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
@@ -145,16 +145,6 @@ Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full
       <trans-unit id="MissingHangDumpMainOption">
         <source>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</source>
         <target state="translated">您指定了一或多個停留傾印參數但並未加以啟用，請將 --hangdump 新增至命令列中</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexDoesNotExistErrorMessage">
-        <source>Cannot find mutex '{0}'</source>
-        <target state="translated">找不到 Mutex '{0}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
-        <source>Mutex name wasn't received after '{0}' seconds</source>
-        <target state="translated">'{0}' 秒後未收到 Mutex 名稱</target>
         <note />
       </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">

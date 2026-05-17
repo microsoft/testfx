@@ -157,4 +157,85 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenMethodWithMultiLineBody_PreservesIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{|#0:Owner("owner")|}]
+                public void TestMethod()
+                {
+                    var result = SomeMethod(
+                        1,
+                        2,
+                        3);
+                }
+
+                private int SomeMethod(int a, int b, int c) => a + b + c;
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [Owner("owner")]
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var result = SomeMethod(
+                        1,
+                        2,
+                        3);
+                }
+
+                private int SomeMethod(int a, int b, int c) => a + b + c;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic(UseAttributeOnTestMethodAnalyzer.OwnerRule).WithLocation(0), fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsMarkedWithIgnoreButNotWithTestMethod_UsesConcreteConditionAttributeInDiagnosticAsync()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{|#0:Ignore|}]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [Ignore]
+                [TestMethod]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UseAttributeOnTestMethodAnalyzer.ConditionBaseRule).WithLocation(0).WithArguments("IgnoreAttribute"),
+            fixedCode);
+    }
 }

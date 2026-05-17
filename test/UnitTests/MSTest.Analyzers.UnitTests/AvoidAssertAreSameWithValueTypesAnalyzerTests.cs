@@ -216,4 +216,44 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzerTests
             },
         }.RunAsync();
     }
+
+    [TestMethod]
+    public async Task UseAssertAreSameWithValueTypes_MultiLineWithDifferentIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|Assert.AreSame(
+                        0,
+                        0,
+                        "values should be the same")|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.AreEqual(
+                        0,
+                        0,
+                        "values should be the same");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

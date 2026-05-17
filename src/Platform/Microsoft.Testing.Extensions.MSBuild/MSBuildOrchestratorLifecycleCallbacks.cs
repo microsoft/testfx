@@ -12,6 +12,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class MSBuildOrchestratorLifetime : ITestHostOrchestratorApplicationLifetime
 {
     private readonly IConfiguration _configuration;
@@ -27,7 +28,7 @@ internal sealed class MSBuildOrchestratorLifetime : ITestHostOrchestratorApplica
 
     public string Uid => nameof(MSBuildOrchestratorLifetime);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => nameof(MSBuildOrchestratorLifetime);
 
@@ -62,5 +63,5 @@ internal sealed class MSBuildOrchestratorLifetime : ITestHostOrchestratorApplica
             cancellationToken).ConfigureAwait(false);
     }
 
-    public Task AfterRunAsync(int exitCode, CancellationToken cancellation) => Task.CompletedTask;
+    public Task AfterRunAsync(int exitCode, CancellationToken cancellationToken) => Task.CompletedTask;
 }

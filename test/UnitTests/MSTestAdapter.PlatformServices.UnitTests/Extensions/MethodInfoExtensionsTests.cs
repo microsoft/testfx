@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Threading.Tasks;
-
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -11,8 +9,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensi
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 
 using TestFramework.ForTestingMSTest;
-
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
 
@@ -373,7 +369,7 @@ public class MethodInfoExtensionsTests : TestContainer
         }
         catch (TestFailedException ex)
         {
-            ex.Outcome.Should().Be(UTF.UnitTestOutcome.Error);
+            ex.Outcome.Should().Be(UnitTestOutcome.Error);
             ex.TryGetMessage().Should().Be(string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestMethodNoDataError, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters"));
         }
     }
@@ -405,7 +401,7 @@ public class MethodInfoExtensionsTests : TestContainer
         }
         catch (TestFailedException ex)
         {
-            ex.Outcome.Should().Be(UTF.UnitTestOutcome.Error);
+            ex.Outcome.Should().Be(UnitTestOutcome.Error);
 
             // Error in English is:
             //    Cannot run test method 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2.PublicMethodWithParameters': Test data doesn't match method parameters. Either the count or types are different.
@@ -432,7 +428,7 @@ public class MethodInfoExtensionsTests : TestContainer
         }
         catch (TestFailedException ex)
         {
-            ex.Outcome.Should().Be(UTF.UnitTestOutcome.Error);
+            ex.Outcome.Should().Be(UnitTestOutcome.Error);
 
             // Error in English is:
             //    Cannot run test method 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2.PublicMethodWithParameters': Test data doesn't match method parameters. Either the count or types are different.

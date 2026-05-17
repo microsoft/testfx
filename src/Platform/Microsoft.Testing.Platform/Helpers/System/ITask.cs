@@ -12,11 +12,15 @@ internal interface ITask
 
     Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken);
 
+#if !MTP_MSBUILD_TASKS
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
+#endif
     Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken);
 
     Task WhenAll(params Task[] tasks);
 
     Task Delay(int millisecondDelay);
 
-    Task Delay(TimeSpan timeSpan, CancellationToken cancellation);
+    Task Delay(TimeSpan timeSpan, CancellationToken cancellationToken);
 }

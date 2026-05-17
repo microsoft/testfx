@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
@@ -17,23 +16,34 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
     private readonly List<Func<IServiceProvider, ITestHostEnvironmentVariableProvider>> _environmentVariableProviderFactories = [];
     private readonly List<Func<IServiceProvider, ITestHostProcessLifetimeHandler>> _lifetimeHandlerFactories = [];
-    private readonly List<Func<IServiceProvider, IDataConsumer>> _dataConsumerFactories = [];
     private readonly List<ICompositeExtensionFactory> _environmentVariableProviderCompositeFactories = [];
     private readonly List<ICompositeExtensionFactory> _lifetimeHandlerCompositeFactories = [];
     private readonly List<ICompositeExtensionFactory> _alreadyBuiltServices = [];
     private readonly List<ICompositeExtensionFactory> _dataConsumersCompositeServiceFactories = [];
 
+    [UnsupportedOSPlatform("browser")]
     public void AddEnvironmentVariableProvider(Func<IServiceProvider, ITestHostEnvironmentVariableProvider> environmentVariableProviderFactory)
     {
-        Guard.NotNull(environmentVariableProviderFactory);
+        if (OperatingSystem.IsBrowser())
+        {
+            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
+        }
+
+        _ = environmentVariableProviderFactory ?? throw new ArgumentNullException(nameof(environmentVariableProviderFactory));
         _environmentVariableProviderFactories.Add(environmentVariableProviderFactory);
         _factoryOrdering.Add(environmentVariableProviderFactory);
     }
 
+    [UnsupportedOSPlatform("browser")]
     public void AddEnvironmentVariableProvider<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, ITestHostEnvironmentVariableProvider
     {
-        Guard.NotNull(compositeServiceFactory);
+        if (OperatingSystem.IsBrowser())
+        {
+            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
+        }
+
+        _ = compositeServiceFactory ?? throw new ArgumentNullException(nameof(compositeServiceFactory));
         if (_environmentVariableProviderCompositeFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
@@ -43,17 +53,29 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         _factoryOrdering.Add(compositeServiceFactory);
     }
 
+    [UnsupportedOSPlatform("browser")]
     public void AddProcessLifetimeHandler(Func<IServiceProvider, ITestHostProcessLifetimeHandler> lifetimeHandler)
     {
-        Guard.NotNull(lifetimeHandler);
+        if (OperatingSystem.IsBrowser())
+        {
+            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
+        }
+
+        _ = lifetimeHandler ?? throw new ArgumentNullException(nameof(lifetimeHandler));
         _lifetimeHandlerFactories.Add(lifetimeHandler);
         _factoryOrdering.Add(lifetimeHandler);
     }
 
+    [UnsupportedOSPlatform("browser")]
     public void AddProcessLifetimeHandler<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, ITestHostProcessLifetimeHandler
     {
-        Guard.NotNull(compositeServiceFactory);
+        if (OperatingSystem.IsBrowser())
+        {
+            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
+        }
+
+        _ = compositeServiceFactory ?? throw new ArgumentNullException(nameof(compositeServiceFactory));
         if (_lifetimeHandlerCompositeFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
@@ -63,10 +85,16 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         _factoryOrdering.Add(compositeServiceFactory);
     }
 
+    [UnsupportedOSPlatform("browser")]
     public void AddDataConsumer<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, IDataConsumer
     {
-        Guard.NotNull(compositeServiceFactory);
+        if (OperatingSystem.IsBrowser())
+        {
+            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
+        }
+
+        _ = compositeServiceFactory ?? throw new ArgumentNullException(nameof(compositeServiceFactory));
         if (_dataConsumersCompositeServiceFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
@@ -78,13 +106,6 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
     internal async Task<TestHostControllerConfiguration> BuildAsync(ServiceProvider serviceProvider)
     {
-        // For now the test host working directory and the current working directory are the same.
-        // In future we could move the test host in a different directory for instance in case of
-        // the need to rewrite binary files. If we don't move files are locked by ourself.
-        var aggregatedConfiguration = (AggregatedConfiguration)serviceProvider.GetConfiguration();
-        string? currentWorkingDirectory = aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory];
-        ApplicationStateGuard.Ensure(currentWorkingDirectory is not null);
-
         List<(ITestHostEnvironmentVariableProvider TestHostEnvironmentVariableProvider, int RegistrationOrder)> environmentVariableProviders = [];
         foreach (Func<IServiceProvider, ITestHostEnvironmentVariableProvider> environmentVariableProviderFactory in _environmentVariableProviderFactories)
         {
@@ -199,22 +220,6 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         }
 
         List<(IDataConsumer Consumer, int RegistrationOrder)> dataConsumers = [];
-        foreach (Func<IServiceProvider, IDataConsumer> dataConsumerFactory in _dataConsumerFactories)
-        {
-            IDataConsumer service = dataConsumerFactory(serviceProvider);
-
-            // Check if we have already extensions of the same type with same id registered
-            dataConsumers.ValidateUniqueExtension(service, x => x.Consumer);
-
-            // We initialize only if enabled
-            if (await service.IsEnabledAsync().ConfigureAwait(false))
-            {
-                await service.TryInitializeAsync().ConfigureAwait(false);
-
-                // Register the extension for usage
-                dataConsumers.Add((service, _factoryOrdering.IndexOf(dataConsumerFactory)));
-            }
-        }
 
         foreach (ICompositeExtensionFactory compositeServiceFactory in _dataConsumersCompositeServiceFactories)
         {

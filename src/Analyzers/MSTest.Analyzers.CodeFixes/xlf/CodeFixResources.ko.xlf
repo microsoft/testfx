@@ -32,6 +32,16 @@
         <target state="translated">'out' 매개변수 대신 할당 사용</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidOutRefTestMethodParametersFix">
+        <source>Remove 'out' and 'ref' modifiers</source>
+        <target state="translated">'out' 및 'ref' 한정자 제거</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextFix">
+        <source>Change return type to 'Task'</source>
+        <target state="new">Change return type to 'Task'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">메서드 접근성 '비공개'로 변경하기</target>
@@ -60,6 +70,16 @@
       <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
         <source>Remove 'ClassCleanupBehavior' argument</source>
         <target state="translated">'ClassCleanupBehavior' 인수 제거</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveDuplicateDataRowFix">
+        <source>Remove duplicate 'DataRow'</source>
+        <target state="translated">중복된 'DataRow' 제거</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveDuplicateTestMethodAttributeFix">
+        <source>Remove duplicate TestMethod attribute</source>
+        <target state="translated">중복된 TestMethod 특성 제거</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -147,9 +167,19 @@
         <target state="translated">문자열 인수 대신 'DisplayName' 속성 사용</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
+        <source>Use MSTest 'Description' attribute instead</source>
+        <target state="translated">대신 MSTest의 'Description' 특성 사용</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">
         <source>Use '{0}'</source>
         <target state="translated">'{0}' 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckFix">
+        <source>Use '[OSCondition]' attribute</source>
+        <target state="translated">'[OSCondition]' 특성 사용</target>
         <note />
       </trans-unit>
     </body>

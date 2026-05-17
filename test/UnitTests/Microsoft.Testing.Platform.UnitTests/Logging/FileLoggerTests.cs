@@ -48,16 +48,35 @@ public sealed class FileLoggerTests : IDisposable
     [TestMethod]
     public void Write_IfMalformedUTF8_ShouldNotCrash()
     {
-        using TempDirectory tempDirectory = new(nameof(Write_IfMalformedUTF8_ShouldNotCrash));
+        var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
+        var fileStreamFactory = new Mock<IFileStreamFactory>(MockBehavior.Strict);
+        var fileStream = new Mock<IFileStream>(MockBehavior.Strict);
+        var memoryStream = new MemoryStream();
+        fileStream.Setup(f => f.Stream).Returns(memoryStream);
+        fileStream.Setup(f => f.Dispose()).Callback(() => { });
+
+        fileStreamFactory
+            .Setup(f => f.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+            .Returns(fileStream.Object)
+            .Callback((string fileName, FileMode _1, FileAccess _2, FileShare _3) => fileStream.Setup(f => f.Name).Returns(fileName));
+
         using FileLogger fileLogger = new(
-            new FileLoggerOptions(tempDirectory.Path, "Test", fileName: null),
+            new FileLoggerOptions(nameof(Write_IfMalformedUTF8_ShouldNotCrash), "Test", fileName: null),
             LogLevel.Trace,
             new SystemClock(),
             new SystemTask(),
             new SystemConsole(),
-            new SystemFileSystem(),
-            new SystemFileStreamFactory());
+            fileSystem.Object,
+            fileStreamFactory.Object);
+
         fileLogger.Log(LogLevel.Trace, "\uD886", null, LoggingExtensions.Formatter, "Category");
+
+        memoryStream.Seek(0, SeekOrigin.Begin);
+        string logWritten = new StreamReader(memoryStream).ReadToEnd();
+
+        // logWritten looks like this: "[15:01:57.130 Category - Trace] �\r\n"
+        Assert.StartsWith("[", logWritten);
+        Assert.EndsWith($" Category - Trace] \uFFFD{Environment.NewLine}", logWritten);
     }
 
     [TestMethod]

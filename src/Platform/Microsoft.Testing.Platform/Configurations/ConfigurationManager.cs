@@ -12,17 +12,19 @@ using static Microsoft.Testing.Platform.Configurations.JsonConfigurationSource;
 
 namespace Microsoft.Testing.Platform.Configurations;
 
-internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo) : IConfigurationManager
+internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment) : IConfigurationManager
 {
     private readonly List<Func<IConfigurationSource>> _configurationSources = [];
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
+    private readonly IEnvironment _environment = environment;
 
     public void AddConfigurationSource(Func<IConfigurationSource> source) => _configurationSources.Add(source);
 
     internal async Task<IConfiguration> BuildAsync(IFileLoggerProvider? syncFileLoggerProvider, CommandLineParseResult commandLineParseResult)
     {
         List<(IConfigurationProvider ConfigurationProvider, int Order)> configurationProviders = [];
+
         JsonConfigurationProvider? defaultJsonConfiguration = null;
         foreach (Func<IConfigurationSource> configurationSource in _configurationSources)
         {
@@ -44,11 +46,22 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
             configurationProviders.Add((configurationProvider, serviceInstance.Order));
         }
 
-        if (syncFileLoggerProvider is not null)
+        if (defaultJsonConfiguration is null)
+        {
+            throw new InvalidOperationException(PlatformResources.ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage);
+        }
+
+        configurationProviders.Sort(static (a, b) => a.Order.CompareTo(b.Order));
+        var configurationProvidersArray = new IConfigurationProvider[configurationProviders.Count];
+        for (int i = 0; i < configurationProvidersArray.Length; i++)
+        {
+            configurationProvidersArray[i] = configurationProviders[i].ConfigurationProvider;
+        }
+
+        if (syncFileLoggerProvider is not null && defaultJsonConfiguration.ConfigurationFile != null)
         {
             ILogger logger = syncFileLoggerProvider.CreateLogger(nameof(ConfigurationManager));
-            if (logger.IsEnabled(LogLevel.Trace)
-                && defaultJsonConfiguration?.ConfigurationFile != null)
+            if (logger.IsEnabled(LogLevel.Trace))
             {
                 using IFileStream configFileStream = _fileSystem.NewFileStream(defaultJsonConfiguration.ConfigurationFile, FileMode.Open, FileAccess.Read);
                 StreamReader streamReader = new(configFileStream.Stream);
@@ -56,8 +69,6 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
             }
         }
 
-        return defaultJsonConfiguration is null
-            ? throw new InvalidOperationException(PlatformResources.ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage)
-            : new AggregatedConfiguration([.. configurationProviders.OrderBy(x => x.Order).Select(x => x.ConfigurationProvider)], _testApplicationModuleInfo, _fileSystem, commandLineParseResult);
+        return new AggregatedConfiguration(configurationProvidersArray, _testApplicationModuleInfo, _fileSystem, _environment, commandLineParseResult);
     }
 }

@@ -142,15 +142,16 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
 
                         StringBuilder reportBody = new();
                         MethodInfo[] tests = GetTestsMethodFromAssemblies();
+                        HashSet<TestNodeUid>? uidFilterSet = runTestExecutionRequest.Filter is TestNodeUidListFilter filter
+                            ? [.. filter.TestNodeUids]
+                            : null;
                         var results = new List<Task>();
                         foreach (MethodInfo test in tests)
                         {
-                            if (runTestExecutionRequest.Filter is TestNodeUidListFilter filter)
+                            if (uidFilterSet is not null
+                                && !uidFilterSet.Contains($"{test.DeclaringType!.FullName}.{test.Name}"))
                             {
-                                if (!filter.TestNodeUids.Any(testId => testId == $"{test.DeclaringType!.FullName}.{test.Name}"))
-                                {
-                                    continue;
-                                }
+                                continue;
                             }
 
                             SkipAttribute? skipAttribute = test.GetCustomAttribute<SkipAttribute>();

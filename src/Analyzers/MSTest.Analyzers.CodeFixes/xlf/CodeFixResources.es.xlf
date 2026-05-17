@@ -32,6 +32,16 @@
         <target state="translated">Usar la asignación en lugar del parámetro "out"</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidOutRefTestMethodParametersFix">
+        <source>Remove 'out' and 'ref' modifiers</source>
+        <target state="translated">Quitar modificadores 'out' y 'ref'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidUsingAssertsInAsyncVoidContextFix">
+        <source>Change return type to 'Task'</source>
+        <target state="new">Change return type to 'Task'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">Cambiar la accesibilidad del método a "private"</target>
@@ -60,6 +70,16 @@
       <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
         <source>Remove 'ClassCleanupBehavior' argument</source>
         <target state="translated">Quitar el argumento "ClassCleanupBehavior"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveDuplicateDataRowFix">
+        <source>Remove duplicate 'DataRow'</source>
+        <target state="translated">Quitar "DataRow" duplicado</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveDuplicateTestMethodAttributeFix">
+        <source>Remove duplicate TestMethod attribute</source>
+        <target state="translated">Quitar atributo TestMethod duplicado</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -147,9 +167,19 @@
         <target state="translated">Usar la propiedad "DisplayName" en lugar del argumento de cadena</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
+        <source>Use MSTest 'Description' attribute instead</source>
+        <target state="translated">Use el atributo "Descripción" de MSTest en su lugar</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">
         <source>Use '{0}'</source>
         <target state="translated">Usar "{0}"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckFix">
+        <source>Use '[OSCondition]' attribute</source>
+        <target state="translated">Usar el atributo '[OSCondition]'</target>
         <note />
       </trans-unit>
     </body>

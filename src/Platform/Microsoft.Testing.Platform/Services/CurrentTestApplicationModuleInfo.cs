@@ -32,19 +32,8 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
         }
     }
 
-    public bool IsCurrentTestApplicationModuleExecutable
-    {
-        get
-        {
-            string? processPath = GetProcessPath(_environment, _process, true);
-            return processPath != ".dll";
-        }
-    }
-
     public bool IsAppHostOrSingleFileOrNativeAot
-        => IsCurrentTestApplicationModuleExecutable
-        && !IsCurrentTestApplicationHostDotnetMuxer
-        && !IsCurrentTestApplicationHostMonoMuxer;
+        => !IsCurrentTestApplicationHostDotnetMuxer && !IsCurrentTestApplicationHostMonoMuxer;
 
     public string GetCurrentTestApplicationFullPath()
     {
@@ -84,6 +73,7 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
     public string GetProcessPath()
         => GetProcessPath(_environment, _process, throwOnNull: true)!;
 
+    [UnconditionalSuppressMessage("SingleFile", "IL3000:Avoid accessing Assembly file path when publishing as a single file", Justification = "<Pending>")]
     private static string? GetProcessPath(IEnvironment environment, IProcessHandler process, bool throwOnNull = false)
     {
 #if NETCOREAPP
@@ -93,6 +83,17 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
         string? processPath = currentProcess.MainModule?.FileName;
 #endif
 
+        if (processPath is null)
+        {
+            // Fallback for environments where ProcessPath is null (e.g., browser OS)
+            string[] commandLineArgs = environment.GetCommandLineArgs();
+            processPath = commandLineArgs.Length > 0
+                ? commandLineArgs[0]
+                : Assembly.GetEntryAssembly()?.Location is { } entryAssemblyLocation && !RoslynString.IsNullOrEmpty(entryAssemblyLocation)
+                    ? entryAssemblyLocation
+                    : AppContext.BaseDirectory;
+        }
+
         ApplicationStateGuard.Ensure(processPath is not null || !throwOnNull);
         return processPath;
     }
@@ -101,20 +102,17 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
     {
         bool isDotnetMuxer = IsCurrentTestApplicationHostDotnetMuxer;
         bool isAppHost = IsAppHostOrSingleFileOrNativeAot;
-        bool isMonoMuxer = IsCurrentTestApplicationHostMonoMuxer;
         string[] commandLineArguments = _environment.GetCommandLineArgs();
-        IEnumerable<string> arguments = (isAppHost, isDotnetMuxer, isMonoMuxer) switch
+        IEnumerable<string> arguments = (isAppHost, isDotnetMuxer) switch
         {
             // When executable
-            (true, _, _) => commandLineArguments.Skip(1),
+            (true, _) => commandLineArguments.Skip(1),
             // When dotnet
-            (_, true, _) => MuxerExec.Concat(commandLineArguments),
-            // When mono
-            (_, _, true) => commandLineArguments,
+            (_, true) => MuxerExec.Concat(commandLineArguments),
             // Otherwise
             _ => commandLineArguments,
         };
 
-        return new(GetProcessPath(), arguments, GetCurrentTestApplicationDirectory());
+        return new ExecutableInfo(GetProcessPath(), arguments, GetCurrentTestApplicationDirectory());
     }
 }

@@ -12,8 +12,5 @@ internal sealed class LoggerFactoryProxy : ILoggerFactory
             : _loggerFactory.CreateLogger(categoryName);
 
     public void SetLoggerFactory(ILoggerFactory loggerFactory)
-    {
-        Guard.NotNull(loggerFactory);
-        _loggerFactory = loggerFactory;
-    }
+        => _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 }

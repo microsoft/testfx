@@ -3,7 +3,7 @@
 
 using AwesomeAssertions;
 
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using SampleFrameworkExtensions;
 
@@ -11,9 +11,13 @@ using TestFramework.ForTestingMSTest;
 
 namespace PlatformServices.Desktop.ComponentTests;
 
+/// <summary>
+/// Integration tests for ReflectionOperations which provides platform-specific reflection operations.
+/// </summary>
 public class ReflectionUtilityTests : TestContainer
 {
     private readonly Assembly _testAsset;
+    private readonly ReflectionOperations _reflectionOperations = new();
 
     public ReflectionUtilityTests()
     {
@@ -29,70 +33,69 @@ public class ReflectionUtilityTests : TestContainer
 #endif
                 currentAssemblyDirectory.Name /* TFM (e.g. net462) */,
                 "TestProjectForDiscovery.dll");
-        _testAsset = Assembly.ReflectionOnlyLoadFrom(testAssetPath);
-
-        // This is needed for System assemblies.
-        AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += ReflectionOnlyOnResolve;
+        _testAsset = Assembly.LoadFrom(testAssetPath);
     }
 
     public void GetCustomAttributesShouldReturnAllAttributes()
     {
-        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1")!;
+        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo);
+        object[]? attributes = _reflectionOperations.GetCustomAttributes(methodInfo);
 
         attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(2);
 
-        string[] expectedAttributes = ["TestCategory : base", "Owner : base"];
-        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
+        // Filter to known test attributes to avoid fragility if the test asset ever
+        // enables nullable annotations (which would add compiler-generated attributes).
+        string[] expectedAttributes = ["Owner : base", "TestCategory : base"];
+        GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
     }
 
     public void GetCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
-        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1")!;
+        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo);
+        object[]? attributes = _reflectionOperations.GetCustomAttributes(methodInfo);
 
         attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(3);
 
         // Notice that the Owner on the base method does not show up since it can only be defined once.
-        string[] expectedAttributes = ["TestCategory : derived", "TestCategory : base", "Owner : derived"];
-        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
+        // Filter to known test attributes to avoid fragility if the test asset ever
+        // enables nullable annotations (which would add compiler-generated attributes).
+        string[] expectedAttributes = ["Owner : derived", "TestCategory : derived", "TestCategory : base"];
+        GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
     }
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributes()
     {
         Type type = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type);
+        object[]? attributes = _reflectionOperations.GetCustomAttributes(type);
 
         attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(1);
 
+        // Filter to known test attributes to avoid fragility with compiler-generated attributes.
         string[] expectedAttributes = ["TestCategory : ba"];
-        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
+        GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
     }
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
     {
         Type type = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type);
+        object[]? attributes = _reflectionOperations.GetCustomAttributes(type);
 
         attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(2);
 
+        // Filter to known test attributes to avoid fragility with compiler-generated attributes.
         string[] expectedAttributes = ["TestCategory : a", "TestCategory : ba"];
-        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
+        GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
     }
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributes()
     {
-        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1")!;
+        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, typeof(TestCategoryAttribute));
+        TestCategoryAttribute[] attributes = _reflectionOperations.GetAttributes<TestCategoryAttribute>(methodInfo).ToArray();
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
@@ -104,9 +107,9 @@ public class ReflectionUtilityTests : TestContainer
     public void GetSpecificCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
         MethodInfo methodInfo =
-            _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1")!;
+            _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, typeof(TestCategoryAttribute));
+        TestCategoryAttribute[] attributes = _reflectionOperations.GetAttributes<TestCategoryAttribute>(methodInfo).ToArray();
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
@@ -117,22 +120,22 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetCustomAttributesShouldReturnAllAttributesIncludingUserDefinedAttributes()
     {
-        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1")!;
+        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, null);
+        object[]? attributes = _reflectionOperations.GetCustomAttributes(methodInfo);
 
         attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(3);
 
-        string[] expectedAttributes = ["Duration : superfast", "TestCategory : base", "Owner : base"];
-        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
+        // Filter to known test attributes to avoid fragility with compiler-generated attributes.
+        string[] expectedAttributes = ["Duration : superfast", "Owner : base", "TestCategory : base"];
+        GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
     }
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributesIncludingUserDefinedAttributes()
     {
-        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1")!;
+        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, typeof(TestPropertyAttribute));
+        TestPropertyAttribute[] attributes = _reflectionOperations.GetAttributes<TestPropertyAttribute>(methodInfo).ToArray();
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
@@ -143,9 +146,9 @@ public class ReflectionUtilityTests : TestContainer
 
     public void GetSpecificCustomAttributesShouldReturnArrayAttributesAsWell()
     {
-        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyTestMethod2")!;
+        MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyTestMethod2");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, typeof(CategoryArrayAttribute));
+        CategoryArrayAttribute[] attributes = _reflectionOperations.GetAttributes<CategoryArrayAttribute>(methodInfo).ToArray();
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
@@ -158,7 +161,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(type, typeof(TestCategoryAttribute));
+        TestCategoryAttribute[] attributes = _reflectionOperations.GetAttributes<TestCategoryAttribute>(type).ToArray();
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
@@ -171,7 +174,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(type, typeof(TestCategoryAttribute));
+        TestCategoryAttribute[] attributes = _reflectionOperations.GetAttributes<TestCategoryAttribute>(type).ToArray();
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
@@ -184,20 +187,13 @@ public class ReflectionUtilityTests : TestContainer
     {
         Assembly asm = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").Assembly;
 
-        List<Attribute> attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(TestCategoryAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributes(asm, typeof(TestCategoryAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
 
         string[] expectedAttributes = ["TestCategory : a1", "TestCategory : a2"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
-    }
-
-    private static Assembly ReflectionOnlyOnResolve(object sender, ResolveEventArgs args)
-    {
-        string assemblyNameToLoad = AppDomain.CurrentDomain.ApplyPolicy(args.Name);
-
-        return Assembly.ReflectionOnlyLoad(assemblyNameToLoad);
     }
 
     private static string[] GetAttributeValuePairs(IEnumerable attributes)

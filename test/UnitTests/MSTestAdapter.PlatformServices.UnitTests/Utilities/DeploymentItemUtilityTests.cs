@@ -4,7 +4,9 @@
 #if !WINDOWS_UWP && !WIN_UI
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -24,7 +26,7 @@ public class DeploymentItemUtilityTests : TestContainer
         TestPropertyAttributes.Hidden,
         typeof(TestCase));
 
-    private readonly Mock<ReflectionUtility> _mockReflectionUtility;
+    private readonly Mock<IReflectionOperations> _mockReflectionOperations;
     private readonly DeploymentItemUtility _deploymentItemUtility;
     private readonly ICollection<string> _warnings;
 
@@ -33,8 +35,8 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public DeploymentItemUtilityTests()
     {
-        _mockReflectionUtility = new Mock<ReflectionUtility>();
-        _deploymentItemUtility = new DeploymentItemUtility(_mockReflectionUtility.Object);
+        _mockReflectionOperations = new Mock<IReflectionOperations>();
+        _deploymentItemUtility = new DeploymentItemUtility(_mockReflectionOperations.Object);
         _warnings = [];
     }
 
@@ -42,7 +44,7 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public void GetClassLevelDeploymentItemsShouldReturnEmptyListWhenNoDeploymentItems()
     {
-        _mockReflectionUtility.Setup(x => x.GetCustomAttributes(typeof(DeploymentItemUtilityTests), typeof(DeploymentItemAttribute)))
+        _mockReflectionOperations.Setup(x => x.GetAttributes<DeploymentItemAttribute>(typeof(DeploymentItemUtilityTests)))
             .Returns([]);
         IList<DeploymentItem> deploymentItems = _deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), _warnings);
 
@@ -163,7 +165,7 @@ public class DeploymentItemUtilityTests : TestContainer
     public void GetDeploymentItemsShouldReturnNullOnNoDeploymentItems()
     {
         MethodInfo method = typeof(DeploymentItemUtilityTests).GetMethod("GetDeploymentItemsShouldReturnNullOnNoDeploymentItems")!;
-        _mockReflectionUtility.Setup(x => x.GetCustomAttributes(method, typeof(DeploymentItemAttribute)))
+        _mockReflectionOperations.Setup(x => x.GetAttributes<DeploymentItemAttribute>(method))
             .Returns([]);
 
         _deploymentItemUtility.GetDeploymentItems(method, null!, _warnings).Should().BeNull();
@@ -208,7 +210,7 @@ public class DeploymentItemUtilityTests : TestContainer
         };
 
         MethodInfo method = typeof(DeploymentItemUtilityTests).GetMethod("GetDeploymentItemsShouldReturnNullOnNoDeploymentItems")!;
-        _mockReflectionUtility.Setup(x => x.GetCustomAttributes(method, typeof(DeploymentItemAttribute)))
+        _mockReflectionOperations.Setup(x => x.GetAttributes<DeploymentItemAttribute>(method))
             .Returns([]);
 
         // Act.
@@ -413,7 +415,7 @@ public class DeploymentItemUtilityTests : TestContainer
 
     #region private methods
 
-    private void SetupDeploymentItems(MemberInfo memberInfo, KeyValuePair<string, string>[] deploymentItems)
+    private void SetupDeploymentItems(ICustomAttributeProvider attributeProvider, KeyValuePair<string, string>[] deploymentItems)
     {
         var deploymentItemAttributes = new List<DeploymentItemAttribute>();
 
@@ -422,11 +424,8 @@ public class DeploymentItemUtilityTests : TestContainer
             deploymentItemAttributes.Add(new DeploymentItemAttribute(deploymentItem.Key, deploymentItem.Value));
         }
 
-        _mockReflectionUtility.Setup(
-            ru =>
-            ru.GetCustomAttributes(
-                memberInfo,
-                typeof(DeploymentItemAttribute))).Returns(deploymentItemAttributes.ToArray());
+        _mockReflectionOperations.Setup(
+            ru => ru.GetAttributes<DeploymentItemAttribute>(attributeProvider)).Returns(deploymentItemAttributes);
     }
 
     #endregion

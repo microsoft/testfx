@@ -25,12 +25,23 @@ internal static class NativeMethods
         }
     }
 
+    // Copy of https://github.com/dotnet/msbuild/blob/4618ab514861c1aec4e9a5550ce685590de44bc7/src/Framework/NativeMethods.cs#L1613
     internal static (bool AcceptAnsiColorCodes, bool OutputIsScreen, uint? OriginalConsoleMode) QueryIsScreenAndTryEnableAnsiColorCodes(StreamHandleType handleType = StreamHandleType.StdOut)
     {
         if (Console.IsOutputRedirected)
         {
             // There's no ANSI terminal support if console output is redirected.
             return (AcceptAnsiColorCodes: false, OutputIsScreen: false, OriginalConsoleMode: null);
+        }
+
+        if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsBrowser() && !OperatingSystem.IsIOS() && !OperatingSystem.IsTvOS())
+        {
+            if (Console.BufferHeight == 0 || Console.BufferWidth == 0)
+            {
+                // The current console doesn't have a valid buffer size, which means it is not a real console. let's default to not using TL
+                // in those scenarios.
+                return (AcceptAnsiColorCodes: false, OutputIsScreen: false, OriginalConsoleMode: null);
+            }
         }
 
         bool acceptAnsiColorCodes = false;
@@ -40,7 +51,7 @@ internal static class NativeMethods
         {
             try
             {
-                nint outputStream = GetStdHandle((int)handleType);
+                IntPtr outputStream = GetStdHandle((int)handleType);
                 if (GetConsoleMode(outputStream, out uint consoleMode))
                 {
                     if ((consoleMode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) == ENABLE_VIRTUAL_TERMINAL_PROCESSING)

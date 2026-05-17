@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.IPC.Models;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class TestHostControlledHost(NamedPipeClient testHostControllerPipeClient, IHost innerHost, CancellationToken cancellationToken) : IHost, IDisposable
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly
@@ -23,7 +24,7 @@ internal sealed class TestHostControlledHost(NamedPipeClient testHostControllerP
         int exitCode = await _innerHost.RunAsync().ConfigureAwait(false);
         try
         {
-            await _namedPipeClient.RequestReplyAsync<TestHostProcessExitRequest, VoidResponse>(new TestHostProcessExitRequest(exitCode), _cancellationToken).ConfigureAwait(false);
+            await _namedPipeClient.RequestReplyAsync<TestHostCompletedRequest, VoidResponse>(new TestHostCompletedRequest(exitCode), _cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException oc) when (oc.CancellationToken == _cancellationToken)
         {

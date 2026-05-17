@@ -9,7 +9,6 @@ using Microsoft.Testing.Extensions;
 Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 
 CommandLine.MaxOutstandingCommands = Environment.ProcessorCount;
-DotnetCli.DoNotRetry = Debugger.IsAttached;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 
@@ -27,7 +26,7 @@ builder.AddAzureDevOpsProvider();
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory
     = new(_ => new SlowestTestsConsumer());
 builder.TestHost.AddDataConsumer(slowestTestCompositeServiceFactory);
-builder.TestHost.AddTestSessionLifetimeHandle(slowestTestCompositeServiceFactory);
+builder.TestHost.AddTestSessionLifetimeHandler(slowestTestCompositeServiceFactory);
 using ITestApplication app = await builder.BuildAsync();
 int returnValue = await app.RunAsync();
 Console.WriteLine($"Process started: {CommandLine.TotalProcessesAttempt}");

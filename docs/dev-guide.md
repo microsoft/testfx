@@ -4,7 +4,7 @@ This document contains all the required information to build, test, and consume 
 
 ## Prerequisites
 
-To build and test all functionalities of MSTest, we recommend installing [Visual Studio 2022](https://visualstudio.microsoft.com/) with the following workloads:
+To build and test all functionalities of MSTest, we recommend installing [Visual Studio 2026](https://visualstudio.microsoft.com/) with the following workloads:
 
 - `.NET desktop development`
 - `Universal Windows Platform development`
@@ -120,15 +120,15 @@ artifacts
 
 with
 
-| directory         | description |
-|-------------------|-------------|
-| bin               | Build output of each project. |
-| obj               | Intermediate directory for each project. |
-| packages          | NuGet packages produced by all projects in the repo. |
-| SymStore          | Storage for converted Windows PDBs |
-| log               | Build binary log and other logs. |
-| tmp               | Temp files generated during build. |
-| toolset           | Files generated during toolset restore. |
+| directory         | description                                            |
+|-------------------|--------------------------------------------------------|
+| bin               | Build output of each project.                          |
+| obj               | Intermediate directory for each project.               |
+| packages          | NuGet packages produced by all projects in the repo.   |
+| SymStore          | Storage for converted Windows PDBs                     |
+| log               | Build binary log and other logs.                       |
+| tmp               | Temp files generated during build.                     |
+| toolset           | Files generated during toolset restore.                |
 
 ## Testing
 

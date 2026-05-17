@@ -15,6 +15,9 @@ public static class TestingPlatformBuilderHook
     /// </summary>
     /// <param name="testApplicationBuilder">The test application builder.</param>
     /// <param name="_">The command line arguments.</param>
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] _)
         => testApplicationBuilder.AddHangDumpProvider();
 }

@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 
@@ -36,7 +37,11 @@ public sealed class TestApplication : ITestApplication
     /// <param name="args">The command line arguments.</param>
     /// <param name="testApplicationOptions">The test application options.</param>
     /// <returns>The task representing the asynchronous operation.</returns>
+#if NET8_0_OR_GREATER
+    [Obsolete("This method is obsolete. Use CreateBuilderAsync instead.", DiagnosticId = "MTP0002", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+#else
     [Obsolete("This method is obsolete. Use CreateBuilderAsync instead.")]
+#endif
     public static Task<ITestApplicationBuilder> CreateServerModeBuilderAsync(string[] args, TestApplicationOptions? testApplicationOptions = null)
     {
         if (args.Contains($"--{PlatformCommandLineProvider.ServerOptionKey}") || args.Contains($"-{PlatformCommandLineProvider.ServerOptionKey}"))
@@ -76,6 +81,11 @@ public sealed class TestApplication : ITestApplication
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, systemEnvironment);
         if (parseResult.IsOptionSet(PlatformCommandLineProvider.DebugAttachOptionKey))
         {
+            if (OperatingSystem.IsBrowser())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.WaitDebuggerAttachNotSupportedInBrowserErrorMessage);
+            }
+
             WaitForDebuggerToAttach(systemEnvironment, systemConsole, systemProcess);
         }
 
@@ -223,10 +233,16 @@ public sealed class TestApplication : ITestApplication
 
         if (environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER) == "1")
         {
+            if (OperatingSystem.IsBrowser())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.WaitDebuggerAttachNotSupportedInBrowserErrorMessage);
+            }
+
             WaitForDebuggerToAttach(environment, console, systemProcess);
         }
     }
 
+    [UnsupportedOSPlatform("browser")]
     private static void WaitForDebuggerToAttach(SystemEnvironment environment, SystemConsole console, SystemProcessHandler systemProcess)
     {
         using IProcess currentProcess = systemProcess.GetCurrentProcess();
@@ -278,23 +294,22 @@ public sealed class TestApplication : ITestApplication
 
         if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.DiagnosticVerbosityOptionKey, out string[]? verbosity))
         {
+#if NETCOREAPP
             logLevel = Enum.Parse<LogLevel>(verbosity[0], true);
+#else
+            logLevel = (LogLevel)Enum.Parse(typeof(LogLevel), verbosity[0], true);
+#endif
         }
 
         // Override the log level if the environment variable is set
         string? environmentLogLevel = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY);
-        if (!RoslynString.IsNullOrEmpty(environmentLogLevel))
+        if (TryParseDiagnosticVerbosity(environmentLogLevel, out LogLevel parsedLogLevel))
         {
-            if (!Enum.TryParse(environmentLogLevel, out LogLevel parsedLogLevel))
-            {
-                throw new NotSupportedException($"Invalid environment value '{nameof(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY)}', was expecting 'Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical' but got '{environmentLogLevel}'.");
-            }
-
             logLevel = parsedLogLevel;
         }
 
         // Set the directory to the default test result directory
-        string directory = Path.Combine(testApplicationModuleInfo.GetCurrentTestApplicationDirectory(), AggregatedConfiguration.DefaultTestResultFolderName);
+        string directory = GetDiagnosticDefaultDirectory(environment, testApplicationModuleInfo);
         bool customDirectory = false;
 
         if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.ResultDirectoryOptionKey, out string[]? resultDirectoryArg))
@@ -360,4 +375,27 @@ public sealed class TestApplication : ITestApplication
                 new SystemFileStreamFactory()),
             synchronousWrite);
     }
+
+    internal /* for testing purposes */ static bool TryParseDiagnosticVerbosity(string? environmentLogLevel, out LogLevel parsedLogLevel)
+    {
+        parsedLogLevel = LogLevel.None;
+
+        return !RoslynString.IsNullOrEmpty(environmentLogLevel)
+            && (Enum.TryParse(environmentLogLevel, ignoreCase: true, out parsedLogLevel)
+                || ThrowInvalidDiagnosticVerbosity(environmentLogLevel));
+    }
+
+    internal /* for testing purposes */ static string GetDiagnosticDefaultDirectory(IEnvironment environment, ITestApplicationModuleInfo testApplicationModuleInfo)
+    {
+        string? effectiveWorkingDirectory = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY);
+        if (RoslynString.IsNullOrWhiteSpace(effectiveWorkingDirectory))
+        {
+            effectiveWorkingDirectory = testApplicationModuleInfo.GetCurrentTestApplicationDirectory();
+        }
+
+        return Path.Combine(effectiveWorkingDirectory, AggregatedConfiguration.DefaultTestResultFolderName);
+    }
+
+    private static bool ThrowInvalidDiagnosticVerbosity(string environmentLogLevel)
+        => throw new NotSupportedException($"Invalid environment value '{nameof(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY)}', was expecting 'Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical' but got '{environmentLogLevel}'.");
 }

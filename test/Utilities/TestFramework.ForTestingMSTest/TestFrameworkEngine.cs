@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Web;
+
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Logging;
@@ -63,7 +65,8 @@ internal sealed class TestFrameworkEngine : IDataProducer
         Assembly assembly = Assembly.GetEntryAssembly()!;
         IEnumerable<TypeInfo> assemblyTestContainerTypes = assembly.DefinedTypes.Where(IsTestContainer);
 
-        // TODO: Handle filtering
+        string encodedAssemblyName = EncodeString(assembly.GetName().Name!);
+
         foreach (TypeInfo testContainerType in assemblyTestContainerTypes)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -75,13 +78,27 @@ internal sealed class TestFrameworkEngine : IDataProducer
             ConstructorInfo setupMethod = testContainerType.GetConstructor([])!;
             MethodInfo teardownMethod = testContainerType.BaseType!.GetMethod("Dispose")!;
 
+            string testContainerBasePath = $"/{encodedAssemblyName}/{EncodeString(testContainerType.Namespace!)}/{EncodeString(testContainerType.Name)}";
+
             foreach (MethodInfo? publicMethod in testContainerPublicMethods)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 TestNodeUid testNodeUid = $"{testContainerType.FullName}.{publicMethod.Name}";
+
+                // Build the tree node path for filtering
+                string testNodePath = $"{testContainerBasePath}/{EncodeString(publicMethod.Name)}";
+                PropertyBag filterableProperties = new();
+
+                // Apply filters
                 if (request.Filter is TestNodeUidListFilter testNodeUidListFilter
                     && !testNodeUidListFilter.TestNodeUids.Contains(testNodeUid))
+                {
+                    continue;
+                }
+
+                if (request.Filter is TreeNodeFilter treeNodeFilter
+                    && !treeNodeFilter.MatchesFilter(testNodePath, filterableProperties))
                 {
                     continue;
                 }
@@ -114,7 +131,13 @@ internal sealed class TestFrameworkEngine : IDataProducer
 
                 try
                 {
-                    (object? testClassInstance, StepTimingInfo? setupTiming) = await TryRunSetupMethodAsync(testContainerType, setupMethod, testNode, PublishNodeUpdateAsync);
+                    // It's important to keep TryRunSetupMethod synchronous so that async locals set in the test class constructor are available when executing the test method.
+                    (object? testClassInstance, StepTimingInfo? setupTiming, TestNode? errorNode) = TryRunSetupMethod(testContainerType, setupMethod, testNode);
+                    if (errorNode is not null)
+                    {
+                        await PublishNodeUpdateAsync(errorNode);
+                    }
+
                     if (setupTiming is not null)
                     {
                         stepTimings.Add(setupTiming);
@@ -170,7 +193,8 @@ internal sealed class TestFrameworkEngine : IDataProducer
 
         IEnumerable<TypeInfo> assemblyTestContainerTypes = assembly.DefinedTypes.Where(IsTestContainer);
 
-        // TODO: Fail if no container?
+        string encodedAssemblyName = EncodeString(assembly.GetName().Name!);
+
         foreach (TypeInfo? testContainerType in assemblyTestContainerTypes)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -181,10 +205,23 @@ internal sealed class TestFrameworkEngine : IDataProducer
                 && (memberInfo.ReturnType == typeof(void) || memberInfo.ReturnType == typeof(Task))
                 && memberInfo.GetParameters().Length == 0);
 
-            // TODO: Fail if no public method?
+            string testContainerBasePath = $"/{encodedAssemblyName}/{EncodeString(testContainerType.Namespace!)}/{EncodeString(testContainerType.Name)}";
+
             foreach (MethodInfo? publicMethod in testContainerPublicMethods)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
+                // Build the tree node path for filtering
+                string testNodePath = $"{testContainerBasePath}/{EncodeString(publicMethod.Name)}";
+                PropertyBag filterableProperties = new();
+
+                // Apply TreeNodeFilter if present
+                if (request.Filter is TreeNodeFilter treeNodeFilter
+                    && !treeNodeFilter.MatchesFilter(testNodePath, filterableProperties))
+                {
+                    continue;
+                }
+
                 _logger.LogDebug($"Found test '{publicMethod.Name}'");
                 TestNode testNode = new()
                 {
@@ -222,8 +259,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         return false;
     }
 
-    private async Task<(object? TestClassInstance, StepTimingInfo? SetupTiming)> TryRunSetupMethodAsync(TypeInfo testContainerType, ConstructorInfo setupMethod, TestNode testNode,
-        Func<TestNode, Task> publishNodeUpdateAsync)
+    private (object? TestClassInstance, StepTimingInfo? SetupTiming, TestNode? ErrorNode) TryRunSetupMethod(TypeInfo testContainerType, ConstructorInfo setupMethod, TestNode testNode)
     {
         DateTimeOffset stepStartTime = DateTimeOffset.UtcNow;
         try
@@ -231,7 +267,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
             _logger.LogDebug($"Executing test '{testNode.DisplayName}' setup (ctor for '{testContainerType.FullName}')");
             object? instance = setupMethod.Invoke(null);
             DateTimeOffset stepEndTime = DateTimeOffset.UtcNow;
-            return (instance, new StepTimingInfo("init", "Test initialization", new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime)));
+            return (instance, new StepTimingInfo("init", "Test initialization", new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime)), null);
         }
         catch (Exception ex)
         {
@@ -244,8 +280,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
                 [new StepTimingInfo("init", "Test initialization", new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime))]));
             errorNode.Properties.Add(new ErrorTestNodeStateProperty(ex));
             errorNode.Properties.Add(new TrxExceptionProperty(ex.Message, ex.StackTrace));
-            await publishNodeUpdateAsync(errorNode);
-            return (null, null);
+            return (null, null, errorNode);
         }
     }
 
@@ -326,4 +361,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
             DisplayName = testNode.DisplayName,
             Properties = new(testNode.Properties.AsEnumerable()),
         };
+
+    private static string EncodeString(string value)
+        => HttpUtility.UrlEncode(value);
 }

@@ -36,11 +36,6 @@ internal static class EngineConstants
     internal const string AssemblyFixturesHierarchyClassName = "[Assembly]";
 
     /// <summary>
-    /// Discover fixtures or not.
-    /// </summary>
-    internal const string FixturesTestTrait = "FixturesTrait";
-
-    /// <summary>
     /// Assembly initialize.
     /// </summary>
     internal const string AssemblyInitializeFixtureTrait = "AssemblyInitialize";
@@ -60,17 +55,10 @@ internal static class EngineConstants
     /// </summary>
     internal const string ClassCleanupFixtureTrait = "ClassCleanup";
 
-    /// <summary>
-    /// The name of test run parameters node in the runsettings.
-    /// </summary>
-    internal const string TestRunParametersName = "TestRunParameters";
-
     #region Test Property registration
     internal static readonly TestProperty WorkItemIdsProperty = TestProperty.Register("WorkItemIds", WorkItemIdsLabel, typeof(string[]), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty TestClassNameProperty = TestProperty.Register("MSTestDiscoverer.TestClassName", TestClassNameLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty DeclaringClassNameProperty = TestProperty.Register("MSTestDiscoverer.DeclaringClassName", DeclaringClassNameLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
 #pragma warning disable CS0618 // Type or member is obsolete
     internal static readonly TestProperty TestCategoryProperty = TestProperty.Register("MSTestDiscoverer.TestCategory", TestCategoryLabel, typeof(string[]), TestPropertyAttributes.Hidden | TestPropertyAttributes.Trait, typeof(TestCase));
@@ -87,8 +75,6 @@ internal static class EngineConstants
     internal static readonly TestProperty ExecutionIdProperty = TestProperty.Register("ExecutionId", ExecutionIdLabel, typeof(Guid), TestPropertyAttributes.Hidden, typeof(TestResult));
 
     internal static readonly TestProperty ParentExecIdProperty = TestProperty.Register("ParentExecId", ParentExecIdLabel, typeof(Guid), TestPropertyAttributes.Hidden, typeof(TestResult));
-
-    internal static readonly TestProperty InnerResultsCountProperty = TestProperty.Register("InnerResultsCount", InnerResultsCountLabel, typeof(int), TestPropertyAttributes.Hidden, typeof(TestResult));
 
     internal static readonly TestProperty TestRunIdProperty = TestProperty.Register(TestRunId, TestRunId, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
 
@@ -142,7 +128,6 @@ internal static class EngineConstants
     /// These Property names should not be localized.
     /// </summary>
     private const string TestClassNameLabel = "ClassName";
-    private const string DeclaringClassNameLabel = "DeclaringClassName";
     private const string TestCategoryLabel = "TestCategory";
     private const string PriorityLabel = "Priority";
 #if !WINDOWS_UWP && !WIN_UI
@@ -151,7 +136,6 @@ internal static class EngineConstants
     private const string DoNotParallelizeLabel = "DoNotParallelize";
     private const string ExecutionIdLabel = "ExecutionId";
     private const string ParentExecIdLabel = "ParentExecId";
-    private const string InnerResultsCountLabel = "InnerResultsCount";
     private const string WorkItemIdsLabel = "WorkItemIds";
 
     private const string TestRunId = "__Tfs_TestRunId__";

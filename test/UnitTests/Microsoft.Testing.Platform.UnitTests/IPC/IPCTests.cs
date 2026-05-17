@@ -12,6 +12,7 @@ using Moq;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
+[UnsupportedOSPlatform("browser")]
 public sealed class IPCTests
 {
     private readonly TestContext _testContext;
@@ -22,7 +23,7 @@ public sealed class IPCTests
     [TestMethod]
     public async Task SingleConnectionNamedPipeServer_MultipleConnection_Fails()
     {
-        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), new SystemEnvironment());
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
 
         List<NamedPipeServer> openedPipe = [];
         List<Exception> exceptions = [];
@@ -86,7 +87,7 @@ public sealed class IPCTests
     public async Task SingleConnectionNamedPipeServer_RequestReplySerialization_Succeeded()
     {
         Queue<BaseMessage> receivedMessages = new();
-        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), new SystemEnvironment());
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
         NamedPipeClient namedPipeClient = new(pipeNameDescription.Name);
         namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         namedPipeClient.RegisterSerializer(new TextMessageSerializer(), typeof(TextMessage));
@@ -168,7 +169,7 @@ public sealed class IPCTests
     [TestMethod]
     public async Task ConnectionNamedPipeServer_MultipleConnection_Succeeds()
     {
-        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), new SystemEnvironment());
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
 
         List<NamedPipeServer> pipes = [];
         for (int i = 0; i < 3; i++)

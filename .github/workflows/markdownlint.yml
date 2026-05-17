@@ -7,23 +7,18 @@ on:
   pull_request:
     paths:
       - "**/*.md"
-      - ".markdownlint.json"
+      - ".markdownlint*.json*"
+      - ".markdownlintignore"
       - ".github/workflows/markdownlint.yml"
-      - ".github/workflows/markdownlint-problem-matcher.json"
 
 jobs:
   lint:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js
-      uses: actions/setup-node@v1
+    - uses: actions/checkout@v4
+
+    - name: Run markdownlint-cli2
+      uses: DavidAnson/markdownlint-cli2-action@v18
       with:
-        node-version: 16.x
-    - name: Run Markdownlint
-      run: |
-        echo "::add-matcher::.github/workflows/markdownlint-problem-matcher.json"
-        npm i -g markdownlint-cli
-        markdownlint "**/*.md"
+        globs: '**/*.md'

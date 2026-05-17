@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -39,15 +39,33 @@ public sealed partial class Assert
     /// </exception>
     public static void MatchesRegex([NotNull] Regex? pattern, [NotNull] string? value, string? message = "", [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        CheckParameterNotNull(value, "Assert.MatchesRegex", "value", string.Empty);
-        CheckParameterNotNull(pattern, "Assert.MatchesRegex", "pattern", string.Empty);
+        TelemetryCollector.TrackAssertionCall("Assert.MatchesRegex");
+
+        CheckParameterNotNull(value, "Assert.MatchesRegex", "value");
+        CheckParameterNotNull(pattern, "Assert.MatchesRegex", "pattern");
 
         if (!pattern.IsMatch(value))
         {
-            string userMessage = BuildUserMessageForPatternExpressionAndValueExpression(message, patternExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsMatchFail, value, pattern, userMessage);
-            ThrowAssertFailed("Assert.MatchesRegex", finalMessage);
+            ReportAssertMatchesRegexFailed(pattern, value, message, patternExpression, valueExpression);
         }
+    }
+
+    [DoesNotReturn]
+    private static void ReportAssertMatchesRegexFailed(Regex pattern, string value, string? userMessage, string patternExpression, string valueExpression)
+    {
+        string patternText = AssertionValueRenderer.RenderValue(pattern.ToString());
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected pattern:", patternText)
+            .AddLine("actual:", actualText);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.MatchesRegexFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(patternText, actualText);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.MatchesRegex", patternExpression, valueExpression, "<pattern>", "<value>"));
+
+        ReportAssertFailed(structured);
     }
 
     /// <summary>
@@ -115,15 +133,33 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotMatchRegex([NotNull] Regex? pattern, [NotNull] string? value, string? message = "", [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        CheckParameterNotNull(value, "Assert.DoesNotMatchRegex", "value", string.Empty);
-        CheckParameterNotNull(pattern, "Assert.DoesNotMatchRegex", "pattern", string.Empty);
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotMatchRegex");
+
+        CheckParameterNotNull(value, "Assert.DoesNotMatchRegex", "value");
+        CheckParameterNotNull(pattern, "Assert.DoesNotMatchRegex", "pattern");
 
         if (pattern.IsMatch(value))
         {
-            string userMessage = BuildUserMessageForPatternExpressionAndValueExpression(message, patternExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsNotMatchFail, value, pattern, userMessage);
-            ThrowAssertFailed("Assert.DoesNotMatchRegex", finalMessage);
+            ReportAssertDoesNotMatchRegexFailed(pattern, value, message, patternExpression, valueExpression);
         }
+    }
+
+    [DoesNotReturn]
+    private static void ReportAssertDoesNotMatchRegexFailed(Regex pattern, string value, string? userMessage, string patternExpression, string valueExpression)
+    {
+        string patternText = AssertionValueRenderer.RenderValue(pattern.ToString());
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("unexpected pattern:", patternText)
+            .AddLine("actual:", actualText);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.DoesNotMatchRegexFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(patternText, actualText);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.DoesNotMatchRegex", patternExpression, valueExpression, "<pattern>", "<value>"));
+
+        ReportAssertFailed(structured);
     }
 
     /// <summary>
@@ -161,7 +197,7 @@ public sealed partial class Assert
 
     private static Regex? ToRegex([NotNull] string? pattern)
     {
-        CheckParameterNotNull(pattern, "Assert.MatchesRegex", "pattern", string.Empty);
+        CheckParameterNotNull(pattern, "Assert.MatchesRegex", "pattern");
         return new Regex(pattern);
     }
 }

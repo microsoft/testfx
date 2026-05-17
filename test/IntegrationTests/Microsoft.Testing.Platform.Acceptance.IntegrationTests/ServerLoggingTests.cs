@@ -29,7 +29,7 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggi
         ResponseListener runListener = await jsonClient.RunTests(Guid.NewGuid(), runCollector.CollectNodeUpdates);
 
         await Task.WhenAll(discoveryListener.WaitCompletion(), runListener.WaitCompletion());
-        Assert.AreNotEqual(0, logs.Count, "Logs are empty");
+        Assert.IsNotEmpty(logs, "Logs are empty");
         string logsString = string.Join(Environment.NewLine, logs.Select(l => l.ToString()));
         string logPath = LogFilePathRegex().Match(logsString).Groups[1].Value;
         string port = PortRegex().Match(logsString).Groups[1].Value;
@@ -54,19 +54,40 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggi
             """, logsString);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    [TestMethod]
+    public async Task RunningInServerMode_BannerIsSkipped()
+    {
+        string tfm = TargetFrameworks.NetCurrent;
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "ServerLoggingTests", tfm);
+        using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(testHost);
+        LogsCollector logs = [];
+        jsonClient.RegisterLogListener(logs);
+
+        InitializeResponse initializeResponseArgs = await jsonClient.Initialize();
+
+        TestNodeUpdateCollector discoveryCollector = new();
+        ResponseListener discoveryListener = await jsonClient.DiscoverTests(Guid.NewGuid(), discoveryCollector.CollectNodeUpdates);
+
+        await discoveryListener.WaitCompletion();
+
+        string logsString = string.Join(Environment.NewLine, logs.Select(l => l.ToString()));
+
+        // Verify that the banner message pattern does not appear in the logs
+        Assert.IsFalse(Regex.IsMatch(logsString, @"Microsoft\.Testing\.Platform v.+ \[.+\]"), "Banner should be skipped in server mode");
+
+        await jsonClient.Exit();
+    }
+
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string AssetName = "AssetFixture";
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
 
         private const string Sources = """
 #file ServerLoggingTests.csproj

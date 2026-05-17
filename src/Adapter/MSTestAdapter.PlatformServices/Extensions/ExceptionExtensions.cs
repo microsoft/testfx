@@ -4,8 +4,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 
 /// <summary>
@@ -88,21 +86,21 @@ internal static class ExceptionExtensions
     /// <param name="exceptionMessage">Exception message.</param>
     /// <param name="exceptionStackTrace">StackTraceInformation for the exception.</param>
     /// <returns>True, if Assert exception. False, otherwise.</returns>
-    internal static bool TryGetUnitTestAssertException(this Exception exception, out UTF.UnitTestOutcome outcome,
+    internal static bool TryGetUnitTestAssertException(this Exception exception, out UnitTestOutcome outcome,
         [NotNullWhen(true)] out string? exceptionMessage, out StackTraceInformation? exceptionStackTrace)
     {
         if (exception is UnitTestAssertException)
         {
             outcome = exception is AssertInconclusiveException
-                ? UTF.UnitTestOutcome.Inconclusive
-                : UTF.UnitTestOutcome.Failed;
+                ? UnitTestOutcome.Inconclusive
+                : UnitTestOutcome.Failed;
 
             exceptionMessage = exception.TryGetMessage();
             exceptionStackTrace = exception.TryGetStackTraceInformation();
             return true;
         }
 
-        outcome = UTF.UnitTestOutcome.Failed;
+        outcome = UnitTestOutcome.Failed;
         exceptionMessage = null;
         exceptionStackTrace = null;
         return false;

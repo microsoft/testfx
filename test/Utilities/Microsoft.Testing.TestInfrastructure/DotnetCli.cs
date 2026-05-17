@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Polly;
-using Polly.Contrib.WaitAndRetry;
 
 namespace Microsoft.Testing.TestInfrastructure;
 
@@ -45,16 +44,12 @@ public static class DotnetCli
         }
     }
 
-    public static bool DoNotRetry { get; set; }
-
     public static async Task<DotnetMuxerResult> RunAsync(
         string args,
-        string nugetGlobalPackagesFolder,
         string? workingDirectory = null,
         Dictionary<string, string?>? environmentVariables = null,
         bool failIfReturnValueIsNotZero = true,
         bool disableTelemetry = true,
-        int retryCount = 5,
         bool disableCodeCoverage = true,
         bool warnAsError = true,
         bool suppressPreviewDotNetMessage = true,
@@ -95,9 +90,7 @@ public static class DotnetCli
                 environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
             }
 
-            environmentVariables["NUGET_PACKAGES"] = nugetGlobalPackagesFolder;
-
-            string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true" : string.Empty;
+            string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true" : string.Empty;
             extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
             if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
             {
@@ -108,18 +101,7 @@ public static class DotnetCli
                 args += extraArgs;
             }
 
-            if (DoNotRetry)
-            {
-                return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
-            }
-            else
-            {
-                IEnumerable<TimeSpan> delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount, factor: 1.5);
-                return await Policy
-                    .Handle<Exception>()
-                    .WaitAndRetryAsync(delay)
-                    .ExecuteAsync(async ct => await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, ct), cancellationToken);
-            }
+            return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
         }
         finally
         {

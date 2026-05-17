@@ -14,6 +14,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHandler, IAsyncInitializableExtension
 {
     private readonly IServiceProvider _serviceProvider;
@@ -31,7 +32,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
 
     public string Uid => nameof(RetryDataConsumer);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => ExtensionResources.RetryFailedTestsExtensionDisplayName;
 

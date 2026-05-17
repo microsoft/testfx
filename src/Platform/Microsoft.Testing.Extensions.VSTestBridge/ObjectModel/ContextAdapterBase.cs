@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
+using Microsoft.VisualStudio.TestPlatform.Common.Filtering;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
@@ -37,11 +38,27 @@ internal abstract class ContextAdapterBase
 
     private FilterExpressionWrapper? FilterExpressionWrapper { get; set; }
 
+    private sealed class BridgeFilterExpression : ITestCaseFilterExpression
+    {
+        private readonly TestCaseFilterExpression _testCaseFilterExpression;
+
+        public BridgeFilterExpression(TestCaseFilterExpression testCaseFilterExpression)
+            => _testCaseFilterExpression = testCaseFilterExpression;
+
+        public string TestCaseFilterValue
+            => _testCaseFilterExpression.TestCaseFilterValue;
+
+        public bool MatchTestCase(TestCase testCase, Func<string, object?> propertyValueProvider)
+            => _testCaseFilterExpression.MatchTestCase(propertyValueProvider);
+    }
+
     // NOTE: Implementation is borrowed from VSTest
     // MSTest relies on this method existing and access it through reflection: https://github.com/microsoft/testfx/blob/main/src/Adapter/MSTest.TestAdapter/TestMethodFilter.cs#L115
+#pragma warning disable IDE0060 // Remove unused parameter - used via refl.
     public ITestCaseFilterExpression? GetTestCaseFilter(
         IEnumerable<string>? supportedProperties,
         Func<string, TestProperty?> propertyProvider)
+#pragma warning restore IDE0060 // Remove unused parameter
     {
         if (FilterExpressionWrapper is null)
         {
@@ -53,20 +70,10 @@ internal abstract class ContextAdapterBase
             throw new TestPlatformFormatException(FilterExpressionWrapper.ParseError, FilterExpressionWrapper.FilterString);
         }
 
-        var adapterSpecificTestCaseFilter = new TestCaseFilterExpression(FilterExpressionWrapper);
-        string[]? invalidProperties = adapterSpecificTestCaseFilter.ValidForProperties(supportedProperties, propertyProvider);
-
-        if (invalidProperties != null)
-        {
-            string validPropertiesString = supportedProperties == null
-                ? string.Empty
-                : string.Join(", ", supportedProperties);
-
-            // For unsupported property don’t throw exception, just log the message. Later it is going to handle properly with TestCaseFilterExpression.MatchTestCase().
-            EqtTrace.Info($"No tests matched the filter because it contains one or more properties that are not valid ({string.Join(", ", invalidProperties)}). Specify filter expression containing valid properties ({validPropertiesString}).");
-        }
-
-        return adapterSpecificTestCaseFilter;
+        // MSTest relies on ITestCaseFilterExpression from VSTest object model.
+        // The filter source package doesn't bring object model as very intended design.
+        // We create our own BridgeFilterExpression here that just wraps the type from the source-only package
+        return new BridgeFilterExpression(new TestCaseFilterExpression(FilterExpressionWrapper));
     }
 
     private void HandleFilter(ITestExecutionFilter? filter, string? filterFromRunsettings, string? filterFromCommandLineOption)
@@ -93,7 +100,7 @@ internal abstract class ContextAdapterBase
 
         if (filterBuilder.Length > 0)
         {
-            FilterExpressionWrapper = new(filterBuilder.ToString());
+            FilterExpressionWrapper = new FilterExpressionWrapper(filterBuilder.ToString());
         }
 
         // Local functions

@@ -1,6 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <PropertyGroup>
+    <!-- If the project targets .NET Standard, it's not supposed to be a test application. So, we default to false. -->
+    <IsTestApplication Condition=" '$(IsTestApplication)' == '' AND $([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETStandard' ">false</IsTestApplication>
+    <IsTestApplication Condition=" '$(IsTestApplication)' == '' ">true</IsTestApplication>
+  </PropertyGroup>
+
   <!-- Import Runner.targets -->
   <Import Project="$(MSBuildThisFileDirectory)Runner/Runner.targets" Condition=" '$(UseVSTest)' == 'false' " />
 

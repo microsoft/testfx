@@ -7,6 +7,10 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 
+#if !NETCOREAPP
+using Polyfills;
+#endif
+
 namespace Microsoft.Testing.Extensions.Diagnostics.Helpers;
 
 /// <summary>
@@ -16,6 +20,9 @@ internal static class IProcessExtensions
 {
     private const int InvalidProcessId = -1;
 
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     public static async Task<List<ProcessTreeNode>> GetProcessTreeAsync(this IProcess process, ILogger logger, OutputDeviceWriter outputDisplay, CancellationToken cancellationToken)
     {
         var childProcesses = Process.GetProcesses()
@@ -64,6 +71,7 @@ internal static class IProcessExtensions
                     await GetParentPidMacOsAsync(process, logger, outputDisplay, cancellationToken).ConfigureAwait(false)
                     : throw new PlatformNotSupportedException();
 
+    [UnsupportedOSPlatform("browser")]
     internal static int GetParentPidWindows(Process process)
     {
         IntPtr handle = process.Handle;
@@ -77,6 +85,7 @@ internal static class IProcessExtensions
     /// <summary>Read the /proc file system for information about the parent.</summary>
     /// <param name="process">The process to get the parent process from.</param>
     /// <returns>The process id.</returns>
+    [UnsupportedOSPlatform("browser")]
     internal static int GetParentPidLinux(Process process)
     {
         int pid = process.Id;
@@ -93,6 +102,9 @@ internal static class IProcessExtensions
         return ppid;
     }
 
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     internal static async Task<int> GetParentPidMacOsAsync(Process process, ILogger logger, OutputDeviceWriter outputDisplay, CancellationToken cancellationToken)
     {
         var output = new StringBuilder();
@@ -110,17 +122,9 @@ internal static class IProcessExtensions
         ps.BeginErrorReadLine();
 
         int timeout = 5_000;
-#if !NETSTANDARD2_0
         // This will read the output streams till the end.
-        await ps.WaitForExitAsync(new CancellationTokenSource(timeout).Token).ConfigureAwait(false);
-#else
-        // This won't read the streams till the end. If we timeout, we need to use the
-        // wait without timeout, but that can hang, so we offload that into a task so we can abandon it and continue.
-        if (!ps.WaitForExit(timeout))
-        {
-            await Task.Run(ps.WaitForExit, new CancellationTokenSource(timeout).Token).ConfigureAwait(false);
-        }
-#endif
+        using var cts = new CancellationTokenSource(timeout);
+        await ps.WaitForExitAsync(cts.Token).ConfigureAwait(false);
 
         string o = output.ToString();
         string e = err.ToString();
@@ -154,6 +158,9 @@ internal static class IProcessExtensions
         }
     }
 
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     private static bool IsChildCandidate(Process child, IProcess parent)
     {
         // this is extremely slow under debugger, but fast without it

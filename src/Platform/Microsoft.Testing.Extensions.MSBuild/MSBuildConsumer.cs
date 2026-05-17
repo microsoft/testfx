@@ -12,6 +12,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandler
 {
     private readonly IServiceProvider _serviceProvider;
@@ -37,7 +38,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
     public string Uid => nameof(MSBuildConsumer);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => nameof(MSBuildConsumer);
 
@@ -61,10 +62,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         // Avoid processing messages if the session has ended.
         if (_sessionEnded)
@@ -125,9 +123,9 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
                             cancellationToken).ConfigureAwait(false);
                         break;
 
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
                     case CancelledTestNodeStateProperty canceledState:
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
                         await HandleFailuresAsync(
                             testNodeStateChanged.TestNode.DisplayName,
                             isCanceled: true,

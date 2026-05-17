@@ -17,6 +17,21 @@
         <target state="translated">重複する項目が見つかりました:&lt;{1}&gt;。{0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreAllDistinctFailedSummary">
+        <source>Expected all items in collection to be distinct.</source>
+        <target state="new">Expected all items in collection to be distinct.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreAllNotNullFailedSummary">
+        <source>Expected all items in collection to be non-null.</source>
+        <target state="new">Expected all items in collection to be non-null.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreAllOfTypeFailedSummary">
+        <source>Expected all items in collection to be of the specified type.</source>
+        <target state="new">Expected all items in collection to be of the specified type.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreEqualFailMsg">
         <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
         <target state="translated">&lt;{1}&gt; が必要ですが、&lt;{2}&gt; が指定されました。{0}</target>
@@ -68,6 +83,111 @@
         <target state="translated">期待される文字列の長さは {0} ですが、実際は {1} でした。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreEquivalentFailedSummary">
+        <source>Expected values to be structurally equivalent.</source>
+        <target state="new">Expected values to be structurally equivalent.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentFailedSummaryStrict">
+        <source>Expected values to be structurally equivalent (strict mode).</source>
+        <target state="new">Expected values to be structurally equivalent (strict mode).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchActualDictionaryThrew">
+        <source>reading the actual dictionary threw {0}: {1}.</source>
+        <target state="new">reading the actual dictionary threw {0}: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchActualEnumerationThrew">
+        <source>enumerating the actual collection threw {0}: {1}.</source>
+        <target state="new">enumerating the actual collection threw {0}: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchActualMemberThrew">
+        <source>reading the actual member threw {0}: {1}.</source>
+        <target state="new">reading the actual member threw {0}: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchAt">
+        <source>Mismatch at '{0}': {1}</source>
+        <target state="new">Mismatch at '{0}': {1}</target>
+        <note>{0} is a member path (e.g., 'Order.Items[2].Price'), {1} is a localized reason describing the kind of mismatch.</note>
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExpectedDictionaryThrew">
+        <source>reading the expected dictionary threw {0}: {1}.</source>
+        <target state="new">reading the expected dictionary threw {0}: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExpectedEnumerationThrew">
+        <source>enumerating the expected collection threw {0}: {1}.</source>
+        <target state="new">enumerating the expected collection threw {0}: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExpectedMemberThrew">
+        <source>reading the expected member threw {0}: {1}.</source>
+        <target state="new">reading the expected member threw {0}: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExtraMembers">
+        <source>actual has unexpected members not present on expected: {0}.</source>
+        <target state="new">actual has unexpected members not present on expected: {0}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchIEquatableThrew">
+        <source>IEquatable.Equals threw {0}: {1}.</source>
+        <target state="new">IEquatable.Equals threw {0}: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchLength">
+        <source>collections differ in length (expected {0} elements, actual {1}).</source>
+        <target state="new">collections differ in length (expected {0} elements, actual {1}).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchMaxDepth">
+        <source>comparison exceeded the maximum supported depth of {0}.</source>
+        <target state="new">comparison exceeded the maximum supported depth of {0}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchMissingKey">
+        <source>key {0} present on expected is missing from actual.</source>
+        <target state="new">key {0} present on expected is missing from actual.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchMissingMember">
+        <source>member '{0}' present on expected is missing from actual.</source>
+        <target state="new">member '{0}' present on expected is missing from actual.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchNull">
+        <source>one side is null, the other is not.</source>
+        <target state="new">one side is null, the other is not.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchTopology">
+        <source>graph topology differs (the same reference on one side appears paired with different references on the other side).</source>
+        <target state="new">graph topology differs (the same reference on one side appears paired with different references on the other side).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchType">
+        <source>incompatible types (expected '{0}', actual '{1}').</source>
+        <target state="new">incompatible types (expected '{0}', actual '{1}').</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchUnexpectedKey">
+        <source>key {0} present on actual is not on expected.</source>
+        <target state="new">key {0} present on actual is not on expected.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchValue">
+        <source>values are not equal.</source>
+        <target state="new">values are not equal.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentRootPath">
+        <source>&lt;root&gt;</source>
+        <target state="new">&lt;root&gt;</target>
+        <note>Placeholder used in equivalence-mismatch messages when the difference is at the top of the object graph.</note>
+      </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
         <source>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
         <target state="translated">&lt;{1}&gt; 以外の任意の値が必要ですが、&lt;{2}&gt; が指定されています。{0}</target>
@@ -78,20 +198,65 @@
         <target state="translated">指定する値 &lt;{1}&gt; と実際の値 &lt;{2}&gt; との間には、&lt;{3}&gt; を超える差が必要です。{0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreNotEquivalentComparisonFailedSummary">
+        <source>Could not complete structural comparison.</source>
+        <target state="new">Could not complete structural comparison.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentComparisonFailedSummaryStrict">
+        <source>Could not complete structural comparison (strict mode).</source>
+        <target state="new">Could not complete structural comparison (strict mode).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentFailedSummary">
+        <source>Expected values to be structurally different.</source>
+        <target state="new">Expected values to be structurally different.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentFailedSummaryStrict">
+        <source>Expected values to be structurally different (strict mode).</source>
+        <target state="new">Expected values to be structurally different (strict mode).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotSameBothNull">
+        <source>Both values are &lt;null&gt;. {0}</source>
+        <target state="translated">どちらの値も&lt;null&gt;です。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameActualIsNull">
+        <source>Actual is &lt;null&gt;. {0}</source>
+        <target state="translated">実際の値は &lt;null&gt; です。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameExpectedIsNull">
+        <source>Expected is &lt;null&gt;. {0}</source>
+        <target state="translated">必要な値は &lt;null&gt;です。{0}</target>
+        <note></note>
+      </trans-unit>
       <trans-unit id="AreSameGivenValues">
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
         <target state="translated">AreSame() には値型を渡すことはできません。オブジェクトに変換された値が同じにはなりません。AreEqual() を使用することを検討してください。{0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="AssertScopeFailure">
+        <source>{0} assertion(s) failed within the assert scope.</source>
+        <target state="translated">アサート スコープ内で {0} 件のアサーションに失敗しました。</target>
+        <note>{0} is the number of assertion failures collected in the scope.</note>
+      </trans-unit>
+      <trans-unit id="AssertScopeNestedNotAllowed">
+        <source>Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</source>
+        <target state="translated">入れ子のアサート スコープは許可されていません。新しいスコープを作成する前に、現在のスコープを破棄します。</target>
+        <note />
       </trans-unit>
       <trans-unit id="AssertThatDetailsPrefix">
         <source>Details:</source>
         <target state="translated">詳細:</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssertThatFailedFormat">
-        <source>Assert.That({0}) failed.</source>
-        <target state="translated">Assert.That({0}) に失敗しました。</target>
-        <note>{0} is the user code expression</note>
+      <trans-unit id="AssertThatFailedToEvaluate">
+        <source>&lt;Failed to evaluate&gt;</source>
+        <target state="new">&lt;Failed to evaluate&gt;</target>
+        <note />
       </trans-unit>
       <trans-unit id="AssertThatMessageFormat">
         <source>Message: {0}</source>
@@ -148,9 +313,19 @@
         <target state="translated">指定された項目を含むコレクションが必要です。{0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ContainsItemFailedSummary">
+        <source>Expected collection to contain the specified element.</source>
+        <target state="new">Expected collection to contain the specified element.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">
         <source>Expected at least one item to match the predicate. {0}</source>
         <target state="translated">述語と一致する項目が少なくとも 1 つ必要です。{0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ContainsPredicateFailedSummary">
+        <source>Expected collection to contain an element matching the predicate.</source>
+        <target state="new">Expected collection to contain an element matching the predicate.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleFailMsg">
@@ -158,9 +333,24 @@
         <target state="translated">コレクションには 1 つの要素だけを含める必要がありますが、{1} 要素が見つかりました。{0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ContainsSingleFailedSummary">
+        <source>Expected collection to contain exactly one element.</source>
+        <target state="new">Expected collection to contain exactly one element.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ContainsSingleMatchFailMsg">
         <source>Expected exactly one item to match the predicate but found {1} item(s). {0}</source>
         <target state="translated">述語と一致する項目が 1 つだけ必要ですが、{1} 項目が見つかりました。{0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ContainsSingleMatchFailedSummary">
+        <source>Expected collection to contain exactly one element matching the predicate.</source>
+        <target state="new">Expected collection to contain exactly one element matching the predicate.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ContainsSubstringFailedSummary">
+        <source>Expected string to contain the specified substring.</source>
+        <target state="new">Expected string to contain the specified substring.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainFail">
@@ -173,9 +363,24 @@
         <target state="translated">指定された項目を含まないコレクションが必要です。{0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoesNotContainItemFailedSummary">
+        <source>Expected collection to not contain the specified element.</source>
+        <target state="new">Expected collection to not contain the specified element.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailMsg">
         <source>Expected no items to match the predicate. {0}</source>
         <target state="translated">述語に一致する項目が必要ありません。{0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotContainPredicateFailedSummary">
+        <source>Expected collection to not contain an element matching the predicate.</source>
+        <target state="new">Expected collection to not contain an element matching the predicate.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotContainSubstringFailedSummary">
+        <source>Expected string to not contain the specified substring.</source>
+        <target state="new">Expected string to not contain the specified substring.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotEndWithFail">
@@ -183,9 +388,24 @@
         <target state="translated">文字列 '{0}' の末尾は文字列 '{1}' です。{2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoesNotEndWithFailedSummary">
+        <source>Expected string to not end with the specified suffix.</source>
+        <target state="new">Expected string to not end with the specified suffix.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotMatchRegexFailedSummary">
+        <source>Expected string to not match the specified regular expression.</source>
+        <target state="new">Expected string to not match the specified regular expression.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
         <source>String '{0}' starts with string '{1}'. {2}</source>
         <target state="translated">文字列 '{0}' は文字列 '{1}' で始まります。 {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotStartWithFailedSummary">
+        <source>Expected string to not start with the specified prefix.</source>
+        <target state="new">Expected string to not start with the specified prefix.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidFieldLayout">
@@ -233,9 +453,14 @@ Actual: {2}</source>
         <note />
       </trans-unit>
       <trans-unit id="AssertionFailed">
-        <source>{0} failed. {1}</source>
-        <target state="translated">{0} に失敗しました。{1}</target>
-        <note></note>
+        <source>{0} failed.</source>
+        <target state="translated">{0} に失敗しました。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="EndsWithFailedSummary">
+        <source>Expected string to end with the specified suffix.</source>
+        <target state="new">Expected string to end with the specified suffix.</target>
+        <note />
       </trans-unit>
       <trans-unit id="HasCountFailMsg">
         <source>Expected collection of size {1}. Actual: {2}. {0}</source>
@@ -252,14 +477,34 @@ Actual: {2}</source>
         <target state="translated">GitHub チケット URL が無効です</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsFalseFailedSummary">
+        <source>Expected condition to be false.</source>
+        <target state="translated">予期される条件は false です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsGreaterThanFailedSummary">
+        <source>Expected value to be greater than the lower bound.</source>
+        <target state="new">Expected value to be greater than the lower bound.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsGreaterThanOrEqualToFailedSummary">
+        <source>Expected value to be greater than or equal to the lower bound.</source>
+        <target state="new">Expected value to be greater than or equal to the lower bound.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
         <target state="translated">値 '{0}' は予期される範囲 [{1}..{2}] 内にありません。{3}</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsInRangeFailedSummary">
+        <source>Expected value to be within the inclusive range.</source>
+        <target state="new">Expected value to be within the inclusive range.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
         <source>The maximum value must be greater than or equal to the minimum value.</source>
-        <target state="new">The maximum value must be greater than or equal to the minimum value.</target>
+        <target state="translated">最大値は、最小値以上である必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -267,9 +512,24 @@ Actual: {2}</source>
         <target state="translated">{0} には型 &lt;{1}&gt; が必要ですが、型 &lt;{2}&gt; が指定されました。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="IsLessThanFailedSummary">
+        <source>Expected value to be less than the upper bound.</source>
+        <target state="new">Expected value to be less than the upper bound.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsLessThanOrEqualToFailedSummary">
+        <source>Expected value to be less than or equal to the upper bound.</source>
+        <target state="new">Expected value to be less than or equal to the upper bound.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsMatchFail">
         <source>String '{0}' does not match pattern '{1}'. {2}</source>
         <target state="translated">文字列 '{0}' はパターン '{1}' と一致しません。{2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsNegativeFailedSummary">
+        <source>Expected value to be negative.</source>
+        <target state="new">Expected value to be negative.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotEmptyFailMsg">
@@ -282,9 +542,44 @@ Actual: {2}</source>
         <target state="translated">正しくない型は &lt;{1}&gt; であり、実際の型は &lt;{2}&gt; です。{0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="IsExactInstanceOfFailMsg">
+        <source>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
+        <target state="translated">{0} 正確な型が必要です: &lt;{1}&gt;。実際の型: &lt;{2}&gt;。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotExactInstanceOfFailMsg">
+        <source>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
+        <target state="translated">間違った正確な型: &lt;{1}&gt;。実際の型: {2}。{0}</target>
+        <note></note>
+      </trans-unit>
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}</source>
         <target state="translated">文字列 '{0}' はパターン '{1}' と一致します。{2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsNotNullFailedSummary">
+        <source>Expected value to not be null.</source>
+        <target state="translated">予期される値は null ではありません。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsNullFailedSummary">
+        <source>Expected value to be null.</source>
+        <target state="translated">予期される値は null です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsPositiveFailedSummary">
+        <source>Expected value to be positive.</source>
+        <target state="new">Expected value to be positive.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsTrueFailedSummary">
+        <source>Expected condition to be true.</source>
+        <target state="translated">予想される条件は true です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MatchesRegexFailedSummary">
+        <source>Expected string to match the specified regular expression.</source>
+        <target state="new">Expected string to match the specified regular expression.</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
@@ -314,8 +609,8 @@ Actual: {2}</source>
         <note />
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
-        <source>The parameter '{0}' is invalid. The value cannot be null. {1}.</source>
-        <target state="translated">パラメーター '{0}' は無効です。値を null にすることはできません。{1}。</target>
+        <source>The parameter '{0}' is invalid. The value cannot be null.</source>
+        <target state="translated">パラメーター '{0}' は無効です。値を null にすることはできません。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">
@@ -327,11 +622,13 @@ Actual: {2}</source>
         <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
         <target state="translated">要素 &lt;{0}&gt; がコレクション内に存在しません。</target>
         <note />
-      </trans-unit>      <trans-unit id="AssertThatFailedToEvaluate">
-        <source>&lt;Failed to evaluate&gt;</source>
-        <target state="new">&lt;Failed to evaluate&gt;</target>
+      </trans-unit>
+      <trans-unit id="STATestMethodNonWindowsNotSupported">
+        <source>[STATestMethod] is not supported on non-Windows platforms. STA (Single Threaded Apartment) is a Windows-only COM threading concept. Use [OSCondition(OperatingSystems.Windows)] to skip this test on non-Windows platforms.</source>
+        <target state="translated">[STATestMethod] は Windows 以外のプラットフォームではサポートされていません。STA (シングルスレッド アパートメント) は Windows 専用の COM スレッドの概念です。Windows 以外のプラットフォームでこのテストをスキップするには、[OSCondition(OperatingSystems.Windows)] を使用してください。</target>
         <note />
-      </trans-unit>      <trans-unit id="StartsWithFail">
+      </trans-unit>
+      <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">文字列 '{0}' は文字列 '{1}' で始まりません。{2}</target>
         <note />
@@ -350,6 +647,11 @@ Actual: {2}</source>
         <source>(object)</source>
         <target state="translated">(オブジェクト)</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="StartsWithFailedSummary">
+        <source>Expected string to start with the specified prefix.</source>
+        <target state="new">Expected string to start with the specified prefix.</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
@@ -389,36 +691,6 @@ Actual: {2}</source>
       <trans-unit id="DynamicDataIEnumerableEmpty">
         <source>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</source>
         <target state="translated">{1} 上のプロパティまたはメソッド {0} は空の IEnumerable&lt;object[]&gt; を返します。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsGreaterThanFailMsg">
-        <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">実際の値 &lt;{2}&gt; は、予期された値 &lt;{1}&gt; より大きくありません。{0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsGreaterThanOrEqualToFailMsg">
-        <source>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">実際の値 &lt;{2}&gt; は、予期された値 &lt;{1}&gt; 以上ではありません。{0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsLessThanFailMsg">
-        <source>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">実際の値 &lt;{2}&gt; は、予期された値 &lt;{1}&gt; より小さくありません。{0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsLessThanOrEqualToFailMsg">
-        <source>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">実際の値 &lt;{2}&gt; は、予期された値 &lt;{1}&gt; 以下ではありません。{0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsPositiveFailMsg">
-        <source>Expected value &lt;{1}&gt; to be positive. {0}</source>
-        <target state="translated">正の値 &lt;{1}&gt; が必要です。{0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsNegativeFailMsg">
-        <source>Expected value &lt;{1}&gt; to be negative. {0}</source>
-        <target state="translated">負の値 &lt;{1}&gt; が必要です。{0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">

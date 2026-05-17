@@ -5,7 +5,6 @@ using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.Reporting;
 
@@ -15,7 +14,7 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
 
     public string Uid => nameof(AzureDevOpsCommandLineProvider);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => AzureDevOpsResources.DisplayName;
 

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Helpers;
+
 namespace Microsoft.Testing.Platform.Configurations;
 
 /// <summary>
@@ -16,7 +18,7 @@ public static class ConfigurationExtensions
     public static string GetTestResultDirectory(this IConfiguration configuration)
     {
         string? resultDirectory = configuration[PlatformConfigurationConstants.PlatformResultDirectory];
-        return Guard.NotNull(resultDirectory);
+        return resultDirectory ?? throw ApplicationStateGuard.Unreachable();
     }
 
     /// <summary>
@@ -27,6 +29,6 @@ public static class ConfigurationExtensions
     public static string GetCurrentWorkingDirectory(this IConfiguration configuration)
     {
         string? workingDirectory = configuration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory];
-        return Guard.NotNull(workingDirectory);
+        return workingDirectory ?? throw ApplicationStateGuard.Unreachable();
     }
 }

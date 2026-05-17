@@ -38,8 +38,8 @@ EndGlobal
     public VSSolution(string? solutionFolder, string? solutionName)
         : base(solutionFolder)
     {
-        Guard.NotNullOrWhiteSpace(solutionFolder);
-        Guard.NotNullOrWhiteSpace(solutionName);
+        Ensure.NotNullOrWhiteSpace(solutionFolder);
+        Ensure.NotNullOrWhiteSpace(solutionName);
 
         _solutionFileName = $"{solutionName}.sln";
         SolutionFile = Path.Combine(FolderPath, _solutionFileName);
@@ -79,12 +79,16 @@ public class CSharpProject : Project
     private readonly string _projectFileName;
     private XElement _projectContent = new("Project", new XAttribute("Sdk", "Microsoft.NET.Sdk"), new XElement("PropertyGroup"), new XElement("ItemGroup"));
 
-    public CSharpProject(string solutionFolder, string projectName, params string[]? tfms)
+    public CSharpProject(string solutionFolder, string projectName, params string[] tfms)
        : base(Path.Combine(solutionFolder, projectName))
     {
-        Guard.NotNullOrWhiteSpace(solutionFolder);
-        Guard.NotNullOrWhiteSpace(projectName);
-        Guard.NotEmpty(tfms);
+        Ensure.NotNullOrWhiteSpace(solutionFolder);
+        Ensure.NotNullOrWhiteSpace(projectName);
+
+        if (tfms is null || tfms.Length == 0)
+        {
+            throw new InvalidOperationException("tfms must have at least one element.");
+        }
 
         _projectFileName = $"{projectName}.csproj";
         ProjectFile = Path.Combine(FolderPath, _projectFileName);

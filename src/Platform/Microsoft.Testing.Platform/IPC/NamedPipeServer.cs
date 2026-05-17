@@ -6,20 +6,22 @@ using System.IO.Pipes;
 using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+
 using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.IPC;
 
 [Embedded]
+#if !MTP_MSBUILD_TASKS
+[UnsupportedOSPlatform("browser")]
+#endif
 internal sealed class NamedPipeServer : NamedPipeBase, IServer
 {
-#pragma warning disable CA1416 // Validate platform compatibility
     private const PipeOptions AsyncCurrentUserPipeOptions = PipeOptions.Asynchronous
 #if NET
         | PipeOptions.CurrentUserOnly
 #endif
         ;
-#pragma warning restore CA1416 // Validate platform compatibility
 
     private static bool IsUnix => Path.DirectorySeparatorChar == '/';
 
@@ -45,7 +47,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         ILogger logger,
         ITask task,
         CancellationToken cancellationToken)
-        : this(GetPipeName(name, environment), callback, environment, logger, task, cancellationToken)
+        : this(GetPipeName(name), callback, environment, logger, task, cancellationToken)
     {
     }
 
@@ -69,10 +71,12 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         int maxNumberOfServerInstances,
         CancellationToken cancellationToken)
     {
-        Guard.NotNull(pipeNameDescription);
-#pragma warning disable CA1416 // Validate platform compatibility
+        if (pipeNameDescription is null)
+        {
+            throw new ArgumentNullException(nameof(pipeNameDescription));
+        }
+
         _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances, PipeTransmissionMode.Byte, AsyncCurrentUserPipeOptions);
-#pragma warning restore CA1416
         _callback = callback;
         _environment = environment;
         _logger = logger;
@@ -94,9 +98,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         // Then, for the internal loop, we should use _cancellationToken, because we don't know for how long the loop will run.
         // So what we pass to InternalLoopAsync shouldn't have any timeout (it's usually linked to Ctrl+C).
         await _logger.LogDebugAsync($"Waiting for connection for the pipe name {PipeName.Name}").ConfigureAwait(false);
-#pragma warning disable CA1416 // Validate platform compatibility
         await _namedPipeServerStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
-#pragma warning restore CA1416
         WasConnected = true;
         await _logger.LogDebugAsync($"Client connected to {PipeName.Name}").ConfigureAwait(false);
         _loopTask = _task.Run(
@@ -132,9 +134,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         {
             int currentReadIndex = 0;
 #if NET
-#pragma warning disable CA1416 // Validate platform compatibility
             int currentReadBytes = await _namedPipeServerStream.ReadAsync(_readBuffer.AsMemory(currentReadIndex, _readBuffer.Length), cancellationToken).ConfigureAwait(false);
-#pragma warning restore CA1416
 #else
             int currentReadBytes = await _namedPipeServerStream.ReadAsync(_readBuffer, currentReadIndex, _readBuffer.Length, cancellationToken).ConfigureAwait(false);
 #endif
@@ -216,8 +216,14 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 // Write the message size
 #if NET
                 byte[] bytes = _sizeOfIntArray;
-                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
                 ApplicationStateGuard.Ensure(bytes.Length == sizeof(int));
+                if (!BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage))
+                {
+                    // TryWriteBytes only fails if the destination is too small.
+                    // Here, we are writing an int, and we already ensured that the length is correct before calling TryWriteBytes.
+                    throw ApplicationStateGuard.Unreachable();
+                }
+
                 await _messageBuffer.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
 #else
                 await _messageBuffer.WriteAsync(BitConverter.GetBytes(sizeOfTheWholeMessage), 0, sizeof(int), cancellationToken).ConfigureAwait(false);
@@ -226,7 +232,10 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 // Write the serializer id
 #if NET
                 bytes = _sizeOfIntArray;
-                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, responseNamedPipeSerializer.Id), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+                if (!BitConverter.TryWriteBytes(bytes, responseNamedPipeSerializer.Id))
+                {
+                    throw ApplicationStateGuard.Unreachable();
+                }
 
                 await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
 #else
@@ -244,15 +253,11 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 try
                 {
 #if NET
-#pragma warning disable CA1416 // Validate platform compatibility
                     await _namedPipeServerStream.WriteAsync(_messageBuffer.GetBuffer().AsMemory(0, (int)_messageBuffer.Position), cancellationToken).ConfigureAwait(false);
-#pragma warning restore CA1416
 #else
                     await _namedPipeServerStream.WriteAsync(_messageBuffer.GetBuffer(), 0, (int)_messageBuffer.Position, cancellationToken).ConfigureAwait(false);
 #endif
-#pragma warning disable CA1416 // Validate platform compatibility
                     await _namedPipeServerStream.FlushAsync(cancellationToken).ConfigureAwait(false);
-#pragma warning restore CA1416
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
                         _namedPipeServerStream.WaitForPipeDrain();
@@ -272,11 +277,6 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         }
     }
 
-    // For compatibility only.
-    // Old versions of MTP used to have this overload without IEnvironment.
-    // Extensions (e.g, TRX) calls into this overload.
-    // If core MTP is updated, but old version of TRX is still used, it will try to call this overload at runtime.
-    // Without it, MissingMethodException will be thrown at runtime.
     public static PipeNameDescription GetPipeName(string name)
     {
         if (!IsUnix)
@@ -287,14 +287,6 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         // Similar to https://github.com/dotnet/roslyn/blob/99bf83c7bc52fa1ff27cf792db38755d5767c004/src/Compilers/Shared/NamedPipeUtil.cs#L26-L42
         return new PipeNameDescription(Path.Combine("/tmp", name));
     }
-
-    // For compatibility only.
-    // Old versions of MTP used to have this overload without IEnvironment.
-    // Extensions (e.g, TRX) calls into this overload.
-    // If core MTP is updated, but old version of TRX is still used, it will try to call this overload at runtime.
-    // Without it, MissingMethodException will be thrown at runtime.
-    public static PipeNameDescription GetPipeName(string name, IEnvironment _)
-        => GetPipeName(name);
 
     public void Dispose()
     {
@@ -345,7 +337,10 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             }
             catch (TimeoutException)
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage, nameof(InternalLoopAsync)));
+                throw new InvalidOperationException(string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
+                    nameof(InternalLoopAsync)));
             }
         }
 

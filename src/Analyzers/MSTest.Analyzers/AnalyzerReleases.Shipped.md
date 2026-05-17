@@ -1,10 +1,32 @@
-﻿## Release 4.0.0
+﻿## Release 4.1.0
 
 ### New Rules
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-MSTEST0056 | Usage | Warning | TestMethodAttributeShouldNotHaveStringArgumentAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0056)
+MSTEST0058 | Usage | Info | AvoidAssertsInCatchBlocksAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0058)
+MSTEST0059 | Usage | Warning | UseParallelizeAttributeAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0059)
+MSTEST0060 | Usage | Warning | DuplicateTestMethodAttributeAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0060)
+MSTEST0061 | Usage | Info | UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0061)
+MSTEST0062 | Usage | Warning | AvoidOutRefTestMethodParametersAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0062)
+MSTEST0063 | Usage | Warning | TestClassConstructorShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0063)
+
+### Changed Rules
+
+Rule ID | New Category | New Severity | Old Category | Old Severity | Notes
+--------|--------------|--------------|--------------|--------------|-------
+MSTEST0001 | Performance | Info | Performance | Warning | UseParallelizeAttributeAnalyzer
+MSTEST0023 | Usage | Info | Usage | Warning | DoNotNegateBooleanAssertionAnalyzer
+MSTEST0037 | Usage | Info | Usage | Warning | UseProperAssertMethodsAnalyzer
+MSTEST0045 | Usage | Info | Usage | Warning | UseCooperativeCancellationForTimeoutAnalyzer
+
+## Release 4.0.0
+
+### New Rules
+
+Rule ID | Category | Severity | Notes
+--------|----------|----------|-------
+MSTEST0056 | Usage | Warning | TestMethodAttributeShouldSetDisplayNameCorrectlyAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0056)
 MSTEST0057 | Usage | Warning | TestMethodAttributeShouldPropagateSourceInformationAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0057)
 
 ### Changed Rules
@@ -40,7 +62,7 @@ MSTEST0053 | Usage | Warning | AvoidAssertFormatParametersAnalyzer, [Documentati
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 MSTEST0051 | Usage | Info | AssertThrowsShouldContainSingleStatementAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0051)
-MSTEST0052 | Usage | Warning | PreferDynamicDataSourceTypeAutoDetectAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0052)
+MSTEST0052 | Usage | Warning | AvoidExplicitDynamicDataSourceTypeAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0052)
 MSTEST0053 | Usage | Warning | AvoidAssertFormatParametersAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0053)
 MSTEST0054 | Usage | Info | UseCancellationTokenPropertyAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0054)
 MSTEST0055 | Usage | Warning | IgnoreStringMethodReturnValueAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0055)
@@ -93,7 +115,7 @@ MSTEST0041 | Usage | Warning | UseConditionBaseWithTestClassAnalyzer, [Documenta
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-MSTEST0037 | `Usage` | Info | UseProperAssertMethodsAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0037)
+MSTEST0037 | Usage | Info | UseProperAssertMethodsAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0037)
 
 ## Release 3.6.0
 

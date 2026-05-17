@@ -12,6 +12,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestHostApplicationLifetime, IDisposable
 {
     private readonly IConfiguration _configuration;
@@ -29,7 +30,7 @@ internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestHostApplic
 
     public string Uid => nameof(MSBuildTestApplicationLifecycleCallbacks);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     public string DisplayName => nameof(MSBuildTestApplicationLifecycleCallbacks);
 
@@ -69,5 +70,5 @@ internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestHostApplic
     public void Dispose()
         => PipeClient?.Dispose();
 
-    public Task AfterRunAsync(int exitCode, CancellationToken cancellation) => Task.CompletedTask;
+    public Task AfterRunAsync(int exitCode, CancellationToken cancellationToken) => Task.CompletedTask;
 }

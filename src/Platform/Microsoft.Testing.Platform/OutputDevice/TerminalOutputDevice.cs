@@ -5,7 +5,6 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
@@ -22,7 +21,6 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
     IDataConsumer,
     IOutputDeviceDataProducer,
-    ITestSessionLifetimeHandler,
     IDisposable,
     IAsyncInitializableExtension
 {
@@ -54,12 +52,19 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private readonly string? _targetFramework;
     private readonly string _assemblyName;
 
+    // Buffer for discovered test nodes when --list-tests json is active. Writes happen only from
+    // the message bus pump in ConsumeAsync (single-producer per consumer) and are fully drained
+    // by the platform before DisplayAfterSessionEndRunInternalAsync runs, so no extra locking is
+    // required. The list stays empty (and effectively unused) outside JSON mode.
+    private readonly List<TestNode> _discoveredTestsForJson = [];
+
     private TerminalTestReporter? _terminalTestReporter;
-    private bool _firstCallTo_OnSessionStartingAsync = true;
     private bool _bannerDisplayed;
     private bool _isListTests;
+    private bool _isListTestsJson;
     private bool _isServerMode;
     private ILogger? _logger;
+    private TestProcessRole? _processRole;
 
     public TerminalOutputDevice(
         IConsole console,
@@ -107,24 +112,53 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public async Task InitializeAsync()
     {
-        await _policiesService.RegisterOnAbortCallbackAsync(
-            () =>
-            {
-                _terminalTestReporter?.StartCancelling();
-                return Task.CompletedTask;
-            }).ConfigureAwait(false);
-
         if (_fileLoggerInformation is not null)
         {
             _logger = _loggerFactory.CreateLogger(GetType().ToString());
         }
 
         _isListTests = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
+        _isListTestsJson = PlatformCommandLineProvider.IsListTestsJsonOutput(_commandLineOptions);
+
+        if (_isListTestsJson)
+        {
+            // In JSON discovery mode the standard abort callback would call
+            // TerminalTestReporter.StartCancelling which writes "Cancelling test session" to
+            // stdout, corrupting the JSON document. Route a single-line cancellation notice
+            // to stderr instead so the user still gets feedback on Ctrl+C.
+            await _policiesService.RegisterOnAbortCallbackAsync(
+                () => WriteToStandardErrorAsync(PlatformResources.CancellingTestSession)).ConfigureAwait(false);
+        }
+        else
+        {
+            await _policiesService.RegisterOnAbortCallbackAsync(
+                () =>
+                {
+                    _terminalTestReporter?.StartCancelling();
+                    return Task.CompletedTask;
+                }).ConfigureAwait(false);
+        }
+
         _isServerMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
         bool noAnsi = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
 
         // TODO: Replace this with proper CI detection that we already have in telemetry. https://github.com/microsoft/testfx/issues/5533#issuecomment-2838893327
         bool inCI = string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase) || string.Equals(_environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase);
+
+        AnsiMode ansiMode = AnsiMode.AnsiIfPossible;
+        // In LLM environments, prefer simple text output so that LLM can parse it easily.
+        // Note that NoAnsi also implies no progress.
+        if (noAnsi || LLMEnvironmentDetector.IsLLMEnvironment())
+        {
+            // User explicitly specified --no-ansi.
+            // We should respect that.
+            ansiMode = AnsiMode.NoAnsi;
+        }
+        else if (inCI)
+        {
+            ansiMode = AnsiMode.SimpleAnsi;
+        }
+
         bool noProgress = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption);
 
         // _runtimeFeature.IsHotReloadEnabled is not set to true here, even if the session will be HotReload,
@@ -139,9 +173,14 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             showPassed = () => true;
         }
 
-        Func<bool?> shouldShowProgress = noProgress
+        OutputShowMode showStdout = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption);
+        OutputShowMode showStderr = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption);
+
+        Func<bool?> shouldShowProgress = noProgress || ansiMode is AnsiMode.NoAnsi or AnsiMode.SimpleAnsi
             // User preference is to not show progress.
-            ? () => false
+            // Or, we are in terminal that's not capable of changing cursor and we can't update progress in-place.
+            // In that case, we force disable progress as well.
+            ? static () => false
             // User preference is to allow showing progress, figure if we should actually show it based on whether or not we are a testhost controller.
             //
             // TestHost controller is not running any tests and it should not be writing progress.
@@ -158,17 +197,29 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             ShowPassedTests = showPassed,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
-            UseAnsi = !noAnsi,
-            UseCIAnsi = inCI,
+            AnsiMode = ansiMode,
             ShowActiveTests = true,
             ShowProgress = shouldShowProgress,
+            ShowStdout = showStdout,
+            ShowStderr = showStderr,
         });
     }
 
+    private static OutputShowMode GetShowOutputMode(ICommandLineOptions commandLineOptions, string optionName)
+        => commandLineOptions.TryGetOptionArgumentList(optionName, out string[]? arguments) && arguments is { Length: > 0 }
+            ? arguments[0] switch
+            {
+                string s when TerminalTestReporterCommandLineOptionsProvider.ShowOutputFailedArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => OutputShowMode.Failed,
+                string s when TerminalTestReporterCommandLineOptionsProvider.ShowOutputNoneArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => OutputShowMode.None,
+                _ => OutputShowMode.All,
+            }
+            : OutputShowMode.All;
+
     private static string GetShortArchitecture(string runtimeIdentifier)
-        => runtimeIdentifier.Contains(Dash)
-            ? runtimeIdentifier.Split(Dash, 2)[1]
-            : runtimeIdentifier;
+    {
+        int firstIndexOfDash = runtimeIdentifier.IndexOf(Dash);
+        return firstIndexOfDash < 0 ? runtimeIdentifier : runtimeIdentifier.Substring(firstIndexOfDash + 1);
+    }
 
     public Type[] DataTypesConsumed { get; } =
     [
@@ -181,7 +232,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     public string Uid => nameof(TerminalOutputDevice);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     /// <inheritdoc />
     public string DisplayName => "Test Platform Console Service";
@@ -200,9 +251,25 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         }
     }
 
+    // Sole point that bypasses IConsole to reach stderr; used only by --list-tests json paths
+    // so stdout stays reserved for the JSON document while errors and the cancellation notice
+    // still surface somewhere. If IConsole ever grows a stderr abstraction, replace this helper.
+    private static async Task WriteToStandardErrorAsync(string message)
+        => await Console.Error.WriteLineAsync(message).ConfigureAwait(false);
+
     public async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
+
+        if (_isListTestsJson)
+        {
+            // Machine-readable mode: keep stdout clean, suppress banner & file logger notice.
+            // The env var propagates to any child test host the controller spawns so they also
+            // stay quiet — important because the JSON document must be the sole stdout content.
+            _bannerDisplayed = true;
+            _environment.SetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
+            return;
+        }
 
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
@@ -268,7 +335,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public async Task DisplayBeforeSessionStartAsync(CancellationToken cancellationToken)
     {
-        if (_isServerMode)
+        if (_isServerMode || _isListTestsJson)
         {
             return;
         }
@@ -286,7 +353,18 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     }
 
     public async Task DisplayAfterHotReloadSessionEndAsync(CancellationToken cancellationToken)
-        => await DisplayAfterSessionEndRunInternalAsync().ConfigureAwait(false);
+    {
+        if (_isListTestsJson)
+        {
+            // JSON discovery is a point-in-time snapshot. Re-emitting after every hot-reload
+            // cycle would produce multiple growing JSON documents on stdout, which would break
+            // any consumer that pipes the output (the accumulated _discoveredTestsForJson buffer
+            // would also re-include earlier tests every cycle).
+            return;
+        }
+
+        await DisplayAfterSessionEndRunInternalAsync().ConfigureAwait(false);
+    }
 
     public async Task DisplayAfterSessionEndRunAsync(CancellationToken cancellationToken)
     {
@@ -309,34 +387,31 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
+        if (_isListTestsJson)
+        {
+            using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
+            {
+                if (_processRole == TestProcessRole.TestHost)
+                {
+                    _console.WriteLine(DiscoveredTestsJsonSerializer.Serialize(_discoveredTestsForJson));
+                }
+            }
+
+            return;
+        }
+
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
-            if (!_firstCallTo_OnSessionStartingAsync)
+            if (_processRole == TestProcessRole.TestHost)
             {
                 _terminalTestReporter.AssemblyRunCompleted();
                 _terminalTestReporter.TestExecutionCompleted(_clock.UtcNow);
             }
+            else
+            {
+                _terminalTestReporter.PrintOutOfProcessArtifacts();
+            }
         }
-    }
-
-    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext) => Task.CompletedTask;
-
-    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
-    {
-        if (_isServerMode || testSessionContext.CancellationToken.IsCancellationRequested)
-        {
-            return Task.CompletedTask;
-        }
-
-        // We implement IDataConsumerService and IOutputDisplayService.
-        // So the engine is calling us before as IDataConsumerService and after as IOutputDisplayService.
-        // The engine look for the ITestSessionLifetimeHandler in both case and call it.
-        if (_firstCallTo_OnSessionStartingAsync)
-        {
-            _firstCallTo_OnSessionStartingAsync = false;
-        }
-
-        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -348,6 +423,29 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
+
+        if (_isListTestsJson)
+        {
+            // Machine-readable mode: keep stdout reserved for the JSON document so consumers can
+            // pipe it directly. Errors and exceptions still need surfacing somewhere, so route
+            // them to stderr via WriteToStandardErrorAsync (the only place that bypasses IConsole,
+            // which does not abstract stderr today). Warnings and informational text are dropped
+            // to keep stdout strictly JSON.
+            switch (data)
+            {
+                case ErrorMessageOutputDeviceData errorData:
+                    await LogDebugAsync(errorData.Message).ConfigureAwait(false);
+                    await WriteToStandardErrorAsync(errorData.Message).ConfigureAwait(false);
+                    break;
+
+                case ExceptionOutputDeviceData exceptionData:
+                    await LogDebugAsync(exceptionData.Exception.ToString()).ConfigureAwait(false);
+                    await WriteToStandardErrorAsync(exceptionData.Exception.ToString()).ConfigureAwait(false);
+                    break;
+            }
+
+            return;
+        }
 
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
@@ -384,9 +482,21 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
-
-        if (_isServerMode || cancellationToken.IsCancellationRequested)
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_isServerMode)
         {
+            return Task.CompletedTask;
+        }
+
+        if (_isListTestsJson)
+        {
+            // Machine-readable mode: only buffer discovered tests, do not write anything to the terminal.
+            if (value is TestNodeUpdateMessage testNodeUpdate
+                && testNodeUpdate.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>() is DiscoveredTestNodeStateProperty)
+            {
+                _discoveredTestsForJson.Add(testNodeUpdate.TestNode);
+            }
+
             return Task.CompletedTask;
         }
 
@@ -394,15 +504,14 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             case TestNodeUpdateMessage testNodeStateChanged:
 
-                TimeSpan duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
+                TimeSpan? duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration;
                 string? standardOutput = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
                 string? standardError = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
                 foreach (FileArtifactProperty artifact in testNodeStateChanged.TestNode.Properties.OfType<FileArtifactProperty>())
                 {
-                    bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
                     _terminalTestReporter.ArtifactAdded(
-                        isOutOfProcessArtifact,
+                        outOfProcess: _processRole != TestProcessRole.TestHost,
                         testNodeStateChanged.TestNode.DisplayName,
                         artifact.FileInfo.FullName);
                 }
@@ -460,9 +569,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              standardError);
                         break;
 
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
                     case CancelledTestNodeStateProperty cancelledState:
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
                         _terminalTestReporter.TestCompleted(
                              testNodeStateChanged.TestNode.Uid.Value,
                              testNodeStateChanged.TestNode.DisplayName,
@@ -516,9 +625,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
             case SessionFileArtifact artifact:
                 {
-                    bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
                     _terminalTestReporter.ArtifactAdded(
-                        isOutOfProcessArtifact,
+                        outOfProcess: _processRole != TestProcessRole.TestHost,
                         testName: null,
                         artifact.FileInfo.FullName);
                 }
@@ -526,9 +634,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 break;
             case FileArtifact artifact:
                 {
-                    bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
                     _terminalTestReporter.ArtifactAdded(
-                        isOutOfProcessArtifact,
+                        outOfProcess: _processRole != TestProcessRole.TestHost,
                         testName: null,
                         artifact.FileInfo.FullName);
                 }
@@ -544,6 +651,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public async Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
     {
+        _processRole = processRole;
         if (processRole == TestProcessRole.TestHost)
         {
             await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(

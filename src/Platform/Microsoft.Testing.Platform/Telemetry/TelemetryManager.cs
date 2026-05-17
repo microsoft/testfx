@@ -15,22 +15,28 @@ namespace Microsoft.Testing.Platform.Telemetry;
 internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataProducer
 {
     private Func<IServiceProvider, ITelemetryCollector>? _telemetryFactory;
+    private Func<IServiceProvider, IOpenTelemetryProvider>? _openTelemetryProviderFactory;
 
     public string Uid => nameof(TelemetryManager);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => string.Empty;
 
     public string Description => string.Empty;
 
     public void AddTelemetryCollectorProvider(Func<IServiceProvider, ITelemetryCollector> telemetryFactory)
-    {
-        Guard.NotNull(telemetryFactory);
-        _telemetryFactory = telemetryFactory;
-    }
+        => _telemetryFactory = telemetryFactory ?? throw new ArgumentNullException(nameof(telemetryFactory));
 
-    public async Task<ITelemetryCollector> BuildAsync(ServiceProvider serviceProvider, ILoggerFactory loggerFactory, TestApplicationOptions testApplicationOptions)
+    public void AddOpenTelemetryProvider(Func<IServiceProvider, IOpenTelemetryProvider> openTelemetryProviderFactory)
+        => _openTelemetryProviderFactory = openTelemetryProviderFactory ?? throw new ArgumentNullException(nameof(openTelemetryProviderFactory));
+
+    public IOpenTelemetryProvider? BuildOTelProvider(ServiceProvider serviceProvider)
+        => _openTelemetryProviderFactory is null
+            ? null
+            : _openTelemetryProviderFactory(serviceProvider);
+
+    public async Task<ITelemetryCollector> BuildTelemetryAsync(ServiceProvider serviceProvider, ILoggerFactory loggerFactory, TestApplicationOptions testApplicationOptions)
     {
         bool isTelemetryOptedOut = !testApplicationOptions.EnableTelemetry;
 

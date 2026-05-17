@@ -14,7 +14,7 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase<MaxFailedTestsExt
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 2", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.TestExecutionStoppedForMaxFailedTests);
+        testHostResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedForMaxFailedTests);
 
         testHostResult.AssertOutputContains("Test session is aborting due to reaching failures ('2') specified by the '--maximum-failed-tests' option.");
         testHostResult.AssertOutputContainsSummary(failed: 3, passed: 3, skipped: 0);
@@ -32,11 +32,11 @@ public class MaxFailedTestsExtensionTests : AcceptanceTestBase<MaxFailedTestsExt
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
         testHostResult.AssertOutputContains("The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
 #file MaxFailedTestsExtensionTests.csproj
@@ -176,13 +176,10 @@ internal sealed class GracefulStop : IGracefulStopTestExecutionCapability
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
     }
 
     public TestContext TestContext { get; set; }

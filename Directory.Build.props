@@ -44,6 +44,8 @@
 
     <!-- Experimental test API usages are allowed inside this solution -->
     <NoWarn>$(NoWarn);TPEXP</NoWarn>
+    <!-- netfx and netstandard don't have nullability info so the IDE0370 warning should be suppressed -->
+    <NoWarn Condition="'$(TargetFramework)' == 'netstandard2.0' OR $(TargetFramework.StartsWith('net4')) OR '$(TargetFramework)' == '$(UwpMinimum)'">$(NoWarn);IDE0370</NoWarn>
   </PropertyGroup>
 
   <!-- Versioning -->
@@ -71,13 +73,6 @@
   <PropertyGroup>
     <!-- Needs to be setup globally so that arcade doesn't bring xUnit to playground and other test projects -->
     <TestRunnerName>Microsoft.Testing.Platform</TestRunnerName>
-  </PropertyGroup>
-
-  <!-- Polyfill config -->
-  <PropertyGroup>
-    <PolyGuard>true</PolyGuard>
-    <PolyStringInterpolation>true</PolyStringInterpolation>
-    <PolyUseEmbeddedAttribute>true</PolyUseEmbeddedAttribute>
   </PropertyGroup>
 
   <ItemGroup>

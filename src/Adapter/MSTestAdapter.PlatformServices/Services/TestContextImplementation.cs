@@ -47,11 +47,18 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
             => _builder.Clear();
 
         [MethodImpl(MethodImplOptions.Synchronized)]
+        internal string GetAndClear()
+        {
+            string result = _builder.ToString();
+            _builder.Clear();
+
+            return result;
+        }
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public override string ToString()
             => _builder.ToString();
     }
-
-    private static readonly AsyncLocal<TestContextImplementation?> CurrentTestContextAsyncLocal = new();
 
     /// <summary>
     /// Properties.
@@ -106,11 +113,11 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         testClassFullName ??= testMethod?.FullClassName;
         if (testClassFullName is null && testMethod is null)
         {
-            _properties = new Dictionary<string, object?>(properties);
+            _properties = [with(properties)];
         }
         else
         {
-            _properties = new Dictionary<string, object?>(properties.Count + 2);
+            _properties = [with(properties.Count + 2)];
             foreach (KeyValuePair<string, object?> kvp in properties)
             {
                 _properties[kvp.Key] = kvp.Value;
@@ -130,8 +137,6 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         _messageLogger = messageLogger;
         _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
     }
-
-    internal static TestContextImplementation? CurrentTestContext => CurrentTestContextAsyncLocal.Value;
 
     #region TestContext impl
 
@@ -326,14 +331,14 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
     internal readonly struct ScopedTestContextSetter : IDisposable
     {
-        internal ScopedTestContextSetter(TestContextImplementation? testContext)
-            => CurrentTestContextAsyncLocal.Value = testContext;
+        internal ScopedTestContextSetter(TestContext? testContext)
+            => TestContext.Current = testContext;
 
         public void Dispose()
-            => CurrentTestContextAsyncLocal.Value = null;
+            => TestContext.Current = null;
     }
 
-    internal static ScopedTestContextSetter SetCurrentTestContext(TestContextImplementation? testContext)
+    internal static ScopedTestContextSetter SetCurrentTestContext(TestContext? testContext)
         => new(testContext);
 
     internal void WriteConsoleOut(char value)
@@ -384,12 +389,12 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         return _testContextMessageStringBuilder;
     }
 
-    internal string? GetOut()
-        => _stdOutStringBuilder?.ToString();
+    internal string? GetAndClearOutput()
+        => _stdOutStringBuilder?.GetAndClear();
 
-    internal string? GetErr()
-        => _stdErrStringBuilder?.ToString();
+    internal string? GetAndClearError()
+        => _stdErrStringBuilder?.GetAndClear();
 
-    internal string? GetTrace()
-        => _traceStringBuilder?.ToString();
+    internal string? GetAndClearTrace()
+        => _traceStringBuilder?.GetAndClear();
 }

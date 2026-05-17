@@ -1,6 +1,4 @@
-﻿M:System.ArgumentNullException.ThrowIfNull(System.Object,System.String); Use 'ArgumentGuard' class instead
-M:System.ArgumentNullException.#ctor; Use 'ArgumentGuard' class instead
-P:System.DateTime.Now; Use 'IClock' instead
+﻿P:System.DateTime.Now; Use 'IClock' instead
 P:System.DateTime.UtcNow; Use 'IClock' instead
 T:System.Environment; Use 'IEnvironment' instead
 M:System.Diagnostics.Process.GetCurrentProcess(); Use 'IProcess' instead

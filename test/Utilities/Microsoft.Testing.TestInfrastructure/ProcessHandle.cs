@@ -91,11 +91,7 @@ public sealed class ProcessHandle : IProcessHandle, IDisposable
     {
         try
         {
-#if NETCOREAPP
             process.Kill(true);
-#else
-            process.Kill();
-#endif
         }
         catch (InvalidOperationException)
         {

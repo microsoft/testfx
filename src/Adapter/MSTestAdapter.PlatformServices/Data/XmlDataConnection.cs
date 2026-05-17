@@ -3,9 +3,8 @@
 
 #if NETFRAMEWORK
 using System.Data;
-using System.Security;
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
@@ -105,18 +104,14 @@ internal sealed class XmlDataConnection : TestDataConnection
 
             return dataSet;
         }
-        catch (SecurityException securityException)
-        {
-            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, securityException.Message + " for XML data source " + _fileName);
-        }
-        catch (XmlException xmlException)
-        {
-            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, xmlException.Message + " for XML data source " + _fileName);
-        }
         catch (Exception exception)
         {
-            // Yes, we get other exceptions too!
-            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for XML data source " + _fileName);
+            // Yes, we get exceptions other than SecurityException and XmlException too!
+            // So we handle all exceptions!
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error(exception.Message + " for XML data source " + _fileName);
+            }
         }
 
         return null;

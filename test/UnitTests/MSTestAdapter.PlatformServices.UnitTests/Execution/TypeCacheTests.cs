@@ -7,7 +7,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
@@ -37,7 +36,7 @@ public class TypeCacheTests : TestContainer
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
 
-        ReflectHelper.Instance.ClearCache();
+        ReflectHelper.ClearCache();
 
         SetupMocks();
     }
@@ -54,55 +53,34 @@ public class TypeCacheTests : TestContainer
 
     #region GetTestMethodInfo tests
 
-    private static TestContextImplementation CreateTestContextImplementationForMethod(TestMethod testMethod)
-        => new(testMethod, null, new Dictionary<string, object?>(), null, null);
-
-    public void GetTestMethodInfoShouldThrowIfTestMethodIsNull()
-    {
-        var testMethod = new TestMethod("M", "C", "A", displayName: null);
-
-        TestContextImplementation context = CreateTestContextImplementationForMethod(testMethod);
-        Action action = () => _typeCache.GetTestMethodInfo(null!, context);
-        action.Should().Throw<ArgumentNullException>();
-    }
-
-    public void GetTestMethodInfoShouldThrowIfTestContextIsNull()
-    {
-        var testMethod = new TestMethod("M", "C", "A", displayName: null);
-        new Action(() => _typeCache.GetTestMethodInfo(testMethod, null!)).Should().Throw<ArgumentNullException>();
-    }
+    private static TestMethod CreateTestMethod(string methodName, string className, string assemblyName, string? displayName)
+        => new(methodName, null, methodName, className, assemblyName, displayName, null);
 
     public void GetTestMethodInfoShouldReturnNullIfClassInfoForTheMethodIsNull()
     {
-        var testMethod = new TestMethod("M", "C", "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("M", "C", "A", displayName: null);
 
-        _typeCache.GetTestMethodInfo(
-            testMethod,
-            CreateTestContextImplementationForMethod(testMethod))
+        _typeCache.GetTestMethodInfo(testMethod)
             .Should().BeNull();
     }
 
     public void GetTestMethodInfoShouldReturnNullIfLoadingTypeThrowsTypeLoadException()
     {
-        var testMethod = new TestMethod("M", "System.TypedReference[]", "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("M", "System.TypedReference[]", "A", displayName: null);
 
-        _typeCache.GetTestMethodInfo(
-            testMethod,
-            CreateTestContextImplementationForMethod(testMethod))
+        _typeCache.GetTestMethodInfo(testMethod)
             .Should().BeNull();
     }
 
     public void GetTestMethodInfoShouldThrowIfLoadingTypeThrowsException()
     {
-        var testMethod = new TestMethod("M", "C", "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("M", "C", "A", displayName: null);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Throws(new Exception("Load failure"));
 
         void Action() =>
-            _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+            _typeCache.GetTestMethodInfo(testMethod);
 
         TypeInspectionException exception = new Action(Action).Should().Throw<TypeInspectionException>().Which;
 
@@ -112,12 +90,10 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldThrowIfTypeDoesNotHaveADefaultConstructor()
     {
         string className = typeof(DummyTestClassWithNoDefaultConstructor).FullName!;
-        var testMethod = new TestMethod("M", className, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("M", className, "A", displayName: null);
 
         void Action() =>
-            _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+            _typeCache.GetTestMethodInfo(testMethod);
 
         TypeInspectionException exception = new Action(Action).Should().Throw<TypeInspectionException>().Which;
         exception.Message.StartsWith("Cannot find a valid constructor for test class 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TypeCacheTests+DummyTestClassWithNoDefaultConstructor'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.", StringComparison.Ordinal).Should().BeTrue();
@@ -126,12 +102,10 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldThrowIfTestContextHasATypeMismatch()
     {
         string className = typeof(DummyTestClassWithIncorrectTestContextType).FullName!;
-        var testMethod = new TestMethod("M", className, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("M", className, "A", displayName: null);
 
         void Action() =>
-            _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+            _typeCache.GetTestMethodInfo(testMethod);
 
         TypeInspectionException exception = new Action(Action).Should().Throw<TypeInspectionException>().Which;
         exception.Message.StartsWith($"The {className}.TestContext has incorrect type.", StringComparison.Ordinal).Should().BeTrue();
@@ -140,12 +114,10 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldThrowIfTestContextHasMultipleAmbiguousTestContextProperties()
     {
         string className = typeof(DummyTestClassWithMultipleTestContextProperties).FullName!;
-        var testMethod = new TestMethod("M", className, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("M", className, "A", displayName: null);
 
         Action action = () =>
-            _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+            _typeCache.GetTestMethodInfo(testMethod);
 
         action.Should().Throw<TypeInspectionException>()
             .And.Message.Should().StartWith($"Unable to find property {className}.TestContext. Error:Ambiguous match found");
@@ -155,14 +127,12 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
 
-        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
-                                    testMethod,
-                                    CreateTestContextImplementationForMethod(testMethod));
+        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(testMethod);
 
         testMethodInfo.Should().NotBeNull();
         testMethodInfo.Parent.TestContextProperty.Should().NotBeNull();
@@ -172,14 +142,12 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithInitializeMethods);
         MethodInfo methodInfo = type.GetMethod("TestInit")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
 
-        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
-                                testMethod,
-                                CreateTestContextImplementationForMethod(testMethod));
+        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(testMethod);
 
         testMethodInfo.Should().NotBeNull();
         testMethodInfo.Parent.TestContextProperty.Should().BeNull();
@@ -191,14 +159,12 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.AssemblyInfoCache.Count.Should().Be(1);
     }
@@ -207,7 +173,7 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<Type>())).Throws(new Exception());
@@ -215,9 +181,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(typeof(DummyTestClassWithTestMethods))).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.AssemblyInfoCache.Count.Should().Be(1);
     }
@@ -225,7 +189,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldCacheAssemblyInitializeAttribute()
     {
         Type type = typeof(DummyTestClassWithInitializeMethods);
-        var testMethod = new TestMethod("TestInit", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("TestInit", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -233,9 +197,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInit")!)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.AssemblyInfoCache.Count.Should().Be(1);
         _typeCache.AssemblyInfoCache.First().AssemblyInitializeMethod.Should().BeSameAs(type.GetMethod("AssemblyInit")!);
@@ -244,7 +206,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldCacheAssemblyCleanupAttribute()
     {
         Type type = typeof(DummyTestClassWithCleanupMethods);
-        var testMethod = new TestMethod("TestCleanup", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("TestCleanup", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -252,9 +214,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<AssemblyCleanupAttribute>(type.GetMethod("AssemblyCleanup")!)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.AssemblyInfoCache.Count.Should().Be(1);
         _typeCache.AssemblyInfoCache.First().AssemblyCleanupMethod.Should().BeSameAs(type.GetMethod("AssemblyCleanup")!);
@@ -263,7 +223,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldCacheAssemblyInitAndCleanupAttribute()
     {
         Type type = typeof(DummyTestClassWithInitAndCleanupMethods);
-        var testMethod = new TestMethod("TestInitOrCleanup", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("TestInitOrCleanup", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -273,9 +233,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<AssemblyCleanupAttribute>(type.GetMethod("AssemblyCleanup")!)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.AssemblyInfoCache.Count.Should().Be(1);
         _typeCache.AssemblyInfoCache.First().AssemblyCleanupMethod.Should().BeSameAs(type.GetMethod("AssemblyCleanup")!);
@@ -285,7 +243,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldThrowIfAssemblyInitHasIncorrectSignature()
     {
         Type type = typeof(DummyTestClassWithIncorrectInitializeMethods);
-        var testMethod = new TestMethod("M", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("M", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -294,9 +252,7 @@ public class TypeCacheTests : TestContainer
             rh => rh.IsAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInit")!)).Returns(true);
 
         void A() =>
-            _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+            _typeCache.GetTestMethodInfo(testMethod);
 
         Exception exception = new Action(A).Should().Throw<TypeInspectionException>().Which;
 
@@ -314,7 +270,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldThrowIfAssemblyCleanupHasIncorrectSignature()
     {
         Type type = typeof(DummyTestClassWithIncorrectCleanupMethods);
-        var testMethod = new TestMethod("M", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("M", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -323,9 +279,7 @@ public class TypeCacheTests : TestContainer
             rh => rh.IsAttributeDefined<AssemblyCleanupAttribute>(type.GetMethod("AssemblyCleanup")!)).Returns(true);
 
         void A() =>
-            _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+            _typeCache.GetTestMethodInfo(testMethod);
 
         Exception exception = new Action(A).Should().Throw<TypeInspectionException>().Which;
 
@@ -344,18 +298,14 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _mockReflectHelper.Verify(rh => rh.IsAttributeDefined<TestClassAttribute>(type), Times.Once);
         _typeCache.AssemblyInfoCache.Should().HaveCount(1);
@@ -369,14 +319,12 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.ClassInfoCache.Count.Should().Be(1);
         _typeCache.ClassInfoCache.First()!.TestInitializeMethod.Should().BeNull();
@@ -386,7 +334,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldCacheClassInitializeAttribute()
     {
         Type type = typeof(DummyTestClassWithInitializeMethods);
-        var testMethod = new TestMethod("TestInit", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("TestInit", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -394,9 +342,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<ClassInitializeAttribute>(type.GetMethod("AssemblyInit")!)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.ClassInfoCache.Count.Should().Be(1);
         _typeCache.ClassInfoCache.First()!.BaseClassInitMethods.Count.Should().Be(0);
@@ -408,7 +354,7 @@ public class TypeCacheTests : TestContainer
         Type type = typeof(DummyDerivedTestClassWithInitializeMethods);
         Type baseType = typeof(DummyTestClassWithInitializeMethods);
 
-        var testMethod = new TestMethod("TestMethod", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("TestMethod", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -422,9 +368,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
            rh => rh.IsAttributeDefined<ClassInitializeAttribute>(type.GetMethod("ClassInit")!)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-            testMethod,
-            CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.ClassInfoCache.Count.Should().Be(1);
         _typeCache.ClassInfoCache.First()!.BaseClassCleanupMethods.Count.Should().Be(0, "No base class cleanup");
@@ -434,7 +378,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldCacheClassCleanupAttribute()
     {
         Type type = typeof(DummyTestClassWithCleanupMethods);
-        var testMethod = new TestMethod("TestCleanup", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("TestCleanup", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -442,9 +386,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<ClassCleanupAttribute>(type.GetMethod("AssemblyCleanup")!)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.ClassInfoCache.Count.Should().Be(1);
         _typeCache.ClassInfoCache.First()!.ClassCleanupMethod.Should().BeSameAs(type.GetMethod("AssemblyCleanup")!);
@@ -455,7 +397,7 @@ public class TypeCacheTests : TestContainer
         Type type = typeof(DummyDerivedTestClassWithCleanupMethods);
 
         Type baseType = typeof(DummyTestClassWithCleanupMethods);
-        var testMethod = new TestMethod("TestMethod", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("TestMethod", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -465,9 +407,7 @@ public class TypeCacheTests : TestContainer
            rh => rh.GetFirstAttributeOrDefault<ClassCleanupAttribute>(baseType.GetMethod("AssemblyCleanup")!))
                    .Returns(new ClassCleanupAttribute(InheritanceBehavior.BeforeEachDerivedClass));
 
-        _typeCache.GetTestMethodInfo(
-            testMethod,
-            CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.ClassInfoCache.Count.Should().Be(1);
         _typeCache.ClassInfoCache.First()!.BaseClassInitMethods.Count.Should().Be(0, "No base class init");
@@ -477,7 +417,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldCacheClassInitAndCleanupAttribute()
     {
         Type type = typeof(DummyTestClassWithInitAndCleanupMethods);
-        var testMethod = new TestMethod("TestInitOrCleanup", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("TestInitOrCleanup", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -486,9 +426,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<ClassCleanupAttribute>(type.GetMethod("AssemblyCleanup")!)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.ClassInfoCache.Count.Should().Be(1);
         _typeCache.ClassInfoCache.First()!.ClassInitializeMethod.Should().BeSameAs(type.GetMethod("AssemblyInit")!);
@@ -499,7 +437,7 @@ public class TypeCacheTests : TestContainer
     {
         Type baseType = typeof(DummyBaseTestClassWithInitAndCleanupMethods);
         Type type = typeof(DummyTestClassWithInitAndCleanupMethods);
-        var testMethod = new TestMethod("TestInitOrCleanup", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("TestInitOrCleanup", type.FullName!, "A", displayName: null);
 
         MethodInfo baseInitializeMethod = baseType.GetMethod("ClassInit")!;
         MethodInfo baseCleanupMethod = baseType.GetMethod("ClassCleanup")!;
@@ -523,9 +461,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<ClassCleanupAttribute>(type.GetMethod("AssemblyCleanup")!)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.ClassInfoCache.Count.Should().Be(1);
         _typeCache.ClassInfoCache.First()!.ClassInitializeMethod.Should().BeSameAs(type.GetMethod("AssemblyInit")!);
@@ -578,10 +514,8 @@ public class TypeCacheTests : TestContainer
             .Setup(rh => rh.GetFirstAttributeOrDefault<ClassCleanupAttribute>(parentCleanupMethod))
             .Returns(new ClassCleanupAttribute(InheritanceBehavior.BeforeEachDerivedClass));
 
-        var testMethod = new TestMethod("TestMethod", type.FullName!, "A", displayName: null);
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        TestMethod testMethod = CreateTestMethod("TestMethod", type.FullName!, "A", displayName: null);
+        _typeCache.GetTestMethodInfo(testMethod);
 
         TestClassInfo? classInfo = _typeCache.ClassInfoCache.FirstOrDefault();
         _typeCache.ClassInfoCache.Count.Should().Be(1);
@@ -600,7 +534,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldThrowIfClassInitHasIncorrectSignature()
     {
         Type type = typeof(DummyTestClassWithIncorrectInitializeMethods);
-        var testMethod = new TestMethod("M", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("M", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -609,9 +543,7 @@ public class TypeCacheTests : TestContainer
             rh => rh.IsAttributeDefined<ClassInitializeAttribute>(type.GetMethod("AssemblyInit")!)).Returns(true);
 
         void A() =>
-            _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+            _typeCache.GetTestMethodInfo(testMethod);
 
         Exception exception = new Action(A).Should().Throw<TypeInspectionException>().Which;
 
@@ -629,7 +561,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldThrowIfClassCleanupHasIncorrectSignature()
     {
         Type type = typeof(DummyTestClassWithIncorrectCleanupMethods);
-        var testMethod = new TestMethod("M", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("M", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -638,9 +570,7 @@ public class TypeCacheTests : TestContainer
             rh => rh.IsAttributeDefined<ClassCleanupAttribute>(type.GetMethod("AssemblyCleanup")!)).Returns(true);
 
         void A() =>
-            _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+            _typeCache.GetTestMethodInfo(testMethod);
 
         Exception exception = new Action(A).Should().Throw<TypeInspectionException>().Which;
 
@@ -658,7 +588,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldCacheTestInitializeAttribute()
     {
         Type type = typeof(DummyTestClassWithInitializeMethods);
-        var testMethod = new TestMethod("TestInit", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("TestInit", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -666,9 +596,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestInitializeAttribute>(type.GetMethod("TestInit")!)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.ClassInfoCache.Should().HaveCount(1);
         type.GetMethod("TestInit").Should().BeSameAs(_typeCache.ClassInfoCache.First()!.TestInitializeMethod);
@@ -677,7 +605,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldCacheTestCleanupAttribute()
     {
         Type type = typeof(DummyTestClassWithCleanupMethods);
-        var testMethod = new TestMethod("TestCleanup", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("TestCleanup", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -685,9 +613,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestCleanupAttribute>(type.GetMethod("TestCleanup")!)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.ClassInfoCache.Should().HaveCount(1);
         type.GetMethod("TestCleanup").Should().BeSameAs(_typeCache.ClassInfoCache.First()!.TestCleanupMethod);
@@ -696,7 +622,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldThrowIfTestInitOrCleanupHasIncorrectSignature()
     {
         Type type = typeof(DummyTestClassWithIncorrectInitializeMethods);
-        var testMethod = new TestMethod("M", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("M", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -705,9 +631,7 @@ public class TypeCacheTests : TestContainer
             rh => rh.IsAttributeDefined<TestInitializeAttribute>(type.GetMethod("TestInit")!)).Returns(true);
 
         Action action = () =>
-            _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+            _typeCache.GetTestMethodInfo(testMethod);
 
         TypeInspectionException exception = action.Should().Throw<TypeInspectionException>().Which;
 
@@ -726,7 +650,7 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyDerivedTestClassWithInitializeMethods);
         Type baseType = typeof(DummyTestClassWithInitializeMethods);
-        var testMethod = new TestMethod("TestMethod", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("TestMethod", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -734,9 +658,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestInitializeAttribute>(baseType.GetMethod("TestInit")!)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.ClassInfoCache.Should().HaveCount(1);
         baseType.GetMethod("TestInit").Should().BeSameAs(_typeCache.ClassInfoCache.First()!.BaseTestInitializeMethodsQueue.Peek());
@@ -746,7 +668,7 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyDerivedTestClassWithCleanupMethods);
         Type baseType = typeof(DummyTestClassWithCleanupMethods);
-        var testMethod = new TestMethod("TestMethod", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("TestMethod", type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -754,9 +676,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestCleanupAttribute>(baseType.GetMethod("TestCleanup")!)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.ClassInfoCache.Should().HaveCount(1);
         baseType.GetMethod("TestCleanup").Should().BeSameAs(_typeCache.ClassInfoCache.First()!.BaseTestCleanupMethodsQueue.Peek());
@@ -766,18 +686,14 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         _testablePlatformServiceProvider.MockFileOperations.Verify(fo => fo.LoadAssembly(It.IsAny<string>()), Times.Once);
         _typeCache.ClassInfoCache.Should().HaveCount(1);
@@ -791,12 +707,10 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithIncorrectTestMethodSignatures);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         void A() =>
-            _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+            _typeCache.GetTestMethodInfo(testMethod);
 
         Exception exception = new Action(A).Should().Throw<TypeInspectionException>().Which;
 
@@ -813,12 +727,10 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
-        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
-        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _mockReflectHelper.Setup(rh => rh.GetSingleAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
+        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(testMethod);
 
         testMethodInfo!.MethodInfo.Should().BeSameAs(methodInfo);
         testMethodInfo.TimeoutInfo.Timeout.Should().Be(0);
@@ -830,15 +742,13 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethodWithTimeout")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TimeoutAttribute>(methodInfo))
             .Returns(true);
-        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
+        _mockReflectHelper.Setup(rh => rh.GetSingleAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
         _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo)).CallBase();
-        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(testMethod);
 
         testMethodInfo!.MethodInfo.Should().BeSameAs(methodInfo);
         testMethodInfo.TimeoutInfo.Timeout.Should().Be(10);
@@ -850,16 +760,14 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethodWithNegativeTimeout")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TimeoutAttribute>(methodInfo))
             .Returns(true);
         _mockReflectHelper.Setup(ReflectHelper => ReflectHelper.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo))
             .CallBase();
 
-        void A() => _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        void A() => _typeCache.GetTestMethodInfo(testMethod);
 
         Exception exception = new Action(A).Should().Throw<TypeInspectionException>().Which;
 
@@ -877,16 +785,14 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethodWithTimeoutOfZero")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TimeoutAttribute>(methodInfo))
             .Returns(true);
         _mockReflectHelper.Setup(ReflectHelper => ReflectHelper.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo))
             .CallBase();
 
-        void A() => _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        void A() => _typeCache.GetTestMethodInfo(testMethod);
 
         TypeInspectionException exception = new Action(A).Should().Throw<TypeInspectionException>().Which;
 
@@ -911,15 +817,15 @@ public class TypeCacheTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!);
+        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        settings.Should().NotBeNull();
+        MSTestSettings.PopulateSettings(settings);
 
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
-        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(testMethod);
 
         testMethodInfo!.TimeoutInfo.Timeout.Should().Be(4000);
     }
@@ -935,20 +841,20 @@ public class TypeCacheTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!);
+        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        settings.Should().NotBeNull();
+        MSTestSettings.PopulateSettings(settings);
 
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethodWithTimeout")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TimeoutAttribute>(methodInfo))
            .Returns(true);
         _mockReflectHelper.Setup(ReflectHelper => ReflectHelper.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo))
             .CallBase();
 
-        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(testMethod);
 
         testMethodInfo!.TimeoutInfo.Timeout.Should().Be(10);
     }
@@ -964,15 +870,15 @@ public class TypeCacheTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!);
+        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        settings.Should().NotBeNull();
+        MSTestSettings.PopulateSettings(settings);
 
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
-        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(testMethod);
 
         testMethodInfo!.TimeoutInfo.Timeout.Should().Be(0);
     }
@@ -981,12 +887,10 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethodWithDerivedTestMethodAttribute")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
-        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
-        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _mockReflectHelper.Setup(rh => rh.GetSingleAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
+        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(testMethod);
 
         testMethodInfo!.MethodInfo.Should().BeSameAs(methodInfo);
         testMethodInfo.TimeoutInfo.Timeout.Should().Be(0);
@@ -995,197 +899,14 @@ public class TypeCacheTests : TestContainer
         testMethodInfo.Executor.Should().BeOfType<DerivedTestMethodAttribute>();
     }
 
-    public void GetTestMethodInfoShouldSetTestContextWithCustomProperty()
-    {
-        // Not using _typeCache here which uses a mocked ReflectHelper which doesn't work well with this test.
-        // Setting up the mock feels unnecessary when the original production implementation can work just fine.
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithCustomProperty")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        typeCache.GetTestMethodInfo(testMethod, testContext);
-        KeyValuePair<string, object?> customProperty = testContext.Properties.FirstOrDefault(p => p.Key.Equals("WhoAmI", StringComparison.Ordinal));
-
-        customProperty.Should().NotBeNull();
-        (customProperty.Value as string).Should().Be("Me");
-    }
-
-    public void GetTestMethodInfoShouldReportWarningIfCustomPropertyHasSameNameAsPredefinedProperties()
-    {
-        // Not using _typeCache here which uses a mocked ReflectHelper which doesn't work well with this test.
-        // Setting up the mock feels unnecessary when the original production implementation can work just fine.
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithTestCategoryAsCustomProperty")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
-
-        testMethodInfo.Should().NotBeNull();
-        string expectedMessage = string.Format(
-            CultureInfo.InvariantCulture,
-            "UTA023: {0}: Cannot define predefined property {2} on method {1}.",
-            methodInfo.DeclaringType!.FullName!,
-            methodInfo.Name,
-            "TestCategory");
-        testMethodInfo.NotRunnableReason.Should().Be(expectedMessage);
-    }
-
-    public void GetTestMethodInfoShouldReportWarningIfCustomOwnerPropertyIsDefined()
-    {
-        // Test that [TestProperty("Owner", "value")] is still blocked
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithOwnerAsCustomProperty")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
-
-        testMethodInfo.Should().NotBeNull();
-        string expectedMessage = string.Format(
-            CultureInfo.InvariantCulture,
-            "UTA023: {0}: Cannot define predefined property {2} on method {1}.",
-            methodInfo.DeclaringType!.FullName!,
-            methodInfo.Name,
-            "Owner");
-        testMethodInfo.NotRunnableReason.Should().Be(expectedMessage);
-    }
-
-    public void GetTestMethodInfoShouldReportWarningIfCustomPriorityPropertyIsDefined()
-    {
-        // Test that [TestProperty("Priority", "value")] is still blocked
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithPriorityAsCustomProperty")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
-
-        testMethodInfo.Should().NotBeNull();
-        string expectedMessage = string.Format(
-            CultureInfo.InvariantCulture,
-            "UTA023: {0}: Cannot define predefined property {2} on method {1}.",
-            methodInfo.DeclaringType!.FullName!,
-            methodInfo.Name,
-            "Priority");
-        testMethodInfo.NotRunnableReason.Should().Be(expectedMessage);
-    }
-
-    public void GetTestMethodInfoShouldAllowActualOwnerAttribute()
-    {
-        // Test that the actual OwnerAttribute is allowed
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithActualOwnerAttribute")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
-
-        testMethodInfo.Should().NotBeNull();
-        // Owner should be allowed - no NotRunnableReason should be set
-        string.IsNullOrEmpty(testMethodInfo.NotRunnableReason).Should().BeTrue();
-        // The Owner property should be added to the test context
-        testContext.TryGetPropertyValue("Owner", out object? ownerValue).Should().BeTrue();
-        ownerValue?.ToString().Should().Be("TestOwner");
-    }
-
-    public void GetTestMethodInfoShouldAllowActualPriorityAttribute()
-    {
-        // Test that the actual PriorityAttribute is allowed
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithActualPriorityAttribute")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
-
-        testMethodInfo.Should().NotBeNull();
-        // Priority should be allowed - no NotRunnableReason should be set
-        string.IsNullOrEmpty(testMethodInfo.NotRunnableReason).Should().BeTrue();
-        // The Priority property should be added to the test context
-        testContext.TryGetPropertyValue("Priority", out object? priorityValue).Should().BeTrue();
-        priorityValue?.ToString().Should().Be("1");
-    }
-
-    public void GetTestMethodInfoShouldReportWarningIfCustomPropertyNameIsEmpty()
-    {
-        // Not using _typeCache here which uses a mocked ReflectHelper which doesn't work well with this test.
-        // Setting up the mock feels unnecessary when the original production implementation can work just fine.
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithEmptyCustomPropertyName")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
-
-        testMethodInfo.Should().NotBeNull();
-        string expectedMessage = string.Format(
-            CultureInfo.InvariantCulture,
-            "UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.",
-            methodInfo.DeclaringType!.FullName!,
-            methodInfo.Name);
-        testMethodInfo.NotRunnableReason.Should().Be(expectedMessage);
-    }
-
-    public void GetTestMethodInfoShouldReportWarningIfCustomPropertyNameIsNull()
-    {
-        // Not using _typeCache here which uses a mocked ReflectHelper which doesn't work well with this test.
-        // Setting up the mock feels unnecessary when the original production implementation can work just fine.
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithNullCustomPropertyName")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
-
-        testMethodInfo.Should().NotBeNull();
-        string expectedMessage = string.Format(
-            CultureInfo.InvariantCulture,
-            "UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.",
-            methodInfo.DeclaringType!.FullName!,
-            methodInfo.Name);
-        testMethodInfo.NotRunnableReason.Should().Be(expectedMessage);
-    }
-
-    public void GetTestMethodInfoShouldNotAddDuplicateTestPropertiesToTestContext()
-    {
-        // Not using _typeCache here which uses a mocked ReflectHelper which doesn't work well with this test.
-        // Setting up the mock feels unnecessary when the original production implementation can work just fine.
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithDuplicateCustomPropertyNames")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
-
-        testMethodInfo.Should().NotBeNull();
-
-        // Verify that the first value gets set.
-        testContext.Properties.TryGetValue("WhoAmI", out object? value).Should().BeTrue();
-        value.Should().Be("Me");
-    }
-
     public void GetTestMethodInfoShouldReturnTestMethodInfoForDerivedTestClasses()
     {
         Type type = typeof(DerivedTestClass);
         MethodInfo methodInfo = type.GetRuntimeMethod("DummyTestMethod", [])!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
-        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
-        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _mockReflectHelper.Setup(rh => rh.GetSingleAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
+        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(testMethod);
 
         testMethodInfo!.MethodInfo.Should().BeSameAs(methodInfo);
         testMethodInfo.TimeoutInfo.Timeout.Should().Be(0);
@@ -1197,12 +918,10 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DerivedTestClass);
         MethodInfo methodInfo = type.GetRuntimeMethod("OverloadedTestMethod", [])!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
-        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
-        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _mockReflectHelper.Setup(rh => rh.GetSingleAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
+        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(testMethod);
 
         testMethodInfo!.MethodInfo.Should().BeSameAs(methodInfo);
         testMethodInfo.TimeoutInfo.Timeout.Should().Be(0);
@@ -1215,15 +934,10 @@ public class TypeCacheTests : TestContainer
         Type baseType = typeof(BaseTestClass);
         Type type = typeof(DerivedTestClass);
         MethodInfo methodInfo = baseType.GetRuntimeMethod("OverloadedTestMethod", [])!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null)
-        {
-            DeclaringClassFullName = baseType.FullName!,
-        };
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, baseType.FullName!, "A", displayName: null);
 
-        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
-        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _mockReflectHelper.Setup(rh => rh.GetSingleAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
+        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(testMethod);
 
         // The two MethodInfo instances will have different ReflectedType properties,
         // so cannot be compared directly. Use MethodHandle to verify it's the same.
@@ -1250,7 +964,7 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithCleanupMethods);
         MethodInfo methodInfo = type.GetMethod("TestCleanup")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -1258,9 +972,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<ClassCleanupAttribute>(type.GetMethod("TestCleanup")!)).Returns(false);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         IEnumerable<TestClassInfo> cleanupMethods = _typeCache.ClassInfoListWithExecutableCleanupMethods;
 
@@ -1271,7 +983,7 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithCleanupMethods);
         MethodInfo methodInfo = type.GetMethod("TestCleanup")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -1279,9 +991,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<ClassCleanupAttribute>(type.GetMethod("AssemblyCleanup")!)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         IEnumerable<TestClassInfo> cleanupMethods = _typeCache.ClassInfoListWithExecutableCleanupMethods;
 
@@ -1304,7 +1014,7 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithCleanupMethods);
         MethodInfo methodInfo = type.GetMethod("TestCleanup")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -1312,9 +1022,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<AssemblyCleanupAttribute>(type.GetMethod("AssemblyCleanup")!)).Returns(false);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         IEnumerable<TestAssemblyInfo> cleanupMethods = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
 
@@ -1325,7 +1033,7 @@ public class TypeCacheTests : TestContainer
     {
         Type type = typeof(DummyTestClassWithCleanupMethods);
         MethodInfo methodInfo = type.GetMethod("TestCleanup")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
@@ -1333,9 +1041,7 @@ public class TypeCacheTests : TestContainer
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<AssemblyCleanupAttribute>(type.GetMethod("AssemblyCleanup")!)).Returns(true);
 
-        _typeCache.GetTestMethodInfo(
-                testMethod,
-                CreateTestContextImplementationForMethod(testMethod));
+        _typeCache.GetTestMethodInfo(testMethod);
 
         IEnumerable<TestAssemblyInfo> cleanupMethods = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
 
@@ -1384,12 +1090,6 @@ public class TypeCacheTests : TestContainer
         }
 
         [TestMethod]
-        [TestProperty("WhoAmI", "Me")]
-        public void TestMethodWithCustomProperty()
-        {
-        }
-
-        [TestMethod]
         [TestProperty("Owner", "You")]
         public void TestMethodWithOwnerAsCustomProperty()
         {
@@ -1398,18 +1098,6 @@ public class TypeCacheTests : TestContainer
         [TestMethod]
         [TestProperty("TestCategory", "SomeCategory")]
         public void TestMethodWithTestCategoryAsCustomProperty()
-        {
-        }
-
-        [TestMethod]
-        [Owner("TestOwner")]
-        public void TestMethodWithActualOwnerAttribute()
-        {
-        }
-
-        [TestMethod]
-        [Priority(1)]
-        public void TestMethodWithActualPriorityAttribute()
         {
         }
 
@@ -1496,6 +1184,7 @@ public class TypeCacheTests : TestContainer
         }
     }
 
+    [DummyTestClass]
     internal class BaseTestClass
     {
         [TestMethod]

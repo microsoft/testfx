@@ -4,15 +4,12 @@
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
-using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 using Microsoft.Testing.Extensions.VSTestBridge.Requests;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Requests;
-using Microsoft.Testing.Platform.Services;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge;
@@ -22,6 +19,9 @@ namespace Microsoft.Testing.Extensions.VSTestBridge;
 /// </summary>
 public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProducer
 {
+    private readonly ITrxReportCapability? _trxReportCapability;
+    private bool? _isTrxEnabled;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="VSTestBridgedTestFrameworkBase"/> class.
     /// </summary>
@@ -29,12 +29,10 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
     /// <param name="capabilities">The test framework capabilities.</param>
     protected VSTestBridgedTestFrameworkBase(IServiceProvider serviceProvider, ITestFrameworkCapabilities capabilities)
     {
-        Guard.NotNull(serviceProvider);
-        ServiceProvider = serviceProvider;
-        ITrxReportCapability? capability = capabilities.GetCapability<ITrxReportCapability>();
-        IsTrxEnabled = capability is IInternalVSTestBridgeTrxReportCapability internalCapability
-            ? internalCapability.IsTrxEnabled
-            : capability is ITrxReportCapability { IsSupported: true };
+        ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        // NOTE: It's too early to determine from the capability at this point whether or not trx is enabled.
+        // We store the capability and check it later when IsTrxEnabled is accessed.
+        _trxReportCapability = capabilities.GetCapability<ITrxReportCapability>();
     }
 
     /// <inheritdoc />
@@ -67,9 +65,21 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
     protected internal virtual bool UseFullyQualifiedNameAsTestNodeUid { get; }
 
     /// <summary>
+    /// Allows test frameworks built with the VSTestBridge to add additional properties to the TestNode, for example, TestMethodIdentifierProperty.
+    /// </summary>
+    /// <param name="testNode">The MTP test node being constructed.</param>
+    /// <param name="testCase">The VSTest test case for the current test node.</param>
+    protected internal virtual void AddAdditionalProperties(TestNode testNode, TestCase testCase)
+    {
+    }
+
+    /// <summary>
     /// Gets a value indicating whether the TRX report is enabled.
     /// </summary>
-    protected internal bool IsTrxEnabled { get; }
+    protected internal bool IsTrxEnabled
+        => _isTrxEnabled ??= _trxReportCapability is IInternalVSTestBridgeTrxReportCapability internalCapability
+            ? internalCapability.IsTrxEnabled
+            : _trxReportCapability is ITrxReportCapability { IsSupported: true };
 
     /// <inheritdoc />
     public abstract Task<bool> IsEnabledAsync();
@@ -83,12 +93,6 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
 
             Task convertedRequest = context.Request switch
             {
-                VSTestDiscoverTestExecutionRequest discoverRequest =>
-                    DiscoverTestsAsync(UpdateDiscoverRequest(discoverRequest, context.MessageBus, context.CancellationToken), context.MessageBus, context.CancellationToken),
-
-                VSTestRunTestExecutionRequest runRequest =>
-                    RunTestsAsync(UpdateRunRequest(runRequest, context.MessageBus, context.CancellationToken), context.MessageBus, context.CancellationToken),
-
                 TestExecutionRequest request => ExecuteRequestAsync(request, context.MessageBus, context.CancellationToken),
 
                 _ => Task.CompletedTask,
@@ -135,56 +139,4 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
     /// <param name="cancellationToken">The cancellation token.</param>
     protected abstract Task RunTestsAsync(VSTestRunTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken);
-
-    private VSTestDiscoverTestExecutionRequest UpdateDiscoverRequest(
-        VSTestDiscoverTestExecutionRequest discoverRequest,
-        IMessageBus messageBus,
-        CancellationToken cancellationToken)
-    {
-        // Before passing down the request, we need to replace the discovery sink with a custom implementation calling
-        // both the original (VSTest) sink and our own.
-        ILoggerFactory loggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
-        TestCaseDiscoverySinkAdapter testCaseDiscoverySinkAdapter = new(
-            this,
-            discoverRequest.Session,
-            discoverRequest.AssemblyPaths,
-            ServiceProvider.GetTestApplicationModuleInfo(),
-            ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
-            ServiceProvider.GetCommandLineOptions(),
-            ServiceProvider.GetClientInfo(),
-            messageBus,
-            loggerFactory,
-            IsTrxEnabled,
-            cancellationToken,
-            discoverRequest.DiscoverySink);
-
-        return new(discoverRequest.Session, discoverRequest.Filter, discoverRequest.AssemblyPaths, discoverRequest.DiscoveryContext,
-            discoverRequest.MessageLogger, testCaseDiscoverySinkAdapter);
-    }
-
-    private VSTestRunTestExecutionRequest UpdateRunRequest(
-        VSTestRunTestExecutionRequest runRequest,
-        IMessageBus messageBus,
-        CancellationToken cancellationToken)
-    {
-        // Before passing down the request, we need to replace the framework handle with a custom implementation calling
-        // both the original (VSTest) framework handle and our own.
-        ILoggerFactory loggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
-        FrameworkHandlerAdapter frameworkHandlerAdapter = new(
-            this,
-            runRequest.Session,
-            runRequest.AssemblyPaths,
-            ServiceProvider.GetTestApplicationModuleInfo(),
-            ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
-            ServiceProvider.GetCommandLineOptions(),
-            ServiceProvider.GetClientInfo(),
-            messageBus,
-            ServiceProvider.GetOutputDevice(),
-            loggerFactory,
-            IsTrxEnabled,
-            cancellationToken, runRequest.FrameworkHandle);
-
-        return new(runRequest.Session, runRequest.Filter, runRequest.AssemblyPaths, runRequest.RunContext,
-            frameworkHandlerAdapter);
-    }
 }

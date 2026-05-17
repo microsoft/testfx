@@ -14,7 +14,7 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0053: <inheritdoc cref="Resources.TestMethodAttributeShouldSetDisplayNameCorrectlyTitle"/>.
+/// MSTEST0056: <inheritdoc cref="Resources.TestMethodAttributeShouldSetDisplayNameCorrectlyTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class TestMethodAttributeShouldSetDisplayNameCorrectlyAnalyzer : DiagnosticAnalyzer
@@ -68,10 +68,30 @@ public sealed class TestMethodAttributeShouldSetDisplayNameCorrectlyAnalyzer : D
                     Parameter: { IsOptional: true, Type.SpecialType: SpecialType.System_String }
                 }
 
-                && arg.Parameter.GetAttributes().Any(attr => callerFilePathAttributeSymbol.Equals(attr.AttributeClass, SymbolEqualityComparer.Default)))
+                && arg.Parameter.GetAttributes().Any(attr => callerFilePathAttributeSymbol.Equals(attr.AttributeClass, SymbolEqualityComparer.Default))
+                // Skip reporting if the value is accessing DeclaringFilePath or DeclaringLineNumber property
+                // from another TestMethodAttribute instance, as this is a legitimate use case.
+                && !IsAccessingDeclaringProperty(arg.Value, testMethodAttributeSymbol))
             {
                 context.ReportDiagnostic(arg.CreateDiagnostic(TestMethodAttributeShouldSetDisplayNameCorrectlyRule));
             }
         }
+    }
+
+    private static bool IsAccessingDeclaringProperty(IOperation? operation, INamedTypeSymbol testMethodAttributeSymbol)
+    {
+        if (operation is not IPropertyReferenceOperation propertyReference)
+        {
+            return false;
+        }
+
+        // Check if the property is DeclaringFilePath or DeclaringLineNumber
+        if (propertyReference.Property.Name is not ("DeclaringFilePath" or "DeclaringLineNumber"))
+        {
+            return false;
+        }
+
+        // Check if the property belongs to a type that inherits from TestMethodAttribute
+        return propertyReference.Property.ContainingType?.DerivesFrom(testMethodAttributeSymbol) == true;
     }
 }

@@ -17,7 +17,6 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed class AzureDevOpsReporter :
     IDataConsumer,
-    IDataProducer,
     IOutputDeviceDataProducer
 {
     private const string DeterministicBuildRoot = "/_/";
@@ -28,6 +27,7 @@ internal sealed class AzureDevOpsReporter :
     private readonly ICommandLineOptions _commandLine;
     private readonly IEnvironment _environment;
     private readonly IFileSystem _fileSystem;
+    private readonly string _targetFrameworkMoniker;
     private string _severity = "error";
 
     public AzureDevOpsReporter(
@@ -42,6 +42,7 @@ internal sealed class AzureDevOpsReporter :
         _fileSystem = fileSystem;
         _outputDisplay = outputDisplay;
         _logger = loggerFactory.CreateLogger<AzureDevOpsReporter>();
+        _targetFrameworkMoniker = GetTargetFrameworkMoniker();
     }
 
     public Type[] DataTypesConsumed { get; } =
@@ -49,13 +50,11 @@ internal sealed class AzureDevOpsReporter :
         typeof(TestNodeUpdateMessage)
     ];
 
-    public Type[] DataTypesProduced { get; } = [typeof(SessionFileArtifact)];
-
     /// <inheritdoc />
     public string Uid => nameof(AzureDevOpsReporter);
 
     /// <inheritdoc />
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => ExtensionVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = AzureDevOpsResources.DisplayName;
@@ -110,10 +109,7 @@ internal sealed class AzureDevOpsReporter :
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (value is not TestNodeUpdateMessage nodeUpdateMessage)
         {
@@ -122,33 +118,35 @@ internal sealed class AzureDevOpsReporter :
 
         TestNodeStateProperty? nodeState = nodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
 
+        string testDisplayName = nodeUpdateMessage.TestNode.DisplayName;
+
         switch (nodeState)
         {
             case FailedTestNodeStateProperty failed:
-                await WriteExceptionAsync(failed.Explanation, failed.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, failed.Explanation, failed.Exception, cancellationToken).ConfigureAwait(false);
                 break;
             case ErrorTestNodeStateProperty error:
-                await WriteExceptionAsync(error.Explanation, error.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, error.Explanation, error.Exception, cancellationToken).ConfigureAwait(false);
                 break;
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
             case CancelledTestNodeStateProperty cancelled:
-#pragma warning restore CS0618 // Type or member is obsolete
-                await WriteExceptionAsync(cancelled.Explanation, cancelled.Exception, cancellationToken).ConfigureAwait(false);
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
+                await WriteExceptionAsync(testDisplayName, cancelled.Explanation, cancelled.Exception, cancellationToken).ConfigureAwait(false);
                 break;
             case TimeoutTestNodeStateProperty timeout:
-                await WriteExceptionAsync(timeout.Explanation, timeout.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, timeout.Explanation, timeout.Exception, cancellationToken).ConfigureAwait(false);
                 break;
         }
     }
 
-    private async Task WriteExceptionAsync(string? explanation, Exception? exception, CancellationToken cancellationToken)
+    private async Task WriteExceptionAsync(string testDisplayName, string? explanation, Exception? exception, CancellationToken cancellationToken)
     {
         if (_logger.IsEnabled(LogLevel.Trace))
         {
             _logger.LogTrace("Failure received.");
         }
 
-        string? line = GetErrorText(explanation, exception, _severity, _fileSystem, _logger);
+        string? line = GetErrorText(testDisplayName, explanation, exception, _severity, _fileSystem, _logger, _targetFrameworkMoniker);
         if (line == null)
         {
             if (_logger.IsEnabled(LogLevel.Trace))
@@ -167,7 +165,7 @@ internal sealed class AzureDevOpsReporter :
         await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
     }
 
-    internal static /* for testing */ string? GetErrorText(string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger)
+    internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker)
     {
         if (exception == null || exception.StackTrace == null)
         {
@@ -290,9 +288,8 @@ internal sealed class AzureDevOpsReporter :
                 logger.LogTrace($"Normalized path for GitHub '{relativeNormalizedPath}'.");
             }
 
-            string err = AzDoEscaper.Escape(message);
-
-            string line = $"##vso[task.logissue type={severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{err}";
+            string formattedMessage = $"[{testDisplayName}] [{targetFrameworkMoniker}] {message}";
+            string line = $"##vso[task.logissue type={severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{AzDoEscaper.Escape(formattedMessage)}";
             if (logger.IsEnabled(LogLevel.Trace))
             {
                 logger.LogTrace($"Reported full message '{line}'.");
@@ -309,6 +306,10 @@ internal sealed class AzureDevOpsReporter :
 
         return null;
     }
+
+    private static string GetTargetFrameworkMoniker()
+        => TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
+            ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
 
     private static (string Code, string File, int LineNumber)? GetStackFrameLocation(string stackTraceLine)
     {

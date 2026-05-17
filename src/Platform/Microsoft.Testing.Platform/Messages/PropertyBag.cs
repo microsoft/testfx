@@ -35,7 +35,7 @@ public sealed partial class PropertyBag
     /// <param name="properties">The collection of properties.</param>
     public PropertyBag(params IProperty[] properties)
     {
-        Guard.NotNull(properties);
+        _ = properties ?? throw new ArgumentNullException(nameof(properties));
 
         if (properties.Length == 0)
         {
@@ -78,7 +78,7 @@ public sealed partial class PropertyBag
     /// <param name="properties">The collection of properties.</param>
     public PropertyBag(IEnumerable<IProperty> properties)
     {
-        Guard.NotNull(properties);
+        _ = properties ?? throw new ArgumentNullException(nameof(properties));
 
         foreach (IProperty property in properties)
         {
@@ -123,7 +123,7 @@ public sealed partial class PropertyBag
     /// <param name="property">The property to add.</param>
     public void Add(IProperty property)
     {
-        Guard.NotNull(property);
+        _ = property ?? throw new ArgumentNullException(nameof(property));
 
         // Optimized access to the TestNodeStateProperty, it's one of the most used property.
         if (property is TestNodeStateProperty testNodeStateProperty)
@@ -190,23 +190,27 @@ public sealed partial class PropertyBag
             return default;
         }
 
-        if (_property is null || _property.Count == 0)
+        // Direct linked-list walk: avoids allocating a yield-iterator state machine.
+        TProperty? found = default;
+        bool foundAny = false;
+        Property? current = _property;
+        while (current is not null)
         {
-            return default;
+            if (current.Current is TProperty match)
+            {
+                if (foundAny)
+                {
+                    throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.");
+                }
+
+                found = match;
+                foundAny = true;
+            }
+
+            current = current.Next;
         }
 
-        IEnumerable<TProperty> matchingValues = _property.OfType<TProperty>();
-
-        using IEnumerator<TProperty> enumerator = matchingValues.GetEnumerator();
-        if (!enumerator.MoveNext())
-        {
-            return default;
-        }
-
-        TProperty property = enumerator.Current!;
-        return enumerator.MoveNext()
-            ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
-            : property;
+        return found;
     }
 
     /// <summary>
@@ -230,13 +234,30 @@ public sealed partial class PropertyBag
             throw new InvalidOperationException($"Could not find a property of type '{typeof(TProperty)}'.");
         }
 
-        IEnumerable<TProperty> matchingValues = _property is null ? [] : _property.OfType<TProperty>();
+        // Direct linked-list walk: avoids allocating three separate yield-iterator state machines
+        // (the original code called Any(), Skip(1).Any(), and First() on the same IEnumerable).
+        TProperty? found = default;
+        bool foundAny = false;
+        Property? current = _property;
+        while (current is not null)
+        {
+            if (current.Current is TProperty match)
+            {
+                if (foundAny)
+                {
+                    throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.");
+                }
 
-        return !matchingValues.Any()
-            ? throw new InvalidOperationException($"Could not find a property of type '{typeof(TProperty)}'.")
-            : matchingValues.Skip(1).Any()
-                ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
-                : matchingValues.First();
+                found = match;
+                foundAny = true;
+            }
+
+            current = current.Next;
+        }
+
+        return foundAny
+            ? found!
+            : throw new InvalidOperationException($"Could not find a property of type '{typeof(TProperty)}'.");
     }
 
     /// <summary>
@@ -253,9 +274,38 @@ public sealed partial class PropertyBag
         }
 
         // We don't want to allocate an array if we know that we're looking for a TestNodeStateProperty
-        return typeof(TestNodeStateProperty).IsAssignableFrom(typeof(TProperty))
+        if (typeof(TestNodeStateProperty).IsAssignableFrom(typeof(TProperty)) || _property is null)
+        {
+            return [];
+        }
+
+        // Direct linked-list walk: avoids allocating a yield-iterator state machine
+        // (the original code called _property.OfType<TProperty>() which uses yield return).
+        TProperty? first = default;
+        bool foundAny = false;
+        List<TProperty>? overflow = null;
+        Property? current = _property;
+        while (current is not null)
+        {
+            if (current.Current is TProperty match)
+            {
+                if (!foundAny)
+                {
+                    first = match;
+                    foundAny = true;
+                }
+                else
+                {
+                    (overflow ??= [first!]).Add(match);
+                }
+            }
+
+            current = current.Next;
+        }
+
+        return !foundAny
             ? []
-            : _property is null ? [] : [.. _property.OfType<TProperty>()];
+            : overflow is not null ? [.. overflow] : [first!];
     }
 
     /// <summary>

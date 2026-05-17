@@ -113,18 +113,18 @@ Hodnota časového limitu se zadává v jednom z následujících formátů:
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
+Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
 Default type is 'Full'</source>
         <target state="translated">Určete typ výpisu paměti.
-Platné hodnoty jsou Mini, Heap, Triage (dostupné pouze v .NET 6+) nebo Full.
+Platné hodnoty jsou Mini, Heap, Triage, None (dostupné jenom v .NET 6+) nebo Full.
 Výchozí typ je Full.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
-Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
+Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</source>
         <target state="translated">{0} není platný typ výpisu paměti.
-Platné možnosti jsou Mini, Heap, Triage (k dispozici pouze v .NET 6+) a Full.</target>
+Platné možnosti jsou Mini, Heap, Triage, None (dostupné jenom v .NET 6+) a Full.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
@@ -145,16 +145,6 @@ Platné možnosti jsou Mini, Heap, Triage (k dispozici pouze v .NET 6+) a Full.<
       <trans-unit id="MissingHangDumpMainOption">
         <source>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</source>
         <target state="translated">Zadali jste jeden nebo více parametrů výpisu stavu systému, ale nepovolili jste ho. Přidejte do příkazového řádku parametr --hangdump</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexDoesNotExistErrorMessage">
-        <source>Cannot find mutex '{0}'</source>
-        <target state="translated">Objekt mutex {0} nebyl nalezen.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
-        <source>Mutex name wasn't received after '{0}' seconds</source>
-        <target state="translated">Název objektu mutex nebyl přijat po {0} s.</target>
         <note />
       </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">

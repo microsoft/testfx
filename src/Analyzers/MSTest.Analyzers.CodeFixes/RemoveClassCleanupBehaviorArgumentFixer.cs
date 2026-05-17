@@ -78,7 +78,7 @@ public sealed class RemoveClassCleanupBehaviorArgumentFixer : CodeFixProvider
         }
 
         // Otherwise, just remove this specific argument
-        AttributeArgumentListSyntax newArgumentList = argumentList.RemoveNode(attributeArgument, SyntaxRemoveOptions.KeepNoTrivia)!;
+        AttributeArgumentListSyntax? newArgumentList = argumentList.RemoveNode(attributeArgument, SyntaxRemoveOptions.KeepNoTrivia);
         if (newArgumentList is not null)
         {
             SyntaxNode newRoot = root.ReplaceNode(argumentList, newArgumentList);

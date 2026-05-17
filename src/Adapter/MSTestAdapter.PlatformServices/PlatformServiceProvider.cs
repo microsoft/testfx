@@ -49,10 +49,11 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Gets or sets an instance to the platform service for trace logging.
     /// </summary>
-    [field: AllowNull]
-    [field: MaybeNull]
-    [AllowNull]
-    public IAdapterTraceLogger AdapterTraceLogger { get => field ??= new AdapterTraceLogger(); set; }
+    public ITraceLogger AdapterTraceLogger
+    {
+        get => field ??= NopTraceLogger.Instance;
+        set;
+    }
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <summary>
@@ -132,18 +133,14 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// <param name="runSettings">
     /// The run Settings for the session.
     /// </param>
-    /// <param name="frameworkHandle">
-    /// The handle to the test platform.
-    /// </param>
     /// <returns>
     /// Returns the host for the source provided.
     /// </returns>
     public ITestSourceHost CreateTestSourceHost(
         string source,
-        TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings,
-        TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle)
+        TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings)
     {
-        var testSourceHost = new TestSourceHost(source, runSettings, frameworkHandle);
+        var testSourceHost = new TestSourceHost(source, runSettings);
         testSourceHost.SetupHost();
 
         return testSourceHost;

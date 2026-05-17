@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -72,14 +72,33 @@ public sealed partial class Assert
     /// </exception>
     public static void StartsWith([NotNull] string? expectedPrefix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(expectedPrefix))] string expectedPrefixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        CheckParameterNotNull(value, "Assert.StartsWith", "value", string.Empty);
-        CheckParameterNotNull(expectedPrefix, "Assert.StartsWith", "expectedPrefix", string.Empty);
+        TelemetryCollector.TrackAssertionCall("Assert.StartsWith");
+
+        CheckParameterNotNull(value, "Assert.StartsWith", "value");
+        CheckParameterNotNull(expectedPrefix, "Assert.StartsWith", "expectedPrefix");
         if (!value.StartsWith(expectedPrefix, comparisonType))
         {
-            string userMessage = BuildUserMessageForExpectedPrefixExpressionAndValueExpression(message, expectedPrefixExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.StartsWithFail, value, expectedPrefix, userMessage);
-            ThrowAssertFailed("Assert.StartsWith", finalMessage);
+            ReportAssertStartsWithFailed(expectedPrefix, value, comparisonType, message, expectedPrefixExpression, valueExpression);
         }
+    }
+
+    [DoesNotReturn]
+    private static void ReportAssertStartsWithFailed(string expectedPrefix, string value, StringComparison comparisonType, string? userMessage, string expectedPrefixExpression, string valueExpression)
+    {
+        string expectedText = AssertionValueRenderer.RenderValue(expectedPrefix);
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected prefix:", expectedText)
+            .AddLine("actual:", actualText)
+            .AddLine("comparison:", comparisonType.ToString());
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.StartsWithFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedText, actualText);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.StartsWith", expectedPrefixExpression, valueExpression, "<expectedPrefix>", "<value>"));
+
+        ReportAssertFailed(structured);
     }
 
     /// <summary>
@@ -144,13 +163,32 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotStartWith([NotNull] string? notExpectedPrefix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(notExpectedPrefix))] string notExpectedPrefixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        CheckParameterNotNull(value, "Assert.DoesNotStartWith", "value", string.Empty);
-        CheckParameterNotNull(notExpectedPrefix, "Assert.DoesNotStartWith", "notExpectedPrefix", string.Empty);
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotStartWith");
+
+        CheckParameterNotNull(value, "Assert.DoesNotStartWith", "value");
+        CheckParameterNotNull(notExpectedPrefix, "Assert.DoesNotStartWith", "notExpectedPrefix");
         if (value.StartsWith(notExpectedPrefix, comparisonType))
         {
-            string userMessage = BuildUserMessageForNotExpectedPrefixExpressionAndValueExpression(message, notExpectedPrefixExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotStartWithFail, value, notExpectedPrefix, userMessage);
-            ThrowAssertFailed("Assert.DoesNotStartWith", finalMessage);
+            ReportAssertDoesNotStartWithFailed(notExpectedPrefix, value, comparisonType, message, notExpectedPrefixExpression, valueExpression);
         }
+    }
+
+    [DoesNotReturn]
+    private static void ReportAssertDoesNotStartWithFailed(string notExpectedPrefix, string value, StringComparison comparisonType, string? userMessage, string notExpectedPrefixExpression, string valueExpression)
+    {
+        string notExpectedText = AssertionValueRenderer.RenderValue(notExpectedPrefix);
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("unexpected prefix:", notExpectedText)
+            .AddLine("actual:", actualText)
+            .AddLine("comparison:", comparisonType.ToString());
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.DoesNotStartWithFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(notExpectedText, actualText);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.DoesNotStartWith", notExpectedPrefixExpression, valueExpression, "<notExpectedPrefix>", "<value>"));
+
+        ReportAssertFailed(structured);
     }
 }

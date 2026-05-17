@@ -24,10 +24,10 @@ public sealed class ArgumentArityTests
     ];
 
     [TestMethod]
-    public async Task ParseAndValidate_WhenOptionWithArityZeroIsCalledWithOneArgument_ReturnsFalse()
+    public async Task ParseAndValidate_EmptyArgument_ShouldNotThrowException()
     {
         // Arrange
-        string[] args = ["--zeroArgumentsOption arg"];
+        string[] args = [string.Empty];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
         // Act
@@ -36,14 +36,40 @@ public sealed class ArgumentArityTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual("Option '--zeroArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments", result.ErrorMessage, StringComparer.Ordinal);
+#pragma warning disable SA1027 // Use tabs correctly
+        Assert.AreEqual(
+            """
+            Invalid command line arguments:
+            	- Unexpected argument 
+            """, result.ErrorMessage, StringComparer.Ordinal);
+#pragma warning restore SA1027 // Use tabs correctly
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidate_WhenOptionWithArityZeroIsCalledWithOneArgument_ReturnsFalse()
+    {
+        // Arrange
+        string[] args = ["--zeroArgumentsOption", "arg"];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+
+        // Act
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+
+        // Assert
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(
+            """
+            Option '--zeroArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments
+            Command line: --zeroArgumentsOption arg
+            """, result.ErrorMessage, StringComparer.Ordinal);
     }
 
     [TestMethod]
     public async Task ParseAndValidate_WhenOptionWithArityExactlyOneIsCalledWithTwoArguments_ReturnsFalse()
     {
         // Arrange
-        string[] args = ["--exactlyOneArgumentsOption arg1", "arg2"];
+        string[] args = ["--exactlyOneArgumentsOption", "arg1", "arg2"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
         // Act
@@ -52,7 +78,11 @@ public sealed class ArgumentArityTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual("Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments", result.ErrorMessage);
+        Assert.AreEqual(
+            """
+            Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments
+            Command line: --exactlyOneArgumentsOption arg1 arg2
+            """, result.ErrorMessage);
     }
 
     [TestMethod]
@@ -68,14 +98,18 @@ public sealed class ArgumentArityTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual("Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments", result.ErrorMessage);
+        Assert.AreEqual(
+            """
+            Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments
+            Command line: --exactlyOneArgumentsOption
+            """, result.ErrorMessage);
     }
 
     [TestMethod]
     public async Task ParseAndValidate_WhenOptionWithArityZeroOrOneIsCalledWithTwoArguments_ReturnsFalse()
     {
         // Arrange
-        string[] args = ["--zeroOrOneArgumentsOption arg1", "--zeroOrOneArgumentsOption arg2"];
+        string[] args = ["--zeroOrOneArgumentsOption", "arg1", "--zeroOrOneArgumentsOption", "arg2"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
         // Act
@@ -84,7 +118,11 @@ public sealed class ArgumentArityTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual("Option '--zeroOrOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments", result.ErrorMessage);
+        Assert.AreEqual(
+            """
+            Option '--zeroOrOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments
+            Command line: --zeroOrOneArgumentsOption arg1 --zeroOrOneArgumentsOption arg2
+            """, result.ErrorMessage);
     }
 
     [TestMethod]
@@ -100,14 +138,18 @@ public sealed class ArgumentArityTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual("Option '--oneOrMoreArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments", result.ErrorMessage);
+        Assert.AreEqual(
+            """
+            Option '--oneOrMoreArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments
+            Command line: --oneOrMoreArgumentsOption
+            """, result.ErrorMessage);
     }
 
     [TestMethod]
     public async Task ParseAndValidate_WhenOptionsGetsTheExpectedNumberOfArguments_ReturnsTrue()
     {
         // Arrange
-        string[] args = ["--zeroArgumentsOption", "--zeroOrOneArgumentsOption", "--zeroOrMoreArgumentsOption arg2", "--exactlyOneArgumentsOption arg1", "oneOrMoreArgumentsOption arg1"];
+        string[] args = ["--zeroArgumentsOption", "--zeroOrOneArgumentsOption", "--zeroOrMoreArgumentsOption", "arg2", "--exactlyOneArgumentsOption", "arg1", "--oneOrMoreArgumentsOption", "arg1"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
         // Act
@@ -115,8 +157,8 @@ public sealed class ArgumentArityTests
             _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
 
         // Assert
-        Assert.IsTrue(result.IsValid);
         Assert.IsNull(result.ErrorMessage);
+        Assert.IsTrue(result.IsValid);
     }
 
     private sealed class ExtensionCommandLineProviderMockOptionsWithDifferentArity : ICommandLineOptionsProvider
@@ -124,7 +166,7 @@ public sealed class ArgumentArityTests
         public string Uid => nameof(PlatformCommandLineProvider);
 
         /// <inheritdoc />
-        public string Version => AppVersion.DefaultSemVer;
+        public string Version => PlatformVersion.Version;
 
         /// <inheritdoc />
         public string DisplayName => "Microsoft Testing Platform command line provider";

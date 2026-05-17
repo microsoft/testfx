@@ -156,14 +156,100 @@
   <data name="AreEqualStringDiffLengthDifferentMsg" xml:space="preserve">
     <value>Expected string length {0} but was {1}.</value>
   </data>
-  <data name="AreNotEqualFailMsg" xml:space="preserve">
-    <value>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</value>
+  <data name="AreEquivalentFailedSummary" xml:space="preserve">
+    <value>Expected values to be structurally equivalent.</value>
+  </data>
+  <data name="AreEquivalentFailedSummaryStrict" xml:space="preserve">
+    <value>Expected values to be structurally equivalent (strict mode).</value>
+  </data>
+  <data name="AreEquivalentMismatchActualDictionaryThrew" xml:space="preserve">
+    <value>reading the actual dictionary threw {0}: {1}.</value>
+  </data>
+  <data name="AreEquivalentMismatchActualEnumerationThrew" xml:space="preserve">
+    <value>enumerating the actual collection threw {0}: {1}.</value>
+  </data>
+  <data name="AreEquivalentMismatchActualMemberThrew" xml:space="preserve">
+    <value>reading the actual member threw {0}: {1}.</value>
+  </data>
+  <data name="AreEquivalentMismatchAt" xml:space="preserve">
+    <value>Mismatch at '{0}': {1}</value>
+    <comment>{0} is a member path (e.g., 'Order.Items[2].Price'), {1} is a localized reason describing the kind of mismatch.</comment>
+  </data>
+  <data name="AreEquivalentMismatchExpectedDictionaryThrew" xml:space="preserve">
+    <value>reading the expected dictionary threw {0}: {1}.</value>
+  </data>
+  <data name="AreEquivalentMismatchExpectedEnumerationThrew" xml:space="preserve">
+    <value>enumerating the expected collection threw {0}: {1}.</value>
+  </data>
+  <data name="AreEquivalentMismatchExpectedMemberThrew" xml:space="preserve">
+    <value>reading the expected member threw {0}: {1}.</value>
+  </data>
+  <data name="AreEquivalentMismatchExtraMembers" xml:space="preserve">
+    <value>actual has unexpected members not present on expected: {0}.</value>
+  </data>
+  <data name="AreEquivalentMismatchIEquatableThrew" xml:space="preserve">
+    <value>IEquatable.Equals threw {0}: {1}.</value>
+  </data>
+  <data name="AreEquivalentMismatchLength" xml:space="preserve">
+    <value>collections differ in length (expected {0} elements, actual {1}).</value>
+  </data>
+  <data name="AreEquivalentMismatchMaxDepth" xml:space="preserve">
+    <value>comparison exceeded the maximum supported depth of {0}.</value>
+  </data>
+  <data name="AreEquivalentMismatchMissingKey" xml:space="preserve">
+    <value>key {0} present on expected is missing from actual.</value>
+  </data>
+  <data name="AreEquivalentMismatchMissingMember" xml:space="preserve">
+    <value>member '{0}' present on expected is missing from actual.</value>
+  </data>
+  <data name="AreEquivalentMismatchNull" xml:space="preserve">
+    <value>one side is null, the other is not.</value>
+  </data>
+  <data name="AreEquivalentMismatchTopology" xml:space="preserve">
+    <value>graph topology differs (the same reference on one side appears paired with different references on the other side).</value>
+  </data>
+  <data name="AreEquivalentMismatchType" xml:space="preserve">
+    <value>incompatible types (expected '{0}', actual '{1}').</value>
+  </data>
+  <data name="AreEquivalentMismatchUnexpectedKey" xml:space="preserve">
+    <value>key {0} present on actual is not on expected.</value>
+  </data>
+  <data name="AreEquivalentMismatchValue" xml:space="preserve">
+    <value>values are not equal.</value>
+  </data>
+  <data name="AreEquivalentRootPath" xml:space="preserve">
+    <value>&lt;root&gt;</value>
+    <comment>Placeholder used in equivalence-mismatch messages when the difference is at the top of the object graph.</comment>
   </data>
   <data name="AreNotEqualDeltaFailMsg" xml:space="preserve">
     <value>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</value>
   </data>
+  <data name="AreNotEqualFailMsg" xml:space="preserve">
+    <value>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</value>
+  </data>
+  <data name="AreNotEquivalentComparisonFailedSummary" xml:space="preserve">
+    <value>Could not complete structural comparison.</value>
+  </data>
+  <data name="AreNotEquivalentComparisonFailedSummaryStrict" xml:space="preserve">
+    <value>Could not complete structural comparison (strict mode).</value>
+  </data>
+  <data name="AreNotEquivalentFailedSummary" xml:space="preserve">
+    <value>Expected values to be structurally different.</value>
+  </data>
+  <data name="AreNotEquivalentFailedSummaryStrict" xml:space="preserve">
+    <value>Expected values to be structurally different (strict mode).</value>
+  </data>
+  <data name="AreSameExpectedIsNull" xml:space="preserve">
+    <value>Expected is &lt;null&gt;. {0}</value>
+  </data>
+  <data name="AreSameActualIsNull" xml:space="preserve">
+    <value>Actual is &lt;null&gt;. {0}</value>
+  </data>
   <data name="AreSameGivenValues" xml:space="preserve">
     <value>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</value>
+  </data>
+  <data name="AreNotSameBothNull" xml:space="preserve">
+    <value>Both values are &lt;null&gt;. {0}</value>
   </data>
   <data name="BothCollectionsEmpty" xml:space="preserve">
     <value>Both collections are empty. {0}</value>
@@ -201,7 +287,7 @@ Actual: {2}</value>
     <value>String '{0}' does not end with string '{1}'. {2}</value>
   </data>
   <data name="AssertionFailed" xml:space="preserve">
-    <value>{0} failed. {1}</value>
+    <value>{0} failed.</value>
   </data>
   <data name="IsInstanceOfFailMsg" xml:space="preserve">
     <value>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</value>
@@ -211,6 +297,12 @@ Actual: {2}</value>
   </data>
   <data name="IsNotInstanceOfFailMsg" xml:space="preserve">
     <value>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</value>
+  </data>
+  <data name="IsExactInstanceOfFailMsg" xml:space="preserve">
+    <value>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</value>
+  </data>
+  <data name="IsNotExactInstanceOfFailMsg" xml:space="preserve">
+    <value>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</value>
   </data>
   <data name="IsNotMatchFail" xml:space="preserve">
     <value>String '{0}' matches pattern '{1}'. {2}</value>
@@ -230,7 +322,7 @@ Actual: {2}</value>
     </value>
   </data>
   <data name="NullParameterToAssert" xml:space="preserve">
-    <value>The parameter '{0}' is invalid. The value cannot be null. {1}.</value>
+    <value>The parameter '{0}' is invalid. The value cannot be null.</value>
   </data>
   <data name="NumberOfElementsDiff" xml:space="preserve">
     <value>Different number of elements.</value>
@@ -313,24 +405,6 @@ Actual: {2}</value>
   <data name="DoesNotContainFail" xml:space="preserve">
     <value>String '{0}' does contain string '{1}'. {2}.</value>
   </data>
-  <data name="IsGreaterThanFailMsg" xml:space="preserve">
-    <value>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</value>
-  </data>
-  <data name="IsGreaterThanOrEqualToFailMsg" xml:space="preserve">
-    <value>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</value>
-  </data>
-  <data name="IsLessThanFailMsg" xml:space="preserve">
-    <value>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</value>
-  </data>
-  <data name="IsLessThanOrEqualToFailMsg" xml:space="preserve">
-    <value>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</value>
-  </data>
-  <data name="IsPositiveFailMsg" xml:space="preserve">
-    <value>Expected value &lt;{1}&gt; to be positive. {0}</value>
-  </data>
-  <data name="IsNegativeFailMsg" xml:space="preserve">
-    <value>Expected value &lt;{1}&gt; to be negative. {0}</value>
-  </data>
   <data name="DoesNotEndWithFail" xml:space="preserve">
     <value>String '{0}' ends with string '{1}'. {2}</value>
   </data>
@@ -362,10 +436,6 @@ Actual: {2}</value>
     <value>'{0}' expression: '{1}'.</value>
     <comment>Example: "'value' expression: 'new object()'", where 'value' is the parameter name of an assertion method, and 'new object()' is the expression the user passed to the assert method.</comment>
   </data>
-  <data name="AssertThatFailedFormat" xml:space="preserve">
-    <value>Assert.That({0}) failed.</value>
-    <comment>{0} is the user code expression</comment>
-  </data>
   <data name="AssertThatMessageFormat" xml:space="preserve">
     <value>Message: {0}</value>
     <comment>{0} user provided message</comment>
@@ -389,5 +459,99 @@ Actual: {2}</value>
   </data>
   <data name="AssertThatFailedToEvaluate" xml:space="preserve">
     <value>&lt;Failed to evaluate&gt;</value>
+  </data>
+  <data name="AssertScopeFailure" xml:space="preserve">
+    <value>{0} assertion(s) failed within the assert scope.</value>
+    <comment>{0} is the number of assertion failures collected in the scope.</comment>
+  </data>
+  <data name="AssertScopeNestedNotAllowed" xml:space="preserve">
+    <value>Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</value>
+  </data>
+  <data name="STATestMethodNonWindowsNotSupported" xml:space="preserve">
+    <value>[STATestMethod] is not supported on non-Windows platforms. STA (Single Threaded Apartment) is a Windows-only COM threading concept. Use [OSCondition(OperatingSystems.Windows)] to skip this test on non-Windows platforms.</value>
+  </data>
+  <data name="IsTrueFailedSummary" xml:space="preserve">
+    <value>Expected condition to be true.</value>
+  </data>
+  <data name="IsFalseFailedSummary" xml:space="preserve">
+    <value>Expected condition to be false.</value>
+  </data>
+  <data name="IsNullFailedSummary" xml:space="preserve">
+    <value>Expected value to be null.</value>
+  </data>
+  <data name="IsNotNullFailedSummary" xml:space="preserve">
+    <value>Expected value to not be null.</value>
+  </data>
+  <data name="AreAllNotNullFailedSummary" xml:space="preserve">
+    <value>Expected all items in collection to be non-null.</value>
+  </data>
+  <data name="AreAllDistinctFailedSummary" xml:space="preserve">
+    <value>Expected all items in collection to be distinct.</value>
+  </data>
+  <data name="AreAllOfTypeFailedSummary" xml:space="preserve">
+    <value>Expected all items in collection to be of the specified type.</value>
+  </data>
+  <data name="MatchesRegexFailedSummary" xml:space="preserve">
+    <value>Expected string to match the specified regular expression.</value>
+  </data>
+  <data name="DoesNotMatchRegexFailedSummary" xml:space="preserve">
+    <value>Expected string to not match the specified regular expression.</value>
+  </data>
+  <data name="ContainsSingleFailedSummary" xml:space="preserve">
+    <value>Expected collection to contain exactly one element.</value>
+  </data>
+  <data name="ContainsSingleMatchFailedSummary" xml:space="preserve">
+    <value>Expected collection to contain exactly one element matching the predicate.</value>
+  </data>
+  <data name="ContainsItemFailedSummary" xml:space="preserve">
+    <value>Expected collection to contain the specified element.</value>
+  </data>
+  <data name="ContainsPredicateFailedSummary" xml:space="preserve">
+    <value>Expected collection to contain an element matching the predicate.</value>
+  </data>
+  <data name="ContainsSubstringFailedSummary" xml:space="preserve">
+    <value>Expected string to contain the specified substring.</value>
+  </data>
+  <data name="DoesNotContainItemFailedSummary" xml:space="preserve">
+    <value>Expected collection to not contain the specified element.</value>
+  </data>
+  <data name="DoesNotContainPredicateFailedSummary" xml:space="preserve">
+    <value>Expected collection to not contain an element matching the predicate.</value>
+  </data>
+  <data name="DoesNotContainSubstringFailedSummary" xml:space="preserve">
+    <value>Expected string to not contain the specified substring.</value>
+  </data>
+  <data name="IsInRangeFailedSummary" xml:space="preserve">
+    <value>Expected value to be within the inclusive range.</value>
+  </data>
+  <data name="IsGreaterThanFailedSummary" xml:space="preserve">
+    <value>Expected value to be greater than the lower bound.</value>
+  </data>
+  <data name="IsGreaterThanOrEqualToFailedSummary" xml:space="preserve">
+    <value>Expected value to be greater than or equal to the lower bound.</value>
+  </data>
+  <data name="IsLessThanFailedSummary" xml:space="preserve">
+    <value>Expected value to be less than the upper bound.</value>
+  </data>
+  <data name="IsLessThanOrEqualToFailedSummary" xml:space="preserve">
+    <value>Expected value to be less than or equal to the upper bound.</value>
+  </data>
+  <data name="IsPositiveFailedSummary" xml:space="preserve">
+    <value>Expected value to be positive.</value>
+  </data>
+  <data name="IsNegativeFailedSummary" xml:space="preserve">
+    <value>Expected value to be negative.</value>
+  </data>
+  <data name="StartsWithFailedSummary" xml:space="preserve">
+    <value>Expected string to start with the specified prefix.</value>
+  </data>
+  <data name="DoesNotStartWithFailedSummary" xml:space="preserve">
+    <value>Expected string to not start with the specified prefix.</value>
+  </data>
+  <data name="EndsWithFailedSummary" xml:space="preserve">
+    <value>Expected string to end with the specified suffix.</value>
+  </data>
+  <data name="DoesNotEndWithFailedSummary" xml:space="preserve">
+    <value>Expected string to not end with the specified suffix.</value>
   </data>
 </root>

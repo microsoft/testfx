@@ -34,7 +34,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
 
     public string Uid => nameof(CommandLineHandler);
 
-    public string Version => AppVersion.DefaultSemVer;
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => string.Empty;
 
@@ -80,14 +80,14 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
             // Product title, do not translate.
             await outputDevice.DisplayAsync(this, new TextOutputDeviceData("Microsoft Testing Platform:"), cancellationToken).ConfigureAwait(false);
 
-            // TODO: Replace Assembly with IAssembly
+            // TODO: Replace Assembly with IAssembly (tracked by https://github.com/microsoft/testfx/issues/8086)
             AssemblyInformationalVersionAttribute? version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
             string versionInfo = version?.InformationalVersion ?? "Not Available";
             await outputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Version: {versionInfo}"), cancellationToken).ConfigureAwait(false);
 
             await outputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Dynamic Code Supported: {_runtimeFeature.IsDynamicCodeSupported}"), cancellationToken).ConfigureAwait(false);
 
-            // TODO: Replace RuntimeInformation with IRuntimeInformation
+            // TODO: Replace RuntimeInformation with IRuntimeInformation (tracked by https://github.com/microsoft/testfx/issues/8086)
 #if NETCOREAPP
             string runtimeInformation = $"{RuntimeInformation.RuntimeIdentifier} - {RuntimeInformation.FrameworkDescription}";
 #else
@@ -112,7 +112,8 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
             string optionInfoIndent = new(' ', (indentLevel + 1) * 2);
             foreach (CommandLineOption option in options.OrderBy(x => x.Name))
             {
-                await outputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionNameIndent}--{option.Name}"), cancellationToken).ConfigureAwait(false);
+                string optionName = $"{optionNameIndent}--{option.Name}";
+                await outputDevice.DisplayAsync(this, new TextOutputDeviceData(optionName), cancellationToken).ConfigureAwait(false);
                 if (option.Arity.Min == option.Arity.Max)
                 {
                     await outputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionInfoIndent}Arity: {option.Arity.Min}"), cancellationToken).ConfigureAwait(false);
@@ -257,7 +258,8 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
 
             foreach (CommandLineOption? option in options)
             {
-                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"--{option.Name}") { Padding = 4 }, cancellationToken).ConfigureAwait(false);
+                string optionName = $"--{option.Name}";
+                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(optionName) { Padding = 4 }, cancellationToken).ConfigureAwait(false);
                 await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(option.Description) { Padding = 8 }, cancellationToken).ConfigureAwait(false);
                 await outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Empty), cancellationToken).ConfigureAwait(false);
             }

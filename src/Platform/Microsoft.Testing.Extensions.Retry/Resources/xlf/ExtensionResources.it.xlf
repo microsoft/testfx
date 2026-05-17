@@ -40,9 +40,24 @@ Spostamento dei file di asset dell'ultimo tentativo nella directory dei risultat
         <target state="translated">Spostamento del file '{0}' in '{1}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
+        <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
+        <target state="translated">L'estensione del tentativo di ripetizione non è supportata sulla piattaforma browser. I test basati su browser non possono essere ripetuti a causa di limitazioni della piattaforma.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
         <target state="translated">Impossibile avviare il processo '{0}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsDelayOptionDescription">
+        <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</source>
+        <target state="new">Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
+        <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 1s, 2.5m, 1h)</source>
+        <target state="new">Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 1s, 2.5m, 1h)</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">
@@ -53,11 +68,6 @@ Spostamento dei file di asset dell'ultimo tentativo nella directory dei risultat
       <trans-unit id="RetryFailedTestsExtensionDisplayName">
         <source>Retry failed tests</source>
         <target state="translated">Ripeti i test non riusciti</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
-        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">La ripetizione dei test non riusciti funziona solo con i generatori di tipo 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">

@@ -17,7 +17,12 @@ namespace Microsoft.Testing.Platform.Extensions;
 public class CompositeExtensionFactory<TExtension> : ICompositeExtensionFactory, ICloneable
     where TExtension : class, IExtension
 {
+#if NET9_0_OR_GREATER
     private readonly Lock _syncLock = new();
+#else
+    private readonly object _syncLock = new();
+#endif
+
     private readonly Func<IServiceProvider, TExtension>? _factoryWithServiceProvider;
     private readonly Func<TExtension>? _factory;
     private TExtension? _instance;
@@ -35,20 +40,14 @@ TestHost: IDataConsumer, ITestApplicationLifetime
     /// </summary>
     /// <param name="factory">The factory function that creates the extension with a service provider.</param>
     public CompositeExtensionFactory(Func<IServiceProvider, TExtension> factory)
-    {
-        Guard.NotNull(factory);
-        _factoryWithServiceProvider = factory;
-    }
+        => _factoryWithServiceProvider = factory ?? throw new ArgumentNullException(nameof(factory));
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CompositeExtensionFactory{TExtension}"/> class.
     /// </summary>
     /// <param name="factory">The factory function that creates the extension.</param>
     public CompositeExtensionFactory(Func<TExtension> factory)
-    {
-        Guard.NotNull(factory);
-        _factory = factory;
-    }
+        => _factory = factory ?? throw new ArgumentNullException(nameof(factory));
 
     /// <inheritdoc/>
     object ICloneable.Clone()

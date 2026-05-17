@@ -39,7 +39,7 @@ public sealed class TrxCompareToolCommandLineTests
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [filename]).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, TestReports.Resources.ExtensionResources.TrxComparerToolOptionExpectsSingleArgument, optionName), validateOptionsResult.ErrorMessage);
+        Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, TrxReport.Resources.ExtensionResources.TrxComparerToolOptionExpectsSingleArgument, optionName), validateOptionsResult.ErrorMessage);
     }
 
     [TestMethod]
@@ -76,6 +76,6 @@ public sealed class TrxCompareToolCommandLineTests
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, TestReports.Resources.ExtensionResources.TrxComparerToolBothFilesMustBeSpecified, TrxCompareToolCommandLine.BaselineTrxOptionName, TrxCompareToolCommandLine.TrxToCompareOptionName), validateOptionsResult.ErrorMessage);
+        Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, TrxReport.Resources.ExtensionResources.TrxComparerToolBothFilesMustBeSpecified, TrxCompareToolCommandLine.BaselineTrxOptionName, TrxCompareToolCommandLine.TrxToCompareOptionName), validateOptionsResult.ErrorMessage);
     }
 }

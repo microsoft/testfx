@@ -32,6 +32,11 @@
         <target state="translated">Cancelamento da sessão de testes...</target>
         <note />
       </trans-unit>
+      <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
+        <source>Browser platform is only supported on .NET 7.0 or greater.</source>
+        <target state="translated">A plataforma do navegador só tem suporte no .NET 7.0 ou superior.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
         <target state="translated">Falha ao criar um filtro de execução de teste</target>
@@ -113,8 +118,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsReserved">
-        <source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</source>
-        <target state="translated">A opção '--{0}' está reservada e não pode ser usada pelos provedores: '{0}'</target>
+        <source>Option '--{0}' is reserved and cannot be used by providers: '{1}'</source>
+        <target state="translated">A opção '--{0}' está reservada e não pode ser usada pelos provedores: '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
@@ -142,11 +147,6 @@
         <target state="translated">Argumento inesperado {0}</target>
         <note />
       </trans-unit>
-      <trans-unit id="CommandLineParserUnexpectedNullArgument">
-        <source>Unexpected null argument at index {0}</source>
-        <target state="translated">Argumento nulo inesperado no índice {0}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
         <source>Unexpected single quote in argument: {0}</source>
         <target state="translated">Aspas simples inesperadas no argumento: {0}</target>
@@ -162,9 +162,14 @@
         <target state="translated">Opção desconhecida '--{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineValidationCommandLine">
+        <source>Command line: {0}</source>
+        <target state="new">Command line: {0}</target>
+        <note>{0} is the command line used to run the application.</note>
+      </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
-        <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
-        <target state="translated">A mesma instância de “CompositeExtensonFactory” já está registrada</target>
+        <source>The same instance of 'CompositeExtensionFactory' is already registered</source>
+        <target state="translated">A mesma instância de 'CompositeExtensionFactory' já está registrada</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
@@ -416,16 +421,6 @@
         <target state="translated">{0} testes em execução</target>
         <note />
       </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">Nenhum serializador registrado com a ID “{0}”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">Nenhum serializador registrado com o tipo “{0}”</target>
-        <note />
-      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">Não disponível</target>
@@ -521,9 +516,15 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
 Os valores disponíveis são 'Rastreamento', 'Depuração', 'Informação', 'Aviso', 'Erro' e 'Crítico'.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
+        <source>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="new">'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
-        <source>List available tests.</source>
-        <target state="translated">Listar testes disponíveis.</target>
+        <source>List available tests.
+Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</source>
+        <target state="needs-review-translation">Listar testes disponíveis.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
@@ -536,6 +537,11 @@ Os valores disponíveis são 'Rastreamento', 'Depuração', 'Informação', 'Avi
 {1}</source>
         <target state="translated">PID inválido "{0}"
 {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser">
+        <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
+        <target state="translated">Não há suporte para a opção '--exit-on-process-exit' em ambientes de navegador.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
@@ -768,6 +774,11 @@ Recebe um argumento como cadeia de caracteres no formato &lt;valor&gt;[h|m|s] em
         <target state="translated">bem-sucedido</target>
         <note />
       </trans-unit>
+      <trans-unit id="SyncFlushNotSupportedInBrowserErrorMessage">
+        <source>Synchronous flush is not supported in browser environments.</source>
+        <target state="translated">Não há suporte para liberação síncrona em ambientes de navegador.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">Uma fábrica “ITestExecutionFilterFactory” já está definida</target>
@@ -813,6 +824,25 @@ Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal�
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
         <target state="translated">--saída espera um único parâmetro com o valor “Normal” ou “Detalhado”.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="translated">--show-stdout e --show-stderr esperam um único parâmetro com o valor 'All', 'Failed' ou 'None'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Determina quando mostrar a saída de erro capturada de um teste.
+Os valores válidos são 'All', 'Failed', 'None'. O padrão é 'All'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Determina quando mostrar a saída padrão capturada de um teste.
+Os valores válidos são 'All', 'Failed', 'None'. O padrão é 'All'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
@@ -885,6 +915,11 @@ Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal�
         <target state="translated">Falha na sessão de teste do adaptador de teste</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
+        <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
+        <target state="translated">Não há suporte para extensões de controlador de host de teste que exigem reinício do processo em plataformas de navegador/WebAssembly.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
         <target state="translated">O processo de teste do aplicativo não foi encerrado normalmente, o código de saída é ''{0}''</target>
@@ -955,11 +990,6 @@ Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal�
         <target state="translated">Chamada de telemetria inesperada, a telemetria está desabilitada.</target>
         <note />
       </trans-unit>
-      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occurred during byte conversion</source>
-        <target state="translated">Ocorreu uma exceção inesperada durante a conversão de bytes</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
@@ -982,6 +1012,11 @@ Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal�
         <target state="translated">Este local do programa é considerado inacessível. Arquivo='{0}' Linha={1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
+        <target state="translated">Não há suporte para aguardar a anexação do depurador (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) em ambientes de navegador.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">Zero testes executados</target>
@@ -995,11 +1030,6 @@ Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal�
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
         <target state="translated">Um provedor de cliente de chat já foi registrado.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">As extensões de IA só funcionam com construtores do tipo ''Microsoft.Testing.Platform.Builder.TestApplicationBuilder''</target>
         <note />
       </trans-unit>
     </body>

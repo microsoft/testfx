@@ -40,7 +40,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
 
         // Assert
         IEnumerable<TestNodeUpdateMessage> nodeStateChanges = services.MessageBus.Messages.OfType<TestNodeUpdateMessage>();
-        Assert.IsTrue(nodeStateChanges.Any(), $"{nameof(nodeStateChanges)} should have at least 1 item.");
+        Assert.IsNotEmpty(nodeStateChanges, $"{nameof(nodeStateChanges)} should have at least 1 item.");
         Platform.Extensions.Messages.TestNode lastNode = nodeStateChanges.Last().TestNode;
         _ = lastNode.Properties.Single<PassedTestNodeStateProperty>();
     }
@@ -72,7 +72,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
 
         // Assert
         IEnumerable<TestNodeUpdateMessage> nodeStateChanges = services.MessageBus.Messages.OfType<TestNodeUpdateMessage>();
-        Assert.IsTrue(nodeStateChanges.Any(), $"{nameof(nodeStateChanges)} should have at least 1 item.");
+        Assert.IsNotEmpty(nodeStateChanges, $"{nameof(nodeStateChanges)} should have at least 1 item.");
         Platform.Extensions.Messages.TestNode lastNode = nodeStateChanges.Last().TestNode;
         _ = lastNode.Properties.Single<ErrorTestNodeStateProperty>();
         Assert.AreEqual("Oh no!", lastNode.Properties.Single<ErrorTestNodeStateProperty>().Exception!.Message);
@@ -80,7 +80,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
             nameof(ExecutableNode_ThatThrows_ShouldReportError), lastNode.Properties.Single<ErrorTestNodeStateProperty>().Exception!.StackTrace!, "lastNode properties should contain the name of the test");
         TimingProperty timingProperty = lastNode.Properties.Single<TimingProperty>();
         Assert.AreEqual(fakeClock.UsedTimes[0], timingProperty.GlobalTiming.StartTime);
-        Assert.IsTrue(timingProperty.GlobalTiming.StartTime <= timingProperty.GlobalTiming.EndTime, "start time is before (or the same as) stop time");
+        Assert.IsLessThanOrEqualTo(timingProperty.GlobalTiming.EndTime, timingProperty.GlobalTiming.StartTime, "start time is before (or the same as) stop time");
         Assert.AreEqual(fakeClock.UsedTimes[1], timingProperty.GlobalTiming.EndTime);
         Assert.IsGreaterThan(0, timingProperty.GlobalTiming.Duration.TotalMilliseconds, $"duration should be greater than 0");
     }
@@ -109,7 +109,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
             ServiceProvider.AddService(new LoggerFactory());
             ServiceProvider.AddService(new FakeClock());
             ServiceProvider.AddService(new SystemTask());
-            ServiceProvider.AddService(new AggregatedConfiguration([], new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()), new SystemFileSystem(), new(null, [], [])));
+            ServiceProvider.AddService(new AggregatedConfiguration([], new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()), new SystemFileSystem(), new SystemEnvironment(), new(null, [], [])));
         }
 
         public MessageBus MessageBus { get; }

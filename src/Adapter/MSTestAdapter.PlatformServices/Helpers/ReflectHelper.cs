@@ -1,40 +1,47 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
 using System.Security;
+#endif
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 [SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for mocking")]
-internal class ReflectHelper : MarshalByRefObject
+internal class ReflectHelper
+#if NETFRAMEWORK
+    : MarshalByRefObject
+#endif
 {
 #pragma warning disable RS0030 // Do not use banned APIs
     private static readonly Lazy<ReflectHelper> InstanceValue = new(() => new());
 #pragma warning restore RS0030 // Do not use banned APIs
 
-    // PERF: This was moved from Dictionary<MemberInfo, Dictionary<string, object>> to Concurrent<ICustomAttributeProvider, Attribute[]>
-    // storing an array allows us to store multiple attributes of the same type if we find them. It also has lower memory footprint, and is faster
-    // when we are going through the whole collection. Giving us overall better perf.
-    private readonly ConcurrentDictionary<ICustomAttributeProvider, Attribute[]> _attributeCache = [];
-
+    // PERF: Attribute caching is now centralized in ReflectionOperations._attributeCache.
+    // ReflectHelper delegates to PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached
+    // so that discovery and execution paths share a single cache, avoiding double memory usage.
     public static ReflectHelper Instance => InstanceValue.Value;
 
     /// <summary>
     /// Checks to see if a member or type is decorated with the given attribute, or an attribute that derives from it. e.g. [MyTestClass] from [TestClass] will match if you look for [TestClass]. The inherit parameter does not impact this checking.
     /// </summary>
     /// <typeparam name="TAttribute">Attribute to search for.</typeparam>
-    /// <param name="memberInfo">Member to inspect for attributes.</param>
-    /// <returns>True if the attribute of the specified type is defined on this member or a class.</returns>
-    public virtual /* for testing */ bool IsAttributeDefined<TAttribute>(MemberInfo memberInfo)
+    /// <param name="attributeProvider">The type, assembly or method to inspect for attributes.</param>
+    /// <returns>True if the attribute of the specified type is defined.</returns>
+    public virtual /* for testing */ bool IsAttributeDefined<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
     {
-        Guard.NotNull(memberInfo);
+        if (attributeProvider is null)
+        {
+            throw new ArgumentNullException(nameof(attributeProvider));
+        }
 
         // Get all attributes on the member.
-        Attribute[] attributes = GetCustomAttributesCached(memberInfo);
+        Attribute[] attributes = GetCustomAttributesCached(attributeProvider);
 
         // Try to find the attribute that is derived from baseAttrType.
         foreach (Attribute attribute in attributes)
@@ -50,6 +57,7 @@ internal class ReflectHelper : MarshalByRefObject
         return false;
     }
 
+#if NETFRAMEWORK
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>
@@ -57,23 +65,26 @@ internal class ReflectHelper : MarshalByRefObject
     /// The <see cref="object"/>.
     /// </returns>
     [SecurityCritical]
-#if NET5_0_OR_GREATER
-    [Obsolete]
+    public override object? InitializeLifetimeService() => null;
 #endif
-    public override object InitializeLifetimeService() => null!;
 
     /// <summary>
-    /// Gets first attribute that matches the type or is derived from it.
-    /// Use this together with attribute that does not allow multiple. In such case there cannot be more attributes, and this will avoid the cost of
+    /// Gets first attribute that matches the type.
+    /// Use this together with attribute that does not allow multiple and is sealed. In such case there cannot be more attributes, and this will avoid the cost of
     /// checking for more than one attribute.
     /// </summary>
     /// <typeparam name="TAttribute">Type of the attribute to find.</typeparam>
     /// <param name="attributeProvider">The type, assembly or method.</param>
     /// <returns>The attribute that is found or null.</returns>
-    /// <exception cref="InvalidOperationException">Throws when multiple attributes are found (the attribute must allow multiple).</exception>
     public virtual /* for tests, for moq */ TAttribute? GetFirstAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
     {
+        // If the attribute is not sealed, then it can allow multiple, even if AllowMultiple is false.
+        // This happens when a derived type is also applied along with the base type.
+        // Or, if the derived type modifies the attribute usage to allow multiple.
+        // So we want to ensure this is only called for sealed attributes.
+        DebugEx.Assert(typeof(TAttribute).IsSealed, $"Expected '{typeof(TAttribute)}' to be sealed, but was not.");
+
         Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider);
 
         foreach (Attribute cachedAttribute in cachedAttributes)
@@ -88,26 +99,44 @@ internal class ReflectHelper : MarshalByRefObject
     }
 
     /// <summary>
+    /// Gets first attribute that matches the type or is derived from it.
+    /// Use this together with attribute that does not allow multiple. In such case there cannot be more attributes, and this will avoid the cost of
+    /// checking for more than one attribute.
+    /// </summary>
+    /// <typeparam name="TAttribute">Type of the attribute to find.</typeparam>
+    /// <param name="attributeProvider">The type, assembly or method.</param>
+    /// <returns>The attribute that is found or null.</returns>
+    /// <exception cref="InvalidOperationException">Throws when multiple attributes are found (the attribute must allow multiple).</exception>
+    public virtual /* for tests, for moq */ TAttribute? GetSingleAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
+        where TAttribute : Attribute
+    {
+        Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider);
+
+        TAttribute? foundAttribute = null;
+        foreach (Attribute cachedAttribute in cachedAttributes)
+        {
+            if (cachedAttribute is TAttribute cachedAttributeAsTAttribute)
+            {
+                if (foundAttribute is not null)
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.DuplicateAttributeError, typeof(TAttribute)));
+                }
+
+                foundAttribute = cachedAttributeAsTAttribute;
+            }
+        }
+
+        return foundAttribute;
+    }
+
+    /// <summary>
     /// Match return type of method.
     /// </summary>
     /// <param name="method">The method to inspect.</param>
     /// <param name="returnType">The return type to match.</param>
     /// <returns>True if there is a match.</returns>
     internal static bool MatchReturnType(MethodInfo method, Type returnType)
-    {
-        Guard.NotNull(method);
-        Guard.NotNull(returnType);
-        return method.ReturnType.Equals(returnType);
-    }
-
-    /// <summary>
-    /// Returns true when the method is declared in the assembly where the type is declared.
-    /// </summary>
-    /// <param name="method">The method to check for.</param>
-    /// <param name="type">The type declared in the assembly to check.</param>
-    /// <returns>True if the method is declared in the assembly where the type is declared.</returns>
-    internal virtual bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type)
-        => method.DeclaringType!.Assembly.Equals(type.Assembly); // TODO: Investigate if we rely on NRE
+        => method.ReturnType.Equals(returnType);
 
     /// <summary>
     /// Get categories applied to the test method.
@@ -115,13 +144,41 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="categoryAttributeProvider">The member to inspect.</param>
     /// <param name="owningType">The reflected type that owns <paramref name="categoryAttributeProvider"/>.</param>
     /// <returns>Categories defined.</returns>
-    internal virtual /* for tests, we are mocking this */ string[] GetTestCategories(MemberInfo categoryAttributeProvider, Type owningType)
+    internal static string[] GetTestCategories(MemberInfo categoryAttributeProvider, Type owningType)
     {
-        IEnumerable<TestCategoryBaseAttribute> methodCategories = GetAttributes<TestCategoryBaseAttribute>(categoryAttributeProvider);
-        IEnumerable<TestCategoryBaseAttribute> typeCategories = GetAttributes<TestCategoryBaseAttribute>(owningType);
-        IEnumerable<TestCategoryBaseAttribute> assemblyCategories = GetAttributes<TestCategoryBaseAttribute>(owningType.Assembly);
+        Attribute[] methodAttributes = GetCustomAttributesCached(categoryAttributeProvider);
+        Attribute[] typeAttributes = GetCustomAttributesCached(owningType);
+        Attribute[] assemblyAttributes = GetCustomAttributesCached(owningType.Assembly);
 
-        return [.. methodCategories.Concat(typeCategories).Concat(assemblyCategories).SelectMany(c => c.TestCategories)];
+        // Avoid LINQ iterator allocations by iterating the cached attribute arrays directly.
+        // This follows the same allocation-free pattern used by GetTestPropertiesAsTraits.
+        List<string>? categories = null;
+
+        foreach (Attribute attribute in methodAttributes)
+        {
+            if (attribute is TestCategoryBaseAttribute categoryAttr)
+            {
+                (categories ??= []).AddRange(categoryAttr.TestCategories);
+            }
+        }
+
+        foreach (Attribute attribute in typeAttributes)
+        {
+            if (attribute is TestCategoryBaseAttribute categoryAttr)
+            {
+                (categories ??= []).AddRange(categoryAttr.TestCategories);
+            }
+        }
+
+        foreach (Attribute attribute in assemblyAttributes)
+        {
+            if (attribute is TestCategoryBaseAttribute categoryAttr)
+            {
+                (categories ??= []).AddRange(categoryAttr.TestCategories);
+            }
+        }
+
+        return categories is null ? [] : [.. categories];
     }
 
     /// <summary>
@@ -135,13 +192,11 @@ internal class ReflectHelper : MarshalByRefObject
             .FirstOrDefault();
 
     /// <summary>
-    /// Gets discover internals assembly level attribute.
+    /// Returns whether the assembly has discover internals attribute.
     /// </summary>
     /// <param name="assembly"> The test assembly. </param>
-    internal static DiscoverInternalsAttribute? GetDiscoverInternalsAttribute(Assembly assembly)
-        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DiscoverInternalsAttribute))
-            .OfType<DiscoverInternalsAttribute>()
-            .FirstOrDefault();
+    internal static bool HasDiscoverInternalsAttribute(Assembly assembly)
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DiscoverInternalsAttribute)).Length > 0;
 
     /// <summary>
     /// Gets TestDataSourceDiscovery assembly level attribute.
@@ -163,16 +218,6 @@ internal class ReflectHelper : MarshalByRefObject
             .FirstOrDefault();
 
     /// <summary>
-    /// Get the parallelization behavior for a test method.
-    /// </summary>
-    /// <param name="testMethod">Test method.</param>
-    /// <param name="owningType">The type that owns <paramref name="testMethod"/>.</param>
-    /// <returns>True if test method should not run in parallel.</returns>
-    internal bool IsDoNotParallelizeSet(MemberInfo testMethod, Type owningType)
-        => IsAttributeDefined<DoNotParallelizeAttribute>(testMethod)
-        || IsAttributeDefined<DoNotParallelizeAttribute>(owningType);
-
-    /// <summary>
     /// Get the parallelization behavior for a test assembly.
     /// </summary>
     /// <param name="assembly">The test assembly.</param>
@@ -182,20 +227,11 @@ internal class ReflectHelper : MarshalByRefObject
             .Length != 0;
 
     /// <summary>
-    /// Priority if any set for test method. Will return priority if attribute is applied to TestMethod
-    /// else null.
-    /// </summary>
-    /// <param name="priorityAttributeProvider">The member to inspect.</param>
-    /// <returns>Priority value if defined. Null otherwise.</returns>
-    internal virtual int? GetPriority(MemberInfo priorityAttributeProvider) =>
-        GetFirstAttributeOrDefault<PriorityAttribute>(priorityAttributeProvider)?.Priority;
-
-    /// <summary>
     /// KeyValue pairs that are provided by TestPropertyAttributes of the given test method.
     /// </summary>
     /// <param name="testPropertyProvider">The member to inspect.</param>
     /// <returns>List of traits.</returns>
-    internal Trait[] GetTestPropertiesAsTraits(MethodInfo testPropertyProvider)
+    internal static Trait[] GetTestPropertiesAsTraits(MethodInfo testPropertyProvider)
     {
         Attribute[] attributesFromMethod = GetCustomAttributesCached(testPropertyProvider);
         Attribute[] attributesFromClass = testPropertyProvider.ReflectedType is { } testClass ? GetCustomAttributesCached(testClass) : [];
@@ -274,7 +310,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="attributeProvider">The member to inspect.</param>
     /// <param name="action">The action to perform.</param>
     /// <param name="state">The state to pass to action.</param>
-    internal void PerformActionOnAttribute<TAttributeType, TState>(ICustomAttributeProvider attributeProvider, Action<TAttributeType, TState?> action, TState? state)
+    internal static void PerformActionOnAttribute<TAttributeType, TState>(ICustomAttributeProvider attributeProvider, Action<TAttributeType, TState?> action, TState? state)
         where TAttributeType : Attribute
     {
         Attribute[] attributes = GetCustomAttributesCached(attributeProvider);
@@ -291,66 +327,20 @@ internal class ReflectHelper : MarshalByRefObject
 
     /// <summary>
     /// Gets and caches the attributes for the given type, or method.
+    /// Delegates to <see cref="PlatformServiceProvider.Instance"/> so that
+    /// discovery and execution share a single attribute cache.
     /// </summary>
     /// <param name="attributeProvider">The member to inspect.</param>
     /// <returns>attributes defined.</returns>
-    internal Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider)
+    internal static Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider)
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached(attributeProvider);
+
+    internal static /* for tests */ void ClearCache()
     {
-        // If the information is cached, then use it otherwise populate the cache using
-        // the reflection APIs.
-        return _attributeCache.GetOrAdd(attributeProvider, GetAttributes);
-
-        // We are avoiding func allocation here.
-        static Attribute[] GetAttributes(ICustomAttributeProvider attributeProvider)
+        // Delegate to the shared cache in ReflectionOperations.
+        if (PlatformServiceProvider.Instance?.ReflectionOperations is ReflectionOperations reflectionOperations)
         {
-            // Populate the cache
-            try
-            {
-                object[]? attributes = NotCachedReflectionAccessor.GetCustomAttributesNotCached(attributeProvider);
-                return attributes is null ? [] : attributes as Attribute[] ?? [.. attributes.Cast<Attribute>()];
-            }
-            catch (Exception ex)
-            {
-                // Get the exception description
-                string description;
-                try
-                {
-                    // Can throw if the Message or StackTrace properties throw exceptions
-                    description = ex.ToString();
-                }
-                catch (Exception ex2)
-                {
-                    description = string.Format(CultureInfo.CurrentCulture, Resource.ExceptionOccuredWhileGettingTheExceptionDescription, ex.GetType().FullName, ex2.GetType().FullName);                               // ex.GetType().FullName +
-                }
-
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.FailedToGetCustomAttribute, attributeProvider.GetType().FullName!, description);
-
-                return [];
-            }
+            reflectionOperations.ClearCache();
         }
     }
-
-    /// <summary>
-    /// Reflection helper that is accessing Reflection directly, and won't cache the results.
-    /// </summary>
-    internal static class NotCachedReflectionAccessor
-    {
-        /// <summary>
-        /// Get custom attributes on a member without cache. Be CAREFUL where you use this, repeatedly accessing reflection without caching the results degrades the performance.
-        /// </summary>
-        /// <param name="attributeProvider">Member for which attributes needs to be retrieved.</param>
-        /// <returns>All attributes of give type on member.</returns>
-        public static object[]? GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider)
-        {
-            object[] attributesArray = attributeProvider is MemberInfo memberInfo
-                ? PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(memberInfo)
-                : PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes((Assembly)attributeProvider, typeof(Attribute));
-
-            return attributesArray; // TODO: Investigate if we rely on NRE
-        }
-    }
-
-    internal /* for tests */ void ClearCache()
-        // Tests manipulate the platform reflection provider, and we end up caching different attributes than the class / method actually has.
-        => _attributeCache.Clear();
 }

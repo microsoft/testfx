@@ -3,6 +3,7 @@
 
 #if !WINDOWS_UWP
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
@@ -57,14 +58,16 @@ internal class MSTestAdapterSettings
     /// <returns>An instance of the <see cref="MSTestAdapterSettings"/> class.</returns>
     public static MSTestAdapterSettings ToSettings(XmlReader reader)
     {
-        Guard.NotNull(reader);
+        if (reader is null)
+        {
+            throw new ArgumentNullException(nameof(reader));
+        }
 
         // Expected format of the xml is: -
         //
         // <MSTestV2>
         //     <DeploymentEnabled>true</DeploymentEnabled>
         //     <DeployTestSourceDependencies>true</DeployTestSourceDependencies>
-        //     <ConsiderFixturesAsSpecialTests>true</ConsiderFixturesAsSpecialTests>
         //     <DeleteDeploymentDirectoryAfterTestRunIsComplete>true</DeleteDeploymentDirectoryAfterTestRunIsComplete>
         //     <AssemblyResolution>
         //          <Directory path= "% HOMEDRIVE %\directory "includeSubDirectories = "true" />
@@ -280,9 +283,9 @@ internal class MSTestAdapterSettings
             {
                 warningMessage = $"The Directory: {path}, has following problem: This is not an absolute path. A base directory should be provided for this to be used as a relative path.";
 
-                if (EqtTrace.IsWarningEnabled)
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
                 {
-                    EqtTrace.Warning(warningMessage);
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(warningMessage);
                 }
 
                 return null;
@@ -305,9 +308,9 @@ internal class MSTestAdapterSettings
         {
             warningMessage = $"The Directory: {path}, has following problem: {warningMessage}";
 
-            if (EqtTrace.IsWarningEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
             {
-                EqtTrace.Warning(warningMessage);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(warningMessage);
             }
 
             return null;
@@ -319,7 +322,10 @@ internal class MSTestAdapterSettings
         }
 
         // generate warning that path does not exist.
-        EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, $"The Directory: {path}, does not exist.");
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+        {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Warning($"The Directory: {path}, does not exist.");
+        }
 
         return null;
     }
@@ -342,7 +348,10 @@ internal class MSTestAdapterSettings
 
     private void ReadAssemblyResolutionPath(XmlReader reader)
     {
-        Guard.NotNull(reader);
+        if (reader is null)
+        {
+            throw new ArgumentNullException(nameof(reader));
+        }
 
         // Expected format of the xml is: -
         //

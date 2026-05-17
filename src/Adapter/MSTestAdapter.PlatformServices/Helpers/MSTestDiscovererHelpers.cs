@@ -31,14 +31,12 @@ internal static class MSTestDiscovererHelpers
         try
         {
             MSTestSettings.PopulateSettings(discoveryContext, messageLogger, configuration);
+            return true;
         }
         catch (AdapterSettingsException ex)
         {
             messageLogger.SendMessage(TestMessageLevel.Error, ex.Message);
             return false;
         }
-
-        // Scenarios that include testsettings or forcing a run via the legacy adapter are currently not supported in MSTestAdapter.
-        return !MSTestSettings.IsLegacyScenario(messageLogger);
     }
 }

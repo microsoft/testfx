@@ -73,12 +73,12 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
         if (AreMatchingTrxFiles(baseLineResults, comparedResults, outputBuilder))
         {
             await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData(outputBuilder.ToString()), cancellationToken).ConfigureAwait(false);
-            return ExitCodes.Success;
+            return (int)ExitCode.Success;
         }
         else
         {
             await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData(outputBuilder.ToString()), cancellationToken).ConfigureAwait(false);
-            return ExitCodes.GenericFailure;
+            return (int)ExitCode.GenericFailure;
         }
     }
 
@@ -180,7 +180,12 @@ internal sealed class TrxCompareTool : ITool, IOutputDeviceDataProducer
     private static async Task CollectEntriesAndErrorsAsync(string trxFile, XNamespace ns, List<Trx> results, List<string> issues)
     {
         using FileStream stream = File.OpenRead(trxFile);
+#if NETCOREAPP
         XElement trxTestRun = await XElement.LoadAsync(stream, LoadOptions.None, CancellationToken.None).ConfigureAwait(false);
+#else
+        var trxTestRun = XElement.Load(stream, LoadOptions.None);
+#endif
+
         int testResultIndex = 0;
         foreach (XElement testResult in trxTestRun.Elements(ns + "Results").Elements(ns + "UnitTestResult"))
         {

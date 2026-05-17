@@ -58,7 +58,7 @@ public sealed class TelemetryManagerTests
 
         // Act
         environmentMock.Setup(e => e.GetEnvironmentVariable(variable)).Returns(value);
-        await telemetryManager.BuildAsync(serviceProvider, loggerFactoryMock.Object, options);
+        await telemetryManager.BuildTelemetryAsync(serviceProvider, loggerFactoryMock.Object, options);
 
         // Assert
         if (value != "0")
@@ -114,7 +114,7 @@ public sealed class TelemetryManagerTests
 
         // Act
         environmentMock.Setup(e => e.GetEnvironmentVariable(variable)).Returns(value);
-        await telemetryManager.BuildAsync(serviceProvider, loggerFactoryMock.Object, options);
+        await telemetryManager.BuildTelemetryAsync(serviceProvider, loggerFactoryMock.Object, options);
 
         // Assert
         ITelemetryInformation telemetryInformation = serviceProvider.GetRequiredService<ITelemetryInformation>();
@@ -167,7 +167,7 @@ public sealed class TelemetryManagerTests
         telemetryManager.AddTelemetryCollectorProvider(_ => new NopTelemetryService(false));
 
         // Act
-        await telemetryManager.BuildAsync(serviceProvider, loggerFactoryMock.Object, options);
+        await telemetryManager.BuildTelemetryAsync(serviceProvider, loggerFactoryMock.Object, options);
 
         // Assert
         ITelemetryInformation telemetryInformation = serviceProvider.GetRequiredService<ITelemetryInformation>();
@@ -189,7 +189,7 @@ public sealed class TelemetryManagerTests
         fileSystemMock.Invocations.Clear();
 
         fileSystemMock.Setup(f => f.ExistFile(path)).Returns(true);
-        await telemetryManager.BuildAsync(serviceProvider, loggerFactoryMock.Object, options);
+        await telemetryManager.BuildTelemetryAsync(serviceProvider, loggerFactoryMock.Object, options);
         fileSystemMock.Verify(f => f.ExistFile(path), Times.Once);
 
         // Message is not written to screen.
@@ -235,7 +235,7 @@ public sealed class TelemetryManagerTests
         // Act
         // Disable showing the telemetry message.
         environmentMock.Setup(s => s.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER)).Returns("1");
-        await telemetryManager.BuildAsync(serviceProvider, loggerFactoryMock.Object, options);
+        await telemetryManager.BuildTelemetryAsync(serviceProvider, loggerFactoryMock.Object, options);
 
         // Assert
         ITelemetryInformation telemetryInformation = serviceProvider.GetRequiredService<ITelemetryInformation>();
@@ -262,7 +262,7 @@ public sealed class TelemetryManagerTests
         environmentMock.Setup(s => s.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER)).Returns("0");
 
         fileSystemMock.Setup(f => f.ExistFile(path)).Returns(false);
-        await telemetryManager.BuildAsync(serviceProvider, loggerFactoryMock.Object, options);
+        await telemetryManager.BuildTelemetryAsync(serviceProvider, loggerFactoryMock.Object, options);
         fileSystemMock.Verify(f => f.ExistFile(path), Times.Once);
 
         // Message is written to screen.
@@ -300,7 +300,7 @@ public sealed class TelemetryManagerTests
         loggerFactoryMock.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
 
         TelemetryManager telemetryManager = new();
-        await telemetryManager.BuildAsync(serviceProvider, loggerFactoryMock.Object, options);
+        await telemetryManager.BuildTelemetryAsync(serviceProvider, loggerFactoryMock.Object, options);
 
         outputDevice.Verify(c => c.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
     }
