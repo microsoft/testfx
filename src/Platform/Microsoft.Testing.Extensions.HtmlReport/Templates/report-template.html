@@ -476,11 +476,11 @@ footer {
     <select id="group-by" title="Group tests" aria-label="Group tests"></select>
   </div>
 
-  <div class="results" id="results">
+  <div class="results" id="results" role="grid" aria-label="Test results">
     <div class="results-header" role="row">
-      <button type="button" class="sortable" data-sort="outcome" aria-sort="none">Outcome</button>
-      <button type="button" class="sortable" data-sort="name" aria-sort="none">Test</button>
-      <button type="button" class="sortable duration" data-sort="duration" aria-sort="none" style="text-align:right">Duration</button>
+      <button type="button" role="columnheader" class="sortable" data-sort="outcome" aria-sort="none">Outcome</button>
+      <button type="button" role="columnheader" class="sortable" data-sort="name" aria-sort="none">Test</button>
+      <button type="button" role="columnheader" class="sortable duration" data-sort="duration" aria-sort="none" style="text-align:right">Duration</button>
       <div aria-hidden="true"></div>
     </div>
     <div id="rows"></div>
@@ -521,9 +521,13 @@ footer {
     shownPerGroup: Object.create(null)
   };
 
+  // Scope the storage key to this specific report file so that opening another
+  // report in the same browser session does not inherit a stale filter/grouping.
+  var storageKey = "mtp-state:" + location.href;
+
   // Restore persisted UI state per report file (best-effort).
   try {
-    var saved = JSON.parse(sessionStorage.getItem("mtp-state") || "{}");
+    var saved = JSON.parse(sessionStorage.getItem(storageKey) || "{}");
     if (saved.filter)   state.filter = saved.filter;
     if (saved.sort)     state.sort = saved.sort;
     if (saved.sortDir)  state.sortDir = saved.sortDir;
@@ -547,7 +551,7 @@ footer {
 
   function persist() {
     try {
-      sessionStorage.setItem("mtp-state", JSON.stringify({
+      sessionStorage.setItem(storageKey, JSON.stringify({
         filter: state.filter, sort: state.sort, sortDir: state.sortDir,
         search: state.search, groupBy: state.groupBy, pageSize: state.pageSize
       }));
