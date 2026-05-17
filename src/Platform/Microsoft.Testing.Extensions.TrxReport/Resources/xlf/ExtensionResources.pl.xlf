@@ -58,8 +58,12 @@
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameOptionDescription">
-        <source>The name of the generated TRX report</source>
-        <target state="translated">Nazwa wygenerowanego raportu TRX</target>
+        <source>The name of the generated TRX report.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Example: MyReport_{tfm}.trx</source>
+        <target state="new">The name of the generated TRX report.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Example: MyReport_{tfm}.trx</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameRequiresTrxReport">

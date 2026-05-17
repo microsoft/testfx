@@ -113,6 +113,7 @@ Options:
         const string wildcardMatchPattern = $"""
 Microsoft.Testing.Platform v*
 Unknown option '--{UnknownOption}'
+Command line: --no-ansi --no-progress -{UnknownOption}
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
