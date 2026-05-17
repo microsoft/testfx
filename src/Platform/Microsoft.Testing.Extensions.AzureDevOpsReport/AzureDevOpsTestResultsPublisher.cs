@@ -97,7 +97,12 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
 
     public void Dispose()
     {
+        // Signal the background flush loop to stop. The loop is already awaited in
+        // OnTestSessionFinishingAsync; this Cancel is a safety net for cases where the
+        // session lifecycle methods are not called (e.g. early disposal in tests).
+#pragma warning disable VSTHRD103 // CancelAsync is only available on .NET 8+; synchronous cancel is acceptable in Dispose.
         _backgroundFlushCts?.Cancel();
+#pragma warning restore VSTHRD103
         _backgroundFlushCts?.Dispose();
         _flushSemaphore.Dispose();
     }
@@ -199,9 +204,14 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
             {
                 await _backgroundFlushTask.ConfigureAwait(false);
             }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // Unexpected failure in the background flush loop; the loop already logs per-flush warnings.
+                _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+            }
             catch
             {
-                // Ignore any exception from the background task — it's best-effort.
+                // Cancellation — expected and fine.
             }
         }
 
@@ -214,7 +224,7 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
         {
             // Best-effort flush: session was canceled; finalization still runs below with a fresh token.
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
         }
