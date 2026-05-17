@@ -35,6 +35,7 @@ internal static class CommandLineParser
 
     private static CommandLineParseResult Parse(List<string> args, IEnvironment environment)
     {
+        string[] originalArgs = [.. args];
         List<CommandLineParseOption> options = [];
         List<string> errors = [];
 
@@ -101,7 +102,7 @@ internal static class CommandLineParser
             options.Add(new(currentOption, [.. currentOptionArguments]));
         }
 
-        return new CommandLineParseResult(toolName, options, errors);
+        return new CommandLineParseResult(toolName, options, errors, originalArgs);
 
         static void ParseOptionAndSeparators(string arg, out string? currentOption, out string? currentArg)
         {

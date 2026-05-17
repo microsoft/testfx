@@ -298,9 +298,6 @@ public sealed partial class Assert
     private static string BuildUserMessageForCollectionExpression(string? format, string collectionExpression)
         => BuildUserMessageForSingleExpression(format, collectionExpression, "collection");
 
-    private static string BuildUserMessageForPatternExpressionAndValueExpression(string? format, string patternExpression, string valueExpression)
-        => BuildUserMessageForTwoExpressions(format, patternExpression, "pattern", valueExpression, "value");
-
     private static string BuildUserMessageForExpectedExpressionAndActualExpression(string? format, string expectedExpression, string actualExpression)
         => BuildUserMessageForTwoExpressions(format, expectedExpression, "expected", actualExpression, "actual");
 
