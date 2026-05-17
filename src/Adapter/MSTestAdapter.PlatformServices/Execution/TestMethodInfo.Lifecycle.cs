@@ -40,6 +40,7 @@ internal partial class TestMethodInfo
         Exception? testCleanupException;
         TestFailedException? globalTestCleanupException = null;
         MethodInfo? globalTestCleanupFailingMethod = null;
+        MethodInfo? currentGlobalTestCleanupMethod = null;
         try
         {
             try
@@ -81,19 +82,32 @@ internal partial class TestMethodInfo
 
                 foreach ((MethodInfo method, TimeoutInfo? timeoutInfo) in Parent.Parent.GlobalTestCleanups)
                 {
+                    currentGlobalTestCleanupMethod = method;
                     globalTestCleanupException = await InvokeGlobalCleanupMethodAsync(method, timeoutInfo, timeoutTokenSource).ConfigureAwait(false);
+
                     if (globalTestCleanupException is not null)
                     {
                         // Stop on first global cleanup failure, mirroring the local test cleanup loop above.
                         globalTestCleanupFailingMethod = method;
                         break;
                     }
+
+                    currentGlobalTestCleanupMethod = null;
                 }
             }
         }
         catch (Exception ex)
         {
             testCleanupException = ex;
+            if (globalTestCleanupFailingMethod is null && currentGlobalTestCleanupMethod is not null)
+            {
+                globalTestCleanupFailingMethod = currentGlobalTestCleanupMethod;
+            }
+
+            if (globalTestCleanupFailingMethod is not null)
+            {
+                testCleanupMethod = globalTestCleanupFailingMethod;
+            }
         }
 
         // If no earlier cleanup failure was recorded but a global test cleanup failed, surface it
@@ -111,7 +125,11 @@ internal partial class TestMethodInfo
         }
 
         Exception realException = testCleanupException.GetRealException();
-        UnitTestOutcome outcomeFromRealException = realException is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed;
+        UnitTestOutcome outcomeFromRealException = testCleanupException is TestFailedException testFailedException
+            ? testFailedException.Outcome
+            : realException is AssertInconclusiveException
+                ? UnitTestOutcome.Inconclusive
+                : UnitTestOutcome.Failed;
         result.Outcome = result.Outcome.GetMoreImportantOutcome(outcomeFromRealException);
 
         realException = testCleanupMethod != null

@@ -202,7 +202,11 @@ internal partial class TestMethodInfo
                     result.TestFailureException ??= HandleMethodException(ex, realException, TestClassName, TestMethodName);
                 }
 
-                if (result.Outcome != UnitTestOutcome.Passed)
+                if (result.TestFailureException is TestFailedException testFailedException)
+                {
+                    result.Outcome = testFailedException.Outcome;
+                }
+                else if (result.Outcome != UnitTestOutcome.Passed)
                 {
                     result.Outcome = ex is AssertInconclusiveException || ex.InnerException is AssertInconclusiveException
                         ? UnitTestOutcome.Inconclusive
