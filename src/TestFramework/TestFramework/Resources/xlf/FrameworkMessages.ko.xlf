@@ -459,7 +459,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsFalseFailedSummary">
         <source>Expected condition to be false.</source>
-        <target state="new">Expected condition to be false.</target>
+        <target state="translated">조건이 false여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsGreaterThanFailedSummary">
@@ -539,12 +539,12 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsNotNullFailedSummary">
         <source>Expected value to not be null.</source>
-        <target state="new">Expected value to not be null.</target>
+        <target state="translated">값이 null이 아니어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
-        <target state="new">Expected value to be null.</target>
+        <target state="translated">값이 null이어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsPositiveFailedSummary">
@@ -554,7 +554,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">
         <source>Expected condition to be true.</source>
-        <target state="new">Expected condition to be true.</target>
+        <target state="translated">조건이 true여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="MatchesRegexFailedSummary">
