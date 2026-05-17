@@ -5,7 +5,11 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
-internal sealed class NopTraceLogger : MarshalByRefObject, ITraceLogger
+internal sealed class NopTraceLogger :
+#if NETFRAMEWORK
+    MarshalByRefObject,
+#endif
+    ITraceLogger
 {
     private NopTraceLogger()
     {
