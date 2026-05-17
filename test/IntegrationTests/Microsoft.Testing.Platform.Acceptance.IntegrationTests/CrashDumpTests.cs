@@ -169,7 +169,7 @@ public class DummyTestFramework : ITestFramework
         // exercise the crashdump extension's ability to collect dumps from child processes.
         if (Environment.GetEnvironmentVariable("CRASHDUMP_SPAWN_CHILD_THAT_CRASHES") == "1")
         {
-            Process self = Process.GetCurrentProcess();
+            using Process self = Process.GetCurrentProcess();
             string path = self.MainModule!.FileName!;
             string fileName = Path.GetFileName(path);
             string argPrefix = string.Equals(fileName, "dotnet", StringComparison.OrdinalIgnoreCase)
@@ -177,7 +177,7 @@ public class DummyTestFramework : ITestFramework
                 ? $"exec \"{Assembly.GetEntryAssembly()!.Location}\" "
                 : string.Empty;
 
-            Process child = Process.Start(new ProcessStartInfo(path, $"{argPrefix}--child-crash")
+            using Process child = Process.Start(new ProcessStartInfo(path, $"{argPrefix}--child-crash")
             {
                 UseShellExecute = false,
             })!;
