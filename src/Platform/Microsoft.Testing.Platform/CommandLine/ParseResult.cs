@@ -6,11 +6,8 @@ namespace Microsoft.Testing.Platform.CommandLine;
 /// <summary>
 /// Represents the result of parsing a command line.
 /// </summary>
-/// <param name="toolName">The name of the tool.</param>
-/// <param name="options">The collection of parsed options.</param>
-/// <param name="errors">The collection of errors associated to the parsing.</param>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public sealed class CommandLineParseResult(string? toolName, IReadOnlyList<CommandLineParseOption> options, IReadOnlyList<string> errors) : IEquatable<CommandLineParseResult>
+public sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
 {
     /// <summary>
     /// The prefix for options.
@@ -23,19 +20,40 @@ public sealed class CommandLineParseResult(string? toolName, IReadOnlyList<Comma
     public static CommandLineParseResult Empty => new(null, [], []);
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="CommandLineParseResult"/> class.
+    /// </summary>
+    /// <param name="toolName">The name of the tool.</param>
+    /// <param name="options">The collection of parsed options.</param>
+    /// <param name="errors">The collection of errors associated to the parsing.</param>
+    public CommandLineParseResult(string? toolName, IReadOnlyList<CommandLineParseOption> options, IReadOnlyList<string> errors)
+        : this(toolName, options, errors, [])
+    {
+    }
+
+    internal CommandLineParseResult(string? toolName, IReadOnlyList<CommandLineParseOption> options, IReadOnlyList<string> errors, IReadOnlyList<string> arguments)
+    {
+        ToolName = toolName;
+        Options = options;
+        Errors = errors;
+        CommandLine = string.Join(" ", arguments);
+    }
+
+    /// <summary>
     /// Gets the name of the tool.
     /// </summary>
-    public string? ToolName { get; } = toolName;
+    public string? ToolName { get; }
 
     /// <summary>
     /// Gets the collection of parsed options.
     /// </summary>
-    public IReadOnlyList<CommandLineParseOption> Options { get; } = options;
+    public IReadOnlyList<CommandLineParseOption> Options { get; }
 
     /// <summary>
     /// Gets the collection of errors associated to the parsing.
     /// </summary>
-    public IReadOnlyList<string> Errors { get; } = errors;
+    public IReadOnlyList<string> Errors { get; }
+
+    internal string CommandLine { get; }
 
     /// <summary>
     /// Gets a value indicating whether the parsing has errors.
