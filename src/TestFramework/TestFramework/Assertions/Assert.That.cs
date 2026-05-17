@@ -33,7 +33,10 @@ public static partial class AssertExtensions
                 throw new ArgumentNullException(nameof(condition));
             }
 
-            if (condition.Compile()())
+            var details = new Dictionary<string, object?>();
+            bool result = EvaluateAndCollectDetails(condition.Body, details);
+
+            if (result)
             {
                 return;
             }
@@ -47,8 +50,8 @@ public static partial class AssertExtensions
                 sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatMessageFormat, message));
             }
 
-            string details = ExtractDetails(condition.Body);
-            if (!string.IsNullOrWhiteSpace(details))
+            string detailsString = BuildDetailsString(details);
+            if (!string.IsNullOrWhiteSpace(detailsString))
             {
                 if (sb.Length == 0)
                 {
@@ -56,20 +59,15 @@ public static partial class AssertExtensions
                 }
 
                 sb.AppendLine(FrameworkMessages.AssertThatDetailsPrefix);
-                sb.AppendLine(details);
+                sb.AppendLine(detailsString);
             }
 
             Assert.ReportAssertFailed($"Assert.That({expressionText})", sb.ToString().TrimEnd());
         }
     }
 
-#pragma warning disable IDE0051 // Remove unused private members - false positive
-    private static string ExtractDetails(Expression expr)
-#pragma warning restore IDE0051 // Remove unused private members
+    private static string BuildDetailsString(Dictionary<string, object?> details)
     {
-        var details = new Dictionary<string, object?>();
-        ExtractVariablesFromExpression(expr, details);
-
         if (details.Count == 0)
         {
             return string.Empty;
@@ -91,7 +89,95 @@ public static partial class AssertExtensions
         return sb.ToString();
     }
 
-    private static void ExtractVariablesFromExpression(Expression? expr, Dictionary<string, object?> details, bool suppressIntermediateValues = false)
+    private static readonly object UnsetCapture = new();
+
+    /// <summary>
+    /// Evaluates <paramref name="body"/> exactly once while capturing the values of selected sub-expressions
+    /// so the assertion failure message can describe what each named operand evaluated to.
+    /// Sub-expressions inside short-circuited / unreached branches are evaluated lazily as a fallback
+    /// (one evaluation total — the root never ran them). Fixes issue #6690.
+    /// </summary>
+    /// <returns><see langword="true"/> if the condition evaluated to <see langword="true"/>.</returns>
+    private static bool EvaluateAndCollectDetails(Expression body, Dictionary<string, object?> details)
+    {
+        // Pass 1: Walk the tree to identify capture points and their display names.
+        var context = new AnalysisContext();
+        AnalyzeExpression(body, context);
+
+        // Pass 2: Rewrite the tree so that each captured sub-expression's value is written
+        // to a captures array as a side effect of the single evaluation of the root.
+        ParameterExpression arrayParam = Expression.Parameter(typeof(object?[]), "captures");
+        var rewriter = new CaptureRewriter(context.CaptureMap, arrayParam);
+        Expression rewrittenBody = rewriter.Visit(body)!;
+
+        // Compile and invoke ONCE.
+        var lambda = Expression.Lambda<Func<object?[], bool>>(rewrittenBody, arrayParam);
+        object?[] values = new object?[context.CaptureNames.Count];
+
+        // Pre-fill with a sentinel so we can distinguish "not captured" (because the branch was
+        // short-circuited / not evaluated) from "captured null".
+        for (int i = 0; i < values.Length; i++)
+        {
+            values[i] = UnsetCapture;
+        }
+
+        bool result = lambda.Compile()(values);
+
+        if (result)
+        {
+            return true;
+        }
+
+        // Build details using first-occurrence-per-name semantics, filtering out Func/Action values
+        // (matching the historical behavior, using runtime type as the existing code did).
+        for (int i = 0; i < context.CaptureNames.Count; i++)
+        {
+            string name = context.CaptureNames[i];
+            if (details.ContainsKey(name))
+            {
+                continue;
+            }
+
+            object? value = values[i];
+            if (ReferenceEquals(value, UnsetCapture))
+            {
+                // The capture slot was never written, meaning the sub-expression was not evaluated
+                // (e.g., a short-circuited && / || branch or an unreached ternary branch).
+                // Only fall back to evaluating expressions that are conventionally pure operand
+                // reads (variable/property access, array indexers and lengths). For arbitrary
+                // method calls we must NOT re-evaluate, otherwise we'd silently violate
+                // short-circuit semantics for the user's code (issue #6690).
+                Expression expr = context.CaptureExpressions[i];
+                if (IsSafeToReevaluate(expr))
+                {
+                    try
+                    {
+                        value = Expression.Lambda(expr).Compile().DynamicInvoke();
+                    }
+                    catch
+                    {
+                        value = "<Failed to evaluate>";
+                    }
+                }
+                else
+                {
+                    // Skip potentially side-effecting captures that were short-circuited.
+                    continue;
+                }
+            }
+
+            if (IsFuncOrActionType(value?.GetType()))
+            {
+                continue;
+            }
+
+            details[name] = value;
+        }
+
+        return false;
+    }
+
+    private static void AnalyzeExpression(Expression? expr, AnalysisContext context, bool suppressIntermediateValues = false)
     {
         if (expr is null)
         {
@@ -102,55 +188,54 @@ public static partial class AssertExtensions
         {
             // Special handling for array indexing (myArray[index])
             case BinaryExpression binaryExpr when binaryExpr.NodeType == ExpressionType.ArrayIndex:
-                HandleArrayIndexExpression(binaryExpr, details);
+                AnalyzeArrayIndexExpression(binaryExpr, context);
                 break;
 
             case BinaryExpression binaryExpr:
-                ExtractVariablesFromExpression(binaryExpr.Left, details, suppressIntermediateValues);
-                ExtractVariablesFromExpression(binaryExpr.Right, details, suppressIntermediateValues);
+                AnalyzeExpression(binaryExpr.Left, context, suppressIntermediateValues);
+                AnalyzeExpression(binaryExpr.Right, context, suppressIntermediateValues);
                 break;
 
             case TypeBinaryExpression typeBinaryExpr:
-                // Extract variables from the expression being tested (e.g., 'obj' in 'obj is int')
-                ExtractVariablesFromExpression(typeBinaryExpr.Expression, details, suppressIntermediateValues);
+                AnalyzeExpression(typeBinaryExpr.Expression, context, suppressIntermediateValues);
                 break;
 
             // Special handling for ArrayLength expressions
             case UnaryExpression unaryExpr when unaryExpr.NodeType == ExpressionType.ArrayLength:
                 string arrayName = GetCleanMemberName(unaryExpr.Operand);
                 string lengthDisplayName = $"{arrayName}.Length";
-                TryAddExpressionValue(unaryExpr, lengthDisplayName, details);
+                context.AddCapture(unaryExpr, lengthDisplayName);
 
                 if (unaryExpr.Operand is not MemberExpression)
                 {
-                    ExtractVariablesFromExpression(unaryExpr.Operand, details, suppressIntermediateValues);
+                    AnalyzeExpression(unaryExpr.Operand, context, suppressIntermediateValues);
                 }
 
                 break;
 
             case UnaryExpression unaryExpr:
-                ExtractVariablesFromExpression(unaryExpr.Operand, details, suppressIntermediateValues);
+                AnalyzeExpression(unaryExpr.Operand, context, suppressIntermediateValues);
                 break;
 
             case MemberExpression memberExpr:
-                AddMemberExpressionToDetails(memberExpr, details);
+                AnalyzeMemberExpression(memberExpr, context);
                 break;
 
             case MethodCallExpression callExpr:
-                HandleMethodCallExpression(callExpr, details, suppressIntermediateValues);
+                AnalyzeMethodCallExpression(callExpr, context, suppressIntermediateValues);
                 break;
 
             case ConditionalExpression conditionalExpr:
-                ExtractVariablesFromExpression(conditionalExpr.Test, details, suppressIntermediateValues);
-                ExtractVariablesFromExpression(conditionalExpr.IfTrue, details, suppressIntermediateValues);
-                ExtractVariablesFromExpression(conditionalExpr.IfFalse, details, suppressIntermediateValues);
+                AnalyzeExpression(conditionalExpr.Test, context, suppressIntermediateValues);
+                AnalyzeExpression(conditionalExpr.IfTrue, context, suppressIntermediateValues);
+                AnalyzeExpression(conditionalExpr.IfFalse, context, suppressIntermediateValues);
                 break;
 
             case InvocationExpression invocationExpr:
-                ExtractVariablesFromExpression(invocationExpr.Expression, details, suppressIntermediateValues);
+                AnalyzeExpression(invocationExpr.Expression, context, suppressIntermediateValues);
                 foreach (Expression argument in invocationExpr.Arguments)
                 {
-                    ExtractVariablesFromExpression(argument, details, suppressIntermediateValues);
+                    AnalyzeExpression(argument, context, suppressIntermediateValues);
                 }
 
                 break;
@@ -158,26 +243,24 @@ public static partial class AssertExtensions
             case NewExpression newExpr:
                 foreach (Expression argument in newExpr.Arguments)
                 {
-                    ExtractVariablesFromExpression(argument, details, suppressIntermediateValues);
+                    AnalyzeExpression(argument, context, suppressIntermediateValues);
                 }
 
-                // Don't display the new object value if we're suppressing intermediate values
-                // (which happens when it's part of a member access chain)
                 if (!suppressIntermediateValues)
                 {
                     string newExprDisplay = GetCleanMemberName(newExpr);
-                    TryAddExpressionValue(newExpr, newExprDisplay, details);
+                    context.AddCapture(newExpr, newExprDisplay);
                 }
 
                 break;
 
             case ListInitExpression listInitExpr:
-                ExtractVariablesFromExpression(listInitExpr.NewExpression, details, suppressIntermediateValues: true);
+                AnalyzeExpression(listInitExpr.NewExpression, context, suppressIntermediateValues: true);
                 foreach (ElementInit initializer in listInitExpr.Initializers)
                 {
                     foreach (Expression argument in initializer.Arguments)
                     {
-                        ExtractVariablesFromExpression(argument, details, suppressIntermediateValues);
+                        AnalyzeExpression(argument, context, suppressIntermediateValues);
                     }
                 }
 
@@ -186,58 +269,43 @@ public static partial class AssertExtensions
             case NewArrayExpression newArrayExpr:
                 foreach (Expression expression in newArrayExpr.Expressions)
                 {
-                    ExtractVariablesFromExpression(expression, details, suppressIntermediateValues);
+                    AnalyzeExpression(expression, context, suppressIntermediateValues);
                 }
 
                 break;
         }
     }
 
-    private static void HandleArrayIndexExpression(BinaryExpression arrayIndexExpr, Dictionary<string, object?> details)
+    private static void AnalyzeArrayIndexExpression(BinaryExpression arrayIndexExpr, AnalysisContext context)
     {
         string arrayName = GetCleanMemberName(arrayIndexExpr.Left);
         string indexValue = GetIndexArgumentDisplay(arrayIndexExpr.Right);
         string indexerDisplay = $"{arrayName}[{indexValue}]";
-        TryAddExpressionValue(arrayIndexExpr, indexerDisplay, details);
+        context.AddCapture(arrayIndexExpr, indexerDisplay);
 
-        // Extract variables from the index argument
-        ExtractVariablesFromExpression(arrayIndexExpr.Right, details);
+        AnalyzeExpression(arrayIndexExpr.Right, context);
     }
 
-    private static void AddMemberExpressionToDetails(MemberExpression memberExpr, Dictionary<string, object?> details)
+    private static void AnalyzeMemberExpression(MemberExpression memberExpr, AnalysisContext context)
     {
-        string displayName = GetCleanMemberName(memberExpr);
-
-        if (details.ContainsKey(displayName))
+        // Skip Func and Action delegates as they don't provide useful information in assertion failures.
+        // Use the static type so we don't have to evaluate the expression at analysis time.
+        if (IsFuncOrActionType(memberExpr.Type))
         {
             return;
         }
 
-        try
-        {
-            object? value = Expression.Lambda(memberExpr).Compile().DynamicInvoke();
-
-            // Skip Func and Action delegates as they don't provide useful information in assertion failures
-            if (IsFuncOrActionType(value?.GetType()))
-            {
-                return;
-            }
-
-            details[displayName] = value;
-        }
-        catch
-        {
-            details[displayName] = "<Failed to evaluate>";
-        }
+        string displayName = GetCleanMemberName(memberExpr);
+        context.AddCapture(memberExpr, displayName);
 
         // Only extract variables from the object being accessed if it's not a member expression or indexer (which would show the full collection)
         if (memberExpr.Expression is not null and not MemberExpression)
         {
-            ExtractVariablesFromExpression(memberExpr.Expression, details, suppressIntermediateValues: true);
+            AnalyzeExpression(memberExpr.Expression, context, suppressIntermediateValues: true);
         }
     }
 
-    private static void HandleMethodCallExpression(MethodCallExpression callExpr, Dictionary<string, object?> details, bool suppressIntermediateValues = false)
+    private static void AnalyzeMethodCallExpression(MethodCallExpression callExpr, AnalysisContext context, bool suppressIntermediateValues = false)
     {
         // Special handling for indexers (get_Item calls)
         if (callExpr.Method.Name == "get_Item" && callExpr.Object is not null && callExpr.Arguments.Count == 1)
@@ -245,52 +313,104 @@ public static partial class AssertExtensions
             string objectName = GetCleanMemberName(callExpr.Object);
             string indexValue = GetIndexArgumentDisplay(callExpr.Arguments[0]);
             string indexerDisplay = $"{objectName}[{indexValue}]";
-            TryAddExpressionValue(callExpr, indexerDisplay, details);
+            context.AddCapture(callExpr, indexerDisplay);
 
-            // Extract variables from the index argument but not from the object.
-            ExtractVariablesFromExpression(callExpr.Arguments[0], details, suppressIntermediateValues);
+            AnalyzeExpression(callExpr.Arguments[0], context, suppressIntermediateValues);
         }
         else if (callExpr.Method.Name == "Get" && callExpr.Object is not null && callExpr.Arguments.Count > 0)
         {
             string objectName = GetCleanMemberName(callExpr.Object);
             string indexDisplay = string.Join(", ", callExpr.Arguments.Select(GetIndexArgumentDisplay));
             string indexerDisplay = $"{objectName}[{indexDisplay}]";
-            TryAddExpressionValue(callExpr, indexerDisplay, details);
+            context.AddCapture(callExpr, indexerDisplay);
 
-            // Extract variables from the index arguments but not from the object
             foreach (Expression argument in callExpr.Arguments)
             {
-                ExtractVariablesFromExpression(argument, details, suppressIntermediateValues);
+                AnalyzeExpression(argument, context, suppressIntermediateValues);
             }
         }
         else
         {
-            // Check if the method returns a boolean
             if (callExpr.Method.ReturnType == typeof(bool))
             {
                 if (callExpr.Object is not null)
                 {
-                    // For boolean-returning methods, extract details from the object being called
-                    // This captures the last non-boolean method call in a chain
-                    ExtractVariablesFromExpression(callExpr.Object, details, suppressIntermediateValues);
+                    AnalyzeExpression(callExpr.Object, context, suppressIntermediateValues);
                 }
             }
             else
             {
-                // For non-boolean methods, capture the method call itself
-                string methodCallDisplay = GetCleanMemberName(callExpr);
-                TryAddExpressionValue(callExpr, methodCallDisplay, details);
-
-                // Don't extract from the object to avoid duplication
+                string methodCallDisplay = GetMethodCallDisplayName(callExpr);
+                context.AddCapture(callExpr, methodCallDisplay);
             }
 
-            // Always extract variables from the arguments
             foreach (Expression argument in callExpr.Arguments)
             {
-                ExtractVariablesFromExpression(argument, details, suppressIntermediateValues);
+                AnalyzeExpression(argument, context, suppressIntermediateValues);
             }
         }
     }
+
+    /// <summary>
+    /// Builds a friendly display name for a method-call expression so the details message uses the same
+    /// syntax the user wrote. Static methods get prefixed with their declaring type's name; instance methods on
+    /// captured <c>this</c> render as <c>this.Method(...)</c>; extension methods use the first argument as the
+    /// receiver. Fixes issue #6691.
+    /// </summary>
+    private static string GetMethodCallDisplayName(MethodCallExpression callExpr)
+    {
+        string methodName = callExpr.Method.Name;
+
+        // Extension methods are static methods on a static class marked [Extension]; the receiver is the
+        // first argument. Render like the user wrote: receiver.Method(rest).
+        if (callExpr.Object is null
+            && callExpr.Method.IsDefined(typeof(ExtensionAttribute), inherit: false)
+            && callExpr.Arguments.Count > 0)
+        {
+            string receiver = GetCleanMemberName(callExpr.Arguments[0]);
+            string extArgs = string.Join(", ", callExpr.Arguments.Skip(1).Select(static a => CleanExpressionText(a.ToString())));
+            return $"{receiver}.{methodName}({extArgs})";
+        }
+
+        string argsStr = string.Join(", ", callExpr.Arguments.Select(static a => CleanExpressionText(a.ToString())));
+
+        if (callExpr.Object is null)
+        {
+            // Regular static method: use the declaring type's short name as the receiver display.
+            string typeName = callExpr.Method.DeclaringType?.Name ?? "<unknown>";
+            return $"{typeName}.{methodName}({argsStr})";
+        }
+
+        if (IsCapturedThis(callExpr.Object, callExpr.Method.DeclaringType))
+        {
+            return $"this.{methodName}({argsStr})";
+        }
+
+        string objectDisplay = GetCleanMemberName(callExpr.Object);
+        return $"{objectDisplay}.{methodName}({argsStr})";
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> if <paramref name="objectExpr"/> is a reference to the enclosing
+    /// instance (<c>this</c>) — either accessed via the compiler-synthesized display-class field
+    /// (named like <c>&lt;&gt;4__this</c>) or as a <see cref="ConstantExpression"/> whose value is of
+    /// exactly <paramref name="declaringType"/> (which Roslyn may emit when only <c>this</c> is
+    /// captured). The exact-type check (rather than <c>IsInstanceOfType</c>) prevents mis-labeling a
+    /// non-<c>this</c> receiver as <c>this</c> when the asserted method is declared on a base type
+    /// and the receiver happens to be a local of that base type.
+    /// </summary>
+    private static bool IsCapturedThis(Expression objectExpr, Type? declaringType)
+        // Display-class field for captured this is named like "<>4__this".
+        => (objectExpr is MemberExpression me
+                && me.Member.Name.StartsWith("<>", StringComparison.Ordinal)
+                && me.Member.Name.EndsWith("__this", StringComparison.Ordinal))
+            // No-closure case: the object is a ConstantExpression whose runtime type is exactly
+            // the declaring type. Exact-type (rather than IsInstanceOfType) avoids mis-labeling
+            // a base-typed local as "this" when the asserted method is inherited from a base.
+            || (declaringType is not null
+                && objectExpr is ConstantExpression ce
+                && ce.Value is not null
+                && ce.Value.GetType() == declaringType);
 
     private static bool IsFuncOrActionType(Type? type)
     {
@@ -309,6 +429,126 @@ public static partial class AssertExtensions
         // Check for Func types
         return type.IsGenericType && type.GetGenericTypeDefinition().Name.StartsWith("Func`", StringComparison.Ordinal);
     }
+
+    /// <summary>
+    /// Returns <see langword="true"/> for expression kinds that are conventionally pure operand
+    /// reads (variable/property access, array indexers and lengths, collection indexers). These
+    /// can safely be re-evaluated on their own when they were skipped by short-circuit evaluation
+    /// of the root expression. Method calls and constructors are excluded because they may have
+    /// side effects (see issue #6690).
+    /// </summary>
+    /// <remarks>
+    /// This heuristic intentionally treats <see cref="MemberExpression"/> (which covers both
+    /// fields and properties) and the well-known indexer-style method calls
+    /// (<c>get_Item</c>/<c>Get</c>) as pure, even though property getters and user-defined
+    /// indexers can technically have side effects. This matches the pre-fix behavior — which
+    /// always re-evaluated those expressions — and ensures backward compatibility with existing
+    /// failure-detail output for short-circuited conditions like
+    /// <c>name == "x" &amp;&amp; obj.Property == y</c>. Method calls with arbitrary names are
+    /// excluded because they are the common case of side-effecting code (the original motivation
+    /// for issue #6690).
+    /// </remarks>
+    private static bool IsSafeToReevaluate(Expression expr)
+        => expr switch
+        {
+            MemberExpression => true,
+            BinaryExpression { NodeType: ExpressionType.ArrayIndex } => true,
+            UnaryExpression { NodeType: ExpressionType.ArrayLength } => true,
+            // Indexer-style method calls (auto-properties get_Item / multi-dim array Get) are
+            // conventionally pure reads; the previous implementation evaluated them eagerly too.
+            MethodCallExpression { Method.Name: "get_Item" or "Get" } => true,
+            _ => false,
+        };
+
+    private sealed class AnalysisContext
+    {
+#pragma warning disable IDE0028 // Collection initialization can be simplified - Dictionary needs ReferenceEqualityComparer
+        public Dictionary<Expression, int> CaptureMap { get; } = new(ReferenceEqualityComparer.Instance);
+#pragma warning restore IDE0028
+
+        public List<string> CaptureNames { get; } = [];
+
+        public List<Expression> CaptureExpressions { get; } = [];
+
+        public void AddCapture(Expression expr, string name)
+        {
+            // One slot per Expression instance, so duplicates of the same display name (e.g. `x + x`)
+            // and side-effecting calls that appear multiple times each get their own slot.
+            // First-occurrence-by-name wins at display-build time.
+            if (CaptureMap.ContainsKey(expr))
+            {
+                return;
+            }
+
+            // Cannot box void-typed values into the captures array; nothing useful to display anyway.
+            if (expr.Type == typeof(void))
+            {
+                return;
+            }
+
+            int index = CaptureNames.Count;
+            CaptureNames.Add(name);
+            CaptureExpressions.Add(expr);
+            CaptureMap[expr] = index;
+        }
+    }
+
+    /// <summary>
+    /// Rewrites the lambda body so every captured sub-expression's value is stored into a captures array
+    /// as a side effect of the single root evaluation. Each captured node <c>e</c> at slot <c>i</c> is
+    /// replaced by <c>{ var t = e; captures[i] = (object)t; t }</c>, so <c>e</c> is evaluated exactly once.
+    /// </summary>
+    private sealed class CaptureRewriter : ExpressionVisitor
+    {
+        private readonly Dictionary<Expression, int> _captureMap;
+        private readonly ParameterExpression _arrayParam;
+
+        public CaptureRewriter(Dictionary<Expression, int> captureMap, ParameterExpression arrayParam)
+        {
+            _captureMap = captureMap;
+            _arrayParam = arrayParam;
+        }
+
+        [return: NotNullIfNotNull(nameof(node))]
+        public override Expression? Visit(Expression? node)
+        {
+            if (node is not null && _captureMap.TryGetValue(node, out int index))
+            {
+                // Visit children first so nested captures inside `node` are also rewritten and evaluated once.
+                // base.Visit dispatches to VisitX (Member/MethodCall/...), which recurses into children via this.Visit,
+                // so our override is consulted for every descendant.
+                Expression visited = base.Visit(node)!;
+
+                ParameterExpression temp = Expression.Variable(visited.Type);
+                return Expression.Block(
+                    visited.Type,
+                    new[] { temp },
+                    Expression.Assign(temp, visited),
+                    Expression.Assign(
+                        Expression.ArrayAccess(_arrayParam, Expression.Constant(index)),
+                        Expression.Convert(temp, typeof(object))),
+                    temp);
+            }
+
+            return base.Visit(node);
+        }
+    }
+
+#if !NET
+    /// <summary>
+    /// Minimal stand-in for <c>System.Collections.Generic.ReferenceEqualityComparer</c>
+    /// (which is .NET 5+ only) so we can key dictionaries by <see cref="Expression"/> reference
+    /// from netstandard2.0.
+    /// </summary>
+    private sealed class ReferenceEqualityComparer : IEqualityComparer<Expression>
+    {
+        public static readonly ReferenceEqualityComparer Instance = new();
+
+        public bool Equals(Expression? x, Expression? y) => ReferenceEquals(x, y);
+
+        public int GetHashCode(Expression obj) => RuntimeHelpers.GetHashCode(obj);
+    }
+#endif
 
     private static string GetCleanMemberName(Expression? expr)
         => expr is null
@@ -772,26 +1012,6 @@ public static partial class AssertExtensions
 
         // Malformed, don't consume the pattern
         return false;
-    }
-
-    private static bool TryAddExpressionValue(Expression expr, string displayName, Dictionary<string, object?> details)
-    {
-        if (details.ContainsKey(displayName))
-        {
-            return false;
-        }
-
-        try
-        {
-            object? value = Expression.Lambda(expr).Compile().DynamicInvoke();
-            details[displayName] = value;
-        }
-        catch
-        {
-            details[displayName] = "<Failed to evaluate>";
-        }
-
-        return true;
     }
 
 #if NET

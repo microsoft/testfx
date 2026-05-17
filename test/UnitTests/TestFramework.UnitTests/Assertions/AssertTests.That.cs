@@ -1042,4 +1042,276 @@ public partial class AssertTests : TestContainer
               nullVariable = null
             """);
     }
+
+    // ---- Tests for issue #6690 (single-pass evaluation) ------------------------------------
+
+    private sealed class Counter
+    {
+        public int CallCount { get; private set; }
+
+        public int GetNumber()
+        {
+            CallCount++;
+            return CallCount;
+        }
+    }
+
+    public void That_ExpressionWithSideEffect_EvaluatesOnlyOnce()
+    {
+        // Reproduces issue #6690: prior to the fix, Assert.That evaluated the expression once to
+        // determine the boolean result, then re-compiled and re-invoked each sub-expression for
+        // reporting. With a stateful method like Counter.GetNumber(), this produced a misleading
+        // details string where the reported value differed from the value actually compared.
+        var box = new Counter();
+        int expected = 2;
+
+        Action act = () => Assert.That(() => box.GetNumber() == expected);
+
+        try
+        {
+            act();
+        }
+        catch (AssertFailedException)
+        {
+            // Expected.
+        }
+
+        // Each textual occurrence of GetNumber() should have been evaluated exactly once.
+        box.CallCount.Should().Be(1);
+    }
+
+    public void That_ExpressionWithSideEffect_FailureMessageReflectsFirstEvaluation()
+    {
+        var box = new Counter();
+        int expected = 2;
+
+        Action act = () => Assert.That(() => box.GetNumber() == expected);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assert.That(() => box.GetNumber() == expected) failed.
+                Details:
+                  box.GetNumber() = 1
+                  expected = 2
+                """);
+    }
+
+    public void That_ExpressionWithSideEffect_AppearingTwice_EvaluatesEachOccurrenceOnce()
+    {
+        // Each textual occurrence of `box.GetNumber()` is evaluated naturally (once each),
+        // matching what the user wrote. There must be no extra evaluations from the framework.
+        // The reported value uses first-occurrence-wins-by-name semantics.
+        var box = new Counter();
+
+        Action act = () => Assert.That(() => box.GetNumber() == box.GetNumber());
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assert.That(() => box.GetNumber() == box.GetNumber()) failed.
+                Details:
+                  box.GetNumber() = 1
+                """);
+
+        // Two textual occurrences in the expression -> exactly two invocations.
+        box.CallCount.Should().Be(2);
+    }
+
+    public void That_ShortCircuitedExpression_StillReportsBothOperands()
+    {
+        // When `&&` short-circuits, the right-hand side isn't evaluated by the rewritten lambda.
+        // For reporting we still want to show pure operand values, so the implementation falls back
+        // to evaluating just the un-captured *variable* sub-expression on its own.
+        bool a = false;
+        int b = 5;
+
+        Action act = () => Assert.That(() => a && b > 10);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assert.That(() => a && b > 10) failed.
+                Details:
+                  a = False
+                  b = 5
+                """);
+    }
+
+    public void That_ShortCircuitedExpression_DoesNotEvaluateUnreachedSideEffect()
+    {
+        // The right-hand side of `&&` must not be invoked when the left side is false, even after
+        // our rewriting. The framework must not "fall back" to evaluating side-effecting calls
+        // that the user's expression intentionally skipped via short-circuit.
+        var box = new Counter();
+        bool a = false;
+
+        Action act = () => Assert.That(() => a && box.GetNumber() > 0);
+
+        try
+        {
+            act();
+        }
+        catch (AssertFailedException)
+        {
+            // Expected.
+        }
+
+        // Counter must not have been called.
+        box.CallCount.Should().Be(0);
+    }
+
+    // ---- Tests for issue #6691 (method call display names) ---------------------------------
+
+    public string SameClassInstanceMethod() => "Giraffe";
+
+    public static string SameClassStaticMethod() => "Giraffe";
+
+    private sealed class Zoo
+    {
+        public string GetAnimal() => "Giraffe";
+
+        public static string GetAnimalStatic() => "Giraffe";
+    }
+
+    public void That_InstanceMethodOnSameType_RendersAsThis()
+    {
+        // Reproduces issue #6691: previously the instance method on the enclosing test class was
+        // shown with its full type name (e.g. "Namespace.AssertTests.SameClassInstanceMethod()").
+        // It should render as "this.SameClassInstanceMethod()" instead.
+        string animal = "";
+
+        Action act = () => Assert.That(() => SameClassInstanceMethod() == animal);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assert.That(() => SameClassInstanceMethod() == animal) failed.
+                Details:
+                  animal = ""
+                  this.SameClassInstanceMethod() = "Giraffe"
+                """);
+    }
+
+    public void That_StaticMethodOnSameType_RendersWithTypeName()
+    {
+        // Static method on the enclosing test class used to render without any type qualifier
+        // (just "SameClassStaticMethod()"). It should include the declaring type name.
+        string animal = "";
+
+        Action act = () => Assert.That(() => SameClassStaticMethod() == animal);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assert.That(() => SameClassStaticMethod() == animal) failed.
+                Details:
+                  AssertTests.SameClassStaticMethod() = "Giraffe"
+                  animal = ""
+                """);
+    }
+
+    public void That_InstanceMethodOnOtherType_RendersWithObjectName()
+    {
+        // The "happy path" that was already correct: instance method on a local variable.
+        string animal = "";
+        var zoo = new Zoo();
+
+        Action act = () => Assert.That(() => zoo.GetAnimal() == animal);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assert.That(() => zoo.GetAnimal() == animal) failed.
+                Details:
+                  animal = ""
+                  zoo.GetAnimal() = "Giraffe"
+                """);
+    }
+
+    public void That_StaticMethodOnOtherType_RendersWithTypeName()
+    {
+        // Static method on a non-enclosing class should include its type name.
+        string animal = "";
+
+        Action act = () => Assert.That(() => Zoo.GetAnimalStatic() == animal);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assert.That(() => Zoo.GetAnimalStatic() == animal) failed.
+                Details:
+                  Zoo.GetAnimalStatic() = "Giraffe"
+                  animal = ""
+                """);
+    }
+
+    private class AnimalBase
+    {
+        public string Whisper() => "Whisper";
+    }
+
+    private sealed class Cat : AnimalBase
+    {
+    }
+
+    public void That_InstanceMethodOnLocalOfBaseType_DoesNotRenderAsThis()
+    {
+        // Regression guard for IsCapturedThis precision: when the asserted method is declared on
+        // a base type AND the receiver is a local variable of that base type, we must render the
+        // local's name (not "this"), even if the local happens to be assignable to the method's
+        // declaring type. Previously a loose `IsInstanceOfType` check could mislabel this case.
+        AnimalBase pet = new Cat();
+        string expected = "Roar";
+
+        Action act = () => Assert.That(() => pet.Whisper() == expected);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assert.That(() => pet.Whisper() == expected) failed.
+                Details:
+                  expected = "Roar"
+                  pet.Whisper() = "Whisper"
+                """);
+    }
+
+    // ---- Documented-trade-off test: properties in short-circuited branches are re-evaluated ----
+
+    private sealed class PropertyCounter
+    {
+        public int GetCount { get; private set; }
+
+        public int Value
+        {
+            get
+            {
+                GetCount++;
+                return 42;
+            }
+        }
+    }
+
+    public void That_ShortCircuitedPropertyAccess_IsReevaluatedForReporting()
+    {
+        // This locks down the documented trade-off in IsSafeToReevaluate: when a property
+        // appears in a short-circuited branch, the failure path re-evaluates it so it appears
+        // in the details message. Property getters CAN have side effects, so this is a
+        // deliberate compromise — it matches the pre-fix behavior and keeps the failure message
+        // informative for the common case of pure getters.
+        var counter = new PropertyCounter();
+
+        Action act = () => Assert.That(() => false && counter.Value == 0);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assert.That(() => false && counter.Value == 0) failed.
+                Details:
+                  counter.Value = 42
+                """);
+
+        // The property was invoked once by the fallback path (the root short-circuited).
+        counter.GetCount.Should().Be(1);
+    }
 }
