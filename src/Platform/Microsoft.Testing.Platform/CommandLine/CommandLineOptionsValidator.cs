@@ -25,7 +25,7 @@ internal static class CommandLineOptionsValidator
                 stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"\t- {error}");
             }
 
-            return ValidationResult.Invalid(stringBuilder.ToTrimmedString());
+            return InvalidWithCommandLine(commandLineParseResult, stringBuilder.ToTrimmedString());
         }
 
         var extensionOptionsByProvider = extensionCommandLineOptionsProviders.ToDictionary(p => p, p => p.GetCommandLineOptions());
@@ -47,7 +47,7 @@ internal static class CommandLineOptionsValidator
 
         if (ValidateNoUnknownOptions(commandLineParseResult, extensionOptionsByProvider, systemOptionsByProvider) is { IsValid: false } result4)
         {
-            return result4;
+            return AddCommandLine(commandLineParseResult, result4);
         }
 
         var providerAndOptionByOptionName = extensionOptionsByProvider.Union(systemOptionsByProvider)
@@ -56,12 +56,12 @@ internal static class CommandLineOptionsValidator
 
         if (ValidateOptionsArgumentArity(commandLineParseResult, providerAndOptionByOptionName) is { IsValid: false } result5)
         {
-            return result5;
+            return AddCommandLine(commandLineParseResult, result5);
         }
 
         if (await ValidateOptionsArgumentsAsync(commandLineParseResult, providerAndOptionByOptionName).ConfigureAwait(false) is { IsValid: false } result6)
         {
-            return result6;
+            return AddCommandLine(commandLineParseResult, result6);
         }
 
         // Last validation step
@@ -322,5 +322,21 @@ internal static class CommandLineOptionsValidator
         }
 
         return stringBuilder.ToString();
+    }
+
+    private static ValidationResult AddCommandLine(CommandLineParseResult parseResult, ValidationResult result)
+        => result.IsValid ? result : InvalidWithCommandLine(parseResult, result.ErrorMessage);
+
+    private static ValidationResult InvalidWithCommandLine(CommandLineParseResult parseResult, string errorMessage)
+    {
+        if (parseResult.CommandLine.Length == 0)
+        {
+            return ValidationResult.Invalid(errorMessage);
+        }
+
+        var stringBuilder = new StringBuilder(errorMessage);
+        stringBuilder.AppendLine();
+        stringBuilder.AppendFormat(CultureInfo.InvariantCulture, PlatformResources.CommandLineValidationCommandLine, parseResult.CommandLine);
+        return ValidationResult.Invalid(stringBuilder.ToString());
     }
 }

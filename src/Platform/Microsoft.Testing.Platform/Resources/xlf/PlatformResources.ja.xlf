@@ -162,6 +162,11 @@
         <target state="translated">不明なオプション: '--{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineValidationCommandLine">
+        <source>Command line: {0}</source>
+        <target state="new">Command line: {0}</target>
+        <note>{0} is the command line used to run the application.</note>
+      </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensionFactory' is already registered</source>
         <target state="translated">'CompositeExtensionFactory' の同じインスタンスが既に登録されています</target>
@@ -511,9 +516,15 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
 使用可能な値は、'Trace'、'Debug'、'Information'、'Warning'、'Error'、'Critical' です。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
+        <source>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="new">'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
-        <source>List available tests.</source>
-        <target state="translated">使用可能なテストを一覧表示します。</target>
+        <source>List available tests.
+Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</source>
+        <target state="needs-review-translation">使用可能なテストを一覧表示します。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
