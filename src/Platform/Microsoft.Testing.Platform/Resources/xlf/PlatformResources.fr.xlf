@@ -162,6 +162,11 @@
         <target state="translated">Option « --{0} » inconnue.</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineValidationCommandLine">
+        <source>Command line: {0}</source>
+        <target state="new">Command line: {0}</target>
+        <note>{0} is the command line used to run the application.</note>
+      </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensionFactory' is already registered</source>
         <target state="translated">La même instance de 'CompositeExtensionFactory' est déjà enregistrée</target>
