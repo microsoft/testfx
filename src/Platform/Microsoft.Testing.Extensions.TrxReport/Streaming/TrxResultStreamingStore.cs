@@ -220,9 +220,9 @@ internal sealed class TrxResultStreamingStore : IDisposable
                 Interlocked.Add(ref _droppedCount, discarded);
             }
 
-            _logger.LogErrorAsync(
+            TryLogError(
                 $"TRX streaming store writer faulted; intermediate file may be incomplete. {discarded} record(s) were dropped from the in-memory queue and will not appear in the TRX.",
-                ex).GetAwaiter().GetResult();
+                ex);
         }
         finally
         {
@@ -235,7 +235,7 @@ internal sealed class TrxResultStreamingStore : IDisposable
             }
             catch (Exception ex)
             {
-                _logger.LogErrorAsync("Failed to close TRX streaming store file.", ex).GetAwaiter().GetResult();
+                TryLogError("Failed to close TRX streaming store file.", ex);
             }
         }
 
@@ -268,9 +268,9 @@ internal sealed class TrxResultStreamingStore : IDisposable
                 int unwritten = batch.Count - written;
                 Interlocked.Add(ref _droppedCount, unwritten);
 
-                _logger.LogErrorAsync(
-                    $"Failed to write TRX record {i + 1}/{batch.Count} after {MaxWriteRetries} retries; truncating to last good record. {unwritten} record(s) from this batch will not appear in the TRX.",
-                    ex).GetAwaiter().GetResult();
+                TryLogError(
+                    $"Failed to write TRX record {i + 1}/{batch.Count} after up to {MaxWriteRetries} retries; truncating to last good record. {unwritten} record(s) from this batch will not appear in the TRX.",
+                    ex);
                 try
                 {
                     rawStream.Seek(preRecordPosition, SeekOrigin.Begin);
@@ -299,9 +299,9 @@ internal sealed class TrxResultStreamingStore : IDisposable
                         Interlocked.Add(ref _droppedCount, additionalDropped);
                     }
 
-                    _logger.LogErrorAsync(
+                    TryLogError(
                         $"Failed to truncate TRX streaming store after write failure; marking store faulted. {additionalDropped} additional record(s) from the queue were dropped.",
-                        truncEx).GetAwaiter().GetResult();
+                        truncEx);
                     return;
                 }
 
@@ -317,7 +317,7 @@ internal sealed class TrxResultStreamingStore : IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogErrorAsync("Failed to flush TRX streaming store; records remain in OS buffer.", ex).GetAwaiter().GetResult();
+            TryLogError("Failed to flush TRX streaming store; records remain in OS buffer.", ex);
         }
 
         if (written > 0)
@@ -462,6 +462,18 @@ internal sealed class TrxResultStreamingStore : IDisposable
         if (_logger.IsEnabled(LogLevel.Debug))
         {
             _logger.LogDebug($"TRX streaming store dropped a record ({reason}). Total dropped: {Volatile.Read(ref _droppedCount)}.");
+        }
+    }
+
+    private void TryLogError(string message, Exception ex)
+    {
+        try
+        {
+            _logger.LogError(message, ex);
+        }
+        catch
+        {
+            // Logging must remain best-effort and must not change writer failure behavior.
         }
     }
 }
