@@ -17,6 +17,21 @@
         <target state="translated">Byla nalezena duplicitní položka:&lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreAllDistinctFailedSummary">
+        <source>Expected all items in collection to be distinct.</source>
+        <target state="new">Expected all items in collection to be distinct.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreAllNotNullFailedSummary">
+        <source>Expected all items in collection to be non-null.</source>
+        <target state="new">Expected all items in collection to be non-null.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreAllOfTypeFailedSummary">
+        <source>Expected all items in collection to be of the specified type.</source>
+        <target state="new">Expected all items in collection to be of the specified type.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreEqualFailMsg">
         <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
         <target state="translated">Očekáváno:&lt;{1}&gt;. Aktuálně:&lt;{2}&gt;. {0}</target>
@@ -373,6 +388,11 @@
         <target state="new">Expected string to not end with the specified suffix.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoesNotMatchRegexFailedSummary">
+        <source>Expected string to not match the specified regular expression.</source>
+        <target state="new">Expected string to not match the specified regular expression.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
         <source>String '{0}' starts with string '{1}'. {2}</source>
         <target state="translated">Řetězec „{0}“ začíná řetězcem „{1}“. {2}</target>
@@ -555,6 +575,11 @@ Skutečnost: {2}</target>
       <trans-unit id="IsTrueFailedSummary">
         <source>Expected condition to be true.</source>
         <target state="translated">Očekávala se podmínka true.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MatchesRegexFailedSummary">
+        <source>Expected string to match the specified regular expression.</source>
+        <target state="new">Expected string to match the specified regular expression.</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
