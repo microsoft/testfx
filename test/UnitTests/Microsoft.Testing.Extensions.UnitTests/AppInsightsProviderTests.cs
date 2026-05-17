@@ -15,6 +15,8 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class AppInsightsProviderTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void Platform_CancellationToken_Cancellation_Should_Exit_Gracefully()
     {
@@ -151,5 +153,68 @@ public sealed class AppInsightsProviderTests
 #else
         appInsightsProvider.Dispose();
 #endif
+    }
+
+    [TestMethod]
+    public async Task LogEvent_WithBooleanProperty_ConvertsValueToTelemetryString()
+    {
+        Mock<IEnvironment> environment = new();
+        Mock<IClock> clock = new();
+        Mock<IConfiguration> config = new();
+        Mock<ITelemetryInformation> telemetryInformation = new();
+
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+
+        Dictionary<string, string> capturedProperties = [];
+        using ManualResetEventSlim trackEventCalled = new(initialState: false);
+        Mock<ITelemetryClient> testTelemetryClient = new();
+        testTelemetryClient.Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
+            .Callback((string _, Dictionary<string, string> properties, Dictionary<string, double> _) =>
+            {
+                foreach (KeyValuePair<string, string> pair in properties)
+                {
+                    capturedProperties[pair.Key] = pair.Value;
+                }
+
+                trackEventCalled.Set();
+            });
+
+        Mock<ITelemetryClientFactory> telemetryClientFactory = new();
+        telemetryClientFactory.Setup(x => x.Create(It.IsAny<string?>(), It.IsAny<string>())).Returns(testTelemetryClient.Object);
+
+        CancellationTokenSource cancellationTokenSource = new();
+        Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new();
+        testApplicationCancellationTokenSource.Setup(x => x.CancellationToken).Returns(cancellationTokenSource.Token);
+
+        AppInsightsProvider appInsightsProvider = new(
+            environment.Object,
+            testApplicationCancellationTokenSource.Object,
+            new SystemTask(),
+            loggerFactory.Object,
+            clock.Object,
+            config.Object,
+            telemetryInformation.Object,
+            telemetryClientFactory.Object,
+            "sessionId");
+
+        await appInsightsProvider.LogEventAsync(
+            "Sample",
+            new Dictionary<string, object> { ["my.bool"] = true },
+            CancellationToken.None);
+
+        // Wait for the consumer loop to actually invoke TrackEvent before disposing,
+        // otherwise the dispose-time flush window can elapse on slower runners (notably net472)
+        // before the payload is processed.
+        Assert.IsTrue(trackEventCalled.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Telemetry consumer did not invoke TrackEvent within the timeout.");
+
+#if NETCOREAPP
+        await appInsightsProvider.DisposeAsync();
+#else
+        appInsightsProvider.Dispose();
+#endif
+
+        Assert.IsTrue(capturedProperties.TryGetValue("my.bool", out string? value), "Expected 'my.bool' property in tracked event.");
+        Assert.AreEqual(TelemetryProperties.True, value);
     }
 }
