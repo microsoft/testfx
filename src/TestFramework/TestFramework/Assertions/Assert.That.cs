@@ -58,13 +58,27 @@ public static partial class AssertExtensions
                 throw new ArgumentNullException(nameof(condition));
             }
 
-            // Cache to store evaluated expression values to avoid re-evaluation.
-            // This is critical for expressions with side effects - we evaluate each sub-expression
-            // only once and reuse the cached result throughout the assertion process.
-            var evaluationCache = new Dictionary<Expression, object?>();
+            Dictionary<Expression, object?>? evaluationCache = null;
+            bool result;
 
-            // Evaluate the condition expression and cache all sub-expression values
-            bool result = EvaluateExpression(condition.Body, evaluationCache);
+            if (RequiresSinglePassEvaluation(condition.Body))
+            {
+                // Potentially side-effecting expressions must be evaluated once while caching values.
+                evaluationCache = [];
+                result = EvaluateExpression(condition.Body, evaluationCache);
+            }
+            else
+            {
+                // For side-effect-free expressions, keep the fast pass path and only compute details on failures.
+                result = condition.Compile().Invoke();
+                if (result)
+                {
+                    return;
+                }
+
+                evaluationCache = [];
+                EvaluateAllSubExpressions(condition.Body, evaluationCache);
+            }
 
             if (result)
             {
@@ -80,7 +94,7 @@ public static partial class AssertExtensions
                 sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatMessageFormat, message));
             }
 
-            string details = ExtractDetails(condition.Body, evaluationCache);
+            string details = ExtractDetails(condition.Body, evaluationCache!);
             if (!string.IsNullOrWhiteSpace(details))
             {
                 if (sb.Length == 0)
@@ -117,6 +131,31 @@ public static partial class AssertExtensions
         // Fallback - this should not happen if EvaluateAllSubExpressions works correctly
         throw ApplicationStateGuard.Unreachable();
     }
+
+    private static bool RequiresSinglePassEvaluation(Expression expr)
+        => expr switch
+        {
+            BinaryExpression binaryExpr => binaryExpr.Method is not null
+                || RequiresSinglePassEvaluation(binaryExpr.Left)
+                || RequiresSinglePassEvaluation(binaryExpr.Right),
+
+            UnaryExpression unaryExpr => unaryExpr.Method is not null
+                || RequiresSinglePassEvaluation(unaryExpr.Operand),
+
+            MemberExpression memberExpr => memberExpr.Member.MemberType == MemberTypes.Property
+                || (memberExpr.Expression is not null && RequiresSinglePassEvaluation(memberExpr.Expression)),
+
+            ConditionalExpression conditionalExpr => RequiresSinglePassEvaluation(conditionalExpr.Test)
+                || RequiresSinglePassEvaluation(conditionalExpr.IfTrue)
+                || RequiresSinglePassEvaluation(conditionalExpr.IfFalse),
+
+            TypeBinaryExpression typeBinaryExpr => RequiresSinglePassEvaluation(typeBinaryExpr.Expression),
+
+            MethodCallExpression or InvocationExpression or NewExpression or ListInitExpression or MemberInitExpression
+                or NewArrayExpression or IndexExpression => true,
+
+            _ => false,
+        };
 
     /// <summary>
     /// Recursively evaluates all sub-expressions in the tree and caches their values.
