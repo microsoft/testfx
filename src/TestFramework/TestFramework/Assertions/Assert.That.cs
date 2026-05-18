@@ -461,9 +461,11 @@ public static partial class AssertExtensions
             MemberExpression => true,
             BinaryExpression { NodeType: ExpressionType.ArrayIndex } => true,
             UnaryExpression { NodeType: ExpressionType.ArrayLength } => true,
-            // Indexer-style method calls (auto-properties get_Item / multi-dim array Get) are
-            // conventionally pure reads; the previous implementation evaluated them eagerly too.
-            MethodCallExpression { Method.Name: "get_Item" or "Get" } => true,
+            // Indexer-style method calls are conventionally pure reads; the previous implementation
+            // evaluated them eagerly too. Keep this limited to actual indexers and multidimensional
+            // array reads so arbitrary user-defined `Get(...)` methods are not re-invoked.
+            MethodCallExpression { Method.Name: "get_Item" } => true,
+            MethodCallExpression { Method.Name: "Get", Method.DeclaringType: { } declaringType } when declaringType == typeof(Array) => true,
             _ => false,
         };
 
@@ -828,7 +830,8 @@ public static partial class AssertExtensions
     }
 
     private static string CleanTypeName(string typeName)
-        => typeName switch
+    {
+        string cleanedTypeName = typeName switch
         {
             "Int32" => "int",
             "Int64" => "long",
@@ -865,6 +868,22 @@ public static partial class AssertExtensions
 
             _ => typeName,
         };
+
+        if (cleanedTypeName != typeName)
+        {
+            return cleanedTypeName;
+        }
+
+        string[] nestedSegments = typeName.Split('+');
+        for (int i = 0; i < nestedSegments.Length; i++)
+        {
+            string segment = nestedSegments[i];
+            int lastDot = segment.LastIndexOf('.');
+            nestedSegments[i] = lastDot >= 0 ? segment.Substring(lastDot + 1) : segment;
+        }
+
+        return string.Join(".", nestedSegments);
+    }
 
     private static string CleanParentheses(string input)
     {

@@ -1044,7 +1044,6 @@ public partial class AssertTests : TestContainer
     }
 
     // ---- Tests for issue #6690 (single-pass evaluation) ------------------------------------
-
     private sealed class Counter
     {
         public int CallCount { get; private set; }
@@ -1053,6 +1052,12 @@ public partial class AssertTests : TestContainer
         {
             CallCount++;
             return CallCount;
+        }
+
+        public int Get(int value)
+        {
+            CallCount++;
+            return value;
         }
     }
 
@@ -1067,14 +1072,7 @@ public partial class AssertTests : TestContainer
 
         Action act = () => Assert.That(() => box.GetNumber() == expected);
 
-        try
-        {
-            act();
-        }
-        catch (AssertFailedException)
-        {
-            // Expected.
-        }
+        act.Should().Throw<AssertFailedException>();
 
         // Each textual occurrence of GetNumber() should have been evaluated exactly once.
         box.CallCount.Should().Be(1);
@@ -1148,21 +1146,32 @@ public partial class AssertTests : TestContainer
 
         Action act = () => Assert.That(() => a && box.GetNumber() > 0);
 
-        try
-        {
-            act();
-        }
-        catch (AssertFailedException)
-        {
-            // Expected.
-        }
+        act.Should().Throw<AssertFailedException>();
 
         // Counter must not have been called.
         box.CallCount.Should().Be(0);
     }
 
-    // ---- Tests for issue #6691 (method call display names) ---------------------------------
+    public void That_ShortCircuitedExpression_DoesNotReevaluateArbitraryGetMethod()
+    {
+        var box = new Counter();
+        bool a = false;
+        int expected = 2;
 
+        Action act = () => Assert.That(() => a && box.Get(expected) == expected);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assert.That(() => a && box.Get(expected) == expected) failed.
+                Details:
+                  a = False
+                  expected = 2
+                """);
+        box.CallCount.Should().Be(0);
+    }
+
+    // ---- Tests for issue #6691 (method call display names) ---------------------------------
     public string SameClassInstanceMethod() => "Giraffe";
 
     public static string SameClassStaticMethod() => "Giraffe";
@@ -1179,7 +1188,7 @@ public partial class AssertTests : TestContainer
         // Reproduces issue #6691: previously the instance method on the enclosing test class was
         // shown with its full type name (e.g. "Namespace.AssertTests.SameClassInstanceMethod()").
         // It should render as "this.SameClassInstanceMethod()" instead.
-        string animal = "";
+        string animal = string.Empty;
 
         Action act = () => Assert.That(() => SameClassInstanceMethod() == animal);
 
@@ -1197,7 +1206,7 @@ public partial class AssertTests : TestContainer
     {
         // Static method on the enclosing test class used to render without any type qualifier
         // (just "SameClassStaticMethod()"). It should include the declaring type name.
-        string animal = "";
+        string animal = string.Empty;
 
         Action act = () => Assert.That(() => SameClassStaticMethod() == animal);
 
@@ -1214,7 +1223,7 @@ public partial class AssertTests : TestContainer
     public void That_InstanceMethodOnOtherType_RendersWithObjectName()
     {
         // The "happy path" that was already correct: instance method on a local variable.
-        string animal = "";
+        string animal = string.Empty;
         var zoo = new Zoo();
 
         Action act = () => Assert.That(() => zoo.GetAnimal() == animal);
@@ -1232,7 +1241,7 @@ public partial class AssertTests : TestContainer
     public void That_StaticMethodOnOtherType_RendersWithTypeName()
     {
         // Static method on a non-enclosing class should include its type name.
-        string animal = "";
+        string animal = string.Empty;
 
         Action act = () => Assert.That(() => Zoo.GetAnimalStatic() == animal);
 
@@ -1241,7 +1250,7 @@ public partial class AssertTests : TestContainer
                 """
                 Assert.That(() => Zoo.GetAnimalStatic() == animal) failed.
                 Details:
-                  Zoo.GetAnimalStatic() = "Giraffe"
+                  AssertTests.Zoo.GetAnimalStatic() = "Giraffe"
                   animal = ""
                 """);
     }
@@ -1277,7 +1286,6 @@ public partial class AssertTests : TestContainer
     }
 
     // ---- Documented-trade-off test: properties in short-circuited branches are re-evaluated ----
-
     private sealed class PropertyCounter
     {
         public int GetCount { get; private set; }
