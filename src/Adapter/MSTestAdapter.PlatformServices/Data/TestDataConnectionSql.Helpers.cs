@@ -34,22 +34,7 @@ internal partial class TestDataConnectionSql
     /// <param name="values">An array of values.</param>
     /// <returns>True if string exists in array.</returns>
     private static bool IsInArray(string? candidate, string[]? values)
-    {
-        if (values == null)
-        {
-            return false;
-        }
-
-        foreach (string value in values)
-        {
-            if (string.Equals(value, candidate, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+        => values is not null && Array.Exists(values, v => string.Equals(v, candidate, StringComparison.OrdinalIgnoreCase));
 
     #endregion
 
@@ -104,7 +89,7 @@ internal partial class TestDataConnectionSql
     /// </summary>
     /// <remarks>
     /// sqlsrv32.dll: Driver={SQL Server};Server=SqlServer;Database=DatabaseName;Trusted_Connection=yes
-    /// msorcl32.dll: Driver={Microsoft ODBC for Oracle};Server=OracleServer;Uid=user;Pwd=password.
+    /// msorcl32.dll: Driver={Microsoft ODBC for Oracle};Server=OracleServer;Uid=&lt;user&gt;;Pwd=&lt;password&gt;.
     /// </remarks>
     protected static class KnownOdbcDrivers
     {
