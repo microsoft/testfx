@@ -298,6 +298,11 @@
         <target state="translated">{0}. {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ContainsAllFailedSummary">
+        <source>Expected collection to contain all specified items.</source>
+        <target state="new">Expected collection to contain all specified items.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ContainsFail">
         <source>String '{0}' does not contain string '{1}'. {2}.</source>
         <target state="translated">'{0}' 문자열이 '{1}' 문자열을 포함하지 않습니다. {2}</target>
@@ -346,6 +351,11 @@
       <trans-unit id="ContainsSubstringFailedSummary">
         <source>Expected string to contain the specified substring.</source>
         <target state="new">Expected string to contain the specified substring.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotContainAllFailedSummary">
+        <source>Expected collection to not contain all specified items.</source>
+        <target state="new">Expected collection to not contain all specified items.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainFail">

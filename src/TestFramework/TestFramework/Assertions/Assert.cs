@@ -213,6 +213,29 @@ public sealed partial class Assert
         return $"{assertionMethodName}({arg1}, {arg2})";
     }
 
+    /// <summary>
+    /// Formats a call-site expression for display at the bottom of a structured assertion message,
+    /// using three captured expressions. Multiline (or empty/whitespace) expressions are replaced with the
+    /// supplied placeholders. Only when all three expressions are empty/whitespace is the entire call-site
+    /// line suppressed.
+    /// </summary>
+    internal static string? FormatCallSiteExpression(string assertionMethodName, string expression1, string expression2, string expression3, string placeholder1 = "<arg1>", string placeholder2 = "<arg2>", string placeholder3 = "<arg3>")
+    {
+        bool empty1 = string.IsNullOrWhiteSpace(expression1);
+        bool empty2 = string.IsNullOrWhiteSpace(expression2);
+        bool empty3 = string.IsNullOrWhiteSpace(expression3);
+        if (empty1 && empty2 && empty3)
+        {
+            return null;
+        }
+
+        string arg1 = empty1 || IsMultiline(expression1) ? NormalizeCallSitePlaceholder(placeholder1) : expression1;
+        string arg2 = empty2 || IsMultiline(expression2) ? NormalizeCallSitePlaceholder(placeholder2) : expression2;
+        string arg3 = empty3 || IsMultiline(expression3) ? NormalizeCallSitePlaceholder(placeholder3) : expression3;
+
+        return $"{assertionMethodName}({arg1}, {arg2}, {arg3})";
+    }
+
     // string.Contains(char) is not available on netstandard2.0 / net462, so use IndexOf to check for newline characters.
     private static bool IsMultiline(string expression)
         => expression.IndexOf('\n') >= 0 || expression.IndexOf('\r') >= 0;
