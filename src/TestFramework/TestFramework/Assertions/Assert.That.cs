@@ -64,7 +64,9 @@ public static partial class AssertExtensions
             if (RequiresSinglePassEvaluation(condition.Body))
             {
                 // Potentially side-effecting expressions must be evaluated once while caching values.
-                evaluationCache = [];
+#pragma warning disable IDE0028 // Collection initialization can be simplified
+                evaluationCache = new Dictionary<Expression, object?>();
+#pragma warning restore IDE0028
                 result = EvaluateExpression(condition.Body, evaluationCache);
             }
             else
@@ -76,7 +78,9 @@ public static partial class AssertExtensions
                     return;
                 }
 
-                evaluationCache = [];
+#pragma warning disable IDE0028 // Collection initialization can be simplified
+                evaluationCache = new Dictionary<Expression, object?>();
+#pragma warning restore IDE0028
                 EvaluateAllSubExpressions(condition.Body, evaluationCache);
             }
 
@@ -142,8 +146,8 @@ public static partial class AssertExtensions
             UnaryExpression unaryExpr => unaryExpr.Method is not null
                 || RequiresSinglePassEvaluation(unaryExpr.Operand),
 
-            MemberExpression memberExpr => memberExpr.Member.MemberType == MemberTypes.Property
-                || (memberExpr.Expression is not null && RequiresSinglePassEvaluation(memberExpr.Expression)),
+            MemberExpression memberExpr => (memberExpr.Expression is not null && RequiresSinglePassEvaluation(memberExpr.Expression))
+                || memberExpr.Member.MemberType == MemberTypes.Property,
 
             ConditionalExpression conditionalExpr => RequiresSinglePassEvaluation(conditionalExpr.Test)
                 || RequiresSinglePassEvaluation(conditionalExpr.IfTrue)
