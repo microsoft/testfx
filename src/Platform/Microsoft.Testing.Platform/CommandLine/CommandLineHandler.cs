@@ -110,7 +110,10 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
         {
             string optionNameIndent = new(' ', indentLevel * 2);
             string optionInfoIndent = new(' ', (indentLevel + 1) * 2);
-            foreach (CommandLineOption option in options.OrderBy(x => x.Name))
+            // Use StringComparer.OrdinalIgnoreCase so the option ordering is deterministic across TFMs
+            // (the culture-aware default sorts '-' differently between .NET Framework and .NET (Core)).
+            // Note: this affects the visible order of options in `--help` / `--info` output.
+            foreach (CommandLineOption option in options.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
             {
                 string optionName = $"{optionNameIndent}--{option.Name}";
                 await outputDevice.DisplayAsync(this, new TextOutputDeviceData(optionName), cancellationToken).ConfigureAwait(false);
@@ -249,7 +252,8 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
                 [.. optionProviders
                .SelectMany(provider => provider.GetCommandLineOptions())
                .Where(option => !option.IsHidden && option.IsBuiltIn == builtInOnly)
-               .OrderBy(option => option.Name)];
+               // See DisplayOptionsAsync for the rationale behind using StringComparer.Ordinal.
+               .OrderBy(option => option.Name, StringComparer.Ordinal)];
 
             if (options.Length == 0)
             {

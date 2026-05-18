@@ -118,7 +118,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
                 ["SLEEPTIMEMS2"] = "600000",
             },
             cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        AssertTemplateHangDumpCompleted(testHostResult);
 
         // Verify the dump file uses the template format
         string[] dumpFiles = Directory.GetFiles(resultDirectory, "*_hang.dmp", SearchOption.AllDirectories);
@@ -151,7 +151,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
                 ["SLEEPTIMEMS2"] = "600000",
             },
             cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        AssertTemplateHangDumpCompleted(testHostResult);
 
         // Verify the dump file was created inside a subdirectory named after the assembly
         string[] dumpFiles = Directory.GetFiles(resultDirectory, "*_hang.dmp", SearchOption.AllDirectories);
@@ -165,6 +165,17 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         Assert.AreNotEqual(resultDirectory, parentDir, "Dump file should be in a subdirectory created from the {asm} placeholder");
         Assert.AreEqual("HangDump", Path.GetFileName(parentDir),
             $"Subdirectory should be named after the assembly ('HangDump'). Actual: {Path.GetFileName(parentDir)}");
+    }
+
+    private static void AssertTemplateHangDumpCompleted(TestHostResult testHostResult)
+    {
+        testHostResult.AssertOutputContains("Hang dump timeout");
+
+        // These template-focused tests only need to prove that hang dump triggered and the file was created.
+        // On macOS, createdump can finish after the test host reports success, so the process may still exit with 0.
+        Assert.IsTrue(
+            testHostResult.ExitCode is (int)ExitCode.Success or (int)ExitCode.TestHostProcessExitedNonGracefully,
+            $"Expected hang dump template scenarios to exit with {(int)ExitCode.Success} or {(int)ExitCode.TestHostProcessExitedNonGracefully}, but got {testHostResult.ExitCode}.{Environment.NewLine}{testHostResult}");
     }
 
     [TestMethod]

@@ -375,9 +375,6 @@ Actual: {2}</value>
   <data name="DynamicDataSourceShouldExistAndBeValid" xml:space="preserve">
     <value>The dynamic data source '{0}' in type '{1}' should exist and be a property, a method, or a field.</value>
   </data>
-  <data name="HasCountFailMsg" xml:space="preserve">
-    <value>Expected collection of size {1}. Actual: {2}. {0}</value>
-  </data>
   <data name="ContainsSingleMatchFailMsg" xml:space="preserve">
     <value>Expected exactly one item to match the predicate but found {1} item(s). {0}</value>
   </data>
@@ -395,9 +392,6 @@ Actual: {2}</value>
   </data>
   <data name="DoesNotContainPredicateFailMsg" xml:space="preserve">
     <value>Expected no items to match the predicate. {0}</value>
-  </data>
-  <data name="IsNotEmptyFailMsg" xml:space="preserve">
-    <value>Expected collection to contain any item but it is empty. {0}</value>
   </data>
   <data name="InvalidGitHubUrl" xml:space="preserve">
     <value>Invalid GitHub ticket URL</value>
@@ -479,6 +473,15 @@ Actual: {2}</value>
   <data name="IsNotNullFailedSummary" xml:space="preserve">
     <value>Expected value to not be null.</value>
   </data>
+  <data name="HasCountFailedSummary" xml:space="preserve">
+    <value>Expected collection to contain a specific number of elements.</value>
+  </data>
+  <data name="IsEmptyFailedSummary" xml:space="preserve">
+    <value>Expected collection to be empty.</value>
+  </data>
+  <data name="IsNotEmptyFailedSummary" xml:space="preserve">
+    <value>Expected collection to not be empty.</value>
+  </data>
   <data name="AreEqualFailedSummary" xml:space="preserve">
     <value>Expected values to be equal.</value>
   </data>
@@ -505,6 +508,12 @@ Actual: {2}</value>
   </data>
   <data name="DoesNotMatchRegexFailedSummary" xml:space="preserve">
     <value>Expected string to not match the specified regular expression.</value>
+  </data>
+  <data name="ContainsAllFailedSummary" xml:space="preserve">
+    <value>Expected collection to contain all specified items.</value>
+  </data>
+  <data name="DoesNotContainAllFailedSummary" xml:space="preserve">
+    <value>Expected collection to not contain all specified items.</value>
   </data>
   <data name="ContainsSingleFailedSummary" xml:space="preserve">
     <value>Expected collection to contain exactly one element.</value>
