@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -139,8 +139,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
-        ReportAssertAreEqualFailed(expected, actual, userMessage);
+        ReportAssertAreEqualFailed(expected, actual, message, expectedExpression, actualExpression);
     }
 
     private static bool AreEqualFailing<T>(T? expected, T? actual, IEqualityComparer<T>? comparer)
@@ -245,26 +244,58 @@ public sealed partial class Assert
     }
 
     [DoesNotReturn]
-    private static void ReportAssertAreEqualFailed(object? expected, object? actual, string userMessage)
+    private static void ReportAssertAreEqualFailed(object? expected, object? actual, string? message, string expectedExpression, string actualExpression)
     {
-        string finalMessage = actual != null && expected != null && !actual.GetType().Equals(expected.GetType())
-            ? string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualDifferentTypesFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                expected.GetType().FullName,
-                ReplaceNulls(actual),
-                actual.GetType().FullName)
-            : expected is string expectedString && actual is string actualString
-                ? FormatStringComparisonMessage(expectedString, actualString, userMessage)
-                : string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.AreEqualFailMsg,
-                    userMessage,
-                    ReplaceNulls(expected),
-                    ReplaceNulls(actual));
-        ReportAssertFailed("Assert.AreEqual", finalMessage);
+        string expectedRendered = AssertionValueRenderer.RenderValue(expected);
+        string actualRendered = AssertionValueRenderer.RenderValue(actual);
+
+        string summary;
+        EvidenceBlock evidence;
+        string? additionalSummaryLine = null;
+
+        if (actual is not null && expected is not null && !actual.GetType().Equals(expected.GetType()))
+        {
+            Type expectedType = expected.GetType();
+            Type actualType = actual.GetType();
+            summary = FrameworkMessages.AreEqualDifferentTypesFailedSummary;
+            evidence = EvidenceBlock.Create()
+                .AddLine("expected:", expectedRendered)
+                .AddLine("expected type:", expectedType.FullName ?? expectedType.Name)
+                .AddLine("actual:", actualRendered)
+                .AddLine("actual type:", actualType.FullName ?? actualType.Name);
+        }
+        else if (expected is string expectedString && actual is string actualString)
+        {
+            summary = FrameworkMessages.AreEqualStringsFailedSummary;
+            int diffIndex = FindFirstStringDifference(expectedString, actualString);
+            additionalSummaryLine = expectedString.Length == actualString.Length
+                ? string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthBothMsg, expectedString.Length, diffIndex)
+                : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthDifferentMsg, expectedString.Length, actualString.Length);
+
+            evidence = EvidenceBlock.Create()
+                .AddLine("expected:", expectedRendered)
+                .AddLine("actual:", actualRendered);
+        }
+        else
+        {
+            summary = FrameworkMessages.AreEqualFailedSummary;
+            evidence = EvidenceBlock.Create()
+                .AddLine("expected:", expectedRendered)
+                .AddLine("actual:", actualRendered);
+        }
+
+        StructuredAssertionMessage structured = new(summary);
+        if (additionalSummaryLine is not null)
+        {
+            structured.WithAdditionalSummaryLine(additionalSummaryLine);
+        }
+
+        structured.WithUserMessage(message);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedRendered, actualRendered);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreEqual", expectedExpression, actualExpression, "<expected>", "<actual>"));
+
+        ReportAssertFailed(structured);
     }
 
     /// <summary>
@@ -363,23 +394,29 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
-        ReportAssertAreNotEqualFailed(notExpected, actual, userMessage);
+        ReportAssertAreNotEqualFailed(notExpected, actual, message, notExpectedExpression, actualExpression);
     }
 
     private static bool AreNotEqualFailing<T>(T? notExpected, T? actual, IEqualityComparer<T>? comparer)
         => (comparer ?? EqualityComparer<T>.Default).Equals(notExpected!, actual!);
 
     [DoesNotReturn]
-    private static void ReportAssertAreNotEqualFailed(object? notExpected, object? actual, string userMessage)
+    private static void ReportAssertAreNotEqualFailed(object? notExpected, object? actual, string? message, string notExpectedExpression, string actualExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.AreNotEqualFailMsg,
-            userMessage,
-            ReplaceNulls(notExpected),
-            ReplaceNulls(actual));
-        ReportAssertFailed("Assert.AreNotEqual", finalMessage);
+        string notExpectedRendered = AssertionValueRenderer.RenderValue(notExpected);
+        string actualRendered = AssertionValueRenderer.RenderValue(actual);
+
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("notExpected:", notExpectedRendered)
+            .AddLine("actual:", actualRendered);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.AreNotEqualFailedSummary);
+        structured.WithUserMessage(message);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual($"not {notExpectedRendered}", actualRendered);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreNotEqual", notExpectedExpression, actualExpression, "<notExpected>", "<actual>"));
+
+        ReportAssertFailed(structured);
     }
 
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
