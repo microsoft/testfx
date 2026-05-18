@@ -24,6 +24,9 @@ public sealed partial class Assert
     public static void Fail(string message = "")
     {
         TelemetryCollector.TrackAssertionCall("Assert.Fail");
-        ThrowAssertFailed("Assert.Fail", BuildUserMessage(message));
+
+        StructuredAssertionMessage structured = new(string.Empty);
+        structured.WithUserMessage(message);
+        ThrowAssertFailed(structured);
     }
 }

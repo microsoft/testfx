@@ -38,6 +38,9 @@ internal partial class TestMethodInfo
         _isTestCleanupInvoked = true;
         MethodInfo? testCleanupMethod = Parent.TestCleanupMethod;
         Exception? testCleanupException;
+        TestFailedException? globalTestCleanupException = null;
+        MethodInfo? globalTestCleanupFailingMethod = null;
+        MethodInfo? currentGlobalTestCleanupMethod = null;
         try
         {
             try
@@ -79,13 +82,40 @@ internal partial class TestMethodInfo
 
                 foreach ((MethodInfo method, TimeoutInfo? timeoutInfo) in Parent.Parent.GlobalTestCleanups)
                 {
-                    await InvokeGlobalCleanupMethodAsync(method, timeoutInfo, timeoutTokenSource).ConfigureAwait(false);
+                    currentGlobalTestCleanupMethod = method;
+                    globalTestCleanupException = await InvokeGlobalCleanupMethodAsync(method, timeoutInfo, timeoutTokenSource).ConfigureAwait(false);
+
+                    if (globalTestCleanupException is not null)
+                    {
+                        // Stop on first global cleanup failure, mirroring the local test cleanup loop above.
+                        globalTestCleanupFailingMethod = method;
+                        break;
+                    }
+
+                    currentGlobalTestCleanupMethod = null;
                 }
             }
         }
         catch (Exception ex)
         {
             testCleanupException = ex;
+            if (globalTestCleanupFailingMethod is null && currentGlobalTestCleanupMethod is not null)
+            {
+                globalTestCleanupFailingMethod = currentGlobalTestCleanupMethod;
+            }
+
+            if (globalTestCleanupFailingMethod is not null)
+            {
+                testCleanupMethod = globalTestCleanupFailingMethod;
+            }
+        }
+
+        // If no earlier cleanup failure was recorded but a global test cleanup failed, surface it
+        // so the wrapping logic below produces a TestFailedException with the per-method message.
+        if (testCleanupException is null && globalTestCleanupException is not null)
+        {
+            testCleanupException = globalTestCleanupException;
+            testCleanupMethod = globalTestCleanupFailingMethod;
         }
 
         // If testCleanup was successful, then don't do anything
@@ -95,7 +125,15 @@ internal partial class TestMethodInfo
         }
 
         Exception realException = testCleanupException.GetRealException();
-        UnitTestOutcome outcomeFromRealException = realException is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed;
+
+        // Check `realException` (not `testCleanupException`) so that a `TestFailedException` wrapped in
+        // a `TargetInvocationException` / `TypeInitializationException` still preserves its Outcome
+        // (for example a Timeout outcome must not be silently downgraded to Failed).
+        UnitTestOutcome outcomeFromRealException = realException is TestFailedException testFailedException
+            ? testFailedException.Outcome
+            : realException is AssertInconclusiveException
+                ? UnitTestOutcome.Inconclusive
+                : UnitTestOutcome.Failed;
         result.Outcome = result.Outcome.GetMoreImportantOutcome(outcomeFromRealException);
 
         realException = testCleanupMethod != null

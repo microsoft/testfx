@@ -14,6 +14,9 @@ namespace Microsoft.Testing.Extensions.Diagnostics;
 
 internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetimeHandler, IDataProducer, IOutputDeviceDataProducer
 {
+    private const string CrashReportFileExtension = ".crashreport.json";
+    private const string CrashReportFileSearchPattern = "*" + CrashReportFileExtension;
+
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IMessageBus _messageBus;
     private readonly IOutputDevice _outputDisplay;
@@ -47,8 +50,10 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
     public Type[] DataTypesProduced => [typeof(FileArtifact)];
 
     public Task<bool> IsEnabledAsync()
-        => Task.FromResult(_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName)
-        && _netCoreCrashDumpGeneratorConfiguration.Enable);
+        => Task.FromResult(
+            (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) ||
+             _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName)) &&
+            _netCoreCrashDumpGeneratorConfiguration.Enable);
 
     public Task BeforeTestHostProcessStartAsync(CancellationToken _) => Task.CompletedTask;
 
@@ -78,12 +83,13 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         }
 
         ApplicationStateGuard.Ensure(_netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern is not null);
-        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpFileCreated, testHostProcessInformation.PID)), cancellationToken).ConfigureAwait(false);
+        bool generateDump = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName);
+        bool generateCrashReport = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
 
         // The crash dump file name pattern can contain placeholders such as %p (PID), %e (process exe name),
         // %h (hostname), %t (timestamp), etc. that are expanded by the .NET runtime when it writes the dump.
         // See "Dump name formatting" in:
-        // https://github.com/dotnet/runtime/blob/main/docs/design/coreclr/botr/xplat-minidump-generation.md
+        // https://github.com/dotnet/runtime/blob/82742628310076fff22d7e7ee216a74384352056/docs/design/coreclr/botr/xplat-minidump-generation.md
         // We convert the file name part of the pattern into a regular expression (escaping literal characters
         // and turning %X placeholders into '.*') so we can collect not just the testhost dump but also dumps
         // produced by any of its child processes that may have crashed alongside it. Using a regex (instead
@@ -92,11 +98,13 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         // wildcard, which would otherwise cause unrelated files to be picked up on file systems that allow
         // these characters in file names (e.g. Linux/macOS).
         string dumpFileNamePattern = _netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern;
+        string expectedDumpFile = dumpFileNamePattern.Replace("%p", testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
+        string expectedCrashReportFile = $"{expectedDumpFile}{CrashReportFileExtension}";
         string dumpDirectory = GetDumpDirectory(dumpFileNamePattern);
         Regex dumpFileNameRegex = BuildDumpFileNameRegex(Path.GetFileName(dumpFileNamePattern));
 
-        bool publishedAny = false;
-        if (Directory.Exists(dumpDirectory))
+        bool publishedAnyDump = false;
+        if (generateDump && Directory.Exists(dumpDirectory))
         {
             foreach (string dumpFile in Directory.EnumerateFiles(dumpDirectory))
             {
@@ -104,23 +112,63 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
                     && !_preExistingDumpFiles.Contains(dumpFile))
                 {
                     await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
-                    publishedAny = true;
+                    publishedAnyDump = true;
                 }
             }
         }
 
-        if (!publishedAny)
+        // Inspect the disk before emitting the crash banner so the message reflects
+        // what was actually produced, not what was requested. The runtime may fail
+        // to emit one (or both) of the artifacts, e.g. when EnableCrashReport is
+        // unsupported on the current platform/version.
+        bool dumpArtifactProduced = generateDump && (publishedAnyDump || File.Exists(expectedDumpFile));
+        bool crashReportArtifactProduced = generateCrashReport && File.Exists(expectedCrashReportFile);
+
+        string processCrashedMessage = (dumpArtifactProduced, crashReportArtifactProduced) switch
         {
-            string expectedDumpFile = dumpFileNamePattern.Replace("%p", testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
+            (true, true) => string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpAndReportFileCreated, testHostProcessInformation.PID),
+            (false, true) => string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedReportFileCreated, testHostProcessInformation.PID),
+            (true, false) => string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpFileCreated, testHostProcessInformation.PID),
+            (false, false) => string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashed, testHostProcessInformation.PID),
+        };
+        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(processCrashedMessage), cancellationToken).ConfigureAwait(false);
+
+        if (generateDump && !publishedAnyDump)
+        {
             await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashDumpFile, expectedDumpFile)), cancellationToken).ConfigureAwait(false);
             if (Directory.Exists(dumpDirectory))
             {
-                foreach (string dumpFile in Directory.EnumerateFiles(dumpDirectory, "*.dmp"))
+                // Filter by exact extension to defend against Windows' legacy 8.3 short-name
+                // matching where a pattern like '*.dmp' can also match files whose extension
+                // merely starts with '.dmp' (for example 'foo.dmp.crashreport.json').
+                foreach (string dumpFile in Directory.EnumerateFiles(dumpDirectory, "*.dmp")
+                    .Where(static f => Path.GetExtension(f).Equals(".dmp", StringComparison.OrdinalIgnoreCase)))
                 {
                     if (!_preExistingDumpFiles.Contains(dumpFile))
                     {
                         await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
                     }
+                }
+            }
+        }
+
+        if (generateCrashReport)
+        {
+            if (crashReportArtifactProduced)
+            {
+                await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(expectedCrashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
+            }
+            else
+            {
+                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashReportFile, expectedCrashReportFile, CrashReportFileSearchPattern)), cancellationToken).ConfigureAwait(false);
+
+                // Filter by exact suffix to defend against Windows' legacy 8.3 short-name
+                // matching where a pattern can also match files whose extension only starts
+                // with the requested extension.
+                foreach (string crashReportFile in Directory.GetFiles(Path.GetDirectoryName(expectedCrashReportFile)!, CrashReportFileSearchPattern)
+                    .Where(static f => f.EndsWith(CrashReportFileExtension, StringComparison.OrdinalIgnoreCase)))
+                {
+                    await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(crashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
                 }
             }
         }
