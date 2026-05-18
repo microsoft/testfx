@@ -30,9 +30,5 @@ public sealed partial class Assert
     }
 
     private static string FormatInconclusive(string? message)
-        => string.IsNullOrWhiteSpace(message)
-            ? FrameworkMessages.InconclusivePrefix
-            : message![0] is '\n' or '\r'
-                ? string.Concat(FrameworkMessages.InconclusivePrefix, message)
-                : $"{FrameworkMessages.InconclusivePrefix} {message}";
+        => FormatPrefixAndMessage(FrameworkMessages.InconclusivePrefix, message);
 }
