@@ -125,7 +125,11 @@ internal partial class TestMethodInfo
         }
 
         Exception realException = testCleanupException.GetRealException();
-        UnitTestOutcome outcomeFromRealException = testCleanupException is TestFailedException testFailedException
+
+        // Check `realException` (not `testCleanupException`) so that a `TestFailedException` wrapped in
+        // a `TargetInvocationException` / `TypeInitializationException` still preserves its Outcome
+        // (for example a Timeout outcome must not be silently downgraded to Failed).
+        UnitTestOutcome outcomeFromRealException = realException is TestFailedException testFailedException
             ? testFailedException.Outcome
             : realException is AssertInconclusiveException
                 ? UnitTestOutcome.Inconclusive

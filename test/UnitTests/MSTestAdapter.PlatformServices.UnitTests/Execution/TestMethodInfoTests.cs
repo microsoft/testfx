@@ -925,7 +925,17 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeShouldPreserveTimeoutOutcomeForGlobalTestInitialize()
     {
-        DummyTestClass.GlobalTestInitializeMethodBodyAsync = _ => Task.Delay(TimeSpan.FromSeconds(10));
+        DummyTestClass.GlobalTestInitializeMethodBodyAsync = async testContext =>
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10), testContext.CancellationTokenSource.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected when the framework signals cancellation/timeout.
+            }
+        };
         _testAssemblyInfo.GlobalTestInitializations.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestInitializeMethod))!, TimeoutInfo.FromTimeout(1)));
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
@@ -1237,7 +1247,17 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeShouldPreserveTimeoutOutcomeForGlobalTestCleanup()
     {
-        DummyTestClass.GlobalTestCleanupMethodBodyAsync = _ => Task.Delay(TimeSpan.FromSeconds(10));
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = async testContext =>
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10), testContext.CancellationTokenSource.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected when the framework signals cancellation/timeout.
+            }
+        };
         _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, TimeoutInfo.FromTimeout(1)));
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
@@ -1255,14 +1275,14 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClass.TestCleanupMethodBody = _ => { };
         DummyTestClass.GlobalTestCleanupMethodBodyAsync = _ => throw new InvalidOperationException("global cleanup failed");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
-        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, timeoutInfo: null));
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, TimeoutInfo: null));
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
         result.Outcome.Should().Be(UnitTestOutcome.Failed);
         var exception = result.TestFailureException as TestFailedException;
         exception.Should().NotBeNull();
-        exception!.Message.Should().Contain($"Test cleanup method '{typeof(DummyTestClass).Name}.{nameof(DummyTestClass.DummyGlobalTestCleanupMethod)}' threw exception");
+        exception!.Message.Should().Contain($"TestCleanup method {typeof(DummyTestClass).FullName}.{nameof(DummyTestClass.DummyGlobalTestCleanupMethod)} threw exception");
     }
 
     public async Task TestMethodInfoInvokeShouldCallDisposeForDisposableTestClass()
