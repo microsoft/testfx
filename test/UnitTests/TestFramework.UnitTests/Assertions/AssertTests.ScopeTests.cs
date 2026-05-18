@@ -7,6 +7,18 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
 public partial class AssertTests
 {
+    // Shared expected message for the structured failure produced by `Assert.AreEqual(1, 2)`.
+    // Used across the scope soft-failure tests below to reduce churn when the structured-message
+    // format evolves; update this single constant rather than every assertion site.
+    private const string AreEqual1And2StructuredMessage = """
+        Assertion failed. Expected values to be equal.
+
+        expected: 1
+        actual:   2
+
+        Assert.AreEqual(1, 2)
+        """;
+
     public void Scope_NoFailures_DoesNotThrow()
     {
         Action action = () =>
@@ -28,7 +40,7 @@ public partial class AssertTests
         Action action = () => scope.Dispose();
 
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.AreEqual failed. Expected:<1>. Actual:<2>. 'expected' expression: '1', 'actual' expression: '2'.");
+            .WithMessage(AreEqual1And2StructuredMessage);
     }
 
     public void Scope_MultipleFailures_CollectsAllErrors()
@@ -48,7 +60,7 @@ public partial class AssertTests
             .Which;
 
         innerException.InnerExceptions.Should().HaveCount(2);
-        innerException.InnerExceptions[0].Message.Should().Be("Assert.AreEqual failed. Expected:<1>. Actual:<2>. 'expected' expression: '1', 'actual' expression: '2'.");
+        innerException.InnerExceptions[0].Message.Should().Be(AreEqual1And2StructuredMessage);
         innerException.InnerExceptions[1].Message.Should().Be(
             """
             Assertion failed. Expected condition to be true.
@@ -102,7 +114,7 @@ public partial class AssertTests
 
         Action firstDispose = () => scope.Dispose();
         firstDispose.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.AreEqual failed. Expected:<1>. Actual:<2>. 'expected' expression: '1', 'actual' expression: '2'.");
+            .WithMessage(AreEqual1And2StructuredMessage);
 
         // Second dispose should be a no-op
         Action secondDispose = () => scope.Dispose();
@@ -122,7 +134,11 @@ public partial class AssertTests
 
         // Assert.Fail is a hard assertion — it throws immediately, even within a scope.
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.Fail failed. first failure");
+            .WithMessage(
+                """
+                Assertion failed.
+                first failure
+                """);
     }
 
     public void Scope_AssertIsNotNull_IsSoftFailure()
@@ -152,7 +168,7 @@ public partial class AssertTests
 
             Assert.IsNotNull(value)
             """);
-        innerException.InnerExceptions[1].Message.Should().Be("Assert.AreEqual failed. Expected:<1>. Actual:<2>. 'expected' expression: '1', 'actual' expression: '2'.");
+        innerException.InnerExceptions[1].Message.Should().Be(AreEqual1And2StructuredMessage);
     }
 
     public void Scope_AssertIsInstanceOfType_IsSoftFailure()
@@ -183,7 +199,7 @@ public partial class AssertTests
 
             Assert.IsInstanceOfType(value)
             """);
-        innerException.InnerExceptions[1].Message.Should().Be("Assert.AreEqual failed. Expected:<1>. Actual:<2>. 'expected' expression: '1', 'actual' expression: '2'.");
+        innerException.InnerExceptions[1].Message.Should().Be(AreEqual1And2StructuredMessage);
     }
 
     public void Scope_AssertIsExactInstanceOfType_IsSoftFailure()
@@ -214,7 +230,7 @@ public partial class AssertTests
 
             Assert.IsExactInstanceOfType(value)
             """);
-        innerException.InnerExceptions[1].Message.Should().Be("Assert.AreEqual failed. Expected:<1>. Actual:<2>. 'expected' expression: '1', 'actual' expression: '2'.");
+        innerException.InnerExceptions[1].Message.Should().Be(AreEqual1And2StructuredMessage);
     }
 
     public void Scope_AssertContainsSingle_IsSoftFailure()
@@ -237,12 +253,14 @@ public partial class AssertTests
 
         innerException.InnerExceptions.Should().HaveCount(2);
         innerException.InnerExceptions[0].Message.Should().Be(
-            $"Assertion failed. Expected collection to contain exactly one element.{Environment.NewLine}" +
-            $"{Environment.NewLine}" +
-            $"expected count: 1{Environment.NewLine}" +
-            $"actual count:   3{Environment.NewLine}" +
-            $"{Environment.NewLine}" +
-            $"Assert.ContainsSingle(items)");
-        innerException.InnerExceptions[1].Message.Should().Be("Assert.AreEqual failed. Expected:<1>. Actual:<2>. 'expected' expression: '1', 'actual' expression: '2'.");
+            """
+            Assertion failed. Expected collection to contain exactly one element.
+
+            expected count: 1
+            actual count:   3
+
+            Assert.ContainsSingle(items)
+            """);
+        innerException.InnerExceptions[1].Message.Should().Be(AreEqual1And2StructuredMessage);
     }
 }

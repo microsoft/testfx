@@ -129,8 +129,15 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task VSTest_RunTests_Succeeds(string tfm)
     {
+        // Pre-build the VSTest project for this TFM exactly once, then run `dotnet test`
+        // with `--no-build --no-restore` so the build/restore targets that write to
+        // `bin/<tfm>/TelemetryVSTestProject.runtimeconfig.json` do not run per-test.
+        // This removes the GenerateRuntimeConfigurationFiles race that was still flaking
+        // intermittently even with [DoNotParallelize] on the class.
+        await AssetFixture.EnsureVSTestProjectBuiltAsync(tfm, TestContext.CancellationToken);
+
         DotnetMuxerResult testResult = await DotnetCli.RunAsync(
-            $"test -c Release {AssetFixture.VSTestProjectPath} --framework {tfm}",
+            $"test -c Release {AssetFixture.VSTestProjectPath} --framework {tfm} --no-build --no-restore",
             workingDirectory: AssetFixture.VSTestProjectPath,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
@@ -147,8 +154,10 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task VSTest_DiscoverTests_Succeeds(string tfm)
     {
+        await AssetFixture.EnsureVSTestProjectBuiltAsync(tfm, TestContext.CancellationToken);
+
         DotnetMuxerResult testResult = await DotnetCli.RunAsync(
-            $"test -c Release {AssetFixture.VSTestProjectPath} --framework {tfm} --list-tests",
+            $"test -c Release {AssetFixture.VSTestProjectPath} --framework {tfm} --list-tests --no-build --no-restore",
             workingDirectory: AssetFixture.VSTestProjectPath,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
@@ -192,6 +201,9 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
     {
         private const string AssetId = nameof(TelemetryTests);
 
+        private readonly SemaphoreSlim _vstestBuildLock = new(1, 1);
+        private readonly HashSet<string> _builtVSTestFrameworks = [with(StringComparer.OrdinalIgnoreCase)];
+
         public string MTPProjectPath => GetAssetPath(AssetId);
 
         public string VSTestProjectPath => Path.Combine(GetAssetPath(AssetId), "vstest");
@@ -202,6 +214,43 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion));
+
+        // Pre-builds the VSTest project for the given TFM exactly once per TFM. Callers can
+        // then invoke `dotnet test ... --no-build --no-restore` to avoid having every test
+        // method redo the build, which is what produces the
+        // `GenerateRuntimeConfigurationFiles` file-in-use races on shared build outputs.
+        public async Task EnsureVSTestProjectBuiltAsync(string targetFramework, CancellationToken cancellationToken)
+        {
+            await _vstestBuildLock.WaitAsync(cancellationToken);
+            try
+            {
+                if (_builtVSTestFrameworks.Contains(targetFramework))
+                {
+                    return;
+                }
+
+                await DotnetCli.RunAsync(
+                    $"build -c Release {VSTestProjectPath} --framework {targetFramework}",
+                    workingDirectory: VSTestProjectPath,
+                    cancellationToken: cancellationToken);
+
+                _builtVSTestFrameworks.Add(targetFramework);
+            }
+            finally
+            {
+                _vstestBuildLock.Release();
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _vstestBuildLock.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
 
         private const string SourceCode = """
 #file TelemetryMTPProject.csproj

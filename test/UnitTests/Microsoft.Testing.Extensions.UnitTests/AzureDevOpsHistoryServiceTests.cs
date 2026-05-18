@@ -150,6 +150,31 @@ public sealed class AzureDevOpsHistoryServiceTests
     }
 
     [TestMethod]
+    public async Task HistoryService_CancelsBudgetDelayWhenLoadCompletesFirstAsync()
+    {
+        Mock<IAzureDevOpsHistoryClient> historyClientMock = new();
+        historyClientMock
+            .Setup(x => x.GetRunsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        CancellationToken budgetDelayToken = default;
+        TaskCompletionSource<object?> budgetDelayCancelled = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        AzureDevOpsHistoryService historyService = CreateHistoryService(
+            historyClientMock,
+            task: new TestTask(delay: (_, cancellationToken) =>
+            {
+                budgetDelayToken = cancellationToken;
+                cancellationToken.Register(() => budgetDelayCancelled.TrySetResult(null));
+                return Task.Delay(Timeout.Infinite, cancellationToken);
+            }));
+
+        await historyService.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+        await budgetDelayCancelled.Task.ConfigureAwait(false);
+
+        Assert.IsTrue(budgetDelayToken.IsCancellationRequested);
+    }
+
+    [TestMethod]
     public async Task Reporter_AppendsRegressionAnnotationOnlyWhenMinimumSamplesAreAvailableAsync()
     {
         AzureDevOpsHistoryService belowThresholdHistoryService = await CreateHistoryServiceWithStatsAsync("Namespace.Tests.Regression", passCount: 4, failCount: 0).ConfigureAwait(false);

@@ -86,31 +86,44 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
 
         try
         {
-            using var budgetCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(testSessionContext.CancellationToken);
-            Task loadTask = LoadHistoryAsync(query, historyWindowInDays, budgetCancellationTokenSource.Token);
-            Task budgetTask = _task.Delay(HistoryLoadBudget, testSessionContext.CancellationToken);
+            CancellationTokenSource? budgetCancellationTokenSource = null;
 
-            if (await Task.WhenAny(loadTask, budgetTask).ConfigureAwait(false) != loadTask)
+            try
             {
-                testSessionContext.CancellationToken.ThrowIfCancellationRequested();
+                using var loadCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(testSessionContext.CancellationToken);
+                budgetCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(testSessionContext.CancellationToken);
+                Task loadTask = LoadHistoryAsync(query, historyWindowInDays, loadCancellationTokenSource.Token);
+                Task budgetTask = _task.Delay(HistoryLoadBudget, budgetCancellationTokenSource.Token);
+
+                if (await Task.WhenAny(loadTask, budgetTask).ConfigureAwait(false) != loadTask)
+                {
+                    testSessionContext.CancellationToken.ThrowIfCancellationRequested();
+#pragma warning disable VSTHRD103 // CancelAsync is unavailable on all target frameworks.
+                    loadCancellationTokenSource.Cancel();
+#pragma warning restore VSTHRD103
+                    ResetHistoryState();
+                    _logger.LogInformation(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryLoadTimedOutInfo, (int)HistoryLoadBudget.TotalSeconds));
+
+                    try
+                    {
+                        await loadTask.ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) when (!testSessionContext.CancellationToken.IsCancellationRequested)
+                    {
+                    }
+
+                    return;
+                }
+
 #pragma warning disable VSTHRD103 // CancelAsync is unavailable on all target frameworks.
                 budgetCancellationTokenSource.Cancel();
 #pragma warning restore VSTHRD103
-                ResetHistoryState();
-                _logger.LogInformation(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryLoadTimedOutInfo, (int)HistoryLoadBudget.TotalSeconds));
-
-                try
-                {
-                    await loadTask.ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) when (!testSessionContext.CancellationToken.IsCancellationRequested)
-                {
-                }
-
-                return;
+                await loadTask.ConfigureAwait(false);
             }
-
-            await loadTask.ConfigureAwait(false);
+            finally
+            {
+                budgetCancellationTokenSource?.Dispose();
+            }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

@@ -19,33 +19,31 @@ public static class AzureDevOpsExtensions
     /// <param name="builder">The test application builder.</param>
     public static void AddAzureDevOpsProvider(this ITestApplicationBuilder builder)
     {
+        AzureDevOpsHistoryService? historyService = null;
+
         builder.TestHost.AddDataConsumer(serviceProvider =>
-            new AzureDevOpsReporter(
+        {
+            historyService ??= CreateHistoryService(serviceProvider);
+
+            return new AzureDevOpsReporter(
                 serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetEnvironment(),
                 serviceProvider.GetFileSystem(),
                 serviceProvider.GetOutputDevice(),
                 serviceProvider.GetLoggerFactory(),
-                GetOrCreateHistoryService(serviceProvider)));
-        builder.TestHost.AddTestSessionLifetimeHandler(serviceProvider => (AzureDevOpsHistoryService)GetOrCreateHistoryService(serviceProvider));
+                historyService);
+        });
+        builder.TestHost.AddTestSessionLifetimeHandler(serviceProvider =>
+            historyService ??= CreateHistoryService(serviceProvider));
         builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());
     }
 
-    private static IAzureDevOpsHistoryService GetOrCreateHistoryService(IServiceProvider serviceProvider)
-    {
-        if (serviceProvider.GetService<IAzureDevOpsHistoryService>() is IAzureDevOpsHistoryService historyService)
-        {
-            return historyService;
-        }
-
-        historyService = new AzureDevOpsHistoryService(
+    private static AzureDevOpsHistoryService CreateHistoryService(IServiceProvider serviceProvider)
+        => new(
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetEnvironment(),
             serviceProvider.GetClock(),
             new AzureDevOpsHistoryClient(serviceProvider.GetTask(), serviceProvider.GetClock()),
             serviceProvider.GetTask(),
             serviceProvider.GetLoggerFactory());
-        ((ServiceProvider)serviceProvider).AddService(historyService, throwIfSameInstanceExit: false);
-        return historyService;
-    }
 }
