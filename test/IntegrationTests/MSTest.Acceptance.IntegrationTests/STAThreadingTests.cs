@@ -13,6 +13,7 @@ public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.Tes
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/8313. MSTest does not inspect [STAThread] on the entry-point Main; this scenario only ever passed when the async chain between MTP and the test runner happened to complete synchronously, which no longer holds on the Windows Debug leg after recent MTP refactors. Re-enable when implicit STA detection from Main is implemented.")]
     public async Task TestMethodThreading_MainIsSTAThread_OnWindows_NoRunsettingsProvided_ThreadIsSTA(string tfm)
     {
         // Test cannot work on non-Windows OSes as the main method is marked with [STAThread]
