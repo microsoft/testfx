@@ -1171,6 +1171,67 @@ public partial class AssertTests : TestContainer
         box.CallCount.Should().Be(0);
     }
 
+    private sealed class SideEffectingReceiverFactory
+    {
+        public int GetObjectCallCount { get; private set; }
+
+        public int GetListCallCount { get; private set; }
+
+        public SideEffectingReceiverObject GetObject()
+        {
+            GetObjectCallCount++;
+            return new SideEffectingReceiverObject();
+        }
+
+        public List<int> GetList()
+        {
+            GetListCallCount++;
+            return [42];
+        }
+    }
+
+    private sealed class SideEffectingReceiverObject
+    {
+        public int Property => 42;
+    }
+
+    public void That_ShortCircuitedExpression_DoesNotReevaluateMemberExpressionWithSideEffectingReceiver()
+    {
+        var factory = new SideEffectingReceiverFactory();
+
+        Action act = () => Assert.That(() => false && factory.GetObject().Property == 0);
+
+        act.Should().Throw<AssertFailedException>();
+        factory.GetObjectCallCount.Should().Be(0);
+    }
+
+    public void That_ShortCircuitedExpression_DoesNotReevaluateIndexerWithSideEffectingReceiver()
+    {
+        var factory = new SideEffectingReceiverFactory();
+
+        Action act = () => Assert.That(() => false && factory.GetList()[0] == 0);
+
+        act.Should().Throw<AssertFailedException>();
+        factory.GetListCallCount.Should().Be(0);
+    }
+
+    public void That_ArbitraryGetMethod_RendersAsMethodCall_NotIndexer()
+    {
+        var box = new Counter();
+        int expected = 2;
+
+        Action act = () => Assert.That(() => box.Get(expected) == 3);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assert.That(() => box.Get(expected) == 3) failed.
+                Details:
+                  box.Get(expected) = 2
+                  expected = 2
+                """);
+    }
+
     // ---- Tests for issue #6691 (method call display names) ---------------------------------
     public string SameClassInstanceMethod() => "Giraffe";
 
@@ -1260,6 +1321,30 @@ public partial class AssertTests : TestContainer
         public string Whisper() => "Whisper";
     }
 
+    private class InheritedMethodBase
+    {
+        public string InheritedWhisper() => "Whisper";
+    }
+
+    private sealed class InheritedMethodProbe : InheritedMethodBase
+    {
+        public void AssertInheritedMethodRendersAsThis()
+        {
+            string expected = "Roar";
+
+            Action act = () => Assert.That(() => InheritedWhisper() == expected);
+
+            act.Should().Throw<AssertFailedException>()
+                .WithMessage(
+                    """
+                    Assert.That(() => InheritedWhisper() == expected) failed.
+                    Details:
+                      expected = "Roar"
+                      this.InheritedWhisper() = "Whisper"
+                    """);
+        }
+    }
+
     private sealed class Cat : AnimalBase
     {
     }
@@ -1283,6 +1368,13 @@ public partial class AssertTests : TestContainer
                   expected = "Roar"
                   pet.Whisper() = "Whisper"
                 """);
+    }
+
+    public void That_InheritedInstanceMethodOnThis_RendersAsThis()
+    {
+        var probe = new InheritedMethodProbe();
+
+        probe.AssertInheritedMethodRendersAsThis();
     }
 
     // ---- Documented-trade-off test: properties in short-circuited branches are re-evaluated ----

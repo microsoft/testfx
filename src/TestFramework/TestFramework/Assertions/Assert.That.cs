@@ -322,7 +322,7 @@ public static partial class AssertExtensions
 
             AnalyzeExpression(callExpr.Arguments[0], context, suppressIntermediateValues);
         }
-        else if (callExpr.Method.Name == "Get" && callExpr.Object is not null && callExpr.Arguments.Count > 0)
+        else if (IsArrayGetMethod(callExpr))
         {
             string objectName = GetCleanMemberName(callExpr.Object);
             string indexDisplay = string.Join(", ", callExpr.Arguments.Select(GetIndexArgumentDisplay));
@@ -400,24 +400,24 @@ public static partial class AssertExtensions
     /// <summary>
     /// Returns <see langword="true"/> if <paramref name="objectExpr"/> is a reference to the enclosing
     /// instance (<c>this</c>) — either accessed via the compiler-synthesized display-class field
-    /// (named like <c>&lt;&gt;4__this</c>) or as a <see cref="ConstantExpression"/> whose value is of
-    /// exactly <paramref name="declaringType"/> (which Roslyn may emit when only <c>this</c> is
-    /// captured). The exact-type check (rather than <c>IsInstanceOfType</c>) prevents mis-labeling a
-    /// non-<c>this</c> receiver as <c>this</c> when the asserted method is declared on a base type
-    /// and the receiver happens to be a local of that base type.
+    /// (named like <c>&lt;&gt;4__this</c>) or as a <see cref="ConstantExpression"/> representing
+    /// the enclosing instance (no closure case). For the constant form we require the expression's
+    /// static type to match its runtime type and be assignable to <paramref name="declaringType"/>,
+    /// so inherited methods on <c>this</c> still render as <c>this.Method(...)</c> without
+    /// mis-labeling base-typed locals.
     /// </summary>
     private static bool IsCapturedThis(Expression objectExpr, Type? declaringType)
         // Display-class field for captured this is named like "<>4__this".
         => (objectExpr is MemberExpression me
                 && me.Member.Name.StartsWith("<>", StringComparison.Ordinal)
                 && me.Member.Name.EndsWith("__this", StringComparison.Ordinal))
-            // No-closure case: the object is a ConstantExpression whose runtime type is exactly
-            // the declaring type. Exact-type (rather than IsInstanceOfType) avoids mis-labeling
-            // a base-typed local as "this" when the asserted method is inherited from a base.
+            // No-closure case: the object is a ConstantExpression for the enclosing instance.
+            // We still guard against base-typed values by requiring ce.Type == runtime type.
             || (declaringType is not null
                 && objectExpr is ConstantExpression ce
                 && ce.Value is not null
-                && ce.Value.GetType() == declaringType);
+                && ce.Type == ce.Value.GetType()
+                && declaringType.IsAssignableFrom(ce.Type));
 
     private static bool IsFuncOrActionType(Type? type)
     {
@@ -447,27 +447,44 @@ public static partial class AssertExtensions
     /// <remarks>
     /// This heuristic intentionally treats <see cref="MemberExpression"/> (which covers both
     /// fields and properties) and the well-known indexer-style method calls
-    /// (<c>get_Item</c>/<c>Get</c>) as pure, even though property getters and user-defined
+    /// (<c>get_Item</c>/<c>Array.Get</c>) as pure, even though property getters and user-defined
     /// indexers can technically have side effects. This matches the pre-fix behavior — which
     /// always re-evaluated those expressions — and ensures backward compatibility with existing
     /// failure-detail output for short-circuited conditions like
     /// <c>name == "x" &amp;&amp; obj.Property == y</c>. Method calls with arbitrary names are
     /// excluded because they are the common case of side-effecting code (the original motivation
-    /// for issue #6690).
+    /// for issue #6690). Safety is recursive: each child expression must also be safe.
     /// </remarks>
     private static bool IsSafeToReevaluate(Expression expr)
         => expr switch
         {
-            MemberExpression => true,
-            BinaryExpression { NodeType: ExpressionType.ArrayIndex } => true,
-            UnaryExpression { NodeType: ExpressionType.ArrayLength } => true,
+            ConstantExpression => true,
+            ParameterExpression => true,
+            MemberExpression memberExpr => memberExpr.Expression is null || IsSafeToReevaluate(memberExpr.Expression),
+            BinaryExpression { NodeType: ExpressionType.ArrayIndex } arrayIndexExpr
+                => IsSafeToReevaluate(arrayIndexExpr.Left) && IsSafeToReevaluate(arrayIndexExpr.Right),
+            UnaryExpression { NodeType: ExpressionType.ArrayLength } arrayLengthExpr
+                => IsSafeToReevaluate(arrayLengthExpr.Operand),
             // Indexer-style method calls are conventionally pure reads; the previous implementation
             // evaluated them eagerly too. Keep this limited to actual indexers and multidimensional
             // array reads so arbitrary user-defined `Get(...)` methods are not re-invoked.
-            MethodCallExpression { Method.Name: "get_Item" } => true,
-            MethodCallExpression { Method.Name: "Get", Method.DeclaringType: { } declaringType } when declaringType == typeof(Array) => true,
+            MethodCallExpression methodCallExpr when IsCollectionIndexerRead(methodCallExpr)
+                => IsMethodCallSafe(methodCallExpr),
             _ => false,
         };
+
+    private static bool IsMethodCallSafe(MethodCallExpression callExpr)
+        => (callExpr.Object is null || IsSafeToReevaluate(callExpr.Object))
+            && callExpr.Arguments.All(IsSafeToReevaluate);
+
+    private static bool IsCollectionIndexerRead(MethodCallExpression callExpr)
+        => callExpr.Method.Name == "get_Item" || IsArrayGetMethod(callExpr);
+
+    private static bool IsArrayGetMethod(MethodCallExpression callExpr)
+        => callExpr.Method.Name == "Get"
+            && callExpr.Object is not null
+            && callExpr.Method.DeclaringType == typeof(Array)
+            && callExpr.Arguments.Count > 0;
 
     private sealed class AnalysisContext
     {
