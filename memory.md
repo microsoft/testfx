@@ -1,7 +1,7 @@
 # TestFX Test Improver Memory
 
 ## Last Updated
-2026-05-17
+2026-05-18
 
 ## Build/Test Commands
 
@@ -72,12 +72,17 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 9. ✅ **DONE** Quality improvements to `LoggingManagerTests.cs` → merged via #8129 (2026-05-14)
 10. ✅ **DONE** `StopPoliciesService` unit tests → patch in 2026-05-14 run (StopPoliciesServiceTests.cs already exists at 176 lines)
 11. ✅ **DONE** `CommandLineParseResult` unit tests → PR #8249 merged 2026-05-15
-12. 🔄 `ResponseFileHelper.SplitCommandLine` — patch created 2026-05-17 (branch: test-assist/response-file-helper-tests, 14 tests × 2 TFMs = 28)
-13. `ResponseFileHelper.TryReadResponseFile` — file I/O paths (FileNotFoundException, IOException)
-14. Code fix test coverage for MSTEST0040 when `AvoidUsingAssertsInAsyncVoidContextFixer` lands (#7891)
-15. `TestFramework.UnitTests` assertion edge cases
+12. 🔄 `ResponseFileHelper.SplitCommandLine` — patch created 2026-05-17 (issue #8300, bundle from run 25983857280)
+13. 🔄 `CommandLineOption` validation & equality — patch created 2026-05-18 (bundle from run 26018812150)
+14. `ResponseFileHelper.TryReadResponseFile` — file I/O paths (FileNotFoundException, IOException)
+15. Code fix test coverage for MSTEST0040 when `AvoidUsingAssertsInAsyncVoidContextFixer` lands (#7891)
+16. `TestFramework.UnitTests` assertion edge cases
 
 ## Completed Work
+
+### 2026-05-18
+- **Task 3**: Implemented 26 unit tests for `CommandLineOption` covering constructor validation (null/empty/whitespace name+desc, invalid arity, invalid characters), property initialization, Equals/GetHashCode. All 52 pass. PR push fell back to patch artifact (bundle from run 26018812150).
+- **Task 7**: Updated Monthly Summary issue #8301.
 
 ### 2026-05-17
 - **Task 3**: Implemented 14 unit tests for `ResponseFileHelper.SplitCommandLine` covering empty/whitespace/single/multi-token/quoted strings/tabs/real-world patterns. All 28 pass. PR push fell back to patch artifact (branch: test-assist/response-file-helper-tests).
@@ -105,11 +110,11 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 |------|----------|
 | Task 1: Discover commands | 2026-04-24 |
 | Task 2: Identify opportunities | 2026-05-15 |
-| Task 3: Implement tests | 2026-05-17 |
+| Task 3: Implement tests | 2026-05-18 |
 | Task 4: Maintain PRs | 2026-05-12 |
 | Task 5: Comment on issues | 2026-05-08 |
 | Task 6: Test infrastructure | 2026-04-29 |
-| Task 7: Monthly summary | 2026-05-17 |
+| Task 7: Monthly summary | 2026-05-18 |
 
 ## Maintainer Priorities
 - PRs merged quickly by Evangelink — receptive to focused test PRs for MTP and MSTest
@@ -130,3 +135,4 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 - MSTEST0037: Use `Assert.IsEmpty`/`Assert.HasCount` for collection length checks; `Assert.IsNotNull` for null-not-equal checks
 - MSTEST0017: In `Assert.AreEqual(expected, actual)` — expected is FIRST parameter
 - `CommandLineParseResult.IsOptionSet` is case-insensitive and strips leading dashes from the option name before comparing
+- `CommandLineOption` constructor throws `ArgumentNullException` for null name/description (via `Ensure.NotNullOrWhiteSpace`), `ArgumentException` for empty/whitespace or invalid chars
