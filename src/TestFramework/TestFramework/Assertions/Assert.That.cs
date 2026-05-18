@@ -111,6 +111,9 @@ public static partial class AssertExtensions
         Expression rewrittenBody = rewriter.Visit(body)!;
 
         // Compile and invoke ONCE.
+        // This intentionally pays the rewrite+compile cost on every Assert.That call (including passing ones)
+        // to guarantee single-pass evaluation for correctness (#6690). If this ever shows up as a hotspot,
+        // we can consider caching the compiled delegate by expression-tree instance.
         var lambda = Expression.Lambda<Func<object?[], bool>>(rewrittenBody, arrayParam);
         object?[] values = new object?[context.CaptureNames.Count];
 
@@ -152,7 +155,9 @@ public static partial class AssertExtensions
                 {
                     try
                     {
-                        value = Expression.Lambda(expr).Compile().DynamicInvoke();
+                        value = Expression
+                            .Lambda<Func<object?>>(Expression.Convert(expr, typeof(object)))
+                            .Compile()();
                     }
                     catch
                     {
@@ -377,7 +382,9 @@ public static partial class AssertExtensions
         if (callExpr.Object is null)
         {
             // Regular static method: use the declaring type's short name as the receiver display.
-            string typeName = callExpr.Method.DeclaringType?.Name ?? "<unknown>";
+            string typeName = callExpr.Method.DeclaringType is { } dt
+                ? CleanTypeName(dt.FullName ?? dt.Name)
+                : "<unknown>";
             return $"{typeName}.{methodName}({argsStr})";
         }
 
