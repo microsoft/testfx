@@ -238,6 +238,11 @@
         <target state="translated">Оба значения равны &lt;null&gt;. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreNotUnorderedEquivalentFailedSummary">
+        <source>Collections are unexpectedly equivalent.</source>
+        <target state="new">Collections are unexpectedly equivalent.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreSameActualIsNull">
         <source>Actual is &lt;null&gt;. {0}</source>
         <target state="translated">Фактическое значение — &lt;null&gt;. {0}</target>
@@ -252,6 +257,16 @@
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
         <target state="translated">Не передавайте типы значений в функцию AreSame(). Значения, преобразованные в Object, никогда не будут одинаковыми. Попробуйте использовать AreEqual(). {0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="AreUnorderedEquivalentDifferenceSummary">
+        <source>Missing {0} element(s) from actual. Found {1} unexpected element(s).</source>
+        <target state="new">Missing {0} element(s) from actual. Found {1} unexpected element(s).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreUnorderedEquivalentFailedSummary">
+        <source>Collections are not equivalent.</source>
+        <target state="new">Collections are not equivalent.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AssertScopeFailure">
         <source>{0} assertion(s) failed within the assert scope.</source>

@@ -238,6 +238,11 @@
         <target state="translated">두 값 모두 &lt;null&gt;입니다. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreNotUnorderedEquivalentFailedSummary">
+        <source>Collections are unexpectedly equivalent.</source>
+        <target state="new">Collections are unexpectedly equivalent.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreSameActualIsNull">
         <source>Actual is &lt;null&gt;. {0}</source>
         <target state="translated">실제 값은 &lt;null&gt;입니다. {0}</target>
@@ -252,6 +257,16 @@
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
         <target state="translated">AreSame()에 값 형식을 전달하면 안 됩니다. Object로 변환된 값은 동일한 값으로 간주되지 않습니다. AreEqual()을 사용해 보세요. {0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="AreUnorderedEquivalentDifferenceSummary">
+        <source>Missing {0} element(s) from actual. Found {1} unexpected element(s).</source>
+        <target state="new">Missing {0} element(s) from actual. Found {1} unexpected element(s).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreUnorderedEquivalentFailedSummary">
+        <source>Collections are not equivalent.</source>
+        <target state="new">Collections are not equivalent.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AssertScopeFailure">
         <source>{0} assertion(s) failed within the assert scope.</source>
