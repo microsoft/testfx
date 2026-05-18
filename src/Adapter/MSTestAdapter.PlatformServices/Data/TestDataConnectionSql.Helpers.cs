@@ -104,7 +104,7 @@ internal partial class TestDataConnectionSql
     /// </summary>
     /// <remarks>
     /// sqlsrv32.dll: Driver={SQL Server};Server=SqlServer;Database=DatabaseName;Trusted_Connection=yes
-    /// msorcl32.dll: Driver={Microsoft ODBC for Oracle};Server=OracleServer;Uid=user;Pwd=password.
+    /// msorcl32.dll: Driver={Microsoft ODBC for Oracle};Server=OracleServer;Uid=&lt;user&gt;;Pwd=&lt;password&gt;.
     /// </remarks>
     protected static class KnownOdbcDrivers
     {
