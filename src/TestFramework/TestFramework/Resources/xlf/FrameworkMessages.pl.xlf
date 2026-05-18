@@ -472,11 +472,6 @@ Rzeczywiste: {2}</target>
         <target state="new">Expected collection to contain a specific number of elements.</target>
         <note />
       </trans-unit>
-      <trans-unit id="InconclusivePrefix">
-        <source>Assert.Inconclusive.</source>
-        <target state="new">Assert.Inconclusive.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="InvalidAccessToTestContextProperty">
         <source>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</source>
         <target state="translated">Właściwość „TestContext.{0}” jest powiązana z bieżącym testem i nie jest dostępna podczas montażu lub konfiguracji klasy.</target>
@@ -574,7 +569,7 @@ Rzeczywiste: {2}</target>
       </trans-unit>
       <trans-unit id="IsNotNullFailedSummary">
         <source>Expected value to not be null.</source>
-        <target state="new">Expected value to not be null.</target>
+        <target state="translated">Oczekiwana wartość nie może mieć wartości null.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEqualFailedSummary">
@@ -599,7 +594,7 @@ Rzeczywiste: {2}</target>
       </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
-        <target state="new">Expected value to be null.</target>
+        <target state="translated">Oczekiwana wartość ma wartość null.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsPositiveFailedSummary">
