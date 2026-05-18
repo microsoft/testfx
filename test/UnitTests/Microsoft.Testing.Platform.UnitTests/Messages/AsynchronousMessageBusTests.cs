@@ -19,7 +19,7 @@ public sealed class AsynchronousMessageBusTests
     {
         using MessageBusProxy proxy = new();
         InvalidTypePublished consumer = new(proxy);
-        AsynchronousMessageBus asynchronousMessageBus = new(
+        var asynchronousMessageBus = new AsynchronousMessageBus(
             [consumer],
             new CTRLPlusCCancellationTokenSource(),
             new SystemTask(),
@@ -40,7 +40,7 @@ public sealed class AsynchronousMessageBusTests
         using MessageBusProxy proxy = new();
         LoopConsumerA consumerA = new(proxy);
         ConsumerB consumerB = new(proxy);
-        AsynchronousMessageBus asynchronousMessageBus = new(
+        var asynchronousMessageBus = new AsynchronousMessageBus(
             [consumerA, consumerB],
             new CTRLPlusCCancellationTokenSource(),
             new SystemTask(),
@@ -65,7 +65,7 @@ public sealed class AsynchronousMessageBusTests
         using MessageBusProxy proxy = new();
         Consumer consumerA = new(proxy, "consumerA");
         Consumer consumerB = new(proxy, "consumerB");
-        AsynchronousMessageBus asynchronousMessageBus = new(
+        var asynchronousMessageBus = new AsynchronousMessageBus(
             [consumerA, consumerB],
             new CTRLPlusCCancellationTokenSource(),
             new SystemTask(),
@@ -104,7 +104,7 @@ public sealed class AsynchronousMessageBusTests
             dummyConsumers.Add(dummyConsumer);
         }
 
-        using AsynchronousMessageBus asynchronousMessageBus = new(
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
             dummyConsumers.ToArray(),
             new CTRLPlusCCancellationTokenSource(),
             new SystemTask(),
