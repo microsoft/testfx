@@ -539,19 +539,4 @@ public sealed partial class Assert
             // support [CallerArgumentExpression] and the other expressions are also empty.
             ? FormatCallSiteExpression(assertionMethodName, expectedExpression, collectionExpression, expression3: "<comparer>", "<expected>", "<collection>", "<comparer>")
             : FormatCallSiteExpression(assertionMethodName, expectedExpression, collectionExpression, "<expected>", "<collection>");
-
-    private sealed class NonGenericEqualityComparerAdapter : IEqualityComparer<object?>
-    {
-        private readonly IEqualityComparer _comparer;
-
-        public NonGenericEqualityComparerAdapter(IEqualityComparer comparer)
-            => _comparer = comparer;
-
-        // The 'new' modifier suppresses CS0108: this instance method intentionally hides the
-        // static 'object.Equals(object?, object?)' (only sharing its name/signature) to satisfy
-        // the IEqualityComparer<object?>.Equals contract. There is nothing to override.
-        public new bool Equals(object? x, object? y) => _comparer.Equals(x, y);
-
-        public int GetHashCode(object? obj) => obj is null ? 0 : _comparer.GetHashCode(obj);
-    }
 }

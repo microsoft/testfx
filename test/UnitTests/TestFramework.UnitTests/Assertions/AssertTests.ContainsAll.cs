@@ -474,27 +474,4 @@ public partial class AssertTests : TestContainer
 
         comparer.GetHashCode(value).Should().Be(RuntimeHelpers.GetHashCode(value));
     }
-
-    private sealed class CaseInsensitiveStringComparer : IEqualityComparer<string>, IEqualityComparer
-    {
-        public bool Equals(string? x, string? y) => StringComparer.OrdinalIgnoreCase.Equals(x, y);
-
-        public int GetHashCode(string obj) => StringComparer.OrdinalIgnoreCase.GetHashCode(obj);
-
-        bool IEqualityComparer.Equals(object? x, object? y)
-            => (x, y) switch
-            {
-                (null, null) => true,
-                (string left, string right) => Equals(left, right),
-                (null, _) or (_, null) => false,
-                _ => false,
-            };
-
-        int IEqualityComparer.GetHashCode(object obj)
-            => obj is string value
-                ? GetHashCode(value)
-                : obj is null
-                    ? 0
-                    : RuntimeHelpers.GetHashCode(obj);
-    }
 }

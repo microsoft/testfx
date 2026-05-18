@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Runtime.CompilerServices;
 
 using AwesomeAssertions;
 
@@ -381,9 +382,21 @@ public partial class AssertTests : TestContainer
 
         public int GetHashCode(string? obj) => obj is null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(obj);
 
-        bool IEqualityComparer.Equals(object? x, object? y) => Equals(x as string, y as string);
+        bool IEqualityComparer.Equals(object? x, object? y)
+            => (x, y) switch
+            {
+                (null, null) => true,
+                (string left, string right) => Equals(left, right),
+                (null, _) or (_, null) => false,
+                _ => false,
+            };
 
-        int IEqualityComparer.GetHashCode(object obj) => obj is string value ? GetHashCode(value) : 0;
+        int IEqualityComparer.GetHashCode(object obj)
+            => obj is string value
+                ? GetHashCode(value)
+                : obj is null
+                    ? 0
+                    : RuntimeHelpers.GetHashCode(obj);
     }
 
     private sealed class NullEqualsEmptyStringComparer : IEqualityComparer<string?>
