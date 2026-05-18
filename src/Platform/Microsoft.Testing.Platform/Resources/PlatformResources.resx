@@ -304,6 +304,10 @@
   <data name="InvalidCommandLineArguments" xml:space="preserve">
     <value>Invalid command line arguments:</value>
   </data>
+  <data name="CommandLineValidationCommandLine" xml:space="preserve">
+    <value>Command line: {0}</value>
+    <comment>{0} is the command line used to run the application.</comment>
+  </data>
   <data name="CommandLineInvalidArityErrorMessage" xml:space="preserve">
     <value>Invalid arity, maximum must be greater than minimum</value>
   </data>
@@ -385,7 +389,11 @@ If not specified the file will be generated inside the default 'TestResults' dir
 The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</value>
   </data>
   <data name="PlatformCommandLineDiscoverTestsOptionDescription" xml:space="preserve">
-    <value>List available tests.</value>
+    <value>List available tests.
+Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</value>
+  </data>
+  <data name="PlatformCommandLineDiscoverTestsInvalidArgument" xml:space="preserve">
+    <value>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</value>
   </data>
   <data name="PlatformCommandLineHelpOptionDescription" xml:space="preserve">
     <value>Show the command line help.</value>
