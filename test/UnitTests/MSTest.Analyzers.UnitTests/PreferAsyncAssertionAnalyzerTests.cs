@@ -919,7 +919,7 @@ public sealed class PreferAsyncAssertionAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    [|Assert.ThrowsExactly<InvalidOperationException>(new((Action)(() => BarAsync().GetAwaiter().GetResult())))|];
+                    [|Assert.ThrowsExactly<InvalidOperationException>((Action)new(() => BarAsync().GetAwaiter().GetResult()))|];
                 }
 
                 private Task BarAsync() => Task.CompletedTask;
