@@ -67,7 +67,7 @@ public sealed partial class Assert
     {
         CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
         CheckParameterNotNull(comparer, "Assert.AreAllDistinct", "comparer");
-        AreAllDistinctImpl(collection, comparer, comparerTypeName: comparer.GetType().ToString(), message, collectionExpression);
+        AreAllDistinctImpl(collection, comparer, comparerTypeName: comparer.GetType().Name, message, collectionExpression);
     }
 
     /// <summary>
@@ -121,7 +121,7 @@ public sealed partial class Assert
     {
         CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
         CheckParameterNotNull(comparer, "Assert.AreAllDistinct", "comparer");
-        AreAllDistinctImpl(collection.Cast<object?>(), new NonGenericEqualityComparerAdapter(comparer), comparerTypeName: comparer.GetType().ToString(), message, collectionExpression);
+        AreAllDistinctImpl(collection.Cast<object?>(), new NonGenericEqualityComparerAdapter(comparer), comparerTypeName: comparer.GetType().Name, message, collectionExpression);
     }
 
 #pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
