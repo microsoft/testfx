@@ -78,6 +78,10 @@ A theorem prover and interactive proof assistant used in this project for [Forma
 
 A document (`formal-verification/CORRESPONDENCE.md`) that records how each [Lean 4](#lean-4) formal model corresponds to its C# source counterpart. For every [FV Target](#fv-target) it captures the type/function mappings, deliberate approximations and simplifications, properties explicitly excluded from the model, and open questions for maintainer review. Auto-generated and maintained by the [Lean Squad](#lean-squad) FV agent.
 
+### Lean Squad
+
+An automated agentic workflow (`.github/workflows/lean-squad.md`) that manages the formal verification lifecycle for this project. It identifies [FV Targets](#fv-target), extracts informal specs, writes [Lean 4](#lean-4) formal models, and maintains the Lean–C# correspondence documentation.
+
 ### --list-tests json
 
 An optional argument value for the MTP `--list-tests` command-line option that switches test discovery output from the default human-readable text to a machine-readable JSON document emitted on stdout. Introduced in [PR #8280](https://github.com/microsoft/testfx/pull/8280).
@@ -88,11 +92,7 @@ An optional argument value for the MTP `--list-tests` command-line option that s
 | `--list-tests text` | Explicit alias for the default text mode |
 | `--list-tests json` | JSON document on stdout; banner, progress, and per-test text are suppressed; errors go to stderr |
 
-The JSON document conforms to **schema v1**: a top-level object with `schemaVersion` (integer) and `tests` (array). Each test entry always includes `uid` and `displayName`, and optionally includes `type` (assembly, namespace, class, method, arity, parameter types — from `TestMethodIdentifierProperty`), `location` (file path, start/end lines — from `TestFileLocationProperty`), `traits` (from `TestMetadataProperty`), and `properties` (from `SerializableKeyValuePairStringProperty`). Absent fields are omitted rather than emitted as `null`; `traits` and `properties` are arrays of `{ key, value }` objects so duplicate keys are preserved. The `schemaVersion` field is incremented on any breaking schema change.
-
-### Lean Squad
-
-An automated agentic workflow (`.github/workflows/lean-squad.md`) that manages the formal verification lifecycle for this project. It identifies [FV Targets](#fv-target), extracts informal specs, writes [Lean 4](#lean-4) formal models, and maintains the Lean–C# correspondence documentation.
+The JSON document conforms to **schema v1**: a top-level object with `schemaVersion` (integer) and `tests` (array). Each test entry always includes `uid` and `displayName`, and optionally includes `type` (assembly full name, namespace, type name, method name, arity, return type, parameter types — from `TestMethodIdentifierProperty`), `location` (file path, start/end lines — from `TestFileLocationProperty`), `traits` (from `TestMetadataProperty`), and `properties` (from `SerializableKeyValuePairStringProperty`). Absent fields are omitted rather than emitted as `null`; `traits` and `properties` are arrays of `{ key, value }` objects so duplicate keys are preserved. The `schemaVersion` field is incremented on any breaking schema change.
 
 ## M
 
