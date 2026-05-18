@@ -214,7 +214,7 @@ public partial class AssertTests : TestContainer
 
     public void AreAllDistinct_Generic_WithComparer_HasDuplicate_ShouldFail()
     {
-        string comparerTypeName = typeof(CaseInsensitiveStringComparer).FullName!;
+        string comparerTypeName = nameof(CaseInsensitiveStringComparer);
         string expectedMessage = """
             Assertion failed. Expected all items in collection to be distinct.
 
@@ -267,7 +267,7 @@ public partial class AssertTests : TestContainer
 
     public void AreAllDistinct_NonGeneric_WithComparer_HasDuplicate_ShouldFail()
     {
-        string comparerTypeName = typeof(CaseInsensitiveStringComparer).FullName!;
+        string comparerTypeName = nameof(CaseInsensitiveStringComparer);
         string expectedMessage = """
             Assertion failed. Expected all items in collection to be distinct.
 
