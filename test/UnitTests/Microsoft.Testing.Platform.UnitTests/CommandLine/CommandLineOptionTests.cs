@@ -128,7 +128,7 @@ public sealed class CommandLineOptionTests
     {
         var opt = new CommandLineOption("opt", "Desc.", ArgumentArity.ExactlyOne, false);
 
-        Assert.IsFalse(opt.Equals((CommandLineOption?)null));
+        Assert.IsFalse(opt.Equals(null));
         Assert.IsFalse(opt.Equals((object?)null));
     }
 
