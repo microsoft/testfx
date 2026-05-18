@@ -483,7 +483,10 @@ public static partial class AssertExtensions
     private static bool IsArrayGetMethod(MethodCallExpression callExpr)
         => callExpr.Method.Name == "Get"
             && callExpr.Object is not null
-            && callExpr.Method.DeclaringType == typeof(Array)
+            // Multidimensional arrays (e.g. int[,]) expose runtime-synthesized `Get`/`Set`/`Address`
+            // methods on the array type itself — not on `System.Array` — so check the receiver type
+            // rather than the method's declaring type to catch them.
+            && callExpr.Object.Type.IsArray
             && callExpr.Arguments.Count > 0;
 
     private sealed class AnalysisContext
@@ -1058,10 +1061,10 @@ public static partial class AssertExtensions
     }
 
 #if NET
-    [GeneratedRegex(@"[A-Za-z0-9_\.]+\+<>c__DisplayClass\d+_\d+\.(\w+(?:\.\w+)*(?:\[[^\]]+\])?)")]
+    [GeneratedRegex(@"[A-Za-z0-9_\.]+(?:\+[A-Za-z0-9_\.]+)*\+<>c__DisplayClass\d+_\d+\.(\w+(?:\.\w+)*(?:\[[^\]]+\])?)")]
     private static partial Regex CompilerGeneratedDisplayClassRegex();
 #else
     private static Regex CompilerGeneratedDisplayClassRegex()
-        => new(@"[A-Za-z0-9_\.]+\+<>c__DisplayClass\d+_\d+\.(\w+(?:\.\w+)*(?:\[[^\]]+\])?)", RegexOptions.Compiled);
+        => new(@"[A-Za-z0-9_\.]+(?:\+[A-Za-z0-9_\.]+)*\+<>c__DisplayClass\d+_\d+\.(\w+(?:\.\w+)*(?:\[[^\]]+\])?)", RegexOptions.Compiled);
 #endif
 }
