@@ -223,6 +223,16 @@
         <target state="translated">Ambos os valores são &lt;null&gt;. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreNotSequenceEqualInAnyOrderFailedSummary">
+        <source>Expected sequences to differ (in any order).</source>
+        <target state="new">Expected sequences to differ (in any order).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotSequenceEqualInOrderFailedSummary">
+        <source>Expected sequences to differ.</source>
+        <target state="new">Expected sequences to differ.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreSameActualIsNull">
         <source>Actual is &lt;null&gt;. {0}</source>
         <target state="translated">O valor real é &lt;null&gt;. {0}</target>
@@ -237,6 +247,36 @@
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
         <target state="translated">Não passe tipos de valores para AreSame(). Os valores convertidos para Object nunca serão os mesmos. Considere usar AreEqual(). {0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualInAnyOrderFailedSummary">
+        <source>Expected sequences to be equal (in any order).</source>
+        <target state="new">Expected sequences to be equal (in any order).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualInOrderFailedSummary">
+        <source>Expected sequences to be equal.</source>
+        <target state="new">Expected sequences to be equal.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualLengthDiffMsg">
+        <source>Sequences have different lengths (expected: {0}, actual: {1}).</source>
+        <target state="new">Sequences have different lengths (expected: {0}, actual: {1}).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualMissingUnexpectedMsg">
+        <source>Missing {0} element(s) from actual. Found {1} unexpected element(s).</source>
+        <target state="new">Missing {0} element(s) from actual. Found {1} unexpected element(s).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualNullMismatchMsg">
+        <source>one side is null, the other is not.</source>
+        <target state="new">one side is null, the other is not.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualSameLengthDiffMsg">
+        <source>Sequences have {0} element(s). {1} element(s) differ. First difference at index {2}.</source>
+        <target state="new">Sequences have {0} element(s). {1} element(s) differ. First difference at index {2}.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AssertScopeFailure">
         <source>{0} assertion(s) failed within the assert scope.</source>
