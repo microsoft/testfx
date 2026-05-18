@@ -82,6 +82,18 @@ A document (`formal-verification/CORRESPONDENCE.md`) that records how each [Lean
 
 An automated agentic workflow (`.github/workflows/lean-squad.md`) that manages the formal verification lifecycle for this project. It identifies [FV Targets](#fv-target), extracts informal specs, writes [Lean 4](#lean-4) formal models, and maintains the Lean–C# correspondence documentation.
 
+### --list-tests json
+
+An optional argument value for the MTP `--list-tests` command-line option that switches test discovery output from the default human-readable text to a machine-readable JSON document emitted on stdout. Introduced in [PR #8280](https://github.com/microsoft/testfx/pull/8280).
+
+| Invocation | Behavior |
+|---|---|
+| `--list-tests` | Default human-readable text output (unchanged) |
+| `--list-tests text` | Explicit alias for the default text mode |
+| `--list-tests json` | JSON document on stdout; banner, progress, and per-test text are suppressed; errors go to stderr |
+
+The JSON document conforms to **schema v1**: a top-level object with `schemaVersion` (integer) and `tests` (array). Each test entry always includes `uid` and `displayName`, and optionally includes `type` (assembly full name, namespace, type name, method name, arity, return type, parameter types — from `TestMethodIdentifierProperty`), `location` (file path, start/end lines — from `TestFileLocationProperty`), `traits` (from `TestMetadataProperty`), and `properties` (from `SerializableKeyValuePairStringProperty`). Absent fields are omitted rather than emitted as `null`; `traits` and `properties` are arrays of `{ key, value }` objects so duplicate keys are preserved. The `schemaVersion` field is incremented on any breaking schema change.
+
 ## M
 
 ### MSTest
