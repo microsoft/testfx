@@ -69,7 +69,7 @@ public static partial class AssertExtensions
             }
             else
             {
-                // For side-effect-free expressions, keep the fast pass path and only compute details on failures.
+                // For side-effect-free expressions, keep the fast path and only compute details on failures.
                 result = condition.Compile().Invoke();
                 if (result)
                 {
