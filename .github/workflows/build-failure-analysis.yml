@@ -38,22 +38,21 @@ jobs:
         if: steps.build.outcome == 'failure'
         id: find-binlog
         run: |
-          # Find the most recent binlog — Arcade puts them under artifacts/log/
           BINLOG=$(find artifacts/log -name '*.binlog' -type f 2>/dev/null | head -1)
           if [ -z "$BINLOG" ]; then
             echo "No binlog found under artifacts/log/"
             echo "found=false" >> "$GITHUB_OUTPUT"
           else
-            echo "Found binlog: $BINLOG"
+            echo "Found binlog: $BINLOG ($(du -h "$BINLOG" | cut -f1))"
             echo "found=true" >> "$GITHUB_OUTPUT"
             echo "path=$BINLOG" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Install binlog-mcp tool
         if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
+        id: install-tool
+        continue-on-error: true
         run: |
-          # Create a standalone nuget.config to avoid package-source-mapping conflicts
-          # with the repo's NuGet.config.
           mkdir -p /tmp/binlog-tool
           cat > /tmp/binlog-tool/nuget.config << 'NUGETEOF'
           <?xml version="1.0" encoding="utf-8"?>
@@ -69,23 +68,53 @@ jobs:
             --configfile /tmp/binlog-tool/nuget.config \
             --prerelease
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+          # Verify the tool can start
+          timeout 10 binlog-mcp --help 2>/dev/null && echo "tool_ok=true" >> "$GITHUB_OUTPUT" || echo "tool_ok=false" >> "$GITHUB_OUTPUT"
 
-      - name: Extract build errors from binlog
-        if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
-        id: extract
+      - name: Extract errors via binlog-mcp (MCP protocol)
+        if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true' && steps.install-tool.outputs.tool_ok == 'true'
+        id: extract-mcp
+        continue-on-error: true
         run: |
-          node .github/workflows/scripts/extract-binlog-errors.js "${{ steps.find-binlog.outputs.path }}" > /tmp/binlog-analysis.json 2>/tmp/binlog-extract.log || true
+          timeout 90 node .github/workflows/scripts/extract-binlog-errors.js \
+            "${{ steps.find-binlog.outputs.path }}" > /tmp/binlog-analysis.json 2>/tmp/binlog-extract.log
           if [ -s /tmp/binlog-analysis.json ]; then
             echo "extracted=true" >> "$GITHUB_OUTPUT"
+            echo "MCP extraction succeeded"
           else
             echo "extracted=false" >> "$GITHUB_OUTPUT"
-            echo "Extraction failed. Log:"
+            echo "MCP extraction failed:"
             cat /tmp/binlog-extract.log
           fi
 
+      - name: Extract errors from build log (fallback)
+        if: steps.build.outcome == 'failure' && (steps.extract-mcp.outputs.extracted != 'true')
+        id: extract-fallback
+        run: |
+          # Parse errors and warnings from the build output log
+          {
+            echo '{'
+            echo '  "overview": "Build failed. Errors extracted from build output log.",'
+
+            # Extract error lines
+            echo -n '  "errors": "'
+            grep -i ': error ' /tmp/build-output.log | sort -u | head -30 | \
+              sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g'
+            echo '",'
+
+            # Extract warning lines
+            echo -n '  "warnings": "'
+            grep -i ': warning ' /tmp/build-output.log | sort -u | head -10 | \
+              sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g'
+            echo '"'
+
+            echo '}'
+          } > /tmp/binlog-analysis.json
+          echo "extracted=true" >> "$GITHUB_OUTPUT"
+          echo "Fallback extraction from build log succeeded"
+
       - name: Analyze errors with AI
-        if: steps.extract.outputs.extracted == 'true'
-        id: analyze
+        if: steps.build.outcome == 'failure' && (steps.extract-mcp.outputs.extracted == 'true' || steps.extract-fallback.outputs.extracted == 'true')
         uses: actions/github-script@v7
         env:
           BINLOG_DATA: /tmp/binlog-analysis.json
@@ -94,27 +123,27 @@ jobs:
             const fs = require('fs');
             const data = JSON.parse(fs.readFileSync(process.env.BINLOG_DATA, 'utf8'));
 
-            // Build the prompt for AI analysis
-            const prompt = `You are an MSBuild build failure analyst for the microsoft/testfx repository.
-            Analyze the following build failure data extracted from an MSBuild binary log and provide:
-            1. A concise summary of what failed
-            2. The root cause(s) — group related errors together
-            3. Suggested fix(es) for each root cause
-
-            Keep your response concise and actionable. Use markdown formatting.
-
-            ## Build Overview
-            ${data.overview}
-
-            ## Build Errors
-            ${data.errors}
-
-            ## Top Warnings
-            ${data.warnings}`;
+            const prompt = [
+              'You are an MSBuild build failure analyst for the microsoft/testfx repository.',
+              'Analyze the following build failure data and provide:',
+              '1. A concise summary of what failed',
+              '2. The root cause(s) — group related errors together',
+              '3. Suggested fix(es) for each root cause',
+              '',
+              'Keep your response concise and actionable. Use markdown formatting.',
+              '',
+              '## Build Overview',
+              data.overview || 'N/A',
+              '',
+              '## Build Errors',
+              data.errors || 'N/A',
+              '',
+              '## Top Warnings',
+              data.warnings || 'N/A',
+            ].join('\n');
 
             let analysis;
             try {
-              // Try GitHub Models API for AI analysis
               const response = await fetch('https://models.github.ai/inference/chat/completions', {
                 method: 'POST',
                 headers: {
@@ -131,6 +160,8 @@ jobs:
               if (response.ok) {
                 const result = await response.json();
                 analysis = result.choices?.[0]?.message?.content;
+              } else {
+                core.info(`AI API returned ${response.status}: ${await response.text()}`);
               }
             } catch (e) {
               core.info(`AI analysis unavailable: ${e.message}`);
@@ -138,41 +169,38 @@ jobs:
 
             // Fallback: format the raw data as markdown
             if (!analysis) {
-              analysis = `### Build Overview\n\n${data.overview}\n\n### Errors\n\n${data.errors}`;
-              // Truncate if too long
+              const errors = (data.errors || 'No errors captured').replace(/\\n/g, '\n');
+              analysis = `### Build Errors\n\n\`\`\`\n${errors}\n\`\`\``;
               if (analysis.length > 10000) {
                 analysis = analysis.substring(0, 10000) + '\n\n... (truncated)';
               }
             }
 
-            // Write analysis to file for the comment step
             fs.writeFileSync('/tmp/analysis-result.md', analysis);
             core.info('Analysis written to /tmp/analysis-result.md');
 
       - name: Post analysis comment on PR
-        if: steps.build.outcome == 'failure' && steps.extract.outputs.extracted == 'true'
+        if: steps.build.outcome == 'failure'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            let analysis = 'Build failed but binlog analysis could not be completed.';
+            let analysis = 'Build failed but automated analysis could not be completed. Check the [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).';
             try {
               analysis = fs.readFileSync('/tmp/analysis-result.md', 'utf8');
             } catch (e) {
-              core.info('No analysis file found, using fallback');
+              core.info('No analysis file found, using fallback message');
             }
             const marker = '<!-- binlog-failure-analysis -->';
-
             const prNumber = context.payload.pull_request.number;
 
-            // Find and delete any previous analysis comment to avoid spam
+            // Delete any previous analysis comment to avoid spam
             const comments = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber,
               per_page: 100,
             });
-
             for (const comment of comments.data) {
               if (comment.body.includes(marker)) {
                 await github.rest.issues.deleteComment({
@@ -188,12 +216,10 @@ jobs:
               marker,
               '## 🔍 Build Failure Analysis',
               '',
-              'The build failed on this PR. Here\'s an automated analysis from the MSBuild binary log:',
-              '',
               analysis,
               '',
               '---',
-              `<sub>🤖 Generated automatically using <a href="https://dev.azure.com/dnceng/public/_artifacts/feed/dotnet-eng/NuGet/AITools.BinlogMcp">binlog-mcp</a> · commit ${sha}</sub>`,
+              `<sub>🤖 Generated using <a href="https://dev.azure.com/dnceng/public/_artifacts/feed/dotnet-eng/NuGet/AITools.BinlogMcp">binlog-mcp</a> · commit ${sha} · <a href="${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}">workflow run</a></sub>`,
             ].join('\n');
 
             await github.rest.issues.createComment({

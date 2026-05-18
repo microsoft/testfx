@@ -18,25 +18,38 @@ if (!fs.existsSync(binlogPath)) {
 
 const absolutePath = path.resolve(binlogPath);
 
-// Spawn the binlog-mcp server with pre-loaded binlog
-const server = spawn('binlog-mcp', ['--binlog', absolutePath], {
+// Spawn the binlog-mcp server — do NOT pre-load binlog at startup to avoid timeout
+const server = spawn('binlog-mcp', [], {
   stdio: ['pipe', 'pipe', 'pipe'],
 });
 
+let stderrLog = '';
+server.stderr.on('data', (chunk) => {
+  stderrLog += chunk.toString();
+});
+
+server.on('error', (err) => {
+  console.error(`Failed to start binlog-mcp: ${err.message}`);
+  process.exit(1);
+});
+
 let buffer = '';
-let responseResolve = null;
+let pendingResolves = new Map();
 let msgId = 0;
 
 server.stdout.on('data', (chunk) => {
   buffer += chunk.toString();
-  // MCP uses Content-Length header framing
   while (true) {
     const headerEnd = buffer.indexOf('\r\n\r\n');
     if (headerEnd === -1) break;
 
     const header = buffer.substring(0, headerEnd);
     const match = header.match(/Content-Length:\s*(\d+)/i);
-    if (!match) break;
+    if (!match) {
+      // Skip malformed data
+      buffer = buffer.substring(headerEnd + 4);
+      continue;
+    }
 
     const contentLength = parseInt(match[1], 10);
     const bodyStart = headerEnd + 4;
@@ -47,9 +60,9 @@ server.stdout.on('data', (chunk) => {
 
     try {
       const msg = JSON.parse(body);
-      if (responseResolve && msg.id !== undefined) {
-        responseResolve(msg);
-        responseResolve = null;
+      if (msg.id !== undefined && pendingResolves.has(msg.id)) {
+        pendingResolves.get(msg.id)(msg);
+        pendingResolves.delete(msg.id);
       }
     } catch (e) {
       // ignore parse errors from notifications
@@ -57,36 +70,46 @@ server.stdout.on('data', (chunk) => {
   }
 });
 
-server.stderr.on('data', (chunk) => {
-  // Suppress stderr (logging)
-});
-
-function sendRequest(method, params) {
+function sendRequest(method, params, timeoutMs = 60000) {
   return new Promise((resolve, reject) => {
     const id = ++msgId;
     const request = JSON.stringify({ jsonrpc: '2.0', id, method, params });
     const message = `Content-Length: ${Buffer.byteLength(request)}\r\n\r\n${request}`;
-    responseResolve = resolve;
+    const timer = setTimeout(() => {
+      pendingResolves.delete(id);
+      reject(new Error(`Timeout (${timeoutMs}ms) waiting for response to ${method}`));
+    }, timeoutMs);
+    pendingResolves.set(id, (msg) => {
+      clearTimeout(timer);
+      resolve(msg);
+    });
     server.stdin.write(message);
-    setTimeout(() => reject(new Error(`Timeout waiting for response to ${method}`)), 30000);
   });
+}
+
+function sendNotification(method, params) {
+  const notification = JSON.stringify({ jsonrpc: '2.0', method, params });
+  server.stdin.write(`Content-Length: ${Buffer.byteLength(notification)}\r\n\r\n${notification}`);
 }
 
 async function main() {
   try {
     // Initialize MCP connection
-    await sendRequest('initialize', {
+    const initResult = await sendRequest('initialize', {
       protocolVersion: '2024-11-05',
       capabilities: {},
       clientInfo: { name: 'binlog-analyzer', version: '1.0.0' },
-    });
+    }, 15000);
+
+    if (initResult.error) {
+      throw new Error(`Initialize failed: ${JSON.stringify(initResult.error)}`);
+    }
 
     // Send initialized notification
-    const initialized = JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' });
-    server.stdin.write(`Content-Length: ${Buffer.byteLength(initialized)}\r\n\r\n${initialized}`);
+    sendNotification('notifications/initialized');
 
-    // Wait a moment for the server to be ready
-    await new Promise(r => setTimeout(r, 2000));
+    // Small delay for server readiness
+    await new Promise(r => setTimeout(r, 500));
 
     // Get build overview
     const overview = await sendRequest('tools/call', {
@@ -100,7 +123,7 @@ async function main() {
       arguments: { binlog: absolutePath },
     });
 
-    // Get build warnings (just the count — limit output)
+    // Get build warnings (limited)
     const warnings = await sendRequest('tools/call', {
       name: 'binlog_warnings',
       arguments: { binlog: absolutePath, top: 10 },
@@ -114,10 +137,15 @@ async function main() {
 
     console.log(JSON.stringify(result, null, 2));
   } catch (e) {
-    console.error('Error:', e.message);
+    console.error(`Error: ${e.message}`);
+    if (stderrLog) {
+      console.error(`Server stderr: ${stderrLog.substring(0, 500)}`);
+    }
     process.exit(1);
   } finally {
     server.kill();
+    // Give it a moment to exit
+    setTimeout(() => process.exit(0), 500);
   }
 }
 
