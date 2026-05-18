@@ -17,7 +17,8 @@ public sealed class OutputTests : AcceptanceTestBase<OutputTests.TestAssetFixtur
         TestHostResult testHostResult = await testHost.ExecuteAsync("--output detailed", cancellationToken: TestContext.CancellationToken);
 
         // Assert
-        testHostResult.AssertOutputContains("Assert.AreEqual failed. Expected:<1>. Actual:<2>.");
+        testHostResult.AssertOutputContains("Assertion failed. Expected values to be equal.");
+        testHostResult.AssertOutputContains("Assert.AreEqual(1, 2)");
         testHostResult.AssertOutputContains("""
               Standard output
                 Console message

@@ -52,6 +52,7 @@ Options:
         Display .NET test application information.
     --list-tests
         List available tests.
+        Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
     --results-directory
@@ -113,6 +114,7 @@ Options:
         const string wildcardMatchPattern = $"""
 Microsoft.Testing.Platform v*
 Unknown option '--{UnknownOption}'
+Command line: --no-ansi --no-progress -{UnknownOption}
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
@@ -223,9 +225,10 @@ Built-in command line providers:
         Hidden: True
         Description: For testing purposes
       --list-tests
-        Arity: 0
+        Arity: 0..1
         Hidden: False
         Description: List available tests\.
+        Optionally accepts 'text' \(the default human-readable output\) or 'json' to print the discovered tests as a JSON document on standard output\.
       --minimum-expected-tests
         Arity: 0\.\.1
         Hidden: False
