@@ -136,7 +136,11 @@ jobs:
               'Analyze the following build failure data and provide:',
               '1. A concise summary of what failed',
               '2. The root cause(s) — group related errors together',
-              '3. Suggested fix(es) for each root cause',
+              '3. For each root cause, provide a **concrete code fix** using a markdown diff block:',
+              '   ```diff',
+              '   - old line',
+              '   + new line',
+              '   ```',
               '',
               'Keep your response concise and actionable. Use markdown formatting.',
               '',
@@ -145,10 +149,21 @@ jobs:
               '',
               '## Build Errors',
               data.errors || 'N/A',
-              '',
-              '## Top Warnings',
-              data.warnings || 'N/A',
-            ].join('\n');
+            ];
+
+            // Include source context in the AI prompt if available
+            const contexts = data.sourceContexts || {};
+            if (Object.keys(contexts).length > 0) {
+              prompt.push('', '## Source Context');
+              for (const [file, ctx] of Object.entries(contexts)) {
+                const shortPath = file.split('/').slice(-2).join('/');
+                prompt.push('', `### ${shortPath} (around line ${ctx.errorLine})`, '```csharp', ctx.content.trim(), '```');
+              }
+            }
+
+            if (data.warnings && data.warnings !== 'No data') {
+              prompt.push('', '## Top Warnings', data.warnings);
+            }
 
             let analysis;
 
@@ -169,7 +184,7 @@ jobs:
                   },
                   body: JSON.stringify({
                     model: 'gpt-4o-mini',
-                    messages: [{ role: 'user', content: prompt }],
+                    messages: [{ role: 'user', content: prompt.join('\n') }],
                     max_tokens: 2000,
                   }),
                 });
@@ -228,7 +243,6 @@ jobs:
                 parts.push('', '### ❌ Errors', '');
                 for (const [file, errors] of Object.entries(byFile)) {
                   parts.push(`**\`${file}\`**`);
-                  // Deduplicate by code+message
                   const unique = [...new Map(errors.map(e => [`${e.code}:${e.message}`, e])).values()];
                   for (const e of unique) {
                     const loc = e.line ? ` (line ${e.line})` : '';
@@ -238,6 +252,39 @@ jobs:
                 }
               } else if (errorText && errorText !== 'No data') {
                 parts.push('', '### ❌ Errors', '', '```', errorText, '```');
+              }
+
+              // Suggested fixes — use source context from binlog to generate actionable suggestions
+              const contexts = data.sourceContexts || {};
+              if (Object.keys(contexts).length > 0 && realErrors.length > 0) {
+                parts.push('### 🔧 Suggested Fixes', '');
+
+                for (const [fullPath, ctx] of Object.entries(contexts)) {
+                  const shortPath = fullPath.split('/').slice(-2).join('/');
+                  const fileErrors = realErrors.filter(e => e.file === fullPath);
+                  if (fileErrors.length === 0) continue;
+
+                  // Deduplicate errors for this file
+                  const unique = [...new Map(fileErrors.map(e => [`${e.code}:${e.message}`, e])).values()];
+
+                  for (const err of unique) {
+                    parts.push(`**\`${shortPath}\` — \`${err.code}\`**`);
+                    parts.push('');
+
+                    // Show the source context around the error
+                    parts.push('<details><summary>Source context (click to expand)</summary>', '');
+                    parts.push('```csharp');
+                    parts.push(ctx.content.trim());
+                    parts.push('```');
+                    parts.push('</details>', '');
+
+                    // Generate fix suggestion based on error code
+                    const fix = generateFixSuggestion(err, ctx);
+                    if (fix) {
+                      parts.push(fix, '');
+                    }
+                  }
+                }
               }
 
               // Warnings section
@@ -257,6 +304,80 @@ jobs:
               if (analysis.length > 15000) {
                 analysis = analysis.substring(0, 15000) + '\n\n... (truncated)';
               }
+            }
+
+            function generateFixSuggestion(err, ctx) {
+              const lines = ctx.content.split('\n');
+              // Find the error line in context
+              const errorLineContent = lines.find(l => {
+                const match = l.match(/^\s*(\d+)\s*\|/);
+                return match && parseInt(match[1]) === err.line;
+              });
+              const rawLine = errorLineContent ? errorLineContent.replace(/^\s*\d+\s*\|\s?/, '') : null;
+
+              const suggestions = {
+                // Missing using directive / type not found
+                'CS0246': () => {
+                  const typeMatch = err.message.match(/name '(\w+)'/);
+                  const typeName = typeMatch ? typeMatch[1] : null;
+                  if (rawLine && rawLine.match(/^using /)) {
+                    return `**Suggestion:** Remove the invalid using directive:\n\`\`\`diff\n- ${rawLine.trim()}\n\`\`\``;
+                  }
+                  if (typeName) {
+                    return `**Suggestion:** Add the correct \`using\` directive for \`${typeName}\`, or check if the required NuGet package is referenced in the project file.`;
+                  }
+                  return '**Suggestion:** Add the missing `using` directive or NuGet package reference.';
+                },
+                // Type or namespace does not exist in namespace
+                'CS0234': () => {
+                  const nsMatch = err.message.match(/name '(\w+)' does not exist in the namespace '([^']+)'/);
+                  if (nsMatch) {
+                    return `**Suggestion:** The type \`${nsMatch[1]}\` was not found in \`${nsMatch[2]}\`. Check the namespace spelling or add the required package reference.`;
+                  }
+                  return null;
+                },
+                // Member not found
+                'CS0117': () => {
+                  const memMatch = err.message.match(/'([^']+)' does not contain a definition for '([^']+)'/);
+                  if (memMatch) {
+                    return `**Suggestion:** \`${memMatch[1]}\` does not have member \`${memMatch[2]}\`. Check the API documentation or use an alternative method.`;
+                  }
+                  return null;
+                },
+                // Cannot convert type
+                'CS0029': () => '**Suggestion:** Add an explicit cast or use a compatible type.',
+                // No overload matches
+                'CS1501': () => '**Suggestion:** Check the method signature and ensure the correct number/types of arguments are passed.',
+                // Ambiguous reference
+                'CS0104': () => '**Suggestion:** Use a fully qualified type name to resolve the ambiguity.',
+                // Missing semicolon / syntax
+                'CS1002': () => rawLine ? `**Suggestion:** Add missing semicolon:\n\`\`\`diff\n- ${rawLine.trim()}\n+ ${rawLine.trim()};\n\`\`\`` : null,
+                // Unexpected token
+                'CS1513': () => '**Suggestion:** Check for a missing closing brace `}`.',
+                'CS1514': () => '**Suggestion:** Check for a missing opening brace `{`.',
+                // Duplicate definition
+                'CS0111': () => '**Suggestion:** Remove the duplicate member definition or rename one of them.',
+                // Inaccessible due to protection level
+                'CS0122': () => '**Suggestion:** Change the accessibility modifier (e.g., from `private` to `internal` or `public`) or use a public API.',
+                // Cannot implicitly convert
+                'CS0266': () => '**Suggestion:** Add an explicit cast: `(TargetType)expression`.',
+                // Nullable reference
+                'CS8600': () => '**Suggestion:** Add a null check or use the null-forgiving operator `!` if the value is known to be non-null.',
+                'CS8602': () => '**Suggestion:** Add a null check before dereferencing, or use `?.` (null-conditional operator).',
+                'CS8604': () => '**Suggestion:** Ensure the argument is not null, or change the parameter to accept `null`.',
+              };
+
+              const handler = suggestions[err.code];
+              if (handler) {
+                const result = handler();
+                if (result) return result;
+              }
+
+              // Generic suggestion for unknown error codes
+              if (rawLine) {
+                return `**Suggestion:** Review line ${err.line}:\n\`\`\`csharp\n${rawLine.trim()}\n\`\`\``;
+              }
+              return null;
             }
 
             fs.writeFileSync('/tmp/analysis-result.md', analysis);
