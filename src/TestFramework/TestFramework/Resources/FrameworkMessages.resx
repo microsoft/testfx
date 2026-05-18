@@ -151,10 +151,10 @@
     <value>But was:  </value>
   </data>
   <data name="AreEqualStringDiffLengthBothMsg" xml:space="preserve">
-    <value>String lengths are both {0} but differ at index {1}.</value>
+    <value>Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</value>
   </data>
   <data name="AreEqualStringDiffLengthDifferentMsg" xml:space="preserve">
-    <value>Expected string length {0} but was {1}.</value>
+    <value>Strings have different lengths (expected: {0}, actual: {1}) and differ at 1 location(s). First difference at index {2}.</value>
   </data>
   <data name="AreEquivalentFailedSummary" xml:space="preserve">
     <value>Expected values to be structurally equivalent.</value>
@@ -491,11 +491,20 @@ Actual: {2}</value>
   <data name="AreEqualDifferentTypesFailedSummary" xml:space="preserve">
     <value>Expected values to be equal, but they are of different types.</value>
   </data>
+  <data name="AreEqualStringsCaseOnlyDifferenceMsg" xml:space="preserve">
+    <value>Strings differ only in case.</value>
+  </data>
   <data name="AreEqualStringsFailedSummary" xml:space="preserve">
     <value>Expected strings to be equal.</value>
   </data>
   <data name="AreNotEqualFailedSummary" xml:space="preserve">
     <value>Expected values to not be equal.</value>
+  </data>
+  <data name="AreNotEqualStringsCaseInsensitiveFailedSummary" xml:space="preserve">
+    <value>Expected strings to differ (case-insensitive).</value>
+  </data>
+  <data name="AreNotEqualStringsFailedSummary" xml:space="preserve">
+    <value>Expected strings to differ.</value>
   </data>
   <data name="AreAllNotNullFailedSummary" xml:space="preserve">
     <value>Expected all items in collection to be non-null.</value>

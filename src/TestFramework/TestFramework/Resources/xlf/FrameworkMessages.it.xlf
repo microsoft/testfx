@@ -32,56 +32,61 @@
         <target state="new">Expected all items in collection to be of the specified type.</target>
         <note />
       </trans-unit>
-      <trans-unit id="AreEqualFailMsg">
-        <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Previsto:&lt;{1}&gt;. Effettivo:&lt;{2}&gt;. {0}</target>
-        <note></note>
+      <trans-unit id="AreEqualCaseFailMsg">
+        <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
+        <target state="new">Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualDeltaFailMsg">
         <source>Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">Prevista una differenza non maggiore di &lt;{3}&gt; tra il valore previsto &lt;{1}&gt; e il valore effettivo &lt;{2}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="AreEqualCaseFailMsg">
-        <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Previsto:&lt;{1}&gt;. La combinazione di maiuscole e minuscole è diversa per il valore effettivo:&lt;{2}&gt;. {0}</target>
-        <note></note>
+        <target state="new">Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailMsg">
         <source>Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</source>
         <target state="translated">Previsto:&lt;{1} ({2})&gt;. Effettivo:&lt;{3} ({4})&gt;. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreEqualFailMsg">
+        <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
+        <target state="new">Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffActualPrefix">
+        <source>But was:  </source>
+        <target state="new">But was:  </target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffExpectedPrefix">
+        <source>Expected: </source>
+        <target state="new">Expected: </target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreEqualStringDiffFailMsg">
         <source>{0}{1}
 {2}
 {3}
 {4}</source>
-        <target state="translated">{0}{1}
+        <target state="new">{0}{1}
 {2}
 {3}
 {4}</target>
         <note />
       </trans-unit>
-      <trans-unit id="AreEqualStringDiffExpectedPrefix">
-        <source>Expected: </source>
-        <target state="translated">Previsto: </target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="AreEqualStringDiffActualPrefix">
-        <source>But was:  </source>
-        <target state="translated">Ma era:  </target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthBothMsg">
-        <source>String lengths are both {0} but differ at index {1}.</source>
-        <target state="translated">Le lunghezze delle stringhe sono entrambe {0} ma differiscono all'indice {1}.</target>
+        <source>Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</source>
+        <target state="needs-review-translation">Le lunghezze delle stringhe sono entrambe {0} ma differiscono all'indice {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthDifferentMsg">
-        <source>Expected string length {0} but was {1}.</source>
-        <target state="translated">La lunghezza della stringa prevista è {0} ma era {1}.</target>
-        <note></note>
+        <source>Strings have different lengths (expected: {0}, actual: {1}) and differ at 1 location(s). First difference at index {2}.</source>
+        <target state="new">Strings have different lengths (expected: {0}, actual: {1}) and differ at 1 location(s). First difference at index {2}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringsCaseOnlyDifferenceMsg">
+        <source>Strings differ only in case.</source>
+        <target state="new">Strings differ only in case.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEquivalentFailedSummary">
         <source>Expected values to be structurally equivalent.</source>
@@ -188,15 +193,25 @@
         <target state="new">&lt;root&gt;</target>
         <note>Placeholder used in equivalence-mismatch messages when the difference is at the top of the object graph.</note>
       </trans-unit>
+      <trans-unit id="AreNotEqualDeltaFailMsg">
+        <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
+        <target state="new">Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
         <source>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
         <target state="translated">Previsto qualsiasi valore tranne:&lt;{1}&gt;. Effettivo:&lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AreNotEqualDeltaFailMsg">
-        <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">Prevista una differenza maggiore di &lt;{3}&gt; tra il valore previsto &lt;{1}&gt; e il valore effettivo &lt;{2}&gt;. {0}</target>
-        <note></note>
+      <trans-unit id="AreNotEqualStringsCaseInsensitiveFailedSummary">
+        <source>Expected strings to differ (case-insensitive).</source>
+        <target state="new">Expected strings to differ (case-insensitive).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEqualStringsFailedSummary">
+        <source>Expected strings to differ.</source>
+        <target state="new">Expected strings to differ.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreNotEquivalentComparisonFailedSummary">
         <source>Could not complete structural comparison.</source>
