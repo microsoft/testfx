@@ -140,7 +140,9 @@ public class Program
         builder.RegisterTestFramework(
             sp => new TestFrameworkCapabilities(),
             (_, __) => new DummyTestFramework());
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         builder.AddHtmlReportProvider();
+#pragma warning restore TPEXP
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }

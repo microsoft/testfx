@@ -14,6 +14,7 @@ namespace Microsoft.Testing.Extensions;
 /// <summary>
 /// Provides extension methods for adding HTML report generation to a test application.
 /// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class HtmlReportExtensions
 {
     /// <summary>

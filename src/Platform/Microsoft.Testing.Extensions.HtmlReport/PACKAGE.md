@@ -12,6 +12,8 @@ dotnet add package Microsoft.Testing.Extensions.HtmlReport
 
 ## About
 
+> **⚠️ Experimental:** This extension is currently experimental. The API, CLI options, report layout and on-disk format may change in future releases without notice.
+
 This package extends Microsoft.Testing.Platform with:
 
 - **Self-contained HTML report**: a single `.html` file with all CSS/JS/data inlined; can be archived, shared as a CI artifact, attached to PR comments or e-mailed without any external dependency
