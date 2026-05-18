@@ -229,9 +229,18 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
             _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
         }
 
-        string finalState = _testApplicationProcessExitCode.GetProcessExitCode() == 0 && !_testApplicationProcessExitCode.HasTestAdapterTestSessionFailure
-            ? AzureDevOpsLivePublishingConstants.CompletedTestRunState
-            : AzureDevOpsLivePublishingConstants.AbortedTestRunState;
+        // Azure DevOps test runs use "Aborted" specifically for cancellation or session-level
+        // infrastructure failures. Individual failing tests should still mark the run as
+        // "Completed" — only treat process exit codes other than Success/AtLeastOneTestFailed as
+        // an abort signal (e.g. TestSessionAborted, TestHostProcessExitedNonGracefully,
+        // TestAdapterTestSessionFailure, MinimumExpectedTestsPolicyViolation, etc.).
+        int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
+        bool exitCodeIsTestResult = exitCode is (int)ExitCode.Success or (int)ExitCode.AtLeastOneTestFailed;
+        string finalState = testSessionContext.CancellationToken.IsCancellationRequested
+                || _testApplicationProcessExitCode.HasTestAdapterTestSessionFailure
+                || !exitCodeIsTestResult
+            ? AzureDevOpsLivePublishingConstants.AbortedTestRunState
+            : AzureDevOpsLivePublishingConstants.CompletedTestRunState;
 
         try
         {

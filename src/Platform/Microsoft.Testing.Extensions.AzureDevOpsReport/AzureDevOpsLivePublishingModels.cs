@@ -43,12 +43,35 @@ internal sealed record AzureDevOpsTestResultsPublisherOptions(
     int CoordinationReadRetryCount,
     TimeSpan CoordinationReadRetryDelay,
     TimeSpan CoordinationFinalizeTimeout,
-    TimeSpan CoordinationFileExpiration)
+    TimeSpan CoordinationFileExpiration,
+    TimeSpan CoordinationJoinerMaxWaitTime)
 {
     public AzureDevOpsTestResultsPublisherOptions(int batchSize, TimeSpan flushInterval, int coordinationReadRetryCount, TimeSpan coordinationReadRetryDelay)
-        : this(batchSize, flushInterval, coordinationReadRetryCount, coordinationReadRetryDelay, TimeSpan.FromSeconds(30), TimeSpan.FromHours(4))
+        : this(batchSize, flushInterval, coordinationReadRetryCount, coordinationReadRetryDelay, TimeSpan.FromSeconds(30), TimeSpan.FromHours(4), TimeSpan.FromMinutes(2))
     {
     }
 
-    public static AzureDevOpsTestResultsPublisherOptions Default { get; } = new(100, TimeSpan.FromSeconds(5), 40, TimeSpan.FromMilliseconds(250), TimeSpan.FromSeconds(30), TimeSpan.FromHours(4));
+    public AzureDevOpsTestResultsPublisherOptions(int batchSize, TimeSpan flushInterval, int coordinationReadRetryCount, TimeSpan coordinationReadRetryDelay, TimeSpan coordinationFinalizeTimeout, TimeSpan coordinationFileExpiration)
+        : this(batchSize, flushInterval, coordinationReadRetryCount, coordinationReadRetryDelay, coordinationFinalizeTimeout, coordinationFileExpiration, TimeSpan.FromMinutes(2))
+    {
+    }
+
+    public static AzureDevOpsTestResultsPublisherOptions Default { get; } = new(100, TimeSpan.FromSeconds(5), 40, TimeSpan.FromMilliseconds(250), TimeSpan.FromSeconds(30), TimeSpan.FromHours(4), TimeSpan.FromMinutes(2));
 }
+
+internal enum LeaseFileStatus
+{
+    /// <summary>The lease file is not present on disk.</summary>
+    NotFound,
+
+    /// <summary>The lease file was parsed and the lease is still valid.</summary>
+    Active,
+
+    /// <summary>The lease file was parsed and the lease has expired.</summary>
+    Expired,
+
+    /// <summary>The lease file is present but could not be read or parsed; it may be mid-write by another process.</summary>
+    TransientReadError,
+}
+
+internal readonly record struct LeaseReadResult(LeaseFileStatus Status, AzureDevOpsLeaseFile? Lease);

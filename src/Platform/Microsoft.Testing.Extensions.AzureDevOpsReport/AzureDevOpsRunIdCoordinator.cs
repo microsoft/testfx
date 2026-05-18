@@ -58,7 +58,7 @@ internal sealed class AzureDevOpsRunIdCoordinator
                 return new AzureDevOpsCoordinatedRun(runId, true, configuration.BuildId, configuration.ResultsDirectory, runIdFilePath, ownerFilePath, participantFilePath);
             }
 
-            AzureDevOpsRunIdFile? runIdFile = await WaitForRunIdFileAsync(runIdFilePath, configuration.BuildId, cancellationToken).ConfigureAwait(false);
+            AzureDevOpsRunIdFile? runIdFile = await WaitForRunIdFileAsync(runIdFilePath, ownerFilePath, configuration.BuildId, cancellationToken).ConfigureAwait(false);
             if (runIdFile is null)
             {
                 ownsOwnerFile = await TryAcquireOwnerAsync(ownerFilePath, configuration.BuildId, cancellationToken).ConfigureAwait(false);
@@ -69,7 +69,7 @@ internal sealed class AzureDevOpsRunIdCoordinator
                     return new AzureDevOpsCoordinatedRun(runId, true, configuration.BuildId, configuration.ResultsDirectory, runIdFilePath, ownerFilePath, participantFilePath);
                 }
 
-                runIdFile = await WaitForRunIdFileAsync(runIdFilePath, configuration.BuildId, cancellationToken).ConfigureAwait(false);
+                runIdFile = await WaitForRunIdFileAsync(runIdFilePath, ownerFilePath, configuration.BuildId, cancellationToken).ConfigureAwait(false);
             }
 
             if (runIdFile is not null
@@ -157,14 +157,31 @@ internal sealed class AzureDevOpsRunIdCoordinator
 
         foreach (string participantFile in participantFiles)
         {
-            AzureDevOpsLeaseFile? lease = TryReadLeaseFile(participantFile);
-            if (lease is not null)
+            LeaseReadResult result = ReadLease(participantFile);
+
+            // Treat a participant whose file we couldn't read (e.g. mid-write) as active to avoid
+            // racing with a process that is still updating its lease.
+            if (result.Status is LeaseFileStatus.TransientReadError or LeaseFileStatus.Active)
             {
-                if (lease.ExpiresAt > _clock.UtcNow && IsProcessAlive(lease.ProcessId))
+                AzureDevOpsLeaseFile? lease = result.Lease;
+                if (lease is null || (lease.ExpiresAt > _clock.UtcNow && IsProcessAlive(lease.ProcessId)))
                 {
                     activeParticipants.Add(participantFile);
                     continue;
                 }
+            }
+            else if (result.Status == LeaseFileStatus.Expired
+                && result.Lease is { } expiredLease
+                && IsProcessAlive(expiredLease.ProcessId))
+            {
+                // Lease has expired according to wall-clock but the participant process is still
+                // running (its renewal may simply be stuck). Keep waiting rather than deleting.
+                activeParticipants.Add(participantFile);
+                continue;
+            }
+            else if (result.Status == LeaseFileStatus.NotFound)
+            {
+                continue;
             }
             else if (TryGetPid(participantFile) is int processId && IsProcessAlive(processId))
             {
@@ -197,9 +214,11 @@ internal sealed class AzureDevOpsRunIdCoordinator
 
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "The coordination payload type is internal, fixed, and controlled by this extension.")]
     [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "The coordination payload type is internal, fixed, and controlled by this extension.")]
-    private async Task<AzureDevOpsRunIdFile?> WaitForRunIdFileAsync(string runIdFilePath, int buildId, CancellationToken cancellationToken)
+    private async Task<AzureDevOpsRunIdFile?> WaitForRunIdFileAsync(string runIdFilePath, string ownerFilePath, int buildId, CancellationToken cancellationToken)
     {
-        for (int attempt = 0; attempt < _options.CoordinationReadRetryCount; attempt++)
+        DateTimeOffset joinerDeadline = _clock.UtcNow + _options.CoordinationJoinerMaxWaitTime;
+
+        for (int attempt = 0; ; attempt++)
         {
             if (_fileSystem.ExistFile(runIdFilePath))
             {
@@ -230,10 +249,31 @@ internal sealed class AzureDevOpsRunIdCoordinator
                 }
             }
 
+            // After the base retry budget is exhausted, only keep waiting as long as the owner lease
+            // still looks active (or temporarily unreadable). A long CreateTestRunAsync can outlast
+            // CoordinationReadRetryCount * CoordinationReadRetryDelay, but we still want to bound the
+            // wait by CoordinationJoinerMaxWaitTime so a crashed owner doesn't stall joiners forever.
+            if (attempt >= _options.CoordinationReadRetryCount)
+            {
+                if (_clock.UtcNow >= joinerDeadline)
+                {
+                    return null;
+                }
+
+                LeaseReadResult ownerLease = ReadLease(ownerFilePath);
+                bool ownerStillActive = ownerLease.Status is LeaseFileStatus.Active or LeaseFileStatus.TransientReadError
+                    || (ownerLease.Status == LeaseFileStatus.Expired
+                        && ownerLease.Lease is { } expiredLease
+                        && IsProcessAlive(expiredLease.ProcessId));
+
+                if (!ownerStillActive)
+                {
+                    return null;
+                }
+            }
+
             await _task.Delay(_options.CoordinationReadRetryDelay, cancellationToken).ConfigureAwait(false);
         }
-
-        return null;
     }
 
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "The coordination payload type is internal, fixed, and controlled by this extension.")]
@@ -259,8 +299,16 @@ internal sealed class AzureDevOpsRunIdCoordinator
             return true;
         }
 
-        AzureDevOpsLeaseFile? existingLease = TryReadLeaseFile(ownerFilePath);
-        if (existingLease is null || existingLease.ExpiresAt <= _clock.UtcNow)
+        LeaseReadResult existing = ReadLease(ownerFilePath);
+
+        // If the file exists but we couldn't read it (likely partial write from the current owner),
+        // refuse to take over — otherwise we'd race and create a duplicate Azure DevOps run.
+        if (existing.Status == LeaseFileStatus.TransientReadError)
+        {
+            return false;
+        }
+
+        if (existing.Status is LeaseFileStatus.NotFound or LeaseFileStatus.Expired)
         {
             TryDeleteFile(ownerFilePath);
             return await TryWriteLeaseFileAsync(ownerFilePath, lease, overwrite: false, cancellationToken).ConfigureAwait(false);
@@ -274,11 +322,11 @@ internal sealed class AzureDevOpsRunIdCoordinator
 
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "The coordination payload type is internal, fixed, and controlled by this extension.")]
     [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "The coordination payload type is internal, fixed, and controlled by this extension.")]
-    private AzureDevOpsLeaseFile? TryReadLeaseFile(string path)
+    private LeaseReadResult ReadLease(string path)
     {
         if (!_fileSystem.ExistFile(path))
         {
-            return null;
+            return new LeaseReadResult(LeaseFileStatus.NotFound, null);
         }
 
         try
@@ -287,13 +335,20 @@ internal sealed class AzureDevOpsRunIdCoordinator
             AzureDevOpsLeaseFile? lease = JsonSerializer.Deserialize<AzureDevOpsLeaseFile>(content, JsonSerializerOptions);
             if (lease is not null)
             {
-                return lease;
+                return new LeaseReadResult(
+                    lease.ExpiresAt > _clock.UtcNow ? LeaseFileStatus.Active : LeaseFileStatus.Expired,
+                    lease);
             }
 
             if (int.TryParse(content, NumberStyles.Integer, CultureInfo.InvariantCulture, out int processId))
             {
-                return new AzureDevOpsLeaseFile(processId, 0, DateTimeOffset.MinValue);
+                // Legacy plain-PID lease format: treat as expired so the caller can take over.
+                return new LeaseReadResult(LeaseFileStatus.Expired, new AzureDevOpsLeaseFile(processId, 0, DateTimeOffset.MinValue));
             }
+
+            // The file exists but neither parser yielded a usable value. It might be mid-write —
+            // surface this as a transient read error so the caller doesn't race the writer.
+            return new LeaseReadResult(LeaseFileStatus.TransientReadError, null);
         }
         catch (IOException)
         {
@@ -305,7 +360,7 @@ internal sealed class AzureDevOpsRunIdCoordinator
         {
         }
 
-        return null;
+        return new LeaseReadResult(LeaseFileStatus.TransientReadError, null);
     }
 
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "The coordination payload type is internal, fixed, and controlled by this extension.")]
