@@ -22,7 +22,7 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class AzureDevOpsArtifactUploaderTests
 {
     private const string ArtifactUploadOptionsRequireUploadArtifactsMessage = "'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.";
-    private const string ResultsDirectory = @"Q:\results";
+    private static readonly string ResultsDirectory = Path.Combine(Path.GetTempPath(), "azdo-artifact-uploader-tests");
 
     private readonly Mock<IConfiguration> _configurationMock = new();
     private readonly Mock<IEnvironment> _environmentMock = new();
@@ -51,12 +51,12 @@ public sealed class AzureDevOpsArtifactUploaderTests
         _ = _environmentMock.Setup(environment => environment.GetEnvironmentVariable("TF_BUILD")).Returns("true");
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.ExistDirectory(ResultsDirectory)).Returns(true);
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.GetFiles(ResultsDirectory, "*", SearchOption.AllDirectories))
-            .Returns([@"Q:\results\test.trx"]);
+            .Returns([InResults("test.trx")]);
 
         Assert.IsFalse(await uploader.IsEnabledAsync().ConfigureAwait(false));
 
         await uploader.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
-        await uploader.ConsumeAsync(CreateProducer("CrashDumpProcessLifetimeHandler", "Crash dump"), CreateFileArtifact(@"Q:\results\dump.dmp"), CancellationToken.None).ConfigureAwait(false);
+        await uploader.ConsumeAsync(CreateProducer("CrashDumpProcessLifetimeHandler", "Crash dump"), CreateFileArtifact(InResults("dump.dmp")), CancellationToken.None).ConfigureAwait(false);
         await uploader.ConsumeAsync(CreateProducer(), CreateFailedTestNodeUpdateMessage(), CancellationToken.None).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
@@ -75,8 +75,8 @@ public sealed class AzureDevOpsArtifactUploaderTests
         _ = _environmentMock.Setup(environment => environment.GetEnvironmentVariable("TF_BUILD")).Returns("true");
 
         await uploader.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
-        await uploader.ConsumeAsync(CreateProducer("CrashDumpProcessLifetimeHandler", "Crash dump"), CreateFileArtifact(@"Q:\results\crashdump.dmp"), CancellationToken.None).ConfigureAwait(false);
-        await uploader.ConsumeAsync(CreateProducer("HangDumpProcessLifetimeHandler", "Hang dump"), CreateFileArtifact(@"Q:\results\hang\hangdump.dmp"), CancellationToken.None).ConfigureAwait(false);
+        await uploader.ConsumeAsync(CreateProducer("CrashDumpProcessLifetimeHandler", "Crash dump"), CreateFileArtifact(InResults("crashdump.dmp")), CancellationToken.None).ConfigureAwait(false);
+        await uploader.ConsumeAsync(CreateProducer("HangDumpProcessLifetimeHandler", "Hang dump"), CreateFileArtifact(InResults("hang", "hangdump.dmp")), CancellationToken.None).ConfigureAwait(false);
         await uploader.ConsumeAsync(CreateProducer(), CreateFailedTestNodeUpdateMessage(), CancellationToken.None).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
@@ -104,7 +104,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         _ = _environmentMock.Setup(environment => environment.GetEnvironmentVariable("TF_BUILD")).Returns("true");
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.ExistDirectory(ResultsDirectory)).Returns(true);
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.GetFiles(ResultsDirectory, "*", SearchOption.AllDirectories))
-            .Returns([@"Q:\results\a.trx", @"Q:\results\b.dmp"]);
+            .Returns([InResults("a.trx"), InResults("b.dmp")]);
 
         await uploader.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
         await uploader.ConsumeAsync(CreateProducer(), CreateFailedTestNodeUpdateMessage(), CancellationToken.None).ConfigureAwait(false);
@@ -128,13 +128,13 @@ public sealed class AzureDevOpsArtifactUploaderTests
         _ = _environmentMock.Setup(environment => environment.GetEnvironmentVariable("TF_BUILD")).Returns("true");
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.ExistDirectory(ResultsDirectory)).Returns(true);
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.GetFiles(ResultsDirectory, "*", SearchOption.AllDirectories))
-            .Returns([@"Q:\results\inside.trx", @"Q:\results-other\outside.trx"]);
+            .Returns([InResults("inside.trx"), OutsideResults("outside.trx")]);
 
         await uploader.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         CollectionAssert.AreEqual(
-            new[] { @"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]Q:\results\inside.trx" },
+            new[] { $"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{InResults("inside.trx")}" },
             GetFormattedLines());
     }
 
@@ -150,10 +150,10 @@ public sealed class AzureDevOpsArtifactUploaderTests
         _ = _environmentMock.Setup(environment => environment.GetEnvironmentVariable("TF_BUILD")).Returns("true");
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.ExistDirectory(ResultsDirectory)).Returns(true);
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.GetFiles(ResultsDirectory, "*", SearchOption.AllDirectories))
-            .Returns([@"Q:\results\test.trx"]);
+            .Returns([InResults("test.trx")]);
 
         await uploader.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
-        await uploader.ConsumeAsync(CreateProducer("CrashDumpProcessLifetimeHandler", "Crash dump"), CreateFileArtifact(@"Q:\results\dump.dmp"), CancellationToken.None).ConfigureAwait(false);
+        await uploader.ConsumeAsync(CreateProducer("CrashDumpProcessLifetimeHandler", "Crash dump"), CreateFileArtifact(InResults("dump.dmp")), CancellationToken.None).ConfigureAwait(false);
         await uploader.ConsumeAsync(CreateProducer(), CreateFailedTestNodeUpdateMessage(), CancellationToken.None).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
@@ -162,7 +162,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
             {
                 "##vso[build.addbuildtag]has-crashdump",
                 "##vso[build.addbuildtag]has-test-failures",
-                @"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]Q:\results\test.trx",
+                $"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{InResults("test.trx")}",
             },
             GetFormattedLines());
     }
@@ -172,8 +172,8 @@ public sealed class AzureDevOpsArtifactUploaderTests
     {
         AzureDevOpsArtifactUploader uploader = CreateUploader(new Dictionary<string, string[]>
         {
-            [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactExclude] = ["skip\\**"],
-            [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude] = ["**\\*.trx"],
+            [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactExclude] = ["skip/**"],
+            [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude] = ["**/*.trx"],
             [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactName] = ["Artifacts"],
             [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts] = [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactsModeFiles],
         });
@@ -181,13 +181,13 @@ public sealed class AzureDevOpsArtifactUploaderTests
         _ = _environmentMock.Setup(environment => environment.GetEnvironmentVariable("TF_BUILD")).Returns("true");
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.ExistDirectory(ResultsDirectory)).Returns(true);
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.GetFiles(ResultsDirectory, "*", SearchOption.AllDirectories))
-            .Returns([@"Q:\results\keep.trx", @"Q:\results\keep.coverage", @"Q:\results\skip\ignored.trx"]);
+            .Returns([InResults("keep.trx"), InResults("keep.coverage"), InResults("skip", "ignored.trx")]);
 
         await uploader.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         CollectionAssert.AreEqual(
-            new[] { @"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]Q:\results\keep.trx" },
+            new[] { $"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{InResults("keep.trx")}" },
             GetFormattedLines());
     }
 
@@ -202,8 +202,8 @@ public sealed class AzureDevOpsArtifactUploaderTests
         _ = _environmentMock.Setup(environment => environment.GetEnvironmentVariable("TF_BUILD")).Returns("true");
 
         await uploader.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
-        await uploader.ConsumeAsync(CreateProducer("CrashDumpProcessLifetimeHandler", "Crash dump"), CreateFileArtifact(@"Q:\results\dump.dmp"), CancellationToken.None).ConfigureAwait(false);
-        await uploader.ConsumeAsync(CreateProducer("HangDumpProcessLifetimeHandler", "Hang dump"), CreateFileArtifact(@"Q:\results\hang\dump.log"), CancellationToken.None).ConfigureAwait(false);
+        await uploader.ConsumeAsync(CreateProducer("CrashDumpProcessLifetimeHandler", "Crash dump"), CreateFileArtifact(InResults("dump.dmp")), CancellationToken.None).ConfigureAwait(false);
+        await uploader.ConsumeAsync(CreateProducer("HangDumpProcessLifetimeHandler", "Hang dump"), CreateFileArtifact(InResults("hang", "dump.log")), CancellationToken.None).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         CollectionAssert.AreEquivalent(
@@ -226,7 +226,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         _ = _environmentMock.Setup(environment => environment.GetEnvironmentVariable("TF_BUILD")).Returns("true");
 
         await uploader.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
-        await uploader.ConsumeAsync(CreateProducer("GenericProducer", "Generic"), CreateFileArtifact(@"Q:\results\hang\dump.dmp"), CancellationToken.None).ConfigureAwait(false);
+        await uploader.ConsumeAsync(CreateProducer("GenericProducer", "Generic"), CreateFileArtifact(InResults("hang", "dump.dmp")), CancellationToken.None).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         Assert.IsEmpty(GetFormattedLines());
@@ -260,10 +260,10 @@ public sealed class AzureDevOpsArtifactUploaderTests
         _ = _environmentMock.Setup(environment => environment.GetEnvironmentVariable("TF_BUILD")).Returns((string?)null);
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.ExistDirectory(ResultsDirectory)).Returns(true);
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.GetFiles(ResultsDirectory, "*", SearchOption.AllDirectories))
-            .Returns([@"Q:\results\test.trx"]);
+            .Returns([InResults("test.trx")]);
 
         await uploader.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
-        await uploader.ConsumeAsync(CreateProducer("CrashDumpProcessLifetimeHandler", "Crash dump"), CreateFileArtifact(@"Q:\results\dump.dmp"), CancellationToken.None).ConfigureAwait(false);
+        await uploader.ConsumeAsync(CreateProducer("CrashDumpProcessLifetimeHandler", "Crash dump"), CreateFileArtifact(InResults("dump.dmp")), CancellationToken.None).ConfigureAwait(false);
         await uploader.ConsumeAsync(CreateProducer(), CreateFailedTestNodeUpdateMessage(), CancellationToken.None).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
@@ -319,7 +319,8 @@ public sealed class AzureDevOpsArtifactUploaderTests
             [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts] = [AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactsModeFiles],
         });
 
-        string specialPath = "Q:\\results\\semi;line\r\nname.trx";
+        string specialPath = $"{ResultsDirectory}{Path.DirectorySeparatorChar}semi;line\r\nname.trx";
+        string escapedSpecialPath = specialPath.Replace(";", "%3B", StringComparison.Ordinal).Replace("\r", "%0D", StringComparison.Ordinal).Replace("\n", "%0A", StringComparison.Ordinal);
         _ = _environmentMock.Setup(environment => environment.GetEnvironmentVariable("TF_BUILD")).Returns("true");
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.ExistDirectory(ResultsDirectory)).Returns(true);
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.GetFiles(ResultsDirectory, "*", SearchOption.AllDirectories)).Returns([specialPath]);
@@ -328,7 +329,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         CollectionAssert.AreEqual(
-            new[] { "##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]Q:\\results\\semi%3Bline%0D%0Aname.trx" },
+            new[] { $"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{escapedSpecialPath}" },
             GetFormattedLines());
     }
 
@@ -416,6 +417,12 @@ public sealed class AzureDevOpsArtifactUploaderTests
 
     private static IDataProducer CreateProducer(string uid = "Producer", string displayName = "Producer")
         => new TestProducer(uid, displayName);
+
+    private static string InResults(params string[] segments)
+        => segments.Aggregate(ResultsDirectory, Path.Combine);
+
+    private static string OutsideResults(params string[] segments)
+        => segments.Aggregate(Path.Combine(Path.GetTempPath(), "azdo-artifact-uploader-tests-outside"), Path.Combine);
 
     private string[] GetFormattedLines()
         => [.. _outputData.OfType<FormattedTextOutputDeviceData>().Select(output => output.Text)];
