@@ -102,7 +102,12 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
             else
             {
                 await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashDumpFile, expectedDumpFile)), cancellationToken).ConfigureAwait(false);
-                foreach (string dumpFile in Directory.GetFiles(Path.GetDirectoryName(expectedDumpFile)!, "*.dmp"))
+
+                // Filter by exact extension to defend against Windows' legacy 8.3 short-name
+                // matching where a pattern like '*.dmp' can also match files whose extension
+                // merely starts with '.dmp' (for example 'foo.dmp.crashreport.json').
+                foreach (string dumpFile in Directory.EnumerateFiles(Path.GetDirectoryName(expectedDumpFile)!, "*.dmp")
+                    .Where(static f => Path.GetExtension(f).Equals(".dmp", StringComparison.OrdinalIgnoreCase)))
                 {
                     await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
                 }
