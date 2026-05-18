@@ -50,47 +50,10 @@ async function main() {
       arguments: { binlog_file: absolutePath, top: 10 },
     });
 
-    // Extract source context around each error for fix suggestions
-    const errorText = extractText(errors);
-    let parsedErrors = [];
-    try { parsedErrors = JSON.parse(errorText); } catch {}
-
-    const fileContexts = {};
-    const uniqueFiles = [...new Set(
-      parsedErrors
-        .filter(e => e.file && e.line)
-        .map(e => ({ file: e.file, line: e.line }))
-        .map(e => JSON.stringify(e))
-    )].map(s => JSON.parse(s));
-
-    // Fetch source context for each unique error location (max 5 files)
-    for (const { file, line } of uniqueFiles.slice(0, 5)) {
-      try {
-        const startLine = Math.max(1, line - 5);
-        const endLine = line + 10;
-        const fileContent = await client.callTool({
-          name: 'binlog_files',
-          arguments: {
-            binlog_file: absolutePath,
-            filePath: file,
-            startLine,
-            endLine,
-          },
-        });
-        const content = extractText(fileContent);
-        if (content && !content.includes('not found in binlog')) {
-          fileContexts[file] = { startLine, endLine, content, errorLine: line };
-        }
-      } catch (e) {
-        // Skip files we can't retrieve
-      }
-    }
-
     const result = {
       overview: extractText(overview),
-      errors: errorText,
+      errors: extractText(errors),
       warnings: extractText(warnings),
-      sourceContexts: fileContexts,
     };
 
     console.log(JSON.stringify(result, null, 2));

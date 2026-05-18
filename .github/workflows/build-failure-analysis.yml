@@ -126,10 +126,45 @@ jobs:
         uses: actions/github-script@v7
         env:
           BINLOG_DATA: /tmp/binlog-analysis.json
+          GITHUB_WORKSPACE_PATH: ${{ github.workspace }}
         with:
           script: |
             const fs = require('fs');
+            const path = require('path');
             const data = JSON.parse(fs.readFileSync(process.env.BINLOG_DATA, 'utf8'));
+            const workspace = process.env.GITHUB_WORKSPACE_PATH;
+
+            // Read source context for error files directly from the checkout
+            const errorText = data.errors || '';
+            let parsedErrors = [];
+            try { parsedErrors = JSON.parse(errorText); } catch {}
+
+            const sourceContexts = {};
+            const seenFiles = new Set();
+            for (const err of parsedErrors) {
+              if (!err.file || !err.line || seenFiles.has(err.file)) continue;
+              seenFiles.add(err.file);
+              try {
+                // Try both absolute path and workspace-relative path
+                let filePath = err.file;
+                if (!fs.existsSync(filePath)) {
+                  // Try relative to workspace
+                  const relPath = filePath.replace(/^.*?\/testfx\//, '');
+                  filePath = path.join(workspace, relPath);
+                }
+                if (fs.existsSync(filePath)) {
+                  const lines = fs.readFileSync(filePath, 'utf8').split('\n');
+                  const start = Math.max(0, err.line - 6);
+                  const end = Math.min(lines.length, err.line + 10);
+                  const contextLines = lines.slice(start, end)
+                    .map((l, i) => `${(start + i + 1).toString().padStart(4)} | ${l}`);
+                  sourceContexts[err.file] = {
+                    content: contextLines.join('\n'),
+                    errorLine: err.line,
+                  };
+                }
+              } catch {}
+            }
 
             const prompt = [
               'You are an MSBuild build failure analyst for the microsoft/testfx repository.',
