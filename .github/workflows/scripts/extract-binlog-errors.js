@@ -36,19 +36,19 @@ async function main() {
     // Call binlog_overview
     const overview = await client.callTool({
       name: 'binlog_overview',
-      arguments: { binlog: absolutePath },
+      arguments: { binlog_file: absolutePath },
     });
 
     // Call binlog_errors
     const errors = await client.callTool({
       name: 'binlog_errors',
-      arguments: { binlog: absolutePath },
+      arguments: { binlog_file: absolutePath },
     });
 
     // Call binlog_warnings (limited)
     const warnings = await client.callTool({
       name: 'binlog_warnings',
-      arguments: { binlog: absolutePath, top: 10 },
+      arguments: { binlog_file: absolutePath, top: 10 },
     });
 
     const result = {
