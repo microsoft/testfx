@@ -158,6 +158,7 @@ public sealed partial class Assert
     {
         private readonly StringBuilder? _builder;
         private readonly Action<string>? _failAction;
+        private readonly Action<string, string, string>? _failActionWithExpressions;
 
         public AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, float expected, float actual, float delta, out bool shouldAppend)
         {
@@ -165,7 +166,8 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
-                _failAction = userMessage => ReportAssertAreEqualFailed(expected, actual, delta, userMessage);
+                _failActionWithExpressions = (userMessage, expectedExpression, actualExpression) =>
+                    ReportAssertAreEqualFailed(expected, actual, delta, userMessage, expectedExpression, actualExpression);
             }
         }
 
@@ -175,7 +177,8 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
-                _failAction = userMessage => ReportAssertAreEqualFailed(expected, actual, delta, userMessage);
+                _failActionWithExpressions = (userMessage, expectedExpression, actualExpression) =>
+                    ReportAssertAreEqualFailed(expected, actual, delta, userMessage, expectedExpression, actualExpression);
             }
         }
 
@@ -185,7 +188,8 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
-                _failAction = userMessage => ReportAssertAreEqualFailed(expected, actual, delta, userMessage);
+                _failActionWithExpressions = (userMessage, expectedExpression, actualExpression) =>
+                    ReportAssertAreEqualFailed(expected, actual, delta, userMessage, expectedExpression, actualExpression);
             }
         }
 
@@ -195,7 +199,8 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
-                _failAction = userMessage => ReportAssertAreEqualFailed(expected, actual, delta, userMessage);
+                _failActionWithExpressions = (userMessage, expectedExpression, actualExpression) =>
+                    ReportAssertAreEqualFailed(expected, actual, delta, userMessage, expectedExpression, actualExpression);
             }
         }
 
@@ -217,7 +222,11 @@ public sealed partial class Assert
 
         internal void ComputeAssertion(string expectedExpression, string actualExpression)
         {
-            if (_failAction is not null)
+            if (_failActionWithExpressions is not null)
+            {
+                _failActionWithExpressions.Invoke(_builder!.ToString(), expectedExpression, actualExpression);
+            }
+            else if (_failAction is not null)
             {
                 _builder!.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "expected", expectedExpression, "actual", actualExpression) + " ");
                 _failAction.Invoke(_builder!.ToString());
@@ -272,7 +281,7 @@ public sealed partial class Assert
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
                 _failAction = (userMessage, notExpectedExpr, actualExpr) =>
-                    ReportAssertAreNotEqualFailed(notExpected, actual, delta, BuildUserMessageForNotExpectedExpressionAndActualExpression(userMessage, notExpectedExpr, actualExpr));
+                    ReportAssertAreNotEqualFailed(notExpected, actual, delta, userMessage, notExpectedExpr, actualExpr);
             }
         }
 
@@ -283,7 +292,7 @@ public sealed partial class Assert
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
                 _failAction = (userMessage, notExpectedExpr, actualExpr) =>
-                    ReportAssertAreNotEqualFailed(notExpected, actual, delta, BuildUserMessageForNotExpectedExpressionAndActualExpression(userMessage, notExpectedExpr, actualExpr));
+                    ReportAssertAreNotEqualFailed(notExpected, actual, delta, userMessage, notExpectedExpr, actualExpr);
             }
         }
 
@@ -294,7 +303,7 @@ public sealed partial class Assert
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
                 _failAction = (userMessage, notExpectedExpr, actualExpr) =>
-                    ReportAssertAreNotEqualFailed(notExpected, actual, delta, BuildUserMessageForNotExpectedExpressionAndActualExpression(userMessage, notExpectedExpr, actualExpr));
+                    ReportAssertAreNotEqualFailed(notExpected, actual, delta, userMessage, notExpectedExpr, actualExpr);
             }
         }
 
@@ -305,7 +314,7 @@ public sealed partial class Assert
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
                 _failAction = (userMessage, notExpectedExpr, actualExpr) =>
-                    ReportAssertAreNotEqualFailed(notExpected, actual, delta, BuildUserMessageForNotExpectedExpressionAndActualExpression(userMessage, notExpectedExpr, actualExpr));
+                    ReportAssertAreNotEqualFailed(notExpected, actual, delta, userMessage, notExpectedExpr, actualExpr);
             }
         }
 
