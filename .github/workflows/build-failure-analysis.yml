@@ -187,44 +187,75 @@ jobs:
               }
             }
 
-            // Structured fallback: format the raw data as useful markdown
+            // Structured fallback: format the MCP data as useful markdown
             if (!analysis) {
               const errorText = data.errors || 'No errors captured';
               const overviewText = data.overview || '';
 
-              // Try to group errors by file
-              const errorLines = errorText.split('\n').filter(l => l.trim());
-              const byFile = {};
-              for (const line of errorLines) {
-                const match = line.match(/([^(]+)\((\d+),\d+\):\s*error\s+(\w+):\s*(.+?)(?:\s*\[|$)/);
-                if (match) {
-                  const [, file, lineNum, code, msg] = match;
-                  const shortFile = file.split('/').slice(-2).join('/');
-                  if (!byFile[shortFile]) byFile[shortFile] = [];
-                  byFile[shortFile].push({ lineNum, code, msg: msg.trim() });
+              // The MCP tool returns errors as JSON array or plain text
+              let parsedErrors = [];
+              try {
+                parsedErrors = JSON.parse(errorText);
+              } catch {
+                // Not JSON — try regex parsing for MSBuild text output
+                const errorLines = errorText.split('\n').filter(l => l.trim());
+                for (const line of errorLines) {
+                  const match = line.match(/([^(]+)\((\d+),\d+\):\s*error\s+(\w+):\s*(.+?)(?:\s*\[|$)/);
+                  if (match) {
+                    const [, file, lineNum, code, msg] = match;
+                    parsedErrors.push({ file, line: parseInt(lineNum), code, message: msg.trim() });
+                  }
                 }
               }
 
-              const parts = ['### Build Failed'];
-              if (overviewText) parts.push('', overviewText);
+              const parts = [];
 
-              if (Object.keys(byFile).length > 0) {
-                parts.push('', '### Errors by File', '');
+              // Overview section
+              if (overviewText) {
+                parts.push('### 📊 Build Overview', '', overviewText.trim());
+              }
+
+              // Errors section — group by file
+              const realErrors = parsedErrors.filter(e => e.code && e.code !== undefined);
+              if (realErrors.length > 0) {
+                const byFile = {};
+                for (const e of realErrors) {
+                  const file = (e.file || e.projectFile || 'unknown').split('/').slice(-2).join('/');
+                  if (!byFile[file]) byFile[file] = [];
+                  byFile[file].push(e);
+                }
+
+                parts.push('', '### ❌ Errors', '');
                 for (const [file, errors] of Object.entries(byFile)) {
                   parts.push(`**\`${file}\`**`);
-                  const unique = [...new Map(errors.map(e => [`${e.code}:${e.msg}`, e])).values()];
+                  // Deduplicate by code+message
+                  const unique = [...new Map(errors.map(e => [`${e.code}:${e.message}`, e])).values()];
                   for (const e of unique) {
-                    parts.push(`- Line ${e.lineNum}: \`${e.code}\` — ${e.msg}`);
+                    const loc = e.line ? ` (line ${e.line})` : '';
+                    parts.push(`- \`${e.code}\`${loc}: ${e.message}`);
                   }
                   parts.push('');
                 }
-              } else {
-                parts.push('', '### Raw Errors', '', '```', errorText, '```');
+              } else if (errorText && errorText !== 'No data') {
+                parts.push('', '### ❌ Errors', '', '```', errorText, '```');
+              }
+
+              // Warnings section
+              const warningText = data.warnings || '';
+              if (warningText && warningText !== 'No data') {
+                let warningCount = 0;
+                try {
+                  const parsed = JSON.parse(warningText);
+                  warningCount = Array.isArray(parsed) ? parsed.length : 0;
+                } catch {}
+                if (warningCount > 0) {
+                  parts.push(`<details><summary>⚠️ ${warningCount} warning(s)</summary>`, '', '```', warningText, '```', '</details>');
+                }
               }
 
               analysis = parts.join('\n');
-              if (analysis.length > 10000) {
-                analysis = analysis.substring(0, 10000) + '\n\n... (truncated)';
+              if (analysis.length > 15000) {
+                analysis = analysis.substring(0, 15000) + '\n\n... (truncated)';
               }
             }
 
