@@ -120,12 +120,19 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
 
         foreach (IArgumentOperation argumentOperation in invocationOperation.Arguments)
         {
-            if (argumentOperation.Parameter?.Name == "action" &&
-                argumentOperation.Syntax is ArgumentSyntax argumentSyntax)
+            if (argumentOperation.Parameter?.Name != "action")
             {
-                actionArgumentIndex = invocationExpression.ArgumentList.Arguments.IndexOf(argumentSyntax);
-                return actionArgumentIndex >= 0;
+                continue;
             }
+
+            ArgumentSyntax? argumentSyntax = argumentOperation.Syntax.AncestorsAndSelf().OfType<ArgumentSyntax>().FirstOrDefault();
+            if (argumentSyntax is null)
+            {
+                continue;
+            }
+
+            actionArgumentIndex = invocationExpression.ArgumentList.Arguments.IndexOf(argumentSyntax);
+            return actionArgumentIndex >= 0;
         }
 
         actionArgumentIndex = -1;
