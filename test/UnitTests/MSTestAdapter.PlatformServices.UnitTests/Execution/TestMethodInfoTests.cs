@@ -863,7 +863,7 @@ public class TestMethodInfoTests : TestContainer
             Resource.UTA_InitMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestInitializeMethod!.Name,
-            "Assert.Fail failed. dummyFailMessage");
+            $"Assertion failed.{Environment.NewLine}dummyFailMessage");
 
         var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
         {
@@ -898,7 +898,7 @@ public class TestMethodInfoTests : TestContainer
             Resource.UTA_InitMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestInitializeMethod!.Name,
-            "Assert.Inconclusive failed. dummyFailMessage");
+            "Assert.Inconclusive. dummyFailMessage");
 
         var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
         {
@@ -942,7 +942,7 @@ public class TestMethodInfoTests : TestContainer
 
         var exception = result.TestFailureException as TestFailedException;
         exception.Should().NotBeNull();
-        exception.Message.Should().Be("Assert.Inconclusive failed. dummyInconclusiveMessage");
+        exception.Message.Should().Be("Assert.Inconclusive. dummyInconclusiveMessage");
         exception.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
         exception.InnerException.Should().BeOfType<AssertInconclusiveException>();
 #if DEBUG
@@ -1110,7 +1110,7 @@ public class TestMethodInfoTests : TestContainer
             Resource.UTA_CleanupMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestCleanupMethod.Name,
-            "Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test inconclusive");
+            "Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive. Test inconclusive");
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
@@ -1137,7 +1137,7 @@ public class TestMethodInfoTests : TestContainer
             Resource.UTA_CleanupMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestCleanupMethod!.Name,
-            "Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failed");
+            $"Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assertion failed.{Environment.NewLine}Test failed");
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
