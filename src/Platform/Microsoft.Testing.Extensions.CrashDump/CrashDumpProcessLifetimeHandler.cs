@@ -81,10 +81,10 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         // what was actually produced, not what was requested. The runtime may fail
         // to emit one (or both) of the artifacts, e.g. when EnableCrashReport is
         // unsupported on the current platform/version.
-        bool dumpFileFound = generateDump && File.Exists(expectedDumpFile);
-        bool crashReportFileFound = generateCrashReport && File.Exists(expectedCrashReportFile);
+        bool dumpArtifactProduced = generateDump && File.Exists(expectedDumpFile);
+        bool crashReportArtifactProduced = generateCrashReport && File.Exists(expectedCrashReportFile);
 
-        string? processCrashedMessage = (dumpFileFound, crashReportFileFound) switch
+        string? processCrashedMessage = (dumpArtifactProduced, crashReportArtifactProduced) switch
         {
             (true, true) => string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpAndReportFileCreated, testHostProcessInformation.PID),
             (false, true) => string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedReportFileCreated, testHostProcessInformation.PID),
@@ -95,7 +95,7 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
 
         if (generateDump)
         {
-            if (dumpFileFound)
+            if (dumpArtifactProduced)
             {
                 await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(expectedDumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
             }
@@ -116,14 +116,15 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
 
         if (generateCrashReport)
         {
-            if (crashReportFileFound)
+            if (crashReportArtifactProduced)
             {
                 await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(expectedCrashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
             }
             else
             {
                 await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashReportFile, expectedCrashReportFile, CrashReportFileSearchPattern)), cancellationToken).ConfigureAwait(false);
-                foreach (string crashReportFile in Directory.GetFiles(Path.GetDirectoryName(expectedCrashReportFile)!, CrashReportFileSearchPattern))
+                foreach (string crashReportFile in Directory.GetFiles(Path.GetDirectoryName(expectedCrashReportFile)!, CrashReportFileSearchPattern)
+                    .Where(static f => f.EndsWith(CrashReportFileExtension, StringComparison.OrdinalIgnoreCase)))
                 {
                     await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(crashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
                 }

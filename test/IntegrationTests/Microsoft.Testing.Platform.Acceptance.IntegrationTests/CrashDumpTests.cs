@@ -95,6 +95,17 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
     }
 
     [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Validates Windows-specific error for --crashdump --crash-report")]
+    public async Task CrashDump_WithCrashReport_OnWindows_FailsWithValidationError()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --crash-report --results-directory {resultDirectory}", cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        testHostResult.AssertOutputContains("'--crash-report' is not supported on Windows");
+    }
+
+    [TestMethod]
     public async Task CrashDump_InvalidFormat_ShouldFail()
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
