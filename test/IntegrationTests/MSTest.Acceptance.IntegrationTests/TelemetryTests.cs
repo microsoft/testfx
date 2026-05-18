@@ -202,7 +202,7 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
         private const string AssetId = nameof(TelemetryTests);
 
         private readonly SemaphoreSlim _vstestBuildLock = new(1, 1);
-        private readonly HashSet<string> _builtVSTestFrameworks = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _builtVSTestFrameworks = [with(StringComparer.OrdinalIgnoreCase)];
 
         public string MTPProjectPath => GetAssetPath(AssetId);
 
@@ -229,16 +229,10 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
                     return;
                 }
 
-                DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+                await DotnetCli.RunAsync(
                     $"build -c Release {VSTestProjectPath} --framework {targetFramework}",
                     workingDirectory: VSTestProjectPath,
                     cancellationToken: cancellationToken);
-
-                if (buildResult.ExitCode != 0)
-                {
-                    throw new InvalidOperationException(
-                        $"Failed to pre-build VSTest project for {targetFramework}:\n{buildResult.StandardOutput}\n{buildResult.StandardError}");
-                }
 
                 _builtVSTestFrameworks.Add(targetFramework);
             }
