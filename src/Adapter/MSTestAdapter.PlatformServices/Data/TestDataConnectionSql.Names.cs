@@ -19,16 +19,10 @@ internal partial class TestDataConnectionSql
     {
         string[]? parts = SplitName(tableName);
 
-        if (parts is { Length: > 0 })
-        {
-            // Seems to be well formed, so make sure we end up fully quoted
-            return JoinAndQuoteName(parts, true);
-        }
-        else
-        {
-            // Just use what they gave us, literally, since we do not really understand the format
-            return tableName;
-        }
+        // Seems to be well formed, so make sure we end up fully quoted; otherwise use as-is
+        return parts is { Length: > 0 }
+            ? JoinAndQuoteName(parts, true)
+            : tableName;
     }
 
     /// <summary>
