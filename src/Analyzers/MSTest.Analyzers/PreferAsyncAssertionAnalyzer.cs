@@ -68,8 +68,10 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
         if (
             !SymbolEqualityComparer.Default.Equals(targetMethod.ContainingType, assertSymbol) ||
             targetMethod.Name is not ("Throws" or "ThrowsExactly") ||
+            HasInterpolatedStringHandlerParameter(targetMethod) ||
             context.ContainingSymbol is not IMethodSymbol containingMethod ||
             !containingMethod.GetAttributes().Any(attr => attr.AttributeClass.Inherits(testMethodAttributeSymbol)) ||
+            IsUnsupportedVoidTestMethod(containingMethod) ||
             IsInsideUnsupportedAwaitContext(operation) ||
             !TryGetActionArgument(operation, out IArgumentOperation? actionArgument) ||
             !TryGetBlockedTaskOperationFromArgument(actionArgument.Value, out IOperation? asyncOperation))
@@ -85,6 +87,15 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
 
         context.ReportDiagnostic(operation.CreateDiagnostic(Rule, targetMethod.Name + "Async", targetMethod.Name));
     }
+
+    private static bool HasInterpolatedStringHandlerParameter(IMethodSymbol targetMethod)
+        => targetMethod.Parameters.Any(static parameter =>
+            parameter.RefKind != RefKind.None &&
+            parameter.Type.GetAttributes().Any(static attr => attr.AttributeClass?.Name == "InterpolatedStringHandlerAttribute"));
+
+    private static bool IsUnsupportedVoidTestMethod(IMethodSymbol containingMethod)
+        => containingMethod.ReturnsVoid &&
+            (containingMethod.IsOverride || containingMethod.IsImplementationOfAnyInterfaceMember<IMethodSymbol>());
 
     private static bool TryGetActionArgument(IInvocationOperation operation, [NotNullWhen(true)] out IArgumentOperation? actionArgument)
     {
@@ -108,6 +119,21 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
             if (current is IAnonymousFunctionOperation or ILocalFunctionOperation ||
                 current.Kind == OperationKind.Lock ||
                 (current.Parent is ICatchClauseOperation catchClauseOperation && ReferenceEquals(catchClauseOperation.Filter, current)))
+            {
+                return true;
+            }
+        }
+
+        return IsInsideUnsafeSyntax(operation.Syntax);
+    }
+
+    private static bool IsInsideUnsafeSyntax(SyntaxNode syntax)
+    {
+        foreach (SyntaxNode node in syntax.AncestorsAndSelf())
+        {
+            string syntaxTypeName = node.GetType().Name;
+            if (syntaxTypeName == "UnsafeStatementSyntax" ||
+                (syntaxTypeName == "MethodDeclarationSyntax" && node.ChildTokens().Any(static token => token.ValueText == "unsafe")))
             {
                 return true;
             }

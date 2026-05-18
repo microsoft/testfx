@@ -61,15 +61,13 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
 
         InvocationExpressionSyntax newInvocationExpression = ReplaceAssertMethodName(invocationExpression);
         if (TryGetActionArgumentIndex(invocationExpression, semanticModel, cancellationToken, out int actionArgumentIndex) &&
-            TryReplaceLambda(newInvocationExpression.ArgumentList.Arguments[actionArgumentIndex], out ArgumentSyntax? newArgument))
+            TryReplaceAction(newInvocationExpression.ArgumentList.Arguments[actionArgumentIndex], out ArgumentSyntax? newArgument))
         {
             newInvocationExpression = newInvocationExpression.WithArgumentList(
                 newInvocationExpression.ArgumentList.WithArguments(newInvocationExpression.ArgumentList.Arguments.Replace(newInvocationExpression.ArgumentList.Arguments[actionArgumentIndex], newArgument)));
         }
 
-        AwaitExpressionSyntax awaitExpression = SyntaxFactory.AwaitExpression(newInvocationExpression.WithoutLeadingTrivia())
-            .WithLeadingTrivia(invocationExpression.GetLeadingTrivia())
-            .WithAdditionalAnnotations(Formatter.Annotation);
+        ExpressionSyntax awaitExpression = CreateAwaitExpression(invocationExpression, newInvocationExpression);
 
         if (invocationExpression.Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault() is { } methodDeclaration)
         {
@@ -139,9 +137,33 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
         return false;
     }
 
-    private static bool TryReplaceLambda(ArgumentSyntax argument, [NotNullWhen(true)] out ArgumentSyntax? newArgument)
+    private static ExpressionSyntax CreateAwaitExpression(InvocationExpressionSyntax originalInvocationExpression, InvocationExpressionSyntax newInvocationExpression)
     {
-        if (!TryReplaceLambdaExpression(argument.Expression, out ExpressionSyntax? newExpression))
+        AwaitExpressionSyntax awaitExpression = SyntaxFactory.AwaitExpression(newInvocationExpression.WithoutLeadingTrivia())
+            .WithAdditionalAnnotations(Formatter.Annotation);
+
+        return NeedsParenthesizedAwait(originalInvocationExpression)
+            ? SyntaxFactory.ParenthesizedExpression(awaitExpression)
+                .WithLeadingTrivia(originalInvocationExpression.GetLeadingTrivia())
+                .WithAdditionalAnnotations(Formatter.Annotation)
+            : awaitExpression
+                .WithLeadingTrivia(originalInvocationExpression.GetLeadingTrivia())
+                .WithAdditionalAnnotations(Formatter.Annotation);
+    }
+
+    private static bool NeedsParenthesizedAwait(InvocationExpressionSyntax invocationExpression)
+        => invocationExpression.Parent switch
+        {
+            MemberAccessExpressionSyntax memberAccessExpression when memberAccessExpression.Expression == invocationExpression => true,
+            ElementAccessExpressionSyntax elementAccessExpression when elementAccessExpression.Expression == invocationExpression => true,
+            InvocationExpressionSyntax parentInvocationExpression when parentInvocationExpression.Expression == invocationExpression => true,
+            ConditionalAccessExpressionSyntax conditionalAccessExpression when conditionalAccessExpression.Expression == invocationExpression => true,
+            _ => false,
+        };
+
+    private static bool TryReplaceAction(ArgumentSyntax argument, [NotNullWhen(true)] out ArgumentSyntax? newArgument)
+    {
+        if (!TryReplaceActionExpression(argument.Expression, out ExpressionSyntax? newExpression))
         {
             newArgument = null;
             return false;
@@ -151,19 +173,29 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
         return true;
     }
 
-    private static bool TryReplaceLambdaExpression(ExpressionSyntax expression, [NotNullWhen(true)] out ExpressionSyntax? newExpression)
+    private static bool TryReplaceActionExpression(ExpressionSyntax expression, [NotNullWhen(true)] out ExpressionSyntax? newExpression)
     {
         if (expression is ParenthesizedExpressionSyntax parenthesizedExpression &&
-            TryReplaceLambdaExpression(parenthesizedExpression.Expression, out ExpressionSyntax? parenthesizedNewExpression))
+            TryReplaceActionExpression(parenthesizedExpression.Expression, out ExpressionSyntax? parenthesizedNewExpression))
         {
             newExpression = parenthesizedNewExpression.WithTriviaFrom(expression);
             return true;
         }
 
         if (expression is CastExpressionSyntax castExpression &&
-            TryReplaceLambdaExpression(castExpression.Expression, out ExpressionSyntax? castNewExpression))
+            TryReplaceActionExpression(castExpression.Expression, out ExpressionSyntax? castNewExpression))
         {
             newExpression = castNewExpression.WithTriviaFrom(expression);
+            return true;
+        }
+
+        if (expression is AnonymousMethodExpressionSyntax anonymousMethodExpression &&
+            TryGetBlockedTaskExpressionFromBlock(anonymousMethodExpression.Block, out ExpressionSyntax? anonymousMethodAsyncExpression))
+        {
+            newExpression = SyntaxFactory.ParenthesizedLambdaExpression()
+                .WithParameterList(SyntaxFactory.ParameterList())
+                .WithBody(anonymousMethodAsyncExpression.WithTriviaFrom(anonymousMethodExpression.Block))
+                .WithTriviaFrom(expression);
             return true;
         }
 
@@ -199,17 +231,32 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
             newMethodDeclaration = newMethodDeclaration.WithModifiers(newMethodDeclaration.Modifiers.Add(SyntaxFactory.Token(SyntaxKind.AsyncKeyword)));
         }
 
-        if (newMethodDeclaration.ReturnType.IsVoid())
+        bool wasVoid = originalMethodDeclaration.ReturnType.IsVoid();
+
+        if (wasVoid)
         {
             newMethodDeclaration = newMethodDeclaration.WithReturnType(GetTaskReturnType(originalMethodDeclaration, semanticModel, cancellationToken).WithTriviaFrom(newMethodDeclaration.ReturnType));
+            if (newMethodDeclaration.ExpressionBody is { } expressionBody)
+            {
+                newMethodDeclaration = ConvertExpressionBodyToBlock(newMethodDeclaration, expressionBody);
+            }
         }
-        else if (!isAsync && IsTaskReturnType(originalMethodDeclaration, semanticModel, cancellationToken) && newMethodDeclaration.Body is { } body)
+        else if (!isAsync && IsTaskOrValueTaskReturnType(originalMethodDeclaration, semanticModel, cancellationToken) && newMethodDeclaration.Body is { } body)
         {
-            newMethodDeclaration = newMethodDeclaration.WithBody((BlockSyntax)new TaskReturnStatementRewriter().Visit(body)!);
+            newMethodDeclaration = newMethodDeclaration.WithBody((BlockSyntax)new AwaitableReturnStatementRewriter().Visit(body)!);
         }
 
         return newMethodDeclaration.WithAdditionalAnnotations(Formatter.Annotation);
     }
+
+    private static MethodDeclarationSyntax ConvertExpressionBodyToBlock(MethodDeclarationSyntax methodDeclaration, ArrowExpressionClauseSyntax expressionBody)
+        => methodDeclaration
+            .WithExpressionBody(null)
+            .WithSemicolonToken(default)
+            .WithBody(SyntaxFactory.Block(
+                SyntaxFactory.ExpressionStatement(expressionBody.Expression)
+                    .WithLeadingTrivia(expressionBody.GetLeadingTrivia())
+                    .WithAdditionalAnnotations(Formatter.Annotation)));
 
     private static TypeSyntax GetTaskReturnType(MethodDeclarationSyntax methodDeclaration, SemanticModel semanticModel, CancellationToken cancellationToken)
     {
@@ -222,11 +269,13 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
             : SyntaxFactory.ParseTypeName("System.Threading.Tasks.Task");
     }
 
-    private static bool IsTaskReturnType(MethodDeclarationSyntax methodDeclaration, SemanticModel semanticModel, CancellationToken cancellationToken)
+    private static bool IsTaskOrValueTaskReturnType(MethodDeclarationSyntax methodDeclaration, SemanticModel semanticModel, CancellationToken cancellationToken)
     {
         INamedTypeSymbol? taskSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
-        return taskSymbol is not null &&
-            SymbolEqualityComparer.Default.Equals(semanticModel.GetTypeInfo(methodDeclaration.ReturnType, cancellationToken).Type, taskSymbol);
+        INamedTypeSymbol? valueTaskSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
+        ITypeSymbol? returnTypeSymbol = semanticModel.GetTypeInfo(methodDeclaration.ReturnType, cancellationToken).Type;
+        return (taskSymbol is not null && SymbolEqualityComparer.Default.Equals(returnTypeSymbol, taskSymbol)) ||
+            (valueTaskSymbol is not null && SymbolEqualityComparer.Default.Equals(returnTypeSymbol, valueTaskSymbol));
     }
 
     private static bool TryGetBlockedTaskExpressionFromLambda(LambdaExpressionSyntax lambdaExpression, [NotNullWhen(true)] out ExpressionSyntax? asyncExpression)
@@ -236,16 +285,25 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
             return TryGetBlockedTaskExpression(expressionBody, out asyncExpression);
         }
 
-        if (lambdaExpression.Body is BlockSyntax blockSyntax &&
-            blockSyntax.Statements.Count == 1 &&
+        if (lambdaExpression.Body is BlockSyntax blockSyntax)
+        {
+            return TryGetBlockedTaskExpressionFromBlock(blockSyntax, out asyncExpression);
+        }
+
+        asyncExpression = null;
+        return false;
+    }
+
+    private static bool TryGetBlockedTaskExpressionFromBlock(BlockSyntax blockSyntax, [NotNullWhen(true)] out ExpressionSyntax? asyncExpression)
+    {
+        if (blockSyntax.Statements.Count == 1 &&
             blockSyntax.Statements[0] is ExpressionStatementSyntax expressionStatement)
         {
             return TryGetBlockedTaskExpression(expressionStatement.Expression, out asyncExpression);
         }
 
-        if (lambdaExpression.Body is BlockSyntax returnBlockSyntax &&
-            returnBlockSyntax.Statements.Count == 1 &&
-            returnBlockSyntax.Statements[0] is ReturnStatementSyntax { Expression: { } returnExpression })
+        if (blockSyntax.Statements.Count == 1 &&
+            blockSyntax.Statements[0] is ReturnStatementSyntax { Expression: { } returnExpression })
         {
             return TryGetBlockedTaskExpression(returnExpression, out asyncExpression);
         }
@@ -285,7 +343,7 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
         return currentExpression;
     }
 
-    private sealed class TaskReturnStatementRewriter : CSharpSyntaxRewriter
+    private sealed class AwaitableReturnStatementRewriter : CSharpSyntaxRewriter
     {
         public override SyntaxNode? VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax node)
             => node;

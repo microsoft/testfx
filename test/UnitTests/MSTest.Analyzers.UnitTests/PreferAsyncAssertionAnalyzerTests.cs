@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.PreferAsyncAssertionAnalyzer,
     MSTest.Analyzers.PreferAsyncAssertionFixer>;
@@ -282,6 +285,51 @@ public sealed class PreferAsyncAssertionAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenNonAsyncValueTaskReturningTestMethodHasReturnExpression_CodeFixConvertsReturnToAwait()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public ValueTask MyTestMethod()
+                {
+                    [|Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult())|];
+                    return ValueTask.CompletedTask;
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async ValueTask MyTestMethod()
+                {
+                    await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => BarAsync());
+                    await ValueTask.CompletedTask;
+                    return;
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenAssertThrowsExactlyBlocksOnTask_WithNamedArgumentsOutOfOrder_CodeFixUsesAsyncAssertion()
     {
         string code = """
@@ -366,6 +414,131 @@ public sealed class PreferAsyncAssertionAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenAssertionActionIsAnonymousMethod_CodeFixUsesAsyncAssertionAndRemovesBlockingCall()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    [|Assert.ThrowsExactly<InvalidOperationException>(delegate { BarAsync().GetAwaiter().GetResult(); })|];
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => BarAsync());
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertionResultIsUsedInMemberAccess_CodeFixParenthesizesAwait()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string message = [|Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult())|].Message;
+                    Assert.IsNotNull(message);
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    string message = (await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => BarAsync())).Message;
+                    Assert.IsNotNull(message);
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenVoidTestMethodIsExpressionBodied_CodeFixConvertsBodyToBlock()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod() => [|Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult())|];
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => BarAsync());
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenAssertionIsInsideLockStatement_NoDiagnostic()
     {
         string code = """
@@ -415,6 +588,129 @@ public sealed class PreferAsyncAssertionAnalyzerTests
                     catch (Exception) when (Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult()) is not null)
                     {
                     }
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertionIsInsideUnsafeBlock_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    unsafe
+                    {
+                        Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult());
+                    }
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+        };
+
+        test.SolutionTransforms.Add((solution, projectId) =>
+        {
+            var compilationOptions = (CSharpCompilationOptions)solution.GetProject(projectId)!.CompilationOptions!;
+            return solution.WithProjectCompilationOptions(projectId, compilationOptions.WithAllowUnsafe(true));
+        });
+
+        await test.RunAsync(CancellationToken.None);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertionUsesInterpolatedStringHandlerOverload_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult(), $"Message {GetMessage()}");
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+                private string GetMessage() => "message";
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenVoidTestMethodCannotChangeReturnType_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public interface ITest
+            {
+                void MyTestMethod();
+            }
+
+            public class BaseTestClass
+            {
+                public virtual void MyTestMethod()
+                {
+                }
+            }
+
+            [TestClass]
+            public class OverrideTestClass : BaseTestClass
+            {
+                [TestMethod]
+                public override void MyTestMethod()
+                {
+                    Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult());
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+
+            [TestClass]
+            public class ImplicitInterfaceTestClass : ITest
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult());
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+
+            [TestClass]
+            public class ExplicitInterfaceTestClass : ITest
+            {
+                [TestMethod]
+                void ITest.MyTestMethod()
+                {
+                    Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult());
                 }
 
                 private Task BarAsync() => Task.CompletedTask;
