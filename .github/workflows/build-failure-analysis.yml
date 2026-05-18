@@ -52,9 +52,22 @@ jobs:
       - name: Install binlog-mcp tool
         if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
         run: |
+          # Create a standalone nuget.config to avoid package-source-mapping conflicts
+          # with the repo's NuGet.config.
+          mkdir -p /tmp/binlog-tool
+          cat > /tmp/binlog-tool/nuget.config << 'NUGETEOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="dotnet-eng" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json" />
+              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+            </packageSources>
+          </configuration>
+          NUGETEOF
           dotnet tool install --global AITools.BinlogMcp \
-            --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json \
-            --prerelease || true
+            --configfile /tmp/binlog-tool/nuget.config \
+            --prerelease
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
       - name: Extract build errors from binlog
