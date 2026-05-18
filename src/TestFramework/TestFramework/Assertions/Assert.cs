@@ -244,20 +244,6 @@ public sealed partial class Assert
     internal static string BuildUserMessage(string? format)
         => format ?? string.Empty;
 
-    private static string BuildUserMessageForSingleExpression(string? format, string callerArgExpression, string parameterName)
-    {
-        string userMessage = BuildUserMessage(format);
-        if (string.IsNullOrEmpty(callerArgExpression))
-        {
-            return userMessage;
-        }
-
-        string callerArgMessagePart = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, parameterName, callerArgExpression);
-        return string.IsNullOrEmpty(userMessage)
-            ? callerArgMessagePart
-            : $"{callerArgMessagePart} {userMessage}";
-    }
-
     private static string BuildUserMessageForTwoExpressions(string? format, string callerArgExpression1, string parameterName1, string callerArgExpression2, string parameterName2)
     {
         string userMessage = BuildUserMessage(format);
@@ -271,9 +257,6 @@ public sealed partial class Assert
             ? callerArgMessagePart
             : $"{callerArgMessagePart} {userMessage}";
     }
-
-    private static string BuildUserMessageForCollectionExpression(string? format, string collectionExpression)
-        => BuildUserMessageForSingleExpression(format, collectionExpression, "collection");
 
     private static string BuildUserMessageForExpectedExpressionAndActualExpression(string? format, string expectedExpression, string actualExpression)
         => BuildUserMessageForTwoExpressions(format, expectedExpression, "expected", actualExpression, "actual");
@@ -304,15 +287,6 @@ public sealed partial class Assert
 
     internal static string ReplaceNulls(object? input)
         => input?.ToString() ?? string.Empty;
-
-    /// <summary>
-    /// Formats a call-site expression like <c>Assert.MethodName(expression)</c>.
-    /// Returns <see langword="null"/> if the expression is empty or contains a line break.
-    /// </summary>
-    private static string? FormatCallSiteExpression(string methodName, string expression)
-        => string.IsNullOrEmpty(expression) || expression.IndexOfAny(['\n', '\r']) >= 0
-            ? null
-            : $"{methodName}({expression})";
 
     private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo culture)
 #pragma warning disable CA1309 // Use ordinal string comparison
