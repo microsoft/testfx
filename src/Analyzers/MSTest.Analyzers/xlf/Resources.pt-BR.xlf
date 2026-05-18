@@ -532,6 +532,21 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <target state="translated">Usar "Assert.Fail" em vez de uma asserção sempre com falha</target>
         <note />
       </trans-unit>
+      <trans-unit id="PreferAsyncAssertionDescription">
+        <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</source>
+        <target state="new">When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferAsyncAssertionMessageFormat">
+        <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
+        <target state="new">Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferAsyncAssertionTitle">
+        <source>Prefer async assertion methods</source>
+        <target state="new">Prefer async assertion methods</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
         <source>'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</source>
         <target state="translated">'DataTestMethodAttribute' está obsoleto e não oferece funcionalidade adicional em relação a 'TestMethodAttribute'. Use 'TestMethodAttribute' para todos os métodos de teste, inclusive testes parametrizados.</target>
