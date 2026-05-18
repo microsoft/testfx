@@ -93,7 +93,7 @@ public sealed class ResponseFileHelperTests
     }
 
     [TestMethod]
-    public void SplitCommandLine_OptionWithArgument_ReturnsAsSeperateTokens()
+    public void SplitCommandLine_OptionWithArgument_ReturnsAsSeparateTokens()
     {
         string[] result = [.. ResponseFileHelper.SplitCommandLine("--filter TestClass1")];
 
