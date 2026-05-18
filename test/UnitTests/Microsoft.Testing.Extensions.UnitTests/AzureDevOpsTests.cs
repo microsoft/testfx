@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
@@ -29,7 +29,7 @@ public sealed class AzureDevOpsTests
         // Trim ##. If we keep it, then when the test fails, the assertion failure will get printed to screen and picked up incorrectly by AzDO, because it scans all output for the ##vso... pattern
         var logger = new TextLogger();
         string? text = AzureDevOpsReporter.GetErrorText("MyTestDisplayName", null, error, "severity", new SystemFileSystem(), logger, "net9.0")?.TrimStart('#');
-        Assert.AreEqual("vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=22;columnnumber=1][MyTestDisplayName] [net9.0] this is an error%0Awith%0Dnewline", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
+        Assert.AreEqual("vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=22;columnnumber=1]MyTestDisplayName [net9.0]%0Athis is an error%0Awith%0Dnewline", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
     }
 
     [TestMethod]
@@ -48,7 +48,7 @@ public sealed class AzureDevOpsTests
         // Trim ##. If we keep it, then when the test fails, the assertion failure will get printed to screen and picked up incorrectly by AzDO, because it scans all output for the ##vso... pattern
         var logger = new TextLogger();
         string? text = AzureDevOpsReporter.GetErrorText("MyTestDisplayName", "Some custom reason\nwith\rnewline", error, "severity", new SystemFileSystem(), logger, "net9.0")?.TrimStart('#');
-        Assert.AreEqual("vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=41;columnnumber=1][MyTestDisplayName] [net9.0] Some custom reason%0Awith%0Dnewline", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
+        Assert.AreEqual("vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=41;columnnumber=1]MyTestDisplayName [net9.0]%0ASome custom reason%0Awith%0Dnewline", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
     }
 
     [TestMethod]
@@ -77,7 +77,7 @@ public sealed class AzureDevOpsTests
         string? text = AzureDevOpsReporter.GetErrorText("MyTestDisplayName", null, error, "severity", new SystemFileSystem(), logger, "net9.0")?.TrimStart('#');
 
         Assert.AreEqual(
-            $"vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber={userLine};columnnumber=1][MyTestDisplayName] [net9.0] boom",
+            $"vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber={userLine};columnnumber=1]MyTestDisplayName [net9.0]%0Aboom",
             text,
             $"\nLogs:\n{string.Join("\n", logger.Logs)}");
     }
@@ -98,7 +98,7 @@ public sealed class AzureDevOpsTests
         string? text = AzureDevOpsReporter.GetErrorText("MyTestDisplayName", null, error, "severity", new SystemFileSystem(), logger, "net9.0")?.TrimStart('#');
 
         Assert.AreEqual(
-            $"vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber={userLine};columnnumber=1][MyTestDisplayName] [net9.0] boom",
+            $"vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber={userLine};columnnumber=1]MyTestDisplayName [net9.0]%0Aboom",
             text,
             $"\nLogs:\n{string.Join("\n", logger.Logs)}");
     }
@@ -119,7 +119,7 @@ public sealed class AzureDevOpsTests
         string? text = AzureDevOpsReporter.GetErrorText("MyTestDisplayName", null, error, "severity", new SystemFileSystem(), logger, "net9.0")?.TrimStart('#');
 
         Assert.AreEqual(
-            $"vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber={userLine};columnnumber=1][MyTestDisplayName] [net9.0] boom",
+            $"vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber={userLine};columnnumber=1]MyTestDisplayName [net9.0]%0Aboom",
             text,
             $"\nLogs:\n{string.Join("\n", logger.Logs)}");
     }
@@ -140,7 +140,7 @@ public sealed class AzureDevOpsTests
         string? text = AzureDevOpsReporter.GetErrorText("MyTestDisplayName", null, error, "severity", new SystemFileSystem(), logger, "net9.0")?.TrimStart('#');
 
         Assert.AreEqual(
-            $"vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber={userLine};columnnumber=1][MyTestDisplayName] [net9.0] boom",
+            $"vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber={userLine};columnnumber=1]MyTestDisplayName [net9.0]%0Aboom",
             text,
             $"\nLogs:\n{string.Join("\n", logger.Logs)}");
     }
@@ -167,7 +167,7 @@ public sealed class AzureDevOpsTests
         string? text = AzureDevOpsReporter.GetErrorText("MyTestDisplayName", null, error, "severity", fileSystem.Object, logger, "net9.0")?.TrimStart('#');
 
         Assert.AreEqual(
-            "vso[task.logissue type=severity;sourcepath=src/MyCompany/MyAssert.cs;linenumber=17;columnnumber=1][MyTestDisplayName] [net9.0] boom",
+            "vso[task.logissue type=severity;sourcepath=src/MyCompany/MyAssert.cs;linenumber=17;columnnumber=1]MyTestDisplayName [net9.0]%0Aboom",
             text,
             $"\nLogs:\n{string.Join("\n", logger.Logs)}");
     }
@@ -193,9 +193,64 @@ public sealed class AzureDevOpsTests
         string? text = AzureDevOpsReporter.GetErrorText("MyTestDisplayName", null, error, "severity", fileSystem.Object, logger, "net9.0")?.TrimStart('#');
 
         Assert.AreEqual(
-            "vso[task.logissue type=severity;sourcepath=src/MyCompany/MyAssertions.cs;linenumber=25;columnnumber=1][MyTestDisplayName] [net9.0] boom",
+            "vso[task.logissue type=severity;sourcepath=src/MyCompany/MyAssertions.cs;linenumber=25;columnnumber=1]MyTestDisplayName [net9.0]%0Aboom",
             text,
             $"\nLogs:\n{string.Join("\n", logger.Logs)}");
+    }
+
+    [TestMethod]
+    public void FormatErrorMessage_PlacesTestNameAsTitleOnFirstLine()
+    {
+        // The reporter emits one message that is rendered both by AzDO and by GitHub PR
+        // checks (via the dotnet problem matcher). Both UIs treat the first line as the
+        // bold annotation title, so the test name should live there and the assertion
+        // text should follow on the next line (encoded by AzDoEscaper as %0A).
+        string formatted = AzureDevOpsReporter.FormatErrorMessage(
+            "MyTestDisplayName",
+            "net9.0",
+            "Assert.AreEqual failed. Expected:<7>. Actual:<0>.");
+
+        Assert.AreEqual("MyTestDisplayName [net9.0]\nAssert.AreEqual failed. Expected:<7>. Actual:<0>.", formatted);
+    }
+
+    [TestMethod]
+    public void FormatErrorMessage_DoesNotDuplicateTfmWhenAlreadyInDisplayName()
+    {
+        // In multi-TFM runs MTP appends the TFM to the display name (e.g. "MyTest (net9.0)").
+        // We must not append it again or annotations end up reading "MyTest (net9.0) [net9.0]".
+        string formatted = AzureDevOpsReporter.FormatErrorMessage(
+            "MyTest (net9.0)",
+            "net9.0",
+            "boom");
+
+        Assert.AreEqual("MyTest (net9.0)\nboom", formatted);
+    }
+
+    [TestMethod]
+    public void FormatErrorMessage_DoesNotDuplicateTfmWhenQuotedInDisplayName()
+    {
+        // Acceptance tests' display names sometimes show the TFM quoted, e.g.
+        // 'HangDump_TemplateFileName_CreateDump ("net10.0")'. The dedup must catch that too.
+        string formatted = AzureDevOpsReporter.FormatErrorMessage(
+            "HangDump_TemplateFileName_CreateDump (\"net10.0\")",
+            "net10.0",
+            "boom");
+
+        Assert.AreEqual("HangDump_TemplateFileName_CreateDump (\"net10.0\")\nboom", formatted);
+    }
+
+    [TestMethod]
+    public void FormatErrorMessage_KeepsTfmSuffixWhenDisplayNameContainsDifferentTfm()
+    {
+        // Test asset's TFM (in display name) can legitimately differ from the host TFM
+        // when an acceptance test runs against a target asset built for an older TFM.
+        // In that case both pieces of info are useful and we should keep them.
+        string formatted = AzureDevOpsReporter.FormatErrorMessage(
+            "HangDump_TemplateFileName_CreateDump (\"net10.0\")",
+            "net11.0",
+            "boom");
+
+        Assert.AreEqual("HangDump_TemplateFileName_CreateDump (\"net10.0\") [net11.0]\nboom", formatted);
     }
 
     private static (string FilePath, int LineNumber) GetCurrentLocation(

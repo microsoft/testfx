@@ -303,7 +303,7 @@ internal sealed class AzureDevOpsReporter :
                 logger.LogTrace($"Normalized path for GitHub '{relativeNormalizedPath}'.");
             }
 
-            string formattedMessage = $"[{testDisplayName}] [{targetFrameworkMoniker}] {message}";
+            string formattedMessage = FormatErrorMessage(testDisplayName, targetFrameworkMoniker, message);
             string line = $"##vso[task.logissue type={severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{AzDoEscaper.Escape(formattedMessage)}";
             if (logger.IsEnabled(LogLevel.Trace))
             {
@@ -325,6 +325,30 @@ internal sealed class AzureDevOpsReporter :
     private static string GetTargetFrameworkMoniker()
         => TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
             ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
+
+    /// <summary>
+    /// Formats the reporter message so the test name lands on its own line.
+    /// PR check UIs (GitHub Checks via the dotnet problem matcher and Azure DevOps)
+    /// render the first line of the message as the bold annotation title, so we
+    /// keep the test display name compact and push the assertion text to the body.
+    /// </summary>
+    /// <remarks>
+    /// MTP includes the TFM in the display name in multi-TFM mode (e.g. "MyTest (net8.0)").
+    /// To avoid noise like "MyTest (net8.0) [net8.0]" we skip the bracketed TFM
+    /// suffix when the display name already ends with "({tfm})" or "(\"{tfm}\")".
+    /// </remarks>
+    internal static /* for testing */ string FormatErrorMessage(string testDisplayName, string targetFrameworkMoniker, string message)
+    {
+        string titleLine = DisplayNameContainsTfm(testDisplayName, targetFrameworkMoniker)
+            ? testDisplayName
+            : $"{testDisplayName} [{targetFrameworkMoniker}]";
+
+        return $"{titleLine}\n{message}";
+    }
+
+    private static bool DisplayNameContainsTfm(string displayName, string tfm)
+        => displayName.EndsWith($"({tfm})", StringComparison.Ordinal)
+            || displayName.EndsWith($"(\"{tfm}\")", StringComparison.Ordinal);
 
     private static bool IsAssertionImplementationFrame(string code)
     {
