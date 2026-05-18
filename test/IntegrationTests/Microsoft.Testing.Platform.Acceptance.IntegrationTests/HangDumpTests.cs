@@ -115,7 +115,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             new Dictionary<string, string?>
             {
                 ["SLEEPTIMEMS1"] = "4000",
-                ["SLEEPTIMEMS2"] = "20000",
+                ["SLEEPTIMEMS2"] = "600000",
             },
             cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
@@ -148,7 +148,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             new Dictionary<string, string?>
             {
                 ["SLEEPTIMEMS1"] = "4000",
-                ["SLEEPTIMEMS2"] = "20000",
+                ["SLEEPTIMEMS2"] = "600000",
             },
             cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);

@@ -557,6 +557,26 @@ Real: {2}</target>
         <target state="translated">Se esperaba que el valor no fuera null.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AreNotEqualFailedSummary">
+        <source>Expected values to not be equal.</source>
+        <target state="new">Expected values to not be equal.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringsFailedSummary">
+        <source>Expected strings to be equal.</source>
+        <target state="new">Expected strings to be equal.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualDifferentTypesFailedSummary">
+        <source>Expected values to be equal, but they are of different types.</source>
+        <target state="new">Expected values to be equal, but they are of different types.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualFailedSummary">
+        <source>Expected values to be equal.</source>
+        <target state="new">Expected values to be equal.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
         <target state="translated">Se esperaba que el valor fuera null.</target>
