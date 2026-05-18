@@ -27,8 +27,8 @@ jobs:
         id: build
         continue-on-error: true
         run: |
-          ./build.sh --binaryLog 2>&1 | tail -50
-          echo "build_exit_code=$?" >> "$GITHUB_OUTPUT"
+          set -o pipefail
+          ./build.sh --binaryLog 2>&1 | tee /tmp/build-output.log | tail -100
 
       - name: Put dotnet on PATH
         if: steps.build.outcome == 'failure'
@@ -132,21 +132,31 @@ jobs:
               }
             }
 
-            core.setOutput('analysis', analysis);
+            // Write analysis to file for the comment step
+            fs.writeFileSync('/tmp/analysis-result.md', analysis);
+            core.info('Analysis written to /tmp/analysis-result.md');
 
       - name: Post analysis comment on PR
-        if: steps.build.outcome == 'failure' && (steps.analyze.outputs.analysis || steps.find-binlog.outputs.found == 'true')
+        if: steps.build.outcome == 'failure' && steps.extract.outputs.extracted == 'true'
         uses: actions/github-script@v7
         with:
           script: |
-            const analysis = `${{ steps.analyze.outputs.analysis }}` || 'Build failed but binlog analysis could not be completed.';
+            const fs = require('fs');
+            let analysis = 'Build failed but binlog analysis could not be completed.';
+            try {
+              analysis = fs.readFileSync('/tmp/analysis-result.md', 'utf8');
+            } catch (e) {
+              core.info('No analysis file found, using fallback');
+            }
             const marker = '<!-- binlog-failure-analysis -->';
+
+            const prNumber = context.payload.pull_request.number;
 
             // Find and delete any previous analysis comment to avoid spam
             const comments = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              issue_number: prNumber,
               per_page: 100,
             });
 
@@ -160,21 +170,23 @@ jobs:
               }
             }
 
-            const body = `${marker}
-            ## 🔍 Build Failure Analysis
-
-            The build failed on this PR. Here's an automated analysis from the MSBuild binary log:
-
-            ${analysis}
-
-            ---
-            <sub>🤖 This analysis was generated automatically using [binlog-mcp](https://dev.azure.com/dnceng/public/_artifacts/feed/dotnet-eng/NuGet/AITools.BinlogMcp).
-            Triggered by commit ${{ github.event.pull_request.head.sha }}.</sub>`;
+            const sha = context.payload.pull_request.head.sha.substring(0, 7);
+            const body = [
+              marker,
+              '## 🔍 Build Failure Analysis',
+              '',
+              'The build failed on this PR. Here\'s an automated analysis from the MSBuild binary log:',
+              '',
+              analysis,
+              '',
+              '---',
+              `<sub>🤖 Generated automatically using <a href="https://dev.azure.com/dnceng/public/_artifacts/feed/dotnet-eng/NuGet/AITools.BinlogMcp">binlog-mcp</a> · commit ${sha}</sub>`,
+            ].join('\n');
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              issue_number: prNumber,
               body: body,
             });
 
