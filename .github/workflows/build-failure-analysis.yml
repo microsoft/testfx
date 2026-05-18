@@ -187,10 +187,9 @@ jobs:
             ];
 
             // Include source context in the AI prompt if available
-            const contexts = data.sourceContexts || {};
-            if (Object.keys(contexts).length > 0) {
+            if (Object.keys(sourceContexts).length > 0) {
               prompt.push('', '## Source Context');
-              for (const [file, ctx] of Object.entries(contexts)) {
+              for (const [file, ctx] of Object.entries(sourceContexts)) {
                 const shortPath = file.split('/').slice(-2).join('/');
                 prompt.push('', `### ${shortPath} (around line ${ctx.errorLine})`, '```csharp', ctx.content.trim(), '```');
               }
@@ -289,12 +288,11 @@ jobs:
                 parts.push('', '### ❌ Errors', '', '```', errorText, '```');
               }
 
-              // Suggested fixes — use source context from binlog to generate actionable suggestions
-              const contexts = data.sourceContexts || {};
-              if (Object.keys(contexts).length > 0 && realErrors.length > 0) {
+              // Suggested fixes — use source context to generate actionable suggestions
+              if (Object.keys(sourceContexts).length > 0 && realErrors.length > 0) {
                 parts.push('### 🔧 Suggested Fixes', '');
 
-                for (const [fullPath, ctx] of Object.entries(contexts)) {
+                for (const [fullPath, ctx] of Object.entries(sourceContexts)) {
                   const shortPath = fullPath.split('/').slice(-2).join('/');
                   const fileErrors = realErrors.filter(e => e.file === fullPath);
                   if (fileErrors.length === 0) continue;
