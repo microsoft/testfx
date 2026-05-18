@@ -23,6 +23,10 @@ public sealed class ResponseFileHelperTests
     }
 
     [TestMethod]
+    public void SplitCommandLine_NullInput_ThrowsNullReferenceException()
+        => Assert.ThrowsException<NullReferenceException>(() => ResponseFileHelper.SplitCommandLine(null!).ToArray());
+
+    [TestMethod]
     public void SplitCommandLine_SingleToken_ReturnsSingleElement()
     {
         string[] result = [.. ResponseFileHelper.SplitCommandLine("hello")];
@@ -93,7 +97,7 @@ public sealed class ResponseFileHelperTests
     }
 
     [TestMethod]
-    public void SplitCommandLine_OptionWithArgument_ReturnsAsSeparateTokens()
+    public void SplitCommandLine_OptionWithArgument_ReturnsSeparateTokens()
     {
         string[] result = [.. ResponseFileHelper.SplitCommandLine("--filter TestClass1")];
 
@@ -120,6 +124,14 @@ public sealed class ResponseFileHelperTests
 
         Assert.HasCount(1, result);
         Assert.AreEqual("a  b  c", result[0]);
+    }
+
+    [TestMethod]
+    public void SplitCommandLine_UnclosedQuote_ReturnsEmpty()
+    {
+        string[] result = [.. ResponseFileHelper.SplitCommandLine("\"hello world")];
+
+        Assert.IsEmpty(result);
     }
 
     [TestMethod]
