@@ -350,7 +350,7 @@ public class TestClassInfoTests : TestContainer
 
         exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UnitTestOutcome.Failed);
-        exception.Message.Should().Be("Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assertion failed.\r\nTest failure.");
+        exception.Message.Should().Be($"Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assertion failed.{Environment.NewLine}Test failure.");
         exception.StackTraceInformation!.ErrorStackTrace.Contains(
             "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.DummyTestClass.ClassInitializeMethod", StringComparison.Ordinal).Should().BeTrue();
         exception.InnerException.Should().BeOfType<AssertFailedException>();
@@ -481,7 +481,7 @@ public class TestClassInfoTests : TestContainer
         // Assert
         classCleanupException.Should().NotBeNull();
         classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal).Should().BeTrue();
-        classCleanupException.Message.Contains("Error Message: Assertion failed.\r\nTest Failure.").Should().BeTrue();
+        classCleanupException.Message.Contains($"Error Message: Assertion failed.{Environment.NewLine}Test Failure.").Should().BeTrue();
         classCleanupException.Message.Should().Contain(
             $"{typeof(TestClassInfoTests).FullName}.DummyTestClass.ClassCleanupMethod",
             $"Value: {classCleanupException.Message}");

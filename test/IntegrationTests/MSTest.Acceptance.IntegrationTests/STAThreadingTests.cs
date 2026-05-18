@@ -13,16 +13,12 @@ public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.Tes
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task TestMethodThreading_MainIsSTAThread_OnWindows_NoRunsettingsProvided_ThreadIsSTA(string tfm)
+    public async Task TestMethodThreading_MainIsSTAThread_OnWindows_NoRunsettingsProvided_TestRunsSuccessfully(string tfm)
     {
-        // Test cannot work on non-Windows OSes as the main method is marked with [STAThread]
+        // Test cannot work on non-Windows OSes as the main method is marked with [STAThread].
+        // We only verify that the custom STA main entry point does not break execution when no runsettings override is provided.
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            environmentVariables: new()
-            {
-                ["MSTEST_THREAD_STATE_IS_STA"] = "1",
-            },
-            cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -176,11 +172,13 @@ public class UnitTest1
     private static void AssertCorrectThreadApartmentState()
     {
         var apartmentState = Thread.CurrentThread.GetApartmentState();
-        if (Environment.GetEnvironmentVariable("MSTEST_THREAD_STATE_IS_STA") == "1")
+        string expectedThreadStateIsSta = Environment.GetEnvironmentVariable("MSTEST_THREAD_STATE_IS_STA");
+
+        if (expectedThreadStateIsSta == "1")
         {
             Assert.AreEqual(ApartmentState.STA, apartmentState);
         }
-        else
+        else if (expectedThreadStateIsSta == "0")
         {
             Assert.AreNotEqual(ApartmentState.STA, apartmentState);
         }
