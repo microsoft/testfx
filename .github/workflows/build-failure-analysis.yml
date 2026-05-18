@@ -91,25 +91,28 @@ jobs:
         if: steps.build.outcome == 'failure' && (steps.extract-mcp.outputs.extracted != 'true')
         id: extract-fallback
         run: |
-          # Parse errors and warnings from the build output log
-          {
-            echo '{'
-            echo '  "overview": "Build failed. Errors extracted from build output log.",'
-
-            # Extract error lines
-            echo -n '  "errors": "'
-            grep -i ': error ' /tmp/build-output.log | sort -u | head -30 | \
-              sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g'
-            echo '",'
-
-            # Extract warning lines
-            echo -n '  "warnings": "'
-            grep -i ': warning ' /tmp/build-output.log | sort -u | head -10 | \
-              sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g'
-            echo '"'
-
-            echo '}'
-          } > /tmp/binlog-analysis.json
+          # Use Node.js to produce valid JSON from build log (avoids escaping issues)
+          node -e "
+            const fs = require('fs');
+            const log = fs.readFileSync('/tmp/build-output.log', 'utf8');
+            const lines = log.split('\n');
+            const errors = lines.filter(l => /: error /i.test(l))
+              .map(l => l.trim())
+              .filter((v, i, a) => a.indexOf(v) === i)
+              .slice(0, 30)
+              .join('\n');
+            const warnings = lines.filter(l => /: warning /i.test(l))
+              .map(l => l.trim())
+              .filter((v, i, a) => a.indexOf(v) === i)
+              .slice(0, 10)
+              .join('\n');
+            const result = {
+              overview: 'Build failed. Errors extracted from build output log.',
+              errors: errors || 'No error lines found',
+              warnings: warnings || 'No warning lines found'
+            };
+            fs.writeFileSync('/tmp/binlog-analysis.json', JSON.stringify(result, null, 2));
+          "
           echo "extracted=true" >> "$GITHUB_OUTPUT"
           echo "Fallback extraction from build log succeeded"
 
