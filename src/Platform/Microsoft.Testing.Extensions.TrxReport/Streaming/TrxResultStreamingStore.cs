@@ -156,8 +156,8 @@ internal sealed class TrxResultStreamingStore : IDisposable
             // still hold useful records that crash recovery (or an out-of-band tool) can salvage.
             _completionTimedOut = true;
             int stillQueued = _queue.Count;
-            await _logger.LogWarningAsync(
-                $"TRX streaming store writer did not drain within the hang timeout; intermediate file may be incomplete. Approximately {stillQueued} record(s) are still queued and will not appear in the TRX.").ConfigureAwait(false);
+            TryLogWarning(
+                $"TRX streaming store writer did not drain within the hang timeout; intermediate file may be incomplete. Approximately {stillQueued} record(s) are still queued and will not appear in the TRX.");
         }
     }
 
@@ -193,7 +193,7 @@ internal sealed class TrxResultStreamingStore : IDisposable
             // We deliberately do NOT increment _droppedCount: producers stopped enqueuing as soon as
             // Dispose() called CompleteAdding, and anything left in the queue was unobserved by the
             // user (the session was being shut down).
-            _logger.LogDebug("TRX streaming store writer cancelled during shutdown.");
+            TryLogDebug("TRX streaming store writer cancelled during shutdown.");
         }
         catch (Exception ex)
         {
@@ -427,7 +427,7 @@ internal sealed class TrxResultStreamingStore : IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogDebug($"Failed to delete TRX streaming store file '{FilePath}': {ex.Message}");
+            TryLogDebug($"Failed to delete TRX streaming store file '{FilePath}': {ex.Message}");
         }
     }
 
@@ -461,7 +461,31 @@ internal sealed class TrxResultStreamingStore : IDisposable
         Interlocked.Increment(ref _droppedCount);
         if (_logger.IsEnabled(LogLevel.Debug))
         {
-            _logger.LogDebug($"TRX streaming store dropped a record ({reason}). Total dropped: {Volatile.Read(ref _droppedCount)}.");
+            TryLogDebug($"TRX streaming store dropped a record ({reason}). Total dropped: {Volatile.Read(ref _droppedCount)}.");
+        }
+    }
+
+    private void TryLogDebug(string message)
+    {
+        try
+        {
+            _logger.LogDebug(message);
+        }
+        catch
+        {
+            // Logging must remain best-effort and must not change writer failure behavior.
+        }
+    }
+
+    private void TryLogWarning(string message)
+    {
+        try
+        {
+            _logger.LogWarning(message);
+        }
+        catch
+        {
+            // Logging must remain best-effort and must not change writer failure behavior.
         }
     }
 
