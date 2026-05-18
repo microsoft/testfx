@@ -919,7 +919,7 @@ public sealed class PreferAsyncAssertionAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    [|Assert.ThrowsExactly<InvalidOperationException>(new(() => BarAsync().GetAwaiter().GetResult()))|];
+                    [|Assert.ThrowsExactly<InvalidOperationException>(new((Action)(() => BarAsync().GetAwaiter().GetResult())))|];
                 }
 
                 private Task BarAsync() => Task.CompletedTask;
@@ -1035,13 +1035,16 @@ public sealed class PreferAsyncAssertionAnalyzerTests
             public class MyTestClass
             {
                 [TestMethod]
-                public unsafe Task MyTestMethod()
+                public Task MyTestMethod()
                 {
                     [|Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult())|];
                     int[] data = { 1, 2, 3 };
-                    fixed (int* p = data)
+                    unsafe
                     {
-                        return Task.CompletedTask;
+                        fixed (int* p = data)
+                        {
+                            return Task.CompletedTask;
+                        }
                     }
                 }
 
