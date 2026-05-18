@@ -235,6 +235,14 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
             return true;
         }
 
+        if (expression is ImplicitObjectCreationExpressionSyntax implicitObjectCreationExpression &&
+            implicitObjectCreationExpression.ArgumentList is { Arguments.Count: 1 } implicitObjectCreationArgumentList &&
+            TryReplaceActionExpression(implicitObjectCreationArgumentList.Arguments[0].Expression, out ExpressionSyntax? implicitObjectCreationNewExpression))
+        {
+            newExpression = implicitObjectCreationNewExpression.WithTriviaFrom(expression);
+            return true;
+        }
+
         if (expression is not LambdaExpressionSyntax lambdaExpression ||
             !TryGetBlockedTaskExpressionFromLambda(lambdaExpression, out ExpressionSyntax? asyncExpression))
         {

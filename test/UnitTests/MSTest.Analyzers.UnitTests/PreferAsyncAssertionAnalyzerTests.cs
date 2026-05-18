@@ -906,6 +906,48 @@ public sealed class PreferAsyncAssertionAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenAssertionActionIsTargetTypedDelegateCreation_CodeFixUnwrapsDelegateCreation()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    [|Assert.ThrowsExactly<InvalidOperationException>(new(() => BarAsync().GetAwaiter().GetResult()))|];
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => BarAsync());
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenNonAsyncTaskMethodHasReturnInsideLockBlock_DiagnosticReportedButNoCodeFixOffered()
     {
         string code = """
@@ -965,6 +1007,50 @@ public sealed class PreferAsyncAssertionAnalyzerTests
 
         // The diagnostic is still reported, but the fixer cannot safely transform the
         // method because it would emit an 'await' inside the unsafe block. No code fix is
+        // offered, so the expected fixed code is identical to the original.
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+            FixedCode = code,
+        };
+
+        test.SolutionTransforms.Add((solution, projectId) =>
+        {
+            var compilationOptions = (CSharpCompilationOptions)solution.GetProject(projectId)!.CompilationOptions!;
+            return solution.WithProjectCompilationOptions(projectId, compilationOptions.WithAllowUnsafe(true));
+        });
+
+        await test.RunAsync(CancellationToken.None);
+    }
+
+    [TestMethod]
+    public async Task WhenNonAsyncTaskMethodHasReturnInsideFixedBlock_DiagnosticReportedButNoCodeFixOffered()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public unsafe Task MyTestMethod()
+                {
+                    [|Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult())|];
+                    int[] data = { 1, 2, 3 };
+                    fixed (int* p = data)
+                    {
+                        return Task.CompletedTask;
+                    }
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+            }
+            """;
+
+        // The diagnostic is still reported, but the fixer cannot safely transform the
+        // method because it would emit an 'await' inside the fixed statement body. No code fix is
         // offered, so the expected fixed code is identical to the original.
         var test = new VerifyCS.Test
         {
