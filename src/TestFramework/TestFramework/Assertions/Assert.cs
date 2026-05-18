@@ -314,26 +314,6 @@ public sealed partial class Assert
             ? null
             : $"{methodName}({expression})";
 
-    private static readonly char[] LineBreakChars = ['\n', '\r'];
-
-    /// <summary>
-    /// Formats a call-site expression like <c>Assert.MethodName(expression1, expression2)</c>.
-    /// When either expression is empty the call-site is omitted. When an expression contains
-    /// newlines (multiline constant) it is replaced with a <c>&lt;paramName&gt;</c> placeholder.
-    /// </summary>
-    private static string? FormatBinaryCallSiteExpression(string methodName, string expression1, string paramName1, string expression2, string paramName2)
-    {
-        if (string.IsNullOrWhiteSpace(expression1) || string.IsNullOrWhiteSpace(expression2))
-        {
-            return null;
-        }
-
-        string arg1 = expression1.IndexOfAny(LineBreakChars) >= 0 ? $"<{paramName1}>" : expression1;
-        string arg2 = expression2.IndexOfAny(LineBreakChars) >= 0 ? $"<{paramName2}>" : expression2;
-
-        return $"{methodName}({arg1}, {arg2})";
-    }
-
     private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo culture)
 #pragma warning disable CA1309 // Use ordinal string comparison
         => string.Compare(expected, actual, ignoreCase, culture);
