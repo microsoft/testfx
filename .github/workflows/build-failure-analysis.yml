@@ -51,7 +51,6 @@ jobs:
       - name: Install binlog-mcp tool
         if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
         id: install-tool
-        continue-on-error: true
         run: |
           mkdir -p /tmp/binlog-tool
           cat > /tmp/binlog-tool/nuget.config << 'NUGETEOF'
@@ -68,16 +67,22 @@ jobs:
             --configfile /tmp/binlog-tool/nuget.config \
             --prerelease
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
-          # Verify the tool can start
-          timeout 10 binlog-mcp --help 2>/dev/null && echo "tool_ok=true" >> "$GITHUB_OUTPUT" || echo "tool_ok=false" >> "$GITHUB_OUTPUT"
+
+      - name: Install MCP SDK
+        if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
+        run: |
+          cd .github/workflows/scripts
+          npm init -y --silent 2>/dev/null
+          npm install --save @modelcontextprotocol/sdk 2>&1 | tail -5
 
       - name: Extract errors via binlog-mcp (MCP protocol)
-        if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true' && steps.install-tool.outputs.tool_ok == 'true'
+        if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
         id: extract-mcp
         continue-on-error: true
         run: |
-          timeout 90 node .github/workflows/scripts/extract-binlog-errors.js \
-            "${{ steps.find-binlog.outputs.path }}" > /tmp/binlog-analysis.json 2>/tmp/binlog-extract.log
+          cd .github/workflows/scripts
+          timeout 120 node extract-binlog-errors.js \
+            "$GITHUB_WORKSPACE/${{ steps.find-binlog.outputs.path }}" > /tmp/binlog-analysis.json 2>/tmp/binlog-extract.log
           if [ -s /tmp/binlog-analysis.json ]; then
             echo "extracted=true" >> "$GITHUB_OUTPUT"
             echo "MCP extraction succeeded"
@@ -146,34 +151,78 @@ jobs:
             ].join('\n');
 
             let analysis;
-            try {
-              const response = await fetch('https://models.github.ai/inference/chat/completions', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  model: 'openai/gpt-4o-mini',
-                  messages: [{ role: 'user', content: prompt }],
-                  max_tokens: 2000,
-                }),
-              });
 
-              if (response.ok) {
-                const result = await response.json();
-                analysis = result.choices?.[0]?.message?.content;
-              } else {
-                core.info(`AI API returned ${response.status}: ${await response.text()}`);
+            // Try GitHub Models API (requires models:read permission on the repo)
+            const endpoints = [
+              'https://models.github.ai/inference/chat/completions',
+              'https://models.inference.ai.azure.com/chat/completions',
+            ];
+
+            for (const endpoint of endpoints) {
+              if (analysis) break;
+              try {
+                const response = await fetch(endpoint, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [{ role: 'user', content: prompt }],
+                    max_tokens: 2000,
+                  }),
+                });
+
+                if (response.ok) {
+                  const result = await response.json();
+                  analysis = result.choices?.[0]?.message?.content;
+                  core.info(`AI analysis succeeded via ${endpoint}`);
+                } else {
+                  const text = await response.text();
+                  core.info(`${endpoint} returned ${response.status}: ${text.substring(0, 200)}`);
+                }
+              } catch (e) {
+                core.info(`${endpoint} unavailable: ${e.message}`);
               }
-            } catch (e) {
-              core.info(`AI analysis unavailable: ${e.message}`);
             }
 
-            // Fallback: format the raw data as markdown
+            // Structured fallback: format the raw data as useful markdown
             if (!analysis) {
-              const errors = (data.errors || 'No errors captured').replace(/\\n/g, '\n');
-              analysis = `### Build Errors\n\n\`\`\`\n${errors}\n\`\`\``;
+              const errorText = data.errors || 'No errors captured';
+              const overviewText = data.overview || '';
+
+              // Try to group errors by file
+              const errorLines = errorText.split('\n').filter(l => l.trim());
+              const byFile = {};
+              for (const line of errorLines) {
+                const match = line.match(/([^(]+)\((\d+),\d+\):\s*error\s+(\w+):\s*(.+?)(?:\s*\[|$)/);
+                if (match) {
+                  const [, file, lineNum, code, msg] = match;
+                  const shortFile = file.split('/').slice(-2).join('/');
+                  if (!byFile[shortFile]) byFile[shortFile] = [];
+                  byFile[shortFile].push({ lineNum, code, msg: msg.trim() });
+                }
+              }
+
+              const parts = ['### Build Failed'];
+              if (overviewText) parts.push('', overviewText);
+
+              if (Object.keys(byFile).length > 0) {
+                parts.push('', '### Errors by File', '');
+                for (const [file, errors] of Object.entries(byFile)) {
+                  parts.push(`**\`${file}\`**`);
+                  const unique = [...new Map(errors.map(e => [`${e.code}:${e.msg}`, e])).values()];
+                  for (const e of unique) {
+                    parts.push(`- Line ${e.lineNum}: \`${e.code}\` — ${e.msg}`);
+                  }
+                  parts.push('');
+                }
+              } else {
+                parts.push('', '### Raw Errors', '', '```', errorText, '```');
+              }
+
+              analysis = parts.join('\n');
               if (analysis.length > 10000) {
                 analysis = analysis.substring(0, 10000) + '\n\n... (truncated)';
               }

@@ -153,3 +153,7 @@ project.fragment.lock.json
 
 # jetbrains temp
 .idea/
+
+# Workflow script dependencies
+.github/workflows/scripts/node_modules/
+.github/workflows/scripts/package*.json
