@@ -482,6 +482,18 @@ Actual: {2}</value>
   <data name="IsNotNullFailedSummary" xml:space="preserve">
     <value>Expected value to not be null.</value>
   </data>
+  <data name="AreEqualFailedSummary" xml:space="preserve">
+    <value>Expected values to be equal.</value>
+  </data>
+  <data name="AreEqualDifferentTypesFailedSummary" xml:space="preserve">
+    <value>Expected values to be equal, but they are of different types.</value>
+  </data>
+  <data name="AreEqualStringsFailedSummary" xml:space="preserve">
+    <value>Expected strings to be equal.</value>
+  </data>
+  <data name="AreNotEqualFailedSummary" xml:space="preserve">
+    <value>Expected values to not be equal.</value>
+  </data>
   <data name="AreAllNotNullFailedSummary" xml:space="preserve">
     <value>Expected all items in collection to be non-null.</value>
   </data>
