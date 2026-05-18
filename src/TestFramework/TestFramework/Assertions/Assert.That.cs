@@ -577,8 +577,10 @@ public static partial class AssertExtensions
         }
 
         // Only extract variables from the object being accessed if it's not a member expression
-        // (to avoid showing both "person" and "person.Name" when "person.Name" is sufficient)
-        if (memberExpr.Expression is not null and not MemberExpression)
+        // or a method call (to avoid showing both "person" and "person.Name" or both
+        // "provider.GetBox()" and "provider.GetBox().Value" when the leaf access is sufficient
+        // — and to avoid surfacing intermediate side-effecting calls in failure details).
+        if (memberExpr.Expression is not null and not MemberExpression and not MethodCallExpression)
         {
             ExtractVariablesFromExpression(memberExpr.Expression, details, evaluationCache, suppressIntermediateValues: true);
         }
