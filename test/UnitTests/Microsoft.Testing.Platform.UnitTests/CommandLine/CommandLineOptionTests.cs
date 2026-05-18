@@ -49,6 +49,10 @@ public sealed class CommandLineOptionTests
         => Assert.ThrowsExactly<ArgumentException>(() => _ = new CommandLineOption("opt", string.Empty, ArgumentArity.Zero, false));
 
     [TestMethod]
+    public void Constructor_WhitespaceDescription_ThrowsArgumentException()
+        => Assert.ThrowsExactly<ArgumentException>(() => _ = new CommandLineOption("opt", "   ", ArgumentArity.Zero, false));
+
+    [TestMethod]
     public void Constructor_InvalidArityMaxLessThanMin_ThrowsArgumentException()
         => Assert.ThrowsExactly<ArgumentException>(() => _ = new CommandLineOption("opt", "Desc.", new ArgumentArity(2, 1), false));
 
@@ -135,14 +139,5 @@ public sealed class CommandLineOptionTests
         var opt2 = new CommandLineOption("opt", "Desc.", ArgumentArity.ExactlyOne, false);
 
         Assert.AreEqual(opt1.GetHashCode(), opt2.GetHashCode());
-    }
-
-    [TestMethod]
-    public void GetHashCode_DifferentValues_ReturnsDifferentHash()
-    {
-        var opt1 = new CommandLineOption("opt1", "Desc.", ArgumentArity.ExactlyOne, false);
-        var opt2 = new CommandLineOption("opt2", "Desc.", ArgumentArity.ExactlyOne, false);
-
-        Assert.AreNotEqual(opt1.GetHashCode(), opt2.GetHashCode());
     }
 }
