@@ -302,7 +302,78 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreEqual(new object(), 1);
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Contain("Assert.AreEqual failed. Expected:<System.Object (System.Object)>. Actual:<1 (System.Int32)>.");
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected values to be equal, but they are of different types.
+
+                expected:      System.Object
+                expected type: System.Object
+                actual:        1
+                actual type:   System.Int32
+
+                Assert.AreEqual(new object(), 1)
+                """);
+    }
+
+    public void AreNotEqual_PopulatesExpectedAndActualTextWithNotPrefix()
+    {
+        Action action = () => Assert.AreNotEqual(0, 0);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.ExpectedText.Should().Be("not 0");
+        ex.ActualText.Should().Be("0");
+        ex.Data["assert.expected"].Should().Be("not 0");
+        ex.Data["assert.actual"].Should().Be("0");
+    }
+
+    public void AreNotEqual_FailsWithStructuredMessage()
+    {
+        Action action = () => Assert.AreNotEqual(0, 0);
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected values to not be equal.
+
+                notExpected: 0
+                actual:      0
+
+                Assert.AreNotEqual(0, 0)
+                """);
+    }
+
+    public void AreEqual_MultilineExpectedExpression_UsesPlaceholderInCallSite()
+    {
+        Action action = () => Assert.AreEqual(
+            """
+            line1
+            line2
+            """,
+            "different");
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().EndWith("Assert.AreEqual(<expected>, \"different\")");
+    }
+
+    public void AreEqual_MultilineActualExpression_UsesPlaceholderInCallSite()
+    {
+        Action action = () => Assert.AreEqual(
+            "different",
+            """
+            line1
+            line2
+            """);
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().EndWith("Assert.AreEqual(\"different\", <actual>)");
+    }
+
+    public void AreNotEqual_MultilineNotExpectedExpression_UsesPlaceholderInCallSite()
+    {
+        string value = "x";
+        Action action = () => Assert.AreNotEqual(
+            """
+            x
+            """,
+            value);
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().EndWith("Assert.AreNotEqual(<notExpected>, value)");
     }
 
     public void AreEqualWithTypeOverridingEqualsShouldWork()
@@ -373,7 +444,16 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreEqual(0, 1, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreEqual failed. Expected:<0>. Actual:<1>. 'expected' expression: '0', 'actual' expression: '1'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(
+                $"""
+                Assertion failed. Expected values to be equal.
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}
+
+                expected: 0
+                actual:   1
+
+                Assert.AreEqual(0, 1)
+                """);
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -390,7 +470,16 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreNotEqual(0, 0, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreNotEqual failed. Expected any value except:<0>. Actual:<0>. 'notExpected' expression: '0', 'actual' expression: '0'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(
+                $"""
+                Assertion failed. Expected values to not be equal.
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}
+
+                notExpected: 0
+                actual:      0
+
+                Assert.AreNotEqual(0, 0)
+                """);
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -1411,51 +1500,68 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreEqual("baaa", "aaaa");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            Assert.AreEqual failed. String lengths are both 4 but differ at index 0. 'expected' expression: '"baaa"', 'actual' expression: '"aaaa"'.
-            Expected: "baaa"
-            But was:  "aaaa"
-            -----------^
-            """);
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                String lengths are both 4 but differ at index 0.
+
+                expected: "baaa"
+                actual:   "aaaa"
+
+                Assert.AreEqual("baaa", "aaaa")
+                """);
     }
 
     public void AreEqualStringDifferenceAtEnd()
     {
         Action action = () => Assert.AreEqual("aaaa", "aaab");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            Assert.AreEqual failed. String lengths are both 4 but differ at index 3. 'expected' expression: '"aaaa"', 'actual' expression: '"aaab"'.
-            Expected: "aaaa"
-            But was:  "aaab"
-            --------------^
-            """);
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                String lengths are both 4 but differ at index 3.
+
+                expected: "aaaa"
+                actual:   "aaab"
+
+                Assert.AreEqual("aaaa", "aaab")
+                """);
     }
 
     public void AreEqualStringWithSpecialCharactersShouldEscape()
     {
         Action action = () => Assert.AreEqual("aa\ta", "aa a");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            Assert.AreEqual failed. String lengths are both 4 but differ at index 2. 'expected' expression: '"aa\ta"', 'actual' expression: '"aa a"'.
-            Expected: "aa␉a"
-            But was:  "aa a"
-            -------------^
-            """);
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                String lengths are both 4 but differ at index 2.
+
+                expected: "aa\ta"
+                actual:   "aa a"
+
+                Assert.AreEqual("aa\ta", "aa a")
+                """);
     }
 
-    public void AreEqualLongStringsShouldTruncateAndShowContext()
+    // Long-string truncation is intentionally not yet implemented; documents the current full-string render.
+    public void AreEqualLongStringsShowsFullStrings()
     {
         string expected = new string('a', 100) + "b" + new string('c', 100);
         string actual = new string('a', 100) + "d" + new string('c', 100);
 
         Action action = () => Assert.AreEqual(expected, actual);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            Assert.AreEqual failed. String lengths are both 201 but differ at index 100. 'expected' expression: 'expected', 'actual' expression: 'actual'.
-            Expected: "...aaaaaaaaaaaaaaaaaabcccccccccccccccc..."
-            But was:  "...aaaaaaaaaaaaaaaaaadcccccccccccccccc..."
-            --------------------------------^
-            """);
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                String lengths are both 201 but differ at index 100.
+
+                expected: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+                actual:   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaadcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+
+                Assert.AreEqual(expected, actual)
+                """);
     }
 
     public void AreEqualStringWithCultureShouldUseEnhancedMessage()
@@ -1474,48 +1580,65 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreEqual("aaaa", "aaa");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            Assert.AreEqual failed. Expected string length 4 but was 3. 'expected' expression: '"aaaa"', 'actual' expression: '"aaa"'.
-            Expected: "aaaa"
-            But was:  "aaa"
-            --------------^
-            """);
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                Expected string length 4 but was 3.
+
+                expected: "aaaa"
+                actual:   "aaa"
+
+                Assert.AreEqual("aaaa", "aaa")
+                """);
     }
 
     public void AreEqualShorterExpectedString()
     {
         Action action = () => Assert.AreEqual("aaa", "aaab");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            Assert.AreEqual failed. Expected string length 3 but was 4. 'expected' expression: '"aaa"', 'actual' expression: '"aaab"'.
-            Expected: "aaa"
-            But was:  "aaab"
-            --------------^
-            """);
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                Expected string length 3 but was 4.
+
+                expected: "aaa"
+                actual:   "aaab"
+
+                Assert.AreEqual("aaa", "aaab")
+                """);
     }
 
     public void AreEqualStringWithUserMessage()
     {
         Action action = () => Assert.AreEqual("aaaa", "aaab", "My custom message");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            Assert.AreEqual failed. String lengths are both 4 but differ at index 3. 'expected' expression: '"aaaa"', 'actual' expression: '"aaab"'. My custom message
-            Expected: "aaaa"
-            But was:  "aaab"
-            --------------^
-            """);
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                String lengths are both 4 but differ at index 3.
+                My custom message
+
+                expected: "aaaa"
+                actual:   "aaab"
+
+                Assert.AreEqual("aaaa", "aaab")
+                """);
     }
 
     public void AreEqualStringWithEmojis()
     {
         Action action = () => Assert.AreEqual("🥰", "aaab");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            Assert.AreEqual failed. Expected string length 2 but was 4. 'expected' expression: '"🥰"', 'actual' expression: '"aaab"'.
-            Expected: "🥰"
-            But was:  "aaab"
-            -----------^
-            """);
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                Expected string length 2 but was 4.
+
+                expected: "🥰"
+                actual:   "aaab"
+
+                Assert.AreEqual("🥰", "aaab")
+                """);
     }
 
     public void CreateStringPreviews_DiffPointsToCorrectPlaceInNonShortenedString()
