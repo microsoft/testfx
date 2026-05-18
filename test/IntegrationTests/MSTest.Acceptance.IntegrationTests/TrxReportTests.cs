@@ -35,7 +35,10 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
 
         // Verify that exception message is present
         Assert.Contains(@"<Message>", trxContent, trxContent);
-        Assert.Contains("Assert.AreEqual failed. Expected:&lt;1&gt;. Actual:&lt;2&gt;.", trxContent, trxContent);
+        Assert.Contains("Assertion failed. Expected values to be equal.", trxContent, trxContent);
+        Assert.Contains("expected: 1", trxContent, trxContent);
+        Assert.Contains("actual:   2", trxContent, trxContent);
+        Assert.Contains("Assert.AreEqual(1, 2)", trxContent, trxContent);
 
         // Verify that stack trace is present
         Assert.Contains(@"<StackTrace>", trxContent, trxContent);
