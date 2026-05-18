@@ -597,7 +597,7 @@ public sealed partial class Assert
 
             message = new StructuredAssertionMessage(summary)
                 .WithUserMessage(userMessage)
-                .WithCallSiteExpression(FormatCallSiteExpression($"Assert.{assertMethodName}<{expectedTypeName}>", actionExpression));
+                .WithCallSiteExpression(FormatCallSiteExpression($"Assert.{assertMethodName}<{expectedTypeName}>", actionExpression, "action"));
         }
         else
         {
@@ -620,7 +620,7 @@ public sealed partial class Assert
             message = new StructuredAssertionMessage(summary)
                 .WithUserMessage(userMessage)
                 .WithEvidence(evidence)
-                .WithCallSiteExpression(FormatCallSiteExpression($"Assert.{assertMethodName}<{expectedTypeName}>", actionExpression));
+                .WithCallSiteExpression(FormatCallSiteExpression($"Assert.{assertMethodName}<{expectedTypeName}>", actionExpression, "action"));
         }
 
         ReportAssertFailed(message);
