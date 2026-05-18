@@ -95,7 +95,7 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
     }
 
     [TestMethod]
-    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Validates Windows-specific error for --crashdump --crash-report")]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Skipped on non-Windows platforms because this validates Windows-specific rejection of --crashdump --crash-report")]
     public async Task CrashDump_WithCrashReport_OnWindows_FailsWithValidationError()
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));

@@ -123,6 +123,10 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
             else
             {
                 await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashReportFile, expectedCrashReportFile, CrashReportFileSearchPattern)), cancellationToken).ConfigureAwait(false);
+
+                // Filter by exact suffix to defend against Windows' legacy 8.3 short-name
+                // matching where a pattern can also match files whose extension only starts
+                // with the requested extension.
                 foreach (string crashReportFile in Directory.GetFiles(Path.GetDirectoryName(expectedCrashReportFile)!, CrashReportFileSearchPattern)
                     .Where(static f => f.EndsWith(CrashReportFileExtension, StringComparison.OrdinalIgnoreCase)))
                 {
