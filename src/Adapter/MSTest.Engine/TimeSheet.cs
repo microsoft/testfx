@@ -2,7 +2,6 @@
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
-using This.Namespace.Does.Not.Exist; // Deliberate build error for testing binlog analysis workflow
 
 namespace Microsoft.Testing.Framework;
 
