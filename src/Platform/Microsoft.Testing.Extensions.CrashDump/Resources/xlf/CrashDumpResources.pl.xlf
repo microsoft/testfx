@@ -53,8 +53,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
-        <source>Test host process with PID '{0}' crashed</source>
-        <target state="new">Test host process with PID '{0}' crashed</target>
+        <source>Test host process with PID '{0}' crashed, but the expected diagnostic artifact(s) were not produced</source>
+        <target state="new">Test host process with PID '{0}' crashed, but the expected diagnostic artifact(s) were not produced</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpAndReportFileCreated">

@@ -248,12 +248,15 @@ public sealed partial class Assert
     private static string FormatAssertionFailed(string assertionName, string? message)
     {
         string failedMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName);
-        return string.IsNullOrWhiteSpace(message)
-            ? failedMessage
-            : message![0] is '\n' or '\r'
-                ? string.Concat(failedMessage, message)
-                : $"{failedMessage} {message}";
+        return FormatPrefixAndMessage(failedMessage, message);
     }
+
+    private static string FormatPrefixAndMessage(string prefix, string? message)
+        => string.IsNullOrWhiteSpace(message)
+            ? prefix
+            : message![0] is '\n' or '\r'
+                ? string.Concat(prefix, message)
+                : $"{prefix} {message}";
 
     /// <summary>
     /// Builds the formatted message using the given user format message and parameters.

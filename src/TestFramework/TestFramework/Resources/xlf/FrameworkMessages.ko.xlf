@@ -472,6 +472,11 @@ Actual: {2}</source>
         <target state="new">Expected collection to contain a specific number of elements.</target>
         <note />
       </trans-unit>
+      <trans-unit id="InconclusivePrefix">
+        <source>Assert.Inconclusive.</source>
+        <target state="new">Assert.Inconclusive.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidAccessToTestContextProperty">
         <source>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</source>
         <target state="translated">현재 테스트와 관련된 'TestContext.{0}' 속성은 어셈블리나 클래스 픽스처 실행 중에는 사용할 수 없습니다.</target>
