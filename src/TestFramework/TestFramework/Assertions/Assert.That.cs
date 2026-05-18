@@ -64,9 +64,7 @@ public static partial class AssertExtensions
             if (RequiresSinglePassEvaluation(condition.Body))
             {
                 // Potentially side-effecting expressions must be evaluated once while caching values.
-#pragma warning disable IDE0028 // Collection initialization can be simplified
-                evaluationCache = new Dictionary<Expression, object?>();
-#pragma warning restore IDE0028
+                evaluationCache = CreateEvaluationCache();
                 result = EvaluateExpression(condition.Body, evaluationCache);
             }
             else
@@ -78,9 +76,7 @@ public static partial class AssertExtensions
                     return;
                 }
 
-#pragma warning disable IDE0028 // Collection initialization can be simplified
-                evaluationCache = new Dictionary<Expression, object?>();
-#pragma warning restore IDE0028
+                evaluationCache = CreateEvaluationCache();
                 EvaluateAllSubExpressions(condition.Body, evaluationCache);
             }
 
@@ -135,6 +131,10 @@ public static partial class AssertExtensions
         // Fallback - this should not happen if EvaluateAllSubExpressions works correctly
         throw ApplicationStateGuard.Unreachable();
     }
+
+#pragma warning disable IDE0028 // Collection initialization can be simplified
+    private static Dictionary<Expression, object?> CreateEvaluationCache() => new Dictionary<Expression, object?>();
+#pragma warning restore IDE0028
 
     private static bool RequiresSinglePassEvaluation(Expression expr)
         => expr switch
