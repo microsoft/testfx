@@ -131,9 +131,9 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
         foreach (SyntaxNode node in syntax.AncestorsAndSelf())
         {
             // This analyzer targets both C# and VB from a project that intentionally references
-            // Microsoft.CodeAnalysis.Common only. Use syntax type names to detect C# unsafe
-            // constructs without adding a Microsoft.CodeAnalysis.CSharp dependency that would
-            // make the VB analyzer unsupported (RS1038).
+            // Microsoft.CodeAnalysis.Common only. VB has no unsafe keyword, so use syntax type
+            // names to detect C# unsafe constructs without adding a Microsoft.CodeAnalysis.CSharp
+            // dependency that would make the VB analyzer unsupported (RS1038).
             string syntaxTypeName = node.GetType().Name;
             if (syntaxTypeName == "UnsafeStatementSyntax" ||
                 (syntaxTypeName == "MethodDeclarationSyntax" && node.ChildTokens().Any(static token => token.ValueText == "unsafe")))

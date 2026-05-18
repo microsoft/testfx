@@ -231,9 +231,9 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
             newMethodDeclaration = newMethodDeclaration.WithModifiers(newMethodDeclaration.Modifiers.Add(SyntaxFactory.Token(SyntaxKind.AsyncKeyword)));
         }
 
-        bool wasVoid = originalMethodDeclaration.ReturnType.IsVoid();
+        bool originalReturnsVoid = originalMethodDeclaration.ReturnType.IsVoid();
 
-        if (wasVoid)
+        if (originalReturnsVoid)
         {
             newMethodDeclaration = newMethodDeclaration.WithReturnType(GetTaskReturnType(originalMethodDeclaration, semanticModel, cancellationToken).WithTriviaFrom(newMethodDeclaration.ReturnType));
             if (newMethodDeclaration.ExpressionBody is { } expressionBody)
