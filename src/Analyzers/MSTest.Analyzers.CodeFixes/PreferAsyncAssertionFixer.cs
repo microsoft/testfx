@@ -250,13 +250,22 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
     }
 
     private static MethodDeclarationSyntax ConvertExpressionBodyToBlock(MethodDeclarationSyntax methodDeclaration, ArrowExpressionClauseSyntax expressionBody)
-        => methodDeclaration
+    {
+        BlockSyntax block = SyntaxFactory.Block(
+            SyntaxFactory.ExpressionStatement(expressionBody.Expression)
+                .WithLeadingTrivia(expressionBody.GetLeadingTrivia())
+                .WithAdditionalAnnotations(Formatter.Annotation));
+
+        if (!methodDeclaration.SemicolonToken.IsKind(SyntaxKind.None))
+        {
+            block = block.WithCloseBraceToken(block.CloseBraceToken.WithTrailingTrivia(methodDeclaration.SemicolonToken.TrailingTrivia));
+        }
+
+        return methodDeclaration
             .WithExpressionBody(null)
             .WithSemicolonToken(default)
-            .WithBody(SyntaxFactory.Block(
-                SyntaxFactory.ExpressionStatement(expressionBody.Expression)
-                    .WithLeadingTrivia(expressionBody.GetLeadingTrivia())
-                    .WithAdditionalAnnotations(Formatter.Annotation)));
+            .WithBody(block);
+    }
 
     private static TypeSyntax GetTaskReturnType(MethodDeclarationSyntax methodDeclaration, SemanticModel semanticModel, CancellationToken cancellationToken)
     {

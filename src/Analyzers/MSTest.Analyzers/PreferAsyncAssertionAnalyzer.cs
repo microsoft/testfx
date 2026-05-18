@@ -90,7 +90,6 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
 
     private static bool HasInterpolatedStringHandlerParameter(IMethodSymbol targetMethod)
         => targetMethod.Parameters.Any(static parameter =>
-            parameter.RefKind != RefKind.None &&
             parameter.Type.GetAttributes().Any(static attr => attr.AttributeClass?.Name == "InterpolatedStringHandlerAttribute"));
 
     private static bool IsUnsupportedVoidTestMethod(IMethodSymbol containingMethod)
@@ -131,6 +130,10 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
     {
         foreach (SyntaxNode node in syntax.AncestorsAndSelf())
         {
+            // This analyzer targets both C# and VB from a project that intentionally references
+            // Microsoft.CodeAnalysis.Common only. Use syntax type names to detect C# unsafe
+            // constructs without adding a Microsoft.CodeAnalysis.CSharp dependency that would
+            // make the VB analyzer unsupported (RS1038).
             string syntaxTypeName = node.GetType().Name;
             if (syntaxTypeName == "UnsafeStatementSyntax" ||
                 (syntaxTypeName == "MethodDeclarationSyntax" && node.ChildTokens().Any(static token => token.ValueText == "unsafe")))
