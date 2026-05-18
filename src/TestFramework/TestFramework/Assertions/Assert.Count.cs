@@ -47,8 +47,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
-                ReportAssertCountFailed(assertionName, _expectedCount, _actualCount, _builder.ToString());
+                ReportAssertCountFailed(assertionName, _expectedCount, _actualCount, _builder.ToString(), collectionExpression);
             }
         }
 
@@ -115,8 +114,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
-                ReportAssertIsNotEmptyFailed(_builder.ToString());
+                ReportAssertIsNotEmptyFailed(_builder.ToString(), collectionExpression);
             }
         }
 
@@ -207,8 +205,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-        ReportAssertIsNotEmptyFailed(userMessage);
+        ReportAssertIsNotEmptyFailed(message, collectionExpression);
     }
 
     /// <summary>
@@ -229,8 +226,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-        ReportAssertIsNotEmptyFailed(userMessage);
+        ReportAssertIsNotEmptyFailed(message, collectionExpression);
     }
     #endregion // IsNotEmpty
 
@@ -252,7 +248,7 @@ public sealed partial class Assert
 #pragma warning restore IDE0060 // Remove unused parameter
     {
         TelemetryCollector.TrackAssertionCall("Assert.HasCount");
-        message.ComputeAssertion("HasCount", collectionExpression);
+        message.ComputeAssertion(nameof(HasCount), collectionExpression);
     }
 
     /// <summary>
@@ -267,7 +263,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void HasCount<T>(int expected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => HasCount("HasCount", expected, collection, message, collectionExpression);
+        => HasCount(nameof(HasCount), expected, collection, message, collectionExpression);
 
     /// <summary>
     /// Tests whether the collection has the expected count/length.
@@ -280,7 +276,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void HasCount(int expected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => HasCount("HasCount", expected, collection, message, collectionExpression);
+        => HasCount(nameof(HasCount), expected, collection, message, collectionExpression);
 
     #endregion // HasCount
 
@@ -301,7 +297,7 @@ public sealed partial class Assert
 #pragma warning restore IDE0060 // Remove unused parameter
     {
         TelemetryCollector.TrackAssertionCall("Assert.IsEmpty");
-        message.ComputeAssertion("IsEmpty", collectionExpression);
+        message.ComputeAssertion(nameof(IsEmpty), collectionExpression);
     }
 
     /// <summary>
@@ -315,7 +311,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void IsEmpty<T>(IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => HasCount("IsEmpty", 0, collection, message, collectionExpression);
+        => HasCount(nameof(IsEmpty), 0, collection, message, collectionExpression);
 
     /// <summary>
     /// Tests that the collection is empty.
@@ -327,7 +323,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void IsEmpty(IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => HasCount("IsEmpty", 0, collection, message, collectionExpression);
+        => HasCount(nameof(IsEmpty), 0, collection, message, collectionExpression);
 
     #endregion // IsEmpty
 
@@ -343,8 +339,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-        ReportAssertCountFailed(assertionName, expected, actualCount, userMessage);
+        ReportAssertCountFailed(assertionName, expected, actualCount, message, collectionExpression);
     }
 
     private static void HasCount(string assertionName, int expected, IEnumerable collection, string? message, string collectionExpression)
@@ -359,24 +354,44 @@ public sealed partial class Assert
         };
 
     [DoesNotReturn]
-    private static void ReportAssertCountFailed(string assertionName, int expectedCount, int actualCount, string userMessage)
+    private static void ReportAssertCountFailed(string assertionName, int expectedCount, int actualCount, string? userMessage, string collectionExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.HasCountFailMsg,
-            userMessage,
-            expectedCount,
-            actualCount);
-        ReportAssertFailed($"Assert.{assertionName}", finalMessage);
+        bool isEmptyAssertion = string.Equals(assertionName, nameof(IsEmpty), StringComparison.Ordinal);
+        string summary = isEmptyAssertion
+            ? FrameworkMessages.IsEmptyFailedSummary
+            : FrameworkMessages.HasCountFailedSummary;
+
+        string expectedEvidenceText = expectedCount.ToString(CultureInfo.CurrentCulture);
+        string expectedCallSiteText = expectedCount.ToString(CultureInfo.InvariantCulture);
+        string actualText = actualCount.ToString(CultureInfo.CurrentCulture);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected count:", expectedEvidenceText)
+            .AddLine("actual count:", actualText);
+
+        StructuredAssertionMessage structured = new(summary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedEvidenceText, actualText);
+        structured.WithCallSiteExpression(isEmptyAssertion
+            ? FormatCallSiteExpression($"Assert.{assertionName}", collectionExpression, "<collection>")
+            : FormatCallSiteExpression($"Assert.{assertionName}", expectedCallSiteText, collectionExpression, "<expected>", "<collection>"));
+
+        ReportAssertFailed(structured);
     }
 
     [DoesNotReturn]
-    private static void ReportAssertIsNotEmptyFailed(string userMessage)
+    private static void ReportAssertIsNotEmptyFailed(string? userMessage, string collectionExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.IsNotEmptyFailMsg,
-            userMessage);
-        ReportAssertFailed("Assert.IsNotEmpty", finalMessage);
+        string actualText = 0.ToString(CultureInfo.CurrentCulture);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("actual count:", actualText);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.IsNotEmptyFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual("> 0", actualText);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotEmpty", collectionExpression, "<collection>"));
+
+        ReportAssertFailed(structured);
     }
 }
