@@ -169,6 +169,70 @@ public sealed class PlatformCommandLineProviderTests
     }
 
     [TestMethod]
+    public async Task IsValid_When_DiscoverTests_HasNoArgument()
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DiscoverTestsOptionKey);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, []).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow("json")]
+    [DataRow("JSON")]
+    [DataRow("Json")]
+    [DataRow("text")]
+    [DataRow("TEXT")]
+    public async Task IsValid_When_DiscoverTests_HasAcceptedArgument_AnyCasing(string argument)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DiscoverTestsOptionKey);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [argument]).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_When_DiscoverTests_HasUnknownArgument()
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DiscoverTestsOptionKey);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, ["xml"]).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(
+            string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.PlatformCommandLineDiscoverTestsInvalidArgument,
+                "xml",
+                $"'{PlatformCommandLineProvider.DiscoverTestsTextArgument}', '{PlatformCommandLineProvider.DiscoverTestsJsonArgument}'"),
+            validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public void IsListTestsJsonOutput_ReturnsTrueOnlyWhenJsonArgumentSet()
+    {
+        Assert.IsFalse(PlatformCommandLineProvider.IsListTestsJsonOutput(new TestCommandLineOptions([])));
+        Assert.IsFalse(PlatformCommandLineProvider.IsListTestsJsonOutput(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.DiscoverTestsOptionKey, [] },
+        })));
+        Assert.IsFalse(PlatformCommandLineProvider.IsListTestsJsonOutput(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.DiscoverTestsOptionKey, ["text"] },
+        })));
+        Assert.IsTrue(PlatformCommandLineProvider.IsListTestsJsonOutput(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.DiscoverTestsOptionKey, ["json"] },
+        })));
+        Assert.IsTrue(PlatformCommandLineProvider.IsListTestsJsonOutput(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.DiscoverTestsOptionKey, ["JSON"] },
+        })));
+    }
+
+    [TestMethod]
     public async Task IsNotValid_If_ExitOnProcess_Not_Running()
     {
         var provider = new PlatformCommandLineProvider();
