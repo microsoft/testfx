@@ -28,7 +28,7 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
 
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputMatchesRegex(
-            """failed ScopeWithSingleFailure \(\d+ms\)[\s\S]+Assert\.AreEqual failed\. Expected:<1>\. Actual:<2>\.[\s\S]+at UnitTest1\.ScopeWithSingleFailure\(\)""");
+            """failed ScopeWithSingleFailure \(\d+ms\)[\s\S]+Assertion failed\. Expected values to be equal\.[\s\S]+expected: 1[\s\S]+actual:\s+2[\s\S]+Assert\.AreEqual\(1, 2\)[\s\S]+at UnitTest1\.ScopeWithSingleFailure\(\)""");
     }
 
     [TestMethod]

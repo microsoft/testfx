@@ -214,18 +214,19 @@ public partial class AssertTests : TestContainer
 
     public void AreAllDistinct_Generic_WithComparer_HasDuplicate_ShouldFail()
     {
+        string comparerTypeName = typeof(CaseInsensitiveStringComparer).FullName!;
+        string expectedMessage = """
+            Assertion failed. Expected all items in collection to be distinct.
+
+            duplicates: ["a"]
+            collection: ["A", "B", "a"]
+            comparer:   __COMPARER__
+
+            Assert.AreAllDistinct(new[] { "A", "B", "a" }, <comparer>)
+            """.Replace("__COMPARER__", comparerTypeName);
         Action action = () => Assert.AreAllDistinct(new[] { "A", "B", "a" }, new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
-            .WithMessage(
-                """
-                Assertion failed. Expected all items in collection to be distinct.
-
-                duplicates: ["a"]
-                collection: ["A", "B", "a"]
-                comparer:   CaseInsensitiveStringComparer
-
-                Assert.AreAllDistinct(new[] { "A", "B", "a" }, <comparer>)
-                """);
+            .WithMessage(expectedMessage);
     }
 
     public void AreAllDistinct_Generic_NullCollection_ShouldFail()
@@ -266,19 +267,20 @@ public partial class AssertTests : TestContainer
 
     public void AreAllDistinct_NonGeneric_WithComparer_HasDuplicate_ShouldFail()
     {
+        string comparerTypeName = typeof(CaseInsensitiveStringComparer).FullName!;
+        string expectedMessage = """
+            Assertion failed. Expected all items in collection to be distinct.
+
+            duplicates: ["a"]
+            collection: ["A", "B", "a"]
+            comparer:   __COMPARER__
+
+            Assert.AreAllDistinct(list, <comparer>)
+            """.Replace("__COMPARER__", comparerTypeName);
         ArrayList list = ["A", "B", "a"];
         Action action = () => Assert.AreAllDistinct(list, new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
-            .WithMessage(
-                """
-                Assertion failed. Expected all items in collection to be distinct.
-
-                duplicates: ["a"]
-                collection: ["A", "B", "a"]
-                comparer:   CaseInsensitiveStringComparer
-
-                Assert.AreAllDistinct(list, <comparer>)
-                """);
+            .WithMessage(expectedMessage);
     }
 
     public void AreAllDistinct_NonGeneric_NullCollection_ShouldFail()
