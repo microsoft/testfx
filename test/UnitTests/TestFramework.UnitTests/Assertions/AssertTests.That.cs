@@ -1092,6 +1092,36 @@ public partial class AssertTests : TestContainer
             """);
     }
 
+    public void That_FastPathFailure_StillExtractsDetails()
+    {
+        int x = 3;
+
+        Action act = () => Assert.That(() => x == 5);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => x == 5) failed.
+            Details:
+              x = 3
+            """);
+    }
+
+    public void That_FieldAccessWithSideEffectingParent_DoesNotEvaluateTwice()
+    {
+        var provider = new BoxProvider();
+
+        Action act = () => Assert.That(() => provider.GetBox().Value == 0);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => provider.GetBox().Value == 0) failed.
+            Details:
+              provider.GetBox().Value = 1
+            """);
+
+        provider.Calls.Should().Be(1);
+    }
+
     private class Box
     {
         private int _c;
@@ -1101,5 +1131,21 @@ public partial class AssertTests : TestContainer
             _c++;
             return _c;
         }
+    }
+
+    private sealed class BoxProvider
+    {
+        public int Calls { get; private set; }
+
+        public ValueBox GetBox()
+        {
+            Calls++;
+            return new ValueBox(Calls);
+        }
+    }
+
+    private readonly struct ValueBox(int value)
+    {
+        public int Value { get; } = value;
     }
 }

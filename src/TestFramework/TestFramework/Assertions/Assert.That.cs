@@ -132,7 +132,7 @@ public static partial class AssertExtensions
         throw ApplicationStateGuard.Unreachable();
     }
 
-#pragma warning disable IDE0028 // Collection initialization can be simplified
+#pragma warning disable IDE0028 // Keep explicit constructor for broader compiler compatibility when source-building.
     private static Dictionary<Expression, object?> CreateEvaluationCache() => new Dictionary<Expression, object?>();
 #pragma warning restore IDE0028
 
