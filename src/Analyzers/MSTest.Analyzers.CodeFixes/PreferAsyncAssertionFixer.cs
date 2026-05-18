@@ -190,6 +190,7 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
         }
 
         if (expression is AnonymousMethodExpressionSyntax anonymousMethodExpression &&
+            anonymousMethodExpression.ParameterList is null or { Parameters.Count: 0 } &&
             TryGetBlockedTaskExpressionFromBlock(anonymousMethodExpression.Block, out ExpressionSyntax? anonymousMethodAsyncExpression))
         {
             newExpression = SyntaxFactory.ParenthesizedLambdaExpression()
@@ -243,7 +244,7 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
         }
         else if (!isAsync && IsTaskOrValueTaskReturnType(originalMethodDeclaration, semanticModel, cancellationToken) && newMethodDeclaration.Body is { } body)
         {
-            newMethodDeclaration = newMethodDeclaration.WithBody((BlockSyntax)new AwaitableReturnStatementRewriter().Visit(body)!);
+            newMethodDeclaration = newMethodDeclaration.WithBody((BlockSyntax)new AwaitableReturnStatementRewriter(body).Visit(body)!);
         }
 
         return newMethodDeclaration.WithAdditionalAnnotations(Formatter.Annotation);
@@ -354,6 +355,13 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
 
     private sealed class AwaitableReturnStatementRewriter : CSharpSyntaxRewriter
     {
+        private readonly BlockSyntax _rootBody;
+
+        public AwaitableReturnStatementRewriter(BlockSyntax rootBody)
+        {
+            _rootBody = rootBody;
+        }
+
         public override SyntaxNode? VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax node)
             => node;
 
@@ -376,7 +384,8 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
                 if (statement is ReturnStatementSyntax { Expression: { } returnExpression } returnStatement)
                 {
                     rewrittenStatements ??= AddUnchangedStatements(node.Statements, i);
-                    rewrittenStatements.AddRange(CreateAwaitAndReturnStatements(returnStatement, returnExpression));
+                    bool isFinalRootReturn = ReferenceEquals(node, _rootBody) && i == node.Statements.Count - 1;
+                    rewrittenStatements.AddRange(CreateAwaitAndReturnStatements(returnStatement, returnExpression, includeReturn: !isFinalRootReturn));
                     continue;
                 }
 
@@ -399,7 +408,7 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
 
         public override SyntaxNode? VisitReturnStatement(ReturnStatementSyntax node)
             => node.Expression is { } expression
-                ? SyntaxFactory.Block(CreateAwaitAndReturnStatements(node, expression)).WithAdditionalAnnotations(Formatter.Annotation)
+                ? SyntaxFactory.Block(CreateAwaitAndReturnStatements(node, expression, includeReturn: true)).WithAdditionalAnnotations(Formatter.Annotation)
                 : node;
 
         private static List<StatementSyntax> AddUnchangedStatements(SyntaxList<StatementSyntax> statements, int endIndex)
@@ -413,7 +422,7 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
             return rewrittenStatements;
         }
 
-        private static StatementSyntax[] CreateAwaitAndReturnStatements(ReturnStatementSyntax returnStatement, ExpressionSyntax expression)
+        private static StatementSyntax[] CreateAwaitAndReturnStatements(ReturnStatementSyntax returnStatement, ExpressionSyntax expression, bool includeReturn)
         {
             ExpressionStatementSyntax awaitStatement = SyntaxFactory.ExpressionStatement(
                     SyntaxFactory.AwaitExpression(expression.WithoutLeadingTrivia()))
@@ -425,7 +434,7 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
                 .WithLeadingTrivia(SyntaxFactory.ElasticMarker)
                 .WithAdditionalAnnotations(Formatter.Annotation);
 
-            return [awaitStatement, newReturnStatement];
+            return includeReturn ? [awaitStatement, newReturnStatement] : [awaitStatement];
         }
     }
 }

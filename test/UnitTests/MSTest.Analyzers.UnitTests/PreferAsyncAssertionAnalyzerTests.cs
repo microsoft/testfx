@@ -274,7 +274,6 @@ public sealed class PreferAsyncAssertionAnalyzerTests
                 {
                     await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => BarAsync());
                     await Task.CompletedTask;
-                    return;
                 }
 
                 private Task BarAsync() => Task.CompletedTask;
@@ -319,7 +318,6 @@ public sealed class PreferAsyncAssertionAnalyzerTests
                 {
                     await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => BarAsync());
                     await ValueTask.CompletedTask;
-                    return;
                 }
 
                 private Task BarAsync() => Task.CompletedTask;

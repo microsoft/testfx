@@ -136,7 +136,7 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
             // dependency that would make the VB analyzer unsupported (RS1038).
             string syntaxTypeName = node.GetType().Name;
             if (syntaxTypeName == "UnsafeStatementSyntax" ||
-                (syntaxTypeName == "MethodDeclarationSyntax" && node.ChildTokens().Any(static token => token.ValueText == "unsafe")))
+                (syntaxTypeName == "MethodDeclarationSyntax" && HasUnsafeKeyword(node)))
             {
                 return true;
             }
@@ -144,6 +144,9 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
 
         return false;
     }
+
+    private static bool HasUnsafeKeyword(SyntaxNode node)
+        => node.ChildTokens().Any(static token => token.ValueText == "unsafe");
 
     private static bool TryGetBlockedTaskOperationFromArgument(IOperation argumentValueOperation, [NotNullWhen(true)] out IOperation? asyncOperation)
     {
