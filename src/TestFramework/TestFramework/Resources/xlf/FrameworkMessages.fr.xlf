@@ -574,7 +574,7 @@ Réel : {2}</target>
       </trans-unit>
       <trans-unit id="IsNotNullFailedSummary">
         <source>Expected value to not be null.</source>
-        <target state="new">Expected value to not be null.</target>
+        <target state="translated">La valeur attendue ne doit pas être null.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEqualFailedSummary">
@@ -599,7 +599,7 @@ Réel : {2}</target>
       </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
-        <target state="new">Expected value to be null.</target>
+        <target state="translated">La valeur attendue doit être null.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsPositiveFailedSummary">
