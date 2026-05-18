@@ -21,6 +21,21 @@ internal sealed class AzureDevOpsReporter :
 {
     private const string DeterministicBuildRoot = "/_/";
 
+    // Fully-qualified type prefixes for MSTest assertion implementations. A stack frame whose
+    // 'code' (i.e., the "Namespace.Type.Method(args)" portion) starts with any of these is treated
+    // as framework internals and skipped when looking for the user's call site to annotate.
+    // Matching on the type name (rather than the source file name) is robust to partial-class
+    // splits (e.g. Assert.AreEqual.cs, Assert.IComparable.cs) and extension-based assertion
+    // implementations such as Assert.That in Assert.That.cs, and it avoids false positives on user
+    // files innocently named *Assert.cs. See https://github.com/microsoft/testfx/issues/6925.
+    private static readonly string[] AssertionImplementationCodePrefixes =
+    [
+        "Microsoft.VisualStudio.TestTools.UnitTesting.Assert.",
+        "Microsoft.VisualStudio.TestTools.UnitTesting.AssertExtensions.",
+        "Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.",
+        "Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.",
+    ];
+
     private readonly IOutputDevice _outputDisplay;
     private readonly ILogger _logger;
     private static readonly char[] NewlineCharacters = ['\r', '\n'];
@@ -210,13 +225,13 @@ internal sealed class AzureDevOpsReporter :
             }
 
             string file = location.Value.File;
+            string code = location.Value.Code;
 
-            // TODO: We need better rule for stackframes to opt out from being interesting.
-            if (file.EndsWith("Assert.cs", StringComparison.Ordinal))
+            if (IsAssertionImplementationFrame(code))
             {
                 if (logger.IsEnabled(LogLevel.Trace))
                 {
-                    logger.LogTrace("StackFrame location ends with 'Assert.cs' this is a special pattern that we skip, continuing to next.");
+                    logger.LogTrace($"StackFrame code '{code}' is an MSTest assertion implementation, continuing to next.");
                 }
 
                 continue;
@@ -288,7 +303,7 @@ internal sealed class AzureDevOpsReporter :
                 logger.LogTrace($"Normalized path for GitHub '{relativeNormalizedPath}'.");
             }
 
-            string formattedMessage = $"[{testDisplayName}] [{targetFrameworkMoniker}] {message}";
+            string formattedMessage = FormatErrorMessage(testDisplayName, targetFrameworkMoniker, message);
             string line = $"##vso[task.logissue type={severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{AzDoEscaper.Escape(formattedMessage)}";
             if (logger.IsEnabled(LogLevel.Trace))
             {
@@ -305,6 +320,43 @@ internal sealed class AzureDevOpsReporter :
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Formats the reporter message so the test name lands on its own line.
+    /// PR check UIs (GitHub Checks via the dotnet problem matcher and Azure DevOps)
+    /// render the first line of the message as the bold annotation title, so we
+    /// keep the test display name compact and push the assertion text to the body.
+    /// </summary>
+    /// <remarks>
+    /// MTP includes the TFM in the display name in multi-TFM mode (e.g. "MyTest (net8.0)").
+    /// To avoid noise like "MyTest (net8.0) [net8.0]" we skip the bracketed TFM
+    /// suffix when the display name already ends with "({tfm})" or "(\"{tfm}\")".
+    /// </remarks>
+    internal static /* for testing */ string FormatErrorMessage(string testDisplayName, string targetFrameworkMoniker, string message)
+    {
+        string titleLine = DisplayNameContainsTfm(testDisplayName, targetFrameworkMoniker)
+            ? testDisplayName
+            : $"{testDisplayName} [{targetFrameworkMoniker}]";
+
+        return $"{titleLine}\n{message}";
+    }
+
+    private static bool DisplayNameContainsTfm(string displayName, string tfm)
+        => displayName.EndsWith($"({tfm})", StringComparison.Ordinal)
+            || displayName.EndsWith($"(\"{tfm}\")", StringComparison.Ordinal);
+
+    private static bool IsAssertionImplementationFrame(string code)
+    {
+        foreach (string prefix in AssertionImplementationCodePrefixes)
+        {
+            if (code.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static (string Code, string File, int LineNumber)? GetStackFrameLocation(string stackTraceLine)

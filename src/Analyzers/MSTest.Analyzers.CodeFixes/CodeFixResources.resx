@@ -225,4 +225,7 @@
   <data name="RemoveDuplicateTestMethodAttributeFix" xml:space="preserve">
     <value>Remove duplicate TestMethod attribute</value>
   </data>
+  <data name="UseAsyncAssertionFix" xml:space="preserve">
+    <value>Use async assertion</value>
+  </data>
 </root>

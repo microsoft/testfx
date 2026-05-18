@@ -321,7 +321,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         });
 
         string specialPath = $"{ResultsDirectory}{Path.DirectorySeparatorChar}semi;line\r\nname.trx";
-        string escapedSpecialPath = specialPath.Replace(";", "%3B", StringComparison.Ordinal).Replace("\r", "%0D", StringComparison.Ordinal).Replace("\n", "%0A", StringComparison.Ordinal);
+        string escapedSpecialPath = specialPath.Replace(";", "%3B").Replace("\r", "%0D").Replace("\n", "%0A");
         _ = _environmentMock.Setup(environment => environment.GetEnvironmentVariable("TF_BUILD")).Returns("true");
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.ExistDirectory(ResultsDirectory)).Returns(true);
         _ = _fileSystemMock.Setup(fileSystem => fileSystem.GetFiles(ResultsDirectory, "*", SearchOption.AllDirectories)).Returns([specialPath]);
