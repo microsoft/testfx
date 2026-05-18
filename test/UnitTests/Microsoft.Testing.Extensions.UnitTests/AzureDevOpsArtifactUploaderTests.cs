@@ -23,6 +23,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
 {
     private const string ArtifactUploadOptionsRequireUploadArtifactsMessage = "'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.";
     private static readonly string ResultsDirectory = Path.Combine(Path.GetTempPath(), "azdo-artifact-uploader-tests");
+    private static readonly string OutsideResultsDirectory = Path.Combine(Path.GetTempPath(), "azdo-artifact-uploader-tests-outside");
 
     private readonly Mock<IConfiguration> _configurationMock = new();
     private readonly Mock<IEnvironment> _environmentMock = new();
@@ -422,7 +423,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         => segments.Aggregate(ResultsDirectory, Path.Combine);
 
     private static string OutsideResults(params string[] segments)
-        => segments.Aggregate(Path.Combine(Path.GetTempPath(), "azdo-artifact-uploader-tests-outside"), Path.Combine);
+        => segments.Aggregate(OutsideResultsDirectory, Path.Combine);
 
     private string[] GetFormattedLines()
         => [.. _outputData.OfType<FormattedTextOutputDeviceData>().Select(output => output.Text)];
