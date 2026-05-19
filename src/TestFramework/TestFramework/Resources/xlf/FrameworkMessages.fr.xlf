@@ -34,12 +34,17 @@
       </trans-unit>
       <trans-unit id="AreEqualCaseFailMsg">
         <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
-        <target state="new">Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</target>
+        <target state="translated">Attendu :&lt;{1}&gt;. La casse est différente pour la valeur réelle :&lt;{2}&gt;. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualDeltaFailedSummary">
         <source>Expected values to be equal within tolerance.</source>
         <target state="new">Expected values to be equal within tolerance.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualDeltaFailMsg">
+        <source>Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
+        <target state="translated">Différence attendue non supérieure à &lt;{3}&gt; comprise entre la valeur attendue &lt;{1}&gt; et la valeur réelle &lt;{2}&gt;. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailMsg">
@@ -49,17 +54,17 @@
       </trans-unit>
       <trans-unit id="AreEqualFailMsg">
         <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="new">Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</target>
+        <target state="translated">Attendu : &lt;{1}&gt;, Réel : &lt;{2}&gt;. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffActualPrefix">
         <source>But was:  </source>
-        <target state="new">But was:  </target>
+        <target state="translated">Mais c'était :  </target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffExpectedPrefix">
         <source>Expected: </source>
-        <target state="new">Expected: </target>
+        <target state="translated">Attendu : </target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffFailMsg">
@@ -67,7 +72,7 @@
 {2}
 {3}
 {4}</source>
-        <target state="new">{0}{1}
+        <target state="translated">{0}{1}
 {2}
 {3}
 {4}</target>
@@ -75,7 +80,7 @@
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthBothMsg">
         <source>Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</source>
-        <target state="needs-review-translation">Les longueurs de chaîne sont toutes les deux {0} mais diffèrent à l’index {1}.</target>
+        <target state="new">Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthDifferentMsg">
@@ -198,6 +203,11 @@
         <target state="new">Expected values to differ beyond tolerance.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AreNotEqualDeltaFailMsg">
+        <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
+        <target state="translated">Différence attendue supérieure à &lt;{3}&gt; comprise entre la valeur attendue &lt;{1}&gt; et la valeur réelle &lt;{2}&gt;. {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
         <source>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
         <target state="translated">Toute valeur attendue sauf :&lt;{1}&gt;. Réel :&lt;{2}&gt;. {0}</target>
@@ -238,11 +248,6 @@
         <target state="translated">Les deux valeurs sont &lt;null&gt;. {0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AreNotUnorderedEquivalentFailedSummary">
-        <source>Collections are unexpectedly equivalent.</source>
-        <target state="new">Collections are unexpectedly equivalent.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AreSameActualIsNull">
         <source>Actual is &lt;null&gt;. {0}</source>
         <target state="translated">La valeur réelle est &lt;null&gt;. {0}</target>
@@ -257,16 +262,6 @@
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
         <target state="translated">Ne passez pas de types valeur à AreSame(). Les valeurs converties en Object ne seront plus jamais les mêmes. Si possible, utilisez AreEqual(). {0}</target>
         <note></note>
-      </trans-unit>
-      <trans-unit id="AreUnorderedEquivalentDifferenceSummary">
-        <source>Missing {0} element(s) from actual. Found {1} unexpected element(s).</source>
-        <target state="new">Missing {0} element(s) from actual. Found {1} unexpected element(s).</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AreUnorderedEquivalentFailedSummary">
-        <source>Collections are not equivalent.</source>
-        <target state="new">Collections are not equivalent.</target>
-        <note />
       </trans-unit>
       <trans-unit id="AssertScopeFailure">
         <source>{0} assertion(s) failed within the assert scope.</source>
@@ -604,7 +599,7 @@ Réel : {2}</target>
       </trans-unit>
       <trans-unit id="IsNotNullFailedSummary">
         <source>Expected value to not be null.</source>
-        <target state="new">Expected value to not be null.</target>
+        <target state="translated">La valeur attendue ne doit pas être null.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEqualFailedSummary">
@@ -629,7 +624,7 @@ Réel : {2}</target>
       </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
-        <target state="new">Expected value to be null.</target>
+        <target state="translated">La valeur attendue doit être null.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsPositiveFailedSummary">
