@@ -239,6 +239,62 @@ public sealed class CrashDumpTests
         }
     }
 
+    [TestMethod]
+    public async Task OnTestHostProcessExitedAsync_PatternWithMultiplePlaceholders_DoesNotEmitFalseMissingDumpWarning()
+    {
+        // When the configured dump pattern relies on placeholders other than `%p` (here `%e`),
+        // the literal-`%p`-substituted path never exists on disk. The handler must therefore
+        // recognize the testhost dump from the regex match (PID-baked into the testhost-specific
+        // regex) and avoid emitting CannotFindExpectedCrashDumpFile, which would otherwise
+        // contradict the success banner above it.
+        string dumpDirectory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "crashdump-tests-" + Guid.NewGuid().ToString("N"))).FullName;
+        try
+        {
+            string dumpPattern = Path.Combine(dumpDirectory, "Dump_%e_%p.dmp");
+            var configuration = new CrashDumpConfiguration { DumpFileNamePattern = dumpPattern };
+            var commandLineOptions = new TestCommandLineOptions(new Dictionary<string, string[]>
+            {
+                { CrashDumpCommandLineOptions.CrashDumpOptionName, [] },
+            });
+            var messageBus = new RecordingMessageBus();
+            var outputDevice = new CapturingOutputDevice();
+            var handler = new CrashDumpProcessLifetimeHandler(commandLineOptions, messageBus, outputDevice, configuration);
+
+            await handler.OnTestHostProcessStartedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+
+            // Runtime expands %e to "testhost" and %p to the actual PID. The resulting filename is
+            // matched by the testhost-specific regex even though the literal-%p substitution would
+            // produce `Dump_%e_123.dmp` (which does not exist on disk).
+            string testhostDump = Path.Combine(dumpDirectory, "Dump_testhost_123.dmp");
+            File.WriteAllText(testhostDump, "fresh");
+
+            await handler.OnTestHostProcessExitedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+
+            string[] publishedDumps = messageBus.Published
+                .OfType<FileArtifact>()
+                .Select(static a => a.FileInfo.FullName)
+                .ToArray();
+            CollectionAssert.AreEqual(new[] { testhostDump }, publishedDumps);
+
+            // The "expected dump not found" warning must NOT be emitted: the testhost dump was
+            // recognized via the regex even though `expectedDumpFile` (literal `%p` substitution)
+            // would be `Dump_%e_123.dmp`, which does not exist on disk.
+            string captured = string.Join(" | ", outputDevice.Displayed);
+            Assert.DoesNotContain("Dump_%e_123.dmp", captured, "CannotFindExpectedCrashDumpFile must not be displayed when the testhost dump was recognized via the regex.");
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(dumpDirectory, recursive: true);
+            }
+            catch
+            {
+                // Best effort cleanup.
+            }
+        }
+    }
+
     private sealed class RecordingMessageBus : IMessageBus
     {
         public List<IData> Published { get; } = [];
@@ -254,6 +310,21 @@ public sealed class CrashDumpTests
     {
         public Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
             => Task.CompletedTask;
+    }
+
+    private sealed class CapturingOutputDevice : IOutputDevice
+    {
+        public List<string> Displayed { get; } = [];
+
+        public Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
+        {
+            if (data is ErrorMessageOutputDeviceData errorData)
+            {
+                Displayed.Add(errorData.Message);
+            }
+
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class TestHostProcessInformation : ITestHostProcessInformation

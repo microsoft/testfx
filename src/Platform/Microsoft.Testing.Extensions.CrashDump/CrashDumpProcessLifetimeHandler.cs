@@ -131,6 +131,14 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         string dumpFileNameOnly = Path.GetFileName(dumpFileNamePattern);
         Regex dumpFileNameRegex = BuildDumpFileNameRegex(dumpFileNameOnly);
 
+        // Stricter regex that bakes in the testhost PID for any '%p' placeholder before expanding
+        // the remaining placeholders as wildcards. We use this to recognize the testhost's own
+        // dump (versus a child process dump) regardless of whether the configured name relies on
+        // additional placeholders such as '%e', '%h' or '%t' - relying on `File.Exists` with the
+        // literal-`%p`-substituted path would only work when '%p' is the only placeholder.
+        Regex testhostDumpRegex = BuildDumpFileNameRegex(
+            dumpFileNameOnly.Replace("%p", testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture)));
+
         // Narrow the file system enumeration to files that share the configured dump extension when
         // one is present. This avoids scanning every entry of the dump directory (which may also
         // contain TRX files, logs, attachments, ...). The placeholder-expanded regex above still
@@ -139,6 +147,7 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         string dumpSearchPattern = dumpExtension.Length == 0 ? "*" : $"*{dumpExtension}";
 
         bool publishedAnyDump = false;
+        bool testhostDumpProduced = false;
         if (generateDump && Directory.Exists(dumpDirectory))
         {
             foreach (string dumpFile in Directory.EnumerateFiles(dumpDirectory, dumpSearchPattern))
@@ -152,11 +161,17 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
                     continue;
                 }
 
-                if (dumpFileNameRegex.IsMatch(Path.GetFileName(dumpFile))
+                string dumpFileNameOnDisk = Path.GetFileName(dumpFile);
+                if (dumpFileNameRegex.IsMatch(dumpFileNameOnDisk)
                     && !_preExistingDumpFiles.Contains(dumpFile))
                 {
                     await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
                     publishedAnyDump = true;
+
+                    if (testhostDumpRegex.IsMatch(dumpFileNameOnDisk))
+                    {
+                        testhostDumpProduced = true;
+                    }
                 }
             }
         }
@@ -165,7 +180,10 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         // dump specifically. We must not suppress them just because we published a dump for a
         // crashed child process: when only the child writes a dump, the user still needs to know
         // that the testhost's own dump never materialized.
-        bool testhostDumpProduced = generateDump && File.Exists(expectedDumpFile);
+        // Fall back to the literal-`%p`-substituted path existence check to keep behavior consistent
+        // when the configured pattern is `%p`-only (or has no placeholder at all) and the regex loop
+        // could not run (e.g. dumpDirectory does not exist).
+        testhostDumpProduced = generateDump && (testhostDumpProduced || File.Exists(expectedDumpFile));
         bool dumpArtifactProduced = generateDump && (testhostDumpProduced || publishedAnyDump);
         bool crashReportArtifactProduced = generateCrashReport && File.Exists(expectedCrashReportFile);
 
