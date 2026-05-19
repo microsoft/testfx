@@ -101,12 +101,12 @@ jobs:
           cd .github/workflows/scripts
           timeout 120 node extract-binlog-errors.js \
             "$GITHUB_WORKSPACE/${{ steps.find-binlog.outputs.path }}" > /tmp/binlog-analysis.json 2>/tmp/binlog-extract.log
-          if [ -s /tmp/binlog-analysis.json ]; then
+          if [ -s /tmp/binlog-analysis.json ] && node -e "JSON.parse(require('fs').readFileSync('/tmp/binlog-analysis.json','utf8'))" 2>/dev/null; then
             echo "extracted=true" >> "$GITHUB_OUTPUT"
             echo "MCP extraction succeeded"
           else
             echo "extracted=false" >> "$GITHUB_OUTPUT"
-            echo "MCP extraction failed:"
+            echo "MCP extraction failed or produced invalid JSON:"
             cat /tmp/binlog-extract.log
           fi
 
@@ -115,15 +115,21 @@ jobs:
         id: extract-fallback
         run: |
           # Use Node.js to produce valid JSON from build log (avoids escaping issues)
+          # Output errors as JSON array matching MCP binlog_errors format
           node -e "
             const fs = require('fs');
             const log = fs.readFileSync('/tmp/build-output.log', 'utf8');
             const lines = log.split('\n');
-            const errors = lines.filter(l => /: error /i.test(l))
+            const errorLines = lines.filter(l => /: error /i.test(l))
               .map(l => l.trim())
               .filter((v, i, a) => a.indexOf(v) === i)
-              .slice(0, 30)
-              .join('\n');
+              .slice(0, 30);
+            // Parse MSBuild error format into structured objects
+            const errors = errorLines.map(l => {
+              const m = l.match(/^(.+)\((\d+),(\d+)\):\s*error\s+(\w+):\s*(.+?)(?:\s*\[(.+)\])?$/);
+              if (m) return { severity: 'error', code: m[4], message: m[5].trim(), file: m[1], line: parseInt(m[2]), column: parseInt(m[3]), projectFile: (m[6]||'').trim() };
+              return { severity: 'error', message: l };
+            });
             const warnings = lines.filter(l => /: warning /i.test(l))
               .map(l => l.trim())
               .filter((v, i, a) => a.indexOf(v) === i)
@@ -131,7 +137,7 @@ jobs:
               .join('\n');
             const result = {
               overview: 'Build failed. Errors extracted from build output log.',
-              errors: errors || 'No error lines found',
+              errors: JSON.stringify(errors),
               warnings: warnings || 'No warning lines found'
             };
             fs.writeFileSync('/tmp/binlog-analysis.json', JSON.stringify(result, null, 2));
