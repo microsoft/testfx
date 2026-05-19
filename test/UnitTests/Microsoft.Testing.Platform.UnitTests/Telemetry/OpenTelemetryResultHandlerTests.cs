@@ -314,6 +314,94 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         activity.Verify(a => a.SetTag("test.metadataProperty.category", "unit"), Times.Once);
     }
 
+    [TestMethod]
+    public void NotifyInProgress_WithDuplicateUid_DoesNotThrow()
+    {
+        // Regression test for https://github.com/microsoft/testfx/issues/7442.
+        // Some test frameworks (e.g. NUnit with [Values("one", "one")] or MSTest with folded
+        // parameterized tests) can emit multiple test nodes that share the same Uid. Starting
+        // activities for them used to throw because the underlying dictionary did not tolerate
+        // duplicate keys.
+        Mock<IPlatformActivity> activity1 = new();
+        Mock<IPlatformActivity> activity2 = new();
+        _otelService.SetupSequence(s => s.StartActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>()))
+            .Returns(activity1.Object)
+            .Returns(activity2.Object);
+
+        TestNode testNode = CreateTestNode("duplicate-uid");
+
+        _handler.NotifyInProgress(testNode, null);
+        _handler.NotifyInProgress(testNode, null);
+
+        Assert.AreEqual(2, _startedCounter.Value);
+    }
+
+    [TestMethod]
+    public void HandleTestResult_WithDuplicateUid_PairsActivitiesInFifoOrder()
+    {
+        // Regression test for https://github.com/microsoft/testfx/issues/7442.
+        // When two in-flight activities share the same Uid, results must be paired with them
+        // in FIFO order and each activity must be disposed exactly once.
+        Mock<IPlatformActivity> activity1 = new();
+        activity1.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity1.Object);
+        Mock<IPlatformActivity> activity2 = new();
+        activity2.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity2.Object);
+
+        _otelService.SetupSequence(s => s.StartActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>()))
+            .Returns(activity1.Object)
+            .Returns(activity2.Object);
+
+        TestNode testNode = CreateTestNode("duplicate-uid");
+
+        _handler.NotifyInProgress(testNode, null);
+        _handler.NotifyInProgress(testNode, null);
+        _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
+        _handler.NotifyFailed(testNode, new FailedTestNodeStateProperty());
+
+        activity1.Verify(a => a.SetTag("test.result", "passed"), Times.Once);
+        activity1.Verify(a => a.SetTag("test.result", "failed"), Times.Never);
+        activity1.Verify(a => a.Dispose(), Times.Once);
+
+        activity2.Verify(a => a.SetTag("test.result", "failed"), Times.Once);
+        activity2.Verify(a => a.SetTag("test.result", "passed"), Times.Never);
+        activity2.Verify(a => a.Dispose(), Times.Once);
+
+        Assert.AreEqual(2, _completedCounter.Value);
+    }
+
+    [TestMethod]
+    public void Dispose_WithMultipleActivitiesSharingUid_DisposesAllOfThem()
+    {
+        // Regression test for https://github.com/microsoft/testfx/issues/7442.
+        // Orphaned activities sharing the same Uid must all be disposed.
+        Mock<IPlatformActivity> activity1 = new();
+        Mock<IPlatformActivity> activity2 = new();
+        _otelService.SetupSequence(s => s.StartActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>()))
+            .Returns(activity1.Object)
+            .Returns(activity2.Object);
+
+        TestNode testNode = CreateTestNode("orphan-duplicate-uid");
+        _handler.NotifyInProgress(testNode, null);
+        _handler.NotifyInProgress(testNode, null);
+
+        _handler.Dispose();
+
+        activity1.Verify(a => a.Dispose(), Times.Once);
+        activity2.Verify(a => a.Dispose(), Times.Once);
+    }
+
     public void Dispose()
         => _handler.Dispose();
 

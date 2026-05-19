@@ -66,7 +66,10 @@ internal sealed class TrxResultStreamingStore : IDisposable
         _logger = logger;
         _batchSize = batchSize;
         _flushIntervalMs = flushIntervalMs;
-        _writerTask = task.Run(WriteLoopAsync, CancellationToken.None);
+        // BlockingCollection<T>.TryTake blocks the calling thread for up to _flushIntervalMs when
+        // the queue is idle. Running the writer on a dedicated long-running thread instead of the
+        // shared threadpool keeps it from starving threadpool consumers while it sleeps on the queue.
+        _writerTask = task.RunLongRunning(WriteLoopAsync, "TRX streaming store writer", CancellationToken.None);
     }
 
     /// <summary>
@@ -153,12 +156,13 @@ internal sealed class TrxResultStreamingStore : IDisposable
             // still hold useful records that crash recovery (or an out-of-band tool) can salvage.
             _completionTimedOut = true;
             int stillQueued = _queue.Count;
-            await _logger.LogWarningAsync(
-                $"TRX streaming store writer did not drain within the hang timeout; intermediate file may be incomplete. Approximately {stillQueued} record(s) are still queued and will not appear in the TRX.").ConfigureAwait(false);
+            TryLogWarning(
+                $"TRX streaming store writer did not drain within the hang timeout; intermediate file may be incomplete. Approximately {stillQueued} record(s) are still queued and will not appear in the TRX.");
         }
     }
 
-    private async Task WriteLoopAsync()
+#pragma warning disable VSTHRD103 // The writer runs on a dedicated long-running thread; synchronous waits keep queue polling off the threadpool.
+    private Task WriteLoopAsync()
     {
         var batch = new List<TrxTestResult>(_batchSize);
         try
@@ -179,7 +183,7 @@ internal sealed class TrxResultStreamingStore : IDisposable
                     batch.Add(next);
                 }
 
-                await WriteBatchAsync(batch).ConfigureAwait(false);
+                WriteBatch(batch);
                 batch.Clear();
             }
         }
@@ -189,7 +193,7 @@ internal sealed class TrxResultStreamingStore : IDisposable
             // We deliberately do NOT increment _droppedCount: producers stopped enqueuing as soon as
             // Dispose() called CompleteAdding, and anything left in the queue was unobserved by the
             // user (the session was being shut down).
-            _logger.LogDebug("TRX streaming store writer cancelled during shutdown.");
+            TryLogDebug("TRX streaming store writer cancelled during shutdown.");
         }
         catch (Exception ex)
         {
@@ -216,32 +220,29 @@ internal sealed class TrxResultStreamingStore : IDisposable
                 Interlocked.Add(ref _droppedCount, discarded);
             }
 
-            await _logger.LogErrorAsync(
+            TryLogError(
                 $"TRX streaming store writer faulted; intermediate file may be incomplete. {discarded} record(s) were dropped from the in-memory queue and will not appear in the TRX.",
-                ex).ConfigureAwait(false);
+                ex);
         }
         finally
         {
             try
             {
-                if (_fileStream is not null)
-                {
-                    await _fileStream.Stream.FlushAsync().ConfigureAwait(false);
-                }
+                _fileStream?.Stream.Flush();
 
-#pragma warning disable VSTHRD103 // BinaryWriter / IFileStream do not implement IAsyncDisposable.
                 _writer?.Dispose();
                 _fileStream?.Dispose();
-#pragma warning restore VSTHRD103
             }
             catch (Exception ex)
             {
-                await _logger.LogErrorAsync("Failed to close TRX streaming store file.", ex).ConfigureAwait(false);
+                TryLogError("Failed to close TRX streaming store file.", ex);
             }
         }
+
+        return Task.CompletedTask;
     }
 
-    private async Task WriteBatchAsync(List<TrxTestResult> batch)
+    private void WriteBatch(List<TrxTestResult> batch)
     {
         EnsureFileOpen();
         ApplicationStateGuard.Ensure(_writer is not null);
@@ -259,7 +260,7 @@ internal sealed class TrxResultStreamingStore : IDisposable
             long preRecordPosition = rawStream.Position;
             try
             {
-                await WriteRecordWithRetryAsync(_writer, batch[i], rawStream, preRecordPosition).ConfigureAwait(false);
+                WriteRecordWithRetry(_writer, batch[i], rawStream, preRecordPosition);
                 written++;
             }
             catch (Exception ex)
@@ -267,9 +268,9 @@ internal sealed class TrxResultStreamingStore : IDisposable
                 int unwritten = batch.Count - written;
                 Interlocked.Add(ref _droppedCount, unwritten);
 
-                await _logger.LogErrorAsync(
-                    $"Failed to write TRX record {i + 1}/{batch.Count} after {MaxWriteRetries} retries; truncating to last good record. {unwritten} record(s) from this batch will not appear in the TRX.",
-                    ex).ConfigureAwait(false);
+                TryLogError(
+                    $"Failed to write TRX record {i + 1}/{batch.Count} after up to {MaxWriteRetries} retries; truncating to last good record. {unwritten} record(s) from this batch will not appear in the TRX.",
+                    ex);
                 try
                 {
                     rawStream.Seek(preRecordPosition, SeekOrigin.Begin);
@@ -298,9 +299,9 @@ internal sealed class TrxResultStreamingStore : IDisposable
                         Interlocked.Add(ref _droppedCount, additionalDropped);
                     }
 
-                    await _logger.LogErrorAsync(
+                    TryLogError(
                         $"Failed to truncate TRX streaming store after write failure; marking store faulted. {additionalDropped} additional record(s) from the queue were dropped.",
-                        truncEx).ConfigureAwait(false);
+                        truncEx);
                     return;
                 }
 
@@ -312,11 +313,11 @@ internal sealed class TrxResultStreamingStore : IDisposable
 
         try
         {
-            await rawStream.FlushAsync().ConfigureAwait(false);
+            rawStream.Flush();
         }
         catch (Exception ex)
         {
-            await _logger.LogErrorAsync("Failed to flush TRX streaming store; records remain in OS buffer.", ex).ConfigureAwait(false);
+            TryLogError("Failed to flush TRX streaming store; records remain in OS buffer.", ex);
         }
 
         if (written > 0)
@@ -325,7 +326,7 @@ internal sealed class TrxResultStreamingStore : IDisposable
         }
     }
 
-    private async Task WriteRecordWithRetryAsync(BinaryWriter writer, TrxTestResult record, Stream rawStream, long preRecordPosition)
+    private void WriteRecordWithRetry(BinaryWriter writer, TrxTestResult record, Stream rawStream, long preRecordPosition)
     {
         // Mirrors the retry policy of TrxReportEngine.RetryWhenIOExceptionAsync but bounded so a
         // permanently broken file does not stall the writer indefinitely. Critically: each retry
@@ -357,21 +358,22 @@ internal sealed class TrxResultStreamingStore : IDisposable
             }
             catch
             {
-                ExceptionDispatchInfo.Capture(lastError).Throw();
+                ExceptionDispatchInfo.Capture(lastError!).Throw();
             }
 
             try
             {
-                await _task.Delay(TimeSpan.FromMilliseconds(RetryBaseDelayMs * attempt), _disposeCts.Token).ConfigureAwait(false);
+                _task.Delay(TimeSpan.FromMilliseconds(RetryBaseDelayMs * attempt), _disposeCts.Token).GetAwaiter().GetResult();
             }
             catch (OperationCanceledException)
             {
-                ExceptionDispatchInfo.Capture(lastError).Throw();
+                ExceptionDispatchInfo.Capture(lastError!).Throw();
             }
         }
 
         ExceptionDispatchInfo.Capture(lastError!).Throw();
     }
+#pragma warning restore VSTHRD103
 
     // Must only be called from the writer thread. Lazy because most test runs may not produce results
     // before they hit cancellation/discovery; we don't want to provision a file we never use.
@@ -425,7 +427,7 @@ internal sealed class TrxResultStreamingStore : IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogDebug($"Failed to delete TRX streaming store file '{FilePath}': {ex.Message}");
+            TryLogDebug($"Failed to delete TRX streaming store file '{FilePath}': {ex.Message}");
         }
     }
 
@@ -459,7 +461,43 @@ internal sealed class TrxResultStreamingStore : IDisposable
         Interlocked.Increment(ref _droppedCount);
         if (_logger.IsEnabled(LogLevel.Debug))
         {
-            _logger.LogDebug($"TRX streaming store dropped a record ({reason}). Total dropped: {Volatile.Read(ref _droppedCount)}.");
+            TryLogDebug($"TRX streaming store dropped a record ({reason}). Total dropped: {Volatile.Read(ref _droppedCount)}.");
+        }
+    }
+
+    private void TryLogDebug(string message)
+    {
+        try
+        {
+            _logger.LogDebug(message);
+        }
+        catch
+        {
+            // Logging must remain best-effort and must not change writer failure behavior.
+        }
+    }
+
+    private void TryLogWarning(string message)
+    {
+        try
+        {
+            _logger.LogWarning(message);
+        }
+        catch
+        {
+            // Logging must remain best-effort and must not change writer failure behavior.
+        }
+    }
+
+    private void TryLogError(string message, Exception ex)
+    {
+        try
+        {
+            _logger.LogError(message, ex);
+        }
+        catch
+        {
+            // Logging must remain best-effort and must not change writer failure behavior.
         }
     }
 }

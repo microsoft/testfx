@@ -17,31 +17,130 @@ public sealed partial class Assert
         => CompareInternal(expected, actual, ignoreCase, culture) != 0;
 
     [DoesNotReturn]
-    private static void ReportAssertAreEqualFailed(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string userMessage)
+    private static void ReportAssertAreEqualFailed(string? expected, string? actual, bool ignoreCase, CultureInfo culture, bool cultureExplicit, string? message, string expectedExpression, string actualExpression)
     {
-        string finalMessage;
+        string expectedRendered = AssertionValueRenderer.RenderValue(expected);
+        string actualRendered = AssertionValueRenderer.RenderValue(actual);
 
-        // If the user requested to match case, and the difference between expected/actual is casing only, then we use a different message.
-        if (!ignoreCase && CompareInternal(expected, actual, ignoreCase: true, culture) == 0)
+        StructuredAssertionMessage structured = new(FrameworkMessages.AreEqualStringsFailedSummary);
+        if (!ignoreCase && expected is not null && actual is not null && CompareInternal(expected, actual, ignoreCase: true, culture) == 0)
         {
-            finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualCaseFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                ReplaceNulls(actual));
-        }
-        else
-        {
-            // Use enhanced string comparison for string-specific failures
-            finalMessage = FormatStringComparisonMessage(expected, actual, userMessage);
+            structured.WithAdditionalSummaryLine(FrameworkMessages.AreEqualStringsCaseOnlyDifferenceMsg);
         }
 
-        ReportAssertFailed("Assert.AreEqual", finalMessage);
+        if (expected is not null && actual is not null)
+        {
+            int diffIndex = FindFirstStringDifference(expected, actual, ignoreCase, culture);
+            if (diffIndex >= 0)
+            {
+                AppendStringDiffSummary(structured, expected, actual, diffIndex);
+            }
+        }
+
+        structured.WithUserMessage(message);
+        structured.WithEvidence(CreateStringComparisonEvidence("expected:", expectedRendered, actualRendered, ignoreCase, culture, cultureExplicit));
+        structured.WithExpectedAndActual(expectedRendered, actualRendered);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreEqual", expectedExpression, actualExpression, "<expected>", "<actual>"));
+
+        ReportAssertFailed(structured);
+    }
+
+    [DoesNotReturn]
+    private static void ReportAssertAreNotEqualFailed(string? notExpected, string? actual, bool ignoreCase, CultureInfo culture, bool cultureExplicit, string? message, string notExpectedExpression, string actualExpression)
+    {
+        string notExpectedRendered = AssertionValueRenderer.RenderValue(notExpected);
+        string actualRendered = AssertionValueRenderer.RenderValue(actual);
+
+        StructuredAssertionMessage structured = new(ignoreCase
+            ? FrameworkMessages.AreNotEqualStringsCaseInsensitiveFailedSummary
+            : FrameworkMessages.AreNotEqualStringsFailedSummary);
+        structured.WithUserMessage(message);
+        structured.WithEvidence(CreateStringComparisonEvidence("not expected:", notExpectedRendered, actualRendered, ignoreCase, culture, cultureExplicit));
+        structured.WithExpectedAndActual($"not {notExpectedRendered}", actualRendered);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreNotEqual", notExpectedExpression, actualExpression, "<notExpected>", "<actual>"));
+
+        ReportAssertFailed(structured);
+    }
+
+    private static EvidenceBlock CreateStringComparisonEvidence(string firstLabel, string firstValue, string actualValue, bool ignoreCase, CultureInfo culture, bool cultureExplicit)
+    {
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine(firstLabel, firstValue)
+            .AddLine("actual:", actualValue);
+
+        if (ignoreCase)
+        {
+            evidence.AddLine("ignore case:", "true");
+        }
+
+        // Track whether the culture overload was used so explicit CultureInfo.InvariantCulture remains self-describing as culture: "".
+        if (cultureExplicit)
+        {
+            evidence.AddLine("culture:", culture.Name);
+        }
+
+        return evidence;
     }
 
     private static bool AreNotEqualFailing(string? notExpected, string? actual, bool ignoreCase, CultureInfo culture)
         => CompareInternal(notExpected, actual, ignoreCase, culture) == 0;
+
+    private static int FindFirstStringDifference(string expected, string actual, bool ignoreCase, CultureInfo culture)
+    {
+        if (!ignoreCase && culture.Equals(CultureInfo.InvariantCulture))
+        {
+            return FindFirstStringDifference(expected, actual);
+        }
+
+        int expectedIndex = 0;
+        int actualIndex = 0;
+
+        while (expectedIndex < expected.Length && actualIndex < actual.Length)
+        {
+            if (CompareInternal(expected[expectedIndex].ToString(), actual[actualIndex].ToString(), ignoreCase, culture) == 0)
+            {
+                expectedIndex++;
+                actualIndex++;
+                continue;
+            }
+
+            if (TryAdvanceMatchingWindow(expected, actual, ref expectedIndex, ref actualIndex, ignoreCase, culture))
+            {
+                continue;
+            }
+
+            return Math.Min(expectedIndex, actualIndex);
+        }
+
+        return expectedIndex != expected.Length || actualIndex != actual.Length
+            ? Math.Min(expectedIndex, actualIndex)
+            : -1;
+    }
+
+    private static bool TryAdvanceMatchingWindow(string expected, string actual, ref int expectedIndex, ref int actualIndex, bool ignoreCase, CultureInfo culture)
+    {
+        const int MaxWindowLength = 3;
+
+        for (int expectedWindow = 1; expectedWindow <= MaxWindowLength && expectedIndex + expectedWindow <= expected.Length; expectedWindow++)
+        {
+            for (int actualWindow = 1; actualWindow <= MaxWindowLength && actualIndex + actualWindow <= actual.Length; actualWindow++)
+            {
+                if (expectedWindow == 1 && actualWindow == 1)
+                {
+                    continue;
+                }
+
+                if (CompareInternal(expected.Substring(expectedIndex, expectedWindow), actual.Substring(actualIndex, actualWindow), ignoreCase, culture) == 0)
+                {
+                    expectedIndex += expectedWindow;
+                    actualIndex += actualWindow;
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Tests whether the specified strings are equal and throws an exception
@@ -74,7 +173,16 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(string? expected, string? actual, bool ignoreCase, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
-        => AreEqual(expected, actual, ignoreCase, CultureInfo.InvariantCulture, message, expectedExpression, actualExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreEqual");
+
+        if (!AreEqualFailing(expected, actual, ignoreCase, CultureInfo.InvariantCulture))
+        {
+            return;
+        }
+
+        ReportAssertAreEqualFailed(expected, actual, ignoreCase, CultureInfo.InvariantCulture, cultureExplicit: false, message, expectedExpression, actualExpression);
+    }
 
     /// <inheritdoc cref="AreEqual(string?, string?, bool, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -139,8 +247,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
-        ReportAssertAreEqualFailed(expected, actual, ignoreCase, culture, userMessage);
+        ReportAssertAreEqualFailed(expected, actual, ignoreCase, culture, cultureExplicit: true, message, expectedExpression, actualExpression);
     }
 
     /// <summary>
@@ -175,7 +282,16 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
-        => AreNotEqual(notExpected, actual, ignoreCase, CultureInfo.InvariantCulture, message, notExpectedExpression, actualExpression);
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreNotEqual");
+
+        if (!AreNotEqualFailing(notExpected, actual, ignoreCase, CultureInfo.InvariantCulture))
+        {
+            return;
+        }
+
+        ReportAssertAreNotEqualFailed(notExpected, actual, ignoreCase, CultureInfo.InvariantCulture, cultureExplicit: false, message, notExpectedExpression, actualExpression);
+    }
 
     /// <inheritdoc cref="AreNotEqual(string?, string?, bool, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -235,140 +351,15 @@ public sealed partial class Assert
     {
         TelemetryCollector.TrackAssertionCall("Assert.AreNotEqual");
 
-        CheckParameterNotNull(culture, "Assert.AreNotEqual", "culture");
+        CheckParameterNotNull(culture, "Assert.AreNotEqual", nameof(culture));
         if (!AreNotEqualFailing(notExpected, actual, ignoreCase, culture))
         {
             return;
         }
 
-        ReportAssertAreNotEqualFailed(notExpected, actual, message, notExpectedExpression, actualExpression);
+        ReportAssertAreNotEqualFailed(notExpected, actual, ignoreCase, culture, cultureExplicit: true, message, notExpectedExpression, actualExpression);
     }
 
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-}
-
-internal static class StringPreviewHelper
-{
-    public static Tuple<string, string, int> CreateStringPreviews(string expected, string actual, int diffIndex, int fullPreviewLength)
-    {
-        int ellipsisLength = 3; // Length of the ellipsis "..."
-
-        if (fullPreviewLength % 2 == 0)
-        {
-            // Being odd makes it easier to calculate the context length, and center the marker, this is not user customizable.
-            throw new ArgumentException($"{nameof(fullPreviewLength)} must be odd, but it was even.");
-        }
-
-        // This is arbitrary number that is 2 times the size of the ellipsis,
-        // plus 3 chars to make it easier to check the tests are correct when part of string is masked.
-        // Preview length is not user customizable, just makes it harder to break the tests, and avoids few ifs we would need to write otherwise.
-        if (fullPreviewLength < 9)
-        {
-            throw new ArgumentException($"{nameof(fullPreviewLength)} cannot be shorter than 9.");
-        }
-
-        // In case we want to instead count runes or text elements we can change it just here.
-        int expectedLength = expected.Length;
-        int actualLength = actual.Length;
-
-        if (diffIndex < 0 || diffIndex > Math.Min(expectedLength, actualLength)) // Not -1 here because the difference can be right after the end of the shorter string.
-        {
-            throw new ArgumentOutOfRangeException(nameof(diffIndex), "diffIndex must be within the bounds of both strings.");
-        }
-
-        int contextLength = (fullPreviewLength - 1) / 2;
-
-        // Diff index must point into the string, the start of the strings will always be shortened the same amount,
-        // because otherwise the diff would happen at the beginning of the string.
-        // So we just care about how far we are from the end of the string, so we can show the maximum amount of info to the user
-        // when diff is really close to the end.
-        string shorterString = expectedLength < actualLength ? expected : actual;
-        string longerString = expectedLength < actualLength ? actual : expected;
-        bool expectedIsShorter = expectedLength < actualLength;
-
-        int shorterStringLength = shorterString.Length;
-        int longerStringLength = longerString.Length;
-
-        // End marker will point to the end of the shorter string, but the end of the longer string will be replaced by ... when it reaches the end of the preview.
-        // Make sure we don't point at the dots. To do this we need to make sure the strings are cut at the beginning, rather than preferring the maximum context shown.
-        //
-        // Marker needs to point where ellipsis would be when we shorten the longer string.
-        bool markerPointsAtTheEnd = shorterStringLength - diffIndex <= ellipsisLength;
-        // Strings need to have different lengths, for same length strings we don't add ellipsis.
-        bool stringsHaveDifferentLength = longerStringLength > shorterStringLength;
-        // Shorter string needs to be long enough to fill the preview window to the point where ellipsis shows up (last 3 chars).
-        bool shorterStringIsLongEnoughToFillPreviewWindow = shorterStringLength >= fullPreviewLength - ellipsisLength;
-        bool markerPointsAtEllipsis = markerPointsAtTheEnd && stringsHaveDifferentLength && shorterStringIsLongEnoughToFillPreviewWindow;
-        int ellipsisSpaceOrZero = markerPointsAtEllipsis ? ellipsisLength + 2 : 0;
-
-        // Find the end of the string that we will show, either the end of the shorter string, or the end of the preview window.
-        int endOfString = Math.Min(diffIndex + contextLength, shorterStringLength);
-
-        // Then calculate the start of the preview from that. This makes sure that if diff is close end of the string we show as much as we can.
-        int start = endOfString - fullPreviewLength + ellipsisSpaceOrZero;
-
-        // If the string is shorter than the preview, start cutting from 0, otherwise start cutting from the calculated start.
-        int cutStart = Math.Max(0, start);
-        // From here we need to handle longer and shorter string separately, because one of the can be shorter,
-        // and we want to show the maximum we can that fits in the preview window.
-        int cutEndShort = Math.Min(cutStart + fullPreviewLength, shorterStringLength);
-        int cutEndLong = Math.Min(cutStart + fullPreviewLength, longerStringLength);
-
-        string shorterStringPreview = shorterString.Substring(cutStart, cutEndShort - cutStart);
-        string longerStringPreview = longerString.Substring(cutStart, cutEndLong - cutStart);
-
-        // We cut something from the start of the string, so we need to add ellipsis there.
-        // We know if one string is cut then both must be cut, otherwise the diff would be at the beginning of the string.
-        if (cutStart > 0)
-        {
-            shorterStringPreview = EllipsisStart(shorterStringPreview);
-            longerStringPreview = EllipsisStart(longerStringPreview);
-        }
-
-        // We cut something from the end of the string, so we need to add ellipsis there.
-        // We don't know if both strings are cut, so we need to check them separately.
-        if (cutEndShort < shorterStringLength)
-        {
-            shorterStringPreview = EllipsisEnd(shorterStringPreview);
-        }
-
-        // We cut something from the end of the string, so we need to add ellipsis there.
-        if (cutEndLong < longerStringLength)
-        {
-            longerStringPreview = EllipsisEnd(longerStringPreview);
-        }
-
-        string escapedShorterStringPreview = MakeControlCharactersVisible(shorterStringPreview);
-        string escapedLongerStringPreview = MakeControlCharactersVisible(longerStringPreview);
-
-        return new Tuple<string, string, int>(
-            expectedIsShorter ? escapedShorterStringPreview : escapedLongerStringPreview,
-            expectedIsShorter ? escapedLongerStringPreview : escapedShorterStringPreview,
-            diffIndex - cutStart);
-    }
-
-    private static string EllipsisEnd(string text)
-        => $"{text.Substring(0, text.Length - 3)}...";
-
-    private static string EllipsisStart(string text)
-        => $"...{text.Substring(3)}";
-
-    private static string MakeControlCharactersVisible(string text)
-    {
-        var stringBuilder = new StringBuilder(text.Length);
-        foreach (char ch in text)
-        {
-            if (char.IsControl(ch))
-            {
-                stringBuilder.Append((char)(0x2400 + ch));
-            }
-            else
-            {
-                stringBuilder.Append(ch);
-            }
-        }
-
-        return stringBuilder.ToString();
-    }
 }
