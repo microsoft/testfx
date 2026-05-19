@@ -127,12 +127,49 @@ jobs:
         env:
           BINLOG_DATA: /tmp/binlog-analysis.json
           GITHUB_WORKSPACE_PATH: ${{ github.workspace }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         with:
           script: |
             const fs = require('fs');
             const path = require('path');
             const data = JSON.parse(fs.readFileSync(process.env.BINLOG_DATA, 'utf8'));
             const workspace = process.env.GITHUB_WORKSPACE_PATH;
+            const headSha = process.env.PR_HEAD_SHA;
+            const repo = context.repo;
+            const repoUrl = `${process.env.GITHUB_SERVER_URL}/${repo.owner}/${repo.repo}`;
+
+            // Convert an absolute path to a repo-relative path
+            function toRelPath(absPath) {
+              // Strip workspace prefix or common CI path patterns
+              const patterns = [
+                workspace + '/',
+                workspace + '\\',
+                /^\/home\/runner\/work\/[^/]+\/[^/]+\//,
+                /^D:\\a\\[^\\]+\\[^\\]+\\/,
+              ];
+              let rel = absPath;
+              for (const p of patterns) {
+                if (typeof p === 'string' && rel.startsWith(p)) {
+                  rel = rel.substring(p.length);
+                  break;
+                } else if (p instanceof RegExp) {
+                  rel = rel.replace(p, '');
+                }
+              }
+              return rel.replace(/\\/g, '/');
+            }
+
+            // Build a GitHub blob URL for a file + line
+            function fileLink(absPath, line) {
+              const rel = toRelPath(absPath);
+              const url = `${repoUrl}/blob/${headSha}/${rel}`;
+              return line ? `${url}#L${line}` : url;
+            }
+
+            // Build a short display name from path
+            function shortName(absPath) {
+              return absPath.split(/[/\\]/).slice(-2).join('/');
+            }
 
             // Read source context for error files directly from the checkout
             const errorText = data.errors || '';
@@ -264,23 +301,29 @@ jobs:
                 parts.push('### 📊 Build Overview', '', overviewText.trim());
               }
 
-              // Errors section — group by file
+              // Errors section — group by file with links
               const realErrors = parsedErrors.filter(e => e.code && e.code !== undefined);
               if (realErrors.length > 0) {
                 const byFile = {};
                 for (const e of realErrors) {
-                  const file = (e.file || e.projectFile || 'unknown').split('/').slice(-2).join('/');
-                  if (!byFile[file]) byFile[file] = [];
-                  byFile[file].push(e);
+                  const key = e.file || e.projectFile || 'unknown';
+                  if (!byFile[key]) byFile[key] = [];
+                  byFile[key].push(e);
                 }
 
                 parts.push('', '### ❌ Errors', '');
-                for (const [file, errors] of Object.entries(byFile)) {
-                  parts.push(`**\`${file}\`**`);
+                for (const [fullPath, errors] of Object.entries(byFile)) {
+                  const short = shortName(fullPath);
+                  const link = fileLink(fullPath);
+                  parts.push(`**[\`${short}\`](${link})**`);
                   const unique = [...new Map(errors.map(e => [`${e.code}:${e.message}`, e])).values()];
                   for (const e of unique) {
-                    const loc = e.line ? ` (line ${e.line})` : '';
-                    parts.push(`- \`${e.code}\`${loc}: ${e.message}`);
+                    if (e.line) {
+                      const lineLink = fileLink(fullPath, e.line);
+                      parts.push(`- [\`${e.code}\` (line ${e.line})](${lineLink}): ${e.message}`);
+                    } else {
+                      parts.push(`- \`${e.code}\`: ${e.message}`);
+                    }
                   }
                   parts.push('');
                 }
@@ -288,20 +331,20 @@ jobs:
                 parts.push('', '### ❌ Errors', '', '```', errorText, '```');
               }
 
-              // Suggested fixes — use source context to generate actionable suggestions
+              // Suggested fixes — with links to source
               if (Object.keys(sourceContexts).length > 0 && realErrors.length > 0) {
                 parts.push('### 🔧 Suggested Fixes', '');
 
                 for (const [fullPath, ctx] of Object.entries(sourceContexts)) {
-                  const shortPath = fullPath.split('/').slice(-2).join('/');
+                  const short = shortName(fullPath);
                   const fileErrors = realErrors.filter(e => e.file === fullPath);
                   if (fileErrors.length === 0) continue;
 
-                  // Deduplicate errors for this file
                   const unique = [...new Map(fileErrors.map(e => [`${e.code}:${e.message}`, e])).values()];
 
                   for (const err of unique) {
-                    parts.push(`**\`${shortPath}\` — \`${err.code}\`**`);
+                    const errLink = fileLink(fullPath, err.line);
+                    parts.push(`**[\`${short}\`](${errLink}) — \`${err.code}\`**`);
                     parts.push('');
 
                     // Show the source context around the error
