@@ -5,11 +5,10 @@ on:
     types: [opened, synchronize, reopened]
     branches: [main, 'rel/*']
 
+# Build job needs only read permissions. Write permissions are
+# scoped to the analyze job which doesn't run untrusted code.
 permissions:
   contents: read
-  issues: write
-  pull-requests: write
-  models: read
 
 concurrency:
   group: build-failure-analysis-${{ github.event.pull_request.number }}
@@ -19,6 +18,11 @@ jobs:
   build-and-analyze:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      models: read
 
     steps:
       - name: Checkout code
@@ -27,9 +31,12 @@ jobs:
       - name: Build with binary log
         id: build
         continue-on-error: true
+        env:
+          # Prevent untrusted build scripts from accessing the write token
+          GITHUB_TOKEN: ''
         run: |
           set -o pipefail
-          ./build.sh --binaryLog 2>&1 | tee /tmp/build-output.log | tail -100
+          ./build.sh --binaryLog 2>&1 | tee /tmp/build-output.log
 
       - name: Put dotnet on PATH
         if: steps.build.outcome == 'failure'
@@ -70,12 +77,18 @@ jobs:
             --version '1.0.0-preview.26268.3'
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
+      - name: Setup Node.js
+        if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Install MCP SDK
         if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
         run: |
           cd .github/workflows/scripts
           npm init -y --silent 2>/dev/null
-          npm install --save @modelcontextprotocol/sdk@^1.0.0
+          npm install --save --exact @modelcontextprotocol/sdk@1.12.1
 
       - name: Extract errors via binlog-mcp (MCP protocol)
         if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
