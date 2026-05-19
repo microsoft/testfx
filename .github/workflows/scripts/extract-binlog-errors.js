@@ -1,7 +1,6 @@
 // Script that communicates with binlog-mcp via MCP stdio protocol to extract build errors.
 // Uses the official @modelcontextprotocol/sdk for reliable protocol handling.
 
-const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
@@ -28,6 +27,7 @@ async function main() {
   });
 
   const client = new Client({ name: 'binlog-analyzer', version: '1.0.0' });
+  let failed = false;
 
   try {
     await client.connect(transport);
@@ -59,11 +59,12 @@ async function main() {
     console.log(JSON.stringify(result, null, 2));
   } catch (e) {
     console.error(`Error: ${e.message}`);
-    process.exit(1);
+    failed = true;
   } finally {
     try { await client.close(); } catch {}
-    setTimeout(() => process.exit(0), 1000);
   }
+
+  process.exitCode = failed ? 1 : 0;
 }
 
 function extractText(response) {

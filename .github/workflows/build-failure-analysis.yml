@@ -1,7 +1,9 @@
 name: "Build Failure Analysis"
 
 on:
-  pull_request:
+  # Use pull_request_target so the workflow has write permissions even for
+  # fork PRs, while the build still runs the PR's code via explicit checkout.
+  pull_request_target:
     types: [opened, synchronize, reopened]
     branches: [main, 'rel/*']
 
@@ -20,8 +22,10 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout code
+      - name: Checkout PR code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Build with binary log
         id: build
@@ -38,7 +42,8 @@ jobs:
         if: steps.build.outcome == 'failure'
         id: find-binlog
         run: |
-          BINLOG=$(find artifacts/log -name '*.binlog' -type f 2>/dev/null | head -1)
+          # Find the newest binlog by modification time
+          BINLOG=$(find artifacts/log -name '*.binlog' -type f -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
           if [ -z "$BINLOG" ]; then
             echo "No binlog found under artifacts/log/"
             echo "found=false" >> "$GITHUB_OUTPUT"
@@ -65,7 +70,7 @@ jobs:
           NUGETEOF
           dotnet tool install --global AITools.BinlogMcp \
             --configfile /tmp/binlog-tool/nuget.config \
-            --prerelease
+            --version '1.0.0-*'
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
       - name: Install MCP SDK
@@ -73,7 +78,7 @@ jobs:
         run: |
           cd .github/workflows/scripts
           npm init -y --silent 2>/dev/null
-          npm install --save @modelcontextprotocol/sdk 2>&1 | tail -5
+          npm install --save @modelcontextprotocol/sdk@^1.0.0
 
       - name: Extract errors via binlog-mcp (MCP protocol)
         if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
@@ -185,8 +190,19 @@ jobs:
                 // Try both absolute path and workspace-relative path
                 let filePath = err.file;
                 if (!fs.existsSync(filePath)) {
-                  // Try relative to workspace
-                  const relPath = filePath.replace(/^.*?\/testfx\//, '');
+                  // Strip CI workspace prefix to get repo-relative path
+                  const workspacePrefix = workspace.replace(/\/$/, '') + '/';
+                  let relPath = filePath;
+                  if (relPath.startsWith(workspacePrefix)) {
+                    relPath = relPath.substring(workspacePrefix.length);
+                  } else {
+                    // Fallback: strip everything up to and including the repo directory name
+                    const repoName = (process.env.GITHUB_REPOSITORY || '').split('/').pop() || '';
+                    if (repoName) {
+                      const repoPattern = new RegExp(`^.*?/${repoName}/`);
+                      relPath = relPath.replace(repoPattern, '');
+                    }
+                  }
                   filePath = path.join(workspace, relPath);
                 }
                 if (fs.existsSync(filePath)) {
@@ -474,14 +490,12 @@ jobs:
             const marker = '<!-- binlog-failure-analysis -->';
             const prNumber = context.payload.pull_request.number;
 
-            // Delete any previous analysis comment to avoid spam
-            const comments = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              per_page: 100,
-            });
-            for (const comment of comments.data) {
+            // Delete any previous analysis comment (paginate to handle >100 comments)
+            const allComments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber, per_page: 100 },
+            );
+            for (const comment of allComments) {
               if (comment.body.includes(marker)) {
                 await github.rest.issues.deleteComment({
                   owner: context.repo.owner,
