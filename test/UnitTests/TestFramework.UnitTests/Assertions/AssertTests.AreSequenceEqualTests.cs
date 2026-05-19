@@ -4,6 +4,7 @@
 using System.Collections;
 
 using AwesomeAssertions;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
@@ -315,12 +316,9 @@ public partial class AssertTests : TestContainer
         public IEnumerator<T> GetEnumerator()
         {
             EnumerationCount++;
-            if (EnumerationCount > 1)
-            {
-                throw new InvalidOperationException("Sequence was enumerated more than once.");
-            }
-
-            return _items.GetEnumerator();
+            return EnumerationCount > 1
+                ? throw new InvalidOperationException("Sequence was enumerated more than once.")
+                : _items.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
