@@ -9,7 +9,6 @@ using Microsoft.Extensions.AI;
 using Microsoft.Testing.Extensions.AzureFoundry.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.AI;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.AzureFoundry;
 
@@ -18,33 +17,24 @@ namespace Microsoft.Testing.Extensions.AzureFoundry;
 /// </summary>
 internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
 {
-    private readonly IEnvironment _environment;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AzureOpenAIChatClientProvider"/> class.
-    /// </summary>
-    /// <param name="environment">The environment service.</param>
-    internal AzureOpenAIChatClientProvider(IEnvironment environment)
-        => _environment = environment;
-
     /// <inheritdoc />
     public bool IsAvailable =>
-        !RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")) &&
-        !RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME")) &&
-        !RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY"));
+        !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")) &&
+        !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME")) &&
+        !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY"));
 
     /// <inheritdoc />
     public bool HasToolsCapability => true;
 
     /// <inheritdoc />
-    public string ModelName => _environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME") ?? "unknown";
+    public string ModelName => Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME") ?? "unknown";
 
     /// <inheritdoc />
     public Task<IChatClient> CreateChatClientAsync(CancellationToken cancellationToken)
     {
-        string? endpoint = _environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
-        string? deploymentName = _environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME");
-        string? apiKey = _environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
+        string? endpoint = Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+        string? deploymentName = Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME");
+        string? apiKey = Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
         if (RoslynString.IsNullOrEmpty(endpoint))
         {
