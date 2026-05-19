@@ -716,8 +716,13 @@ jobs:
             // Pass 2: for errors on non-PR files (e.g. CS7036 callers), find the
             // method declaration in PR files and suggest making the param optional
             if (suggestionsPosted === 0) {
-              const cs7036Errors = parsedErrors.filter(e => e.code === 'CS7036' && !prFilePaths.has(toRelPath(e.file)));
-              for (const err of cs7036Errors) {
+              // Deduplicate CS7036 errors by message (same error repeated per TFM)
+              const cs7036Unique = [...new Map(
+                parsedErrors
+                  .filter(e => e.code === 'CS7036' && !prFilePaths.has(toRelPath(e.file)))
+                  .map(e => [e.message, e])
+              ).values()];
+              for (const err of cs7036Unique) {
                 const paramMatch = err.message.match(/parameter '(\w+)'/);
                 const methodMatch = err.message.match(/\b(\w+)\.\w+\(/);
                 if (!paramMatch) continue;
