@@ -268,11 +268,6 @@
         <target state="new">Missing {0} element(s) from actual. Found {1} unexpected element(s).</target>
         <note />
       </trans-unit>
-      <trans-unit id="AreSequenceEqualNullMismatchMsg">
-        <source>one side is null, the other is not.</source>
-        <target state="new">one side is null, the other is not.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AreSequenceEqualSameLengthDiffMsg">
         <source>Sequences have {0} element(s). {1} element(s) differ. First difference at index {2}.</source>
         <target state="new">Sequences have {0} element(s). {1} element(s) differ. First difference at index {2}.</target>

@@ -317,7 +317,7 @@ public sealed partial class Assert
                 {
                     List<T?> expectedList = expected as List<T?> ?? [.. expected];
                     List<T?> actualList = actual as List<T?> ?? [.. actual];
-                    if (TryCompareInAnyOrder(expectedList, actualList, comparer, out List<T?>? missing, out List<T?>? unexpected))
+                    if (HasAnyOrderDifferences(expectedList, actualList, comparer, out List<T?>? missing, out List<T?>? unexpected))
                     {
                         ReportAssertAreSequenceEqualInAnyOrderFailed(expectedList, actualList, missing, unexpected, comparerName, hasComparerArgument, hasOrderArgument, message, expectedExpression, actualExpression);
                     }
@@ -372,7 +372,7 @@ public sealed partial class Assert
                 {
                     List<T?> notExpectedList = notExpected as List<T?> ?? [.. notExpected];
                     List<T?> actualList = actual as List<T?> ?? [.. actual];
-                    if (!TryCompareInAnyOrder(notExpectedList, actualList, comparer, out _, out _))
+                    if (!HasAnyOrderDifferences(notExpectedList, actualList, comparer, out _, out _))
                     {
                         ReportAssertAreNotSequenceEqualFailed(notExpectedList, actualList, comparerName, order, hasComparerArgument, hasOrderArgument, message, notExpectedExpression, actualExpression);
                     }
@@ -390,7 +390,7 @@ public sealed partial class Assert
             ? expected is null && actual is null
             : comparer.Equals(expected, actual);
 
-    private static bool TryCompareInAnyOrder<T>(List<T?> expected, List<T?> actual, IEqualityComparer<T> comparer, out List<T?>? missing, out List<T?>? unexpected)
+    private static bool HasAnyOrderDifferences<T>(List<T?> expected, List<T?> actual, IEqualityComparer<T> comparer, out List<T?>? missing, out List<T?>? unexpected)
     {
 #pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
 #pragma warning disable IDE0028 // Collection initialization can be simplified - target-typed `new` cannot pass the comparer in the same syntactic form expected.
@@ -506,7 +506,7 @@ public sealed partial class Assert
         }
 
         StructuredAssertionMessage structured = new(order == SequenceOrder.InAnyOrder ? FrameworkMessages.AreSequenceEqualInAnyOrderFailedSummary : FrameworkMessages.AreSequenceEqualInOrderFailedSummary);
-        structured.WithAdditionalSummaryLine(FrameworkMessages.AreSequenceEqualNullMismatchMsg);
+        structured.WithAdditionalSummaryLine(FrameworkMessages.AreEquivalentMismatchNull);
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
         structured.WithExpectedAndActual(expectedText, actualText);

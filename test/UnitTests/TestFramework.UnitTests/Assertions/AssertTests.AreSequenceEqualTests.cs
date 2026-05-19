@@ -76,12 +76,12 @@ public partial class AssertTests : TestContainer
 
     public void AreSequenceEqual_InOrder_CustomComparer_PassesAndReportsComparerOnFailure()
     {
-        Assert.AreSequenceEqual(["a", "B"], ["A", "b"], StringComparer.OrdinalIgnoreCase);
+        Assert.AreSequenceEqual(["a", "B"], ["A", "b"], new CaseInsensitiveStringComparer());
 
         string[] expected = ["a"];
         string[] actual = ["b"];
 
-        Action action = () => Assert.AreSequenceEqual(expected, actual, StringComparer.OrdinalIgnoreCase);
+        Action action = () => Assert.AreSequenceEqual(expected, actual, new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
             .Which.Message.Should().Be(
                 """
@@ -90,7 +90,7 @@ public partial class AssertTests : TestContainer
 
                 expected: ["a"]
                 actual:   ["b"]
-                comparer: OrdinalIgnoreCaseComparer
+                comparer: CaseInsensitiveStringComparer
 
                 Assert.AreSequenceEqual(expected, actual, <comparer>)
                 """);
@@ -232,7 +232,7 @@ public partial class AssertTests : TestContainer
         string[] notExpected = ["a"];
         string[] actual = ["A"];
 
-        Action action = () => Assert.AreNotSequenceEqual(notExpected, actual, StringComparer.OrdinalIgnoreCase);
+        Action action = () => Assert.AreNotSequenceEqual(notExpected, actual, new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
             .Which.Message.Should().Be(
                 """
@@ -240,7 +240,7 @@ public partial class AssertTests : TestContainer
 
                 notExpected: ["a"]
                 actual:      ["A"]
-                comparer:    OrdinalIgnoreCaseComparer
+                comparer:    CaseInsensitiveStringComparer
 
                 Assert.AreNotSequenceEqual(notExpected, actual, <comparer>)
                 """);
@@ -260,7 +260,7 @@ public partial class AssertTests : TestContainer
         string[] expected = ["a"];
         string[] actual = ["c"];
 
-        Action action = () => Assert.AreSequenceEqual(expected, actual, StringComparer.OrdinalIgnoreCase, SequenceOrder.InAnyOrder);
+        Action action = () => Assert.AreSequenceEqual(expected, actual, new CaseInsensitiveStringComparer(), SequenceOrder.InAnyOrder);
         action.Should().Throw<AssertFailedException>()
             .Which.Message.Should().Be(
                 """
@@ -269,7 +269,7 @@ public partial class AssertTests : TestContainer
 
                 missing:    ["a"]
                 unexpected: ["c"]
-                comparer:   OrdinalIgnoreCaseComparer
+                comparer:   CaseInsensitiveStringComparer
 
                 Assert.AreSequenceEqual(expected, actual, <comparer>, <order>)
                 """);
@@ -301,7 +301,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>();
     }
 
-    public void AreSequenceEqual_RecordElements_UseValueEquality()
+    public void AreSequenceEqual_RecordElements_UsesValueEquality()
         => Assert.AreSequenceEqual([new ValueRecord(1), new ValueRecord(2)], [new ValueRecord(1), new ValueRecord(2)]);
 
     public void AreSequenceEqual_DoubleNaN_UsesDefaultEqualityComparer()
