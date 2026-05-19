@@ -18,18 +18,19 @@ if (!fs.existsSync(binlogPath)) {
 const absolutePath = path.resolve(binlogPath);
 
 async function main() {
-  const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
-  const { StdioClientTransport } = await import('@modelcontextprotocol/sdk/client/stdio.js');
-
-  const transport = new StdioClientTransport({
-    command: 'binlog-mcp',
-    args: [],
-  });
-
-  const client = new Client({ name: 'binlog-analyzer', version: '1.0.0' });
+  let client;
   let failed = false;
 
   try {
+    const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
+    const { StdioClientTransport } = await import('@modelcontextprotocol/sdk/client/stdio.js');
+
+    const transport = new StdioClientTransport({
+      command: 'binlog-mcp',
+      args: [],
+    });
+
+    client = new Client({ name: 'binlog-analyzer', version: '1.0.0' });
     await client.connect(transport);
 
     // Get build overview
@@ -62,7 +63,7 @@ async function main() {
     console.error(`Error: ${errorMessage}`);
     failed = true;
   } finally {
-    try { await client.close(); } catch {}
+    try { if (client) await client.close(); } catch {}
   }
 
   process.exitCode = failed ? 1 : 0;

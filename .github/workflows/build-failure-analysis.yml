@@ -611,6 +611,22 @@ jobs:
             );
             const prFilePaths = new Set(prFiles.map(f => f.filename));
 
+            // Build a set of lines actually in the PR diff (only these can have review comments)
+            const diffLines = new Set();
+            for (const f of prFiles) {
+              if (!f.patch) continue;
+              // Parse @@ hunk headers to find which lines are in the diff
+              const hunkRegex = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/gm;
+              let match;
+              while ((match = hunkRegex.exec(f.patch)) !== null) {
+                const start = parseInt(match[1]);
+                const count = parseInt(match[2] || '1');
+                for (let i = start; i < start + count; i++) {
+                  diffLines.add(`${f.filename}:${i}`);
+                }
+              }
+            }
+
             // Convert absolute path to repo-relative
             function toRelPath(absPath) {
               const patterns = [
@@ -636,7 +652,10 @@ jobs:
                 case 'CS0246':
                 case 'CS0234': {
                   if (trimmed.match(/^\s*using\s+/)) {
-                    return { body: `🔧 **\`${err.code}\`**: ${err.message}\n\nRemove the invalid using directive:\n\`\`\`suggestion\n\`\`\``, type: 'remove' };
+                    // For using removal, suggest replacing with an empty line (GitHub
+                    // suggestion blocks cannot truly delete lines, but an empty
+                    // suggestion replaces with blank which the author can then remove)
+                    return { body: `🔧 **\`${err.code}\`**: ${err.message}\n\nRemove this invalid using directive:\n\`\`\`suggestion\n\`\`\``, type: 'remove' };
                   }
                   return null;
                 }
@@ -698,6 +717,12 @@ jobs:
               const suggestion = generateSuggestion(err, sourceLine);
               if (!suggestion) continue;
 
+              // Only post on lines that are in the PR diff (GitHub rejects others with 422)
+              if (!diffLines.has(`${relPath}:${err.line}`)) {
+                core.info(`Skipping suggestion on ${relPath}:${err.line} (not in PR diff)`);
+                continue;
+              }
+
               try {
                 await github.rest.pulls.createReviewComment({
                   owner: context.repo.owner,
@@ -745,6 +770,11 @@ jobs:
                       if (line.includes(paramMatch[1]) && line.match(/\b(string|int|bool|object)\s+\w+/)) {
                         const suggestion = generateSuggestion(err, line);
                         if (!suggestion) continue;
+
+                        if (!diffLines.has(`${prFile.filename}:${i + 1}`)) {
+                          core.info(`Skipping suggestion on ${prFile.filename}:${i + 1} (not in PR diff)`);
+                          continue;
+                        }
 
                         try {
                           await github.rest.pulls.createReviewComment({
