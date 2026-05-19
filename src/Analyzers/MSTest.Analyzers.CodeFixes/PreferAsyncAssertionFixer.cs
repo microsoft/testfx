@@ -46,12 +46,39 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
             return;
         }
 
+        if (invocationExpression.Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault() is { } methodDeclaration &&
+            ContainsReturnExpressionInUnawaitableContext(methodDeclaration))
+        {
+            SemanticModel? semanticModel = await context.Document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
+            if (semanticModel is not null &&
+                !methodDeclaration.Modifiers.Any(static modifier => modifier.IsKind(SyntaxKind.AsyncKeyword)) &&
+                IsTaskOrValueTaskReturnType(methodDeclaration, semanticModel, context.CancellationToken))
+            {
+                return;
+            }
+        }
+
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.UseAsyncAssertionFix,
                 createChangedDocument: ct => UseAsyncAssertionAsync(context.Document, invocationExpression, ct),
                 equivalenceKey: nameof(PreferAsyncAssertionFixer)),
             context.Diagnostics);
+    }
+
+    private static bool ContainsReturnExpressionInUnawaitableContext(MethodDeclarationSyntax methodDeclaration)
+    {
+        var walker = new UnawaitableReturnDetector();
+        if (methodDeclaration.Body is { } body)
+        {
+            walker.Visit(body);
+        }
+        else if (methodDeclaration.ExpressionBody is { } expressionBody)
+        {
+            walker.Visit(expressionBody);
+        }
+
+        return walker.Found;
     }
 
     private static async Task<Document> UseAsyncAssertionAsync(Document document, InvocationExpressionSyntax invocationExpression, CancellationToken cancellationToken)
@@ -197,6 +224,22 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
                 .WithParameterList(SyntaxFactory.ParameterList())
                 .WithBody(anonymousMethodAsyncExpression.WithTriviaFrom(anonymousMethodExpression.Block))
                 .WithTriviaFrom(expression);
+            return true;
+        }
+
+        if (expression is ObjectCreationExpressionSyntax objectCreationExpression &&
+            objectCreationExpression.ArgumentList is { Arguments.Count: 1 } objectCreationArgumentList &&
+            TryReplaceActionExpression(objectCreationArgumentList.Arguments[0].Expression, out ExpressionSyntax? objectCreationNewExpression))
+        {
+            newExpression = objectCreationNewExpression.WithTriviaFrom(expression);
+            return true;
+        }
+
+        if (expression is ImplicitObjectCreationExpressionSyntax implicitObjectCreationExpression &&
+            implicitObjectCreationExpression.ArgumentList is { Arguments.Count: 1 } implicitObjectCreationArgumentList &&
+            TryReplaceActionExpression(implicitObjectCreationArgumentList.Arguments[0].Expression, out ExpressionSyntax? implicitObjectCreationNewExpression))
+        {
+            newExpression = implicitObjectCreationNewExpression.WithTriviaFrom(expression);
             return true;
         }
 
@@ -435,6 +478,72 @@ public sealed class PreferAsyncAssertionFixer : CodeFixProvider
                 .WithAdditionalAnnotations(Formatter.Annotation);
 
             return includeReturn ? [awaitStatement, newReturnStatement] : [awaitStatement];
+        }
+    }
+
+    private sealed class UnawaitableReturnDetector : CSharpSyntaxWalker
+    {
+        private int _unawaitableDepth;
+
+        public bool Found { get; private set; }
+
+        public override void Visit(SyntaxNode? node)
+        {
+            if (Found)
+            {
+                return;
+            }
+
+            base.Visit(node);
+        }
+
+        public override void VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax node)
+        {
+        }
+
+        public override void VisitParenthesizedLambdaExpression(ParenthesizedLambdaExpressionSyntax node)
+        {
+        }
+
+        public override void VisitAnonymousMethodExpression(AnonymousMethodExpressionSyntax node)
+        {
+        }
+
+        public override void VisitLocalFunctionStatement(LocalFunctionStatementSyntax node)
+        {
+        }
+
+        public override void VisitLockStatement(LockStatementSyntax node)
+            => VisitInUnawaitableContext(node.Statement);
+
+        public override void VisitUnsafeStatement(UnsafeStatementSyntax node)
+            => VisitInUnawaitableContext(node.Block);
+
+        public override void VisitFixedStatement(FixedStatementSyntax node)
+            => VisitInUnawaitableContext(node.Statement);
+
+        public override void VisitReturnStatement(ReturnStatementSyntax node)
+        {
+            if (_unawaitableDepth > 0 && node.Expression is not null)
+            {
+                Found = true;
+                return;
+            }
+
+            base.VisitReturnStatement(node);
+        }
+
+        private void VisitInUnawaitableContext(SyntaxNode? node)
+        {
+            _unawaitableDepth++;
+            try
+            {
+                Visit(node);
+            }
+            finally
+            {
+                _unawaitableDepth--;
+            }
         }
     }
 }
