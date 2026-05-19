@@ -47,6 +47,7 @@ stages:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
+      microbuildPluginVersion: '5.4.0'
       enablePublishTestResults: true
       testResultsFormat: 'vstest'
       artifacts:
@@ -313,6 +314,7 @@ stages:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
+      microbuildPluginVersion: '5.4.0'
       artifacts:
         publish:
           logs:

@@ -1,0 +1,33 @@
+<Project>
+
+  <!--
+    Workaround for https://github.com/dotnet/msbuild/issues/13739.
+
+    The Arcade SDK this repository consumes declares InstallDotNetCore (and other
+    build tasks) with Runtime="NET" but no Architecture attribute in
+    tools\BuildTasks.props. When the host MSBuild is x86 .NET Framework
+    (e.g. the default MSBuild.exe shipped with VS 2026 Insiders / Preview, which is
+    what the CodeQL pipeline uses), MSBuild tries to spin up an x86 .NET task host.
+    The .NET SDK only ships x64/arm64 MSBuild binaries, so there is no x86 MSBuild.exe
+    under .dotnet\sdk\<version>\, producing:
+
+      error MSB4216: Could not run the "InstallDotNetCore" task because MSBuild could
+      not create or connect to a task host with runtime "NET" and architecture "x86".
+
+    Architecture="*" lets MSBuild use any available .NET task host architecture.
+    This was fixed centrally in dotnet/arcade#16790 (merged 2026-05-12); remove this
+    workaround once Arcade flows that fix into this repository.
+
+    eng\Tools.props is imported by Arcade's Tools.proj
+    (artifacts\toolset\<version>\Tools.proj) right before it imports
+    InstallDotNetCore.targets, making this the correct place to override the
+    UsingTask registration that comes from Sdk.props -> BuildTasks.props.
+  -->
+  <UsingTask Condition="'$(ArcadeSdkBuildTasksAssembly)' != ''"
+             TaskName="Microsoft.DotNet.Arcade.Sdk.InstallDotNetCore"
+             AssemblyFile="$(ArcadeSdkBuildTasksAssembly)"
+             Runtime="NET"
+             Architecture="*"
+             Override="true" />
+
+</Project>

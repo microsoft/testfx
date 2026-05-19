@@ -156,6 +156,8 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClass.TestInitializeMethodBody = value => { };
         DummyTestClass.TestMethodBody = instance => { };
         DummyTestClass.TestCleanupMethodBody = value => { };
+        DummyTestClass.GlobalTestInitializeMethodBodyAsync = _ => Task.CompletedTask;
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = _ => Task.CompletedTask;
     }
 
     protected override void Dispose(bool disposing)
@@ -863,7 +865,7 @@ public class TestMethodInfoTests : TestContainer
             Resource.UTA_InitMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestInitializeMethod!.Name,
-            "Assert.Fail failed. dummyFailMessage");
+            $"Assertion failed.{Environment.NewLine}dummyFailMessage");
 
         var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
         {
@@ -898,7 +900,7 @@ public class TestMethodInfoTests : TestContainer
             Resource.UTA_InitMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestInitializeMethod!.Name,
-            "Assert.Inconclusive failed. dummyFailMessage");
+            "Assert.Inconclusive. dummyFailMessage");
 
         var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
         {
@@ -919,6 +921,31 @@ public class TestMethodInfoTests : TestContainer
         exception.InnerException.Should().BeOfType<AssertInconclusiveException>();
         exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
             "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestInitializeMethod");
+    }
+
+    public async Task TestMethodInfoInvokeShouldPreserveTimeoutOutcomeForGlobalTestInitialize()
+    {
+        DummyTestClass.GlobalTestInitializeMethodBodyAsync = async testContext =>
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10), testContext.CancellationTokenSource.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected when the framework signals cancellation/timeout.
+            }
+        };
+        _testAssemblyInfo.GlobalTestInitializations.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestInitializeMethod))!, TimeoutInfo.FromTimeout(1)));
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        var exception = result.TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
+        exception!.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        exception.Message.Should().Contain("DummyGlobalTestInitializeMethod");
+        exception.Message.Should().Contain("timed out after 1ms");
     }
 
     public async Task TestMethodInfoInvokeWhenConstructorThrowsAssertInconclusiveReturnsExpectedResult()
@@ -942,7 +969,7 @@ public class TestMethodInfoTests : TestContainer
 
         var exception = result.TestFailureException as TestFailedException;
         exception.Should().NotBeNull();
-        exception.Message.Should().Be("Assert.Inconclusive failed. dummyInconclusiveMessage");
+        exception.Message.Should().Be("Assert.Inconclusive. dummyInconclusiveMessage");
         exception.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
         exception.InnerException.Should().BeOfType<AssertInconclusiveException>();
 #if DEBUG
@@ -1110,7 +1137,7 @@ public class TestMethodInfoTests : TestContainer
             Resource.UTA_CleanupMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestCleanupMethod.Name,
-            "Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test inconclusive");
+            "Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive. Test inconclusive");
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
@@ -1137,7 +1164,7 @@ public class TestMethodInfoTests : TestContainer
             Resource.UTA_CleanupMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestCleanupMethod!.Name,
-            "Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failed");
+            $"Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assertion failed.{Environment.NewLine}Test failed");
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
@@ -1216,6 +1243,46 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
         result.Outcome.Should().Be(UnitTestOutcome.Failed);
+    }
+
+    public async Task TestMethodInfoInvokeShouldPreserveTimeoutOutcomeForGlobalTestCleanup()
+    {
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = async testContext =>
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10), testContext.CancellationTokenSource.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected when the framework signals cancellation/timeout.
+            }
+        };
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, TimeoutInfo.FromTimeout(1)));
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        var exception = result.TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
+        exception!.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        exception.Message.Should().Contain("DummyGlobalTestCleanupMethod");
+        exception.Message.Should().Contain("timed out after 1ms");
+    }
+
+    public async Task TestMethodInfoInvokeShouldAttributeGlobalTestCleanupMethodWhenItThrows()
+    {
+        DummyTestClass.TestCleanupMethodBody = _ => { };
+        DummyTestClass.GlobalTestCleanupMethodBodyAsync = _ => throw new InvalidOperationException("global cleanup failed");
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+        _testAssemblyInfo.GlobalTestCleanups.Add((typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyGlobalTestCleanupMethod))!, TimeoutInfo: null));
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+        var exception = result.TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
+        exception!.Message.Should().Contain($"TestCleanup method {typeof(DummyTestClass).FullName}.{nameof(DummyTestClass.DummyGlobalTestCleanupMethod)} threw exception");
     }
 
     public async Task TestMethodInfoInvokeShouldCallDisposeForDisposableTestClass()
@@ -1848,6 +1915,10 @@ public class TestMethodInfoTests : TestContainer
 
         public static Func<Task> DummyAsyncTestMethodBody { get; set; } = null!;
 
+        public static Func<TestContext, Task> GlobalTestInitializeMethodBodyAsync { get; set; } = null!;
+
+        public static Func<TestContext, Task> GlobalTestCleanupMethodBodyAsync { get; set; } = null!;
+
         public static TestContext GetTestContext() => s_tc;
 
         public TestContext TestContext
@@ -1889,6 +1960,12 @@ public class TestMethodInfoTests : TestContainer
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public void DummyParamsArgumentMethod(int i, params string[] args) => TestMethodBody(this);
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public static async Task DummyGlobalTestInitializeMethod(TestContext testContext) => await GlobalTestInitializeMethodBodyAsync(testContext);
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public static async Task DummyGlobalTestCleanupMethod(TestContext testContext) => await GlobalTestCleanupMethodBodyAsync(testContext);
     }
 
     public class DummyTestClassWithRetryAttributeMethods
