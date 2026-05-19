@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-05-18T18:13:00Z",
-  "last_tasks": ["task2_scan", "task4_maintain_prs", "task7_monthly_summary"],
+  "last_run": "2026-05-19T18:25:00Z",
+  "last_tasks": ["task2_scan", "task5_check_issues"],
   "validated_commands": {
     "build": "export PATH=\"$PWD/.dotnet:$PATH\" && dotnet build <project.csproj> -p:SignAssembly=false --nologo",
     "restore": "dotnet restore <project.csproj> -p:SignAssembly=false",
@@ -14,7 +14,8 @@
     {"title": "[Efficiency Improver] perf: eliminate yield-iterator state machine in PropertyBag.OfType<T>()", "pr_number": 7917, "date": "2026-04-29", "status": "merged_by_Evangelink_2026-04-29"},
     {"title": "[Efficiency Improver] perf: avoid iterator allocation in GetRetryAttribute()", "pr_number": 8103, "date": "2026-05-11", "status": "merged_by_Evangelink_2026-05-11"},
     {"title": "[Efficiency Improver] perf: eliminate yield-iterator allocations in test execution hot path", "pr_number": 8093, "date": "2026-05-11", "status": "merged_by_Evangelink_2026-05-13"},
-    {"title": "[Efficiency Improver] perf: eliminate yield-iterator and GroupBy allocations in IsIgnored() hot path", "pr_number": 8195, "date": "2026-05-12", "status": "merged_by_Evangelink_2026-05-14"}
+    {"title": "[Efficiency Improver] perf: eliminate yield-iterator and GroupBy allocations in IsIgnored() hot path", "pr_number": 8195, "date": "2026-05-12", "status": "merged_by_Evangelink_2026-05-14"},
+    {"title": "[Efficiency Improver] perf: eliminate LINQ closure allocations in TreeNodeFilter hot paths", "pr_number": 8343, "date": "2026-05-18", "status": "merged_by_Evangelink_2026-05-19"}
   ],
   "open_prs": [],
   "backlog": [
@@ -57,9 +58,9 @@
     "build_env_2026-05-12": "Local build succeeds for net9.0 with .NET 11 preview SDK. MSTestAdapter.PlatformServices builds with 0 warnings/errors.",
     "test_env_issue": "MSTestAdapter.PlatformServices.UnitTests can't run locally — restore fails (net462/net48 TFM mismatch) + AwesomeAssertions path error for net8.0.",
     "sa1503_warning": "SA1503: braces must not be omitted — always use braces even for single-statement if bodies.",
-    "scan_status_2026-05-18": "Scanned recent commits (TRX streaming store, Assert.ContainsAll/DoesNotContainAll, AzureDevOps frame skipping fix, MSTEST0064 PreferAsyncAssertion analyzer, structured assertion messages RFC 012). No new hot-path inefficiencies found. ContainsAll uses efficient dictionary-based O(n) counting. StructuredAssertionMessage only runs on failure path. All backlog items remain low-priority.",
+    "scan_status_2026-05-19": "Scanned new commits: Logging bridge (MEL), Assert.AreSequenceEqual/AreNotSequenceEqual, MSTest.Engine (BFSTestNodeVisitor, ThreadPoolTestNodeRunner, TestFrameworkEngine), Azure DevOps artifact upload. All new code looks clean. HasAnyOrderDifferences uses O(n) dictionary approach. BFSTestNodeVisitor uses efficient BFS with string-based path building. No new hot-path inefficiencies found. All backlog items remain low-priority.",
     "monthly_summary_issue": "IMPORTANT: Issue #7975 (May 2026 activity summary) was closed as 'not_planned' by Evangelink on 2026-05-13. Do NOT create new monthly activity summary issues — maintainer has signalled they don't want them.",
     "issue_access": "Many issues are access-restricted in lockdown mode — cannot read body/comments.",
-    "treenodefilter_pr_status_2026-05-18": "TreeNodeFilter LINQ closure elimination PR (efficiency/treenodefilter-eliminate-linq-closures) no longer shows in open PRs — may have been closed or merged without tracking. No action needed."
+    "treenodefilter_pr_8343": "TreeNodeFilter LINQ closure PR #8343 merged by Evangelink on 2026-05-19."
   }
 }
