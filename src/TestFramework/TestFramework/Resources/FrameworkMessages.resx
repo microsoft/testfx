@@ -266,9 +266,6 @@
   <data name="AreSequenceEqualMissingUnexpectedMsg" xml:space="preserve">
     <value>Missing {0} element(s) from actual. Found {1} unexpected element(s).</value>
   </data>
-  <data name="AreSequenceEqualNullMismatchMsg" xml:space="preserve">
-    <value>one side is null, the other is not.</value>
-  </data>
   <data name="AreSequenceEqualSameLengthDiffMsg" xml:space="preserve">
     <value>Sequences have {0} element(s). {1} element(s) differ. First difference at index {2}.</value>
   </data>

@@ -4,6 +4,7 @@
 using System.Collections;
 
 using AwesomeAssertions;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
@@ -75,12 +76,12 @@ public partial class AssertTests : TestContainer
 
     public void AreSequenceEqual_InOrder_CustomComparer_PassesAndReportsComparerOnFailure()
     {
-        Assert.AreSequenceEqual(["a", "B"], ["A", "b"], StringComparer.OrdinalIgnoreCase);
+        Assert.AreSequenceEqual(["a", "B"], ["A", "b"], new CaseInsensitiveStringComparer());
 
         string[] expected = ["a"];
         string[] actual = ["b"];
 
-        Action action = () => Assert.AreSequenceEqual(expected, actual, StringComparer.OrdinalIgnoreCase);
+        Action action = () => Assert.AreSequenceEqual(expected, actual, new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
             .Which.Message.Should().Be(
                 """
@@ -89,7 +90,7 @@ public partial class AssertTests : TestContainer
 
                 expected: ["a"]
                 actual:   ["b"]
-                comparer: OrdinalIgnoreCaseComparer
+                comparer: CaseInsensitiveStringComparer
 
                 Assert.AreSequenceEqual(expected, actual, <comparer>)
                 """);
@@ -188,6 +189,9 @@ public partial class AssertTests : TestContainer
                 """
                 Assertion failed. Expected sequences to differ.
 
+                notExpected: [1, 2, 3]
+                actual:      [1, 2, 3]
+
                 Assert.AreNotSequenceEqual(notExpected, actual)
                 """);
     }
@@ -206,6 +210,9 @@ public partial class AssertTests : TestContainer
                 """
                 Assertion failed. Expected sequences to differ (in any order).
 
+                notExpected: [1, 2, 2]
+                actual:      [2, 1, 2]
+
                 Assert.AreNotSequenceEqual(notExpected, actual, <order>)
                 """);
     }
@@ -217,7 +224,26 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreNotSequenceEqual<string>(null, null);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assertion failed. Expected sequences to differ.*");
+            .WithMessage("Assertion failed. Expected sequences to differ.*notExpected: null*actual:      null*");
+    }
+
+    public void AreNotSequenceEqual_CustomComparerFailure_ReportsComparer()
+    {
+        string[] notExpected = ["a"];
+        string[] actual = ["A"];
+
+        Action action = () => Assert.AreNotSequenceEqual(notExpected, actual, new CaseInsensitiveStringComparer());
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected sequences to differ.
+
+                notExpected: ["a"]
+                actual:      ["A"]
+                comparer:    CaseInsensitiveStringComparer
+
+                Assert.AreNotSequenceEqual(notExpected, actual, <comparer>)
+                """);
     }
 
     public void AreNotSequenceEqual_OneNull_Passes()
@@ -234,7 +260,7 @@ public partial class AssertTests : TestContainer
         string[] expected = ["a"];
         string[] actual = ["c"];
 
-        Action action = () => Assert.AreSequenceEqual(expected, actual, StringComparer.OrdinalIgnoreCase, SequenceOrder.InAnyOrder);
+        Action action = () => Assert.AreSequenceEqual(expected, actual, new CaseInsensitiveStringComparer(), SequenceOrder.InAnyOrder);
         action.Should().Throw<AssertFailedException>()
             .Which.Message.Should().Be(
                 """
@@ -243,7 +269,7 @@ public partial class AssertTests : TestContainer
 
                 missing:    ["a"]
                 unexpected: ["c"]
-                comparer:   OrdinalIgnoreCaseComparer
+                comparer:   CaseInsensitiveStringComparer
 
                 Assert.AreSequenceEqual(expected, actual, <comparer>, <order>)
                 """);
@@ -275,7 +301,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>();
     }
 
-    public void AreSequenceEqual_RecordElements_UseValueEquality()
+    public void AreSequenceEqual_RecordElements_UsesValueEquality()
         => Assert.AreSequenceEqual([new ValueRecord(1), new ValueRecord(2)], [new ValueRecord(1), new ValueRecord(2)]);
 
     public void AreSequenceEqual_DoubleNaN_UsesDefaultEqualityComparer()
@@ -290,12 +316,9 @@ public partial class AssertTests : TestContainer
         public IEnumerator<T> GetEnumerator()
         {
             EnumerationCount++;
-            if (EnumerationCount > 1)
-            {
-                throw new InvalidOperationException("Sequence was enumerated more than once.");
-            }
-
-            return _items.GetEnumerator();
+            return EnumerationCount > 1
+                ? throw new InvalidOperationException("Sequence was enumerated more than once.")
+                : _items.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
