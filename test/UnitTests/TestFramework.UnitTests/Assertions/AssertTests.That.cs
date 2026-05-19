@@ -1323,6 +1323,108 @@ public partial class AssertTests : TestContainer
         container.Inner.Value.Should().Be(42);
     }
 
+    // Regression for Assign double-evaluation: the RHS of Expression.Assign was evaluated
+    // once during the bottom-up pass, but the generic "rebuild and compile" path then
+    // produced an invalid Assign(Constant, Constant) that the catch sentineled, and the
+    // parent LessThan was re-invoked from the original tree — re-running ComputeValue a
+    // second time. Assign is now special-cased so the RHS runs exactly once.
+    public void That_ManuallyConstructedAssign_EvaluatesRhsExactlyOnce()
+    {
+        var container = new MutableContainer();
+        FieldInfo innerFi = typeof(MutableContainer).GetField(nameof(MutableContainer.Inner))!;
+        FieldInfo valueFi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
+
+        CountingComputeValue.Calls = 0;
+
+        MemberExpression innerAccess = Expression.Field(Expression.Constant(container), innerFi);
+        MemberExpression valueAccess = Expression.Field(innerAccess, valueFi);
+        MethodCallExpression rhs = Expression.Call(typeof(CountingComputeValue).GetMethod(nameof(CountingComputeValue.Get))!);
+        BinaryExpression assign = Expression.Assign(valueAccess, rhs);
+        BinaryExpression body = Expression.LessThan(assign, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+
+        act.Should().Throw<AssertFailedException>();
+        CountingComputeValue.Calls.Should().Be(1);
+        container.Inner.Value.Should().Be(42);
+    }
+
+    // Regression: a compound assignment whose only side effect is the assignment itself (no
+    // method or property reads triggering single-pass) was taking the side-effect-free fast
+    // path. The fast path ran the assignment once, then EvaluateAllSubExpressions ran it
+    // again on the failure-diagnostic path. RequiresSinglePassEvaluation now recognizes
+    // assignment node types so these expressions always take the single-pass evaluator.
+    public void That_CompoundAssignmentOnField_AppliesExactlyOnceOnFailure()
+    {
+        var container = new MutableContainer();
+        FieldInfo innerFi = typeof(MutableContainer).GetField(nameof(MutableContainer.Inner))!;
+        FieldInfo valueFi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
+
+        MemberExpression innerAccess = Expression.Field(Expression.Constant(container), innerFi);
+        MemberExpression valueAccess = Expression.Field(innerAccess, valueFi);
+        BinaryExpression addAssign = Expression.AddAssign(valueAccess, Expression.Constant(7));
+        BinaryExpression body = Expression.LessThan(addAssign, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+
+        act.Should().Throw<AssertFailedException>();
+        // Exactly one += 7 must apply — not two.
+        container.Inner.Value.Should().Be(7);
+    }
+
+    // Regression: assigning to a member whose receiver chain has a side effect (e.g.,
+    // `provider.GetBox().Value = 42`) previously ran the receiver method twice because the
+    // rebuild kept the original (unevaluated) Left in place. The Left's sub-children are
+    // now substituted with cached constants while the writable MemberExpression wrapper is
+    // preserved, so the receiver runs exactly once.
+    public void That_AssignToFieldOfSideEffectingReceiver_EvaluatesReceiverExactlyOnce()
+    {
+        var provider = new MutableBoxProvider();
+
+        MethodInfo getBoxMethod = typeof(MutableBoxProvider).GetMethod(nameof(MutableBoxProvider.GetBox))!;
+        MethodCallExpression getBoxCall = Expression.Call(Expression.Constant(provider), getBoxMethod);
+        FieldInfo valueFi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
+        MemberExpression valueAccess = Expression.Field(getBoxCall, valueFi);
+        BinaryExpression assign = Expression.Assign(valueAccess, Expression.Constant(42));
+        BinaryExpression body = Expression.LessThan(assign, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+        act.Should().Throw<AssertFailedException>();
+
+        // Receiver method (GetBox) must run exactly once.
+        provider.Calls.Should().Be(1);
+        provider.Box.Value.Should().Be(42);
+    }
+
+    private sealed class MutableBoxProvider
+    {
+        public int Calls { get; private set; }
+
+        public MutableBox Box { get; } = new();
+
+        public MutableBox GetBox()
+        {
+            Calls++;
+            return Box;
+        }
+    }
+
+    private static class CountingComputeValue
+    {
+#pragma warning disable SA1401 // Fields should be private - intentional: test counter must be readable from the test assembly.
+        public static int Calls;
+#pragma warning restore SA1401
+
+        public static int Get()
+        {
+            Calls++;
+            return 42;
+        }
+    }
+
     // Regression: a member whose static type is Func/Action but whose runtime value is null should
     // still appear in the failure details. Filtering must remain runtime-typed (via the cached
     // value's GetType()) rather than static-typed at analysis time.
