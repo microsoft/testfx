@@ -147,7 +147,7 @@ jobs:
               { owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber, per_page: 100 },
             );
             for (const c of allComments) {
-              if (c.body.includes(marker)) {
+              if (c.body.includes(marker) && c.user.login === 'github-actions[bot]') {
                 await github.rest.issues.deleteComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: c.id });
               }
             }

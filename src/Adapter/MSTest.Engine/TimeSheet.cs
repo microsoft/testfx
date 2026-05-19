@@ -41,8 +41,7 @@ internal sealed class TimeSheet
     /// <summary>
     /// Record the start of the test, this will capture time spent in queue and start measuring duration of test.
     /// </summary>
-    /// <param name="testDisplayName">Display name of the test being started.</param>
-    internal void RecordStart(string testDisplayName)
+    internal void RecordStart()
     {
         StartTime = _clock.UtcNow;
         _stopwatch.Restart();

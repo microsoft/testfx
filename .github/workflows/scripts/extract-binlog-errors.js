@@ -51,9 +51,17 @@ async function main() {
       arguments: { binlog_file: absolutePath, top: 10 },
     });
 
+    const errorsText = extractText(errors);
+    // Ensure errors is valid JSON array for downstream consumers
+    let errorsJson = errorsText;
+    try { JSON.parse(errorsText); } catch {
+      // If MCP returned plain text, wrap in a simple JSON array
+      errorsJson = JSON.stringify([{ severity: 'error', message: errorsText }]);
+    }
+
     const result = {
       overview: extractText(overview),
-      errors: extractText(errors),
+      errors: errorsJson,
       warnings: extractText(warnings),
     };
 
