@@ -1343,6 +1343,52 @@ public partial class AssertTests : TestContainer
         ex.Message.Should().Contain("Callback");
         ex.Message.Should().Contain("null");
     }
+
+    // ---- Object-typed sub-expressions: locks down current behavior when two side-effecting
+    // method calls return the same mutable reference. The cache stores reference values, so by
+    // the time details are extracted both slots point to the post-mutation object; with
+    // first-occurrence-by-name and "same value -> dedupe" semantics in TryAddExpressionValue,
+    // only one entry surfaces. This is a known UX limitation worth pinning down with a test.
+    public void That_TwoCallsReturningSameMutatedReference_DeduplicatesInDetails()
+    {
+        var box = new BoxOfShapes();
+
+        // Same reference returned twice but mutated between calls; the != check therefore returns
+        // false (same reference) so the assertion fails.
+        Action act = () => Assert.That(() => box.GetValueWithSideEffect() != box.GetValueWithSideEffect());
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assert.That(() => box.GetValueWithSideEffect() != box.GetValueWithSideEffect()) failed.
+                Details:
+                  box.GetValueWithSideEffect() = Shape: Circle
+                """);
+    }
+
+    private sealed class Shape
+    {
+        public string Name { get; set; } = string.Empty;
+
+        public override string ToString() => $"Shape: {Name}";
+    }
+
+    private sealed class BoxOfShapes
+    {
+        private Shape? _c;
+
+        public Shape GetValueWithSideEffect()
+        {
+            if (_c is null)
+            {
+                _c = new Shape { Name = "Square" };
+                return _c;
+            }
+
+            _c.Name = "Circle";
+            return _c;
+        }
+    }
 }
 
 internal static class MutableBoxHelper
