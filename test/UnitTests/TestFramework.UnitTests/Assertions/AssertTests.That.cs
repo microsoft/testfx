@@ -479,10 +479,10 @@ public partial class AssertTests : TestContainer
             .WithMessage($"""
                 Assert.That(() => new DateTime(year, month, day) == DateTime.MinValue) failed.
                 Details:
-                  DateTime.MinValue = {DateTime.MinValue.ToString(CultureInfo.CurrentCulture)}
+                  DateTime.MinValue = {DateTime.MinValue.ToString(CultureInfo.InvariantCulture)}
                   day = 25
                   month = 12
-                  new DateTime(year, month, day) = {new DateTime(year, month, day).ToString(CultureInfo.CurrentCulture)}
+                  new DateTime(year, month, day) = {new DateTime(year, month, day).ToString(CultureInfo.InvariantCulture)}
                   year = 2023
                 """);
     }
@@ -1041,5 +1041,240 @@ public partial class AssertTests : TestContainer
               nonNullVariable = "value"
               nullVariable = null
             """);
+    }
+
+    public void That_DoesNotEvaluateTwice_WhenAssertionFails()
+    {
+        var box = new Box();
+
+        // If we evaluate twice, box.GetValueWithSideEffect() is called once on comparison, and once when message for assertion is built.
+        // We compare to 0 to force failure.
+        Action act = () => Assert.That(() => box.GetValueWithSideEffect() == 0);
+
+        // GetValueWithSideEffect() should report 1, which is the value when we evaluate only once.
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => box.GetValueWithSideEffect() == 0) failed.
+            Details:
+              box.GetValueWithSideEffect() = 1
+            """);
+
+        // We call again, this should be second call now.
+        box.GetValueWithSideEffect().Should().Be(2);
+    }
+
+    public void That_DoesNotEvaluateTwice_WhenAssertionFails_NoSideEffect()
+    {
+        int i = 1;
+        Action act = () => Assert.That(() => i + i == 0);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => i + i == 0) failed.
+            Details:
+              i = 1
+            """);
+    }
+
+    public void That_DoesEvaluateTwice_WhenMethodIsLeaf()
+    {
+        var box = new Box();
+
+        // Compare to 0 to force failure.
+        Action act = () => Assert.That(() => box.GetValueWithSideEffect() + box.GetValueWithSideEffect() == 0);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => box.GetValueWithSideEffect() + box.GetValueWithSideEffect() == 0) failed.
+            Details:
+              box.GetValueWithSideEffect() = 1
+              box.GetValueWithSideEffect() (2) = 2
+            """);
+    }
+
+    public void That_FastPathFailure_StillExtractsDetails()
+    {
+        int x = 3;
+
+        Action act = () => Assert.That(() => x == 5);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => x == 5) failed.
+            Details:
+              x = 3
+            """);
+    }
+
+    public void That_FieldAccessWithSideEffectingParent_DoesNotEvaluateTwice()
+    {
+        var provider = new BoxProvider();
+
+        Action act = () => Assert.That(() => provider.GetBox().Value == 0);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => provider.GetBox().Value == 0) failed.
+            Details:
+              provider.GetBox().Value = 1
+            """);
+
+        provider.Calls.Should().Be(1);
+    }
+
+    public void That_AndAlso_ShortCircuits_DoesNotEvaluateRightWhenLeftIsFalse()
+    {
+        string? s = null;
+
+        // s != null is false; the right operand s.Length > 0 must NOT execute on the assertion
+        // path (it would NRE) and the diagnostic walk must not surface "<Failed to evaluate>"
+        // for the benign short-circuit.
+        Action act = () => Assert.That(() => s != null && s.Length > 0);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => s != null && s.Length > 0) failed.
+            Details:
+              s = null
+            """);
+    }
+
+    public void That_OrElse_ShortCircuit_PassingAssertion_DoesNotInvokeRight()
+    {
+        var counter = new SideEffectCounter();
+        bool leftTrue = true;
+
+        // Assertion passes because leftTrue is true; counter.Increment() must NOT run.
+        Action act = () => Assert.That(() => leftTrue || counter.Increment() > 0);
+
+        act.Should().NotThrow();
+        counter.Count.Should().Be(0);
+    }
+
+    public void That_Coalesce_ShortCircuit_PassingAssertion_DoesNotInvokeRight()
+    {
+        var counter = new SideEffectCounter();
+        string? value = "hello";
+
+        // Non-null value short-circuits the null-coalescing operator; counter.Increment() must NOT run.
+        Action act = () => Assert.That(() => (value ?? counter.Increment().ToString()) == "hello");
+
+        act.Should().NotThrow();
+        counter.Count.Should().Be(0);
+    }
+
+    public void That_Conditional_PassingAssertion_DoesNotInvokeUnselectedBranch()
+    {
+        var counter = new SideEffectCounter();
+        bool useTrueBranch = true;
+
+        // useTrueBranch picks the IfTrue side; counter.Increment() in IfFalse must NOT run.
+        Action act = () => Assert.That(() => (useTrueBranch ? 1 : counter.Increment()) == 1);
+
+        act.Should().NotThrow();
+        counter.Count.Should().Be(0);
+    }
+
+    public void That_PropagatesUserExceptions_OnSinglePassPath()
+    {
+        var thrower = new Thrower();
+
+        // The lambda throws InvalidOperationException; previously the single-pass evaluator
+        // would swallow it and turn it into a confusing InvalidCastException ("<Failed to evaluate>" -> bool).
+        // Now the original exception must surface unchanged.
+        Action act = () => Assert.That(() => thrower.Throw());
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("boom");
+    }
+
+    public void That_NewExpressionWithSideEffectingArgument_DoesNotEvaluateTwice()
+    {
+        var counter = new SideEffectCounter();
+
+        Action act = () => Assert.That(() => new Wrapper(counter.Increment()).Value == 99);
+
+        act.Should().Throw<AssertFailedException>();
+        counter.Count.Should().Be(1);
+    }
+
+    public void That_NewArrayWithSideEffectingElement_DoesNotEvaluateTwice()
+    {
+        var counter = new SideEffectCounter();
+
+        Action act = () => Assert.That(() => new[] { counter.Increment() }.Length == 99);
+
+        act.Should().Throw<AssertFailedException>();
+        counter.Count.Should().Be(1);
+    }
+
+    public void That_InvocationWithSideEffectingArgument_DoesNotEvaluateTwice()
+    {
+        var counter = new SideEffectCounter();
+        Func<int, int> identity = x => x;
+
+        Action act = () => Assert.That(() => identity(counter.Increment()) == 99);
+
+        act.Should().Throw<AssertFailedException>();
+        counter.Count.Should().Be(1);
+    }
+
+    public void That_QueryableWithQuotedLambda_FailsAsAssertionFailure()
+    {
+        int[] items = [1, 2, 3];
+
+        // The Where/Any call uses a quoted lambda; the previous walker tried to unwrap the Quote
+        // and produced an InvalidCastException instead of an AssertFailedException.
+        Action act = () => Assert.That(() => items.AsQueryable().Any(i => i > 99));
+
+        act.Should().Throw<AssertFailedException>();
+    }
+
+    private sealed class SideEffectCounter
+    {
+        public int Count { get; private set; }
+
+        public int Increment()
+        {
+            Count++;
+            return Count;
+        }
+    }
+
+    private sealed class Thrower
+    {
+        public bool Throw() => throw new InvalidOperationException("boom");
+    }
+
+    private sealed class Wrapper(int value)
+    {
+        public int Value { get; } = value;
+    }
+
+    private class Box
+    {
+        private int _c;
+
+        public int GetValueWithSideEffect()
+        {
+            _c++;
+            return _c;
+        }
+    }
+
+    private sealed class BoxProvider
+    {
+        public int Calls { get; private set; }
+
+        public ValueBox GetBox()
+        {
+            Calls++;
+            return new ValueBox(Calls);
+        }
+    }
+
+    private readonly struct ValueBox(int value)
+    {
+        public int Value { get; } = value;
     }
 }

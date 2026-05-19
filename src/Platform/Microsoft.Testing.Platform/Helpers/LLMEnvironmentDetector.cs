@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.Helpers;
 
-// Copy from https://github.com/dotnet/sdk/tree/1e5d8e39d3026edb222cdf4f8d8240f1eb99f24b/src/Cli/Microsoft.DotNet.Cli.Definitions/Telemetry
+// Copy from https://github.com/dotnet/sdk/tree/eaad2a6f937b2c8d9247c53d71b57204f5d127b2/src/Cli/dotnet/Telemetry/LLMEnvironmentDetectorForTelemetry.cs
 internal static class LLMEnvironmentDetector
 {
     private static readonly EnvironmentDetectionRuleWithResult<string>[] DetectionRules =
@@ -14,10 +14,10 @@ internal static class LLMEnvironmentDetector
         new EnvironmentDetectionRuleWithResult<string>("cursor", new AnyPresentEnvironmentRule("CURSOR_EDITOR", "CURSOR_AI")),
         // Gemini
         new EnvironmentDetectionRuleWithResult<string>("gemini", new BooleanEnvironmentRule("GEMINI_CLI")),
-        // GitHub Copilot (legacy gh extension: GITHUB_COPILOT_CLI_MODE=true; new Copilot CLI: GH_COPILOT_WORKING_DIRECTORY is set)
+        // GitHub Copilot (legacy gh extension: GITHUB_COPILOT_CLI_MODE=true; new Copilot CLI: GH_COPILOT_WORKING_DIRECTORY or COPILOT_CLI is set)
         new EnvironmentDetectionRuleWithResult<string>("copilot", new AnyMatchEnvironmentRule(
             new BooleanEnvironmentRule("GITHUB_COPILOT_CLI_MODE"),
-            new AnyPresentEnvironmentRule("GH_COPILOT_WORKING_DIRECTORY"))),
+            new AnyPresentEnvironmentRule("GH_COPILOT_WORKING_DIRECTORY", "COPILOT_CLI"))),
         // Codex CLI
         new EnvironmentDetectionRuleWithResult<string>("codex", new AnyPresentEnvironmentRule("CODEX_CLI", "CODEX_SANDBOX")),
         // Aider

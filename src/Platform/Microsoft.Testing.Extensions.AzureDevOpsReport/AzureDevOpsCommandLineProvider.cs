@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.AzureDevOpsReport;
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
@@ -11,6 +12,11 @@ namespace Microsoft.Testing.Extensions.Reporting;
 internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvider
 {
     private static readonly string[] SeverityOptions = ["error", "warning"];
+
+    private static readonly string DemoteKnownFlakyOptionDescriptionFormatted = string.Format(
+        CultureInfo.InvariantCulture,
+        AzureDevOpsResources.DemoteKnownFlakyOptionDescription,
+        AzureDevOpsReporter.KnownFlakyFailureRateThreshold * 100);
 
     public string Uid => nameof(AzureDevOpsCommandLineProvider);
 
@@ -26,31 +32,61 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
         =>
         [
             new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName, AzureDevOpsResources.OptionDescription, ArgumentArity.Zero, false),
+            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky, DemoteKnownFlakyOptionDescriptionFormatted, ArgumentArity.Zero, false),
+            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory, AzureDevOpsResources.FlakyHistoryOptionDescription, ArgumentArity.ExactlyOne, false),
+            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile, AzureDevOpsResources.QuarantineFileOptionDescription, ArgumentArity.ExactlyOne, false),
             new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, AzureDevOpsResources.SeverityOptionDescription, ArgumentArity.ExactlyOne, false),
         ];
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
-    {
-        if (commandOption.Name == AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity)
+        => commandOption.Name switch
         {
-            if (!SeverityOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase))
-            {
-                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidSeverity, arguments[0]));
-            }
-        }
-
-        return ValidationResult.ValidTask;
-    }
+            AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory => ValidateFlakyHistoryArgumentsAsync(arguments),
+            AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity => ValidateSeverityArgumentsAsync(arguments),
+            _ => ValidationResult.ValidTask,
+        };
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
     {
-        if (!commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName) &&
-            commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity))
+        string? errorMessage = null;
+        if (!commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName))
         {
-            // If report-azdo is not set, but report-azdo-severity is set, it's invalid.
-            return ValidationResult.InvalidTask(AzureDevOpsResources.AzureDevOpsReportSeverityRequiresAzureDevOps);
+            if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps;
+            }
+            else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsFlakyHistoryRequiresAzureDevOps;
+            }
+            else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsQuarantineFileRequiresAzureDevOps;
+            }
+            else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsReportSeverityRequiresAzureDevOps;
+            }
+        }
+        else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky)
+            && !commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory))
+        {
+            errorMessage = AzureDevOpsResources.AzureDevOpsDemoteKnownFlakyRequiresFlakyHistory;
         }
 
-        return ValidationResult.ValidTask;
+        return errorMessage is null
+            ? ValidationResult.ValidTask
+            : ValidationResult.InvalidTask(errorMessage);
     }
+
+    private static Task<ValidationResult> ValidateFlakyHistoryArgumentsAsync(string[] arguments)
+        => int.TryParse(arguments[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int days)
+            && days is >= 1 and <= 90
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidFlakyHistoryDays, arguments[0]));
+
+    private static Task<ValidationResult> ValidateSeverityArgumentsAsync(string[] arguments)
+        => SeverityOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
+            ? ValidationResult.ValidTask
+            : ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidSeverity, arguments[0]));
 }
