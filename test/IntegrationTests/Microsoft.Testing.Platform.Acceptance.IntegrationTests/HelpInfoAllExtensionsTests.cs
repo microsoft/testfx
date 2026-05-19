@@ -103,6 +103,14 @@ Extension options:
     --output
         Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+    --publish-azdo-run-name
+        Custom Azure DevOps test run name for live test-result publishing.
+    --publish-azdo-test-results
+        Publish test results live to the Azure DevOps Tests tab.
+    --report-azdo
+        Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.
+    --report-azdo-severity
+        Severity to use for the reported event. Options are: error (default) and warning.
     --report-trx
         Enable generating TRX report
     --report-trx-filename
@@ -269,6 +277,27 @@ Built-in command line providers:
         Description: A global test execution timeout.
         Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
 Registered command line providers:
+  AzureDevOpsCommandLineProvider
+    Name: Azure DevOps report generator
+    Version: *
+    Description: Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.
+    Options:
+      --publish-azdo-run-name
+        Arity: 1
+        Hidden: False
+        Description: Custom Azure DevOps test run name for live test-result publishing.
+      --publish-azdo-test-results
+        Arity: 0
+        Hidden: False
+        Description: Publish test results live to the Azure DevOps Tests tab.
+      --report-azdo
+        Arity: 0
+        Hidden: False
+        Description: Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.
+      --report-azdo-severity
+        Arity: 1
+        Hidden: False
+        Description: Severity to use for the reported event. Options are: error (default) and warning.
   CrashDumpCommandLineProvider
     Name: Crash dump
     Version: *
@@ -439,6 +468,7 @@ Registered tools:
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingPlatformVersion$" />

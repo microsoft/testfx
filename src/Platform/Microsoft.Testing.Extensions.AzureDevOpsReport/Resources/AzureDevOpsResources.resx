@@ -119,9 +119,10 @@
   </resheader>
   <data name="AzureDevOpsReportSeverityRequiresAzureDevOps" xml:space="preserve">
     <value>'--report-azdo-severity' requires '--report-azdo' to be enabled</value>
+    <comment>{Locked='--report-azdo-severity'}{Locked='--report-azdo'}</comment>
   </data>
   <data name="Description" xml:space="preserve">
-    <value>Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</value>
+    <value>Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</value>
   </data>
   <data name="DisplayName" xml:space="preserve">
     <value>Azure DevOps report generator</value>
@@ -130,10 +131,62 @@
     <value>Invalid option {0}.</value>
   </data>
   <data name="OptionDescription" xml:space="preserve">
-    <value>Eanble Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</value>
+    <value>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</value>
   </data>
   <data name="SeverityOptionDescription" xml:space="preserve">
     <value>Severity to use for the reported event. Options are: error (default) and warning.</value>
     <comment>{Locked="error"}{Locked="warning"}</comment>
+  </data>
+  <data name="PublishAzdoRunNameOptionDescription" xml:space="preserve">
+    <value>Custom Azure DevOps test run name for live test-result publishing.</value>
+  </data>
+  <data name="PublishAzdoRunNameRequiresPublishAzdoTestResults" xml:space="preserve">
+    <value>'--publish-azdo-run-name' requires '--publish-azdo-test-results' to be enabled</value>
+    <comment>{Locked='--publish-azdo-run-name'}{Locked='--publish-azdo-test-results'}</comment>
+  </data>
+  <data name="PublishAzdoTestResultsOptionDescription" xml:space="preserve">
+    <value>Publish test results live to the Azure DevOps Tests tab.</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingCompleteRunFailed" xml:space="preserve">
+    <value>Azure DevOps live publishing failed to complete the test run.</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingCreateRunFailed" xml:space="preserve">
+    <value>Azure DevOps live publishing failed to create the test run.</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingFailedToDeleteCoordinationFile" xml:space="preserve">
+    <value>Azure DevOps live publishing failed to delete coordination file</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingFinalizeWaitTimedOut" xml:space="preserve">
+    <value>Azure DevOps live publishing timed out after {0} waiting for {1} participant file(s); finalizing the run anyway.</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingHttpError" xml:space="preserve">
+    <value>Azure DevOps REST API request failed with status code {0}. Response: {1}</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingInvalidResponse" xml:space="preserve">
+    <value>Azure DevOps REST API returned an unexpected response payload.</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingMissingConfiguration" xml:space="preserve">
+    <value>'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</value>
+    <comment>{Locked='--publish-azdo-test-results'}</comment>
+  </data>
+  <data name="AzureDevOpsLivePublishingMissingRunIdFile" xml:space="preserve">
+    <value>Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</value>
+    <comment>{Locked="azdo-runid.&lt;buildId&gt;.json"}</comment>
+  </data>
+  <data name="AzureDevOpsLivePublishingPublishResultsFailed" xml:space="preserve">
+    <value>Azure DevOps live publishing failed to publish test results.</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingRequestFailed" xml:space="preserve">
+    <value>Azure DevOps REST API request failed after all retries.</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingRunIdFileMismatch" xml:space="preserve">
+    <value>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</value>
+    <comment>{Locked="azdo-runid.&lt;buildId&gt;.json"}</comment>
+  </data>
+  <data name="AzureDevOpsLivePublishingTimeoutErrorMessage" xml:space="preserve">
+    <value>Timeout</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingTimeoutErrorMessageWithReason" xml:space="preserve">
+    <value>Timeout: {0}</value>
   </data>
 </root>

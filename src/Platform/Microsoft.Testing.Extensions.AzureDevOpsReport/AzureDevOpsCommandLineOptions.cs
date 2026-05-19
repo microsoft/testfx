@@ -7,4 +7,6 @@ internal static class AzureDevOpsCommandLineOptions
 {
     public const string AzureDevOpsOptionName = "report-azdo";
     public const string AzureDevOpsReportSeverity = "report-azdo-severity";
+    public const string PublishAzureDevOpsRunNameOptionName = "publish-azdo-run-name";
+    public const string PublishAzureDevOpsTestResultsOptionName = "publish-azdo-test-results";
 }

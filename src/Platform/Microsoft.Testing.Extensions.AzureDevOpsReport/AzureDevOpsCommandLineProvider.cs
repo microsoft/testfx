@@ -27,6 +27,8 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
         [
             new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName, AzureDevOpsResources.OptionDescription, ArgumentArity.Zero, false),
             new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, AzureDevOpsResources.SeverityOptionDescription, ArgumentArity.ExactlyOne, false),
+            new CommandLineOption(AzureDevOpsCommandLineOptions.PublishAzureDevOpsRunNameOptionName, AzureDevOpsResources.PublishAzdoRunNameOptionDescription, ArgumentArity.ExactlyOne, false),
+            new CommandLineOption(AzureDevOpsCommandLineOptions.PublishAzureDevOpsTestResultsOptionName, AzureDevOpsResources.PublishAzdoTestResultsOptionDescription, ArgumentArity.Zero, false),
         ];
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
@@ -51,6 +53,14 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
             return ValidationResult.InvalidTask(AzureDevOpsResources.AzureDevOpsReportSeverityRequiresAzureDevOps);
         }
 
-        return ValidationResult.ValidTask;
+        if (!commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.PublishAzureDevOpsRunNameOptionName))
+        {
+            return ValidationResult.ValidTask;
+        }
+
+        bool isPublishResultsEnabled = commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.PublishAzureDevOpsTestResultsOptionName);
+        return isPublishResultsEnabled
+            ? ValidationResult.ValidTask
+            : ValidationResult.InvalidTask(AzureDevOpsResources.PublishAzdoRunNameRequiresPublishAzdoTestResults);
     }
 }
