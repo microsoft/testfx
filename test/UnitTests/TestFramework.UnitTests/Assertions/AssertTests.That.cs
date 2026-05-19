@@ -1445,7 +1445,9 @@ public partial class AssertTests : TestContainer
     // CaptureRewriter skips them rather than wrapping a writable LHS in a non-writable Block.
     private sealed class MutableBox
     {
+#pragma warning disable SA1401 // Fields should be private - intentional: this type tests Expression.Assign on a field.
         public int Value;
+#pragma warning restore SA1401
     }
 
     public void That_ManuallyConstructedAssignExpression_DoesNotThrow()
