@@ -32,25 +32,35 @@
         <target state="new">Expected all items in collection to be of the specified type.</target>
         <note />
       </trans-unit>
-      <trans-unit id="AreEqualFailMsg">
-        <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Beklenen:&lt;{1}&gt;. Gerçek:&lt;{2}&gt;. {0}</target>
-        <note></note>
+      <trans-unit id="AreEqualCaseFailMsg">
+        <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
+        <target state="translated">Beklenen:&lt;{1}&gt;. Durum, gerçek değer için farklı:&lt;{2}&gt;. {0}</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualDeltaFailMsg">
         <source>Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
         <target state="translated">Beklenen değer &lt;{1}&gt; ile gerçek değer &lt;{2}&gt; arasında, şundan büyük olmayan fark bekleniyor: &lt;{3}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="AreEqualCaseFailMsg">
-        <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Beklenen:&lt;{1}&gt;. Durum, gerçek değer için farklı:&lt;{2}&gt;. {0}</target>
-        <note></note>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailMsg">
         <source>Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</source>
         <target state="translated">Beklenen:&lt;{1} ({2})&gt;. Gerçek:&lt;{3} ({4})&gt;. {0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualFailMsg">
+        <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
+        <target state="translated">Beklenen:&lt;{1}&gt;. Gerçek:&lt;{2}&gt;. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffActualPrefix">
+        <source>But was:  </source>
+        <target state="translated">Ancak:  </target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffExpectedPrefix">
+        <source>Expected: </source>
+        <target state="translated">Beklenen: </target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffFailMsg">
         <source>{0}{1}
@@ -63,25 +73,20 @@
 {4}</target>
         <note />
       </trans-unit>
-      <trans-unit id="AreEqualStringDiffExpectedPrefix">
-        <source>Expected: </source>
-        <target state="translated">Beklenen: </target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="AreEqualStringDiffActualPrefix">
-        <source>But was:  </source>
-        <target state="translated">Ancak:  </target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthBothMsg">
-        <source>String lengths are both {0} but differ at index {1}.</source>
-        <target state="translated">Dize uzunlukları her ikisi de {0} ama dizin {1} üzerinde farklılık gösterir.</target>
+        <source>Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</source>
+        <target state="new">Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthDifferentMsg">
-        <source>Expected string length {0} but was {1}.</source>
-        <target state="translated">Beklenen dize uzunluğu {0} idi, ancak dize uzunluğu {1} oldu.</target>
-        <note></note>
+        <source>Strings have different lengths (expected: {0}, actual: {1}) and differ at 1 location(s). First difference at index {2}.</source>
+        <target state="new">Strings have different lengths (expected: {0}, actual: {1}) and differ at 1 location(s). First difference at index {2}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringsCaseOnlyDifferenceMsg">
+        <source>Strings differ only in case.</source>
+        <target state="new">Strings differ only in case.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEquivalentFailedSummary">
         <source>Expected values to be structurally equivalent.</source>
@@ -188,15 +193,25 @@
         <target state="new">&lt;root&gt;</target>
         <note>Placeholder used in equivalence-mismatch messages when the difference is at the top of the object graph.</note>
       </trans-unit>
+      <trans-unit id="AreNotEqualDeltaFailMsg">
+        <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
+        <target state="translated">Beklenen değer &lt;{1}&gt; ile gerçek değer &lt;{2}&gt; arasında, şundan büyük olan fark bekleniyor: &lt;{3}&gt;. {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
         <source>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
         <target state="translated">Şunun dışında bir değer bekleniyor:&lt;{1}&gt;. Gerçek:&lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AreNotEqualDeltaFailMsg">
-        <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">Beklenen değer &lt;{1}&gt; ile gerçek değer &lt;{2}&gt; arasında, şundan büyük olan fark bekleniyor: &lt;{3}&gt;. {0}</target>
-        <note></note>
+      <trans-unit id="AreNotEqualStringsCaseInsensitiveFailedSummary">
+        <source>Expected strings to differ (case-insensitive).</source>
+        <target state="new">Expected strings to differ (case-insensitive).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEqualStringsFailedSummary">
+        <source>Expected strings to differ.</source>
+        <target state="new">Expected strings to differ.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreNotEquivalentComparisonFailedSummary">
         <source>Could not complete structural comparison.</source>
@@ -251,6 +266,11 @@
       <trans-unit id="AssertThatDetailsPrefix">
         <source>Details:</source>
         <target state="translated">Ayrıntılar:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatFailedToEvaluate">
+        <source>&lt;Failed to evaluate&gt;</source>
+        <target state="new">&lt;Failed to evaluate&gt;</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThatMessageFormat">
@@ -470,6 +490,11 @@ Gerçekte olan: {2}</target>
       <trans-unit id="HasCountFailedSummary">
         <source>Expected collection to contain a specific number of elements.</source>
         <target state="new">Expected collection to contain a specific number of elements.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InconclusivePrefix">
+        <source>Assert.Inconclusive.</source>
+        <target state="new">Assert.Inconclusive.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidAccessToTestContextProperty">

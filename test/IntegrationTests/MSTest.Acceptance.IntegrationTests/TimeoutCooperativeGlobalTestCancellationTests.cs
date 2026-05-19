@@ -10,7 +10,6 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class TimeoutCooperativeGlobalTestCancellationTests : AcceptanceTestBase<TimeoutCooperativeGlobalTestCancellationTests.TestAssetFixture>
 {
     [TestMethod]
-    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/6198. The TestFailedException returned by InvokeGlobalInitializeMethodAsync is currently discarded in TestMethodInfo.Execution.cs, so timeouts on global test initialize methods do not fail the test.")]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task CooperativeCancellation_WhenGlobalTestInitTimeoutExpires_StepThrows(string tfm)
     {
@@ -27,7 +26,6 @@ public sealed class TimeoutCooperativeGlobalTestCancellationTests : AcceptanceTe
     }
 
     [TestMethod]
-    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/6198. The TestFailedException returned by InvokeGlobalInitializeMethodAsync is currently discarded in TestMethodInfo.Execution.cs, so timeouts on global test initialize methods do not fail the test.")]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task CooperativeCancellation_WhenGlobalTestInitTimeoutExpiresAndUserChecksToken_StepThrows(string tfm)
     {
@@ -44,7 +42,6 @@ public sealed class TimeoutCooperativeGlobalTestCancellationTests : AcceptanceTe
     }
 
     [TestMethod]
-    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/6198. The TestFailedException returned by InvokeGlobalCleanupMethodAsync is currently discarded in TestMethodInfo.Lifecycle.cs, so timeouts on global test cleanup methods do not fail the test.")]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task CooperativeCancellation_WhenGlobalTestCleanupTimeoutExpires_StepThrows(string tfm)
     {
@@ -61,7 +58,6 @@ public sealed class TimeoutCooperativeGlobalTestCancellationTests : AcceptanceTe
     }
 
     [TestMethod]
-    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/6198. The TestFailedException returned by InvokeGlobalCleanupMethodAsync is currently discarded in TestMethodInfo.Lifecycle.cs, so timeouts on global test cleanup methods do not fail the test.")]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task CooperativeCancellation_WhenGlobalTestCleanupTimeoutExpiresAndUserChecksToken_StepThrows(string tfm)
     {

@@ -173,8 +173,19 @@ public partial class AssertTests : TestContainer
 
         // Won't ignore case.
         Action action = () => Assert.AreEqual(expected, actual, false, englishCulture);
-        action.Should().Throw<Exception>()
-            .WithMessage("Assert.AreEqual failed. Expected:<i>. Case is different for actual value:<I>. 'expected' expression: 'expected', 'actual' expression: 'actual'.");
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                Strings differ only in case.
+                Strings have same length (1) and differ at 1 location(s). First difference at index 0.
+
+                expected: "i"
+                actual:   "I"
+                culture:  en-EN
+
+                Assert.AreEqual(expected, actual)
+                """);
     }
 
     public void AreEqual_WithTurkishCultureAndDoesNotIgnoreCase_Throws()
@@ -1503,7 +1514,7 @@ public partial class AssertTests : TestContainer
             .Which.Message.Should().Be(
                 """
                 Assertion failed. Expected strings to be equal.
-                String lengths are both 4 but differ at index 0.
+                Strings have same length (4) and differ at 1 location(s). First difference at index 0.
 
                 expected: "baaa"
                 actual:   "aaaa"
@@ -1519,7 +1530,7 @@ public partial class AssertTests : TestContainer
             .Which.Message.Should().Be(
                 """
                 Assertion failed. Expected strings to be equal.
-                String lengths are both 4 but differ at index 3.
+                Strings have same length (4) and differ at 1 location(s). First difference at index 3.
 
                 expected: "aaaa"
                 actual:   "aaab"
@@ -1531,17 +1542,12 @@ public partial class AssertTests : TestContainer
     public void AreEqualStringWithSpecialCharactersShouldEscape()
     {
         Action action = () => Assert.AreEqual("aa\ta", "aa a");
-        action.Should().Throw<AssertFailedException>()
-            .Which.Message.Should().Be(
-                """
-                Assertion failed. Expected strings to be equal.
-                String lengths are both 4 but differ at index 2.
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
 
-                expected: "aa\ta"
-                actual:   "aa a"
-
-                Assert.AreEqual("aa\ta", "aa a")
-                """);
+        ex.Message.Should().Contain("Strings have same length (4) and differ at 1 location(s). First difference at index 2.");
+        ex.Message.Should().Contain("expected: \"aa\\ta\"");
+        ex.Message.Should().Contain("actual:   \"aa a\"");
+        ex.Message.Should().Contain("Assert.AreEqual(\"aa\\ta\", \"aa a\")");
     }
 
     // Long-string truncation is intentionally not yet implemented; documents the current full-string render.
@@ -1555,7 +1561,7 @@ public partial class AssertTests : TestContainer
             .Which.Message.Should().Be(
                 """
                 Assertion failed. Expected strings to be equal.
-                String lengths are both 201 but differ at index 100.
+                Strings have same length (201) and differ at 1 location(s). First difference at index 100.
 
                 expected: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
                 actual:   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaadcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
@@ -1567,12 +1573,21 @@ public partial class AssertTests : TestContainer
     public void AreEqualStringWithCultureShouldUseEnhancedMessage()
     {
         Action action = () => Assert.AreEqual("aaaa", "aaab", false, CultureInfo.InvariantCulture);
-        action.Should().Throw<Exception>()
-            .WithMessage("""
-            Assert.AreEqual failed. String lengths are both 4 but differ at index 3. 'expected' expression: '"aaaa"', 'actual' expression: '"aaab"'.
-            Expected: "aaaa"
-            But was:  "aaab"
-            --------------^
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+
+        ex.Message.Should().StartWith(
+            """
+            Assertion failed. Expected strings to be equal.
+            Strings have same length (4) and differ at 1 location(s). First difference at index 3.
+
+            expected: "aaaa"
+            actual:   "aaab"
+            """);
+        ex.Message.Should().Contain($"{Environment.NewLine}culture:");
+        ex.Message.Should().EndWith(
+            """
+
+            Assert.AreEqual("aaaa", "aaab")
             """);
     }
 
@@ -1583,7 +1598,7 @@ public partial class AssertTests : TestContainer
             .Which.Message.Should().Be(
                 """
                 Assertion failed. Expected strings to be equal.
-                Expected string length 4 but was 3.
+                Strings have different lengths (expected: 4, actual: 3) and differ at 1 location(s). First difference at index 3.
 
                 expected: "aaaa"
                 actual:   "aaa"
@@ -1599,7 +1614,7 @@ public partial class AssertTests : TestContainer
             .Which.Message.Should().Be(
                 """
                 Assertion failed. Expected strings to be equal.
-                Expected string length 3 but was 4.
+                Strings have different lengths (expected: 3, actual: 4) and differ at 1 location(s). First difference at index 3.
 
                 expected: "aaa"
                 actual:   "aaab"
@@ -1615,7 +1630,7 @@ public partial class AssertTests : TestContainer
             .Which.Message.Should().Be(
                 """
                 Assertion failed. Expected strings to be equal.
-                String lengths are both 4 but differ at index 3.
+                Strings have same length (4) and differ at 1 location(s). First difference at index 3.
                 My custom message
 
                 expected: "aaaa"
@@ -1632,7 +1647,7 @@ public partial class AssertTests : TestContainer
             .Which.Message.Should().Be(
                 """
                 Assertion failed. Expected strings to be equal.
-                Expected string length 2 but was 4.
+                Strings have different lengths (expected: 2, actual: 4) and differ at 1 location(s). First difference at index 0.
 
                 expected: "🥰"
                 actual:   "aaab"
@@ -1641,208 +1656,117 @@ public partial class AssertTests : TestContainer
                 """);
     }
 
-    public void CreateStringPreviews_DiffPointsToCorrectPlaceInNonShortenedString()
+    public void AreEqualStringSpecificWithIgnoreCaseAndCultureUsesComparisonAwareDiffIndex()
     {
-        int preview = 9;
-        int length = 1;
-        int diffIndex = 0;
-        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(length, diffIndex), DigitString(length, diffIndex), diffIndex, preview));
-        StringPreviewsAreEqual(
-            """
-            "X"
-            "X"
-            _^
-            """,
-            stringPreview);
-    }
+        Action action = () => Assert.AreEqual("straße", "STRAẞE!", true, new CultureInfo("de-DE"));
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                Strings have different lengths (expected: 6, actual: 7) and differ at 1 location(s). First difference at index 6.
 
-    public void CreateStringPreviews_DiffPointsToCorrectPlaceInShortenedStringWithEndCut()
-    {
-        int preview = 9;
-        int length = preview + 10;
-        int diffIndex = 0;
-        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(length, diffIndex), DigitString(length, diffIndex), diffIndex, preview));
-        StringPreviewsAreEqual(
-            """
-            "X12345..."
-            "X12345..."
-            _^
-            """, stringPreview);
-    }
+                expected:    "straße"
+                actual:      "STRAẞE!"
+                ignore case: true
+                culture:     de-DE
 
-    public void CreateStringPreviews_DiffPointsToCorrectPlaceInShortenedStringWithStartCut()
-    {
-        int preview = 9;
-        int length = 10;
-        int diffIndex = 9;
-        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(length, diffIndex), DigitString(length, diffIndex), diffIndex: diffIndex, preview));
-        StringPreviewsAreEqual(
-            """
-            "...45678X"
-            "...45678X"
-            _________^
-            """,
-            stringPreview);
-    }
-
-    public void CreateStringPreviews_ShowWholeStringWhenDifferenceIsAtTheEndAndJustOneStringDoesNotFit()
-    {
-        int preview = 21;
-        int length = 50;
-        int diffIndex = 16;
-        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(preview, diffIndex), DigitString(length, diffIndex), diffIndex: diffIndex, preview));
-        StringPreviewsAreEqual(
-            """
-            "0123456789012345X7890"
-            "0123456789012345X7..."
-            _________________^
-            """,
-            stringPreview);
-    }
-
-    public void CreateStringPreviews_MakeSureWeDontPointToEndEllipsis()
-    {
-        // We will mask last 3 chars of the string, so we need to make sure that the diff index is not pointing to the end ellipsis.
-        int preview = 25;
-        int length = 50;
-        int diffIndex = 24;
-
-        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(preview, diffIndex), DigitString(length, diffIndex), diffIndex: diffIndex, preview));
-        StringPreviewsAreEqual(
-            """
-            "...8901234567890123X"
-            "...8901234567890123X56..."
-            ____________________^
-            """,
-            stringPreview);
-    }
-
-    public void CreateStringPreviews_MakeSureWeDontPointToEndEllipsis_WhenLongerStringOneCharLargerThanPreviewWindow()
-    {
-        // We will mask last 3 chars of the string, so we need to make sure that the diff index is not pointing to the end ellipsis.
-        int preview = 15;
-        int diffIndex = preview - 1;
-
-        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(preview, diffIndex), DigitString(preview + 1, diffIndex), diffIndex: diffIndex, preview));
-        StringPreviewsAreEqual(
-            """
-            "...890123X"
-            "...890123X5"
-            __________^
-            """,
-            stringPreview);
-    }
-
-    public void CreateStringPreviews_MakeSureWeDontPointToEndEllipsis_WhenLongerStringIsBarelyLonger()
-    {
-        // We will mask last 3 chars of the string, so we need to make sure that the diff index is not pointing to the end ellipsis.
-        int preview = 25;
-
-        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews("01234567890123456789012345678901234567890123X", "01234567890123456789012345678901234567890123X56", diffIndex: 44, preview));
-        StringPreviewsAreEqual(
-            """
-            "...8901234567890123X"
-            "...8901234567890123X56"
-            ____________________^
-            """,
-            stringPreview);
-    }
-
-    public void CreateStringPreviews_DiffPointsAfterLastCharacterWhenStringsAreAllTheSameCharactersUntilTheEndOfTheShorterOne()
-    {
-        int preview = 9;
-        int diffIndex = 3;
-        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews("aaa", "aaaX", diffIndex, preview));
-        stringPreview.Should().Be("""
-            "aaa"
-            "aaaX"
-            ____^
-            """);
-    }
-
-    public void CreateStringPreviews_DiffNeverPointsAtEllipsis_Generated()
-    {
-        // Generate all combinations of string lengths and diff to see if in any of them we point to ellipsis.
-        StringBuilder s = new();
-        foreach (int a in Enumerable.Range(1, 20))
-        {
-            foreach (int e in Enumerable.Range(1, 20))
-            {
-                foreach (int d in Enumerable.Range(1, Math.Min(a, e)))
-                {
-                    string p = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(e, d), DigitString(a, d), diffIndex: d, 11));
-
-                    string[] lines = p.Split('\n');
-                    int diffIndicator = lines[2].IndexOf('^');
-                    bool line0PointsOnEllipsis = lines[0].Length > diffIndicator && lines[0][diffIndicator] == '.';
-                    bool line1PointsOnEllipsis = lines[1].Length > diffIndicator && lines[1][diffIndicator] == '.';
-
-                    if (line0PointsOnEllipsis || line1PointsOnEllipsis)
-                    {
-                        string text = $"""
-                            Failed for:
-                            Expected={e}, Actual={a}, DiffIndex={d}
-                            string result = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString({e}, {d}), DigitString({a}, {d}), diffIndex: {d}, 11));
-                            {p}
-                            """;
-
-                        s.AppendLine(text);
-                        s.AppendLine();
-                    }
-                }
-            }
-        }
-
-        if (s.Length > 0)
-        {
-            throw new InvalidOperationException($"Some combinations pointed to ellipsis:\n{s}");
-        }
-    }
-
-    private string FormatStringPreview(Tuple<string, string, int> tuple)
-        => $"""
-            "{tuple.Item1}"
-            "{tuple.Item2}"
-            {new string('_', tuple.Item3 + 1)}{'^'}
-            """;
-
-    private static string DigitString(int length, int diffIndex)
-    {
-        const string digits = "0123456789";
-        if (length <= 0)
-        {
-            return string.Empty;
-        }
-
-        var result = new StringBuilder(length);
-        for (int i = 0; i < length; i++)
-        {
-            if (i == diffIndex)
-            {
-                // Use 'X' to indicate a difference should be at this index.
-                // To make it easier to see where the arrow should point, even though both strings are the same (we provide the diff index externally).
-                result.Append('X');
-                continue;
-            }
-
-            result.Append(digits[i % digits.Length]);
-        }
-
-        return result.ToString();
-    }
-
-    private void StringPreviewsAreEqual(string expected, string actual)
-    {
-        if (expected != actual)
-        {
-            throw new InvalidOperationException(
-                $"""
-                Actual:
-                {actual}
-
-                Expected:
-                {expected}
+                Assert.AreEqual("straße", "STRAẞE!")
                 """);
-        }
     }
+
+    public void AreEqualStringSpecificWithNullExpectedUsesStructuredMessage()
+    {
+        string? expected = null;
+        string actual = "string";
+
+        Action action = () => Assert.AreEqual(expected, actual, false);
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+
+                expected: null
+                actual:   "string"
+
+                Assert.AreEqual(expected, actual)
+                """);
+    }
+
+    public void AreEqualStringSpecificWithMultilineStringsUsesStructuredMessage()
+    {
+        string expected = "line one\nline two\nline three";
+        string actual = "line one\nLINE TWO\nline three";
+
+        Action action = () => Assert.AreEqual(expected, actual, false);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+
+        ex.Message.Should().Contain("Assertion failed. Expected strings to be equal.");
+        ex.Message.Should().Contain("line one");
+        ex.Message.Should().Contain("LINE TWO");
+        ex.Message.Should().Contain("Assert.AreEqual(expected, actual)");
+    }
+
+    public void AreEqualStringSpecificWhenEqualDoesNotThrow()
+        => FluentActions.Invoking(() => Assert.AreEqual("Straße", "STRAẞE", true, new CultureInfo("de-DE"))).Should().NotThrow();
+
+    public void AreNotEqualStringSpecificShowsStructuredMessage()
+    {
+        string notExpected = "A";
+        string actual = "A";
+
+        Action action = () => Assert.AreNotEqual(notExpected, actual, false);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+
+        ex.Message.Should().Be(
+            """
+            Assertion failed. Expected strings to differ.
+
+            not expected: "A"
+            actual:       "A"
+
+            Assert.AreNotEqual(notExpected, actual)
+            """);
+        ex.ExpectedText.Should().Be("not \"A\"");
+        ex.ActualText.Should().Be("\"A\"");
+        ex.Data["assert.expected"].Should().Be("not \"A\"");
+        ex.Data["assert.actual"].Should().Be("\"A\"");
+    }
+
+    public void AreNotEqualStringSpecificWithIgnoreCaseAndCultureShowsEvidence()
+    {
+        Action action = () => Assert.AreNotEqual("Straße", "STRAẞE", true, new CultureInfo("de-DE"));
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to differ (case-insensitive).
+
+                not expected: "Straße"
+                actual:       "STRAẞE"
+                ignore case:  true
+                culture:      de-DE
+
+                Assert.AreNotEqual("Straße", "STRAẞE")
+                """);
+    }
+
+    public void AreNotEqualStringSpecificWithBothNullShowsStructuredMessage()
+    {
+        string? notExpected = null;
+        string? actual = null;
+
+        Action action = () => Assert.AreNotEqual(notExpected, actual, false);
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to differ.
+
+                not expected: null
+                actual:       null
+
+                Assert.AreNotEqual(notExpected, actual)
+                """);
+    }
+
+    public void AreNotEqualStringSpecificWhenDifferentDoesNotThrow()
+        => FluentActions.Invoking(() => Assert.AreNotEqual("Straße", "STRASSE!", true, new CultureInfo("de-DE"))).Should().NotThrow();
 }

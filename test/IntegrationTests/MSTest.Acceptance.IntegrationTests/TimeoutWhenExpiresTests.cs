@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -119,31 +119,26 @@ public sealed class TimeoutWhenExpiresTests : AcceptanceTestBase<TimeoutWhenExpi
         => await RunAndAssertAttributeTakesPrecedenceAsync(tfm, "testCleanup");
 
     [TestMethod]
-    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/6198. The TestFailedException returned by InvokeGlobalInitializeMethodAsync is currently discarded in TestMethodInfo.Execution.cs, so timeouts on global test initialize methods do not fail the test.")]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task GlobalTestInitialize_WhenTimeoutExpires_GlobalTestInitializeTaskIsCanceled(string tfm)
         => await RunAndAssertTestTimedOutAsync(tfm, "LONG_WAIT_", "globalTestInit");
 
     [TestMethod]
-    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/6198. The TestFailedException returned by InvokeGlobalInitializeMethodAsync is currently discarded in TestMethodInfo.Execution.cs, so timeouts on global test initialize methods do not fail the test.")]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task GlobalTestInitialize_WhenTimeoutExpiresAndTestContextTokenIsUsed_GlobalTestInitializeExits(string tfm)
         => await RunAndAssertTestTimedOutAsync(tfm, "TIMEOUT_", "globalTestInit");
 
     [TestMethod]
-    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/6198. The TestFailedException returned by InvokeGlobalInitializeMethodAsync is currently discarded in TestMethodInfo.Execution.cs, so timeouts on global test initialize methods do not fail the test.")]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task GlobalTestInitialize_WhenTimeoutExpires_GlobalTestInitializeIsCanceled_AttributeTakesPrecedence(string tfm)
         => await RunAndAssertAttributeTakesPrecedenceAsync(tfm, "globalTestInit");
 
     [TestMethod]
-    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/6198. The TestFailedException returned by InvokeGlobalCleanupMethodAsync is currently discarded in TestMethodInfo.Lifecycle.cs, so timeouts on global test cleanup methods do not fail the test.")]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task GlobalTestCleanup_WhenTimeoutExpires_GlobalTestCleanupTaskIsCanceled(string tfm)
         => await RunAndAssertTestTimedOutAsync(tfm, "LONG_WAIT_", "globalTestCleanup");
 
     [TestMethod]
-    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/6198. The TestFailedException returned by InvokeGlobalCleanupMethodAsync is currently discarded in TestMethodInfo.Lifecycle.cs, so timeouts on global test cleanup methods do not fail the test.")]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task GlobalTestCleanup_WhenTimeoutExpires_GlobalTestCleanupIsCanceled_AttributeTakesPrecedence(string tfm)
         => await RunAndAssertAttributeTakesPrecedenceAsync(tfm, "globalTestCleanup");

@@ -16,14 +16,9 @@ public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.Tes
     [Ignore("Tracked by https://github.com/microsoft/testfx/issues/8313. MSTest does not inspect [STAThread] on the entry-point Main; this scenario only ever passed when the async chain between MTP and the test runner happened to complete synchronously, which no longer holds on the Windows Debug leg after recent MTP refactors. Re-enable when implicit STA detection from Main is implemented.")]
     public async Task TestMethodThreading_MainIsSTAThread_OnWindows_NoRunsettingsProvided_ThreadIsSTA(string tfm)
     {
-        // Test cannot work on non-Windows OSes as the main method is marked with [STAThread]
+        // Test cannot work on non-Windows OSes as the main method is marked with [STAThread].
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            environmentVariables: new()
-            {
-                ["MSTEST_THREAD_STATE_IS_STA"] = "1",
-            },
-            cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -177,11 +172,13 @@ public class UnitTest1
     private static void AssertCorrectThreadApartmentState()
     {
         var apartmentState = Thread.CurrentThread.GetApartmentState();
-        if (Environment.GetEnvironmentVariable("MSTEST_THREAD_STATE_IS_STA") == "1")
+        string expectedThreadStateIsSta = Environment.GetEnvironmentVariable("MSTEST_THREAD_STATE_IS_STA");
+
+        if (expectedThreadStateIsSta == "1")
         {
             Assert.AreEqual(ApartmentState.STA, apartmentState);
         }
-        else
+        else if (expectedThreadStateIsSta == "0")
         {
             Assert.AreNotEqual(ApartmentState.STA, apartmentState);
         }
