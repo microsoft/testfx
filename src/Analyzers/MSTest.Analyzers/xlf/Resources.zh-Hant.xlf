@@ -117,6 +117,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">應該以正確的順序傳遞判斷提示引數</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsDescription">
+        <source>`Assert.AreEqual` and `Assert.AreNotEqual` use `EqualityComparer&lt;T&gt;.Default`. For collection-like types this relies on the type's own equality semantics instead of comparing sequence elements, so `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` or `Assert.AreEquivalent`/`Assert.AreNotEquivalent` are usually the better fit.</source>
+        <target state="new">`Assert.AreEqual` and `Assert.AreNotEqual` use `EqualityComparer&lt;T&gt;.Default`. For collection-like types this relies on the type's own equality semantics instead of comparing sequence elements, so `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` or `Assert.AreEquivalent`/`Assert.AreNotEquivalent` are usually the better fit.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsMessageFormat">
+        <source>`{0}` on {1} (which implements IEnumerable&lt;T&gt;) does not perform element-wise sequence comparison. Use `Assert.AreSequenceEqual` for ordered element-wise comparison, `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` for unordered, or `Assert.AreEquivalent` for deep structural comparison.</source>
+        <target state="new">`{0}` on {1} (which implements IEnumerable&lt;T&gt;) does not perform element-wise sequence comparison. Use `Assert.AreSequenceEqual` for ordered element-wise comparison, `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` for unordered, or `Assert.AreEquivalent` for deep structural comparison.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsTitle">
+        <source>Avoid Assert.AreEqual on collection types</source>
+        <target state="new">Avoid Assert.AreEqual on collection types</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
         <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
         <target state="translated">比較值類型時，請使用 'Assert.AreEqual'/'Assert.AreNotEqual' 取代 'Assert.AreSame'/'Assert.AreNotSame'。將值類型傳遞至 『Assert.AreSame』/'Assert.AreNotSame' 將會在建立新物件) (方塊化。因為 'Assert.AreSame'/'Assert.AreNotSame' 依參照進行比較，當進行拳擊時，'Assert.AreSame' 將會失敗，而且 'Assert.AreNotSame' 一律會通過。</target>
