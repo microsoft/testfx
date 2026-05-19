@@ -1442,7 +1442,8 @@ public partial class AssertTests : TestContainer
     // ---- Assignment / update expression trees must not cause compilation failures -----------
     // C# expression-tree lambdas do not allow assignment operators (the compiler emits CS0832),
     // so these nodes can only appear in manually-constructed expression trees. The fix ensures
-    // CaptureRewriter skips them rather than wrapping a writable LHS in a non-writable Block.
+    // CaptureRewriter does not wrap a writable LHS / unary-update operand in a non-writable
+    // Block, while still capturing reads beneath the writable target and on the RHS.
     private sealed class MutableBox
     {
 #pragma warning disable SA1401 // Fields should be private - intentional: this type tests Expression.Assign on a field.
@@ -1482,6 +1483,79 @@ public partial class AssertTests : TestContainer
         // Must not throw a compilation error.
         act.Should().NotThrow();
         box.Value.Should().Be(6);
+    }
+
+    public void That_ManuallyConstructedAssignExpression_CapturesValuesFromRhsAndLhs()
+    {
+        // Construct: (box.Value = (rhsValue + 1)) < expected
+        // The previous implementation skipped the entire Assign node during analysis and lost
+        // both the assigned member ("box.Value") and any read on the RHS.
+        var box = new MutableBox();
+        int rhsValue = 9;
+        int expected = 0;
+        FieldInfo fi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
+        MemberExpression boxField = Expression.Field(Expression.Constant(box), fi);
+
+        // Borrow a real captured-local MemberExpression by compiling a tiny C# lambda.
+        Expression<Func<int>> rhsLambda = () => rhsValue;
+        Expression rhsRead = rhsLambda.Body;
+
+        BinaryExpression assign = Expression.Assign(
+            boxField,
+            Expression.Add(rhsRead, Expression.Constant(1)));
+        BinaryExpression body = Expression.LessThan(assign, Expression.Constant(expected));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        // RHS read is captured (with its display-class wrapper stripped).
+        ex.Message.Should().Contain("rhsValue = 9");
+        // LHS member is captured too; the fallback re-evaluation surfaces the post-assignment value.
+        ex.Message.Should().Contain(".Value = 10");
+        // The assignment must have actually run (preserved by the writable-target guard).
+        box.Value.Should().Be(10);
+    }
+
+    public void That_ManuallyConstructedAssignExpression_WithReusedLhsInstance_DoesNotThrow()
+    {
+        // Hand-built tree where the same MemberExpression instance is used both as the
+        // assignment LHS and inside the RHS. CaptureRewriter must leave the LHS writable
+        // even though analysis adds the shared instance to its capture map (because it's
+        // also a read on the RHS). Locks down rubber-duck's reused-node concern.
+        var box = new MutableBox { Value = 3 };
+        FieldInfo fi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
+        MemberExpression field = Expression.Field(Expression.Constant(box), fi);
+        // box.Value = box.Value * 2
+        BinaryExpression assign = Expression.Assign(field, Expression.Multiply(field, Expression.Constant(2)));
+        BinaryExpression body = Expression.GreaterThan(assign, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+
+        act.Should().NotThrow();
+        box.Value.Should().Be(6);
+    }
+
+    // ---- Func/Action filtering preserves historical null-rendering behavior -----------------
+    public void That_WithNullFuncDelegate_RendersAsNullInDetails()
+    {
+        // A member statically typed as Func<...> but holding `null` must still appear in the
+        // failure details (as `null`) — matching the historical behavior. Previously the
+        // static-type filter at analysis time dropped these silently.
+        Func<int, bool>? predicate = null;
+        bool flag = false;
+
+        Action act = () => Assert.That(() => flag || predicate != null);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assert.That(() => flag || predicate != null) failed.
+                Details:
+                  flag = False
+                  predicate = null
+                """);
     }
 }
 

@@ -131,8 +131,9 @@ public static partial class AssertExtensions
             return true;
         }
 
-        // Build details using first-occurrence-per-name semantics, filtering out Func/Action values
-        // (matching the historical behavior, using runtime type as the existing code did).
+        // Build details using first-occurrence-per-name semantics. Func/Action values are filtered
+        // out by their RUNTIME type so that a member statically typed as Func/Action but holding a
+        // `null` value still renders as `null` (preserving the historical behavior).
         for (int i = 0; i < context.CaptureNames.Count; i++)
         {
             string name = context.CaptureNames[i];
@@ -196,13 +197,11 @@ public static partial class AssertExtensions
                 AnalyzeArrayIndexExpression(binaryExpr, context);
                 break;
 
-            // Assignment-style binary nodes (=, +=, -=, …) require writable left-hand operands.
-            // CaptureRewriter would replace the LHS with a Block, making it non-writable and
-            // causing the rewritten lambda to fail to compile. Skip these entirely.
-            case BinaryExpression binaryExpr when IsAssignmentNodeType(binaryExpr.NodeType):
-                break;
-
             case BinaryExpression binaryExpr:
+                // For assignment-style nodes (=, +=, -=, …), the LHS must remain writable so the
+                // rewritten lambda still compiles; the writable-context guard in CaptureRewriter
+                // handles that. We still analyze both sides so reads on either side contribute
+                // capture details.
                 AnalyzeExpression(binaryExpr.Left, context, suppressIntermediateValues);
                 AnalyzeExpression(binaryExpr.Right, context, suppressIntermediateValues);
                 break;
@@ -224,12 +223,9 @@ public static partial class AssertExtensions
 
                 break;
 
-            // Unary update nodes (++x, x++, --x, x--) require writable operands. CaptureRewriter
-            // would replace the operand with a Block, making it non-writable and causing compilation
-            // of the rewritten lambda to fail. Skip these entirely.
-            case UnaryExpression unaryExpr when IsUnaryUpdateNodeType(unaryExpr.NodeType):
-                break;
-
+            // Unary update nodes (++x, x++, --x, x--) require a writable operand. The
+            // writable-context guard in CaptureRewriter ensures the operand is left
+            // unwrapped; analyze it so any read sub-expressions still contribute details.
             case UnaryExpression unaryExpr:
                 AnalyzeExpression(unaryExpr.Operand, context, suppressIntermediateValues);
                 break;
@@ -305,13 +301,9 @@ public static partial class AssertExtensions
 
     private static void AnalyzeMemberExpression(MemberExpression memberExpr, AnalysisContext context)
     {
-        // Skip Func and Action delegates as they don't provide useful information in assertion failures.
-        // Use the static type so we don't have to evaluate the expression at analysis time.
-        if (IsFuncOrActionType(memberExpr.Type))
-        {
-            return;
-        }
-
+        // Note: filtering of Func/Action values is intentionally deferred to detail-build time
+        // (see EvaluateAndCollectDetails) so that members statically typed as Func/Action but
+        // holding a `null` value still render as `null` — matching the historical behavior.
         string displayName = GetCleanMemberName(memberExpr);
         context.AddCapture(memberExpr, displayName);
 
@@ -578,6 +570,9 @@ public static partial class AssertExtensions
     /// Rewrites the lambda body so every captured sub-expression's value is stored into a captures array
     /// as a side effect of the single root evaluation. Each captured node <c>e</c> at slot <c>i</c> is
     /// replaced by <c>{ var t = e; captures[i] = (object)t; t }</c>, so <c>e</c> is evaluated exactly once.
+    /// Expressions that appear in a writable position (assignment LHS, unary-update operand) are visited
+    /// without wrapping the top-level node in a <see cref="BlockExpression"/> so the rewritten lambda
+    /// still compiles; reads under the writable target are still captured normally.
     /// </summary>
     private sealed class CaptureRewriter : ExpressionVisitor
     {
@@ -613,6 +608,53 @@ public static partial class AssertExtensions
 
             return base.Visit(node);
         }
+
+        protected override Expression VisitBinary(BinaryExpression node)
+        {
+            if (IsAssignmentNodeType(node.NodeType))
+            {
+                // Keep the LHS in a writable form (don't wrap it in a Block) so the rewritten
+                // lambda still compiles, but recurse into its children so reads beneath the
+                // writable target are still captured. The RHS is processed normally.
+                Expression left = VisitWritableTarget(node.Left);
+                Expression right = Visit(node.Right)!;
+                return node.Update(left, node.Conversion, right);
+            }
+
+            return base.VisitBinary(node);
+        }
+
+        protected override Expression VisitUnary(UnaryExpression node)
+        {
+            if (IsUnaryUpdateNodeType(node.NodeType))
+            {
+                // The operand of an update expression must remain writable; recurse into
+                // its children for captures but leave the operand itself unwrapped.
+                Expression operand = VisitWritableTarget(node.Operand);
+                return node.Update(operand);
+            }
+
+            return base.VisitUnary(node);
+        }
+
+        /// <summary>
+        /// Visits a node that must remain writable for the surrounding assignment/update expression
+        /// to compile. The node itself is NOT wrapped in a capture block; its children are visited
+        /// normally so reads beneath the writable target still get captured.
+        /// </summary>
+        private Expression VisitWritableTarget(Expression node)
+            => node switch
+            {
+                // For `obj.Field`/`obj.Property`, visit the receiver normally (a read) but
+                // leave the MemberExpression itself writable.
+                MemberExpression me when me.Expression is not null
+                    => me.Update(Visit(me.Expression)),
+                BinaryExpression { NodeType: ExpressionType.ArrayIndex } ai
+                    => ai.Update(Visit(ai.Left)!, ai.Conversion, Visit(ai.Right)!),
+                IndexExpression ix when ix.Object is not null
+                    => ix.Update(Visit(ix.Object), Visit(ix.Arguments)),
+                _ => node,
+            };
     }
 
 #if !NET
