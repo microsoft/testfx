@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Linq.Expressions;
+using System.Reflection;
+
 using AwesomeAssertions;
 
 using TestFramework.ForTestingMSTest;
@@ -1414,4 +1417,74 @@ public partial class AssertTests : TestContainer
         // The property was invoked once by the fallback path (the root short-circuited).
         counter.GetCount.Should().Be(1);
     }
+
+    // ---- Extension method on `this` renders as this.Method(...) (issue #6691) ----------------
+    public void That_ExtensionMethodOnThis_RendersAsThis()
+    {
+        // Regression guard for IsCapturedThis in the extension method path:
+        // an extension method called on `this` must render as "this.GetDisplayName()"
+        // rather than the raw display-class field ("<>4__this.GetDisplayName()") or
+        // a type name prefix ("AssertTests.GetDisplayName()").
+        string expected = "WrongName";
+
+        Action act = () => Assert.That(() => this.GetDisplayName() == expected);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assert.That(() => this.GetDisplayName() == expected) failed.
+                Details:
+                  expected = "WrongName"
+                  this.GetDisplayName() = "MyTestClass"
+                """);
+    }
+
+    // ---- Assignment / update expression trees must not cause compilation failures -----------
+    // C# expression-tree lambdas do not allow assignment operators (the compiler emits CS0832),
+    // so these nodes can only appear in manually-constructed expression trees. The fix ensures
+    // CaptureRewriter skips them rather than wrapping a writable LHS in a non-writable Block.
+    private sealed class MutableBox
+    {
+        public int Value;
+    }
+
+    public void That_ManuallyConstructedAssignExpression_DoesNotThrow()
+    {
+        // Construct: (box.Value = 5) > 0   — passes, so no AssertFailedException.
+        var box = new MutableBox();
+        FieldInfo fi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
+        MemberExpression field = Expression.Field(Expression.Constant(box), fi);
+        BinaryExpression assign = Expression.Assign(field, Expression.Constant(5));
+        BinaryExpression body = Expression.GreaterThan(assign, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+
+        // Must not throw a compilation error (InvalidOperationException / InvalidProgramException).
+        act.Should().NotThrow();
+        box.Value.Should().Be(5);
+    }
+
+    public void That_ManuallyConstructedPreIncrementAssignExpression_DoesNotThrow()
+    {
+        // Construct: ++box.Value > 0   — passes, so no AssertFailedException.
+        var box = new MutableBox { Value = 5 };
+        FieldInfo fi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
+        MemberExpression field = Expression.Field(Expression.Constant(box), fi);
+        UnaryExpression preInc = Expression.PreIncrementAssign(field);
+        BinaryExpression body = Expression.GreaterThan(preInc, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+
+        // Must not throw a compilation error.
+        act.Should().NotThrow();
+        box.Value.Should().Be(6);
+    }
+}
+
+internal static class AssertTestsExtensions
+{
+    /// <summary>Helper for the <c>That_ExtensionMethodOnThis_RendersAsThis</c> test.</summary>
+    public static string GetDisplayName(this AssertTests _) => "MyTestClass";
 }

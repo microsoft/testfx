@@ -196,6 +196,12 @@ public static partial class AssertExtensions
                 AnalyzeArrayIndexExpression(binaryExpr, context);
                 break;
 
+            // Assignment-style binary nodes (=, +=, -=, …) require writable left-hand operands.
+            // CaptureRewriter would replace the LHS with a Block, making it non-writable and
+            // causing the rewritten lambda to fail to compile. Skip these entirely.
+            case BinaryExpression binaryExpr when IsAssignmentNodeType(binaryExpr.NodeType):
+                break;
+
             case BinaryExpression binaryExpr:
                 AnalyzeExpression(binaryExpr.Left, context, suppressIntermediateValues);
                 AnalyzeExpression(binaryExpr.Right, context, suppressIntermediateValues);
@@ -216,6 +222,12 @@ public static partial class AssertExtensions
                     AnalyzeExpression(unaryExpr.Operand, context, suppressIntermediateValues);
                 }
 
+                break;
+
+            // Unary update nodes (++x, x++, --x, x--) require writable operands. CaptureRewriter
+            // would replace the operand with a Block, making it non-writable and causing compilation
+            // of the rewritten lambda to fail. Skip these entirely.
+            case UnaryExpression unaryExpr when IsUnaryUpdateNodeType(unaryExpr.NodeType):
                 break;
 
             case UnaryExpression unaryExpr:
@@ -372,7 +384,14 @@ public static partial class AssertExtensions
             && callExpr.Method.IsDefined(typeof(ExtensionAttribute), inherit: false)
             && callExpr.Arguments.Count > 0)
         {
-            string receiver = GetCleanMemberName(callExpr.Arguments[0]);
+            // Use IsCapturedThis with the first parameter's declared type so that
+            // Assert.That(() => this.SomeExtension() == x) renders as "this.SomeExtension(x)"
+            // rather than "<>4__this.SomeExtension(x)" or "TypeName.SomeExtension(x)".
+            Expression firstArg = callExpr.Arguments[0];
+            Type receiverParamType = callExpr.Method.GetParameters()[0].ParameterType;
+            string receiver = IsCapturedThis(firstArg, receiverParamType)
+                ? "this"
+                : GetCleanMemberName(firstArg);
             string extArgs = string.Join(", ", callExpr.Arguments.Skip(1).Select(static a => CleanExpressionText(a.ToString())));
             return $"{receiver}.{methodName}({extArgs})";
         }
@@ -488,6 +507,39 @@ public static partial class AssertExtensions
             // rather than the method's declaring type to catch them.
             && callExpr.Object.Type.IsArray
             && callExpr.Arguments.Count > 0;
+
+    /// <summary>
+    /// Returns <see langword="true"/> for binary <see cref="ExpressionType"/> values that represent
+    /// an assignment or compound-assignment operation (=, +=, -=, …). These require a writable
+    /// left-hand operand and must not be rewritten by <see cref="CaptureRewriter"/>.
+    /// </summary>
+    private static bool IsAssignmentNodeType(ExpressionType nodeType)
+        => nodeType is ExpressionType.Assign
+            or ExpressionType.AddAssign
+            or ExpressionType.AndAssign
+            or ExpressionType.DivideAssign
+            or ExpressionType.ExclusiveOrAssign
+            or ExpressionType.LeftShiftAssign
+            or ExpressionType.ModuloAssign
+            or ExpressionType.MultiplyAssign
+            or ExpressionType.OrAssign
+            or ExpressionType.PowerAssign
+            or ExpressionType.RightShiftAssign
+            or ExpressionType.SubtractAssign
+            or ExpressionType.AddAssignChecked
+            or ExpressionType.MultiplyAssignChecked
+            or ExpressionType.SubtractAssignChecked;
+
+    /// <summary>
+    /// Returns <see langword="true"/> for unary <see cref="ExpressionType"/> values that represent
+    /// an increment or decrement-assign operation (++x, x++, --x, x--). These require a writable
+    /// operand and must not be rewritten by <see cref="CaptureRewriter"/>.
+    /// </summary>
+    private static bool IsUnaryUpdateNodeType(ExpressionType nodeType)
+        => nodeType is ExpressionType.PreIncrementAssign
+            or ExpressionType.PreDecrementAssign
+            or ExpressionType.PostIncrementAssign
+            or ExpressionType.PostDecrementAssign;
 
     private sealed class AnalysisContext
     {
