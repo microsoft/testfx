@@ -210,12 +210,14 @@ internal sealed class AnsiTerminalTestProgressFrame
             terminal.AppendLine();
         }
 
-        int i = 0;
+        int i;
         RenderedLines = [with(progress.Length * 2)];
         List<object> progresses = GenerateLinesToRender(progress);
 
-        foreach (object item in progresses)
+        for (i = 0; i < progresses.Count; i++)
         {
+            object item = progresses[i];
+
             if (previousFrame.RenderedLines != null && previousFrame.RenderedLines.Count > i)
             {
                 if (item is TestProgressState progressItem)
@@ -225,7 +227,7 @@ internal sealed class AnsiTerminalTestProgressFrame
 
                     // We have a line that was rendered previously, compare it and decide how to render.
                     RenderedProgressItem previouslyRenderedLine = previousFrame.RenderedLines[i];
-                    if (previouslyRenderedLine.ProgressId == progressItem.Id && false)
+                    if (previouslyRenderedLine.ProgressId == progressItem.Id && previouslyRenderedLine.ProgressVersion == progressItem.Version)
                     {
                         // This is the same progress item and it was not updated since we rendered it, only update the timestamp if possible to avoid flicker.
                         string durationString = HumanReadableDurationFormatter.Render(progressItem.Stopwatch.Elapsed);

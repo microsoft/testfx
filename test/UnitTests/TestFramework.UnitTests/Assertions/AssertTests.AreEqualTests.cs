@@ -173,8 +173,19 @@ public partial class AssertTests : TestContainer
 
         // Won't ignore case.
         Action action = () => Assert.AreEqual(expected, actual, false, englishCulture);
-        action.Should().Throw<Exception>()
-            .WithMessage("Assert.AreEqual failed. Expected:<i>. Case is different for actual value:<I>. 'expected' expression: 'expected', 'actual' expression: 'actual'.");
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                Strings differ only in case.
+                Strings have same length (1) and differ at 1 location(s). First difference at index 0.
+
+                expected: "i"
+                actual:   "I"
+                culture:  en-EN
+
+                Assert.AreEqual(expected, actual)
+                """);
     }
 
     public void AreEqual_WithTurkishCultureAndDoesNotIgnoreCase_Throws()
@@ -302,7 +313,98 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreEqual(new object(), 1);
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Contain("Assert.AreEqual failed. Expected:<System.Object (System.Object)>. Actual:<1 (System.Int32)>.");
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected values to be equal, but they are of different types.
+
+                expected:      System.Object
+                expected type: System.Object
+                actual:        1
+                actual type:   System.Int32
+
+                Assert.AreEqual(new object(), 1)
+                """);
+    }
+
+    public void AreNotEqual_PopulatesExpectedAndActualTextWithNotPrefix()
+    {
+        Action action = () => Assert.AreNotEqual(0, 0);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.ExpectedText.Should().Be("not 0");
+        ex.ActualText.Should().Be("0");
+        ex.Data["assert.expected"].Should().Be("not 0");
+        ex.Data["assert.actual"].Should().Be("0");
+    }
+
+    public void AreEqualWithDelta_PopulatesExpectedAndActualText()
+    {
+        Action action = () => Assert.AreEqual(5.0f, 2.0f, 2.0f);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.ExpectedText.Should().Be("5");
+        ex.ActualText.Should().Be("2");
+        ex.Data["assert.expected"].Should().Be("5");
+        ex.Data["assert.actual"].Should().Be("2");
+    }
+
+    public void AreNotEqualWithDelta_PopulatesExpectedAndActualTextWithNotPrefix()
+    {
+        Action action = () => Assert.AreNotEqual(5.0f, 4.0f, 2.0f);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.ExpectedText.Should().Be("not 5");
+        ex.ActualText.Should().Be("4");
+        ex.Data["assert.expected"].Should().Be("not 5");
+        ex.Data["assert.actual"].Should().Be("4");
+    }
+
+    public void AreNotEqual_FailsWithStructuredMessage()
+    {
+        Action action = () => Assert.AreNotEqual(0, 0);
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected values to not be equal.
+
+                notExpected: 0
+                actual:      0
+
+                Assert.AreNotEqual(0, 0)
+                """);
+    }
+
+    public void AreEqual_MultilineExpectedExpression_UsesPlaceholderInCallSite()
+    {
+        Action action = () => Assert.AreEqual(
+            """
+            line1
+            line2
+            """,
+            "different");
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().EndWith("Assert.AreEqual(<expected>, \"different\")");
+    }
+
+    public void AreEqual_MultilineActualExpression_UsesPlaceholderInCallSite()
+    {
+        Action action = () => Assert.AreEqual(
+            "different",
+            """
+            line1
+            line2
+            """);
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().EndWith("Assert.AreEqual(\"different\", <actual>)");
+    }
+
+    public void AreNotEqual_MultilineNotExpectedExpression_UsesPlaceholderInCallSite()
+    {
+        string value = "x";
+        Action action = () => Assert.AreNotEqual(
+            """
+            x
+            """,
+            value);
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().EndWith("Assert.AreNotEqual(<notExpected>, value)");
     }
 
     public void AreEqualWithTypeOverridingEqualsShouldWork()
@@ -373,7 +475,16 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreEqual(0, 1, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreEqual failed. Expected:<0>. Actual:<1>. 'expected' expression: '0', 'actual' expression: '1'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(
+                $"""
+                Assertion failed. Expected values to be equal.
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}
+
+                expected: 0
+                actual:   1
+
+                Assert.AreEqual(0, 1)
+                """);
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -390,7 +501,16 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreNotEqual(0, 0, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreNotEqual failed. Expected any value except:<0>. Actual:<0>. 'notExpected' expression: '0', 'actual' expression: '0'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(
+                $"""
+                Assertion failed. Expected values to not be equal.
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}
+
+                notExpected: 0
+                actual:      0
+
+                Assert.AreNotEqual(0, 0)
+                """);
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -407,7 +527,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreEqual(1.0f, 1.1f, 0.001f, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreEqual failed. Expected a difference no greater than <0.001> between expected value <1> and actual value <1.1>. 'expected' expression: '1.0f', 'actual' expression: '1.1f'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage(
+                "1",
+                "1.1",
+                "0.001",
+                "Assert.AreEqual(1.0f, 1.1f, <delta>)",
+                $"User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}"));
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -424,7 +549,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreNotEqual(1.0f, 1.1f, 0.2f, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreNotEqual failed. Expected a difference greater than <0.2> between expected value <1> and actual value <1.1>. 'notExpected' expression: '1.0f', 'actual' expression: '1.1f'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage(
+                "1",
+                "1.1",
+                "0.2",
+                "Assert.AreNotEqual(1.0f, 1.1f, <delta>)",
+                $"User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}"));
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -441,7 +571,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreEqual(1.0m, 1.1m, 0.001m, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreEqual failed. Expected a difference no greater than <0.001> between expected value <1.0> and actual value <1.1>. 'expected' expression: '1.0m', 'actual' expression: '1.1m'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage(
+                "1.0",
+                "1.1",
+                "0.001",
+                "Assert.AreEqual(1.0m, 1.1m, <delta>)",
+                $"User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}"));
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -458,7 +593,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreNotEqual(1.0m, 1.1m, 0.2m, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreNotEqual failed. Expected a difference greater than <0.2> between expected value <1.0> and actual value <1.1>. 'notExpected' expression: '1.0m', 'actual' expression: '1.1m'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage(
+                "1.0",
+                "1.1",
+                "0.2",
+                "Assert.AreNotEqual(1.0m, 1.1m, <delta>)",
+                $"User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}"));
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -475,7 +615,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreEqual(1L, 2L, 0L, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreEqual failed. Expected a difference no greater than <0> between expected value <1> and actual value <2>. 'expected' expression: '1L', 'actual' expression: '2L'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage(
+                "1",
+                "2",
+                "0",
+                "Assert.AreEqual(1L, 2L, <delta>)",
+                $"User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}"));
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -492,7 +637,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreNotEqual(1L, 2L, 1L, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreNotEqual failed. Expected a difference greater than <1> between expected value <1> and actual value <2>. 'notExpected' expression: '1L', 'actual' expression: '2L'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage(
+                "1",
+                "2",
+                "1",
+                "Assert.AreNotEqual(1L, 2L, <delta>)",
+                $"User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}"));
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -509,7 +659,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreEqual(1.0d, 1.1d, 0.001d, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreEqual failed. Expected a difference no greater than <0.001> between expected value <1> and actual value <1.1>. 'expected' expression: '1.0d', 'actual' expression: '1.1d'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage(
+                "1",
+                "1.1",
+                "0.001",
+                "Assert.AreEqual(1.0d, 1.1d, <delta>)",
+                $"User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}"));
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -526,7 +681,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreNotEqual(1.0d, 1.1d, 0.2d, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreNotEqual failed. Expected a difference greater than <0.2> between expected value <1> and actual value <1.1>. 'notExpected' expression: '1.0d', 'actual' expression: '1.1d'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage(
+                "1",
+                "1.1",
+                "0.2",
+                "Assert.AreNotEqual(1.0d, 1.1d, <delta>)",
+                $"User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}"));
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -698,13 +858,13 @@ public partial class AssertTests : TestContainer
     public void FloatAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceGreaterThanDeltaPositive_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreEqual(5.0f, 2.0f, 2.0f); // difference is 3. Delta is 2
-        action.Should().Throw<Exception>().WithMessage("Assert.AreEqual failed. Expected a difference no greater than <2> between expected value <5> and actual value <2>. 'expected' expression: '5.0f', 'actual' expression: '2.0f'.");
+        action.Should().Throw<Exception>().Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage("5", "2", "2", "Assert.AreEqual(5.0f, 2.0f, <delta>)"));
     }
 
     public void FloatAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceGreaterThanDeltaNegative_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreEqual(2.0f, 5.0f, 2.0f); // difference is -3. Delta is 2
-        action.Should().Throw<Exception>().WithMessage("Assert.AreEqual failed. Expected a difference no greater than <2> between expected value <2> and actual value <5>. 'expected' expression: '2.0f', 'actual' expression: '5.0f'.");
+        action.Should().Throw<Exception>().Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage("2", "5", "2", "Assert.AreEqual(2.0f, 5.0f, <delta>)"));
     }
 
     public void FloatAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceLessThanDeltaPositive_DeltaIsNumeric_ShouldPass()
@@ -716,13 +876,13 @@ public partial class AssertTests : TestContainer
     public void FloatAreEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreEqual(5.0f, float.NaN, 2.0f);
-        action.Should().Throw<Exception>().WithMessage("Assert.AreEqual failed. Expected a difference no greater than <2> between expected value <5> and actual value <NaN>. 'expected' expression: '5.0f', 'actual' expression: 'float.NaN'.");
+        action.Should().Throw<Exception>().Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage("5", "NaN", "2", "Assert.AreEqual(5.0f, float.NaN, <delta>)"));
     }
 
     public void FloatAreEqual_ExpectedIsNaN_ActualIsNumeric_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreEqual(float.NaN, 5.0f, 2.0f);
-        action.Should().Throw<Exception>().WithMessage("Assert.AreEqual failed. Expected a difference no greater than <2> between expected value <NaN> and actual value <5>. 'expected' expression: 'float.NaN', 'actual' expression: '5.0f'.");
+        action.Should().Throw<Exception>().Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage("NaN", "5", "2", "Assert.AreEqual(float.NaN, 5.0f, <delta>)"));
     }
 
     public void FloatAreEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNumeric_ShouldPass()
@@ -910,13 +1070,13 @@ public partial class AssertTests : TestContainer
     public void FloatAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceLessThanDeltaPositive_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreNotEqual(5.0f, 4.0f, 2.0f); // difference is 1. Delta is 2
-        action.Should().Throw<Exception>().WithMessage("Assert.AreNotEqual failed. Expected a difference greater than <2> between expected value <5> and actual value <4>. 'notExpected' expression: '5.0f', 'actual' expression: '4.0f'.");
+        action.Should().Throw<Exception>().Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage("5", "4", "2", "Assert.AreNotEqual(5.0f, 4.0f, <delta>)"));
     }
 
     public void FloatAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceLessThanDeltaNegative_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreNotEqual(4.0f, 5.0f, 2.0f); // difference is -1. Delta is 2
-        action.Should().Throw<Exception>().WithMessage("Assert.AreNotEqual failed. Expected a difference greater than <2> between expected value <4> and actual value <5>. 'notExpected' expression: '4.0f', 'actual' expression: '5.0f'.");
+        action.Should().Throw<Exception>().Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage("4", "5", "2", "Assert.AreNotEqual(4.0f, 5.0f, <delta>)"));
     }
 
     public void FloatAreNotEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNumeric_ShouldPass() => Assert.AreNotEqual(5.0f, float.NaN, 2.0f);
@@ -927,7 +1087,7 @@ public partial class AssertTests : TestContainer
     public void FloatAreNotEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreNotEqual(float.NaN, float.NaN, 2.0f);
-        action.Should().Throw<Exception>().WithMessage("Assert.AreNotEqual failed. Expected a difference greater than <2> between expected value <NaN> and actual value <NaN>. 'notExpected' expression: 'float.NaN', 'actual' expression: 'float.NaN'.");
+        action.Should().Throw<Exception>().Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage("NaN", "NaN", "2", "Assert.AreNotEqual(float.NaN, float.NaN, <delta>)"));
     }
 
     public void DoubleAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualNotEquals_DeltaIsNaN_ShouldFail()
@@ -1111,14 +1271,14 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreEqual(5.0d, 2.0d, 2.0d); // difference is 3. Delta is 2
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.AreEqual failed. Expected a difference no greater than <2> between expected value <5> and actual value <2>. 'expected' expression: '5.0d', 'actual' expression: '2.0d'.");
+            .Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage("5", "2", "2", "Assert.AreEqual(5.0d, 2.0d, <delta>)"));
     }
 
     public void DoubleAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceGreaterThanDeltaNegative_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreEqual(2.0d, 5.0d, 2.0d); // difference is -3. Delta is 2
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.AreEqual failed. Expected a difference no greater than <2> between expected value <2> and actual value <5>. 'expected' expression: '2.0d', 'actual' expression: '5.0d'.");
+            .Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage("2", "5", "2", "Assert.AreEqual(2.0d, 5.0d, <delta>)"));
     }
 
     public void DoubleAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceLessThanDeltaPositive_DeltaIsNumeric_ShouldPass()
@@ -1131,14 +1291,14 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreEqual(5.0d, double.NaN, 2.0d);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.AreEqual failed. Expected a difference no greater than <2> between expected value <5> and actual value <NaN>. 'expected' expression: '5.0d', 'actual' expression: 'double.NaN'.");
+            .Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage("5", "NaN", "2", "Assert.AreEqual(5.0d, double.NaN, <delta>)"));
     }
 
     public void DoubleAreEqual_ExpectedIsNaN_ActualIsNumeric_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreEqual(double.NaN, 5.0d, 2.0d);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.AreEqual failed. Expected a difference no greater than <2> between expected value <NaN> and actual value <5>. 'expected' expression: 'double.NaN', 'actual' expression: '5.0d'.");
+            .Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage("NaN", "5", "2", "Assert.AreEqual(double.NaN, 5.0d, <delta>)"));
     }
 
     public void DoubleAreEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNumeric_ShouldPass()
@@ -1334,14 +1494,14 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreNotEqual(5.0d, 4.0d, 2.0d); // difference is 1. Delta is 2
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.AreNotEqual failed. Expected a difference greater than <2> between expected value <5> and actual value <4>. 'notExpected' expression: '5.0d', 'actual' expression: '4.0d'.");
+            .Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage("5", "4", "2", "Assert.AreNotEqual(5.0d, 4.0d, <delta>)"));
     }
 
     public void DoubleAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceLessThanDeltaNegative_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreNotEqual(4.0d, 5.0d, 2.0d); // difference is -1. Delta is 2
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.AreNotEqual failed. Expected a difference greater than <2> between expected value <4> and actual value <5>. 'notExpected' expression: '4.0d', 'actual' expression: '5.0d'.");
+            .Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage("4", "5", "2", "Assert.AreNotEqual(4.0d, 5.0d, <delta>)"));
     }
 
     public void DoubleAreNotEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNumeric_ShouldPass() => Assert.AreNotEqual(5.0d, double.NaN, 2.0d);
@@ -1353,7 +1513,61 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreNotEqual(double.NaN, double.NaN, 2.0d);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.AreNotEqual failed. Expected a difference greater than <2> between expected value <NaN> and actual value <NaN>. 'notExpected' expression: 'double.NaN', 'actual' expression: 'double.NaN'.");
+            .Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage("NaN", "NaN", "2", "Assert.AreNotEqual(double.NaN, double.NaN, <delta>)"));
+    }
+
+    private static string CreateDeltaAreEqualFailureMessage(string expected, string actual, string delta, string callSite, string? userMessage = null)
+    {
+        string[] lines = userMessage is null
+            ?
+            [
+                "Assertion failed. Expected values to be equal within tolerance.",
+                string.Empty,
+                $"expected: {expected}",
+                $"actual:   {actual}",
+                $"delta:    {delta}",
+                string.Empty,
+                callSite,
+            ]
+            :
+            [
+                "Assertion failed. Expected values to be equal within tolerance.",
+                userMessage,
+                string.Empty,
+                $"expected: {expected}",
+                $"actual:   {actual}",
+                $"delta:    {delta}",
+                string.Empty,
+                callSite,
+            ];
+        return string.Join(Environment.NewLine, lines);
+    }
+
+    private static string CreateDeltaAreNotEqualFailureMessage(string notExpected, string actual, string delta, string callSite, string? userMessage = null)
+    {
+        string[] lines = userMessage is null
+            ?
+            [
+                "Assertion failed. Expected values to differ beyond tolerance.",
+                string.Empty,
+                $"not expected: {notExpected}",
+                $"actual:       {actual}",
+                $"delta:        {delta}",
+                string.Empty,
+                callSite,
+            ]
+            :
+            [
+                "Assertion failed. Expected values to differ beyond tolerance.",
+                userMessage,
+                string.Empty,
+                $"not expected: {notExpected}",
+                $"actual:       {actual}",
+                $"delta:        {delta}",
+                string.Empty,
+                callSite,
+            ];
+        return string.Join(Environment.NewLine, lines);
     }
 
     private class TypeOverridesEquals
@@ -1411,62 +1625,83 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreEqual("baaa", "aaaa");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            Assert.AreEqual failed. String lengths are both 4 but differ at index 0. 'expected' expression: '"baaa"', 'actual' expression: '"aaaa"'.
-            Expected: "baaa"
-            But was:  "aaaa"
-            -----------^
-            """);
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                Strings have same length (4) and differ at 1 location(s). First difference at index 0.
+
+                expected: "baaa"
+                actual:   "aaaa"
+
+                Assert.AreEqual("baaa", "aaaa")
+                """);
     }
 
     public void AreEqualStringDifferenceAtEnd()
     {
         Action action = () => Assert.AreEqual("aaaa", "aaab");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            Assert.AreEqual failed. String lengths are both 4 but differ at index 3. 'expected' expression: '"aaaa"', 'actual' expression: '"aaab"'.
-            Expected: "aaaa"
-            But was:  "aaab"
-            --------------^
-            """);
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                Strings have same length (4) and differ at 1 location(s). First difference at index 3.
+
+                expected: "aaaa"
+                actual:   "aaab"
+
+                Assert.AreEqual("aaaa", "aaab")
+                """);
     }
 
     public void AreEqualStringWithSpecialCharactersShouldEscape()
     {
         Action action = () => Assert.AreEqual("aa\ta", "aa a");
-        action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            Assert.AreEqual failed. String lengths are both 4 but differ at index 2. 'expected' expression: '"aa\ta"', 'actual' expression: '"aa a"'.
-            Expected: "aa␉a"
-            But was:  "aa a"
-            -------------^
-            """);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+
+        ex.Message.Should().Contain("Strings have same length (4) and differ at 1 location(s). First difference at index 2.");
+        ex.Message.Should().Contain("expected: \"aa\\ta\"");
+        ex.Message.Should().Contain("actual:   \"aa a\"");
+        ex.Message.Should().Contain("Assert.AreEqual(\"aa\\ta\", \"aa a\")");
     }
 
-    public void AreEqualLongStringsShouldTruncateAndShowContext()
+    // Long-string truncation is intentionally not yet implemented; documents the current full-string render.
+    public void AreEqualLongStringsShowsFullStrings()
     {
         string expected = new string('a', 100) + "b" + new string('c', 100);
         string actual = new string('a', 100) + "d" + new string('c', 100);
 
         Action action = () => Assert.AreEqual(expected, actual);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            Assert.AreEqual failed. String lengths are both 201 but differ at index 100. 'expected' expression: 'expected', 'actual' expression: 'actual'.
-            Expected: "...aaaaaaaaaaaaaaaaaabcccccccccccccccc..."
-            But was:  "...aaaaaaaaaaaaaaaaaadcccccccccccccccc..."
-            --------------------------------^
-            """);
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                Strings have same length (201) and differ at 1 location(s). First difference at index 100.
+
+                expected: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+                actual:   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaadcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+
+                Assert.AreEqual(expected, actual)
+                """);
     }
 
     public void AreEqualStringWithCultureShouldUseEnhancedMessage()
     {
         Action action = () => Assert.AreEqual("aaaa", "aaab", false, CultureInfo.InvariantCulture);
-        action.Should().Throw<Exception>()
-            .WithMessage("""
-            Assert.AreEqual failed. String lengths are both 4 but differ at index 3. 'expected' expression: '"aaaa"', 'actual' expression: '"aaab"'.
-            Expected: "aaaa"
-            But was:  "aaab"
-            --------------^
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+
+        ex.Message.Should().StartWith(
+            """
+            Assertion failed. Expected strings to be equal.
+            Strings have same length (4) and differ at 1 location(s). First difference at index 3.
+
+            expected: "aaaa"
+            actual:   "aaab"
+            """);
+        ex.Message.Should().Contain($"{Environment.NewLine}culture:");
+        ex.Message.Should().EndWith(
+            """
+
+            Assert.AreEqual("aaaa", "aaab")
             """);
     }
 
@@ -1474,252 +1709,178 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreEqual("aaaa", "aaa");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            Assert.AreEqual failed. Expected string length 4 but was 3. 'expected' expression: '"aaaa"', 'actual' expression: '"aaa"'.
-            Expected: "aaaa"
-            But was:  "aaa"
-            --------------^
-            """);
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                Strings have different lengths (expected: 4, actual: 3) and differ at 1 location(s). First difference at index 3.
+
+                expected: "aaaa"
+                actual:   "aaa"
+
+                Assert.AreEqual("aaaa", "aaa")
+                """);
     }
 
     public void AreEqualShorterExpectedString()
     {
         Action action = () => Assert.AreEqual("aaa", "aaab");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            Assert.AreEqual failed. Expected string length 3 but was 4. 'expected' expression: '"aaa"', 'actual' expression: '"aaab"'.
-            Expected: "aaa"
-            But was:  "aaab"
-            --------------^
-            """);
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                Strings have different lengths (expected: 3, actual: 4) and differ at 1 location(s). First difference at index 3.
+
+                expected: "aaa"
+                actual:   "aaab"
+
+                Assert.AreEqual("aaa", "aaab")
+                """);
     }
 
     public void AreEqualStringWithUserMessage()
     {
         Action action = () => Assert.AreEqual("aaaa", "aaab", "My custom message");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            Assert.AreEqual failed. String lengths are both 4 but differ at index 3. 'expected' expression: '"aaaa"', 'actual' expression: '"aaab"'. My custom message
-            Expected: "aaaa"
-            But was:  "aaab"
-            --------------^
-            """);
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                Strings have same length (4) and differ at 1 location(s). First difference at index 3.
+                My custom message
+
+                expected: "aaaa"
+                actual:   "aaab"
+
+                Assert.AreEqual("aaaa", "aaab")
+                """);
     }
 
     public void AreEqualStringWithEmojis()
     {
         Action action = () => Assert.AreEqual("🥰", "aaab");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            Assert.AreEqual failed. Expected string length 2 but was 4. 'expected' expression: '"🥰"', 'actual' expression: '"aaab"'.
-            Expected: "🥰"
-            But was:  "aaab"
-            -----------^
-            """);
-    }
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                Strings have different lengths (expected: 2, actual: 4) and differ at 1 location(s). First difference at index 0.
 
-    public void CreateStringPreviews_DiffPointsToCorrectPlaceInNonShortenedString()
-    {
-        int preview = 9;
-        int length = 1;
-        int diffIndex = 0;
-        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(length, diffIndex), DigitString(length, diffIndex), diffIndex, preview));
-        StringPreviewsAreEqual(
-            """
-            "X"
-            "X"
-            _^
-            """,
-            stringPreview);
-    }
+                expected: "🥰"
+                actual:   "aaab"
 
-    public void CreateStringPreviews_DiffPointsToCorrectPlaceInShortenedStringWithEndCut()
-    {
-        int preview = 9;
-        int length = preview + 10;
-        int diffIndex = 0;
-        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(length, diffIndex), DigitString(length, diffIndex), diffIndex, preview));
-        StringPreviewsAreEqual(
-            """
-            "X12345..."
-            "X12345..."
-            _^
-            """, stringPreview);
-    }
-
-    public void CreateStringPreviews_DiffPointsToCorrectPlaceInShortenedStringWithStartCut()
-    {
-        int preview = 9;
-        int length = 10;
-        int diffIndex = 9;
-        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(length, diffIndex), DigitString(length, diffIndex), diffIndex: diffIndex, preview));
-        StringPreviewsAreEqual(
-            """
-            "...45678X"
-            "...45678X"
-            _________^
-            """,
-            stringPreview);
-    }
-
-    public void CreateStringPreviews_ShowWholeStringWhenDifferenceIsAtTheEndAndJustOneStringDoesNotFit()
-    {
-        int preview = 21;
-        int length = 50;
-        int diffIndex = 16;
-        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(preview, diffIndex), DigitString(length, diffIndex), diffIndex: diffIndex, preview));
-        StringPreviewsAreEqual(
-            """
-            "0123456789012345X7890"
-            "0123456789012345X7..."
-            _________________^
-            """,
-            stringPreview);
-    }
-
-    public void CreateStringPreviews_MakeSureWeDontPointToEndEllipsis()
-    {
-        // We will mask last 3 chars of the string, so we need to make sure that the diff index is not pointing to the end ellipsis.
-        int preview = 25;
-        int length = 50;
-        int diffIndex = 24;
-
-        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(preview, diffIndex), DigitString(length, diffIndex), diffIndex: diffIndex, preview));
-        StringPreviewsAreEqual(
-            """
-            "...8901234567890123X"
-            "...8901234567890123X56..."
-            ____________________^
-            """,
-            stringPreview);
-    }
-
-    public void CreateStringPreviews_MakeSureWeDontPointToEndEllipsis_WhenLongerStringOneCharLargerThanPreviewWindow()
-    {
-        // We will mask last 3 chars of the string, so we need to make sure that the diff index is not pointing to the end ellipsis.
-        int preview = 15;
-        int diffIndex = preview - 1;
-
-        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(preview, diffIndex), DigitString(preview + 1, diffIndex), diffIndex: diffIndex, preview));
-        StringPreviewsAreEqual(
-            """
-            "...890123X"
-            "...890123X5"
-            __________^
-            """,
-            stringPreview);
-    }
-
-    public void CreateStringPreviews_MakeSureWeDontPointToEndEllipsis_WhenLongerStringIsBarelyLonger()
-    {
-        // We will mask last 3 chars of the string, so we need to make sure that the diff index is not pointing to the end ellipsis.
-        int preview = 25;
-
-        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews("01234567890123456789012345678901234567890123X", "01234567890123456789012345678901234567890123X56", diffIndex: 44, preview));
-        StringPreviewsAreEqual(
-            """
-            "...8901234567890123X"
-            "...8901234567890123X56"
-            ____________________^
-            """,
-            stringPreview);
-    }
-
-    public void CreateStringPreviews_DiffPointsAfterLastCharacterWhenStringsAreAllTheSameCharactersUntilTheEndOfTheShorterOne()
-    {
-        int preview = 9;
-        int diffIndex = 3;
-        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews("aaa", "aaaX", diffIndex, preview));
-        stringPreview.Should().Be("""
-            "aaa"
-            "aaaX"
-            ____^
-            """);
-    }
-
-    public void CreateStringPreviews_DiffNeverPointsAtEllipsis_Generated()
-    {
-        // Generate all combinations of string lengths and diff to see if in any of them we point to ellipsis.
-        StringBuilder s = new();
-        foreach (int a in Enumerable.Range(1, 20))
-        {
-            foreach (int e in Enumerable.Range(1, 20))
-            {
-                foreach (int d in Enumerable.Range(1, Math.Min(a, e)))
-                {
-                    string p = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(e, d), DigitString(a, d), diffIndex: d, 11));
-
-                    string[] lines = p.Split('\n');
-                    int diffIndicator = lines[2].IndexOf('^');
-                    bool line0PointsOnEllipsis = lines[0].Length > diffIndicator && lines[0][diffIndicator] == '.';
-                    bool line1PointsOnEllipsis = lines[1].Length > diffIndicator && lines[1][diffIndicator] == '.';
-
-                    if (line0PointsOnEllipsis || line1PointsOnEllipsis)
-                    {
-                        string text = $"""
-                            Failed for:
-                            Expected={e}, Actual={a}, DiffIndex={d}
-                            string result = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString({e}, {d}), DigitString({a}, {d}), diffIndex: {d}, 11));
-                            {p}
-                            """;
-
-                        s.AppendLine(text);
-                        s.AppendLine();
-                    }
-                }
-            }
-        }
-
-        if (s.Length > 0)
-        {
-            throw new InvalidOperationException($"Some combinations pointed to ellipsis:\n{s}");
-        }
-    }
-
-    private string FormatStringPreview(Tuple<string, string, int> tuple)
-        => $"""
-            "{tuple.Item1}"
-            "{tuple.Item2}"
-            {new string('_', tuple.Item3 + 1)}{'^'}
-            """;
-
-    private static string DigitString(int length, int diffIndex)
-    {
-        const string digits = "0123456789";
-        if (length <= 0)
-        {
-            return string.Empty;
-        }
-
-        var result = new StringBuilder(length);
-        for (int i = 0; i < length; i++)
-        {
-            if (i == diffIndex)
-            {
-                // Use 'X' to indicate a difference should be at this index.
-                // To make it easier to see where the arrow should point, even though both strings are the same (we provide the diff index externally).
-                result.Append('X');
-                continue;
-            }
-
-            result.Append(digits[i % digits.Length]);
-        }
-
-        return result.ToString();
-    }
-
-    private void StringPreviewsAreEqual(string expected, string actual)
-    {
-        if (expected != actual)
-        {
-            throw new InvalidOperationException(
-                $"""
-                Actual:
-                {actual}
-
-                Expected:
-                {expected}
+                Assert.AreEqual("🥰", "aaab")
                 """);
-        }
     }
+
+    public void AreEqualStringSpecificWithIgnoreCaseAndCultureUsesComparisonAwareDiffIndex()
+    {
+        Action action = () => Assert.AreEqual("straße", "STRAẞE!", true, new CultureInfo("de-DE"));
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                Strings have different lengths (expected: 6, actual: 7) and differ at 1 location(s). First difference at index 6.
+
+                expected:    "straße"
+                actual:      "STRAẞE!"
+                ignore case: true
+                culture:     de-DE
+
+                Assert.AreEqual("straße", "STRAẞE!")
+                """);
+    }
+
+    public void AreEqualStringSpecificWithNullExpectedUsesStructuredMessage()
+    {
+        string? expected = null;
+        string actual = "string";
+
+        Action action = () => Assert.AreEqual(expected, actual, false);
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+
+                expected: null
+                actual:   "string"
+
+                Assert.AreEqual(expected, actual)
+                """);
+    }
+
+    public void AreEqualStringSpecificWithMultilineStringsUsesStructuredMessage()
+    {
+        string expected = "line one\nline two\nline three";
+        string actual = "line one\nLINE TWO\nline three";
+
+        Action action = () => Assert.AreEqual(expected, actual, false);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+
+        ex.Message.Should().Contain("Assertion failed. Expected strings to be equal.");
+        ex.Message.Should().Contain("line one");
+        ex.Message.Should().Contain("LINE TWO");
+        ex.Message.Should().Contain("Assert.AreEqual(expected, actual)");
+    }
+
+    public void AreEqualStringSpecificWhenEqualDoesNotThrow()
+        => FluentActions.Invoking(() => Assert.AreEqual("Straße", "STRAẞE", true, new CultureInfo("de-DE"))).Should().NotThrow();
+
+    public void AreNotEqualStringSpecificShowsStructuredMessage()
+    {
+        string notExpected = "A";
+        string actual = "A";
+
+        Action action = () => Assert.AreNotEqual(notExpected, actual, false);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+
+        ex.Message.Should().Be(
+            """
+            Assertion failed. Expected strings to differ.
+
+            not expected: "A"
+            actual:       "A"
+
+            Assert.AreNotEqual(notExpected, actual)
+            """);
+        ex.ExpectedText.Should().Be("not \"A\"");
+        ex.ActualText.Should().Be("\"A\"");
+        ex.Data["assert.expected"].Should().Be("not \"A\"");
+        ex.Data["assert.actual"].Should().Be("\"A\"");
+    }
+
+    public void AreNotEqualStringSpecificWithIgnoreCaseAndCultureShowsEvidence()
+    {
+        Action action = () => Assert.AreNotEqual("Straße", "STRAẞE", true, new CultureInfo("de-DE"));
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to differ (case-insensitive).
+
+                not expected: "Straße"
+                actual:       "STRAẞE"
+                ignore case:  true
+                culture:      de-DE
+
+                Assert.AreNotEqual("Straße", "STRAẞE")
+                """);
+    }
+
+    public void AreNotEqualStringSpecificWithBothNullShowsStructuredMessage()
+    {
+        string? notExpected = null;
+        string? actual = null;
+
+        Action action = () => Assert.AreNotEqual(notExpected, actual, false);
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to differ.
+
+                not expected: null
+                actual:       null
+
+                Assert.AreNotEqual(notExpected, actual)
+                """);
+    }
+
+    public void AreNotEqualStringSpecificWhenDifferentDoesNotThrow()
+        => FluentActions.Invoking(() => Assert.AreNotEqual("Straße", "STRASSE!", true, new CultureInfo("de-DE"))).Should().NotThrow();
 }

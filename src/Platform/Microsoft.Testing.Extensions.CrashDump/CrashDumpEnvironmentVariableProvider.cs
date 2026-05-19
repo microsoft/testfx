@@ -16,9 +16,9 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     private const string EnableMiniDumpVariable = "DbgEnableMiniDump";
     private const string MiniDumpTypeVariable = "DbgMiniDumpType";
     private const string MiniDumpNameVariable = "DbgMiniDumpName";
-    private const string CreateDumpDiagnosticsVariable = "CreateDumpDiagnostics";
-    private const string CreateDumpVerboseDiagnosticsVariable = "CreateDumpVerboseDiagnostics";
-    private const string EnableMiniDumpValue = "1";
+    private const string EnableCrashReportVariable = "EnableCrashReport";
+    private const string EnableCrashReportOnlyVariable = "EnableCrashReportOnly";
+    private const string EnabledValue = "1";
 
     private static readonly string[] Prefixes = ["DOTNET_", "COMPlus_"];
     private readonly IConfiguration _configuration;
@@ -54,15 +54,32 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync()
-        => Task.FromResult(_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) && _crashDumpGeneratorConfiguration.Enable);
+        => Task.FromResult(
+            (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) ||
+             _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName)) &&
+            _crashDumpGeneratorConfiguration.Enable);
 
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
+        // IsEnabledAsync gates this method, so at least one of --crashdump / --crash-report is set here.
+        bool crashReportEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
+
         foreach (string prefix in Prefixes)
         {
-            environmentVariables.SetVariable(new($"{prefix}{EnableMiniDumpVariable}", EnableMiniDumpValue, false, true));
-            environmentVariables.SetVariable(new($"{prefix}{CreateDumpDiagnosticsVariable}", EnableMiniDumpValue, false, true));
-            environmentVariables.SetVariable(new($"{prefix}{CreateDumpVerboseDiagnosticsVariable}", EnableMiniDumpValue, false, true));
+            environmentVariables.SetVariable(new($"{prefix}{EnableMiniDumpVariable}", EnabledValue, false, true));
+        }
+
+        if (crashReportEnabled)
+        {
+            bool crashDumpEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName);
+
+            // When a dump is also requested, emit a crash report alongside it.
+            // Otherwise emit only the crash report (no dump file).
+            string reportVariable = crashDumpEnabled ? EnableCrashReportVariable : EnableCrashReportOnlyVariable;
+            foreach (string prefix in Prefixes)
+            {
+                environmentVariables.SetVariable(new($"{prefix}{reportVariable}", EnabledValue, false, true));
+            }
         }
 
         string miniDumpTypeValue = "4";
@@ -133,31 +150,17 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         return ValidationResult.InvalidTask(CrashDumpResources.CrashDumpNotSupportedInNonNetCoreErrorMessage);
 #else
         StringBuilder errors = new();
-        foreach (string prefix in Prefixes)
-        {
-            if (!environmentVariables.TryGetVariable($"{prefix}{EnableMiniDumpVariable}", out OwnedEnvironmentVariable? enableMiniDump)
-            || enableMiniDump.Value != EnableMiniDumpValue)
-            {
-                AddError(errors, $"{prefix}{EnableMiniDumpVariable}", EnableMiniDumpValue, enableMiniDump?.Value);
-            }
-        }
 
-        foreach (string prefix in Prefixes)
-        {
-            if (!environmentVariables.TryGetVariable($"{prefix}{CreateDumpDiagnosticsVariable}", out OwnedEnvironmentVariable? enableMiniDump)
-            || enableMiniDump.Value != EnableMiniDumpValue)
-            {
-                AddError(errors, $"{prefix}{CreateDumpDiagnosticsVariable}", EnableMiniDumpValue, enableMiniDump?.Value);
-            }
-        }
+        // IsEnabledAsync gates this method, so at least one of --crashdump / --crash-report is set here.
+        bool crashReportEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
 
-        foreach (string prefix in Prefixes)
+        ValidateBothPrefixes(EnableMiniDumpVariable, EnabledValue);
+
+        if (crashReportEnabled)
         {
-            if (!environmentVariables.TryGetVariable($"{prefix}{CreateDumpVerboseDiagnosticsVariable}", out OwnedEnvironmentVariable? enableMiniDump)
-            || enableMiniDump.Value != EnableMiniDumpValue)
-            {
-                AddError(errors, $"{prefix}{CreateDumpVerboseDiagnosticsVariable}", EnableMiniDumpValue, enableMiniDump?.Value);
-            }
+            bool crashDumpEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName);
+            string reportVariable = crashDumpEnabled ? EnableCrashReportVariable : EnableCrashReportOnlyVariable;
+            ValidateBothPrefixes(reportVariable, EnabledValue);
         }
 
         foreach (string prefix in Prefixes)
@@ -198,6 +201,18 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         {
             string actualValueString = actualValue ?? "<null>";
             errors.AppendLine(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpInvalidEnvironmentVariableValueErrorMessage, variableName, expectedValue, actualValueString));
+        }
+
+        void ValidateBothPrefixes(string variableName, string expectedValue)
+        {
+            foreach (string prefix in Prefixes)
+            {
+                if (!environmentVariables.TryGetVariable($"{prefix}{variableName}", out OwnedEnvironmentVariable? variable)
+                    || variable.Value != expectedValue)
+                {
+                    AddError(errors, $"{prefix}{variableName}", expectedValue, variable?.Value);
+                }
+            }
         }
 #endif
     }

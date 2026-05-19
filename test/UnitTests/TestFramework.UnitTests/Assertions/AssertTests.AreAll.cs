@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Runtime.CompilerServices;
 
 using AwesomeAssertions;
 
@@ -214,18 +215,19 @@ public partial class AssertTests : TestContainer
 
     public void AreAllDistinct_Generic_WithComparer_HasDuplicate_ShouldFail()
     {
+        string comparerTypeName = nameof(CaseInsensitiveStringComparer);
+        string expectedMessage = """
+            Assertion failed. Expected all items in collection to be distinct.
+
+            duplicates: ["a"]
+            collection: ["A", "B", "a"]
+            comparer:   __COMPARER__
+
+            Assert.AreAllDistinct(new[] { "A", "B", "a" }, <comparer>)
+            """.Replace("__COMPARER__", comparerTypeName);
         Action action = () => Assert.AreAllDistinct(new[] { "A", "B", "a" }, new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
-            .WithMessage(
-                """
-                Assertion failed. Expected all items in collection to be distinct.
-
-                duplicates: ["a"]
-                collection: ["A", "B", "a"]
-                comparer:   CaseInsensitiveStringComparer
-
-                Assert.AreAllDistinct(new[] { "A", "B", "a" }, <comparer>)
-                """);
+            .WithMessage(expectedMessage);
     }
 
     public void AreAllDistinct_Generic_NullCollection_ShouldFail()
@@ -266,19 +268,20 @@ public partial class AssertTests : TestContainer
 
     public void AreAllDistinct_NonGeneric_WithComparer_HasDuplicate_ShouldFail()
     {
+        string comparerTypeName = nameof(CaseInsensitiveStringComparer);
+        string expectedMessage = """
+            Assertion failed. Expected all items in collection to be distinct.
+
+            duplicates: ["a"]
+            collection: ["A", "B", "a"]
+            comparer:   __COMPARER__
+
+            Assert.AreAllDistinct(list, <comparer>)
+            """.Replace("__COMPARER__", comparerTypeName);
         ArrayList list = ["A", "B", "a"];
         Action action = () => Assert.AreAllDistinct(list, new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
-            .WithMessage(
-                """
-                Assertion failed. Expected all items in collection to be distinct.
-
-                duplicates: ["a"]
-                collection: ["A", "B", "a"]
-                comparer:   CaseInsensitiveStringComparer
-
-                Assert.AreAllDistinct(list, <comparer>)
-                """);
+            .WithMessage(expectedMessage);
     }
 
     public void AreAllDistinct_NonGeneric_NullCollection_ShouldFail()
@@ -381,9 +384,21 @@ public partial class AssertTests : TestContainer
 
         public int GetHashCode(string? obj) => obj is null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(obj);
 
-        bool IEqualityComparer.Equals(object? x, object? y) => Equals(x as string, y as string);
+        bool IEqualityComparer.Equals(object? x, object? y)
+            => (x, y) switch
+            {
+                (null, null) => true,
+                (string left, string right) => Equals(left, right),
+                (null, _) or (_, null) => false,
+                _ => false,
+            };
 
-        int IEqualityComparer.GetHashCode(object obj) => obj is string value ? GetHashCode(value) : 0;
+        int IEqualityComparer.GetHashCode(object obj)
+            => obj is string value
+                ? GetHashCode(value)
+                : obj is null
+                    ? 0
+                    : RuntimeHelpers.GetHashCode(obj);
     }
 
     private sealed class NullEqualsEmptyStringComparer : IEqualityComparer<string?>
