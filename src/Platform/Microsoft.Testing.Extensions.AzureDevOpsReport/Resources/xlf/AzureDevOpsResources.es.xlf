@@ -2,6 +2,16 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="es" original="../AzureDevOpsResources.resx">
     <body>
+      <trans-unit id="ArtifactUploadOptionsRequireUploadArtifacts">
+        <source>'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</source>
+        <target state="new">'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</target>
+        <note>{Locked="--report-azdo-upload-artifact-include"}{Locked="--report-azdo-upload-artifact-exclude"}{Locked="--report-azdo-upload-artifact-name"}{Locked="--report-azdo-upload-artifacts"}{Locked="off"}</note>
+      </trans-unit>
+      <trans-unit id="ArtifactUploadRequiresTfBuildWarning">
+        <source>Azure DevOps artifact upload was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps artifact upload and build tags.</source>
+        <target state="new">Azure DevOps artifact upload was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps artifact upload and build tags.</target>
+        <note>{Locked="TF_BUILD"}{Locked="true"}</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps">
         <source>'--report-azdo-demote-known-flaky' requires '--report-azdo' to be enabled</source>
         <target state="new">'--report-azdo-demote-known-flaky' requires '--report-azdo' to be enabled</target>
@@ -82,6 +92,16 @@
         <target state="new">Azure DevOps flaky history returned {0} runs. Only the first {1} runs will be inspected.</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidArtifactUploadGlob">
+        <source>Invalid glob pattern {0}.</source>
+        <target state="new">Invalid glob pattern {0}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidArtifactUploadMode">
+        <source>Invalid artifact upload mode {0}.</source>
+        <target state="new">Invalid artifact upload mode {0}.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidFlakyHistoryDays">
         <source>Invalid value '{0}' for '--report-azdo-flaky-history'. Provide an integer between 1 and 90.</source>
         <target state="new">Invalid value '{0}' for '--report-azdo-flaky-history'. Provide an integer between 1 and 90.</target>
@@ -131,6 +151,26 @@
         <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
         <target state="translated">Gravedad que se va a usar para el evento notificado. Las opciones son: error (valor predeterminado) y warning.</target>
         <note>{Locked="error"}{Locked="warning"}</note>
+      </trans-unit>
+      <trans-unit id="UploadArtifactExcludeOptionDescription">
+        <source>Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.</source>
+        <target state="new">Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UploadArtifactIncludeOptionDescription">
+        <source>Include files in Azure DevOps artifact upload using glob patterns relative to the test results directory. Defaults to '**/*'.</source>
+        <target state="new">Include files in Azure DevOps artifact upload using glob patterns relative to the test results directory. Defaults to '**/*'.</target>
+        <note>{Locked="**/*"}</note>
+      </trans-unit>
+      <trans-unit id="UploadArtifactNameOptionDescription">
+        <source>Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.</source>
+        <target state="new">Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.</target>
+        <note>{Locked="TestResults_{assemblyName}_{tfm}"}</note>
+      </trans-unit>
+      <trans-unit id="UploadArtifactsOptionDescription">
+        <source>Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.</source>
+        <target state="new">Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.</target>
+        <note>{Locked="off"}{Locked="tags-only"}{Locked="files"}{Locked="all"}</note>
       </trans-unit>
     </body>
   </file>

@@ -397,15 +397,12 @@ internal sealed class AzureDevOpsReporter :
         _hasLoadedEnabledConfiguration = true;
     }
 
-    private static string GetTargetFrameworkMoniker()
-        => TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
-            ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
-
     private static string GetTestName(TestNode testNode)
         => testNode.Properties
             .OfType<SerializableKeyValuePairStringProperty>()
             .FirstOrDefault(static property => property.Key == FullyQualifiedNamePropertyKey)?.Value
             ?? testNode.DisplayName;
+
     /// <summary>
     /// Formats the reporter message so the test name lands on its own line.
     /// PR check UIs (GitHub Checks via the dotnet problem matcher and Azure DevOps)

@@ -4,6 +4,7 @@
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
 using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions;
