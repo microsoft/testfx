@@ -166,7 +166,7 @@ public sealed partial class Assert
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
                 _failAction = (userMessage, expectedExpression, actualExpression) =>
-                    ReportAssertAreEqualFailed(expected, actual, delta, BuildUserMessageForExpectedExpressionAndActualExpression(userMessage, expectedExpression, actualExpression));
+                    ReportAssertAreEqualFailed(expected, actual, delta, userMessage, expectedExpression, actualExpression);
             }
         }
 
@@ -177,7 +177,7 @@ public sealed partial class Assert
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
                 _failAction = (userMessage, expectedExpression, actualExpression) =>
-                    ReportAssertAreEqualFailed(expected, actual, delta, BuildUserMessageForExpectedExpressionAndActualExpression(userMessage, expectedExpression, actualExpression));
+                    ReportAssertAreEqualFailed(expected, actual, delta, userMessage, expectedExpression, actualExpression);
             }
         }
 
@@ -188,7 +188,7 @@ public sealed partial class Assert
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
                 _failAction = (userMessage, expectedExpression, actualExpression) =>
-                    ReportAssertAreEqualFailed(expected, actual, delta, BuildUserMessageForExpectedExpressionAndActualExpression(userMessage, expectedExpression, actualExpression));
+                    ReportAssertAreEqualFailed(expected, actual, delta, userMessage, expectedExpression, actualExpression);
             }
         }
 
@@ -199,7 +199,7 @@ public sealed partial class Assert
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
                 _failAction = (userMessage, expectedExpression, actualExpression) =>
-                    ReportAssertAreEqualFailed(expected, actual, delta, BuildUserMessageForExpectedExpressionAndActualExpression(userMessage, expectedExpression, actualExpression));
+                    ReportAssertAreEqualFailed(expected, actual, delta, userMessage, expectedExpression, actualExpression);
             }
         }
 
@@ -277,7 +277,7 @@ public sealed partial class Assert
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
                 _failAction = (userMessage, notExpectedExpr, actualExpr) =>
-                    ReportAssertAreNotEqualFailed(notExpected, actual, delta, BuildUserMessageForNotExpectedExpressionAndActualExpression(userMessage, notExpectedExpr, actualExpr));
+                    ReportAssertAreNotEqualFailed(notExpected, actual, delta, userMessage, notExpectedExpr, actualExpr);
             }
         }
 
@@ -288,7 +288,7 @@ public sealed partial class Assert
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
                 _failAction = (userMessage, notExpectedExpr, actualExpr) =>
-                    ReportAssertAreNotEqualFailed(notExpected, actual, delta, BuildUserMessageForNotExpectedExpressionAndActualExpression(userMessage, notExpectedExpr, actualExpr));
+                    ReportAssertAreNotEqualFailed(notExpected, actual, delta, userMessage, notExpectedExpr, actualExpr);
             }
         }
 
@@ -299,7 +299,7 @@ public sealed partial class Assert
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
                 _failAction = (userMessage, notExpectedExpr, actualExpr) =>
-                    ReportAssertAreNotEqualFailed(notExpected, actual, delta, BuildUserMessageForNotExpectedExpressionAndActualExpression(userMessage, notExpectedExpr, actualExpr));
+                    ReportAssertAreNotEqualFailed(notExpected, actual, delta, userMessage, notExpectedExpr, actualExpr);
             }
         }
 
@@ -310,7 +310,7 @@ public sealed partial class Assert
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
                 _failAction = (userMessage, notExpectedExpr, actualExpr) =>
-                    ReportAssertAreNotEqualFailed(notExpected, actual, delta, BuildUserMessageForNotExpectedExpressionAndActualExpression(userMessage, notExpectedExpr, actualExpr));
+                    ReportAssertAreNotEqualFailed(notExpected, actual, delta, userMessage, notExpectedExpr, actualExpr);
             }
         }
 

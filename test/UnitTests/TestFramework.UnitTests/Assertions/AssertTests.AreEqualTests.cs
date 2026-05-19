@@ -336,6 +336,26 @@ public partial class AssertTests : TestContainer
         ex.Data["assert.actual"].Should().Be("0");
     }
 
+    public void AreEqualWithDelta_PopulatesExpectedAndActualText()
+    {
+        Action action = () => Assert.AreEqual(5.0f, 2.0f, 2.0f);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.ExpectedText.Should().Be("5");
+        ex.ActualText.Should().Be("2");
+        ex.Data["assert.expected"].Should().Be("5");
+        ex.Data["assert.actual"].Should().Be("2");
+    }
+
+    public void AreNotEqualWithDelta_PopulatesExpectedAndActualTextWithNotPrefix()
+    {
+        Action action = () => Assert.AreNotEqual(5.0f, 4.0f, 2.0f);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.ExpectedText.Should().Be("not 5");
+        ex.ActualText.Should().Be("4");
+        ex.Data["assert.expected"].Should().Be("not 5");
+        ex.Data["assert.actual"].Should().Be("4");
+    }
+
     public void AreNotEqual_FailsWithStructuredMessage()
     {
         Action action = () => Assert.AreNotEqual(0, 0);
@@ -507,7 +527,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreEqual(1.0f, 1.1f, 0.001f, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreEqual failed. Expected a difference no greater than <0.001> between expected value <1> and actual value <1.1>. 'expected' expression: '1.0f', 'actual' expression: '1.1f'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage(
+                "1",
+                "1.1",
+                "0.001",
+                "Assert.AreEqual(1.0f, 1.1f, <delta>)",
+                $"User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}"));
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -524,7 +549,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreNotEqual(1.0f, 1.1f, 0.2f, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreNotEqual failed. Expected a difference greater than <0.2> between expected value <1> and actual value <1.1>. 'notExpected' expression: '1.0f', 'actual' expression: '1.1f'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage(
+                "1",
+                "1.1",
+                "0.2",
+                "Assert.AreNotEqual(1.0f, 1.1f, <delta>)",
+                $"User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}"));
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -541,7 +571,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreEqual(1.0m, 1.1m, 0.001m, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreEqual failed. Expected a difference no greater than <0.001> between expected value <1.0> and actual value <1.1>. 'expected' expression: '1.0m', 'actual' expression: '1.1m'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage(
+                "1.0",
+                "1.1",
+                "0.001",
+                "Assert.AreEqual(1.0m, 1.1m, <delta>)",
+                $"User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}"));
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -558,7 +593,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreNotEqual(1.0m, 1.1m, 0.2m, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreNotEqual failed. Expected a difference greater than <0.2> between expected value <1.0> and actual value <1.1>. 'notExpected' expression: '1.0m', 'actual' expression: '1.1m'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage(
+                "1.0",
+                "1.1",
+                "0.2",
+                "Assert.AreNotEqual(1.0m, 1.1m, <delta>)",
+                $"User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}"));
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -575,7 +615,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreEqual(1L, 2L, 0L, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreEqual failed. Expected a difference no greater than <0> between expected value <1> and actual value <2>. 'expected' expression: '1L', 'actual' expression: '2L'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage(
+                "1",
+                "2",
+                "0",
+                "Assert.AreEqual(1L, 2L, <delta>)",
+                $"User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}"));
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -592,7 +637,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreNotEqual(1L, 2L, 1L, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreNotEqual failed. Expected a difference greater than <1> between expected value <1> and actual value <2>. 'notExpected' expression: '1L', 'actual' expression: '2L'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage(
+                "1",
+                "2",
+                "1",
+                "Assert.AreNotEqual(1L, 2L, <delta>)",
+                $"User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}"));
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -609,7 +659,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreEqual(1.0d, 1.1d, 0.001d, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreEqual failed. Expected a difference no greater than <0.001> between expected value <1> and actual value <1.1>. 'expected' expression: '1.0d', 'actual' expression: '1.1d'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage(
+                "1",
+                "1.1",
+                "0.001",
+                "Assert.AreEqual(1.0d, 1.1d, <delta>)",
+                $"User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}"));
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -626,7 +681,12 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreNotEqual(1.0d, 1.1d, 0.2d, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.AreNotEqual failed. Expected a difference greater than <0.2> between expected value <1> and actual value <1.1>. 'notExpected' expression: '1.0d', 'actual' expression: '1.1d'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage(
+                "1",
+                "1.1",
+                "0.2",
+                "Assert.AreNotEqual(1.0d, 1.1d, <delta>)",
+                $"User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}"));
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -798,13 +858,13 @@ public partial class AssertTests : TestContainer
     public void FloatAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceGreaterThanDeltaPositive_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreEqual(5.0f, 2.0f, 2.0f); // difference is 3. Delta is 2
-        action.Should().Throw<Exception>().WithMessage("Assert.AreEqual failed. Expected a difference no greater than <2> between expected value <5> and actual value <2>. 'expected' expression: '5.0f', 'actual' expression: '2.0f'.");
+        action.Should().Throw<Exception>().Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage("5", "2", "2", "Assert.AreEqual(5.0f, 2.0f, <delta>)"));
     }
 
     public void FloatAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceGreaterThanDeltaNegative_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreEqual(2.0f, 5.0f, 2.0f); // difference is -3. Delta is 2
-        action.Should().Throw<Exception>().WithMessage("Assert.AreEqual failed. Expected a difference no greater than <2> between expected value <2> and actual value <5>. 'expected' expression: '2.0f', 'actual' expression: '5.0f'.");
+        action.Should().Throw<Exception>().Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage("2", "5", "2", "Assert.AreEqual(2.0f, 5.0f, <delta>)"));
     }
 
     public void FloatAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceLessThanDeltaPositive_DeltaIsNumeric_ShouldPass()
@@ -816,13 +876,13 @@ public partial class AssertTests : TestContainer
     public void FloatAreEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreEqual(5.0f, float.NaN, 2.0f);
-        action.Should().Throw<Exception>().WithMessage("Assert.AreEqual failed. Expected a difference no greater than <2> between expected value <5> and actual value <NaN>. 'expected' expression: '5.0f', 'actual' expression: 'float.NaN'.");
+        action.Should().Throw<Exception>().Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage("5", "NaN", "2", "Assert.AreEqual(5.0f, float.NaN, <delta>)"));
     }
 
     public void FloatAreEqual_ExpectedIsNaN_ActualIsNumeric_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreEqual(float.NaN, 5.0f, 2.0f);
-        action.Should().Throw<Exception>().WithMessage("Assert.AreEqual failed. Expected a difference no greater than <2> between expected value <NaN> and actual value <5>. 'expected' expression: 'float.NaN', 'actual' expression: '5.0f'.");
+        action.Should().Throw<Exception>().Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage("NaN", "5", "2", "Assert.AreEqual(float.NaN, 5.0f, <delta>)"));
     }
 
     public void FloatAreEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNumeric_ShouldPass()
@@ -1010,13 +1070,13 @@ public partial class AssertTests : TestContainer
     public void FloatAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceLessThanDeltaPositive_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreNotEqual(5.0f, 4.0f, 2.0f); // difference is 1. Delta is 2
-        action.Should().Throw<Exception>().WithMessage("Assert.AreNotEqual failed. Expected a difference greater than <2> between expected value <5> and actual value <4>. 'notExpected' expression: '5.0f', 'actual' expression: '4.0f'.");
+        action.Should().Throw<Exception>().Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage("5", "4", "2", "Assert.AreNotEqual(5.0f, 4.0f, <delta>)"));
     }
 
     public void FloatAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceLessThanDeltaNegative_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreNotEqual(4.0f, 5.0f, 2.0f); // difference is -1. Delta is 2
-        action.Should().Throw<Exception>().WithMessage("Assert.AreNotEqual failed. Expected a difference greater than <2> between expected value <4> and actual value <5>. 'notExpected' expression: '4.0f', 'actual' expression: '5.0f'.");
+        action.Should().Throw<Exception>().Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage("4", "5", "2", "Assert.AreNotEqual(4.0f, 5.0f, <delta>)"));
     }
 
     public void FloatAreNotEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNumeric_ShouldPass() => Assert.AreNotEqual(5.0f, float.NaN, 2.0f);
@@ -1027,7 +1087,7 @@ public partial class AssertTests : TestContainer
     public void FloatAreNotEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreNotEqual(float.NaN, float.NaN, 2.0f);
-        action.Should().Throw<Exception>().WithMessage("Assert.AreNotEqual failed. Expected a difference greater than <2> between expected value <NaN> and actual value <NaN>. 'notExpected' expression: 'float.NaN', 'actual' expression: 'float.NaN'.");
+        action.Should().Throw<Exception>().Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage("NaN", "NaN", "2", "Assert.AreNotEqual(float.NaN, float.NaN, <delta>)"));
     }
 
     public void DoubleAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualNotEquals_DeltaIsNaN_ShouldFail()
@@ -1211,14 +1271,14 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreEqual(5.0d, 2.0d, 2.0d); // difference is 3. Delta is 2
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.AreEqual failed. Expected a difference no greater than <2> between expected value <5> and actual value <2>. 'expected' expression: '5.0d', 'actual' expression: '2.0d'.");
+            .Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage("5", "2", "2", "Assert.AreEqual(5.0d, 2.0d, <delta>)"));
     }
 
     public void DoubleAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceGreaterThanDeltaNegative_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreEqual(2.0d, 5.0d, 2.0d); // difference is -3. Delta is 2
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.AreEqual failed. Expected a difference no greater than <2> between expected value <2> and actual value <5>. 'expected' expression: '2.0d', 'actual' expression: '5.0d'.");
+            .Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage("2", "5", "2", "Assert.AreEqual(2.0d, 5.0d, <delta>)"));
     }
 
     public void DoubleAreEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceLessThanDeltaPositive_DeltaIsNumeric_ShouldPass()
@@ -1231,14 +1291,14 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreEqual(5.0d, double.NaN, 2.0d);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.AreEqual failed. Expected a difference no greater than <2> between expected value <5> and actual value <NaN>. 'expected' expression: '5.0d', 'actual' expression: 'double.NaN'.");
+            .Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage("5", "NaN", "2", "Assert.AreEqual(5.0d, double.NaN, <delta>)"));
     }
 
     public void DoubleAreEqual_ExpectedIsNaN_ActualIsNumeric_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreEqual(double.NaN, 5.0d, 2.0d);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.AreEqual failed. Expected a difference no greater than <2> between expected value <NaN> and actual value <5>. 'expected' expression: 'double.NaN', 'actual' expression: '5.0d'.");
+            .Which.Message.Should().Be(CreateDeltaAreEqualFailureMessage("NaN", "5", "2", "Assert.AreEqual(double.NaN, 5.0d, <delta>)"));
     }
 
     public void DoubleAreEqual_ExpectedIsNaN_ActualIsNaN_DeltaIsNumeric_ShouldPass()
@@ -1434,14 +1494,14 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreNotEqual(5.0d, 4.0d, 2.0d); // difference is 1. Delta is 2
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.AreNotEqual failed. Expected a difference greater than <2> between expected value <5> and actual value <4>. 'notExpected' expression: '5.0d', 'actual' expression: '4.0d'.");
+            .Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage("5", "4", "2", "Assert.AreNotEqual(5.0d, 4.0d, <delta>)"));
     }
 
     public void DoubleAreNotEqual_ExpectedIsNumeric_ActualIsNumeric_ExpectedAndActualDifferenceLessThanDeltaNegative_DeltaIsNumeric_ShouldFail()
     {
         Action action = () => Assert.AreNotEqual(4.0d, 5.0d, 2.0d); // difference is -1. Delta is 2
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.AreNotEqual failed. Expected a difference greater than <2> between expected value <4> and actual value <5>. 'notExpected' expression: '4.0d', 'actual' expression: '5.0d'.");
+            .Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage("4", "5", "2", "Assert.AreNotEqual(4.0d, 5.0d, <delta>)"));
     }
 
     public void DoubleAreNotEqual_ExpectedIsNumeric_ActualIsNaN_DeltaIsNumeric_ShouldPass() => Assert.AreNotEqual(5.0d, double.NaN, 2.0d);
@@ -1453,7 +1513,61 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreNotEqual(double.NaN, double.NaN, 2.0d);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.AreNotEqual failed. Expected a difference greater than <2> between expected value <NaN> and actual value <NaN>. 'notExpected' expression: 'double.NaN', 'actual' expression: 'double.NaN'.");
+            .Which.Message.Should().Be(CreateDeltaAreNotEqualFailureMessage("NaN", "NaN", "2", "Assert.AreNotEqual(double.NaN, double.NaN, <delta>)"));
+    }
+
+    private static string CreateDeltaAreEqualFailureMessage(string expected, string actual, string delta, string callSite, string? userMessage = null)
+    {
+        string[] lines = userMessage is null
+            ?
+            [
+                "Assertion failed. Expected values to be equal within tolerance.",
+                string.Empty,
+                $"expected: {expected}",
+                $"actual:   {actual}",
+                $"delta:    {delta}",
+                string.Empty,
+                callSite,
+            ]
+            :
+            [
+                "Assertion failed. Expected values to be equal within tolerance.",
+                userMessage,
+                string.Empty,
+                $"expected: {expected}",
+                $"actual:   {actual}",
+                $"delta:    {delta}",
+                string.Empty,
+                callSite,
+            ];
+        return string.Join(Environment.NewLine, lines);
+    }
+
+    private static string CreateDeltaAreNotEqualFailureMessage(string notExpected, string actual, string delta, string callSite, string? userMessage = null)
+    {
+        string[] lines = userMessage is null
+            ?
+            [
+                "Assertion failed. Expected values to differ beyond tolerance.",
+                string.Empty,
+                $"not expected: {notExpected}",
+                $"actual:       {actual}",
+                $"delta:        {delta}",
+                string.Empty,
+                callSite,
+            ]
+            :
+            [
+                "Assertion failed. Expected values to differ beyond tolerance.",
+                userMessage,
+                string.Empty,
+                $"not expected: {notExpected}",
+                $"actual:       {actual}",
+                $"delta:        {delta}",
+                string.Empty,
+                callSite,
+            ];
+        return string.Join(Environment.NewLine, lines);
     }
 
     private class TypeOverridesEquals

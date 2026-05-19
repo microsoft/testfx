@@ -129,8 +129,8 @@
   <data name="AreEqualFailMsg" xml:space="preserve">
     <value>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</value>
   </data>
-  <data name="AreEqualDeltaFailMsg" xml:space="preserve">
-    <value>Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</value>
+  <data name="AreEqualDeltaFailedSummary" xml:space="preserve">
+    <value>Expected values to be equal within tolerance.</value>
   </data>
   <data name="AreEqualCaseFailMsg" xml:space="preserve">
     <value>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</value>
@@ -221,8 +221,8 @@
     <value>&lt;root&gt;</value>
     <comment>Placeholder used in equivalence-mismatch messages when the difference is at the top of the object graph.</comment>
   </data>
-  <data name="AreNotEqualDeltaFailMsg" xml:space="preserve">
-    <value>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</value>
+  <data name="AreNotEqualDeltaFailedSummary" xml:space="preserve">
+    <value>Expected values to differ beyond tolerance.</value>
   </data>
   <data name="AreNotEqualFailMsg" xml:space="preserve">
     <value>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</value>
