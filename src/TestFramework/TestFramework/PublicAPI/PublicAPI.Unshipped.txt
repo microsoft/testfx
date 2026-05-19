@@ -2,7 +2,7 @@
 [MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Scope() -> System.IDisposable!
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ActualText.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ExpectedText.get -> string?
-Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder -> enum
+Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InAnyOrder = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InOrder = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreAllDistinct(System.Collections.IEnumerable? collection, System.Collections.IEqualityComparer? comparer, string? message = "", string! collectionExpression = "") -> void

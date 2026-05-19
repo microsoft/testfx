@@ -332,19 +332,14 @@ public sealed partial class Assert
     }
 
     private static bool AreSequenceElementsEqual<T>(T? expected, T? actual, IEqualityComparer<T> comparer)
-    {
-        if (expected is null || actual is null)
-        {
-            return expected is null && actual is null;
-        }
-
-        return comparer.Equals(expected, actual);
-    }
+        => expected is null || actual is null
+            ? expected is null && actual is null
+            : comparer.Equals(expected, actual);
 
     private static bool TryCompareInAnyOrder<T>(List<T?> expected, List<T?> actual, IEqualityComparer<T> comparer, out List<T?>? missing, out List<T?>? unexpected)
     {
 #pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
-        Dictionary<T, int> expectedCounts = new(comparer);
+        var expectedCounts = new Dictionary<T, int>(comparer);
 #pragma warning restore CS8714
         int missingNullCount = 0;
 

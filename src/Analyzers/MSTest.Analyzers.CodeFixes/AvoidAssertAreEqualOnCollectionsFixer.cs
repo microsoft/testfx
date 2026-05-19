@@ -95,8 +95,8 @@ public sealed class AvoidAssertAreEqualOnCollectionsFixer : CodeFixProvider
 
         IArgumentOperation? comparerArgumentOperation = invocationOperation.Arguments.FirstOrDefault(argument => argument.Parameter?.Name == "comparer");
         IArgumentOperation? messageArgumentOperation = invocationOperation.Arguments.FirstOrDefault(argument => argument.Parameter?.Name == "message");
-        ArgumentSyntax? comparerArgument = comparerArgumentOperation?.Syntax as ArgumentSyntax;
-        ArgumentSyntax? messageArgument = messageArgumentOperation?.Syntax as ArgumentSyntax;
+        var comparerArgument = comparerArgumentOperation?.Syntax as ArgumentSyntax;
+        var messageArgument = messageArgumentOperation?.Syntax as ArgumentSyntax;
 
         bool isAreEqual = invocationOperation.TargetMethod.Name == "AreEqual";
         bool canOfferEquivalentFix = comparerArgument is null;
