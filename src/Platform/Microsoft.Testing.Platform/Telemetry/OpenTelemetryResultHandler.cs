@@ -20,7 +20,7 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
     private readonly IHistogram<double> _totalDuration;
     // Note: we use a queue per Uid because frameworks are allowed (but discouraged) to produce
     // multiple test nodes that share the same Uid (e.g. NUnit's [Values("one", "one")] or
-    // MSTest's "folded" parametrized tests). When that happens we still want to track every
+    // MSTest's "folded" parameterized tests). When that happens we still want to track every
     // in-flight activity and pair them with results in FIFO order, instead of throwing.
     private readonly Dictionary<TestNodeUid, Queue<IPlatformActivity>> _testActivities = [];
     private bool _disposed;

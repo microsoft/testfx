@@ -319,7 +319,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     {
         // Regression test for https://github.com/microsoft/testfx/issues/7442.
         // Some test frameworks (e.g. NUnit with [Values("one", "one")] or MSTest with folded
-        // parametrized tests) can emit multiple test nodes that share the same Uid. Starting
+        // parameterized tests) can emit multiple test nodes that share the same Uid. Starting
         // activities for them used to throw because the underlying dictionary did not tolerate
         // duplicate keys.
         Mock<IPlatformActivity> activity1 = new();
