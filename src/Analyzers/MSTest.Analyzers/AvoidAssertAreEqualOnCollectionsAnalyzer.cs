@@ -47,17 +47,16 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
             Compilation compilation = context.Compilation;
             INamedTypeSymbol? assertSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert);
             INamedTypeSymbol? genericEnumerableSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemCollectionsGenericIEnumerable1);
-            ITypeSymbol stringSymbol = compilation.GetSpecialType(SpecialType.System_String);
             if (assertSymbol is null || genericEnumerableSymbol is null)
             {
                 return;
             }
 
-            context.RegisterOperationAction(context => AnalyzeInvocation(context, assertSymbol, genericEnumerableSymbol, stringSymbol), OperationKind.Invocation);
+            context.RegisterOperationAction(context => AnalyzeInvocation(context, assertSymbol, genericEnumerableSymbol), OperationKind.Invocation);
         });
     }
 
-    private static void AnalyzeInvocation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, INamedTypeSymbol genericEnumerableSymbol, ITypeSymbol stringSymbol)
+    private static void AnalyzeInvocation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, INamedTypeSymbol genericEnumerableSymbol)
     {
         var invocation = (IInvocationOperation)context.Operation;
         IMethodSymbol targetMethod = invocation.TargetMethod;
@@ -70,7 +69,7 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
         }
 
         ITypeSymbol comparedType = targetMethod.TypeArguments[0];
-        if (!ShouldReport(comparedType, genericEnumerableSymbol, stringSymbol))
+        if (!ShouldReport(comparedType, genericEnumerableSymbol))
         {
             return;
         }
@@ -80,9 +79,8 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
         context.ReportDiagnostic(invocation.CreateDiagnostic(Rule, methodName, comparedTypeDisplay));
     }
 
-    private static bool ShouldReport(ITypeSymbol comparedType, INamedTypeSymbol genericEnumerableSymbol, ITypeSymbol stringSymbol)
-        => !SymbolEqualityComparer.Default.Equals(comparedType, stringSymbol)
-            && comparedType.SpecialType != SpecialType.System_String
+    private static bool ShouldReport(ITypeSymbol comparedType, INamedTypeSymbol genericEnumerableSymbol)
+        => comparedType.SpecialType != SpecialType.System_String
             && ImplementsGenericEnumerable(comparedType, genericEnumerableSymbol);
 
     private static bool ImplementsGenericEnumerable(ITypeSymbol type, INamedTypeSymbol genericEnumerableSymbol)

@@ -87,7 +87,7 @@ public sealed class AvoidAssertAreEqualOnCollectionsFixer : CodeFixProvider
         IArgumentOperation? expectedArgumentOperation = invocationOperation.Arguments.FirstOrDefault(argument => argument.Parameter?.Ordinal == 0);
         IArgumentOperation? actualArgumentOperation = invocationOperation.Arguments.FirstOrDefault(argument => argument.Parameter?.Ordinal == 1);
         if (expectedArgumentOperation?.Syntax is not ArgumentSyntax expectedArgument ||
-            actualArgumentOperation.Syntax is not ArgumentSyntax actualArgument)
+            actualArgumentOperation?.Syntax is not ArgumentSyntax actualArgument)
         {
             replacementContext = default;
             return false;
@@ -141,7 +141,7 @@ public sealed class AvoidAssertAreEqualOnCollectionsFixer : CodeFixProvider
 
         if (addInAnyOrderArgument)
         {
-            arguments.Add(SyntaxFactory.Argument(CreateInAnyOrderExpression(invocation)));
+            arguments.Add(SyntaxFactory.Argument(CreateInAnyOrderExpression()));
         }
 
         if (replacementContext.MessageArgument is not null)
@@ -174,7 +174,7 @@ public sealed class AvoidAssertAreEqualOnCollectionsFixer : CodeFixProvider
     private static ArgumentSyntax StripArgumentName(ArgumentSyntax argument)
         => argument.WithNameColon(null);
 
-    private static ExpressionSyntax CreateInAnyOrderExpression(InvocationExpressionSyntax invocation)
+    private static ExpressionSyntax CreateInAnyOrderExpression()
         => SyntaxFactory.ParseExpression("Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InAnyOrder");
 
     private readonly record struct ReplacementContext(

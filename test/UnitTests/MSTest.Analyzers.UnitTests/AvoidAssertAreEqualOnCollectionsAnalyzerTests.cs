@@ -565,6 +565,27 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
         }.RunAsync();
     }
 
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualOnConstrainedTypeParameter_ReportDiagnostic()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod<T>(T a, T b) where T : IEnumerable<int>
+                {
+                    {|#0:Assert.AreEqual(a, b)|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, ExpectedDiagnostic("Assert.AreEqual", "T"));
+    }
+
     private static DiagnosticResult ExpectedDiagnostic(string methodName, string typeName)
         => VerifyCS.Diagnostic().WithLocation(0).WithArguments(methodName, typeName);
 
