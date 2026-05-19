@@ -4,7 +4,6 @@
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
 using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions;
@@ -20,17 +19,31 @@ public static class AzureDevOpsExtensions
     /// <param name="builder">The test application builder.</param>
     public static void AddAzureDevOpsProvider(this ITestApplicationBuilder builder)
     {
-        var compositeTestSessionAzDoService =
-           new CompositeExtensionFactory<AzureDevOpsReporter>(serviceProvider =>
-               new AzureDevOpsReporter(
-                   serviceProvider.GetCommandLineOptions(),
-                   serviceProvider.GetEnvironment(),
-                   serviceProvider.GetFileSystem(),
-                   serviceProvider.GetOutputDevice(),
-                   serviceProvider.GetLoggerFactory()));
+        AzureDevOpsHistoryService? historyService = null;
 
-        builder.TestHost.AddDataConsumer(compositeTestSessionAzDoService);
+        builder.TestHost.AddDataConsumer(serviceProvider =>
+        {
+            historyService ??= CreateHistoryService(serviceProvider);
 
+            return new AzureDevOpsReporter(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetFileSystem(),
+                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetLoggerFactory(),
+                historyService);
+        });
+        builder.TestHost.AddTestSessionLifetimeHandler(serviceProvider =>
+            historyService ??= CreateHistoryService(serviceProvider));
         builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());
     }
+
+    private static AzureDevOpsHistoryService CreateHistoryService(IServiceProvider serviceProvider)
+        => new(
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetEnvironment(),
+            serviceProvider.GetClock(),
+            new AzureDevOpsHistoryClient(serviceProvider.GetTask(), serviceProvider.GetClock()),
+            serviceProvider.GetTask(),
+            serviceProvider.GetLoggerFactory());
 }
