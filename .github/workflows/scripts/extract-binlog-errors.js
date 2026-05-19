@@ -58,7 +58,8 @@ async function main() {
 
     console.log(JSON.stringify(result, null, 2));
   } catch (e) {
-    console.error(`Error: ${e.message}`);
+    const errorMessage = e instanceof Error ? (e.stack ?? e.message) : String(e);
+    console.error(`Error: ${errorMessage}`);
     failed = true;
   } finally {
     try { await client.close(); } catch {}
