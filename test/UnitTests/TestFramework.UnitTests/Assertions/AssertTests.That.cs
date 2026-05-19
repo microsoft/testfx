@@ -1343,6 +1343,70 @@ public partial class AssertTests : TestContainer
         ex.Message.Should().Contain("Callback");
         ex.Message.Should().Contain("null");
     }
+
+    // ---- #6691 method-call display: locks down the friendly receiver rendering ---------------
+    // Without the fix, arbitrary `Get(...)` instance methods on non-array types render as
+    // `obj[arg]` (mis-leading), instance methods on `this` render with the full type name, and
+    // static methods on the same type show as `Method(args)` with no receiver context.
+    private static int GetAnimal() => 42;
+
+    public int GetAnimalInstance() => 7;
+
+    public void That_ArbitraryGetMethodOnNonArray_RendersAsMethodCall_NotIndexer()
+    {
+        var box = new GetterBox();
+        int expected = 0;
+
+        Action act = () => Assert.That(() => box.Get(1) == expected);
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        // Must render as `box.Get(1)`, not as `box[1]` (former #6691 regression).
+        ex.Message.Should().Contain("box.Get(1)");
+        ex.Message.Should().NotContain("box[1]");
+    }
+
+    public void That_StaticMethodOnSameType_RendersWithTypeNamePrefix()
+    {
+        int expected = 0;
+
+        Action act = () => Assert.That(() => GetAnimal() == expected);
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        // The declaring type should prefix the static method call so the user can locate it.
+        ex.Message.Should().Contain(nameof(GetAnimal));
+        ex.Message.Should().Contain(nameof(AssertTests));
+    }
+
+    public void That_InstanceMethodOnThis_RendersAsThisMethod()
+    {
+        int expected = 0;
+
+        Action act = () => Assert.That(() => GetAnimalInstance() == expected);
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        // Captured-this instance methods should render as `this.MethodName(...)`.
+        ex.Message.Should().Contain($"this.{nameof(GetAnimalInstance)}");
+    }
+
+    public void That_ExtensionMethodOnThis_RendersAsThisMethod()
+    {
+        string expected = "wrong";
+
+        Action act = () => Assert.That(() => this.GetGreeting() == expected);
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain($"this.{nameof(AssertTestsExtensions.GetGreeting)}");
+    }
+
+    private sealed class GetterBox
+    {
+        public int Get(int key) => key + 100;
+    }
+}
+
+internal static class AssertTestsExtensions
+{
+    public static string GetGreeting(this AssertTests _) => "hello";
 }
 
 internal static class MutableBoxHelper
