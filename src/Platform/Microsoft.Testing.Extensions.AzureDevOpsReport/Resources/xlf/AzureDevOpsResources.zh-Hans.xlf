@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="Description">
         <source>Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
-        <target state="needs-review-translation">Azure DevOps报表生成器，可通过 Azure DevOps 可理解的方式将错误写入输出。</target>
+        <target state="new">Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</target>
         <note />
       </trans-unit>
       <trans-unit id="DisplayName">
@@ -94,7 +94,7 @@
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
-        <target state="needs-review-translation">启用 Azure DevOps 报表生成器，以通过 Azure DevOps 可理解的方式将错误写入输出。</target>
+        <target state="new">Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">
