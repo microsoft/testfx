@@ -5,10 +5,11 @@ on:
     types: [opened, synchronize, reopened]
     branches: [main, 'rel/*']
 
-# Build job needs only read permissions. Write permissions are
-# scoped to the analyze job which doesn't run untrusted code.
 permissions:
   contents: read
+
+env:
+  BINLOG_MCP_VERSION: '1.0.0-preview.26268.3'
 
 concurrency:
   group: build-failure-analysis-${{ github.event.pull_request.number }}
@@ -16,6 +17,8 @@ concurrency:
 
 jobs:
   build-and-analyze:
+    # Skip analysis for fork PRs (token is read-only, cannot post comments)
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -74,7 +77,7 @@ jobs:
           NUGETEOF
           dotnet tool install --global AITools.BinlogMcp \
             --configfile /tmp/binlog-tool/nuget.config \
-            --version '1.0.0-preview.26268.3'
+            --version "$BINLOG_MCP_VERSION"
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
       - name: Setup Node.js
@@ -87,8 +90,7 @@ jobs:
         if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
         run: |
           cd .github/workflows/scripts
-          npm init -y --silent 2>/dev/null
-          npm install --save --exact @modelcontextprotocol/sdk@1.12.1
+          npm ci --ignore-scripts
 
       - name: Extract errors via binlog-mcp (MCP protocol)
         if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
@@ -295,17 +297,18 @@ jobs:
                   // Post-process: replace file references with clickable links
                   if (analysis) {
                     // Build a map of filename -> full GitHub URL from parsed errors
+                    // Use last 2 path segments as key to reduce collision risk
                     const fileLinks = {};
                     for (const err of parsedErrors) {
                       if (!err.file) continue;
                       const basename = err.file.split(/[/\\]/).pop();
+                      const shortPath = err.file.split(/[/\\]/).slice(-2).join('/');
                       if (!fileLinks[basename]) {
                         const url = fileLink(err.file, err.line);
                         const urlNoLine = fileLink(err.file);
-                        fileLinks[basename] = { url, urlNoLine, fullPath: err.file };
+                        fileLinks[basename] = { url, urlNoLine, fullPath: err.file, shortPath };
                       }
                     }
-                    // Also add source context files
                     for (const [fullPath, ctx] of Object.entries(sourceContexts)) {
                       const basename = fullPath.split(/[/\\]/).pop();
                       if (!fileLinks[basename]) {
@@ -313,15 +316,15 @@ jobs:
                           url: fileLink(fullPath, ctx.errorLine),
                           urlNoLine: fileLink(fullPath),
                           fullPath,
+                          shortPath: fullPath.split(/[/\\]/).slice(-2).join('/'),
                         };
                       }
                     }
 
-                    // Replace bare filenames (e.g. `ThreadPoolTestNodeRunner.cs`) with links
-                    // Match filenames in backticks or standalone .cs references
+                    // Replace bare filenames with links (only exact basename matches in backticks)
                     for (const [basename, info] of Object.entries(fileLinks)) {
-                      const escaped = basename.replace(/\./g, '\\.');
-                      // Replace `FileName.cs` (in backticks) — but not if already inside a link
+                      const escaped = basename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                      // Replace `FileName.cs` (in backticks) — skip if already inside a markdown link
                       analysis = analysis.replace(
                         new RegExp('(?<!\\[)`(' + escaped + ')`(?!\\])', 'g'),
                         `[\`${basename}\`](${info.urlNoLine})`
@@ -612,7 +615,9 @@ jobs:
             function toRelPath(absPath) {
               const patterns = [
                 workspace + '/',
+                workspace + '\\',
                 /^\/home\/runner\/work\/[^/]+\/[^/]+\//,
+                /^D:\\a\\[^\\]+\\[^\\]+\\/,
               ];
               let rel = absPath;
               for (const p of patterns) {

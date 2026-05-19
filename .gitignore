@@ -156,4 +156,3 @@ project.fragment.lock.json
 
 # Workflow script dependencies
 .github/workflows/scripts/node_modules/
-.github/workflows/scripts/package*.json
