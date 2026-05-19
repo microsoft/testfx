@@ -188,6 +188,9 @@ public partial class AssertTests : TestContainer
                 """
                 Assertion failed. Expected sequences to differ.
 
+                notExpected: [1, 2, 3]
+                actual:      [1, 2, 3]
+
                 Assert.AreNotSequenceEqual(notExpected, actual)
                 """);
     }
@@ -206,6 +209,9 @@ public partial class AssertTests : TestContainer
                 """
                 Assertion failed. Expected sequences to differ (in any order).
 
+                notExpected: [1, 2, 2]
+                actual:      [2, 1, 2]
+
                 Assert.AreNotSequenceEqual(notExpected, actual, <order>)
                 """);
     }
@@ -217,7 +223,26 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreNotSequenceEqual<string>(null, null);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assertion failed. Expected sequences to differ.*");
+            .WithMessage("Assertion failed. Expected sequences to differ.*notExpected: null*actual:      null*");
+    }
+
+    public void AreNotSequenceEqual_CustomComparerFailure_ReportsComparer()
+    {
+        string[] notExpected = ["a"];
+        string[] actual = ["A"];
+
+        Action action = () => Assert.AreNotSequenceEqual(notExpected, actual, StringComparer.OrdinalIgnoreCase);
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected sequences to differ.
+
+                notExpected: ["a"]
+                actual:      ["A"]
+                comparer:    OrdinalIgnoreCaseComparer
+
+                Assert.AreNotSequenceEqual(notExpected, actual, <comparer>)
+                """);
     }
 
     public void AreNotSequenceEqual_OneNull_Passes()
