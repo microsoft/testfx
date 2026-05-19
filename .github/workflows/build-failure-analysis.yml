@@ -278,7 +278,49 @@ jobs:
                   const result = await response.json();
                   analysis = result.choices?.[0]?.message?.content;
                   core.info(`AI analysis succeeded via ${endpoint}`);
-                } else {
+
+                  // Post-process: replace file references with clickable links
+                  if (analysis) {
+                    // Build a map of filename -> full GitHub URL from parsed errors
+                    const fileLinks = {};
+                    for (const err of parsedErrors) {
+                      if (!err.file) continue;
+                      const basename = err.file.split(/[/\\]/).pop();
+                      if (!fileLinks[basename]) {
+                        const url = fileLink(err.file, err.line);
+                        const urlNoLine = fileLink(err.file);
+                        fileLinks[basename] = { url, urlNoLine, fullPath: err.file };
+                      }
+                    }
+                    // Also add source context files
+                    for (const [fullPath, ctx] of Object.entries(sourceContexts)) {
+                      const basename = fullPath.split(/[/\\]/).pop();
+                      if (!fileLinks[basename]) {
+                        fileLinks[basename] = {
+                          url: fileLink(fullPath, ctx.errorLine),
+                          urlNoLine: fileLink(fullPath),
+                          fullPath,
+                        };
+                      }
+                    }
+
+                    // Replace bare filenames (e.g. `ThreadPoolTestNodeRunner.cs`) with links
+                    // Match filenames in backticks or standalone .cs references
+                    for (const [basename, info] of Object.entries(fileLinks)) {
+                      const escaped = basename.replace(/\./g, '\\.');
+                      // Replace `FileName.cs` (in backticks) — but not if already inside a link
+                      analysis = analysis.replace(
+                        new RegExp('(?<!\\[)`(' + escaped + ')`(?!\\])', 'g'),
+                        `[\`${basename}\`](${info.urlNoLine})`
+                      );
+                      // Replace "line N of FileName.cs" with linked version
+                      analysis = analysis.replace(
+                        new RegExp('line (\\d+) of `?' + escaped + '`?', 'g'),
+                        (match, lineNum) => `[line ${lineNum} of \`${basename}\`](${fileLink(info.fullPath, parseInt(lineNum))})`
+                      );
+                    }
+                  }
+                }else {
                   const text = await response.text();
                   core.info(`${endpoint} returned ${response.status}: ${text.substring(0, 200)}`);
                 }
