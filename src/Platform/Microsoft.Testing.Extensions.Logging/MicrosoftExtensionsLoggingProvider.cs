@@ -29,7 +29,9 @@ internal sealed class MicrosoftExtensionsLoggingProvider : MtpILoggerProvider, I
     }
 
     public MtpILogger CreateLogger(string categoryName)
-        => new MicrosoftExtensionsLoggerAdapter(_loggerFactory.CreateLogger(categoryName));
+        => Volatile.Read(ref _disposed) != 0
+            ? throw new ObjectDisposedException(nameof(MicrosoftExtensionsLoggingProvider))
+            : new MicrosoftExtensionsLoggerAdapter(_loggerFactory.CreateLogger(categoryName));
 
     public void Dispose()
     {
