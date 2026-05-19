@@ -136,6 +136,13 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         // dump (versus a child process dump) regardless of whether the configured name relies on
         // additional placeholders such as '%e', '%h' or '%t' - relying on `File.Exists` with the
         // literal-`%p`-substituted path would only work when '%p' is the only placeholder.
+        //
+        // Note: when the configured pattern omits '%p', this regex collapses to `dumpFileNameRegex`
+        // (the `Replace("%p", ...)` call is a no-op) and we cannot distinguish testhost from child
+        // dumps by name — any matching dump is treated as the testhost's. The runtime in that case
+        // can only produce one dump per process matching the configured shape, so the practical
+        // impact is limited to setups that pre-create files with the same shape under the dump
+        // directory.
         Regex testhostDumpRegex = BuildDumpFileNameRegex(
             dumpFileNameOnly.Replace("%p", testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture)));
 
@@ -180,9 +187,10 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         // dump specifically. We must not suppress them just because we published a dump for a
         // crashed child process: when only the child writes a dump, the user still needs to know
         // that the testhost's own dump never materialized.
-        // Fall back to the literal-`%p`-substituted path existence check to keep behavior consistent
-        // when the configured pattern is `%p`-only (or has no placeholder at all) and the regex loop
-        // could not run (e.g. dumpDirectory does not exist).
+        // Fall back to checking `expectedDumpFile` existence on disk to cover the edge case where
+        // a file matching the literal-`%p`-substituted name was already present at start time (and
+        // therefore skipped by the regex loop because it is in `_preExistingDumpFiles`) - we still
+        // want the banner to reflect that the testhost dump is, technically, present on disk.
         testhostDumpProduced = generateDump && (testhostDumpProduced || File.Exists(expectedDumpFile));
         bool dumpArtifactProduced = generateDump && (testhostDumpProduced || publishedAnyDump);
         bool crashReportArtifactProduced = generateCrashReport && File.Exists(expectedCrashReportFile);

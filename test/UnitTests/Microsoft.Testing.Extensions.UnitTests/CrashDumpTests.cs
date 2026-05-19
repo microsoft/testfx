@@ -295,6 +295,105 @@ public sealed class CrashDumpTests
         }
     }
 
+    [TestMethod]
+    public async Task OnTestHostProcessExitedAsync_PatternWithRepeatedPidPlaceholder_RecognizesTesthostDump()
+    {
+        // A configured pattern can include `%p` more than once. Verify that the PID-substitution
+        // applies to every occurrence (string.Replace substitutes all matches) so the
+        // testhost-specific regex is anchored to the actual PID on both sides.
+        string dumpDirectory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "crashdump-tests-" + Guid.NewGuid().ToString("N"))).FullName;
+        try
+        {
+            string dumpPattern = Path.Combine(dumpDirectory, "dump_%p_backup_%p.dmp");
+            var configuration = new CrashDumpConfiguration { DumpFileNamePattern = dumpPattern };
+            var commandLineOptions = new TestCommandLineOptions(new Dictionary<string, string[]>
+            {
+                { CrashDumpCommandLineOptions.CrashDumpOptionName, [] },
+            });
+            var messageBus = new RecordingMessageBus();
+            var outputDevice = new CapturingOutputDevice();
+            var handler = new CrashDumpProcessLifetimeHandler(commandLineOptions, messageBus, outputDevice, configuration);
+
+            await handler.OnTestHostProcessStartedAsync(new TestHostProcessInformation(pid: 555, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+
+            string testhostDump = Path.Combine(dumpDirectory, "dump_555_backup_555.dmp");
+            File.WriteAllText(testhostDump, "fresh");
+
+            await handler.OnTestHostProcessExitedAsync(new TestHostProcessInformation(pid: 555, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+
+            string[] publishedDumps = messageBus.Published
+                .OfType<FileArtifact>()
+                .Select(static a => a.FileInfo.FullName)
+                .ToArray();
+            CollectionAssert.AreEqual(new[] { testhostDump }, publishedDumps);
+            string captured = string.Join(" | ", outputDevice.Displayed);
+            Assert.DoesNotContain("dump_555_backup_555.dmp", captured, "CannotFindExpectedCrashDumpFile must not be displayed when the testhost dump was recognized via the regex.");
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(dumpDirectory, recursive: true);
+            }
+            catch
+            {
+                // Best effort cleanup.
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task OnTestHostProcessExitedAsync_TesthostAndChildBothCrashWithMultiPlaceholderPattern_PublishesBothAndSuppressesWarning()
+    {
+        // Regression coverage for the M1 vector: when both the testhost AND a child process write
+        // dumps using a pattern with non-`%p` placeholders, both dumps must be published, and the
+        // "expected dump not found" warning must NOT fire (because the testhost dump is identified
+        // via the testhost-specific regex, not via File.Exists on the literal-`%p`-substituted path).
+        string dumpDirectory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "crashdump-tests-" + Guid.NewGuid().ToString("N"))).FullName;
+        try
+        {
+            string dumpPattern = Path.Combine(dumpDirectory, "Dump_%e_%p.dmp");
+            var configuration = new CrashDumpConfiguration { DumpFileNamePattern = dumpPattern };
+            var commandLineOptions = new TestCommandLineOptions(new Dictionary<string, string[]>
+            {
+                { CrashDumpCommandLineOptions.CrashDumpOptionName, [] },
+            });
+            var messageBus = new RecordingMessageBus();
+            var outputDevice = new CapturingOutputDevice();
+            var handler = new CrashDumpProcessLifetimeHandler(commandLineOptions, messageBus, outputDevice, configuration);
+
+            await handler.OnTestHostProcessStartedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+
+            string testhostDump = Path.Combine(dumpDirectory, "Dump_testhost_123.dmp");
+            string childDump = Path.Combine(dumpDirectory, "Dump_child_456.dmp");
+            File.WriteAllText(testhostDump, "fresh");
+            File.WriteAllText(childDump, "fresh");
+
+            await handler.OnTestHostProcessExitedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+
+            string[] publishedDumps = messageBus.Published
+                .OfType<FileArtifact>()
+                .Select(static a => a.FileInfo.FullName)
+                .OrderBy(static p => p, StringComparer.Ordinal)
+                .ToArray();
+            string[] expected = new[] { testhostDump, childDump }.OrderBy(static p => p, StringComparer.Ordinal).ToArray();
+            CollectionAssert.AreEqual(expected, publishedDumps);
+            string captured = string.Join(" | ", outputDevice.Displayed);
+            Assert.DoesNotContain("Dump_%e_123.dmp", captured, "CannotFindExpectedCrashDumpFile must not be displayed when the testhost dump was recognized via the regex.");
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(dumpDirectory, recursive: true);
+            }
+            catch
+            {
+                // Best effort cleanup.
+            }
+        }
+    }
+
     private sealed class RecordingMessageBus : IMessageBus
     {
         public List<IData> Published { get; } = [];
