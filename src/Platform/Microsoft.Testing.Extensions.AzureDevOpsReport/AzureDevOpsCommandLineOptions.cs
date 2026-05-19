@@ -6,6 +6,9 @@ namespace Microsoft.Testing.Extensions.Reporting;
 internal static class AzureDevOpsCommandLineOptions
 {
     public const string AzureDevOpsOptionName = "report-azdo";
+    public const string AzureDevOpsDemoteKnownFlaky = "report-azdo-demote-known-flaky";
+    public const string AzureDevOpsFlakyHistory = "report-azdo-flaky-history";
+    public const string AzureDevOpsQuarantineFile = "report-azdo-quarantine-file";
     public const string AzureDevOpsReportSeverity = "report-azdo-severity";
     public const string AzureDevOpsUploadArtifactExclude = "report-azdo-upload-artifact-exclude";
     public const string AzureDevOpsUploadArtifactInclude = "report-azdo-upload-artifact-include";

@@ -104,7 +104,13 @@ Extension options:
         Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
     --report-azdo
-        Enable Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.
+        Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.
+    --report-azdo-demote-known-flaky
+        Demote failures with an Azure DevOps flaky history of at least 25% in the selected window to warnings.
+    --report-azdo-flaky-history
+        Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.
+    --report-azdo-quarantine-file
+        Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.
     --report-azdo-severity
         Severity to use for the reported event. Options are: error (default) and warning.
     --report-azdo-upload-artifact-exclude
@@ -284,12 +290,24 @@ Registered command line providers:
   AzureDevOpsCommandLineProvider
     Name: Azure DevOps report generator
     Version: *
-    Description: Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.
+    Description: Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.
     Options:
       --report-azdo
         Arity: 0
         Hidden: False
-        Description: Enable Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.
+        Description: Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.
+      --report-azdo-demote-known-flaky
+        Arity: 0
+        Hidden: False
+        Description: Demote failures with an Azure DevOps flaky history of at least 25% in the selected window to warnings.
+      --report-azdo-flaky-history
+        Arity: 1
+        Hidden: False
+        Description: Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.
+      --report-azdo-quarantine-file
+        Arity: 1
+        Hidden: False
+        Description: Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.
       --report-azdo-severity
         Arity: 1
         Hidden: False

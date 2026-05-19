@@ -25,6 +25,11 @@ public static class WellKnownEnvironmentVariables
         "COMPlus_DbgEnableElfDumpOnMacOS",
         "COMPlus_DbgMiniDumpName",
         "COMPlus_DbgMiniDumpType",
+        "COMPlus_CreateDumpDiagnostics",
+        "COMPlus_CreateDumpVerboseDiagnostics",
+        "COMPlus_CreateDumpLogToFile",
+        "COMPlus_EnableCrashReport",
+        "COMPlus_EnableCrashReportOnly",
 
         // Hot reload mode
         "TESTINGPLATFORM_HOTRELOAD_ENABLED",

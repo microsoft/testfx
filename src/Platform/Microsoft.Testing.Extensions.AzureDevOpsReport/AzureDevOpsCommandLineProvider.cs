@@ -23,6 +23,11 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
 
     private static readonly string[] SeverityOptions = ["error", "warning"];
 
+    private static readonly string DemoteKnownFlakyOptionDescriptionFormatted = string.Format(
+        CultureInfo.InvariantCulture,
+        AzureDevOpsResources.DemoteKnownFlakyOptionDescription,
+        AzureDevOpsReporter.KnownFlakyFailureRateThreshold * 100);
+
     public string Uid => nameof(AzureDevOpsCommandLineProvider);
 
     public string Version => ExtensionVersion.DefaultSemVer;
@@ -37,6 +42,9 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
         =>
         [
             new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName, AzureDevOpsResources.OptionDescription, ArgumentArity.Zero, false),
+            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky, DemoteKnownFlakyOptionDescriptionFormatted, ArgumentArity.Zero, false),
+            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory, AzureDevOpsResources.FlakyHistoryOptionDescription, ArgumentArity.ExactlyOne, false),
+            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile, AzureDevOpsResources.QuarantineFileOptionDescription, ArgumentArity.ExactlyOne, false),
             new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, AzureDevOpsResources.SeverityOptionDescription, ArgumentArity.ExactlyOne, false),
             new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactExclude, AzureDevOpsResources.UploadArtifactExcludeOptionDescription, ArgumentArity.ZeroOrMore, false),
             new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude, AzureDevOpsResources.UploadArtifactIncludeOptionDescription, ArgumentArity.ZeroOrMore, false),
@@ -47,6 +55,7 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
         => commandOption.Name switch
         {
+            AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory => ValidateFlakyHistoryArgumentsAsync(arguments),
             AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity when !SeverityOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidSeverity, arguments[0])),
             AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts when !ArtifactUploadModes.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
@@ -57,12 +66,42 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
         };
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => !commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName)
-            && commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity)
-                ? ValidationResult.InvalidTask(AzureDevOpsResources.AzureDevOpsReportSeverityRequiresAzureDevOps)
-                : HasArtifactUploadConfiguration(commandLineOptions) && IsArtifactUploadDisabled(commandLineOptions)
-                    ? ValidationResult.InvalidTask(AzureDevOpsResources.ArtifactUploadOptionsRequireUploadArtifacts)
-                    : ValidationResult.ValidTask;
+    {
+        string? errorMessage = null;
+        if (!commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName))
+        {
+            if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps;
+            }
+            else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsFlakyHistoryRequiresAzureDevOps;
+            }
+            else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsQuarantineFileRequiresAzureDevOps;
+            }
+            else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsReportSeverityRequiresAzureDevOps;
+            }
+        }
+        else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky)
+            && !commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory))
+        {
+            errorMessage = AzureDevOpsResources.AzureDevOpsDemoteKnownFlakyRequiresFlakyHistory;
+        }
+
+        if (errorMessage is null && HasArtifactUploadConfiguration(commandLineOptions) && IsArtifactUploadDisabled(commandLineOptions))
+        {
+            errorMessage = AzureDevOpsResources.ArtifactUploadOptionsRequireUploadArtifacts;
+        }
+
+        return errorMessage is null
+            ? ValidationResult.ValidTask
+            : ValidationResult.InvalidTask(errorMessage);
+    }
 
     private static bool HasArtifactUploadConfiguration(ICommandLineOptions commandLineOptions)
         => commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude)
@@ -104,4 +143,10 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
 
     private static string NormalizePattern(string pattern)
         => pattern.Replace(Path.DirectorySeparatorChar, '/').Replace(Path.AltDirectorySeparatorChar, '/');
+
+    private static Task<ValidationResult> ValidateFlakyHistoryArgumentsAsync(string[] arguments)
+        => int.TryParse(arguments[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int days)
+            && days is >= 1 and <= 90
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidFlakyHistoryDays, arguments[0]));
 }
