@@ -210,12 +210,14 @@ internal sealed class AnsiTerminalTestProgressFrame
             terminal.AppendLine();
         }
 
-        int i = 0;
+        int i;
         RenderedLines = [with(progress.Length * 2)];
         List<object> progresses = GenerateLinesToRender(progress);
 
-        foreach (object item in progresses)
+        for (i = 0; i < progresses.Count; i++)
         {
+            object item = progresses[i];
+
             if (previousFrame.RenderedLines != null && previousFrame.RenderedLines.Count > i)
             {
                 if (item is TestProgressState progressItem)
