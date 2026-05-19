@@ -114,8 +114,11 @@ internal sealed class HtmlReportEngine
                 await WriteAsync(candidate, FileMode.CreateNew, bytes).ConfigureAwait(false);
                 return (candidate, null);
             }
-            catch (IOException)
+            catch (IOException) when (_fileSystem.ExistFile(candidate))
             {
+                // The IOException was caused by the file already existing. Try a
+                // suffixed name. Any other IOException (disk full, permission, path
+                // too long, etc.) is not caught here and will propagate to the caller.
                 if (_clock.UtcNow - firstTry > TimeSpan.FromSeconds(5))
                 {
                     throw;

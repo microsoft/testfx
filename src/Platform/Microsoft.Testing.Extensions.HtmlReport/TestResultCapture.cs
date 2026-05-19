@@ -16,6 +16,8 @@ internal static class TestResultCapture
     internal const int MaxStandardStreamLength = 32 * 1024;
     internal const int MaxStackTraceLength = 32 * 1024;
     internal const int MaxMessageLength = 16 * 1024;
+    internal const int MaxIdentityFieldLength = 4 * 1024;
+    internal const int MaxTraitFieldLength = 1024;
 
     public static CapturedTestResult? TryCapture(TestNode node)
     {
@@ -57,26 +59,33 @@ internal static class TestResultCapture
         string? stderr = node.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
         // Collect traits without using LINQ to avoid an enumerator allocation per node.
+        // Trait keys and values are also test-controlled so we truncate them as well to
+        // bound the size of the in-memory result list and generated HTML.
         List<KeyValuePair<string, string>>? traits = null;
         foreach (IProperty p in node.Properties)
         {
             if (p is TestMetadataProperty meta)
             {
                 traits ??= [];
-                traits.Add(new KeyValuePair<string, string>(meta.Key, meta.Value));
+                traits.Add(new KeyValuePair<string, string>(
+                    Truncate(meta.Key, MaxTraitFieldLength)!,
+                    Truncate(meta.Value, MaxTraitFieldLength)!));
             }
         }
 
         return new CapturedTestResult
         {
-            Uid = node.Uid.Value,
-            DisplayName = node.DisplayName,
+            // Identity fields are test-controlled and can be unbounded (e.g. very long
+            // UIDs/display names from generated data), so we also cap them to keep the
+            // session-wide result list and generated HTML within a predictable budget.
+            Uid = Truncate(node.Uid.Value, MaxIdentityFieldLength)!,
+            DisplayName = Truncate(node.DisplayName, MaxIdentityFieldLength)!,
             Outcome = outcome,
             Duration = duration,
             StartTime = timing?.GlobalTiming.StartTime,
             EndTime = timing?.GlobalTiming.EndTime,
-            ClassName = className,
-            MethodName = methodName,
+            ClassName = Truncate(className, MaxIdentityFieldLength),
+            MethodName = Truncate(methodName, MaxIdentityFieldLength),
             ErrorMessage = Truncate(errorMessage, MaxMessageLength),
             ExceptionType = exceptionType,
             StackTrace = Truncate(stackTrace, MaxStackTraceLength),

@@ -1157,7 +1157,7 @@ public partial class AssertTests : TestContainer
         string? value = "hello";
 
         // Non-null value short-circuits the null-coalescing operator; counter.Increment() must NOT run.
-        Action act = () => Assert.That(() => (value ?? counter.Increment().ToString()) == "hello");
+        Action act = () => Assert.That(() => (value ?? counter.Increment().ToString(CultureInfo.InvariantCulture)) == "hello");
 
         act.Should().NotThrow();
         counter.Count.Should().Be(0);

@@ -309,6 +309,10 @@ public class HtmlReportEngineTests
                     : new MemoryFileStream();
             });
 
+        // The retry only kicks in when the candidate path actually exists, so the file
+        // system must report the first candidate as already on disk.
+        _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
+
         _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
         _ = _environmentMock.SetupGet(_ => _.MachineName).Returns("M");
         _ = _environmentMock.Setup(_ => _.GetEnvironmentVariable(It.IsAny<string>())).Returns("u");
@@ -335,6 +339,85 @@ public class HtmlReportEngineTests
         Assert.AreEqual(2, callCount);
         Assert.AreEqual(bytesSeen[1], finalPath);
         Assert.Contains("_1.html", finalPath);
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_PropagatesIOException_When_FileDoesNotExist()
+    {
+        // Simulate an IOException that is not caused by the candidate already existing
+        // (e.g. disk full, permission denied). The engine must propagate the failure
+        // immediately rather than spinning up disambiguating suffixes for 5 seconds.
+        int callCount = 0;
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.CreateNew))
+            .Returns<string, FileMode>((path, _) =>
+            {
+                callCount++;
+                throw new IOException("disk full");
+            });
+
+        // ExistFile reports false so the IOException is not interpreted as a collision.
+        _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+
+        _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
+        _ = _environmentMock.SetupGet(_ => _.MachineName).Returns("M");
+        _ = _environmentMock.Setup(_ => _.GetEnvironmentVariable(It.IsAny<string>())).Returns("u");
+        _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns("app");
+        _ = _testFrameworkMock.SetupGet(_ => _.Uid).Returns("uid");
+        _ = _testFrameworkMock.SetupGet(_ => _.Version).Returns("0.0");
+        _ = _testFrameworkMock.SetupGet(_ => _.DisplayName).Returns("F");
+        _ = _clockMock.SetupGet(_ => _.UtcNow).Returns(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+
+        var engine = new HtmlReportEngine(
+            _fileSystem.Object,
+            _testApplicationModuleInfoMock.Object,
+            _environmentMock.Object,
+            _commandLineOptionsMock.Object,
+            _configurationMock.Object,
+            _clockMock.Object,
+            _testFrameworkMock.Object,
+            DateTimeOffset.UtcNow,
+            0,
+            CancellationToken.None);
+
+        await Assert.ThrowsExactlyAsync<IOException>(() => engine.GenerateReportAsync([Captured("a", "A", "passed")]));
+        Assert.AreEqual(1, callCount);
+    }
+
+    [TestMethod]
+    public void TestResultCapture_TruncatesIdentityFields_AtBoundary()
+    {
+        string huge = new('a', TestResultCapture.MaxIdentityFieldLength + 7);
+
+        var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
+        bag.Add(new TestMethodIdentifierProperty("asm", "n", "t", huge, 0, [], "void"));
+        TestNode node = new() { Uid = huge, DisplayName = huge, Properties = bag };
+
+        CapturedTestResult result = TestResultCapture.TryCapture(node)!;
+
+        Assert.IsNotNull(result);
+        Assert.Contains("[truncated, original length:", result.Uid);
+        Assert.Contains("[truncated, original length:", result.DisplayName);
+        Assert.IsNotNull(result.MethodName);
+        Assert.Contains("[truncated, original length:", result.MethodName!);
+    }
+
+    [TestMethod]
+    public void TestResultCapture_TruncatesTraitKeysAndValues_AtBoundary()
+    {
+        string hugeKey = new('k', TestResultCapture.MaxTraitFieldLength + 3);
+        string hugeValue = new('v', TestResultCapture.MaxTraitFieldLength + 5);
+
+        var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
+        bag.Add(new TestMetadataProperty(hugeKey, hugeValue));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = bag };
+
+        CapturedTestResult result = TestResultCapture.TryCapture(node)!;
+
+        Assert.IsNotNull(result);
+        Assert.IsNotNull(result.Traits);
+        Assert.HasCount(1, result.Traits!);
+        Assert.Contains("[truncated, original length:", result.Traits![0].Key);
+        Assert.Contains("[truncated, original length:", result.Traits![0].Value);
     }
 
     private static CapturedTestResult Captured(string uid, string name, string outcome,
