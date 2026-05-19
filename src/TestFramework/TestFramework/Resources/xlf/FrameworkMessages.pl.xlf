@@ -34,12 +34,12 @@
       </trans-unit>
       <trans-unit id="AreEqualCaseFailMsg">
         <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
-        <target state="new">Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</target>
+        <target state="translated">Oczekiwano:&lt;{1}&gt;. Przypadek różni się od rzeczywistej wartości:&lt;{2}&gt;. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualDeltaFailMsg">
         <source>Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="new">Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</target>
+        <target state="translated">Oczekiwano różnicy nie większej niż &lt;{3}&gt; pomiędzy oczekiwaną wartością &lt;{1}&gt; a rzeczywistą wartością &lt;{2}&gt;. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailMsg">
@@ -49,17 +49,17 @@
       </trans-unit>
       <trans-unit id="AreEqualFailMsg">
         <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="new">Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</target>
+        <target state="translated">Oczekiwana:&lt;{1}&gt;. Rzeczywista:&lt;{2}&gt;. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffActualPrefix">
         <source>But was:  </source>
-        <target state="new">But was:  </target>
+        <target state="translated">Ale było:  </target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffExpectedPrefix">
         <source>Expected: </source>
-        <target state="new">Expected: </target>
+        <target state="translated">Oczekiwane: </target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffFailMsg">
@@ -67,7 +67,7 @@
 {2}
 {3}
 {4}</source>
-        <target state="new">{0}{1}
+        <target state="translated">{0}{1}
 {2}
 {3}
 {4}</target>
@@ -75,7 +75,7 @@
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthBothMsg">
         <source>Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</source>
-        <target state="needs-review-translation">Długości ciągów są {0}, ale różnią się w indeksie {1}.</target>
+        <target state="new">Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthDifferentMsg">
@@ -195,7 +195,7 @@
       </trans-unit>
       <trans-unit id="AreNotEqualDeltaFailMsg">
         <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="new">Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</target>
+        <target state="translated">Oczekiwano różnicy większej niż &lt;{3}&gt; pomiędzy oczekiwaną wartością &lt;{1}&gt; a rzeczywistą wartością &lt;{2}&gt;. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
