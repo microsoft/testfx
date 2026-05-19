@@ -113,6 +113,14 @@ Extension options:
         Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.
     --report-azdo-severity
         Severity to use for the reported event. Options are: error (default) and warning.
+    --report-azdo-upload-artifact-exclude
+        Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.
+    --report-azdo-upload-artifact-include
+        Include files in Azure DevOps artifact upload using glob patterns relative to the test results directory. Defaults to '**/*'.
+    --report-azdo-upload-artifact-name
+        Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.
+    --report-azdo-upload-artifacts
+        Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.
     --report-trx
         Enable generating TRX report
     --report-trx-filename
@@ -304,6 +312,22 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Severity to use for the reported event. Options are: error (default) and warning.
+      --report-azdo-upload-artifact-exclude
+        Arity: 0..N
+        Hidden: False
+        Description: Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.
+      --report-azdo-upload-artifact-include
+        Arity: 0..N
+        Hidden: False
+        Description: Include files in Azure DevOps artifact upload using glob patterns relative to the test results directory. Defaults to '**/*'.
+      --report-azdo-upload-artifact-name
+        Arity: 1
+        Hidden: False
+        Description: Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.
+      --report-azdo-upload-artifacts
+        Arity: 1
+        Hidden: False
+        Description: Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.
   CrashDumpCommandLineProvider
     Name: Crash dump
     Version: *

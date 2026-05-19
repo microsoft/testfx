@@ -4,6 +4,7 @@
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
 using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions;
@@ -21,6 +22,17 @@ public static class AzureDevOpsExtensions
     {
         AzureDevOpsHistoryService? historyService = null;
 
+        var compositeArtifactUploader =
+            new CompositeExtensionFactory<AzureDevOpsArtifactUploader>(serviceProvider =>
+                new AzureDevOpsArtifactUploader(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetConfiguration(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetFileSystem(),
+                    serviceProvider.GetOutputDevice(),
+                    serviceProvider.GetTestApplicationModuleInfo(),
+                    serviceProvider.GetLoggerFactory()));
+
         builder.TestHost.AddDataConsumer(serviceProvider =>
         {
             historyService ??= CreateHistoryService(serviceProvider);
@@ -33,8 +45,10 @@ public static class AzureDevOpsExtensions
                 serviceProvider.GetLoggerFactory(),
                 historyService);
         });
+        builder.TestHost.AddDataConsumer(compositeArtifactUploader);
         builder.TestHost.AddTestSessionLifetimeHandler(serviceProvider =>
             historyService ??= CreateHistoryService(serviceProvider));
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeArtifactUploader);
         builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());
     }
 
