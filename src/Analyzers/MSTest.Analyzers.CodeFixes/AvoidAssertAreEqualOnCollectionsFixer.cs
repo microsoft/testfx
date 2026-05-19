@@ -5,7 +5,6 @@ using System.Collections.Immutable;
 using System.Composition;
 
 using Analyzer.Utilities;
-using Analyzer.Utilities.Extensions;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
