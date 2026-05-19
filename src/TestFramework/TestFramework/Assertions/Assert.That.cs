@@ -32,6 +32,12 @@ public static partial class AssertExtensions
     // Constants for parenthesis limits
     private const int MaxConsecutiveParentheses = 2;
 
+    // Sentinel placed in the evaluation cache when a sub-expression cannot be evaluated.
+    // Using a reference-identity object (rather than a string) prevents accidentally
+    // substituting it for a same-typed operand when rebuilding parent expressions, and
+    // lets diagnostic extraction translate it to a localized "<Failed to evaluate>" display.
+    private static readonly object FailedToEvaluateSentinel = new();
+
     /// <summary>
     /// Provides That extension to Assert class.
     /// </summary>
@@ -122,14 +128,17 @@ public static partial class AssertExtensions
         // Use a single-pass evaluation that only evaluates each expression once
         EvaluateAllSubExpressions(expr, cache);
 
-        // The root expression should now be cached
-        if (cache.TryGetValue(expr, out object? result))
+        // The root expression should now be cached with a bool value when the walk succeeded.
+        if (cache.TryGetValue(expr, out object? result) && result is bool boolResult)
         {
-            return (bool)result!;
+            return boolResult;
         }
 
-        // Fallback - this should not happen if EvaluateAllSubExpressions works correctly
-        throw ApplicationStateGuard.Unreachable();
+        // The walk did not produce a bool for the root (e.g., a sub-expression threw and was
+        // cached as the failure sentinel, then the rebuilt parent could not be evaluated either).
+        // Re-invoke the original lambda so the user sees the actual exception thrown by their
+        // assertion code rather than an unrelated InvalidCastException from the sentinel.
+        return Expression.Lambda<Func<bool>>(expr).Compile().Invoke();
     }
 
 #pragma warning disable IDE0028 // Keep explicit constructor for broader compiler compatibility when source-building.
@@ -165,6 +174,8 @@ public static partial class AssertExtensions
     /// Recursively evaluates all sub-expressions in the tree and caches their values.
     /// Uses a bottom-up approach: evaluate children first, then replace them with constants
     /// before evaluating the parent. This prevents side effects from being executed multiple times.
+    /// Short-circuit operators (<c>&amp;&amp;</c>, <c>||</c>, <c>??</c>) and conditional expressions
+    /// honor C# evaluation order so unevaluated branches do not run side effects or throw.
     /// </summary>
 #if NET7_0_OR_GREATER
     [RequiresDynamicCode("Calls System.Linq.Expressions.Expression.Lambda(Expression, params ParameterExpression[])")]
@@ -186,11 +197,38 @@ public static partial class AssertExtensions
             // are already cached and can be replaced with constant values.
             switch (expr)
             {
+                // Short-circuit binary operators: evaluate Left first; only walk Right
+                // when the original C# semantics would have executed it. This preserves
+                // assertions like `s != null && s.Length > 0` (no NRE) and `flag || Throw()`.
+                case BinaryExpression binaryExpr when binaryExpr.NodeType is ExpressionType.AndAlso or ExpressionType.OrElse:
+                    if (TryEvaluateShortCircuitBinary(binaryExpr, cache))
+                    {
+                        return;
+                    }
+
+                    break;
+
+                // Null-coalescing: evaluate Left; only walk Right when Left is null.
+                case BinaryExpression binaryExpr when binaryExpr.NodeType == ExpressionType.Coalesce:
+                    if (TryEvaluateCoalesce(binaryExpr, cache))
+                    {
+                        return;
+                    }
+
+                    break;
+
                 case BinaryExpression binaryExpr:
                     // Evaluate both operands before evaluating the binary operation
                     EvaluateAllSubExpressions(binaryExpr.Left, cache);
                     EvaluateAllSubExpressions(binaryExpr.Right, cache);
                     hasChildren = true;
+                    break;
+
+                // Quote wraps an unevaluated expression tree (typically the lambda argument
+                // to IQueryable methods like Where/Any). Walking into the operand would
+                // compile it into a delegate and prevent rebuilding the Quote, which would
+                // break Queryable scenarios. Treat it as a leaf instead.
+                case UnaryExpression unaryExpr when unaryExpr.NodeType == ExpressionType.Quote:
                     break;
 
                 case UnaryExpression unaryExpr:
@@ -226,11 +264,12 @@ public static partial class AssertExtensions
                     break;
 
                 case ConditionalExpression conditionalExpr:
-                    // For ternary expressions, evaluate all three parts
-                    EvaluateAllSubExpressions(conditionalExpr.Test, cache);
-                    EvaluateAllSubExpressions(conditionalExpr.IfTrue, cache);
-                    EvaluateAllSubExpressions(conditionalExpr.IfFalse, cache);
-                    hasChildren = true;
+                    // Ternary expressions evaluate Test first and only the chosen branch.
+                    if (TryEvaluateConditional(conditionalExpr, cache))
+                    {
+                        return;
+                    }
+
                     break;
 
                 case InvocationExpression invocationExpr:
@@ -255,8 +294,16 @@ public static partial class AssertExtensions
                     break;
 
                 case ListInitExpression listInitExpr:
-                    // For collection initializers, evaluate the new expression and all initializer arguments
-                    EvaluateAllSubExpressions(listInitExpr.NewExpression, cache);
+                    // For collection initializers, evaluate the inner constructor arguments
+                    // and all initializer arguments individually. We intentionally do not
+                    // evaluate the wrapping NewExpression as a whole: List<T> initializers
+                    // require an unrealized NewExpression at rebuild time, and reusing a
+                    // pre-built instance would force the constructor to run a second time.
+                    foreach (Expression argument in listInitExpr.NewExpression.Arguments)
+                    {
+                        EvaluateAllSubExpressions(argument, cache);
+                    }
+
                     foreach (ElementInit initializer in listInitExpr.Initializers)
                     {
                         foreach (Expression argument in initializer.Arguments)
@@ -273,6 +320,23 @@ public static partial class AssertExtensions
                     foreach (Expression expression in newArrayExpr.Expressions)
                     {
                         EvaluateAllSubExpressions(expression, cache);
+                        hasChildren = true;
+                    }
+
+                    break;
+
+                case IndexExpression indexExpr:
+                    // Indexer access (e.g., list[i] expressed as IndexExpression) — evaluate
+                    // the indexed object and all argument expressions.
+                    if (indexExpr.Object is not null)
+                    {
+                        EvaluateAllSubExpressions(indexExpr.Object, cache);
+                        hasChildren = true;
+                    }
+
+                    foreach (Expression argument in indexExpr.Arguments)
+                    {
+                        EvaluateAllSubExpressions(argument, cache);
                         hasChildren = true;
                     }
 
@@ -310,78 +374,202 @@ public static partial class AssertExtensions
         }
         catch
         {
-            // If evaluation fails (e.g., null reference, division by zero), mark it as failed
-            // rather than throwing. This allows us to continue and provide diagnostic information.
-            cache[expr] = FrameworkMessages.AssertThatFailedToEvaluate;
+            // If evaluation fails (e.g., null reference, division by zero), cache the failure
+            // sentinel so other branches can still be diagnosed. The root caller (EvaluateExpression)
+            // detects a non-bool root result and re-invokes the original lambda to surface the
+            // user's real exception instead of masking it as an InvalidCastException.
+            cache[expr] = FailedToEvaluateSentinel;
         }
+    }
+
+    /// <summary>
+    /// Evaluates an <c>&amp;&amp;</c> or <c>||</c> binary expression with short-circuit semantics
+    /// and caches both the operand values (when evaluated) and the resulting bool.
+    /// </summary>
+#if NET7_0_OR_GREATER
+    [RequiresDynamicCode("Calls System.Linq.Expressions.Expression.Lambda(Expression, params ParameterExpression[])")]
+#endif
+    private static bool TryEvaluateShortCircuitBinary(BinaryExpression binaryExpr, Dictionary<Expression, object?> cache)
+    {
+        EvaluateAllSubExpressions(binaryExpr.Left, cache);
+        if (!cache.TryGetValue(binaryExpr.Left, out object? leftValue) || leftValue is not bool leftBool)
+        {
+            // Left couldn't be evaluated to a bool — let the default leaf evaluation path
+            // attempt to compile the whole node so we surface a coherent failure.
+            return false;
+        }
+
+        bool isAndAlso = binaryExpr.NodeType == ExpressionType.AndAlso;
+        bool shouldEvaluateRight = isAndAlso ? leftBool : !leftBool;
+
+        if (!shouldEvaluateRight)
+        {
+            cache[binaryExpr] = leftBool;
+            return true;
+        }
+
+        EvaluateAllSubExpressions(binaryExpr.Right, cache);
+        if (!cache.TryGetValue(binaryExpr.Right, out object? rightValue) || rightValue is not bool rightBool)
+        {
+            return false;
+        }
+
+        cache[binaryExpr] = isAndAlso ? leftBool && rightBool : leftBool || rightBool;
+        return true;
+    }
+
+    /// <summary>
+    /// Evaluates a <c>??</c> binary expression with short-circuit semantics, walking Right
+    /// only when Left is null. The actual result is computed by rebuilding the expression so
+    /// any user-supplied <see cref="BinaryExpression.Conversion"/> is preserved.
+    /// </summary>
+#if NET7_0_OR_GREATER
+    [RequiresDynamicCode("Calls System.Linq.Expressions.Expression.Lambda(Expression, params ParameterExpression[])")]
+#endif
+    private static bool TryEvaluateCoalesce(BinaryExpression binaryExpr, Dictionary<Expression, object?> cache)
+    {
+        EvaluateAllSubExpressions(binaryExpr.Left, cache);
+        if (!cache.TryGetValue(binaryExpr.Left, out object? leftValue) || ReferenceEquals(leftValue, FailedToEvaluateSentinel))
+        {
+            return false;
+        }
+
+        if (leftValue is not null)
+        {
+            // Rebuild with the cached Left so a user-supplied Conversion still runs.
+            Expression rebuilt = ReplaceSubExpressionsWithConstants(binaryExpr, cache);
+            cache[binaryExpr] = Expression.Lambda(rebuilt).Compile().DynamicInvoke();
+            return true;
+        }
+
+        EvaluateAllSubExpressions(binaryExpr.Right, cache);
+        Expression rebuiltWithRight = ReplaceSubExpressionsWithConstants(binaryExpr, cache);
+        cache[binaryExpr] = Expression.Lambda(rebuiltWithRight).Compile().DynamicInvoke();
+        return true;
+    }
+
+    /// <summary>
+    /// Evaluates a ternary expression by walking <see cref="ConditionalExpression.Test"/> first
+    /// and only the selected branch, then caching the branch's result as the conditional's value.
+    /// </summary>
+#if NET7_0_OR_GREATER
+    [RequiresDynamicCode("Calls System.Linq.Expressions.Expression.Lambda(Expression, params ParameterExpression[])")]
+#endif
+    private static bool TryEvaluateConditional(ConditionalExpression conditionalExpr, Dictionary<Expression, object?> cache)
+    {
+        EvaluateAllSubExpressions(conditionalExpr.Test, cache);
+        if (!cache.TryGetValue(conditionalExpr.Test, out object? testValue) || testValue is not bool testBool)
+        {
+            return false;
+        }
+
+        Expression chosenBranch = testBool ? conditionalExpr.IfTrue : conditionalExpr.IfFalse;
+        EvaluateAllSubExpressions(chosenBranch, cache);
+        if (cache.TryGetValue(chosenBranch, out object? branchValue))
+        {
+            cache[conditionalExpr] = branchValue;
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
     /// Replaces sub-expressions in an expression tree with constant values from the cache.
     /// This prevents re-execution of side effects when the parent expression is compiled and invoked.
+    /// Uses the <c>Update</c> helpers on each node type so node metadata such as
+    /// <see cref="BinaryExpression.Method"/> and <see cref="BinaryExpression.Conversion"/> are preserved.
     /// </summary>
     private static Expression ReplaceSubExpressionsWithConstants(Expression expr, Dictionary<Expression, object?> cache)
     {
-        // If this expression's direct sub-expressions are cached, replace them with constants
         switch (expr)
         {
             case BinaryExpression binaryExpr:
-                // Replace left and right operands with constants if they're cached
-                Expression left = cache.TryGetValue(binaryExpr.Left, out object? leftValue)
-                    ? Expression.Constant(leftValue, binaryExpr.Left.Type)
-                    : binaryExpr.Left;
-                Expression right = cache.TryGetValue(binaryExpr.Right, out object? rightValue)
-                    ? Expression.Constant(rightValue, binaryExpr.Right.Type)
-                    : binaryExpr.Right;
-                return Expression.MakeBinary(binaryExpr.NodeType, left, right);
+                return binaryExpr.Update(
+                    ReplaceChildWithConstant(binaryExpr.Left, cache),
+                    binaryExpr.Conversion,
+                    ReplaceChildWithConstant(binaryExpr.Right, cache));
 
             case UnaryExpression unaryExpr:
-                // Replace the operand with a constant if it's cached
-                Expression operand = cache.TryGetValue(unaryExpr.Operand, out object? value)
-                    ? Expression.Constant(value, unaryExpr.Operand.Type)
-                    : unaryExpr.Operand;
-                return Expression.MakeUnary(unaryExpr.NodeType, operand, unaryExpr.Type);
+                return unaryExpr.Update(ReplaceChildWithConstant(unaryExpr.Operand, cache));
 
-            case MemberExpression memberExpr when memberExpr.Expression is not null && cache.ContainsKey(memberExpr.Expression):
-                // Replace the object being accessed with a constant
-                Expression instance = Expression.Constant(cache[memberExpr.Expression], memberExpr.Expression.Type);
-                return Expression.MakeMemberAccess(instance, memberExpr.Member);
+            case MemberExpression memberExpr when memberExpr.Expression is not null:
+                return memberExpr.Update(ReplaceChildWithConstant(memberExpr.Expression, cache));
 
             case MethodCallExpression callExpr:
-                // Replace the target object and all arguments with constants if they're cached
-                Expression? obj = callExpr.Object is not null && cache.TryGetValue(callExpr.Object, out object? callExprValue)
-                    ? Expression.Constant(callExprValue, callExpr.Object.Type)
-                    : callExpr.Object;
-
-                Expression[] args = [.. callExpr.Arguments
-                    .Select(arg => cache.TryGetValue(arg, out object? value)
-                        ? Expression.Constant(value, arg.Type)
-                        : arg)];
-
-                return Expression.Call(obj, callExpr.Method, args);
+                Expression? obj = callExpr.Object is not null
+                    ? ReplaceChildWithConstant(callExpr.Object, cache)
+                    : null;
+                IEnumerable<Expression> callArgs = callExpr.Arguments.Select(arg => ReplaceChildWithConstant(arg, cache));
+                return callExpr.Update(obj, callArgs);
 
             case ConditionalExpression conditionalExpr:
-                // Replace all three parts of the ternary expression with constants if they're cached
-                Expression test = cache.TryGetValue(conditionalExpr.Test, out object? testValue)
-                    ? Expression.Constant(testValue, conditionalExpr.Test.Type)
-                    : conditionalExpr.Test;
-                Expression ifTrue = cache.TryGetValue(conditionalExpr.IfTrue, out object? ifTrueValue)
-                    ? Expression.Constant(ifTrueValue, conditionalExpr.IfTrue.Type)
-                    : conditionalExpr.IfTrue;
-                Expression ifFalse = cache.TryGetValue(conditionalExpr.IfFalse, out object? ifFalseValue)
-                    ? Expression.Constant(ifFalseValue, conditionalExpr.IfFalse.Type)
-                    : conditionalExpr.IfFalse;
-                return Expression.Condition(test, ifTrue, ifFalse);
+                return conditionalExpr.Update(
+                    ReplaceChildWithConstant(conditionalExpr.Test, cache),
+                    ReplaceChildWithConstant(conditionalExpr.IfTrue, cache),
+                    ReplaceChildWithConstant(conditionalExpr.IfFalse, cache));
 
-            case TypeBinaryExpression typeBinaryExpr when cache.ContainsKey(typeBinaryExpr.Expression):
-                // Replace the object being type-checked with a constant
-                Expression typeExpr = Expression.Constant(cache[typeBinaryExpr.Expression], typeBinaryExpr.Expression.Type);
-                return Expression.TypeIs(typeExpr, typeBinaryExpr.TypeOperand);
+            case TypeBinaryExpression typeBinaryExpr:
+                return typeBinaryExpr.Update(ReplaceChildWithConstant(typeBinaryExpr.Expression, cache));
+
+            case InvocationExpression invocationExpr:
+                return invocationExpr.Update(
+                    ReplaceChildWithConstant(invocationExpr.Expression, cache),
+                    invocationExpr.Arguments.Select(arg => ReplaceChildWithConstant(arg, cache)));
+
+            case NewExpression newExpr:
+                return newExpr.Update(newExpr.Arguments.Select(arg => ReplaceChildWithConstant(arg, cache)));
+
+            case NewArrayExpression newArrayExpr:
+                return newArrayExpr.Update(newArrayExpr.Expressions.Select(e => ReplaceChildWithConstant(e, cache)));
+
+            case ListInitExpression listInitExpr:
+                NewExpression rebuiltNew = listInitExpr.NewExpression.Update(
+                    listInitExpr.NewExpression.Arguments.Select(arg => ReplaceChildWithConstant(arg, cache)));
+                IEnumerable<ElementInit> rebuiltInits = listInitExpr.Initializers.Select(init =>
+                    init.Update(init.Arguments.Select(arg => ReplaceChildWithConstant(arg, cache))));
+                return listInitExpr.Update(rebuiltNew, rebuiltInits);
+
+            case IndexExpression indexExpr when indexExpr.Object is not null:
+                Expression indexObj = ReplaceChildWithConstant(indexExpr.Object, cache);
+                return indexExpr.Update(indexObj, indexExpr.Arguments.Select(arg => ReplaceChildWithConstant(arg, cache)));
+
+            case IndexExpression indexExpr:
+                // Object is null: leave as-is (static indexer scenario — not expressible in C# trees today).
+                return indexExpr;
 
             default:
                 // For other expressions or leaf nodes (constants, parameters), return as-is
                 return expr;
         }
+    }
+
+    /// <summary>
+    /// Returns a <see cref="ConstantExpression"/> for <paramref name="child"/> when its value
+    /// has been successfully cached and is type-compatible with the child's declared type;
+    /// otherwise returns the original child expression unchanged.
+    /// </summary>
+    private static Expression ReplaceChildWithConstant(Expression child, Dictionary<Expression, object?> cache)
+    {
+        if (!cache.TryGetValue(child, out object? value))
+        {
+            return child;
+        }
+
+        if (ReferenceEquals(value, FailedToEvaluateSentinel))
+        {
+            return child;
+        }
+
+        if (value is null)
+        {
+            // null is assignable to any reference / nullable type — guard against value-type slots.
+            return !child.Type.IsValueType || Nullable.GetUnderlyingType(child.Type) is not null
+                ? Expression.Constant(null, child.Type)
+                : child;
+        }
+
+        return !child.Type.IsInstanceOfType(value) ? child : Expression.Constant(value, child.Type);
     }
 
     /// <summary>
@@ -435,6 +623,25 @@ public static partial class AssertExtensions
                 HandleArrayIndexExpression(binaryExpr, details, evaluationCache);
                 break;
 
+            case BinaryExpression binaryExpr when binaryExpr.NodeType is ExpressionType.AndAlso or ExpressionType.OrElse:
+                // Always walk both sides for diagnostics so users see every captured variable.
+                // We populate the cache for Right with a safe evaluation pass; the catch inside
+                // EvaluateAllSubExpressions stores a sentinel for sub-expressions that would
+                // throw (e.g., `s.Length` when s is null) and the detail helpers omit those.
+                // Side effects on Right run at most once total — only here, not during the
+                // single-pass assertion evaluation that already honored short-circuit.
+                ExtractVariablesFromExpression(binaryExpr.Left, details, evaluationCache, suppressIntermediateValues);
+                EvaluateAllSubExpressions(binaryExpr.Right, evaluationCache);
+                ExtractVariablesFromExpression(binaryExpr.Right, details, evaluationCache, suppressIntermediateValues);
+                break;
+
+            case BinaryExpression binaryExpr when binaryExpr.NodeType == ExpressionType.Coalesce:
+                // Same rationale as AndAlso/OrElse: walk both sides for diagnostic completeness.
+                ExtractVariablesFromExpression(binaryExpr.Left, details, evaluationCache, suppressIntermediateValues);
+                EvaluateAllSubExpressions(binaryExpr.Right, evaluationCache);
+                ExtractVariablesFromExpression(binaryExpr.Right, details, evaluationCache, suppressIntermediateValues);
+                break;
+
             case BinaryExpression binaryExpr:
                 // For binary operations (e.g., x > y), extract variables from both sides
                 ExtractVariablesFromExpression(binaryExpr.Left, details, evaluationCache, suppressIntermediateValues);
@@ -478,9 +685,13 @@ public static partial class AssertExtensions
                 break;
 
             case ConditionalExpression conditionalExpr:
-                // For ternary expressions, extract from all three parts
+                // Walk all three parts for diagnostic completeness. The unselected branch is
+                // populated via a safe evaluation; sub-expressions that would throw are
+                // omitted (the sentinel handling in the detail helpers skips them).
                 ExtractVariablesFromExpression(conditionalExpr.Test, details, evaluationCache, suppressIntermediateValues);
+                EvaluateAllSubExpressions(conditionalExpr.IfTrue, evaluationCache);
                 ExtractVariablesFromExpression(conditionalExpr.IfTrue, details, evaluationCache, suppressIntermediateValues);
+                EvaluateAllSubExpressions(conditionalExpr.IfFalse, evaluationCache);
                 ExtractVariablesFromExpression(conditionalExpr.IfFalse, details, evaluationCache, suppressIntermediateValues);
                 break;
 
@@ -564,8 +775,18 @@ public static partial class AssertExtensions
             return;
         }
 
+        bool hasCachedValue = evaluationCache.TryGetValue(memberExpr, out object? cachedValue);
+
+        // Skip sub-expressions that failed safe evaluation (e.g., NRE when walking the unreached
+        // branch of `s != null && s.Length > 0`). Surfacing them as "<Failed to evaluate>" would
+        // confuse users with a benign short-circuit.
+        if (hasCachedValue && ReferenceEquals(cachedValue, FailedToEvaluateSentinel))
+        {
+            return;
+        }
+
         // Use cached value if available, otherwise mark as failed
-        details[displayName] = evaluationCache.TryGetValue(memberExpr, out object? cachedValue)
+        details[displayName] = hasCachedValue
             ? cachedValue
             : FrameworkMessages.AssertThatFailedToEvaluate;
 
@@ -710,7 +931,7 @@ public static partial class AssertExtensions
             // For other simple expressions, try to use cached value
             if (evaluationCache.TryGetValue(indexArg, out object? cachedValue))
             {
-                return FormatValue(cachedValue);
+                return FormatValue(TranslateFailureSentinel(cachedValue));
             }
 
             // Fallback to expression text
@@ -1227,13 +1448,22 @@ public static partial class AssertExtensions
 
     /// <summary>
     /// Attempts to add an expression's value to the details dictionary using the cached value.
-    /// Returns true if the value was added, false if the key already exists.
+    /// Returns true if the value was added, false if the key already exists or the cached value
+    /// is the failure sentinel.
     /// </summary>
     private static bool TryAddExpressionValue(Expression expr, string displayName, Dictionary<string, object?> details, Dictionary<Expression, object?> evaluationCache)
     {
         // Use cached value if available
         if (evaluationCache.TryGetValue(expr, out object? cachedValue))
         {
+            // Skip sub-expressions that failed safe evaluation (e.g., NRE when walking the
+            // unreached branch of a short-circuited operator). Surfacing them as
+            // "<Failed to evaluate>" would be misleading for benign short-circuits.
+            if (ReferenceEquals(cachedValue, FailedToEvaluateSentinel))
+            {
+                return false;
+            }
+
             // If the key already exists, check if it has the same value
             if (details.TryGetValue(displayName, out object? existingValue))
             {
@@ -1271,6 +1501,16 @@ public static partial class AssertExtensions
         details[displayName] = FrameworkMessages.AssertThatFailedToEvaluate;
         return true;
     }
+
+    /// <summary>
+    /// Converts the internal failure sentinel into the localized
+    /// <see cref="FrameworkMessages.AssertThatFailedToEvaluate"/> display string. Any other
+    /// value (including <see langword="null"/>) is returned unchanged.
+    /// </summary>
+    private static object? TranslateFailureSentinel(object? value)
+        => ReferenceEquals(value, FailedToEvaluateSentinel)
+            ? FrameworkMessages.AssertThatFailedToEvaluate
+            : value;
 
 #if NET
     [GeneratedRegex(@"[A-Za-z0-9_\.]+\+<>c__DisplayClass\d+_\d+\.(\w+(?:\.\w+)*(?:\[[^\]]+\])?)")]
