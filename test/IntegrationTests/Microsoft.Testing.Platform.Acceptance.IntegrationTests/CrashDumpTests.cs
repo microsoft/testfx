@@ -195,7 +195,12 @@ public class Startup
         if (args.Length > 0 && args[0] == "--child-crash")
         {
             Environment.FailFast("ChildCrashDump");
-            return 0; // unreachable
+#if NETFRAMEWORK
+            // Environment.FailFast lacks the [DoesNotReturn] annotation on .NET Framework, so the
+            // compiler still requires the method to return on all paths. On .NET 6+ this branch is
+            // omitted to avoid an "unreachable code" warning.
+            return 0;
+#endif
         }
 
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);

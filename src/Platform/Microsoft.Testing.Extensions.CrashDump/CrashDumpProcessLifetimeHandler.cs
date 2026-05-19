@@ -88,16 +88,30 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         // callback (e.g. host restart) cannot drop entries that we have already classified as
         // pre-existing.
         ApplicationStateGuard.Ensure(_netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern is not null);
-        string dumpDirectory = GetDumpDirectory(_netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern);
+        string dumpFileNamePattern = _netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern;
+        string dumpDirectory = GetDumpDirectory(dumpFileNamePattern);
         if (Directory.Exists(dumpDirectory))
         {
-            foreach (string file in Directory.EnumerateFiles(dumpDirectory))
+            // Narrow the snapshot to files that share the configured dump extension when one is
+            // present, matching the search pattern we use on exit. This avoids paying for an
+            // enumeration of every entry in the dump directory (which may also contain TRX files,
+            // logs, attachments, ...), especially when `dumpDirectory` resolves to "." or to a
+            // large shared --results-directory.
+            string dumpSearchPattern = GetDumpSearchPattern(dumpFileNamePattern);
+            foreach (string file in Directory.EnumerateFiles(dumpDirectory, dumpSearchPattern))
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 _preExistingDumpFiles.Add(file);
             }
         }
 
         return Task.CompletedTask;
+    }
+
+    private static string GetDumpSearchPattern(string dumpFileNamePattern)
+    {
+        string dumpExtension = Path.GetExtension(Path.GetFileName(dumpFileNamePattern));
+        return dumpExtension.Length == 0 ? "*" : $"*{dumpExtension}";
     }
 
     public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
@@ -151,7 +165,7 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         // contain TRX files, logs, attachments, ...). The placeholder-expanded regex above still
         // applies to filter out anything that does not match the configured name pattern.
         string dumpExtension = Path.GetExtension(dumpFileNameOnly);
-        string dumpSearchPattern = dumpExtension.Length == 0 ? "*" : $"*{dumpExtension}";
+        string dumpSearchPattern = GetDumpSearchPattern(dumpFileNamePattern);
 
         bool publishedAnyDump = false;
         bool testhostDumpProduced = false;
