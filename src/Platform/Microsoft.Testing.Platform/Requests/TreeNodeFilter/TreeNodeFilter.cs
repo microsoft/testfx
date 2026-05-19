@@ -300,9 +300,9 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     {
         switch (expr)
         {
-            case OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subexprsNot } when subexprsNot.Length != 1:
-            case OperatorExpression { Op: FilterOperator.And, SubExpressions.Length: < 2 }:
-            case OperatorExpression { Op: FilterOperator.Or, SubExpressions.Length: < 2 }:
+            case OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subexprsNot } when subexprsNot.Count != 1:
+            case OperatorExpression { Op: FilterOperator.And, SubExpressions.Count: < 2 }:
+            case OperatorExpression { Op: FilterOperator.Or, SubExpressions.Count: < 2 }:
                 throw ApplicationStateGuard.Unreachable();
 
             case OperatorExpression opExpr:
@@ -350,7 +350,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                     _ => throw ApplicationStateGuard.Unreachable(),
                 };
 
-                expr.Push(new OperatorExpression(filter, [.. subexprs]));
+                expr.Push(new OperatorExpression(filter, subexprs.ToArray()));
                 break;
 
             case OperatorKind.FilterEquals:
@@ -513,7 +513,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
             if (currentFragmentIndex >= _filters.Count)
             {
                 // Note: The regex for ** is .*.*, so we match against such a value expression.
-                FilterExpression lastFilter = _filters[_filters.Count - 1];
+                FilterExpression lastFilter = _filters[^1];
                 if (lastFilter is ValueAndPropertyExpression valueAndPropertyExpression)
                 {
                     lastFilter = valueAndPropertyExpression.Value;
@@ -566,7 +566,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
             case ValueExpression vExpr:
                 return vExpr.Regex.IsMatch(testNodeFragment);
             case OperatorExpression { Op: FilterOperator.Or, SubExpressions: var subexprs }:
-                for (int i = 0; i < subexprs.Length; i++)
+                for (int i = 0; i < subexprs.Count; i++)
                 {
                     if (MatchFilterPattern(subexprs[i], testNodeFragment, properties))
                     {
@@ -576,7 +576,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
 
                 return false;
             case OperatorExpression { Op: FilterOperator.And, SubExpressions: var subexprs }:
-                for (int i = 0; i < subexprs.Length; i++)
+                for (int i = 0; i < subexprs.Count; i++)
                 {
                     if (!MatchFilterPattern(subexprs[i], testNodeFragment, properties))
                     {
@@ -585,8 +585,8 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                 }
 
                 return true;
-            case OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subexprs }:
-                return !MatchFilterPattern(subexprs[0], testNodeFragment, properties);
+            case OperatorExpression { Op: FilterOperator.Not, SubExpressions: [var singleSubExpr] }:
+                return !MatchFilterPattern(singleSubExpr, testNodeFragment, properties);
             case ValueAndPropertyExpression { Value: var valueExpr, Properties: var propExpr }:
                 return MatchFilterPattern(valueExpr, testNodeFragment, properties)
                     && MatchProperties(propExpr, properties);
@@ -604,20 +604,21 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         switch (propertyExpr)
         {
             case PropertyExpression { PropertyName: var propExpr, Value: var valueExpr }:
-                PropertyBag.Property? current = properties._property;
-                while (current is not null)
+                // Use the struct-based enumerator on PropertyBag to iterate every property
+                // (including TestNodeStateProperty) without allocating, while keeping
+                // TreeNodeFilter decoupled from PropertyBag's internal storage layout.
+                PropertyBag.PropertyBagEnumerator enumerator = properties.GetStructEnumerator();
+                while (enumerator.MoveNext())
                 {
-                    if (IsMatchingProperty(current.Current, propExpr, valueExpr))
+                    if (IsMatchingProperty(enumerator.Current, propExpr, valueExpr))
                     {
                         return true;
                     }
-
-                    current = current.Next;
                 }
 
                 return false;
             case OperatorExpression { Op: FilterOperator.Or, SubExpressions: var subExprs }:
-                for (int i = 0; i < subExprs.Length; i++)
+                for (int i = 0; i < subExprs.Count; i++)
                 {
                     if (MatchProperties(subExprs[i], properties))
                     {
@@ -627,7 +628,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
 
                 return false;
             case OperatorExpression { Op: FilterOperator.And, SubExpressions: var subExprs }:
-                for (int i = 0; i < subExprs.Length; i++)
+                for (int i = 0; i < subExprs.Count; i++)
                 {
                     if (!MatchProperties(subExprs[i], properties))
                     {
@@ -636,8 +637,8 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                 }
 
                 return true;
-            case OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subExprs }:
-                return !MatchProperties(subExprs[0], properties);
+            case OperatorExpression { Op: FilterOperator.Not, SubExpressions: [var singleSubExpr] }:
+                return !MatchProperties(singleSubExpr, properties);
             default:
                 throw ApplicationStateGuard.Unreachable();
         }
@@ -657,7 +658,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
 
         if (expression is OperatorExpression op)
         {
-            for (int i = 0; i < op.SubExpressions.Length; i++)
+            for (int i = 0; i < op.SubExpressions.Count; i++)
             {
                 if (HasPropertyFilterExpression(op.SubExpressions[i]))
                 {

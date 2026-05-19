@@ -324,6 +324,12 @@ public sealed partial class PropertyBag
     public IEnumerator<IProperty> GetEnumerator()
         => new PropertyBagEnumerator(_property, _testNodeStateProperty);
 
+    // Returns the struct-based enumerator by value to allow zero-allocation iteration
+    // from inside the assembly (avoids the boxing that happens when the public
+    // GetEnumerator() returns the struct as IEnumerator<IProperty>).
+    internal PropertyBagEnumerator GetStructEnumerator()
+        => new(_property, _testNodeStateProperty);
+
     [DoesNotReturn]
     private static void ThrowDuplicatedPropertyType(IProperty property)
         => throw new InvalidOperationException($"Duplicated property of type '{property}'");
