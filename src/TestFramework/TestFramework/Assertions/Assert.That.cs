@@ -148,9 +148,16 @@ public static partial class AssertExtensions
     private static bool RequiresSinglePassEvaluation(Expression expr)
         => expr switch
         {
+            // Assignments and compound assignments are side-effecting by definition; ensure they
+            // always take the single-pass evaluator so the fast path doesn't run them once before
+            // EvaluateAllSubExpressions runs them again on the failure-diagnostic path.
+            BinaryExpression binaryExpr when IsAssignmentBinaryNodeType(binaryExpr.NodeType) => true,
+
             BinaryExpression binaryExpr => binaryExpr.Method is not null
                 || RequiresSinglePassEvaluation(binaryExpr.Left)
                 || RequiresSinglePassEvaluation(binaryExpr.Right),
+
+            UnaryExpression unaryExpr when IsAssignmentUnaryNodeType(unaryExpr.NodeType) => true,
 
             UnaryExpression unaryExpr => unaryExpr.Method is not null
                 || RequiresSinglePassEvaluation(unaryExpr.Operand),
@@ -217,6 +224,32 @@ public static partial class AssertExtensions
 
                     break;
 
+                // Assignment-style binary expressions (Assign and compound assignments such as
+                // AddAssign, MultiplyAssign, ...) require special handling. The Left operand is a
+                // writable target — replacing it wholesale with a ConstantExpression during the
+                // generic "rebuild and compile" path produces an invalid Assign whose compilation
+                // throws. The outer try/catch would then sentinel the parent, and a higher-level
+                // rebuild would re-execute the original assignment, running the RHS side effects
+                // a second time. Handle these inline:
+                //   1. Walk Left to capture diagnostics and cache any side-effecting sub-children
+                //      (receiver/index arguments). Reading a property getter on Left runs it once
+                //      as part of capturing the pre-assignment value.
+                //   2. Walk Right exactly once.
+                //   3. Rebuild Left via ReplaceSubExpressionsWithConstants so its sub-children
+                //      (receiver, index arguments) become constants but the writable wrapper node
+                //      (MemberExpression/IndexExpression/ParameterExpression) is preserved.
+                //   4. Substitute Right with its cached constant and invoke the rebuilt assignment
+                //      exactly once. The cached binary value is the post-assignment value (for
+                //      compound assignments it is the result of the compound operation).
+                case BinaryExpression binaryExpr when IsAssignmentBinaryNodeType(binaryExpr.NodeType):
+                    EvaluateAllSubExpressions(binaryExpr.Left, cache);
+                    EvaluateAllSubExpressions(binaryExpr.Right, cache);
+                    Expression rebuiltAssignLeft = ReplaceSubExpressionsWithConstants(binaryExpr.Left, cache);
+                    Expression rebuiltAssignRight = ReplaceChildWithConstant(binaryExpr.Right, cache);
+                    BinaryExpression rebuiltAssign = binaryExpr.Update(rebuiltAssignLeft, binaryExpr.Conversion, rebuiltAssignRight);
+                    cache[binaryExpr] = Expression.Lambda(rebuiltAssign).Compile().DynamicInvoke();
+                    return;
+
                 case BinaryExpression binaryExpr:
                     // Evaluate both operands before evaluating the binary operation
                     EvaluateAllSubExpressions(binaryExpr.Left, cache);
@@ -230,6 +263,19 @@ public static partial class AssertExtensions
                 // break Queryable scenarios. Treat it as a leaf instead.
                 case UnaryExpression unaryExpr when unaryExpr.NodeType == ExpressionType.Quote:
                     break;
+
+                // Unary assignment-style nodes (PreIncrementAssign, PostIncrementAssign, etc.).
+                // The Operand is a writable target, so the generic rebuild path that replaces it
+                // with a ConstantExpression would produce an invalid node. Walk the Operand's
+                // sub-children so receiver/index arguments execute exactly once, then rebuild the
+                // unary with the Operand's sub-children substituted by cached constants — the
+                // writable wrapper node is preserved.
+                case UnaryExpression unaryExpr when IsAssignmentUnaryNodeType(unaryExpr.NodeType):
+                    EvaluateAllSubExpressions(unaryExpr.Operand, cache);
+                    Expression rebuiltUnaryOperand = ReplaceSubExpressionsWithConstants(unaryExpr.Operand, cache);
+                    UnaryExpression rebuiltUnary = unaryExpr.Update(rebuiltUnaryOperand);
+                    cache[unaryExpr] = Expression.Lambda(rebuiltUnary).Compile().DynamicInvoke();
+                    return;
 
                 case UnaryExpression unaryExpr:
                     // Evaluate the operand before evaluating the unary operation
@@ -753,7 +799,7 @@ public static partial class AssertExtensions
     private static void HandleArrayIndexExpression(BinaryExpression arrayIndexExpr, Dictionary<string, object?> details, Dictionary<Expression, object?> evaluationCache)
     {
         string arrayName = GetCleanMemberName(arrayIndexExpr.Left);
-        string indexValue = GetIndexArgumentDisplay(arrayIndexExpr.Right, evaluationCache);
+        string indexValue = GetIndexArgumentDisplay(arrayIndexExpr.Right);
         string indexerDisplay = $"{arrayName}[{indexValue}]";
         TryAddExpressionValue(arrayIndexExpr, indexerDisplay, details, evaluationCache);
 
@@ -820,7 +866,7 @@ public static partial class AssertExtensions
         {
             // Display as "listName[indexValue]" for readability
             string objectName = GetCleanMemberName(callExpr.Object);
-            string indexValue = GetIndexArgumentDisplay(callExpr.Arguments[0], evaluationCache);
+            string indexValue = GetIndexArgumentDisplay(callExpr.Arguments[0]);
             string indexerDisplay = $"{objectName}[{indexValue}]";
             TryAddExpressionValue(callExpr, indexerDisplay, details, evaluationCache);
 
@@ -832,7 +878,7 @@ public static partial class AssertExtensions
         {
             // Handle multi-dimensional array indexers (e.g., array.Get(i, j) displayed as array[i, j])
             string objectName = GetCleanMemberName(callExpr.Object);
-            string indexDisplay = string.Join(", ", callExpr.Arguments.Select(arg => GetIndexArgumentDisplay(arg, evaluationCache)));
+            string indexDisplay = string.Join(", ", callExpr.Arguments.Select(GetIndexArgumentDisplay));
             string indexerDisplay = $"{objectName}[{indexDisplay}]";
             TryAddExpressionValue(callExpr, indexerDisplay, details, evaluationCache);
 
@@ -872,6 +918,20 @@ public static partial class AssertExtensions
         }
     }
 
+    private static bool IsAssignmentBinaryNodeType(ExpressionType nodeType)
+        => nodeType is ExpressionType.Assign
+            or ExpressionType.AddAssign or ExpressionType.AddAssignChecked
+            or ExpressionType.SubtractAssign or ExpressionType.SubtractAssignChecked
+            or ExpressionType.MultiplyAssign or ExpressionType.MultiplyAssignChecked
+            or ExpressionType.DivideAssign or ExpressionType.ModuloAssign
+            or ExpressionType.PowerAssign
+            or ExpressionType.AndAssign or ExpressionType.OrAssign or ExpressionType.ExclusiveOrAssign
+            or ExpressionType.LeftShiftAssign or ExpressionType.RightShiftAssign;
+
+    private static bool IsAssignmentUnaryNodeType(ExpressionType nodeType)
+        => nodeType is ExpressionType.PreIncrementAssign or ExpressionType.PreDecrementAssign
+            or ExpressionType.PostIncrementAssign or ExpressionType.PostDecrementAssign;
+
     private static bool IsFuncOrActionType(Type? type)
     {
         if (type is null)
@@ -879,15 +939,19 @@ public static partial class AssertExtensions
             return false;
         }
 
-        // Check for Action types
-        if (type == typeof(Action) ||
-            (type.IsGenericType && type.GetGenericTypeDefinition().Name.StartsWith(ActionTypePrefix, StringComparison.Ordinal)))
+        if (type == typeof(Action))
         {
             return true;
         }
 
-        // Check for Func types
-        return type.IsGenericType && type.GetGenericTypeDefinition().Name.StartsWith(FuncTypePrefix, StringComparison.Ordinal);
+        if (!type.IsGenericType)
+        {
+            return false;
+        }
+
+        string genericDefinitionName = type.GetGenericTypeDefinition().Name;
+        return genericDefinitionName.StartsWith(ActionTypePrefix, StringComparison.Ordinal)
+            || genericDefinitionName.StartsWith(FuncTypePrefix, StringComparison.Ordinal);
     }
 
     private static string GetCleanMemberName(Expression? expr)
@@ -897,78 +961,25 @@ public static partial class AssertExtensions
 
     /// <summary>
     /// Gets a display string for an index argument in an indexer expression.
-    /// Preserves variable names for readability (e.g., "i" instead of "0" if i is a variable).
+    /// Preserves variable names and source-style expression text for readability (e.g., "i" or
+    /// "start + offset" rather than the evaluated constant value), so the failure message keeps
+    /// the user's intent visible.
     /// </summary>
-    private static string GetIndexArgumentDisplay(Expression indexArg, Dictionary<Expression, object?> evaluationCache)
+    private static string GetIndexArgumentDisplay(Expression indexArg)
     {
         try
         {
-            // For constant values, just format the value
-            if (indexArg is ConstantExpression constExpr)
-            {
-                return FormatValue(constExpr.Value);
-            }
-
-            // For member expressions that are fields or simple variable references,
-            // preserve the variable name to help with readability (e.g., "myIndex" instead of "5")
-            if (indexArg is MemberExpression memberExpr && IsVariableReference(memberExpr))
-            {
-                return CleanExpressionText(indexArg.ToString());
-            }
-
-            // For parameter expressions (method parameters), preserve the parameter name
-            if (indexArg is ParameterExpression)
-            {
-                return CleanExpressionText(indexArg.ToString());
-            }
-
-            // For complex expressions (e.g., "i + 1"), preserve the expression text for clarity
-            if (!IsSimpleExpression(indexArg))
-            {
-                return CleanExpressionText(indexArg.ToString());
-            }
-
-            // For other simple expressions, try to use cached value
-            if (evaluationCache.TryGetValue(indexArg, out object? cachedValue))
-            {
-                return FormatValue(TranslateFailureSentinel(cachedValue));
-            }
-
-            // Fallback to expression text
-            return CleanExpressionText(indexArg.ToString());
+            // For literal constant indices, formatting the value gives the cleanest output
+            // (e.g., the literal 0 in `array[0]`).
+            return indexArg is ConstantExpression constExpr
+                ? FormatValue(constExpr.Value)
+                : CleanExpressionText(indexArg.ToString());
         }
         catch
         {
             return CleanExpressionText(indexArg.ToString());
         }
     }
-
-    /// <summary>
-    /// Determines if a member expression is a simple variable reference (field or captured variable)
-    /// rather than a property access on an object.
-    /// </summary>
-    private static bool IsVariableReference(MemberExpression memberExpr)
-        // Fields typically have Expression as null (static) or ConstantExpression (instance field on captured variable)
-        => memberExpr.Expression is null or ConstantExpression;
-
-    /// <summary>
-    /// Determines if an expression is simple enough to evaluate directly or if its
-    /// textual representation should be preserved for better diagnostic messages.
-    /// </summary>
-    private static bool IsSimpleExpression(Expression expr)
-        => expr switch
-        {
-            // Constants are simple and can be evaluated
-            ConstantExpression => true,
-            // Parameter references should preserve their names for indices (e.g., "i" not "0")
-            ParameterExpression => false,
-            // Member expressions should be evaluated case by case
-            MemberExpression => false,
-            // Simple unary operations on members like "!flag" should preserve the expression text
-            UnaryExpression unary when unary.Operand is MemberExpression or ParameterExpression => false,
-            // Everything else is considered complex (binary operations, method calls, etc.)
-            _ => false,
-        };
 
     private static string FormatValue(object? value)
         => value switch
@@ -1025,9 +1036,11 @@ public static partial class AssertExtensions
 
         while (i < input.Length)
         {
-            // Look for anonymous type pattern: new <>f__AnonymousType followed by generic parameters
-            if (i <= input.Length - NewKeyword.Length && input.Substring(i, NewKeyword.Length) == NewKeyword &&
-                i + NewKeyword.Length < input.Length && input.Substring(i + NewKeyword.Length).StartsWith(AnonymousTypePrefix, StringComparison.Ordinal))
+            // Look for anonymous type pattern: new <>f__AnonymousType followed by generic parameters.
+            // Use position-aware ordinal comparisons to avoid allocating substring instances on
+            // every character of the input.
+            if (HasSubstringAt(input, i, NewKeyword) &&
+                HasSubstringAt(input, i + NewKeyword.Length, AnonymousTypePrefix))
             {
                 // Find the start of the constructor parameters
                 int constructorStart = input.IndexOf('(', i + NewKeyword.Length);
@@ -1122,14 +1135,12 @@ public static partial class AssertExtensions
                     string initContent = input.Substring(braceStart + 1, braceEnd - braceStart - 2);
 
                     // Extract the generic type parameter and arguments from the Add method calls
-                    string addMethodPattern = @"Void\s+Add\([^)]+\)\(([^)]+)\)";
-                    MatchCollection addMatches = Regex.Matches(initContent, addMethodPattern);
+                    MatchCollection addMatches = ListInitAddArgumentRegex().Matches(initContent);
 
                     if (addMatches.Count > 0)
                     {
                         // Extract type from the first Add method call
-                        string firstAddPattern = @"Void\s+Add\(([^)]+)\)";
-                        Match typeMatch = Regex.Match(initContent, firstAddPattern);
+                        Match typeMatch = ListInitAddTypeRegex().Match(initContent);
                         string genericType = "object"; // default fallback
 
                         if (typeMatch.Success)
@@ -1140,7 +1151,7 @@ public static partial class AssertExtensions
                         }
 
                         // Extract all arguments from Add method calls
-                        var arguments = new List<string>();
+                        var arguments = new List<string>(addMatches.Count);
                         foreach (Match addMatch in addMatches)
                         {
                             string argument = addMatch.Groups[1].Value;
@@ -1172,8 +1183,8 @@ public static partial class AssertExtensions
         collectionType = string.Empty;
         patternEnd = startIndex;
 
-        // Check for "new " at the start
-        if (startIndex + NewKeyword.Length >= input.Length || !input.Substring(startIndex, NewKeyword.Length).Equals(NewKeyword, StringComparison.Ordinal))
+        // Check for "new " at the start (non-allocating ordinal compare).
+        if (!HasSubstringAt(input, startIndex, NewKeyword))
         {
             return false;
         }
@@ -1192,8 +1203,7 @@ public static partial class AssertExtensions
 
         foreach (string type in collectionTypes)
         {
-            if (pos + type.Length < input.Length &&
-                input.Substring(pos, type.Length).Equals(type, StringComparison.Ordinal))
+            if (HasSubstringAt(input, pos, type))
             {
                 matchedType = type;
                 pos += type.Length;
@@ -1207,7 +1217,7 @@ public static partial class AssertExtensions
         }
 
         // Check for "`1()" pattern
-        if (pos + ListInitPattern.Length >= input.Length || !input.Substring(pos, ListInitPattern.Length).Equals(ListInitPattern, StringComparison.Ordinal))
+        if (!HasSubstringAt(input, pos, ListInitPattern))
         {
             return false;
         }
@@ -1230,6 +1240,17 @@ public static partial class AssertExtensions
         patternEnd = pos;
         return true;
     }
+
+    /// <summary>
+    /// Returns <see langword="true"/> if <paramref name="value"/> occurs in
+    /// <paramref name="input"/> at <paramref name="start"/> using ordinal comparison. Avoids the
+    /// substring allocation that <c>input.Substring(start, value.Length) == value</c> would
+    /// incur for every probe in the diagnostic text cleanup pipeline.
+    /// </summary>
+    private static bool HasSubstringAt(string input, int start, string value)
+        => start >= 0
+            && start <= input.Length - value.Length
+            && string.CompareOrdinal(input, start, value, 0, value.Length) == 0;
 
     private static string CleanTypeName(string typeName)
         => typeName switch
@@ -1503,20 +1524,37 @@ public static partial class AssertExtensions
     }
 
     /// <summary>
-    /// Converts the internal failure sentinel into the localized
-    /// <see cref="FrameworkMessages.AssertThatFailedToEvaluate"/> display string. Any other
-    /// value (including <see langword="null"/>) is returned unchanged.
+    /// Cached regular expressions used by the diagnostic text cleanup pipeline.
+    /// On NET we use the source-generated regex attribute; on netstandard/net462 we cache
+    /// a single compiled instance to avoid the per-call allocation and JIT cost that a
+    /// freshly-constructed <c>Regex</c> would incur on every failed assertion.
     /// </summary>
-    private static object? TranslateFailureSentinel(object? value)
-        => ReferenceEquals(value, FailedToEvaluateSentinel)
-            ? FrameworkMessages.AssertThatFailedToEvaluate
-            : value;
-
 #if NET
     [GeneratedRegex(@"[A-Za-z0-9_\.]+\+<>c__DisplayClass\d+_\d+\.(\w+(?:\.\w+)*(?:\[[^\]]+\])?)")]
     private static partial Regex CompilerGeneratedDisplayClassRegex();
+
+    [GeneratedRegex(@"Void\s+Add\([^)]+\)\(([^)]+)\)")]
+    private static partial Regex ListInitAddArgumentRegex();
+
+    [GeneratedRegex(@"Void\s+Add\(([^)]+)\)")]
+    private static partial Regex ListInitAddTypeRegex();
 #else
-    private static Regex CompilerGeneratedDisplayClassRegex()
-        => new(@"[A-Za-z0-9_\.]+\+<>c__DisplayClass\d+_\d+\.(\w+(?:\.\w+)*(?:\[[^\]]+\])?)", RegexOptions.Compiled);
+    private static readonly Regex CompilerGeneratedDisplayClass = new(
+        @"[A-Za-z0-9_\.]+\+<>c__DisplayClass\d+_\d+\.(\w+(?:\.\w+)*(?:\[[^\]]+\])?)",
+        RegexOptions.Compiled);
+
+    private static readonly Regex ListInitAddArgument = new(
+        @"Void\s+Add\([^)]+\)\(([^)]+)\)",
+        RegexOptions.Compiled);
+
+    private static readonly Regex ListInitAddType = new(
+        @"Void\s+Add\(([^)]+)\)",
+        RegexOptions.Compiled);
+
+    private static Regex CompilerGeneratedDisplayClassRegex() => CompilerGeneratedDisplayClass;
+
+    private static Regex ListInitAddArgumentRegex() => ListInitAddArgument;
+
+    private static Regex ListInitAddTypeRegex() => ListInitAddType;
 #endif
 }
