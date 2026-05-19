@@ -230,18 +230,36 @@ public class DummyTestFramework : ITestFramework
         // exercise the crashdump extension's ability to collect dumps from child processes.
         if (Environment.GetEnvironmentVariable("CRASHDUMP_SPAWN_CHILD_THAT_CRASHES") == "1")
         {
-            using Process self = Process.GetCurrentProcess();
-            string path = self.MainModule!.FileName!;
-            string fileName = Path.GetFileName(path);
-            string argPrefix = string.Equals(fileName, "dotnet", StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(fileName, "dotnet.exe", StringComparison.OrdinalIgnoreCase)
-                ? $"exec \"{Assembly.GetEntryAssembly()!.Location}\" "
-                : string.Empty;
+            // Prefer Environment.ProcessPath (available since .NET 6) over Process.MainModule.FileName
+            // so we avoid loading the process module and any platform-specific failure modes that come
+            // with it. Fall back to MainModule for older runtimes.
+            string? path = Environment.ProcessPath;
+            if (string.IsNullOrEmpty(path))
+            {
+                using Process self = Process.GetCurrentProcess();
+                path = self.MainModule!.FileName!;
+            }
 
-            using Process child = Process.Start(new ProcessStartInfo(path, $"{argPrefix}--child-crash")
+            string fileName = Path.GetFileName(path);
+            bool isDotnetMuxer = string.Equals(fileName, "dotnet", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(fileName, "dotnet.exe", StringComparison.OrdinalIgnoreCase);
+
+            // Use ArgumentList instead of a single argument string so the runtime quotes/escapes each
+            // argument correctly across Windows and Unix; this also makes the test asset robust to
+            // paths that contain spaces or special characters.
+            var psi = new ProcessStartInfo(path)
             {
                 UseShellExecute = false,
-            })!;
+            };
+            if (isDotnetMuxer)
+            {
+                psi.ArgumentList.Add("exec");
+                psi.ArgumentList.Add(Assembly.GetEntryAssembly()!.Location);
+            }
+
+            psi.ArgumentList.Add("--child-crash");
+
+            using Process child = Process.Start(psi)!;
 
             // Wait for the child to fully exit (with a bounded timeout to avoid hanging the test run)
             // so its crash dump is written before we crash too.

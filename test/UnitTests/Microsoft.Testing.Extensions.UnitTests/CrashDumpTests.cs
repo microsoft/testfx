@@ -121,6 +121,12 @@ public sealed class CrashDumpTests
     // file systems that allow these characters in file names (e.g. Linux/macOS).
     [DataRow("my*dump_%p.dmp", @"^my\*dump_.*\.dmp$")]
     [DataRow("dump?_%p.dmp", @"^dump\?_.*\.dmp$")]
+    // The .NET runtime's createdump tool treats "%%" as an escape for a literal '%'. The regex builder
+    // must preserve that: "%%" stays a literal percent rather than collapsing into a ".*" wildcard
+    // (which would otherwise over-match unrelated files).
+    [DataRow("My%%App_%p.dmp", @"^My%App_.*\.dmp$")]
+    [DataRow("%%%p.dmp", @"^%.*\.dmp$")]
+    [DataRow("%p%%.dmp", @"^.*%\.dmp$")]
     public void BuildDumpFileNameRegexPattern_ConvertsPlaceholdersToRegex(string fileName, string expected)
     {
         string actual = CrashDumpProcessLifetimeHandler.BuildDumpFileNameRegexPattern(fileName);
@@ -134,6 +140,15 @@ public sealed class CrashDumpTests
         Assert.IsTrue(regex.IsMatch("my*dump_123.dmp"), "Literal '*' must be matched literally.");
         Assert.IsFalse(regex.IsMatch("myXYZdump_123.dmp"), "Literal '*' must not act as a wildcard.");
         Assert.IsFalse(regex.IsMatch("mydump_123.dmp"), "Literal '*' must require at least the '*' character to be present.");
+    }
+
+    [TestMethod]
+    public void BuildDumpFileNameRegex_LiteralPercentInName_DoesNotOverMatch()
+    {
+        Regex regex = CrashDumpProcessLifetimeHandler.BuildDumpFileNameRegex("My%%App_%p.dmp");
+        Assert.IsTrue(regex.IsMatch("My%App_123.dmp"), "Literal '%' must be matched literally.");
+        Assert.IsFalse(regex.IsMatch("MyApp_123.dmp"), "Literal '%' must require the '%' character to be present.");
+        Assert.IsFalse(regex.IsMatch("MyXApp_123.dmp"), "Literal '%' must not be treated as a wildcard.");
     }
 
     [TestMethod]

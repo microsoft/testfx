@@ -21,7 +21,16 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
     private readonly IMessageBus _messageBus;
     private readonly IOutputDevice _outputDisplay;
     private readonly CrashDumpConfiguration _netCoreCrashDumpGeneratorConfiguration;
-    private HashSet<string> _preExistingDumpFiles = new(StringComparer.OrdinalIgnoreCase);
+
+    // The dump enumeration relies on this set to identify dumps that pre-date the current test
+    // run so it can skip them when publishing artifacts. File paths are case-insensitive on
+    // Windows but case-sensitive on Linux/macOS, so use an OS-appropriate comparer to avoid
+    // treating freshly produced dumps as "pre-existing" merely because of casing differences.
+    private static readonly StringComparer PathComparer = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+        ? StringComparer.OrdinalIgnoreCase
+        : StringComparer.Ordinal;
+
+    private HashSet<string> _preExistingDumpFiles;
 
     public CrashDumpProcessLifetimeHandler(
         ICommandLineOptions commandLineOptions,
@@ -33,6 +42,9 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         _messageBus = messageBus;
         _outputDisplay = outputDisplay;
         _netCoreCrashDumpGeneratorConfiguration = netCoreCrashDumpGeneratorConfiguration;
+#pragma warning disable IDE0028 // Collection initialization can be simplified - target-typed `new` cannot pass the comparer in the same syntactic form expected.
+        _preExistingDumpFiles = new(PathComparer);
+#pragma warning restore IDE0028
     }
 
     /// <inheritdoc />
@@ -67,7 +79,7 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         string dumpDirectory = GetDumpDirectory(_netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern);
         if (Directory.Exists(dumpDirectory))
         {
-            _preExistingDumpFiles = new HashSet<string>(Directory.EnumerateFiles(dumpDirectory), StringComparer.OrdinalIgnoreCase);
+            _preExistingDumpFiles = new HashSet<string>(Directory.EnumerateFiles(dumpDirectory), PathComparer);
         }
 
         return Task.CompletedTask;
@@ -101,13 +113,30 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         string expectedDumpFile = dumpFileNamePattern.Replace("%p", testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
         string expectedCrashReportFile = $"{expectedDumpFile}{CrashReportFileExtension}";
         string dumpDirectory = GetDumpDirectory(dumpFileNamePattern);
-        Regex dumpFileNameRegex = BuildDumpFileNameRegex(Path.GetFileName(dumpFileNamePattern));
+        string dumpFileNameOnly = Path.GetFileName(dumpFileNamePattern);
+        Regex dumpFileNameRegex = BuildDumpFileNameRegex(dumpFileNameOnly);
+
+        // Narrow the file system enumeration to files that share the configured dump extension when
+        // one is present. This avoids scanning every entry of the dump directory (which may also
+        // contain TRX files, logs, attachments, ...). The placeholder-expanded regex above still
+        // applies to filter out anything that does not match the configured name pattern.
+        string dumpExtension = Path.GetExtension(dumpFileNameOnly);
+        string dumpSearchPattern = dumpExtension.Length == 0 ? "*" : $"*{dumpExtension}";
 
         bool publishedAnyDump = false;
         if (generateDump && Directory.Exists(dumpDirectory))
         {
-            foreach (string dumpFile in Directory.EnumerateFiles(dumpDirectory))
+            foreach (string dumpFile in Directory.EnumerateFiles(dumpDirectory, dumpSearchPattern))
             {
+                // Filter by exact extension to defend against Windows' legacy 8.3 short-name
+                // matching where a pattern like '*.dmp' can also match files whose extension
+                // merely starts with '.dmp' (for example 'foo.dmp.crashreport.json').
+                if (dumpExtension.Length != 0
+                    && !Path.GetExtension(dumpFile).Equals(dumpExtension, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
                 if (dumpFileNameRegex.IsMatch(Path.GetFileName(dumpFile))
                     && !_preExistingDumpFiles.Contains(dumpFile))
                 {
@@ -199,8 +228,20 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         {
             if (fileName[i] == '%' && i + 1 < fileName.Length)
             {
-                // Replace any %X placeholder with ".*". Collapse consecutive wildcards to keep the regex
-                // simple and to avoid backtracking on patterns like "%p%t".
+                // The .NET runtime's createdump tool treats "%%" as an escape for a literal '%'.
+                // Preserve that behavior so a configured name like "My%%App_%p.dmp" produces a regex
+                // that requires a literal '%' (rather than collapsing both characters into a wildcard
+                // and over-matching unrelated files).
+                if (fileName[i + 1] == '%')
+                {
+                    sb.Append(Regex.Escape("%"));
+                    lastWasWildcard = false;
+                    i++;
+                    continue;
+                }
+
+                // Replace any other %X placeholder with ".*". Collapse consecutive wildcards to keep
+                // the regex simple and to avoid backtracking on patterns like "%p%t".
                 if (!lastWasWildcard)
                 {
                     sb.Append(".*");
