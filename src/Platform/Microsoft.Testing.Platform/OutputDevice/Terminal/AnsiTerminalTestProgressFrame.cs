@@ -225,7 +225,7 @@ internal sealed class AnsiTerminalTestProgressFrame
 
                     // We have a line that was rendered previously, compare it and decide how to render.
                     RenderedProgressItem previouslyRenderedLine = previousFrame.RenderedLines[i];
-                    if (previouslyRenderedLine.ProgressId == progressItem.Id && false)
+                    if (previouslyRenderedLine.ProgressId == progressItem.Id && previouslyRenderedLine.ProgressVersion == progressItem.Version)
                     {
                         // This is the same progress item and it was not updated since we rendered it, only update the timestamp if possible to avoid flicker.
                         string durationString = HumanReadableDurationFormatter.Render(progressItem.Stopwatch.Elapsed);
