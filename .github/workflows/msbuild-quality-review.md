@@ -202,6 +202,7 @@ If you find issues that can be fixed with **very high confidence** and without r
 - Changing backslashes to forward slashes in NuGet package files
 
 Do **NOT** auto-fix:
+
 - DependsOn chain restructuring (may change target ordering)
 - Inputs/Outputs additions (requires understanding of file dependencies)
 - Target restructuring or renaming
