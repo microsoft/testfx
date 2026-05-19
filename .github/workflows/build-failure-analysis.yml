@@ -563,6 +563,8 @@ jobs:
               body: body,
             });
 
-      - name: Fail the job if build failed
+      - name: Build failed
         if: steps.build.outcome == 'failure'
-        run: exit 1
+        run: |
+          echo "::error::The build failed. See the '🔍 Build Failure Analysis' comment on the PR for details and suggested fixes."
+          exit 1
