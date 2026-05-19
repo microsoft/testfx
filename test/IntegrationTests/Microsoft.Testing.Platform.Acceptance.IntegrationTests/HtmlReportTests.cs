@@ -28,7 +28,7 @@ public class HtmlReportTests : AcceptanceTestBase<HtmlReportTests.TestAssetFixtu
     public async Task Html_WhenReportHtmlIsSpecified_HtmlReportIsGeneratedInDefaultLocation(string tfm)
     {
         string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, "TestResults");
-        string htmlPathPattern = Path.Combine(testResultsPath, ".+?\\.html").Replace(@"\", @"\\");
+        string htmlPathPattern = Regex.Escape(testResultsPath + Path.DirectorySeparatorChar) + @".+?\.html";
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--report-html", cancellationToken: TestContext.CancellationToken);
