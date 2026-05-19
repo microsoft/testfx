@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.AzureDevOpsReport;
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
@@ -11,6 +12,11 @@ namespace Microsoft.Testing.Extensions.Reporting;
 internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvider
 {
     private static readonly string[] SeverityOptions = ["error", "warning"];
+
+    private static readonly string DemoteKnownFlakyOptionDescriptionFormatted = string.Format(
+        CultureInfo.InvariantCulture,
+        AzureDevOpsResources.DemoteKnownFlakyOptionDescription,
+        AzureDevOpsReporter.KnownFlakyFailureRateThreshold * 100);
 
     public string Uid => nameof(AzureDevOpsCommandLineProvider);
 
@@ -26,7 +32,7 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
         =>
         [
             new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName, AzureDevOpsResources.OptionDescription, ArgumentArity.Zero, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky, AzureDevOpsResources.DemoteKnownFlakyOptionDescription, ArgumentArity.Zero, false),
+            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky, DemoteKnownFlakyOptionDescriptionFormatted, ArgumentArity.Zero, false),
             new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory, AzureDevOpsResources.FlakyHistoryOptionDescription, ArgumentArity.ExactlyOne, false),
             new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile, AzureDevOpsResources.QuarantineFileOptionDescription, ArgumentArity.ExactlyOne, false),
             new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, AzureDevOpsResources.SeverityOptionDescription, ArgumentArity.ExactlyOne, false),

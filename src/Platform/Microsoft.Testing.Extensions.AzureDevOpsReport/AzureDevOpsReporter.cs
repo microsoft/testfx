@@ -19,10 +19,7 @@ internal sealed class AzureDevOpsReporter :
     IDataConsumer,
     IOutputDeviceDataProducer
 {
-    // NOTE: This threshold is also rendered as "25%" in the localized
-    // DemoteKnownFlakyOptionDescription resource string (see AzureDevOpsResources.resx
-    // and xlf/*.xlf). If you change this value, update the localized strings to match.
-    private const double KnownFlakyFailureRateThreshold = 0.25;
+    internal const double KnownFlakyFailureRateThreshold = 0.25;
     private const string DeterministicBuildRoot = "/_/";
     private const string FullyQualifiedNamePropertyKey = "vstest.TestCase.FullyQualifiedName";
     private const int MinSamplesForRegressionAnnotation = 5;
