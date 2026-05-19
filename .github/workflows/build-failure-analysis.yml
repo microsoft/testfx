@@ -630,24 +630,32 @@ jobs:
               switch (err.code) {
                 case 'CS0246':
                 case 'CS0234': {
-                  // Missing using / type not found — if it's a using line, suggest removal
                   if (trimmed.match(/^\s*using\s+/)) {
                     return { body: `🔧 **\`${err.code}\`**: ${err.message}\n\nRemove the invalid using directive:\n\`\`\`suggestion\n\`\`\``, type: 'remove' };
                   }
                   return null;
                 }
                 case 'CS7036': {
-                  // Missing argument — suggest adding a placeholder
                   const paramMatch = err.message.match(/parameter '(\w+)'/);
                   const methodMatch = trimmed.match(/(\.\w+)\(\)/);
                   if (methodMatch && paramMatch) {
                     const fixed = trimmed.replace(methodMatch[1] + '()', methodMatch[1] + `(/* ${paramMatch[1]} */)`);
                     return { body: `🔧 **\`${err.code}\`**: ${err.message}\n\nAdd the missing argument:\n\`\`\`suggestion\n${fixed}\n\`\`\``, type: 'fix' };
                   }
+                  // If the error is about a caller not matching a changed signature,
+                  // suggest making the new parameter optional at the declaration
+                  if (paramMatch && trimmed.match(/\bstring\b.*\b\w+\b/)) {
+                    const fixed = trimmed.replace(
+                      new RegExp(`(string\\s+${paramMatch[1]})`),
+                      `$1 = ""`
+                    );
+                    if (fixed !== trimmed) {
+                      return { body: `🔧 **\`${err.code}\`**: Callers are missing the new \`${paramMatch[1]}\` parameter. Consider making it optional:\n\`\`\`suggestion\n${fixed}\n\`\`\``, type: 'fix' };
+                    }
+                  }
                   return null;
                 }
                 case 'CS1002': {
-                  // Missing semicolon
                   if (!trimmed.endsWith(';')) {
                     return { body: `🔧 **\`${err.code}\`**: ${err.message}\n\n\`\`\`suggestion\n${trimmed};\n\`\`\``, type: 'fix' };
                   }
@@ -662,6 +670,7 @@ jobs:
             const seen = new Set();
             let suggestionsPosted = 0;
 
+            // Pass 1: suggest directly on errors that are in PR files
             for (const err of parsedErrors) {
               if (!err.file || !err.line || !err.code) continue;
               const key = `${err.file}:${err.line}`;
@@ -671,7 +680,6 @@ jobs:
               const relPath = toRelPath(err.file);
               if (!prFilePaths.has(relPath)) continue;
 
-              // Read the source line
               let sourceLine = null;
               try {
                 let filePath = err.file;
@@ -702,7 +710,56 @@ jobs:
                 core.info(`Could not post suggestion on ${relPath}:${err.line}: ${e.message}`);
               }
 
-              if (suggestionsPosted >= 10) break; // Avoid spamming
+              if (suggestionsPosted >= 10) break;
+            }
+
+            // Pass 2: for errors on non-PR files (e.g. CS7036 callers), find the
+            // method declaration in PR files and suggest making the param optional
+            if (suggestionsPosted === 0) {
+              const cs7036Errors = parsedErrors.filter(e => e.code === 'CS7036' && !prFilePaths.has(toRelPath(e.file)));
+              for (const err of cs7036Errors) {
+                const paramMatch = err.message.match(/parameter '(\w+)'/);
+                const methodMatch = err.message.match(/\b(\w+)\.\w+\(/);
+                if (!paramMatch) continue;
+
+                // Search PR files for the method declaration containing this parameter
+                for (const prFile of prFiles) {
+                  if (!prFile.filename.endsWith('.cs')) continue;
+                  try {
+                    const fullPath = path.join(workspace, prFile.filename);
+                    if (!fs.existsSync(fullPath)) continue;
+                    const lines = fs.readFileSync(fullPath, 'utf8').split('\n');
+                    for (let i = 0; i < lines.length; i++) {
+                      const line = lines[i];
+                      // Look for the parameter declaration in a method signature
+                      if (line.includes(paramMatch[1]) && line.match(/\b(string|int|bool|object)\s+\w+/)) {
+                        const suggestion = generateSuggestion(err, line);
+                        if (!suggestion) continue;
+
+                        try {
+                          await github.rest.pulls.createReviewComment({
+                            owner: context.repo.owner,
+                            repo: context.repo.repo,
+                            pull_number: prNumber,
+                            commit_id: headSha,
+                            path: prFile.filename,
+                            line: i + 1,
+                            side: 'RIGHT',
+                            body: suggestion.body,
+                          });
+                          suggestionsPosted++;
+                          core.info(`Posted declaration suggestion on ${prFile.filename}:${i + 1}`);
+                        } catch (e) {
+                          core.info(`Could not post suggestion on ${prFile.filename}:${i + 1}: ${e.message}`);
+                        }
+                        break;
+                      }
+                    }
+                  } catch {}
+                  if (suggestionsPosted > 0) break;
+                }
+                if (suggestionsPosted >= 10) break;
+              }
             }
 
             core.info(`Posted ${suggestionsPosted} inline suggestion(s)`);
