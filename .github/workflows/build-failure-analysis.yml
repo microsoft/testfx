@@ -70,8 +70,9 @@ jobs:
           <configuration>
             <packageSources>
               <clear />
+              <!-- Only use dotnet-eng to avoid dependency confusion — AITools.BinlogMcp
+                   is not on nuget.org and the name is not prefix-reserved. -->
               <add key="dotnet-eng" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json" />
-              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
             </packageSources>
           </configuration>
           NUGETEOF
