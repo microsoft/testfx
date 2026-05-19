@@ -213,6 +213,29 @@ public sealed partial class Assert
         return $"{assertionMethodName}({arg1}, {arg2})";
     }
 
+    /// <summary>
+    /// Formats a call-site expression for display at the bottom of a structured assertion message,
+    /// using three captured expressions. Multiline (or empty/whitespace) expressions are replaced with the
+    /// supplied placeholders. Only when all three expressions are empty/whitespace is the entire call-site
+    /// line suppressed.
+    /// </summary>
+    internal static string? FormatCallSiteExpression(string assertionMethodName, string expression1, string expression2, string expression3, string placeholder1 = "<arg1>", string placeholder2 = "<arg2>", string placeholder3 = "<arg3>")
+    {
+        bool empty1 = string.IsNullOrWhiteSpace(expression1);
+        bool empty2 = string.IsNullOrWhiteSpace(expression2);
+        bool empty3 = string.IsNullOrWhiteSpace(expression3);
+        if (empty1 && empty2 && empty3)
+        {
+            return null;
+        }
+
+        string arg1 = empty1 || IsMultiline(expression1) ? NormalizeCallSitePlaceholder(placeholder1) : expression1;
+        string arg2 = empty2 || IsMultiline(expression2) ? NormalizeCallSitePlaceholder(placeholder2) : expression2;
+        string arg3 = empty3 || IsMultiline(expression3) ? NormalizeCallSitePlaceholder(placeholder3) : expression3;
+
+        return $"{assertionMethodName}({arg1}, {arg2}, {arg3})";
+    }
+
     // string.Contains(char) is not available on netstandard2.0 / net462, so use IndexOf to check for newline characters.
     private static bool IsMultiline(string expression)
         => expression.IndexOf('\n') >= 0 || expression.IndexOf('\r') >= 0;
@@ -225,12 +248,15 @@ public sealed partial class Assert
     private static string FormatAssertionFailed(string assertionName, string? message)
     {
         string failedMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName);
-        return string.IsNullOrWhiteSpace(message)
-            ? failedMessage
-            : message![0] is '\n' or '\r'
-                ? string.Concat(failedMessage, message)
-                : $"{failedMessage} {message}";
+        return FormatPrefixAndMessage(failedMessage, message);
     }
+
+    private static string FormatPrefixAndMessage(string prefix, string? message)
+        => string.IsNullOrWhiteSpace(message)
+            ? prefix
+            : message![0] is '\n' or '\r'
+                ? string.Concat(prefix, message)
+                : $"{prefix} {message}";
 
     /// <summary>
     /// Builds the formatted message using the given user format message and parameters.
@@ -243,20 +269,6 @@ public sealed partial class Assert
     /// </returns>
     internal static string BuildUserMessage(string? format)
         => format ?? string.Empty;
-
-    private static string BuildUserMessageForSingleExpression(string? format, string callerArgExpression, string parameterName)
-    {
-        string userMessage = BuildUserMessage(format);
-        if (string.IsNullOrEmpty(callerArgExpression))
-        {
-            return userMessage;
-        }
-
-        string callerArgMessagePart = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, parameterName, callerArgExpression);
-        return string.IsNullOrEmpty(userMessage)
-            ? callerArgMessagePart
-            : $"{callerArgMessagePart} {userMessage}";
-    }
 
     private static string BuildUserMessageForTwoExpressions(string? format, string callerArgExpression1, string parameterName1, string callerArgExpression2, string parameterName2)
     {
@@ -271,9 +283,6 @@ public sealed partial class Assert
             ? callerArgMessagePart
             : $"{callerArgMessagePart} {userMessage}";
     }
-
-    private static string BuildUserMessageForCollectionExpression(string? format, string collectionExpression)
-        => BuildUserMessageForSingleExpression(format, collectionExpression, "collection");
 
     private static string BuildUserMessageForExpectedExpressionAndActualExpression(string? format, string expectedExpression, string actualExpression)
         => BuildUserMessageForTwoExpressions(format, expectedExpression, "expected", actualExpression, "actual");
@@ -304,15 +313,6 @@ public sealed partial class Assert
 
     internal static string ReplaceNulls(object? input)
         => input?.ToString() ?? string.Empty;
-
-    /// <summary>
-    /// Formats a call-site expression like <c>Assert.MethodName(expression)</c>.
-    /// Returns <see langword="null"/> if the expression is empty or contains a line break.
-    /// </summary>
-    private static string? FormatCallSiteExpression(string methodName, string expression)
-        => string.IsNullOrEmpty(expression) || expression.IndexOfAny(['\n', '\r']) >= 0
-            ? null
-            : $"{methodName}({expression})";
 
     private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo culture)
 #pragma warning disable CA1309 // Use ordinal string comparison

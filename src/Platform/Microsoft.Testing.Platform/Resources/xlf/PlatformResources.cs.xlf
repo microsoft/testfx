@@ -524,7 +524,8 @@ Dostupné hodnoty jsou Trace, Debug, Information, Warning, Error a Critical.</ta
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.
 Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</source>
-        <target state="needs-review-translation">Umožňuje zobrazit seznam dostupných testů.</target>
+        <target state="new">List available tests.
+Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">

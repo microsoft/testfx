@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming;
 internal static class TrxTestResultExtractor
 {
     // Cap individual stdout/stderr/stack-trace fields when projecting into the streaming DTO.
-    // A single TRX result with multi-MB output trips the serializer's 16 MiB record cap (which exists
+    // A single TRX result with multi-MB output trips the serializer's 64 MiB record cap (which exists
     // to detect corruption), at which point ReadAll cannot continue past the offending record because
     // there is no sync marker. Truncating at the source preserves the rest of the run; downstream TRX
     // consumers (Azure DevOps, VS) also choke on multi-MB output fields. The chosen cap is well below
