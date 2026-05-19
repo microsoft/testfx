@@ -24,7 +24,7 @@ public sealed class ResponseFileHelperTests
 
     [TestMethod]
     public void SplitCommandLine_NullInput_ThrowsNullReferenceException()
-        => Assert.ThrowsException<NullReferenceException>(() => ResponseFileHelper.SplitCommandLine(null!).ToArray());
+        => Assert.Throws<NullReferenceException>(() => ResponseFileHelper.SplitCommandLine(null!).ToArray());
 
     [TestMethod]
     public void SplitCommandLine_SingleToken_ReturnsSingleElement()
