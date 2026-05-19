@@ -3,9 +3,9 @@
   <!--
     Workaround for https://github.com/dotnet/msbuild/issues/13739.
 
-    The Arcade SDK version this repository consumes (11.0.0-beta.26156.2) declares
-    InstallDotNetCore (and other build tasks) with Runtime="NET" but no Architecture
-    attribute in tools\BuildTasks.props. When the host MSBuild is x86 .NET Framework
+    The Arcade SDK this repository consumes declares InstallDotNetCore (and other
+    build tasks) with Runtime="NET" but no Architecture attribute in
+    tools\BuildTasks.props. When the host MSBuild is x86 .NET Framework
     (e.g. the default MSBuild.exe shipped with VS 2026 Insiders / Preview, which is
     what the CodeQL pipeline uses), MSBuild tries to spin up an x86 .NET task host.
     The .NET SDK only ships x64/arm64 MSBuild binaries, so there is no x86 MSBuild.exe
