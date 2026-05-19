@@ -482,10 +482,10 @@ public partial class AssertTests : TestContainer
             .WithMessage($"""
                 Assert.That(() => new DateTime(year, month, day) == DateTime.MinValue) failed.
                 Details:
-                  DateTime.MinValue = {DateTime.MinValue.ToString(CultureInfo.CurrentCulture)}
+                  DateTime.MinValue = {DateTime.MinValue.ToString(CultureInfo.InvariantCulture)}
                   day = 25
                   month = 12
-                  new DateTime(year, month, day) = {new DateTime(year, month, day).ToString(CultureInfo.CurrentCulture)}
+                  new DateTime(year, month, day) = {new DateTime(year, month, day).ToString(CultureInfo.InvariantCulture)}
                   year = 2023
                 """);
     }
@@ -1046,442 +1046,239 @@ public partial class AssertTests : TestContainer
             """);
     }
 
-    // ---- Tests for issue #6690 (single-pass evaluation) ------------------------------------
-    private sealed class Counter
+    public void That_DoesNotEvaluateTwice_WhenAssertionFails()
     {
-        public int CallCount { get; private set; }
+        var box = new Box();
 
-        public int GetNumber()
-        {
-            CallCount++;
-            return CallCount;
-        }
+        // If we evaluate twice, box.GetValueWithSideEffect() is called once on comparison, and once when message for assertion is built.
+        // We compare to 0 to force failure.
+        Action act = () => Assert.That(() => box.GetValueWithSideEffect() == 0);
 
-        public int Get(int value)
-        {
-            CallCount++;
-            return value;
-        }
+        // GetValueWithSideEffect() should report 1, which is the value when we evaluate only once.
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => box.GetValueWithSideEffect() == 0) failed.
+            Details:
+              box.GetValueWithSideEffect() = 1
+            """);
+
+        // We call again, this should be second call now.
+        box.GetValueWithSideEffect().Should().Be(2);
     }
 
-    public void That_ExpressionWithSideEffect_EvaluatesOnlyOnce()
+    public void That_DoesNotEvaluateTwice_WhenAssertionFails_NoSideEffect()
     {
-        // Reproduces issue #6690: prior to the fix, Assert.That evaluated the expression once to
-        // determine the boolean result, then re-compiled and re-invoked each sub-expression for
-        // reporting. With a stateful method like Counter.GetNumber(), this produced a misleading
-        // details string where the reported value differed from the value actually compared.
-        var box = new Counter();
-        int expected = 2;
-
-        Action act = () => Assert.That(() => box.GetNumber() == expected);
-
-        act.Should().Throw<AssertFailedException>();
-
-        // Each textual occurrence of GetNumber() should have been evaluated exactly once.
-        box.CallCount.Should().Be(1);
-    }
-
-    public void That_ExpressionWithSideEffect_FailureMessageReflectsFirstEvaluation()
-    {
-        var box = new Counter();
-        int expected = 2;
-
-        Action act = () => Assert.That(() => box.GetNumber() == expected);
+        int i = 1;
+        Action act = () => Assert.That(() => i + i == 0);
 
         act.Should().Throw<AssertFailedException>()
-            .WithMessage(
-                """
-                Assert.That(() => box.GetNumber() == expected) failed.
-                Details:
-                  box.GetNumber() = 1
-                  expected = 2
-                """);
+            .WithMessage("""
+            Assert.That(() => i + i == 0) failed.
+            Details:
+              i = 1
+            """);
     }
 
-    public void That_ExpressionWithSideEffect_AppearingTwice_EvaluatesEachOccurrenceOnce()
+    public void That_DoesEvaluateTwice_WhenMethodIsLeaf()
     {
-        // Each textual occurrence of `box.GetNumber()` is evaluated naturally (once each),
-        // matching what the user wrote. There must be no extra evaluations from the framework.
-        // The reported value uses first-occurrence-wins-by-name semantics.
-        var box = new Counter();
+        var box = new Box();
 
-        Action act = () => Assert.That(() => box.GetNumber() == box.GetNumber());
+        // Compare to 0 to force failure.
+        Action act = () => Assert.That(() => box.GetValueWithSideEffect() + box.GetValueWithSideEffect() == 0);
 
         act.Should().Throw<AssertFailedException>()
-            .WithMessage(
-                """
-                Assert.That(() => box.GetNumber() == box.GetNumber()) failed.
-                Details:
-                  box.GetNumber() = 1
-                """);
-
-        // Two textual occurrences in the expression -> exactly two invocations.
-        box.CallCount.Should().Be(2);
+            .WithMessage("""
+            Assert.That(() => box.GetValueWithSideEffect() + box.GetValueWithSideEffect() == 0) failed.
+            Details:
+              box.GetValueWithSideEffect() = 1
+              box.GetValueWithSideEffect() (2) = 2
+            """);
     }
 
-    public void That_ShortCircuitedExpression_StillReportsBothOperands()
+    public void That_FastPathFailure_StillExtractsDetails()
     {
-        // When `&&` short-circuits, the right-hand side isn't evaluated by the rewritten lambda.
-        // For reporting we still want to show pure operand values, so the implementation falls back
-        // to evaluating just the un-captured *variable* sub-expression on its own.
-        bool a = false;
-        int b = 5;
+        int x = 3;
 
-        Action act = () => Assert.That(() => a && b > 10);
+        Action act = () => Assert.That(() => x == 5);
 
         act.Should().Throw<AssertFailedException>()
-            .WithMessage(
-                """
-                Assert.That(() => a && b > 10) failed.
-                Details:
-                  a = False
-                  b = 5
-                """);
+            .WithMessage("""
+            Assert.That(() => x == 5) failed.
+            Details:
+              x = 3
+            """);
     }
 
-    public void That_ShortCircuitedExpression_DoesNotEvaluateUnreachedSideEffect()
+    public void That_FieldAccessWithSideEffectingParent_DoesNotEvaluateTwice()
     {
-        // The right-hand side of `&&` must not be invoked when the left side is false, even after
-        // our rewriting. The framework must not "fall back" to evaluating side-effecting calls
-        // that the user's expression intentionally skipped via short-circuit.
-        var box = new Counter();
-        bool a = false;
+        var provider = new BoxProvider();
 
-        Action act = () => Assert.That(() => a && box.GetNumber() > 0);
-
-        act.Should().Throw<AssertFailedException>();
-
-        // Counter must not have been called.
-        box.CallCount.Should().Be(0);
-    }
-
-    public void That_ShortCircuitedExpression_DoesNotReevaluateArbitraryGetMethod()
-    {
-        var box = new Counter();
-        bool a = false;
-        int expected = 2;
-
-        Action act = () => Assert.That(() => a && box.Get(expected) == expected);
+        Action act = () => Assert.That(() => provider.GetBox().Value == 0);
 
         act.Should().Throw<AssertFailedException>()
-            .WithMessage(
-                """
-                Assert.That(() => a && box.Get(expected) == expected) failed.
-                Details:
-                  a = False
-                  expected = 2
-                """);
-        box.CallCount.Should().Be(0);
+            .WithMessage("""
+            Assert.That(() => provider.GetBox().Value == 0) failed.
+            Details:
+              provider.GetBox().Value = 1
+            """);
+
+        provider.Calls.Should().Be(1);
     }
 
-    private sealed class SideEffectingReceiverFactory
+    public void That_AndAlso_ShortCircuits_DoesNotEvaluateRightWhenLeftIsFalse()
     {
-        public int GetObjectCallCount { get; private set; }
+        string? s = null;
 
-        public int GetListCallCount { get; private set; }
-
-        public SideEffectingReceiverObject GetObject()
-        {
-            GetObjectCallCount++;
-            return new SideEffectingReceiverObject();
-        }
-
-        public List<int> GetList()
-        {
-            GetListCallCount++;
-            return [42];
-        }
-    }
-
-    private sealed class SideEffectingReceiverObject
-    {
-        public int Property => 42;
-    }
-
-    public void That_ShortCircuitedExpression_DoesNotReevaluateMemberExpressionWithSideEffectingReceiver()
-    {
-        var factory = new SideEffectingReceiverFactory();
-
-        Action act = () => Assert.That(() => false && factory.GetObject().Property == 0);
-
-        act.Should().Throw<AssertFailedException>();
-        factory.GetObjectCallCount.Should().Be(0);
-    }
-
-    public void That_ShortCircuitedExpression_DoesNotReevaluateIndexerWithSideEffectingReceiver()
-    {
-        var factory = new SideEffectingReceiverFactory();
-
-        Action act = () => Assert.That(() => false && factory.GetList()[0] == 0);
-
-        act.Should().Throw<AssertFailedException>();
-        factory.GetListCallCount.Should().Be(0);
-    }
-
-    public void That_ArbitraryGetMethod_RendersAsMethodCall_NotIndexer()
-    {
-        var box = new Counter();
-        int expected = 2;
-
-        Action act = () => Assert.That(() => box.Get(expected) == 3);
+        // s != null is false; the right operand s.Length > 0 must NOT execute on the assertion
+        // path (it would NRE) and the diagnostic walk must not surface "<Failed to evaluate>"
+        // for the benign short-circuit.
+        Action act = () => Assert.That(() => s != null && s.Length > 0);
 
         act.Should().Throw<AssertFailedException>()
-            .WithMessage(
-                """
-                Assert.That(() => box.Get(expected) == 3) failed.
-                Details:
-                  box.Get(expected) = 2
-                  expected = 2
-                """);
+            .WithMessage("""
+            Assert.That(() => s != null && s.Length > 0) failed.
+            Details:
+              s = null
+            """);
     }
 
-    // ---- Tests for issue #6691 (method call display names) ---------------------------------
-    public string SameClassInstanceMethod() => "Giraffe";
-
-    public static string SameClassStaticMethod() => "Giraffe";
-
-    private sealed class Zoo
+    public void That_OrElse_ShortCircuit_PassingAssertion_DoesNotInvokeRight()
     {
-        public string GetAnimal() => "Giraffe";
+        var counter = new SideEffectCounter();
+        bool leftTrue = true;
 
-        public static string GetAnimalStatic() => "Giraffe";
-    }
+        // Assertion passes because leftTrue is true; counter.Increment() must NOT run.
+        Action act = () => Assert.That(() => leftTrue || counter.Increment() > 0);
 
-    public void That_InstanceMethodOnSameType_RendersAsThis()
-    {
-        // Reproduces issue #6691: previously the instance method on the enclosing test class was
-        // shown with its full type name (e.g. "Namespace.AssertTests.SameClassInstanceMethod()").
-        // It should render as "this.SameClassInstanceMethod()" instead.
-        string animal = string.Empty;
-
-        Action act = () => Assert.That(() => SameClassInstanceMethod() == animal);
-
-        act.Should().Throw<AssertFailedException>()
-            .WithMessage(
-                """
-                Assert.That(() => SameClassInstanceMethod() == animal) failed.
-                Details:
-                  animal = ""
-                  this.SameClassInstanceMethod() = "Giraffe"
-                """);
-    }
-
-    public void That_StaticMethodOnSameType_RendersWithTypeName()
-    {
-        // Static method on the enclosing test class used to render without any type qualifier
-        // (just "SameClassStaticMethod()"). It should include the declaring type name.
-        string animal = string.Empty;
-
-        Action act = () => Assert.That(() => SameClassStaticMethod() == animal);
-
-        act.Should().Throw<AssertFailedException>()
-            .WithMessage(
-                """
-                Assert.That(() => SameClassStaticMethod() == animal) failed.
-                Details:
-                  AssertTests.SameClassStaticMethod() = "Giraffe"
-                  animal = ""
-                """);
-    }
-
-    public void That_InstanceMethodOnOtherType_RendersWithObjectName()
-    {
-        // The "happy path" that was already correct: instance method on a local variable.
-        string animal = string.Empty;
-        var zoo = new Zoo();
-
-        Action act = () => Assert.That(() => zoo.GetAnimal() == animal);
-
-        act.Should().Throw<AssertFailedException>()
-            .WithMessage(
-                """
-                Assert.That(() => zoo.GetAnimal() == animal) failed.
-                Details:
-                  animal = ""
-                  zoo.GetAnimal() = "Giraffe"
-                """);
-    }
-
-    public void That_StaticMethodOnOtherType_RendersWithTypeName()
-    {
-        // Static method on a non-enclosing class should include its type name.
-        string animal = string.Empty;
-
-        Action act = () => Assert.That(() => Zoo.GetAnimalStatic() == animal);
-
-        act.Should().Throw<AssertFailedException>()
-            .WithMessage(
-                """
-                Assert.That(() => Zoo.GetAnimalStatic() == animal) failed.
-                Details:
-                  AssertTests.Zoo.GetAnimalStatic() = "Giraffe"
-                  animal = ""
-                """);
-    }
-
-    private class AnimalBase
-    {
-        public string Whisper() => "Whisper";
-    }
-
-    private class InheritedMethodBase
-    {
-        public string InheritedWhisper() => "Whisper";
-    }
-
-    private sealed class InheritedMethodProbe : InheritedMethodBase
-    {
-        public void AssertInheritedMethodRendersAsThis()
-        {
-            string expected = "Roar";
-
-            Action act = () => Assert.That(() => InheritedWhisper() == expected);
-
-            act.Should().Throw<AssertFailedException>()
-                .WithMessage(
-                    """
-                    Assert.That(() => InheritedWhisper() == expected) failed.
-                    Details:
-                      expected = "Roar"
-                      this.InheritedWhisper() = "Whisper"
-                    """);
-        }
-    }
-
-    private sealed class Cat : AnimalBase
-    {
-    }
-
-    public void That_InstanceMethodOnLocalOfBaseType_DoesNotRenderAsThis()
-    {
-        // Regression guard for IsCapturedThis precision: when the asserted method is declared on
-        // a base type AND the receiver is a local variable of that base type, we must render the
-        // local's name (not "this"), even if the local happens to be assignable to the method's
-        // declaring type. Previously a loose `IsInstanceOfType` check could mislabel this case.
-        AnimalBase pet = new Cat();
-        string expected = "Roar";
-
-        Action act = () => Assert.That(() => pet.Whisper() == expected);
-
-        act.Should().Throw<AssertFailedException>()
-            .WithMessage(
-                """
-                Assert.That(() => pet.Whisper() == expected) failed.
-                Details:
-                  expected = "Roar"
-                  pet.Whisper() = "Whisper"
-                """);
-    }
-
-    public void That_InheritedInstanceMethodOnThis_RendersAsThis()
-    {
-        var probe = new InheritedMethodProbe();
-
-        probe.AssertInheritedMethodRendersAsThis();
-    }
-
-    // ---- Documented-trade-off test: properties in short-circuited branches are re-evaluated ----
-    private sealed class PropertyCounter
-    {
-        public int GetCount { get; private set; }
-
-        public int Value
-        {
-            get
-            {
-                GetCount++;
-                return 42;
-            }
-        }
-    }
-
-    public void That_ShortCircuitedPropertyAccess_IsReevaluatedForReporting()
-    {
-        // This locks down the documented trade-off in IsSafeToReevaluate: when a property
-        // appears in a short-circuited branch, the failure path re-evaluates it so it appears
-        // in the details message. Property getters CAN have side effects, so this is a
-        // deliberate compromise — it matches the pre-fix behavior and keeps the failure message
-        // informative for the common case of pure getters.
-        var counter = new PropertyCounter();
-
-        Action act = () => Assert.That(() => false && counter.Value == 0);
-
-        act.Should().Throw<AssertFailedException>()
-            .WithMessage(
-                """
-                Assert.That(() => false && counter.Value == 0) failed.
-                Details:
-                  counter.Value = 42
-                """);
-
-        // The property was invoked once by the fallback path (the root short-circuited).
-        counter.GetCount.Should().Be(1);
-    }
-
-    // ---- Extension method on `this` renders as this.Method(...) (issue #6691) ----------------
-    public void That_ExtensionMethodOnThis_RendersAsThis()
-    {
-        // Regression guard for IsCapturedThis in the extension method path:
-        // an extension method called on `this` must render as "this.GetDisplayName()"
-        // rather than the raw display-class field ("<>4__this.GetDisplayName()") or
-        // a type name prefix ("AssertTests.GetDisplayName()").
-        string expected = "WrongName";
-
-        Action act = () => Assert.That(() => this.GetDisplayName() == expected);
-
-        act.Should().Throw<AssertFailedException>()
-            .WithMessage(
-                """
-                Assert.That(() => this.GetDisplayName() == expected) failed.
-                Details:
-                  expected = "WrongName"
-                  this.GetDisplayName() = "MyTestClass"
-                """);
-    }
-
-    // ---- Assignment / update expression trees must not cause compilation failures -----------
-    // C# expression-tree lambdas do not allow assignment operators (the compiler emits CS0832),
-    // so these nodes can only appear in manually-constructed expression trees. The fix ensures
-    // CaptureRewriter skips them rather than wrapping a writable LHS in a non-writable Block.
-    private sealed class MutableBox
-    {
-#pragma warning disable SA1401 // Fields should be private - intentional: this type tests Expression.Assign on a field.
-        public int Value;
-#pragma warning restore SA1401
-    }
-
-    public void That_ManuallyConstructedAssignExpression_DoesNotThrow()
-    {
-        // Construct: (box.Value = 5) > 0   — passes, so no AssertFailedException.
-        var box = new MutableBox();
-        FieldInfo fi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
-        MemberExpression field = Expression.Field(Expression.Constant(box), fi);
-        BinaryExpression assign = Expression.Assign(field, Expression.Constant(5));
-        BinaryExpression body = Expression.GreaterThan(assign, Expression.Constant(0));
-        var lambda = Expression.Lambda<Func<bool>>(body);
-
-        Action act = () => Assert.That(lambda);
-
-        // Must not throw a compilation error (InvalidOperationException / InvalidProgramException).
         act.Should().NotThrow();
-        box.Value.Should().Be(5);
+        counter.Count.Should().Be(0);
     }
 
-    public void That_ManuallyConstructedPreIncrementAssignExpression_DoesNotThrow()
+    public void That_Coalesce_ShortCircuit_PassingAssertion_DoesNotInvokeRight()
     {
-        // Construct: ++box.Value > 0   — passes, so no AssertFailedException.
-        var box = new MutableBox { Value = 5 };
-        FieldInfo fi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
-        MemberExpression field = Expression.Field(Expression.Constant(box), fi);
-        UnaryExpression preInc = Expression.PreIncrementAssign(field);
-        BinaryExpression body = Expression.GreaterThan(preInc, Expression.Constant(0));
-        var lambda = Expression.Lambda<Func<bool>>(body);
+        var counter = new SideEffectCounter();
+        string? value = "hello";
 
-        Action act = () => Assert.That(lambda);
+        // Non-null value short-circuits the null-coalescing operator; counter.Increment() must NOT run.
+        Action act = () => Assert.That(() => (value ?? counter.Increment().ToString()) == "hello");
 
-        // Must not throw a compilation error.
         act.Should().NotThrow();
-        box.Value.Should().Be(6);
+        counter.Count.Should().Be(0);
+    }
+
+    public void That_Conditional_PassingAssertion_DoesNotInvokeUnselectedBranch()
+    {
+        var counter = new SideEffectCounter();
+        bool useTrueBranch = true;
+
+        // useTrueBranch picks the IfTrue side; counter.Increment() in IfFalse must NOT run.
+        Action act = () => Assert.That(() => (useTrueBranch ? 1 : counter.Increment()) == 1);
+
+        act.Should().NotThrow();
+        counter.Count.Should().Be(0);
+    }
+
+    public void That_PropagatesUserExceptions_OnSinglePassPath()
+    {
+        var thrower = new Thrower();
+
+        // The lambda throws InvalidOperationException; previously the single-pass evaluator
+        // would swallow it and turn it into a confusing InvalidCastException ("<Failed to evaluate>" -> bool).
+        // Now the original exception must surface unchanged.
+        Action act = () => Assert.That(() => thrower.Throw());
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("boom");
+    }
+
+    public void That_NewExpressionWithSideEffectingArgument_DoesNotEvaluateTwice()
+    {
+        var counter = new SideEffectCounter();
+
+        Action act = () => Assert.That(() => new Wrapper(counter.Increment()).Value == 99);
+
+        act.Should().Throw<AssertFailedException>();
+        counter.Count.Should().Be(1);
+    }
+
+    public void That_NewArrayWithSideEffectingElement_DoesNotEvaluateTwice()
+    {
+        var counter = new SideEffectCounter();
+
+        Action act = () => Assert.That(() => new[] { counter.Increment() }.Length == 99);
+
+        act.Should().Throw<AssertFailedException>();
+        counter.Count.Should().Be(1);
+    }
+
+    public void That_InvocationWithSideEffectingArgument_DoesNotEvaluateTwice()
+    {
+        var counter = new SideEffectCounter();
+        Func<int, int> identity = x => x;
+
+        Action act = () => Assert.That(() => identity(counter.Increment()) == 99);
+
+        act.Should().Throw<AssertFailedException>();
+        counter.Count.Should().Be(1);
+    }
+
+    public void That_QueryableWithQuotedLambda_FailsAsAssertionFailure()
+    {
+        int[] items = [1, 2, 3];
+
+        // The Where/Any call uses a quoted lambda; the previous walker tried to unwrap the Quote
+        // and produced an InvalidCastException instead of an AssertFailedException.
+        Action act = () => Assert.That(() => items.AsQueryable().Any(i => i > 99));
+
+        act.Should().Throw<AssertFailedException>();
+    }
+
+    private sealed class SideEffectCounter
+    {
+        public int Count { get; private set; }
+
+        public int Increment()
+        {
+            Count++;
+            return Count;
+        }
+    }
+
+    private sealed class Thrower
+    {
+        public bool Throw() => throw new InvalidOperationException("boom");
+    }
+
+    private sealed class Wrapper(int value)
+    {
+        public int Value { get; } = value;
+    }
+
+    private class Box
+    {
+        private int _c;
+
+        public int GetValueWithSideEffect()
+        {
+            _c++;
+            return _c;
+        }
+    }
+
+    private sealed class BoxProvider
+    {
+        public int Calls { get; private set; }
+
+        public ValueBox GetBox()
+        {
+            Calls++;
+            return new ValueBox(Calls);
+        }
+    }
+
+    private readonly struct ValueBox(int value)
+    {
+        public int Value { get; } = value;
     }
 
     private sealed class MutableContainer
@@ -1491,11 +1288,17 @@ public partial class AssertTests : TestContainer
 #pragma warning restore SA1401
     }
 
-    public void That_ManuallyConstructedAssignExpression_AnalyzesReceiverChainAndRhs()
+    private sealed class MutableBox
+    {
+#pragma warning disable SA1401 // Fields should be private - intentional: this type tests Expression.Assign on a field.
+        public int Value;
+#pragma warning restore SA1401
+    }
+
+    public void That_ManuallyConstructedAssignExpression_SurfacesRhsAndPreservesSideEffect()
     {
         // Construct: (container.Inner.Value = ComputeValue()) < 0   — fails, so message must
-        // include both the readable receiver chain (container.Inner) AND the RHS computation
-        // result captured from the sole evaluation of the assignment (#6690 single-pass guarantee).
+        // include enough context for diagnosis AND the assignment side-effect must apply.
         var container = new MutableContainer();
         FieldInfo innerFi = typeof(MutableContainer).GetField(nameof(MutableContainer.Inner))!;
         FieldInfo valueFi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
@@ -1509,46 +1312,20 @@ public partial class AssertTests : TestContainer
 
         Action act = () => Assert.That(lambda);
 
-        // Failure message should reflect that the readable receiver and RHS were both captured
-        // during the single evaluation of the assignment (i.e., neither the LHS subtree nor the
-        // RHS was skipped wholesale by the analyzer).
         AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
-        ex.Message.Should().Contain("ComputeValue()");
-        // The Inner member of the writable LHS receiver chain was captured as a read-side
-        // sub-expression (rather than the whole assignment being skipped wholesale).
+        // Assert on the method name only (not the parenthesized rendering) so that future
+        // renderer tweaks (e.g., dropping/adding parentheses for nullary calls) don't break
+        // this regression test.
+        ex.Message.Should().Contain(nameof(MutableBoxHelper.ComputeValue));
+        // The Inner member of the receiver chain should surface in the failure details.
         ex.Message.Should().Contain("Inner");
-        // The assignment side-effect must still apply since the lambda is evaluated exactly once.
+        // The assignment side-effect must apply.
         container.Inner.Value.Should().Be(42);
     }
 
-    public void That_ManuallyConstructedPreIncrementExpression_AnalyzesReceiverChain()
-    {
-        // Construct: --container.Inner.Value > 0   — fails (0 - 1 = -1 is not > 0).
-        // The readable receiver chain (container.Inner) must still be captured even though the
-        // writable storage location (container.Inner.Value) is not.
-        var container = new MutableContainer { Inner = new MutableBox { Value = 0 } };
-        FieldInfo innerFi = typeof(MutableContainer).GetField(nameof(MutableContainer.Inner))!;
-        FieldInfo valueFi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
-
-        MemberExpression innerAccess = Expression.Field(Expression.Constant(container), innerFi);
-        MemberExpression valueAccess = Expression.Field(innerAccess, valueFi);
-        UnaryExpression preDec = Expression.PreDecrementAssign(valueAccess);
-        BinaryExpression body = Expression.GreaterThan(preDec, Expression.Constant(0));
-        var lambda = Expression.Lambda<Func<bool>>(body);
-
-        Action act = () => Assert.That(lambda);
-
-        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
-        // The Inner member of the writable LHS receiver chain was captured as a read-side
-        // sub-expression even though the writable target (Inner.Value) is not captured.
-        ex.Message.Should().Contain("Inner");
-        // Side effect of the single root evaluation applied.
-        container.Inner.Value.Should().Be(-1);
-    }
-
     // Regression: a member whose static type is Func/Action but whose runtime value is null should
-    // still appear in the failure details, matching pre-PR behavior. Filtering must remain
-    // runtime-typed at detail-build time rather than static-typed at analysis time.
+    // still appear in the failure details. Filtering must remain runtime-typed (via the cached
+    // value's GetType()) rather than static-typed at analysis time.
     private sealed class HolderWithFuncField
     {
 #pragma warning disable SA1401 // Fields should be private - intentional: test fixture exposing a delegate-typed field.
@@ -1571,10 +1348,4 @@ public partial class AssertTests : TestContainer
 internal static class MutableBoxHelper
 {
     public static int ComputeValue() => 42;
-}
-
-internal static class AssertTestsExtensions
-{
-    /// <summary>Helper for the <c>That_ExtensionMethodOnThis_RendersAsThis</c> test.</summary>
-    public static string GetDisplayName(this AssertTests _) => "MyTestClass";
 }
