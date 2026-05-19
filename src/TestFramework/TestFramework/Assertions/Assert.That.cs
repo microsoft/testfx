@@ -112,8 +112,10 @@ public static partial class AssertExtensions
 
         // Compile and invoke ONCE.
         // This intentionally pays the rewrite+compile cost on every Assert.That call (including passing ones)
-        // to guarantee single-pass evaluation for correctness (#6690). If this ever shows up as a hotspot,
-        // we can consider caching the compiled delegate by expression-tree instance.
+        // to guarantee single-pass evaluation for correctness (#6690). Reference-keyed caching of the compiled
+        // delegate would not help the common inline pattern `Assert.That(() => ...)` because each call site
+        // constructs a fresh Expression<Func<bool>> instance at runtime, but could be considered later if a
+        // workload that re-uses the same expression tree across calls demonstrates measurable overhead.
         var lambda = Expression.Lambda<Func<object?[], bool>>(rewrittenBody, arrayParam);
         object?[] values = new object?[context.CaptureNames.Count];
 
@@ -131,8 +133,9 @@ public static partial class AssertExtensions
             return true;
         }
 
-        // Build details using first-occurrence-per-name semantics, filtering out Func/Action values
-        // (matching the historical behavior, using runtime type as the existing code did).
+        // Build details using first-occurrence-per-name semantics. Func/Action-valued captures
+        // are filtered out by runtime type, matching the historical behavior so a member typed
+        // as a delegate whose runtime value is null still shows up as "null" in failure details.
         for (int i = 0; i < context.CaptureNames.Count; i++)
         {
             string name = context.CaptureNames[i];
@@ -196,10 +199,14 @@ public static partial class AssertExtensions
                 AnalyzeArrayIndexExpression(binaryExpr, context);
                 break;
 
-            // Assignment-style binary nodes (=, +=, -=, …) require writable left-hand operands.
-            // CaptureRewriter would replace the LHS with a Block, making it non-writable and
-            // causing the rewritten lambda to fail to compile. Skip these entirely.
+            // Assignment-style binary nodes (=, +=, -=, …) require a writable left-hand operand.
+            // We must not let CaptureRewriter wrap the assignable storage location itself in a Block
+            // (a Block is not a writable LValue), but the readable sub-expressions on the LHS
+            // (e.g., the receiver in `obj.Field = ...` or the array/indices in `arr[i] = ...`) and
+            // the whole RHS subtree are safe to analyze for captures.
             case BinaryExpression binaryExpr when IsAssignmentNodeType(binaryExpr.NodeType):
+                AnalyzeWritableOperand(binaryExpr.Left, context, suppressIntermediateValues);
+                AnalyzeExpression(binaryExpr.Right, context, suppressIntermediateValues);
                 break;
 
             case BinaryExpression binaryExpr:
@@ -224,10 +231,12 @@ public static partial class AssertExtensions
 
                 break;
 
-            // Unary update nodes (++x, x++, --x, x--) require writable operands. CaptureRewriter
-            // would replace the operand with a Block, making it non-writable and causing compilation
-            // of the rewritten lambda to fail. Skip these entirely.
+            // Unary update nodes (++x, x++, --x, x--) require a writable operand. Same constraint
+            // as assignment-style binary nodes above: the writable storage location must not be
+            // wrapped, but its readable sub-expressions are safe to analyze for captures so that
+            // failure details for trees like `++obj.Field` still surface the receiver value.
             case UnaryExpression unaryExpr when IsUnaryUpdateNodeType(unaryExpr.NodeType):
+                AnalyzeWritableOperand(unaryExpr.Operand, context, suppressIntermediateValues);
                 break;
 
             case UnaryExpression unaryExpr:
@@ -305,13 +314,9 @@ public static partial class AssertExtensions
 
     private static void AnalyzeMemberExpression(MemberExpression memberExpr, AnalysisContext context)
     {
-        // Skip Func and Action delegates as they don't provide useful information in assertion failures.
-        // Use the static type so we don't have to evaluate the expression at analysis time.
-        if (IsFuncOrActionType(memberExpr.Type))
-        {
-            return;
-        }
-
+        // Note: We intentionally do NOT skip delegate-typed members here. Filtering happens at
+        // detail-build time based on the runtime value's type (see EvaluateAndCollectDetails),
+        // which preserves the historical behavior of showing `null` for null delegate values.
         string displayName = GetCleanMemberName(memberExpr);
         context.AddCapture(memberExpr, displayName);
 
@@ -320,6 +325,55 @@ public static partial class AssertExtensions
         {
             AnalyzeExpression(memberExpr.Expression, context, suppressIntermediateValues: true);
         }
+    }
+
+    /// <summary>
+    /// Analyzes the writable left-hand operand of an assignment or unary-update expression.
+    /// The writable storage location itself (e.g., a field/property/index access used as
+    /// the target of an assignment) is NOT added as a capture — wrapping it in a Block via
+    /// <see cref="CaptureRewriter"/> would make it non-writable and break compilation of the
+    /// rewritten lambda. However, its readable sub-expressions (the receiver of a member
+    /// access, the array reference and indices of an indexer) ARE analyzed normally so the
+    /// failure-detail message still reports those intermediate values for
+    /// manually-constructed expression trees.
+    /// </summary>
+    private static void AnalyzeWritableOperand(Expression? expr, AnalysisContext context, bool suppressIntermediateValues)
+    {
+        if (expr is null)
+        {
+            return;
+        }
+
+        switch (expr)
+        {
+            // Field/property access used as a write target: traverse the receiver chain for
+            // reads, but don't capture the member itself.
+            case MemberExpression memberExpr when memberExpr.Expression is not null:
+                AnalyzeExpression(memberExpr.Expression, context, suppressIntermediateValues);
+                break;
+
+            // `arr[i] = ...` via the BinaryExpression ArrayIndex form: the array reference and
+            // the index are both reads (assignments to single-dimensional arrays however use
+            // the IndexExpression form below).
+            case BinaryExpression { NodeType: ExpressionType.ArrayIndex } arrayIndex:
+                AnalyzeExpression(arrayIndex.Left, context, suppressIntermediateValues);
+                AnalyzeExpression(arrayIndex.Right, context, suppressIntermediateValues);
+                break;
+
+            // Indexer `arr[i] = ...` or `obj[a, b] = ...`: the receiver and all index arguments
+            // are reads.
+            case IndexExpression indexExpr:
+                AnalyzeExpression(indexExpr.Object, context, suppressIntermediateValues);
+                foreach (Expression arg in indexExpr.Arguments)
+                {
+                    AnalyzeExpression(arg, context, suppressIntermediateValues);
+                }
+
+                break;
+        }
+
+        // ParameterExpression (e.g., `++x` on a local) and static field access have no readable
+        // sub-expressions worth analyzing — they fall through the switch above with no-op.
     }
 
     private static void AnalyzeMethodCallExpression(MethodCallExpression callExpr, AnalysisContext context, bool suppressIntermediateValues = false)

@@ -1483,6 +1483,94 @@ public partial class AssertTests : TestContainer
         act.Should().NotThrow();
         box.Value.Should().Be(6);
     }
+
+    private sealed class MutableContainer
+    {
+#pragma warning disable SA1401 // Fields should be private - intentional: this type tests Expression.Assign on nested members.
+        public MutableBox Inner = new() { Value = 0 };
+#pragma warning restore SA1401
+    }
+
+    public void That_ManuallyConstructedAssignExpression_AnalyzesReceiverChainAndRhs()
+    {
+        // Construct: (container.Inner.Value = ComputeValue()) < 0   — fails, so message must
+        // include both the readable receiver chain (container.Inner) AND the RHS computation
+        // result captured from the sole evaluation of the assignment (#6690 single-pass guarantee).
+        var container = new MutableContainer();
+        FieldInfo innerFi = typeof(MutableContainer).GetField(nameof(MutableContainer.Inner))!;
+        FieldInfo valueFi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
+
+        MemberExpression innerAccess = Expression.Field(Expression.Constant(container), innerFi);
+        MemberExpression valueAccess = Expression.Field(innerAccess, valueFi);
+        MethodCallExpression rhs = Expression.Call(typeof(MutableBoxHelper).GetMethod(nameof(MutableBoxHelper.ComputeValue))!);
+        BinaryExpression assign = Expression.Assign(valueAccess, rhs);
+        BinaryExpression body = Expression.LessThan(assign, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+
+        // Failure message should reflect that the readable receiver and RHS were both captured
+        // during the single evaluation of the assignment (i.e., neither the LHS subtree nor the
+        // RHS was skipped wholesale by the analyzer).
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("ComputeValue()");
+        // The Inner member of the writable LHS receiver chain was captured as a read-side
+        // sub-expression (rather than the whole assignment being skipped wholesale).
+        ex.Message.Should().Contain("Inner");
+        // The assignment side-effect must still apply since the lambda is evaluated exactly once.
+        container.Inner.Value.Should().Be(42);
+    }
+
+    public void That_ManuallyConstructedPreIncrementExpression_AnalyzesReceiverChain()
+    {
+        // Construct: --container.Inner.Value > 0   — fails (0 - 1 = -1 is not > 0).
+        // The readable receiver chain (container.Inner) must still be captured even though the
+        // writable storage location (container.Inner.Value) is not.
+        var container = new MutableContainer { Inner = new MutableBox { Value = 0 } };
+        FieldInfo innerFi = typeof(MutableContainer).GetField(nameof(MutableContainer.Inner))!;
+        FieldInfo valueFi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
+
+        MemberExpression innerAccess = Expression.Field(Expression.Constant(container), innerFi);
+        MemberExpression valueAccess = Expression.Field(innerAccess, valueFi);
+        UnaryExpression preDec = Expression.PreDecrementAssign(valueAccess);
+        BinaryExpression body = Expression.GreaterThan(preDec, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        // The Inner member of the writable LHS receiver chain was captured as a read-side
+        // sub-expression even though the writable target (Inner.Value) is not captured.
+        ex.Message.Should().Contain("Inner");
+        // Side effect of the single root evaluation applied.
+        container.Inner.Value.Should().Be(-1);
+    }
+
+    // Regression: a member whose static type is Func/Action but whose runtime value is null should
+    // still appear in the failure details, matching pre-PR behavior. Filtering must remain
+    // runtime-typed at detail-build time rather than static-typed at analysis time.
+    private sealed class HolderWithFuncField
+    {
+#pragma warning disable SA1401 // Fields should be private - intentional: test fixture exposing a delegate-typed field.
+        public Func<int>? Callback;
+#pragma warning restore SA1401
+    }
+
+    public void That_NullDelegateTypedMember_StillAppearsInDetails()
+    {
+        var holder = new HolderWithFuncField { Callback = null };
+
+        Action act = () => Assert.That(() => holder.Callback != null);
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("Callback");
+        ex.Message.Should().Contain("null");
+    }
+}
+
+internal static class MutableBoxHelper
+{
+    public static int ComputeValue() => 42;
 }
 
 internal static class AssertTestsExtensions
