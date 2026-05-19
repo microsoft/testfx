@@ -26,11 +26,19 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
     // run so it can skip them when publishing artifacts. File paths are case-insensitive on
     // Windows but case-sensitive on Linux/macOS, so use an OS-appropriate comparer to avoid
     // treating freshly produced dumps as "pre-existing" merely because of casing differences.
+    //
+    // KNOWN LIMITATION: when multiple testhost processes share the same dump directory (e.g. a
+    // user running two `dotnet test` invocations into the same --results-directory), each
+    // handler instance snapshots only the files present at *its own* start time. If process B
+    // writes a dump after handler A's snapshot, handler A may publish B's dump as if it were
+    // its own. The previous "PID-only match" code had the same issue. A more robust fix would
+    // require tracking per-file creation times against the snapshot time, which we deliberately
+    // avoid here to keep the handler free of an `IClock` dependency.
     private static readonly StringComparer PathComparer = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
         ? StringComparer.OrdinalIgnoreCase
         : StringComparer.Ordinal;
 
-    private HashSet<string> _preExistingDumpFiles;
+    private readonly HashSet<string> _preExistingDumpFiles;
 
     public CrashDumpProcessLifetimeHandler(
         ICommandLineOptions commandLineOptions,
@@ -75,11 +83,18 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         // to files that appeared during this run. Without this, when the results/dump directory is reused
         // across runs, stale dumps from a previous crash whose names also match the configured pattern
         // would be surfaced as artifacts of the current failure.
+        //
+        // We *union* into the existing set rather than reassign it, so multiple invocations of this
+        // callback (e.g. host restart) cannot drop entries that we have already classified as
+        // pre-existing.
         ApplicationStateGuard.Ensure(_netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern is not null);
         string dumpDirectory = GetDumpDirectory(_netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern);
         if (Directory.Exists(dumpDirectory))
         {
-            _preExistingDumpFiles = new HashSet<string>(Directory.EnumerateFiles(dumpDirectory), PathComparer);
+            foreach (string file in Directory.EnumerateFiles(dumpDirectory))
+            {
+                _preExistingDumpFiles.Add(file);
+            }
         }
 
         return Task.CompletedTask;
@@ -146,13 +161,18 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
             }
         }
 
+        // The crash banner and the "expected dump not found" warning are scoped to the testhost
+        // dump specifically. We must not suppress them just because we published a dump for a
+        // crashed child process: when only the child writes a dump, the user still needs to know
+        // that the testhost's own dump never materialized.
+        bool testhostDumpProduced = generateDump && File.Exists(expectedDumpFile);
+        bool dumpArtifactProduced = generateDump && (testhostDumpProduced || publishedAnyDump);
+        bool crashReportArtifactProduced = generateCrashReport && File.Exists(expectedCrashReportFile);
+
         // Inspect the disk before emitting the crash banner so the message reflects
         // what was actually produced, not what was requested. The runtime may fail
         // to emit one (or both) of the artifacts, e.g. when EnableCrashReport is
         // unsupported on the current platform/version.
-        bool dumpArtifactProduced = generateDump && (publishedAnyDump || File.Exists(expectedDumpFile));
-        bool crashReportArtifactProduced = generateCrashReport && File.Exists(expectedCrashReportFile);
-
         string processCrashedMessage = (dumpArtifactProduced, crashReportArtifactProduced) switch
         {
             (true, true) => string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpAndReportFileCreated, testHostProcessInformation.PID),
@@ -162,10 +182,14 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         };
         await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(processCrashedMessage), cancellationToken).ConfigureAwait(false);
 
-        if (generateDump && !publishedAnyDump)
+        if (generateDump && !testhostDumpProduced)
         {
             await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashDumpFile, expectedDumpFile)), cancellationToken).ConfigureAwait(false);
-            if (Directory.Exists(dumpDirectory))
+
+            // Only fall back to a directory-wide `*.dmp` scan when neither the testhost dump nor any
+            // other matching dump was published. This avoids re-enumerating the directory when we
+            // already published at least one dump (e.g. a child process dump) above.
+            if (!publishedAnyDump && Directory.Exists(dumpDirectory))
             {
                 // Filter by exact extension to defend against Windows' legacy 8.3 short-name
                 // matching where a pattern like '*.dmp' can also match files whose extension
@@ -234,7 +258,8 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
                 // and over-matching unrelated files).
                 if (fileName[i + 1] == '%')
                 {
-                    sb.Append(Regex.Escape("%"));
+                    // '%' is not a regex metacharacter so it does not need escaping.
+                    sb.Append('%');
                     lastWasWildcard = false;
                     i++;
                     continue;

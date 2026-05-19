@@ -5,6 +5,11 @@ using Microsoft.Testing.Extensions.Diagnostics;
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
+using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+using Microsoft.Testing.Platform.Messages;
+using Microsoft.Testing.Platform.OutputDevice;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -174,5 +179,96 @@ public sealed class CrashDumpTests
         string actual = CrashDumpProcessLifetimeHandler.GetDumpDirectory(pattern);
 
         Assert.AreEqual(directory, actual);
+    }
+
+    [TestMethod]
+    public async Task OnTestHostProcessExitedAsync_OnlyPublishesDumpsThatAppearedDuringTheRun()
+    {
+        // Create an isolated dump directory so we can pre-populate it with stale files that simulate
+        // dumps left over from a previous run (the snapshot must filter them out) and then write a
+        // fresh dump that should be published as an artifact.
+        string dumpDirectory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "crashdump-tests-" + Guid.NewGuid().ToString("N"))).FullName;
+        try
+        {
+            string stale1 = Path.Combine(dumpDirectory, "CrashDump_999_crash.dmp");
+            string stale2 = Path.Combine(dumpDirectory, "CrashDump_888_crash.dmp");
+            File.WriteAllText(stale1, "stale");
+            File.WriteAllText(stale2, "stale");
+
+            string dumpPattern = Path.Combine(dumpDirectory, "CrashDump_%p_crash.dmp");
+            var configuration = new CrashDumpConfiguration { DumpFileNamePattern = dumpPattern };
+            var commandLineOptions = new TestCommandLineOptions(new Dictionary<string, string[]>
+            {
+                { CrashDumpCommandLineOptions.CrashDumpOptionName, [] },
+            });
+            var messageBus = new RecordingMessageBus();
+            var outputDevice = new NullOutputDevice();
+            var handler = new CrashDumpProcessLifetimeHandler(commandLineOptions, messageBus, outputDevice, configuration);
+
+            // Snapshot the directory; both stale dumps must be considered pre-existing.
+            await handler.OnTestHostProcessStartedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+
+            // Simulate the runtime writing two new dumps during the run: one for the testhost and one
+            // for a child process that crashed too. The expected testhost dump is also created on disk
+            // (so the "missing expected dump" warning is not triggered).
+            string fresh1 = Path.Combine(dumpDirectory, "CrashDump_123_crash.dmp");
+            string fresh2 = Path.Combine(dumpDirectory, "CrashDump_456_crash.dmp");
+            File.WriteAllText(fresh1, "fresh");
+            File.WriteAllText(fresh2, "fresh");
+
+            await handler.OnTestHostProcessExitedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+
+            string[] publishedDumps = messageBus.Published
+                .OfType<FileArtifact>()
+                .Select(static a => a.FileInfo.FullName)
+                .OrderBy(static p => p, StringComparer.Ordinal)
+                .ToArray();
+            string[] expected = new[] { fresh1, fresh2 }.OrderBy(static p => p, StringComparer.Ordinal).ToArray();
+            CollectionAssert.AreEqual(expected, publishedDumps);
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(dumpDirectory, recursive: true);
+            }
+            catch
+            {
+                // Best effort cleanup.
+            }
+        }
+    }
+
+    private sealed class RecordingMessageBus : IMessageBus
+    {
+        public List<IData> Published { get; } = [];
+
+        public Task PublishAsync(IDataProducer dataProducer, IData data)
+        {
+            Published.Add(data);
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class NullOutputDevice : IOutputDevice
+    {
+        public Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
+            => Task.CompletedTask;
+    }
+
+    private sealed class TestHostProcessInformation : ITestHostProcessInformation
+    {
+        public TestHostProcessInformation(int pid, int exitCode, bool hasExitedGracefully)
+        {
+            PID = pid;
+            ExitCode = exitCode;
+            HasExitedGracefully = hasExitedGracefully;
+        }
+
+        public int PID { get; }
+
+        public int ExitCode { get; }
+
+        public bool HasExitedGracefully { get; }
     }
 }
