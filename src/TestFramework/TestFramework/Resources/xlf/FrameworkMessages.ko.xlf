@@ -34,12 +34,12 @@
       </trans-unit>
       <trans-unit id="AreEqualCaseFailMsg">
         <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
-        <target state="new">Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</target>
+        <target state="translated">예상 값: &lt;{1}&gt;. 대/소문자가 다른 실제 값: &lt;{2}&gt;. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualDeltaFailMsg">
         <source>Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="new">Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</target>
+        <target state="translated">예상 값 &lt;{1}&gt;과(와) 실제 값 &lt;{2}&gt;의 차이가 &lt;{3}&gt;보다 크지 않아야 합니다. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailMsg">
@@ -49,17 +49,17 @@
       </trans-unit>
       <trans-unit id="AreEqualFailMsg">
         <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="new">Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</target>
+        <target state="translated">예상 값: &lt;{1}&gt;. 실제 값: &lt;{2}&gt;. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffActualPrefix">
         <source>But was:  </source>
-        <target state="new">But was:  </target>
+        <target state="translated">그러나 다음과 같습니다.  </target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffExpectedPrefix">
         <source>Expected: </source>
-        <target state="new">Expected: </target>
+        <target state="translated">예상: </target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffFailMsg">
@@ -67,7 +67,7 @@
 {2}
 {3}
 {4}</source>
-        <target state="new">{0}{1}
+        <target state="translated">{0}{1}
 {2}
 {3}
 {4}</target>
@@ -75,7 +75,7 @@
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthBothMsg">
         <source>Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</source>
-        <target state="needs-review-translation">문자열 길이는 둘 다 {0} 이지만 인덱스 {1}에서 다릅니다.</target>
+        <target state="new">Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthDifferentMsg">
@@ -195,7 +195,7 @@
       </trans-unit>
       <trans-unit id="AreNotEqualDeltaFailMsg">
         <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="new">Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</target>
+        <target state="translated">예상 값 &lt;{1}&gt;과(와) 실제 값 &lt;{2}&gt;의 차이가 &lt;{3}&gt;보다 커야 합니다. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
