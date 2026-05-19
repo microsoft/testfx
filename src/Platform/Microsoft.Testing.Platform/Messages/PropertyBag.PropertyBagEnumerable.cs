@@ -18,7 +18,7 @@ public sealed partial class PropertyBag
         IEnumerator IEnumerable.GetEnumerator() => new PropertyBagEnumerator(_properties, _testNodeStateProperty);
     }
 
-    private struct PropertyBagEnumerator(Property? properties, TestNodeStateProperty? testNodeStateProperty) : IEnumerator<IProperty>
+    internal struct PropertyBagEnumerator(Property? properties, TestNodeStateProperty? testNodeStateProperty) : IEnumerator<IProperty>
     {
         private readonly Property? _properties = properties;
         private readonly TestNodeStateProperty? _testNodeStateProperty = testNodeStateProperty;
