@@ -251,15 +251,6 @@
   <data name="AreNotSameBothNull" xml:space="preserve">
     <value>Both values are &lt;null&gt;. {0}</value>
   </data>
-  <data name="AreNotUnorderedEquivalentFailedSummary" xml:space="preserve">
-    <value>Collections are unexpectedly equivalent.</value>
-  </data>
-  <data name="AreUnorderedEquivalentDifferenceSummary" xml:space="preserve">
-    <value>Missing {0} element(s) from actual. Found {1} unexpected element(s).</value>
-  </data>
-  <data name="AreUnorderedEquivalentFailedSummary" xml:space="preserve">
-    <value>Collections are not equivalent.</value>
-  </data>
   <data name="BothCollectionsEmpty" xml:space="preserve">
     <value>Both collections are empty. {0}</value>
   </data>

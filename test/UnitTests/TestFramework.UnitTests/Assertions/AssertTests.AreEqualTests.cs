@@ -1517,56 +1517,58 @@ public partial class AssertTests : TestContainer
     }
 
     private static string CreateDeltaAreEqualFailureMessage(string expected, string actual, string delta, string callSite, string? userMessage = null)
-        => string.Join(
-            Environment.NewLine,
-            userMessage is null
-                ? new[]
-                {
-                    "Assertion failed. Expected values to be equal within tolerance.",
-                    string.Empty,
-                    $"expected: {expected}",
-                    $"actual:   {actual}",
-                    $"delta:    {delta}",
-                    string.Empty,
-                    callSite,
-                }
-                : new[]
-                {
-                    "Assertion failed. Expected values to be equal within tolerance.",
-                    userMessage,
-                    string.Empty,
-                    $"expected: {expected}",
-                    $"actual:   {actual}",
-                    $"delta:    {delta}",
-                    string.Empty,
-                    callSite,
-                });
+    {
+        string[] lines = userMessage is null
+            ?
+            [
+                "Assertion failed. Expected values to be equal within tolerance.",
+                string.Empty,
+                $"expected: {expected}",
+                $"actual:   {actual}",
+                $"delta:    {delta}",
+                string.Empty,
+                callSite,
+            ]
+            :
+            [
+                "Assertion failed. Expected values to be equal within tolerance.",
+                userMessage,
+                string.Empty,
+                $"expected: {expected}",
+                $"actual:   {actual}",
+                $"delta:    {delta}",
+                string.Empty,
+                callSite,
+            ];
+        return string.Join(Environment.NewLine, lines);
+    }
 
     private static string CreateDeltaAreNotEqualFailureMessage(string notExpected, string actual, string delta, string callSite, string? userMessage = null)
-        => string.Join(
-            Environment.NewLine,
-            userMessage is null
-                ? new[]
-                {
-                    "Assertion failed. Expected values to differ beyond tolerance.",
-                    string.Empty,
-                    $"not expected: {notExpected}",
-                    $"actual:       {actual}",
-                    $"delta:        {delta}",
-                    string.Empty,
-                    callSite,
-                }
-                : new[]
-                {
-                    "Assertion failed. Expected values to differ beyond tolerance.",
-                    userMessage,
-                    string.Empty,
-                    $"not expected: {notExpected}",
-                    $"actual:       {actual}",
-                    $"delta:        {delta}",
-                    string.Empty,
-                    callSite,
-                });
+    {
+        string[] lines = userMessage is null
+            ?
+            [
+                "Assertion failed. Expected values to differ beyond tolerance.",
+                string.Empty,
+                $"not expected: {notExpected}",
+                $"actual:       {actual}",
+                $"delta:        {delta}",
+                string.Empty,
+                callSite,
+            ]
+            :
+            [
+                "Assertion failed. Expected values to differ beyond tolerance.",
+                userMessage,
+                string.Empty,
+                $"not expected: {notExpected}",
+                $"actual:       {actual}",
+                $"delta:        {delta}",
+                string.Empty,
+                callSite,
+            ];
+        return string.Join(Environment.NewLine, lines);
+    }
 
     private class TypeOverridesEquals
     {
