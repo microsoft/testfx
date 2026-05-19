@@ -650,85 +650,146 @@ jobs:
               return rel.replace(/\\/g, '/');
             }
 
-            // Generate suggestion content based on error code and source line
-            function generateSuggestion(err, sourceLine) {
-              if (!sourceLine) return null;
-              const trimmed = sourceLine.trimEnd();
-
-              switch (err.code) {
-                case 'CS0246':
-                case 'CS0234': {
-                  if (trimmed.match(/^\s*using\s+/)) {
-                    // For using removal, suggest replacing with an empty line (GitHub
-                    // suggestion blocks cannot truly delete lines, but an empty
-                    // suggestion replaces with blank which the author can then remove)
-                    return { body: `🔧 **\`${err.code}\`**: ${err.message}\n\nRemove this invalid using directive:\n\`\`\`suggestion\n\`\`\``, type: 'remove' };
-                  }
-                  return null;
-                }
-                case 'CS7036': {
-                  const paramMatch = err.message.match(/parameter '(\w+)'/);
-                  const methodMatch = trimmed.match(/(\.\w+)\(\)/);
-                  if (methodMatch && paramMatch) {
-                    const fixed = trimmed.replace(methodMatch[1] + '()', methodMatch[1] + `(/* ${paramMatch[1]} */)`);
-                    return { body: `🔧 **\`${err.code}\`**: ${err.message}\n\nAdd the missing argument:\n\`\`\`suggestion\n${fixed}\n\`\`\``, type: 'fix' };
-                  }
-                  // If the error is about a caller not matching a changed signature,
-                  // suggest making the new parameter optional at the declaration
-                  if (paramMatch && trimmed.match(/\bstring\b.*\b\w+\b/)) {
-                    const fixed = trimmed.replace(
-                      new RegExp(`(string\\s+${paramMatch[1]})`),
-                      `$1 = ""`
-                    );
-                    if (fixed !== trimmed) {
-                      return { body: `🔧 **\`${err.code}\`**: Callers are missing the new \`${paramMatch[1]}\` parameter. Consider making it optional:\n\`\`\`suggestion\n${fixed}\n\`\`\``, type: 'fix' };
-                    }
-                  }
-                  return null;
-                }
-                case 'CS1002': {
-                  if (!trimmed.endsWith(';')) {
-                    return { body: `🔧 **\`${err.code}\`**: ${err.message}\n\n\`\`\`suggestion\n${trimmed};\n\`\`\``, type: 'fix' };
-                  }
-                  return null;
-                }
-                default:
-                  return null;
-              }
-            }
-
-            // Deduplicate errors by file+line
-            const seen = new Set();
-            let suggestionsPosted = 0;
-
-            // Pass 1: suggest directly on errors that are in PR files
+            // Ask the LLM to generate inline fix suggestions for each error line in the PR diff
+            const suggestionCandidates = [];
             for (const err of parsedErrors) {
               if (!err.file || !err.line || !err.code) continue;
-              const key = `${err.file}:${err.line}`;
-              if (seen.has(key)) continue;
-              seen.add(key);
-
               const relPath = toRelPath(err.file);
+              // Check if this line is in the PR diff (GitHub rejects review comments on non-diff lines)
+              if (!diffLines.has(`${relPath}:${err.line}`)) continue;
               if (!prFilePaths.has(relPath)) continue;
-
-              let sourceLine = null;
+              // Read source context
+              let contextLines = '';
               try {
                 let filePath = err.file;
                 if (!fs.existsSync(filePath)) filePath = path.join(workspace, relPath);
                 if (fs.existsSync(filePath)) {
                   const lines = fs.readFileSync(filePath, 'utf8').split('\n');
-                  sourceLine = lines[err.line - 1];
+                  const start = Math.max(0, err.line - 4);
+                  const end = Math.min(lines.length, err.line + 4);
+                  contextLines = lines.slice(start, end)
+                    .map((l, i) => `${start + i + 1}: ${l}`)
+                    .join('\n');
                 }
               } catch {}
-
-              const suggestion = generateSuggestion(err, sourceLine);
-              if (!suggestion) continue;
-
-              // Only post on lines that are in the PR diff (GitHub rejects others with 422)
-              if (!diffLines.has(`${relPath}:${err.line}`)) {
-                core.info(`Skipping suggestion on ${relPath}:${err.line} (not in PR diff)`);
-                continue;
+              if (contextLines) {
+                suggestionCandidates.push({ err, relPath, contextLines });
               }
+            }
+
+            // Also check: errors on non-PR files whose root cause is a declaration change in the PR
+            const nonPrErrors = parsedErrors.filter(e =>
+              e.file && e.line && e.code && !prFilePaths.has(toRelPath(e.file))
+            );
+            const uniqueNonPr = [...new Map(nonPrErrors.map(e => [e.message, e])).values()];
+            for (const err of uniqueNonPr.slice(0, 3)) {
+              // Find the related declaration in PR files
+              for (const prFile of prFiles) {
+                if (!prFile.filename.endsWith('.cs')) continue;
+                try {
+                  const fullPath = path.join(workspace, prFile.filename);
+                  if (!fs.existsSync(fullPath)) continue;
+                  const lines = fs.readFileSync(fullPath, 'utf8').split('\n');
+                  // Search for a method/type name from the error message in the PR file
+                  const nameMatch = err.message.match(/'([^']+)'/);
+                  if (!nameMatch) continue;
+                  for (let i = 0; i < lines.length; i++) {
+                    if (!lines[i].includes(nameMatch[1])) continue;
+                    if (!diffLines.has(`${prFile.filename}:${i + 1}`)) continue;
+                    const start = Math.max(0, i - 3);
+                    const end = Math.min(lines.length, i + 4);
+                    const contextLines = lines.slice(start, end)
+                      .map((l, idx) => `${start + idx + 1}: ${l}`)
+                      .join('\n');
+                    suggestionCandidates.push({
+                      err: { ...err, file: path.join(workspace, prFile.filename), line: i + 1 },
+                      relPath: prFile.filename,
+                      contextLines,
+                      isDeclaration: true,
+                    });
+                    break;
+                  }
+                } catch {}
+                if (suggestionCandidates.length >= 10) break;
+              }
+            }
+
+            if (suggestionCandidates.length === 0) {
+              core.info('No suggestion candidates found in PR diff');
+              return;
+            }
+
+            // Build a prompt asking the LLM to produce exact replacement lines
+            const fixPrompt = [
+              'You are a C# code fix assistant. For each build error below, produce the EXACT fixed line(s) that should replace the erroring line.',
+              'Reply ONLY with a JSON array. Each element must have:',
+              '  - "index": the 0-based index of the error from the list below',
+              '  - "fixed_lines": the replacement code (string, may contain newlines)',
+              '  - "explanation": one-sentence explanation of the fix',
+              '',
+              'Rules:',
+              '- Preserve exact indentation from the original line',
+              '- If the line should be deleted, set fixed_lines to ""',
+              '- If you cannot determine a fix, omit that index from the array',
+              '- Do NOT wrap the JSON in markdown code fences',
+              '',
+            ];
+
+            suggestionCandidates.slice(0, 10).forEach((c, idx) => {
+              fixPrompt.push(`--- Error ${idx} ---`);
+              fixPrompt.push(`File: ${c.relPath}, Line: ${c.err.line}`);
+              fixPrompt.push(`Error: ${c.err.code}: ${c.err.message}`);
+              if (c.isDeclaration) fixPrompt.push('(This is the declaration that caused caller errors — consider making it backward-compatible)');
+              fixPrompt.push('Context:');
+              fixPrompt.push(c.contextLines);
+              fixPrompt.push('');
+            });
+
+            // Call the LLM for fix suggestions
+            let fixes = [];
+            const endpoints = [
+              'https://models.github.ai/inference/chat/completions',
+              'https://models.inference.ai.azure.com/chat/completions',
+            ];
+            for (const endpoint of endpoints) {
+              if (fixes.length > 0) break;
+              try {
+                const resp = await fetch(endpoint, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${process.env.GH_TOKEN}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [{ role: 'user', content: fixPrompt.join('\n') }],
+                    max_tokens: 2000,
+                  }),
+                });
+                if (resp.ok) {
+                  const result = await resp.json();
+                  let content = result.choices?.[0]?.message?.content || '';
+                  // Strip markdown fences if present
+                  content = content.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
+                  fixes = JSON.parse(content);
+                  core.info(`LLM returned ${fixes.length} fix suggestion(s)`);
+                } else {
+                  core.info(`${endpoint} returned ${resp.status} for fix suggestions`);
+                }
+              } catch (e) {
+                core.info(`Fix suggestion LLM call failed: ${e.message}`);
+              }
+            }
+
+            // Post each fix as an inline review comment with a suggestion block
+            let suggestionsPosted = 0;
+            for (const fix of fixes) {
+              if (fix.index == null || fix.index >= suggestionCandidates.length) continue;
+              const candidate = suggestionCandidates[fix.index];
+              const fixedLines = fix.fixed_lines ?? '';
+              const explanation = fix.explanation || '';
+
+              const body = `🔧 **\`${candidate.err.code}\`**: ${explanation}\n\`\`\`suggestion\n${fixedLines}\n\`\`\``;
 
               try {
                 await github.rest.pulls.createReviewComment({
@@ -736,77 +797,17 @@ jobs:
                   repo: context.repo.repo,
                   pull_number: prNumber,
                   commit_id: headSha,
-                  path: relPath,
-                  line: err.line,
+                  path: candidate.relPath,
+                  line: candidate.err.line,
                   side: 'RIGHT',
-                  body: suggestion.body,
+                  body,
                 });
                 suggestionsPosted++;
-                core.info(`Posted suggestion on ${relPath}:${err.line}`);
+                core.info(`Posted LLM suggestion on ${candidate.relPath}:${candidate.err.line}`);
               } catch (e) {
-                core.info(`Could not post suggestion on ${relPath}:${err.line}: ${e.message}`);
+                core.info(`Could not post suggestion on ${candidate.relPath}:${candidate.err.line}: ${e.message}`);
               }
-
               if (suggestionsPosted >= 10) break;
-            }
-
-            // Pass 2: for errors on non-PR files (e.g. CS7036 callers), find the
-            // method declaration in PR files and suggest making the param optional
-            if (suggestionsPosted === 0) {
-              // Deduplicate CS7036 errors by message (same error repeated per TFM)
-              const cs7036Unique = [...new Map(
-                parsedErrors
-                  .filter(e => e.code === 'CS7036' && !prFilePaths.has(toRelPath(e.file)))
-                  .map(e => [e.message, e])
-              ).values()];
-              for (const err of cs7036Unique) {
-                const paramMatch = err.message.match(/parameter '(\w+)'/);
-                const methodMatch = err.message.match(/\b(\w+)\.\w+\(/);
-                if (!paramMatch) continue;
-
-                // Search PR files for the method declaration containing this parameter
-                for (const prFile of prFiles) {
-                  if (!prFile.filename.endsWith('.cs')) continue;
-                  try {
-                    const fullPath = path.join(workspace, prFile.filename);
-                    if (!fs.existsSync(fullPath)) continue;
-                    const lines = fs.readFileSync(fullPath, 'utf8').split('\n');
-                    for (let i = 0; i < lines.length; i++) {
-                      const line = lines[i];
-                      // Look for the parameter declaration in a method signature
-                      if (line.includes(paramMatch[1]) && line.match(/\b(string|int|bool|object)\s+\w+/)) {
-                        const suggestion = generateSuggestion(err, line);
-                        if (!suggestion) continue;
-
-                        if (!diffLines.has(`${prFile.filename}:${i + 1}`)) {
-                          core.info(`Skipping suggestion on ${prFile.filename}:${i + 1} (not in PR diff)`);
-                          continue;
-                        }
-
-                        try {
-                          await github.rest.pulls.createReviewComment({
-                            owner: context.repo.owner,
-                            repo: context.repo.repo,
-                            pull_number: prNumber,
-                            commit_id: headSha,
-                            path: prFile.filename,
-                            line: i + 1,
-                            side: 'RIGHT',
-                            body: suggestion.body,
-                          });
-                          suggestionsPosted++;
-                          core.info(`Posted declaration suggestion on ${prFile.filename}:${i + 1}`);
-                        } catch (e) {
-                          core.info(`Could not post suggestion on ${prFile.filename}:${i + 1}: ${e.message}`);
-                        }
-                        break;
-                      }
-                    }
-                  } catch {}
-                  if (suggestionsPosted > 0) break;
-                }
-                if (suggestionsPosted >= 10) break;
-              }
             }
 
             core.info(`Posted ${suggestionsPosted} inline suggestion(s)`);
