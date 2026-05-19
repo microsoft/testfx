@@ -1,14 +1,13 @@
 name: "Build Failure Analysis"
 
 on:
-  # Use pull_request_target so the workflow has write permissions even for
-  # fork PRs, while the build still runs the PR's code via explicit checkout.
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened]
     branches: [main, 'rel/*']
 
 permissions:
   contents: read
+  issues: write
   pull-requests: write
   models: read
 
@@ -22,10 +21,8 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout PR code
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Build with binary log
         id: build
@@ -70,7 +67,7 @@ jobs:
           NUGETEOF
           dotnet tool install --global AITools.BinlogMcp \
             --configfile /tmp/binlog-tool/nuget.config \
-            --version '1.0.0-*'
+            --version '1.0.0-preview.26268.3'
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
       - name: Install MCP SDK
@@ -133,6 +130,7 @@ jobs:
           BINLOG_DATA: /tmp/binlog-analysis.json
           GITHUB_WORKSPACE_PATH: ${{ github.workspace }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GH_TOKEN: ${{ github.token }}
         with:
           script: |
             const fs = require('fs');
@@ -266,7 +264,7 @@ jobs:
                 const response = await fetch(endpoint, {
                   method: 'POST',
                   headers: {
-                    'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+                    'Authorization': `Bearer ${process.env.GH_TOKEN}`,
                     'Content-Type': 'application/json',
                   },
                   body: JSON.stringify({
