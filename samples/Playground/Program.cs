@@ -67,6 +67,19 @@ public class Program
             //         metrics.AddTestingPlatformInstrumentation();
             //         metrics.AddOtlpExporter();
             //     });
+
+            // Forward Microsoft.Testing.Platform diagnostic logs to Microsoft.Extensions.Logging
+            // providers (Console, Debug, Serilog, Application Insights, ...). This pulls in any
+            // logging stack from the BCL ecosystem without modifying the platform.
+            // Run with --diagnostic to see entries appear on stdout alongside the .diag file.
+            // testApplicationBuilder.AddMicrosoftExtensionsLogging(logging =>
+            // {
+            //     logging.AddSimpleConsole(options =>
+            //     {
+            //         options.SingleLine = true;
+            //         options.TimestampFormat = "HH:mm:ss.fff ";
+            //     });
+            // });
             using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
             return await testApplication.RunAsync();
         }
