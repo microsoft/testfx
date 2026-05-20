@@ -310,15 +310,22 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
             return;
         }
 
-        foreach (KeyValuePair<string, object?> kvp in propertiesToMerge)
+        // Take the same lock as CaptureLifecycleProperties so a snapshot capture cannot race
+        // with a merge on the same context (which would otherwise corrupt the Dictionary
+        // iterator or cause a missed write). Writes via the public Properties indexer still
+        // bypass this lock - see the remarks on CaptureLifecycleProperties.
+        lock (_properties)
         {
-            // Never overwrite the per-context labels.
-            if (kvp.Key == FullyQualifiedTestClassNameLabel || kvp.Key == TestNameLabel)
+            foreach (KeyValuePair<string, object?> kvp in propertiesToMerge)
             {
-                continue;
-            }
+                // Never overwrite the per-context labels.
+                if (kvp.Key == FullyQualifiedTestClassNameLabel || kvp.Key == TestNameLabel)
+                {
+                    continue;
+                }
 
-            _properties[kvp.Key] = kvp.Value;
+                _properties[kvp.Key] = kvp.Value;
+            }
         }
     }
 

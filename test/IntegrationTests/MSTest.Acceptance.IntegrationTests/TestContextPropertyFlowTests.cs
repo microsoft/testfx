@@ -213,22 +213,54 @@ public sealed class DataRowFlowTests
 [TestClass]
 public sealed class TestContextPropertyFlowForceCleanupTests : AcceptanceTestBase<TestContextPropertyFlowForceCleanupTests.TestAssetFixture>
 {
-    private const string ClassCleanupMarker = "FORCECLEANUP_CLASSCLEANUP_OK";
-    private const string AssemblyCleanupMarker = "FORCECLEANUP_ASSEMBLYCLEANUP_OK";
+    private const string MarkerDirectoryEnvVar = "FORCECLEANUP_MARKER_DIR";
+    private const string ClassCleanupMarkerFileName = "class-cleanup.marker";
+    private const string AssemblyCleanupMarkerFileName = "assembly-cleanup.marker";
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task ForceCleanupSeesAssemblyAndClassInitProperties(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 1", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedForMaxFailedTests);
-        // ClassCleanup and AssemblyCleanup invoked via ForceCleanup must see both snapshots.
-        // The cleanup methods emit a sentinel marker only when their assertions pass; the
-        // markers' presence proves the snapshots flowed correctly into the fallback contexts.
-        Assert.Contains(ClassCleanupMarker, testHostResult.StandardOutput);
-        Assert.Contains(AssemblyCleanupMarker, testHostResult.StandardOutput);
+        // Cleanup methods cannot signal success via Console.WriteLine because MSTest routes
+        // Console.Out through a per-TestContext capture during cleanup (and the captured
+        // output is discarded on the ForceCleanup fallback path). Use a marker directory
+        // on disk instead: the cleanup methods only create the marker files when their
+        // property-flow assertions pass.
+        string markerDirectory = Path.Combine(Path.GetTempPath(), "mstest-force-cleanup-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(markerDirectory);
+        try
+        {
+            TestHostResult testHostResult = await testHost.ExecuteAsync(
+                "--maximum-failed-tests 1",
+                environmentVariables: new() { [MarkerDirectoryEnvVar] = markerDirectory },
+                cancellationToken: TestContext.CancellationToken);
+
+            testHostResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedForMaxFailedTests);
+            // ClassCleanup and AssemblyCleanup must see the AssemblyInit / ClassInit snapshots
+            // regardless of whether they are invoked via the normal end-of-class / end-of-assembly
+            // path or via the ForceCleanup fallback (which path runs depends on the race between
+            // the failing test and the graceful-stop request triggered by --maximum-failed-tests).
+            // The marker files are created only when the assertions inside the cleanup methods pass.
+            Assert.IsTrue(
+                File.Exists(Path.Combine(markerDirectory, ClassCleanupMarkerFileName)),
+                $"ClassCleanup marker file not found. StandardOutput:\n{testHostResult.StandardOutput}");
+            Assert.IsTrue(
+                File.Exists(Path.Combine(markerDirectory, AssemblyCleanupMarkerFileName)),
+                $"AssemblyCleanup marker file not found. StandardOutput:\n{testHostResult.StandardOutput}");
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(markerDirectory, recursive: true);
+            }
+            catch
+            {
+                // Best-effort cleanup of the temporary marker directory.
+            }
+        }
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -262,6 +294,7 @@ public sealed class TestContextPropertyFlowForceCleanupTests : AcceptanceTestBas
 
 #file UnitTest1.cs
 using System;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -294,7 +327,7 @@ public sealed class ForceCleanupFlowTests
     {
         Assert.AreEqual("AssemblyInitValue", context.Properties["AssemblyInitKey"]);
         Assert.AreEqual("ClassInitValue", context.Properties["ClassInitKey"]);
-        Console.WriteLine("FORCECLEANUP_CLASSCLEANUP_OK");
+        WriteMarker("class-cleanup.marker");
     }
 
     [AssemblyCleanup]
@@ -306,7 +339,23 @@ public sealed class ForceCleanupFlowTests
         Assert.IsFalse(
             context.Properties.ContainsKey("ClassInitKey"),
             "Properties set by ClassInitialize must not flow to AssemblyCleanup, even via ForceCleanup.");
-        Console.WriteLine("FORCECLEANUP_ASSEMBLYCLEANUP_OK");
+        WriteMarker("assembly-cleanup.marker");
+    }
+
+    // Cleanup methods cannot reliably signal success via Console.WriteLine because MSTest routes
+    // Console.Out into the per-TestContext output buffer during cleanup (and that buffer is
+    // discarded on the ForceCleanup fallback path). Write to a marker file under the directory
+    // supplied by the test harness so the parent test can observe the cleanup ran with
+    // satisfied property-flow assertions.
+    private static void WriteMarker(string fileName)
+    {
+        string? markerDirectory = Environment.GetEnvironmentVariable("FORCECLEANUP_MARKER_DIR");
+        if (string.IsNullOrEmpty(markerDirectory))
+        {
+            return;
+        }
+
+        File.WriteAllText(Path.Combine(markerDirectory, fileName), "ok");
     }
 }
 """;
