@@ -231,6 +231,7 @@ public sealed class AzureDevOpsTests
         }
 
         var logger = new TextLogger();
+        // Trim ##. If we keep it, then when the test fails, the assertion failure will get printed to screen and picked up incorrectly by AzDO, because it scans all output for the ##vso... pattern.
         string? text = AzureDevOpsReporter.GetErrorText(
             "MyTestDisplayName",
             explanation: null,
@@ -238,24 +239,38 @@ public sealed class AzureDevOpsTests
             "severity",
             new SystemFileSystem(),
             logger,
-            "net9.0");
+            "net9.0")?.TrimStart('#');
 
-        Assert.IsNotNull(text, $"AzDO reporter should have produced an annotation. Logs:\n{string.Join("\n", logger.Logs)}");
+        // Also neutralize any '##vso[' that the trace logger captured (the reporter logs the full
+        // command line at trace level) so the assertion failure messages below cannot smuggle a
+        // real AzDO command into the build output when this test fails on CI.
+        string safeLogs = string.Join("\n", logger.Logs).Replace("##vso[", "vso[");
 
+        Assert.IsNotNull(text, $"AzDO reporter should have produced an annotation. Logs:\n{safeLogs}");
+
+        // Mirror the path normalization performed by AzureDevOpsReporter.GetErrorText:
+        //  * Strip the deterministic-build root '/_/' (set by <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+        //    in CI), then fall back to stripping the runtime repo root for local builds.
+        //  * Normalize separators to '/'.
+        // Without this, the test breaks in CI where [CallerFilePath] returns '/_/test/...'
+        // but the reporter strips '/_/' and emits 'sourcepath=test/...'.
+        const string DeterministicBuildRoot = "/_/";
         string normalizedTestFile = testFile.Replace('\\', '/');
         string repoRoot = RootFinder.Find().Replace('\\', '/');
-        string expectedRelativeFile = normalizedTestFile.StartsWith(repoRoot, StringComparison.OrdinalIgnoreCase)
-            ? normalizedTestFile.Substring(repoRoot.Length).TrimStart('/')
-            : normalizedTestFile;
+        string expectedRelativeFile = normalizedTestFile.StartsWith(DeterministicBuildRoot, StringComparison.OrdinalIgnoreCase)
+            ? normalizedTestFile.Substring(DeterministicBuildRoot.Length)
+            : normalizedTestFile.StartsWith(repoRoot, StringComparison.OrdinalIgnoreCase)
+                ? normalizedTestFile.Substring(repoRoot.Length).TrimStart('/')
+                : normalizedTestFile;
 
         Assert.Contains(
             $"sourcepath={expectedRelativeFile};",
             text,
-            $"AzDO annotation must point at the test method's source file. Got: {text}\nLogs:\n{string.Join("\n", logger.Logs)}");
+            $"AzDO annotation must point at the test method's source file. Got: {text}\nLogs:\n{safeLogs}");
         Assert.DoesNotContain(
             "/src/TestFramework/TestFramework/Assertions/",
             text,
-            $"AzDO annotation must not point at a framework Assert partial-class file. Got: {text}\nLogs:\n{string.Join("\n", logger.Logs)}");
+            $"AzDO annotation must not point at a framework Assert partial-class file. Got: {text}\nLogs:\n{safeLogs}");
     }
 
     [TestMethod]
