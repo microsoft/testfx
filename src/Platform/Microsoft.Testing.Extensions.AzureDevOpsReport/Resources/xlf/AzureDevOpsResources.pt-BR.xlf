@@ -27,6 +27,71 @@
         <target state="new">'--report-azdo-flaky-history' requires '--report-azdo' to be enabled</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
+        <source>Azure DevOps live publishing failed to complete the test run.</source>
+        <target state="new">Azure DevOps live publishing failed to complete the test run.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCreateRunFailed">
+        <source>Azure DevOps live publishing failed to create the test run.</source>
+        <target state="new">Azure DevOps live publishing failed to create the test run.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingFailedToDeleteCoordinationFile">
+        <source>Azure DevOps live publishing failed to delete coordination file</source>
+        <target state="new">Azure DevOps live publishing failed to delete coordination file</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingFinalizeWaitTimedOut">
+        <source>Azure DevOps live publishing timed out after {0} waiting for {1} participant file(s); finalizing the run anyway.</source>
+        <target state="new">Azure DevOps live publishing timed out after {0} waiting for {1} participant file(s); finalizing the run anyway.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingHttpError">
+        <source>Azure DevOps REST API request failed with status code {0}. Response: {1}</source>
+        <target state="new">Azure DevOps REST API request failed with status code {0}. Response: {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingInvalidResponse">
+        <source>Azure DevOps REST API returned an unexpected response payload.</source>
+        <target state="new">Azure DevOps REST API returned an unexpected response payload.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingMissingConfiguration">
+        <source>'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</source>
+        <target state="new">'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</target>
+        <note>{Locked='--publish-azdo-test-results'}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingMissingRunIdFile">
+        <source>Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</source>
+        <target state="new">Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</target>
+        <note>{Locked="azdo-runid.&lt;buildId&gt;.json"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingPublishResultsFailed">
+        <source>Azure DevOps live publishing failed to publish test results.</source>
+        <target state="new">Azure DevOps live publishing failed to publish test results.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRequestFailed">
+        <source>Azure DevOps REST API request failed after all retries.</source>
+        <target state="new">Azure DevOps REST API request failed after all retries.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunIdFileMismatch">
+        <source>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</source>
+        <target state="new">Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</target>
+        <note>{Locked="azdo-runid.&lt;buildId&gt;.json"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingTimeoutErrorMessage">
+        <source>Timeout</source>
+        <target state="new">Timeout</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingTimeoutErrorMessageWithReason">
+        <source>Timeout: {0}</source>
+        <target state="new">Timeout: {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
         <source>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</source>
         <target state="new">'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</target>
@@ -34,8 +99,8 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsReportSeverityRequiresAzureDevOps">
         <source>'--report-azdo-severity' requires '--report-azdo' to be enabled</source>
-        <target state="translated">'--report-azdo-severity' requer que '--report-azdo' esteja habilitado</target>
-        <note />
+        <target state="needs-review-translation">'--report-azdo-severity' requer que '--report-azdo' esteja habilitado</target>
+        <note>{Locked='--report-azdo-severity'}{Locked='--report-azdo'}</note>
       </trans-unit>
       <trans-unit id="DemoteKnownFlakyOptionDescription">
         <source>Demote failures with an Azure DevOps flaky history of at least {0}% in the selected window to warnings.</source>
@@ -115,6 +180,21 @@
       <trans-unit id="OptionDescription">
         <source>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
         <target state="new">Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PublishAzdoRunNameOptionDescription">
+        <source>Custom Azure DevOps test run name for live test-result publishing.</source>
+        <target state="new">Custom Azure DevOps test run name for live test-result publishing.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PublishAzdoRunNameRequiresPublishAzdoTestResults">
+        <source>'--publish-azdo-run-name' requires '--publish-azdo-test-results' to be enabled</source>
+        <target state="new">'--publish-azdo-run-name' requires '--publish-azdo-test-results' to be enabled</target>
+        <note>{Locked='--publish-azdo-run-name'}{Locked='--publish-azdo-test-results'}</note>
+      </trans-unit>
+      <trans-unit id="PublishAzdoTestResultsOptionDescription">
+        <source>Publish test results live to the Azure DevOps Tests tab.</source>
+        <target state="new">Publish test results live to the Azure DevOps Tests tab.</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">
