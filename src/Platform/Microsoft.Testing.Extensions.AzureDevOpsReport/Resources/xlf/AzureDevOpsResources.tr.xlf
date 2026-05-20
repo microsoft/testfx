@@ -99,7 +99,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsReportSeverityRequiresAzureDevOps">
         <source>'--report-azdo-severity' requires '--report-azdo' to be enabled</source>
-        <target state="needs-review-translation">'--report-azdo-severity' öğesi '--report-azdo' öğesinin etkinleştirilmesini gerektirir</target>
+        <target state="translated">'--report-azdo-severity' öğesi '--report-azdo' öğesinin etkinleştirilmesini gerektirir</target>
         <note>{Locked='--report-azdo-severity'}{Locked='--report-azdo'}</note>
       </trans-unit>
       <trans-unit id="DemoteKnownFlakyOptionDescription">
