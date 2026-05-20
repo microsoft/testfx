@@ -1,0 +1,15 @@
+{
+  "name": "binlog-analysis-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCP client scripts for build failure analysis workflow",
+  "main": "extract-binlog-errors.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1"
+  }
+}

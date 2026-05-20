@@ -97,7 +97,7 @@ public static class MicrosoftExtensionsLoggingBuilderExtensions
 
 Internally:
 
-```
+```text
 MTP ILoggingManager.AddProvider(factoryFunc)
         │
         ▼
