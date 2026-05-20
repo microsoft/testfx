@@ -71,6 +71,12 @@ if [ -f /tmp/gh-aw/cache-memory/focus-areas/history.json ]; then
 fi
 ```
 
+If `history.json` does not exist, treat it as an expected first-run cache miss:
+
+- Initialize an empty in-memory history object and continue.
+- **Do not** call `missing_data` for cache-memory misses.
+- Only use `missing_data` when required analysis data cannot be obtained from the repository or available tools.
+
 The history file should contain:
 
 ```json
