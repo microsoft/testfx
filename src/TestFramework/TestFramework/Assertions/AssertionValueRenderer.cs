@@ -6,6 +6,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Renders values for display in structured assertion messages following the RFC 012 value rendering rules.
 /// </summary>
+[StackTraceHidden]
 internal static class AssertionValueRenderer
 {
     /// <summary>

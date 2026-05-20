@@ -6,6 +6,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// The string assert.
 /// </summary>
+[StackTraceHidden]
 public sealed class StringAssert
 {
     #region Singleton constructor

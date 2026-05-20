@@ -16,6 +16,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public sealed partial class Assert
 {
+    [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
@@ -71,6 +72,7 @@ public sealed partial class Assert
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
+    [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member

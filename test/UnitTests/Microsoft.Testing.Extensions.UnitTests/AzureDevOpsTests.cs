@@ -199,6 +199,66 @@ public sealed class AzureDevOpsTests
     }
 
     [TestMethod]
+    public void RealAssertFailure_AnnotationPointsAtTestMethodAndNotAtFrameworkFile()
+    {
+        // End-to-end acceptance for https://github.com/microsoft/testfx/issues/8277.
+        //
+        // Trigger a *real* MSTest assertion failure (no synthetic stack trace) and ensure the
+        // AzDO reporter annotates the test method's source file rather than the framework
+        // partial-class file that actually holds the failing implementation.
+        //
+        // This regression is double-guarded:
+        //   * On .NET 6+: every public Assert/CollectionAssert/StringAssert method carries
+        //     [StackTraceHidden], so the framework frame should not even appear in the
+        //     captured stack trace.
+        //   * On older runtimes (.NET Framework / netstandard2.0 consumers): the attribute is
+        //     a no-op, but the reporter's type-prefix heuristic still skips the framework
+        //     frame.
+        // Either way, the annotation must point at this test method's source file.
+        (string testFile, _) = GetCurrentLocation();
+
+        AssertFailedException error;
+        try
+        {
+#pragma warning disable MSTEST0025 // Use 'Assert.Fail' instead of an always-failing assert - we deliberately want a real Assert.AreEqual failure so the captured stack trace reflects what users see.
+            Assert.AreEqual(1, 2);
+#pragma warning restore MSTEST0025
+            throw new InvalidOperationException("Expected AssertFailedException was not thrown.");
+        }
+        catch (AssertFailedException ex)
+        {
+            error = ex;
+        }
+
+        var logger = new TextLogger();
+        string? text = AzureDevOpsReporter.GetErrorText(
+            "MyTestDisplayName",
+            explanation: null,
+            error,
+            "severity",
+            new SystemFileSystem(),
+            logger,
+            "net9.0");
+
+        Assert.IsNotNull(text, $"AzDO reporter should have produced an annotation. Logs:\n{string.Join("\n", logger.Logs)}");
+
+        string normalizedTestFile = testFile.Replace('\\', '/');
+        string repoRoot = RootFinder.Find().Replace('\\', '/');
+        string expectedRelativeFile = normalizedTestFile.StartsWith(repoRoot, StringComparison.OrdinalIgnoreCase)
+            ? normalizedTestFile.Substring(repoRoot.Length).TrimStart('/')
+            : normalizedTestFile;
+
+        Assert.Contains(
+            $"sourcepath={expectedRelativeFile};",
+            text,
+            $"AzDO annotation must point at the test method's source file. Got: {text}\nLogs:\n{string.Join("\n", logger.Logs)}");
+        Assert.DoesNotContain(
+            "/src/TestFramework/TestFramework/Assertions/",
+            text,
+            $"AzDO annotation must not point at a framework Assert partial-class file. Got: {text}\nLogs:\n{string.Join("\n", logger.Logs)}");
+    }
+
+    [TestMethod]
     public void FormatErrorMessage_PlacesTestNameAsTitleOnFirstLine()
     {
         // The reporter emits one message that is rendered both by AzDO and by GitHub PR

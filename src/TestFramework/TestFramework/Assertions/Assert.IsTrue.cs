@@ -16,6 +16,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public sealed partial class Assert
 {
+    [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
@@ -70,6 +71,7 @@ public sealed partial class Assert
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
     }
 
+    [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
     public readonly struct AssertIsFalseInterpolatedStringHandler
