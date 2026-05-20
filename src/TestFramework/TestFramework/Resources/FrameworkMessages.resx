@@ -522,7 +522,7 @@ Actual: {2}</value>
     <value>Expected strings to be equal.</value>
   </data>
   <data name="AreNotEqualFailedSummary" xml:space="preserve">
-    <value>Expected values to not be equal.</value>
+    <value>Expected values to differ.</value>
   </data>
   <data name="AreNotEqualStringsCaseInsensitiveFailedSummary" xml:space="preserve">
     <value>Expected strings to differ (case-insensitive).</value>
@@ -540,10 +540,10 @@ Actual: {2}</value>
     <value>Expected all items in collection to be of the specified type.</value>
   </data>
   <data name="MatchesRegexFailedSummary" xml:space="preserve">
-    <value>Expected string to match the specified regular expression.</value>
+    <value>Expected string to match the specified pattern.</value>
   </data>
   <data name="DoesNotMatchRegexFailedSummary" xml:space="preserve">
-    <value>Expected string to not match the specified regular expression.</value>
+    <value>Expected string to not match the specified pattern.</value>
   </data>
   <data name="ContainsAllFailedSummary" xml:space="preserve">
     <value>Expected collection to contain all specified items.</value>
