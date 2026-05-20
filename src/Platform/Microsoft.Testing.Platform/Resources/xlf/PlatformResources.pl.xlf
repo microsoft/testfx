@@ -207,11 +207,6 @@
         <target state="translated">Nie można odnaleźć katalogu „{0}”.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DeprecatedEnvironmentVariableWarning">
-        <source>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</source>
-        <target state="new">Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</target>
-        <note>{0} is the deprecated environment variable name, {1} is the replacement environment variable name.</note>
-      </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">Plik diagnostyczny (poziom „{0}” z asynchronicznym opróżnianiem): {1}</target>
