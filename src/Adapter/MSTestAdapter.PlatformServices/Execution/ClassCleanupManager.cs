@@ -57,7 +57,13 @@ internal sealed class ClassCleanupManager
         IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
         foreach (TestClassInfo classInfo in classInfoCache)
         {
-            TestContext testContext = new TestContextImplementation(null, classInfo.ClassType.FullName, sourceLevelParameters, logger, testRunCancellationToken: null);
+            var testContext = new TestContextImplementation(null, classInfo.ClassType.FullName, sourceLevelParameters, logger, testRunCancellationToken: null);
+
+            // Flow properties set during AssemblyInitialize and ClassInitialize so the
+            // ClassCleanup method observes them when invoked via the fallback path.
+            testContext.MergeProperties(classInfo.Parent.PostAssemblyInitProperties);
+            testContext.MergeProperties(classInfo.PostClassInitProperties);
+
             TestFailedException? ex = classInfo.ExecuteClassCleanupAsync(testContext).GetAwaiter().GetResult();
             if (ex is not null)
             {
@@ -68,7 +74,12 @@ internal sealed class ClassCleanupManager
         IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
         foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
         {
-            TestContext testContext = new TestContextImplementation(null, null, sourceLevelParameters, logger, testRunCancellationToken: null);
+            var testContext = new TestContextImplementation(null, null, sourceLevelParameters, logger, testRunCancellationToken: null);
+
+            // Flow properties set during AssemblyInitialize so the AssemblyCleanup method observes
+            // them when invoked via the fallback path.
+            testContext.MergeProperties(assemblyInfo.PostAssemblyInitProperties);
+
             TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanupAsync(testContext).GetAwaiter().GetResult();
             if (ex is not null)
             {
