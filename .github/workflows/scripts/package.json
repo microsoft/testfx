@@ -1,0 +1,15 @@
+{
+  "name": "binlog-analysis-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCP client helper used by .github/workflows/build-failure-analysis*.md to dump binlog data as JSON before the agent runs.",
+  "main": "dump-binlog.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1"
+  }
+}

@@ -101,7 +101,6 @@ extends:
       - template: /eng/common/templates-official/jobs/jobs.yml@self
         parameters:
           enableMicrobuild: true
-          microbuildPluginVersion: '5.4.0'
           enablePublishTestResults: true
           testResultsFormat: 'vstest'
           publishingVersion: 4

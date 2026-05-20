@@ -81,6 +81,13 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
             await DisposeServiceProviderAsync(ServiceProvider, alreadyDisposed: alreadyDisposed, isProcessShutdown: true).ConfigureAwait(false);
             await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>()).ConfigureAwait(false);
+
+            // Dispose the LoggerFactoryProxy last so that all user-registered logger providers
+            // (e.g., Microsoft.Extensions.Logging providers added via the Microsoft.Testing.Extensions.Logging
+            // bridge such as Serilog, Application Insights, OpenTelemetry) get a chance to flush their buffers.
+            // The proxy is skipped by DisposeServiceProviderAsync for ordering reasons.
+            await DisposeHelper.DisposeAsync(ServiceProvider.GetService<LoggerFactoryProxy>()).ConfigureAwait(false);
+
             if (PushOnlyProtocol is not null && !alreadyDisposed.Contains(PushOnlyProtocol))
             {
                 await DisposeHelper.DisposeAsync(PushOnlyProtocol).ConfigureAwait(false);
@@ -311,6 +318,14 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             // Logger is the most special service and we dispose it manually as last one, we want to be able to
             // collect logs till the end of the process.
             if (service is FileLoggerProvider)
+            {
+                continue;
+            }
+
+            // The LoggerFactoryProxy owns the real ILoggerFactory and is disposed manually after the rest of
+            // the services so that providers registered through it (including bridges to
+            // Microsoft.Extensions.Logging) can flush at the very end of the process.
+            if (service is LoggerFactoryProxy)
             {
                 continue;
             }

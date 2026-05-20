@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="tr" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="HtmlReportArtifactDescription">
+        <source>Self-contained HTML test report</source>
+        <target state="new">Self-contained HTML test report</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportArtifactDisplayName">
+        <source>HTML Report</source>
+        <target state="new">HTML Report</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileExistsAndWillBeOverwritten">
+        <source>Warning: HTML report file '{0}' already exists and will be overwritten.</source>
+        <target state="new">Warning: HTML report file '{0}' already exists and will be overwritten.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameExtensionIsNotHtml">
+        <source>'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</source>
+        <target state="new">'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameOptionDescription">
+        <source>The name of the generated HTML report</source>
+        <target state="new">The name of the generated HTML report</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameRequiresHtmlReport">
+        <source>'--report-html-filename' requires '--report-html' to be enabled</source>
+        <target state="new">'--report-html-filename' requires '--report-html' to be enabled</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameShouldNotContainPath">
+        <source>file name argument must not contain a path or invalid characters (e.g. --report-html-filename myreport.html)</source>
+        <target state="new">file name argument must not contain a path or invalid characters (e.g. --report-html-filename myreport.html)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportGeneratorDescription">
+        <source>Produce a self-contained HTML report for the current test session</source>
+        <target state="new">Produce a self-contained HTML report for the current test session</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportGeneratorDisplayName">
+        <source>HTML report generator</source>
+        <target state="new">HTML report generator</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportIsNotValidForDiscovery">
+        <source>'--report-html' cannot be enabled when using '--list-tests'</source>
+        <target state="new">'--report-html' cannot be enabled when using '--list-tests'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportOptionDescription">
+        <source>Enable generating an HTML report</source>
+        <target state="new">Enable generating an HTML report</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidTestApplicationBuilderType">
+        <source>HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="new">HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

@@ -401,4 +401,120 @@ public class TestContextImplementationTests : TestContainer
         _ = testContextImplementation.GetAndClearTrace();
         t.Join();
     }
+
+    public void MergePropertiesShouldAddNewKeysIntoThePropertyBag()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        IReadOnlyDictionary<string, object?> snapshot = new Dictionary<string, object?>
+        {
+            ["NewKey"] = "NewValue",
+            ["AnotherKey"] = 42,
+        };
+
+        _testContextImplementation.MergeProperties(snapshot);
+
+        _testContextImplementation.Properties["NewKey"].Should().Be("NewValue");
+        _testContextImplementation.Properties["AnotherKey"].Should().Be(42);
+    }
+
+    public void MergePropertiesShouldOverwriteExistingKeys()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.Properties["Key"] = "Original";
+
+        _testContextImplementation.MergeProperties(new Dictionary<string, object?> { ["Key"] = "Overwritten" });
+
+        _testContextImplementation.Properties["Key"].Should().Be("Overwritten");
+    }
+
+    public void MergePropertiesShouldIgnoreNull()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.Properties["Key"] = "Original";
+
+        _testContextImplementation.MergeProperties(null);
+
+        _testContextImplementation.Properties["Key"].Should().Be("Original");
+    }
+
+    public void MergePropertiesShouldNotOverwritePerContextLabels()
+    {
+        _testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
+        _testMethod.Setup(tm => tm.Name).Returns("M");
+        _testContextImplementation = CreateTestContextImplementation();
+
+        _testContextImplementation.MergeProperties(new Dictionary<string, object?>
+        {
+            ["FullyQualifiedTestClassName"] = "Hacked.Class",
+            ["TestName"] = "HackedTestName",
+            ["LegitKey"] = "LegitValue",
+        });
+
+        _testContextImplementation.Properties["FullyQualifiedTestClassName"].Should().Be("A.C.M");
+        _testContextImplementation.Properties["TestName"].Should().Be("M");
+        _testContextImplementation.Properties["LegitKey"].Should().Be("LegitValue");
+    }
+
+    public void CaptureLifecyclePropertiesShouldReturnAllPropertiesExceptPerContextLabels()
+    {
+        _testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
+        _testMethod.Setup(tm => tm.Name).Returns("M");
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.Properties["UserKey"] = "UserValue";
+        _testContextImplementation.Properties["AnotherKey"] = 7;
+
+        IReadOnlyDictionary<string, object?> snapshot = _testContextImplementation.CaptureLifecycleProperties();
+
+        snapshot.Should().ContainKey("UserKey");
+        snapshot["UserKey"].Should().Be("UserValue");
+        snapshot.Should().ContainKey("AnotherKey");
+        snapshot["AnotherKey"].Should().Be(7);
+        snapshot.Should().NotContainKey("FullyQualifiedTestClassName");
+        snapshot.Should().NotContainKey("TestName");
+    }
+
+    public void CaptureLifecyclePropertiesShouldReturnSnapshotIndependentOfTheLiveBag()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.Properties["Key"] = "OriginalValue";
+
+        IReadOnlyDictionary<string, object?> snapshot = _testContextImplementation.CaptureLifecycleProperties();
+
+        // Mutating the live bag must not affect the snapshot.
+        _testContextImplementation.Properties["Key"] = "ChangedValue";
+        _testContextImplementation.Properties["NewKey"] = "NewValue";
+
+        snapshot["Key"].Should().Be("OriginalValue");
+        snapshot.Should().NotContainKey("NewKey");
+    }
+
+    public void CaptureLifecyclePropertiesShouldAliasReferenceTypeValues()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        var bag = new List<int> { 1 };
+        _testContextImplementation.Properties["RefKey"] = bag;
+
+        IReadOnlyDictionary<string, object?> snapshot = _testContextImplementation.CaptureLifecycleProperties();
+
+        // The snapshot is shallow: the snapshot's value and the live bag share the same instance.
+        // Mutating the instance must therefore be visible through both. This guards the documented
+        // contract on CaptureLifecycleProperties from accidentally regressing to a deep copy.
+        bag.Add(2);
+        ((List<int>)snapshot["RefKey"]!).Should().BeEquivalentTo(new[] { 1, 2 });
+    }
+
+    public void ConstructorShouldNotThrowWhenSeededPropertiesAlreadyContainFullyQualifiedTestClassName()
+    {
+        _testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
+        var seeded = new Dictionary<string, object?>
+        {
+            ["FullyQualifiedTestClassName"] = "Old.Class.Name",
+        };
+
+        // Should not throw — the ctor now uses indexer assignment for labels.
+        var ctx = new TestContextImplementation(_testMethod.Object, null, seeded, null, null);
+
+        // The per-context value wins.
+        ctx.Properties["FullyQualifiedTestClassName"].Should().Be("A.C.M");
+    }
 }

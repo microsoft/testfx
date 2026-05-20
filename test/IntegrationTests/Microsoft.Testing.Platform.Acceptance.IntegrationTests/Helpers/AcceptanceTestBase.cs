@@ -15,6 +15,7 @@ public abstract class AcceptanceTestBase
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
         MSTestEngineVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.Engine.");
+        MicrosoftTestingExtensionsLoggingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Logging.");
     }
 
     internal static string RID { get; }
@@ -33,6 +34,8 @@ public abstract class AcceptanceTestBase
     public static string MicrosoftNETTestSdkVersion { get; private set; }
 
     public static string MicrosoftTestingPlatformVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsLoggingVersion { get; private set; }
 
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)
     {

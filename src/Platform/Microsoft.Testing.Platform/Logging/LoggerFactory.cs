@@ -46,6 +46,12 @@ internal sealed class LoggerFactory(ILoggerProvider[] loggerProviders, LogLevel 
 
     public void Dispose()
     {
+        // NOTE: Reachable through the explicit LoggerFactoryProxy disposal at the end of
+        // CommonHost.RunAsync's finally block. Before that change, this method was never
+        // executed at runtime, so anything that becomes externally observable here (provider
+        // ordering, exceptions, side effects) must be considered against the live shutdown path.
+        // FileLoggerProvider is intentionally skipped because CommonHost disposes it explicitly
+        // on the preceding line.
         foreach (IDisposable disposable in _loggerProviders.OfType<IDisposable>())
         {
             // FileLoggerProvider is special and needs to be disposed manually.

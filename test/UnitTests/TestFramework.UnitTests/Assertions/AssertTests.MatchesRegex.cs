@@ -24,7 +24,7 @@ public partial class AssertTests
         AssertFailedException ex = action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assertion failed. Expected string to match the specified regular expression.
+                Assertion failed. Expected string to match the specified pattern.
                 User-provided message
 
                 expected pattern: "^foo"
@@ -49,7 +49,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assertion failed. Expected string to match the specified regular expression.
+                Assertion failed. Expected string to match the specified pattern.
 
                 expected pattern: "^foo"
                 actual:           "hello"
@@ -73,7 +73,7 @@ public partial class AssertTests
         AssertFailedException ex = action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assertion failed. Expected string to not match the specified regular expression.
+                Assertion failed. Expected string to not match the specified pattern.
                 User-provided message
 
                 unexpected pattern: "world"
@@ -98,7 +98,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assertion failed. Expected string to not match the specified regular expression.
+                Assertion failed. Expected string to not match the specified pattern.
 
                 unexpected pattern: "world"
                 actual:             "hello world"

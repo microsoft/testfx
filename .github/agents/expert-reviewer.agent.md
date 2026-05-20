@@ -485,6 +485,7 @@ Applies to changes in `src/Platform/` involving serialization/deserialization.
 | 8 | **Arcade Build System** | `build.cmd`/`build.sh`. `eng/build.ps1` with `-build`, `-test`, `-integrationTest`, `-pack`. | `eng/build.ps1` |
 | 9 | **Acceptance Tests** | Must run `./build.sh -pack` before running acceptance tests. | `.github/copilot-instructions.md` |
 | 10 | **StyleCop Rules** | SA1028 (no trailing whitespace), SA1316 (tuple casing), SA1518 (file ends with newline). `.editorconfig` is authoritative. | `.editorconfig` |
+| 11 | **MSBuild Authoring** | `.props`/`.targets` follow the rule catalog in the [`msbuild-reviewer`](msbuild-reviewer.agent.md) agent (DependsOn append, condition quoting, NuGet layout, etc.). The `expert-reviewer` delegates to this agent when MSBuild files are touched. | `.github/agents/msbuild-reviewer.agent.md` |
 
 ---
 
@@ -499,10 +500,11 @@ Use this to prioritize dimensions based on changed files.
 | `src/Adapter/` | Correctness, Threading, Resource Mgmt, Defensive Coding | VSTest bridge, discovery, execution |
 | `src/Analyzers/` | Analyzer Quality, Correctness, API Surface | Analyzer/code-fix implementations |
 | `src/Polyfills/` | Cross-TFM, Correctness | Polyfill implementations |
-| `src/Package/` | Build Infrastructure, Compatibility | NuGet packaging definitions |
+| `src/Package/` | Build Infrastructure, Compatibility, **MSBuild Authoring** | NuGet packaging definitions, `build/`, `buildTransitive/`, `buildMultiTargeting/` |
 | `test/UnitTests/` | Test Isolation, Assertions, Flakiness, Data-Driven | All test files |
 | `test/IntegrationTests/` | Flakiness, Resource Mgmt, Test Isolation | Acceptance tests |
-| `eng/` | Build Infrastructure, Dependencies | `Versions.props`, build scripts |
+| `eng/` | Build Infrastructure, Dependencies, **MSBuild Authoring** | `Versions.props`, build scripts, shared `.props`/`.targets` |
+| `**/*.{props,targets}` | **MSBuild Authoring** (supplemental review via `msbuild-reviewer`) | `Directory.Build.*`, `Directory.Packages.props`, package `build/*.{props,targets}` |
 | `docs/` | Documentation Accuracy | Specs, changelogs, RFCs |
 
 ---
@@ -559,6 +561,23 @@ Before analyzing the diff, load the repository history knowledge base produced b
    > ```
 
    **Skip dimensions that do not apply.** For example, skip "Analyzer Quality" when no `src/Analyzers/` files changed. Skip "Test Isolation" when no test files changed. Skip "IPC Wire Compatibility" when no serialization code changed.
+
+#### Supplemental review: MSBuild authoring
+
+If the PR diff contains any of the following paths, **launch one additional sub-agent in parallel with the dimension batches** — the [`msbuild-reviewer`](msbuild-reviewer.agent.md) agent in `diff` mode:
+
+- `**/*.props`, `**/*.targets`
+- `Directory.Build.props`, `Directory.Build.targets`, `Directory.Packages.props`
+- any file under `*/build/`, `*/buildTransitive/`, `*/buildMultiTargeting/`
+
+This is a **specialized supplemental review**, not a 22nd dimension — the 21-dimension count in this document and the summary table stays unchanged. The supplemental review's output is folded into the same pipeline:
+
+- Its `MSBuild Authoring — LGTM` / `MSBuild Authoring — ISSUE` blocks use the exact format of dimension agents (see [Output Contract — Diff Mode](msbuild-reviewer.agent.md#output-contract--diff-mode)).
+- Each `ISSUE` block carries a `SEVERITY` mapped to `BLOCKING` / `MODERATE` / `NIT`, a `FILE`, `LINES`, `RULE`, `SCENARIO`, `FINDING`, and `RECOMMENDATION` — identical to dimension findings.
+- Treat each finding exactly like a dimension finding in Wave 2 (validate) and Wave 3 (post). Inline comments use `create_pull_request_review_comment`. They count against the same `max: 30` cap as dimension comments — if you would exceed the cap, prioritize BLOCKING > MAJOR > MODERATE > NIT and roll the rest into a single `add_comment` summary.
+- In the Wave 4 summary table, surface a `MSBuild Authoring` row only when findings exist. Do not increase the `N/21 dimensions clean` denominator.
+
+Invoke as a background `task` (`agent_type: "general-purpose"`, `model: "claude-opus-4.6"`, **NOT** `mode: "background"` — this one you must read because its findings are folded in). Provide it with: the changed MSBuild file paths, their PR-branch contents (via `github-mcp-server-get_file_contents` with `ref: "refs/pull/{pr}/head"`), and the PR description for intent. Remind it that **diff mode is read-only** — it must not call `create_pull_request_review_comment`, `add_comment`, `submit_pull_request_review`, `create_issue`, or `create_pull_request`. Posting is your responsibility.
 
 ### Wave 2: Validate
 

@@ -119,17 +119,17 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsDescription">
         <source>`Assert.AreEqual` and `Assert.AreNotEqual` use `EqualityComparer&lt;T&gt;.Default`. For collection-like types this relies on the type's own equality semantics instead of comparing sequence elements, so `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` or `Assert.AreEquivalent`/`Assert.AreNotEquivalent` are usually the better fit.</source>
-        <target state="new">`Assert.AreEqual` and `Assert.AreNotEqual` use `EqualityComparer&lt;T&gt;.Default`. For collection-like types this relies on the type's own equality semantics instead of comparing sequence elements, so `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` or `Assert.AreEquivalent`/`Assert.AreNotEquivalent` are usually the better fit.</target>
+        <target state="translated">`Assert.AreEqual` a `Assert.AreNotEqual` používají `EqualityComparer&lt;T&gt;.Default`. U typů podobných kolekcím se používá vlastní sémantika rovnosti daného typu místo porovnávání elementů sekvence, takže vhodnější volbou obvykle bývá `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` nebo `Assert.AreEquivalent`/`Assert.AreNotEquivalent`.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsMessageFormat">
         <source>`{0}` on {1} (which implements IEnumerable&lt;T&gt;) does not perform element-wise sequence comparison. Use `Assert.AreSequenceEqual` for ordered element-wise comparison, `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` for unordered, or `Assert.AreEquivalent` for deep structural comparison.</source>
-        <target state="new">`{0}` on {1} (which implements IEnumerable&lt;T&gt;) does not perform element-wise sequence comparison. Use `Assert.AreSequenceEqual` for ordered element-wise comparison, `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` for unordered, or `Assert.AreEquivalent` for deep structural comparison.</target>
+        <target state="translated">`{0}` na {1} (implementující rozhraní IEnumerable&lt;T&gt;) neprovádí porovnání sekvencí po elementech. Pro uspořádané porovnání elementů použijte `Assert.AreSequenceEqual`, pro neuspořádané `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` nebo pro hloubkové strukturální porovnání `Assert.AreEquivalent`.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsTitle">
         <source>Avoid Assert.AreEqual on collection types</source>
-        <target state="new">Avoid Assert.AreEqual on collection types</target>
+        <target state="translated">Nepoužívat Assert.AreEqual u typů kolekcí</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
@@ -549,17 +549,17 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionDescription">
         <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</source>
-        <target state="new">When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</target>
+        <target state="translated">Při ověřování výjimek z asynchronního kódu používejte asynchronní metody kontrolních výrazů místo blokování asynchronní operace pomocí GetAwaiter().GetResult().</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
         <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
-        <target state="new">Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</target>
+        <target state="translated">Místo blokování asynchronního volání v Assert.{1} použijte Assert.{0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionTitle">
         <source>Prefer async assertion methods</source>
-        <target state="new">Prefer async assertion methods</target>
+        <target state="translated">Upřednostňovat asynchronní metody kontrolních výrazů</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
@@ -1040,8 +1040,8 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksDescription">
-        <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</source>
-        <target state="translated">Používání kontrolních výrazů v blocích catch je problematické, protože test projde, i když se nevyvolá žádná výjimka a blok catch se nikdy nespustí. K ověření, že je vyvolána výjimka, použijte metody Assert.Throws, Assert.ThrowsExactly, Assert.ThrowsAsync nebo Assert.ThrowsExactlyAsync a poté proveďte další kontrolní výrazy nad zachycenou výjimkou bez použití bloku try-catch.</target>
+        <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block. The rule also flags 'throw new AssertFailedException(...)' and 'throw new AssertInconclusiveException(...)' (the desugared forms of 'Assert.Fail' and 'Assert.Inconclusive'). 'Assert.Inconclusive' (and 'throw new AssertInconclusiveException(...)') is exempt when used inside a filtered catch ('catch (...) when (...)'), because demoting a caught failure to an Inconclusive outcome is the only use case that cannot be expressed without a catch block. For other intentional bypasses (for example, attaching a runtime-built message to the failure), suppress the diagnostic with '#pragma warning disable MSTEST0058'.</source>
+        <target state="needs-review-translation">Používání kontrolních výrazů v blocích catch je problematické, protože test projde, i když se nevyvolá žádná výjimka a blok catch se nikdy nespustí. K ověření, že je vyvolána výjimka, použijte metody Assert.Throws, Assert.ThrowsExactly, Assert.ThrowsAsync nebo Assert.ThrowsExactlyAsync a poté proveďte další kontrolní výrazy nad zachycenou výjimkou bez použití bloku try-catch.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
