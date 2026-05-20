@@ -164,7 +164,7 @@
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
         <source>Command line: {0}</source>
-        <target state="new">Command line: {0}</target>
+        <target state="translated">命令列: {0}</target>
         <note>{0} is the command line used to run the application.</note>
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
@@ -518,14 +518,14 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
         <source>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</source>
-        <target state="new">'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <target state="translated">'--list-tests' 收到未預期的值 '{0}'。支援的值為: {1}。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.
 Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</source>
-        <target state="new">List available tests.
-Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</target>
+        <target state="translated">列出可用的測試。
+此外可接受 'text' (預設的人類可讀輸出) 或 'json'，以在標準輸出上將找到的測試列印為 JSON 文件。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">

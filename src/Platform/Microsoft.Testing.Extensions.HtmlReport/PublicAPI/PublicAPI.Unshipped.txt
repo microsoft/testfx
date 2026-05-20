@@ -1,0 +1,5 @@
+#nullable enable
+Microsoft.Testing.Extensions.HtmlReport.TestingPlatformBuilderHook
+[TPEXP]Microsoft.Testing.Extensions.HtmlReportExtensions
+static Microsoft.Testing.Extensions.HtmlReport.TestingPlatformBuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, string![]! _) -> void
+[TPEXP]static Microsoft.Testing.Extensions.HtmlReportExtensions.AddHtmlReportProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder) -> void
