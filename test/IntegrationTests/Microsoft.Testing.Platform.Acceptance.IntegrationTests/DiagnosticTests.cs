@@ -1,6 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// Suppress CS0618 for the entire file: we intentionally exercise the deprecated legacy
+// diagnostic environment variable constants (TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX,
+// TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE) to validate back-compat behavior.
+#pragma warning disable CS0618 // Type or member is obsolete
+
 using Microsoft.Testing.Platform.Configurations;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -243,6 +248,33 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
 
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern, flushType: "sync");
         testHostResult.AssertOutputDoesNotContain("is deprecated and will be removed in a future major version");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Diag_EnableWithEnvironmentVariables_SynchronousWrite_NewNameTakesPrecedence(string tfm)
+    {
+        string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
+        string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
+
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+
+        // Legacy env var would request async flush ("0"), the new env var requests sync flush ("1").
+        // The new env var must win => the diagnostic report should be written with sync flush.
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            null,
+            new Dictionary<string, string?>
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
+                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE, "0" },
+                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE, "1" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern, flushType: "sync");
+
+        // Setting the legacy env var should still warn even when the new one is also set and wins.
+        testHostResult.AssertOutputContains($"Warning: The environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE}' is deprecated and will be removed in a future major version. Use '{EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE}' instead.");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]

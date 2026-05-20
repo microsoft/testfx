@@ -346,6 +346,7 @@ public sealed class TestApplication : ITestApplication
         // but fall back to the legacy TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX for backward compatibility.
         // See https://github.com/microsoft/testfx/issues/7159.
         string? environmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX);
+#pragma warning disable CS0618 // Type or member is obsolete - intentional back-compat fallback to the legacy env var.
         string? legacyEnvironmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX);
         if (!RoslynString.IsNullOrEmpty(legacyEnvironmentFilePrefix))
         {
@@ -355,6 +356,7 @@ public sealed class TestApplication : ITestApplication
                 EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX,
                 EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX));
         }
+#pragma warning restore CS0618
 
         if (RoslynString.IsNullOrEmpty(environmentFilePrefix))
         {
@@ -373,6 +375,7 @@ public sealed class TestApplication : ITestApplication
         // but fall back to the legacy TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE for backward compatibility.
         // See https://github.com/microsoft/testfx/issues/7159.
         string? environmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE);
+#pragma warning disable CS0618 // Type or member is obsolete - intentional back-compat fallback to the legacy env var.
         string? legacyEnvironmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE);
         if (!RoslynString.IsNullOrEmpty(legacyEnvironmentSynchronousWrite))
         {
@@ -382,6 +385,7 @@ public sealed class TestApplication : ITestApplication
                 EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE,
                 EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE));
         }
+#pragma warning restore CS0618
 
         if (RoslynString.IsNullOrEmpty(environmentSynchronousWrite))
         {
