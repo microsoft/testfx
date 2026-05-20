@@ -37,9 +37,9 @@
         <target state="translated">Attendu :&lt;{1}&gt;. La casse est différente pour la valeur réelle :&lt;{2}&gt;. {0}</target>
         <note />
       </trans-unit>
-      <trans-unit id="AreEqualDeltaFailMsg">
-        <source>Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">Différence attendue non supérieure à &lt;{3}&gt; comprise entre la valeur attendue &lt;{1}&gt; et la valeur réelle &lt;{2}&gt;. {0}</target>
+      <trans-unit id="AreEqualDeltaFailedSummary">
+        <source>Expected values to be equal within tolerance.</source>
+        <target state="new">Expected values to be equal within tolerance.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailMsg">
@@ -193,9 +193,9 @@
         <target state="new">&lt;root&gt;</target>
         <note>Placeholder used in equivalence-mismatch messages when the difference is at the top of the object graph.</note>
       </trans-unit>
-      <trans-unit id="AreNotEqualDeltaFailMsg">
-        <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">Différence attendue supérieure à &lt;{3}&gt; comprise entre la valeur attendue &lt;{1}&gt; et la valeur réelle &lt;{2}&gt;. {0}</target>
+      <trans-unit id="AreNotEqualDeltaFailedSummary">
+        <source>Expected values to differ beyond tolerance.</source>
+        <target state="new">Expected values to differ beyond tolerance.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
@@ -238,6 +238,16 @@
         <target state="translated">Les deux valeurs sont &lt;null&gt;. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreNotSequenceEqualInAnyOrderFailedSummary">
+        <source>Expected sequences to differ (in any order).</source>
+        <target state="new">Expected sequences to differ (in any order).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotSequenceEqualInOrderFailedSummary">
+        <source>Expected sequences to differ.</source>
+        <target state="new">Expected sequences to differ.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreSameActualIsNull">
         <source>Actual is &lt;null&gt;. {0}</source>
         <target state="translated">La valeur réelle est &lt;null&gt;. {0}</target>
@@ -252,6 +262,31 @@
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
         <target state="translated">Ne passez pas de types valeur à AreSame(). Les valeurs converties en Object ne seront plus jamais les mêmes. Si possible, utilisez AreEqual(). {0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualInAnyOrderFailedSummary">
+        <source>Expected sequences to be equal (in any order).</source>
+        <target state="new">Expected sequences to be equal (in any order).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualInOrderFailedSummary">
+        <source>Expected sequences to be equal.</source>
+        <target state="new">Expected sequences to be equal.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualLengthDiffMsg">
+        <source>Sequences have different lengths (expected: {0}, actual: {1}).</source>
+        <target state="new">Sequences have different lengths (expected: {0}, actual: {1}).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualMissingUnexpectedMsg">
+        <source>Missing {0} element(s) from actual. Found {1} unexpected element(s).</source>
+        <target state="new">Missing {0} element(s) from actual. Found {1} unexpected element(s).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualSameLengthDiffMsg">
+        <source>Sequences have {0} element(s). {1} element(s) differ. First difference at index {2}.</source>
+        <target state="new">Sequences have {0} element(s). {1} element(s) differ. First difference at index {2}.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AssertScopeFailure">
         <source>{0} assertion(s) failed within the assert scope.</source>

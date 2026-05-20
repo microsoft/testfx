@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Linq.Expressions;
+using System.Reflection;
+
 using AwesomeAssertions;
 
 using TestFramework.ForTestingMSTest;
@@ -1277,4 +1280,118 @@ public partial class AssertTests : TestContainer
     {
         public int Value { get; } = value;
     }
+
+    private sealed class MutableContainer
+    {
+#pragma warning disable SA1401 // Fields should be private - intentional: this type tests Expression.Assign on nested members.
+        public MutableBox Inner = new() { Value = 0 };
+#pragma warning restore SA1401
+    }
+
+    private sealed class MutableBox
+    {
+#pragma warning disable SA1401 // Fields should be private - intentional: this type tests Expression.Assign on a field.
+        public int Value;
+#pragma warning restore SA1401
+    }
+
+    public void That_ManuallyConstructedAssignExpression_SurfacesRhsAndPreservesSideEffect()
+    {
+        // Construct: (container.Inner.Value = ComputeValue()) < 0   — fails, so message must
+        // include enough context for diagnosis AND the assignment side-effect must apply.
+        var container = new MutableContainer();
+        FieldInfo innerFi = typeof(MutableContainer).GetField(nameof(MutableContainer.Inner))!;
+        FieldInfo valueFi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
+
+        MemberExpression innerAccess = Expression.Field(Expression.Constant(container), innerFi);
+        MemberExpression valueAccess = Expression.Field(innerAccess, valueFi);
+        MethodCallExpression rhs = Expression.Call(typeof(MutableBoxHelper).GetMethod(nameof(MutableBoxHelper.ComputeValue))!);
+        BinaryExpression assign = Expression.Assign(valueAccess, rhs);
+        BinaryExpression body = Expression.LessThan(assign, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        // Assert on the method name only (not the parenthesized rendering) so that future
+        // renderer tweaks (e.g., dropping/adding parentheses for nullary calls) don't break
+        // this regression test.
+        ex.Message.Should().Contain(nameof(MutableBoxHelper.ComputeValue));
+        // The Inner member of the receiver chain should surface in the failure details.
+        ex.Message.Should().Contain("Inner");
+        // The assignment side-effect must apply.
+        container.Inner.Value.Should().Be(42);
+    }
+
+    // Regression: a member whose static type is Func/Action but whose runtime value is null should
+    // still appear in the failure details. Filtering must remain runtime-typed (via the cached
+    // value's GetType()) rather than static-typed at analysis time.
+    private sealed class HolderWithFuncField
+    {
+#pragma warning disable SA1401 // Fields should be private - intentional: test fixture exposing a delegate-typed field.
+        public Func<int>? Callback;
+#pragma warning restore SA1401
+    }
+
+    public void That_NullDelegateTypedMember_StillAppearsInDetails()
+    {
+        var holder = new HolderWithFuncField { Callback = null };
+
+        Action act = () => Assert.That(() => holder.Callback != null);
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("Callback");
+        ex.Message.Should().Contain("null");
+    }
+
+    // ---- Object-typed sub-expressions: locks down current behavior when two side-effecting
+    // method calls return the same mutable reference. The cache stores reference values, so by
+    // the time details are extracted both slots point to the post-mutation object; with
+    // first-occurrence-by-name and "same value -> dedupe" semantics in TryAddExpressionValue,
+    // only one entry surfaces. This is a known UX limitation worth pinning down with a test.
+    public void That_TwoCallsReturningSameMutatedReference_DeduplicatesInDetails()
+    {
+        var box = new BoxOfShapes();
+
+        // Same reference returned twice but mutated between calls; the != check therefore returns
+        // false (same reference) so the assertion fails.
+        Action act = () => Assert.That(() => box.GetValueWithSideEffect() != box.GetValueWithSideEffect());
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assert.That(() => box.GetValueWithSideEffect() != box.GetValueWithSideEffect()) failed.
+                Details:
+                  box.GetValueWithSideEffect() = Shape: Circle
+                """);
+    }
+
+    private sealed class Shape
+    {
+        public string Name { get; set; } = string.Empty;
+
+        public override string ToString() => $"Shape: {Name}";
+    }
+
+    private sealed class BoxOfShapes
+    {
+        private Shape? _c;
+
+        public Shape GetValueWithSideEffect()
+        {
+            if (_c is null)
+            {
+                _c = new Shape { Name = "Square" };
+                return _c;
+            }
+
+            _c.Name = "Circle";
+            return _c;
+        }
+    }
+}
+
+internal static class MutableBoxHelper
+{
+    public static int ComputeValue() => 42;
 }

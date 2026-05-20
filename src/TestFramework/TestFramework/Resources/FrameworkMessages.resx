@@ -129,8 +129,8 @@
   <data name="AreEqualFailMsg" xml:space="preserve">
     <value>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</value>
   </data>
-  <data name="AreEqualDeltaFailMsg" xml:space="preserve">
-    <value>Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</value>
+  <data name="AreEqualDeltaFailedSummary" xml:space="preserve">
+    <value>Expected values to be equal within tolerance.</value>
   </data>
   <data name="AreEqualCaseFailMsg" xml:space="preserve">
     <value>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</value>
@@ -221,8 +221,8 @@
     <value>&lt;root&gt;</value>
     <comment>Placeholder used in equivalence-mismatch messages when the difference is at the top of the object graph.</comment>
   </data>
-  <data name="AreNotEqualDeltaFailMsg" xml:space="preserve">
-    <value>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</value>
+  <data name="AreNotEqualDeltaFailedSummary" xml:space="preserve">
+    <value>Expected values to differ beyond tolerance.</value>
   </data>
   <data name="AreNotEqualFailMsg" xml:space="preserve">
     <value>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</value>
@@ -239,6 +239,12 @@
   <data name="AreNotEquivalentFailedSummaryStrict" xml:space="preserve">
     <value>Expected values to be structurally different (strict mode).</value>
   </data>
+  <data name="AreNotSequenceEqualInAnyOrderFailedSummary" xml:space="preserve">
+    <value>Expected sequences to differ (in any order).</value>
+  </data>
+  <data name="AreNotSequenceEqualInOrderFailedSummary" xml:space="preserve">
+    <value>Expected sequences to differ.</value>
+  </data>
   <data name="AreSameExpectedIsNull" xml:space="preserve">
     <value>Expected is &lt;null&gt;. {0}</value>
   </data>
@@ -247,6 +253,21 @@
   </data>
   <data name="AreSameGivenValues" xml:space="preserve">
     <value>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</value>
+  </data>
+  <data name="AreSequenceEqualInAnyOrderFailedSummary" xml:space="preserve">
+    <value>Expected sequences to be equal (in any order).</value>
+  </data>
+  <data name="AreSequenceEqualInOrderFailedSummary" xml:space="preserve">
+    <value>Expected sequences to be equal.</value>
+  </data>
+  <data name="AreSequenceEqualLengthDiffMsg" xml:space="preserve">
+    <value>Sequences have different lengths (expected: {0}, actual: {1}).</value>
+  </data>
+  <data name="AreSequenceEqualMissingUnexpectedMsg" xml:space="preserve">
+    <value>Missing {0} element(s) from actual. Found {1} unexpected element(s).</value>
+  </data>
+  <data name="AreSequenceEqualSameLengthDiffMsg" xml:space="preserve">
+    <value>Sequences have {0} element(s). {1} element(s) differ. First difference at index {2}.</value>
   </data>
   <data name="AreNotSameBothNull" xml:space="preserve">
     <value>Both values are &lt;null&gt;. {0}</value>

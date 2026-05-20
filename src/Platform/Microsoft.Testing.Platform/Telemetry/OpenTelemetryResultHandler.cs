@@ -18,7 +18,11 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
     private readonly ICounter<int> _totalSkippedTests;
     private readonly ICounter<int> _totalUnknownTests;
     private readonly IHistogram<double> _totalDuration;
-    private readonly Dictionary<TestNodeUid, IPlatformActivity> _testActivities = [];
+    // Note: we use a queue per Uid because frameworks are allowed (but discouraged) to produce
+    // multiple test nodes that share the same Uid (e.g. NUnit's [Values("one", "one")] or
+    // MSTest's "folded" parameterized tests). When that happens we still want to track every
+    // in-flight activity and pair them with results in FIFO order, instead of throwing.
+    private readonly Dictionary<TestNodeUid, Queue<IPlatformActivity>> _testActivities = [];
     private bool _disposed;
 
     public OpenTelemetryResultHandler(IPlatformOpenTelemetryService otelService, IEnvironment environment)
@@ -66,7 +70,13 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
 
         if (activity is not null)
         {
-            _testActivities.Add(testNode.Uid, activity);
+            if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity>? activities))
+            {
+                activities = new Queue<IPlatformActivity>();
+                _testActivities.Add(testNode.Uid, activities);
+            }
+
+            activities.Enqueue(activity);
         }
     }
 
@@ -81,9 +91,12 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
         }
 
         _disposed = true;
-        foreach (IPlatformActivity activity in _testActivities.Values)
+        foreach (Queue<IPlatformActivity> activities in _testActivities.Values)
         {
-            activity.Dispose();
+            foreach (IPlatformActivity activity in activities)
+            {
+                activity.Dispose();
+            }
         }
 
         _testActivities.Clear();
@@ -123,9 +136,15 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
     {
         _totalCompletedTests.Add(1);
 
-        if (!_testActivities.TryGetValue(testNode.Uid, out IPlatformActivity? activity))
+        if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity>? activities) || activities.Count == 0)
         {
             return;
+        }
+
+        IPlatformActivity activity = activities.Dequeue();
+        if (activities.Count == 0)
+        {
+            _testActivities.Remove(testNode.Uid);
         }
 
         (string result, Exception? exception, TimeSpan? timeoutTime) = stateProperty switch
@@ -183,6 +202,5 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
         }
 
         activity.Dispose();
-        _testActivities.Remove(testNode.Uid);
     }
 }

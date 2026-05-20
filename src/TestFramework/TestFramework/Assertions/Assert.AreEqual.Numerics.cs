@@ -64,17 +64,24 @@ public sealed partial class Assert
             : Math.Abs(expected - actual) > delta;
 
     [DoesNotReturn]
-    private static void ReportAssertAreEqualFailed<T>(T expected, T actual, T delta, string userMessage)
+    private static void ReportAssertAreEqualFailed<T>(T expected, T actual, T delta, string? userMessage, string expectedExpression, string actualExpression)
         where T : struct, IConvertible
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.AreEqualDeltaFailMsg,
-            userMessage,
-            expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
-            actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
-            delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-        ReportAssertFailed("Assert.AreEqual", finalMessage);
+        string expectedRendered = AssertionValueRenderer.RenderValue(expected);
+        string actualRendered = AssertionValueRenderer.RenderValue(actual);
+        string deltaRendered = AssertionValueRenderer.RenderValue(delta);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected:", expectedRendered)
+            .AddLine("actual:", actualRendered)
+            .AddLine("delta:", deltaRendered);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.AreEqualDeltaFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedRendered, actualRendered);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreEqual", expectedExpression, actualExpression, string.Empty, "<expected>", "<actual>", "<delta>"));
+
+        ReportAssertFailed(structured);
     }
 
     /// <inheritdoc cref="AreEqual(float, float, float, string, string, string)"/>
@@ -124,8 +131,7 @@ public sealed partial class Assert
 
         if (AreEqualFailing(expected, actual, delta))
         {
-            string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
-            ReportAssertAreEqualFailed(expected, actual, delta, userMessage);
+            ReportAssertAreEqualFailed(expected, actual, delta, message, expectedExpression, actualExpression);
         }
     }
 
@@ -176,8 +182,7 @@ public sealed partial class Assert
 
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
-            string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
-            ReportAssertAreNotEqualFailed(notExpected, actual, delta, userMessage);
+            ReportAssertAreNotEqualFailed(notExpected, actual, delta, message, notExpectedExpression, actualExpression);
         }
     }
 
@@ -249,8 +254,7 @@ public sealed partial class Assert
 
         if (AreEqualFailing(expected, actual, delta))
         {
-            string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
-            ReportAssertAreEqualFailed(expected, actual, delta, userMessage);
+            ReportAssertAreEqualFailed(expected, actual, delta, message, expectedExpression, actualExpression);
         }
     }
 
@@ -301,8 +305,7 @@ public sealed partial class Assert
 
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
-            string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
-            ReportAssertAreNotEqualFailed(notExpected, actual, delta, userMessage);
+            ReportAssertAreNotEqualFailed(notExpected, actual, delta, message, notExpectedExpression, actualExpression);
         }
     }
 
@@ -356,8 +359,7 @@ public sealed partial class Assert
 
         if (AreEqualFailing(expected, actual, delta))
         {
-            string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
-            ReportAssertAreEqualFailed(expected, actual, delta, userMessage);
+            ReportAssertAreEqualFailed(expected, actual, delta, message, expectedExpression, actualExpression);
         }
     }
 
@@ -408,8 +410,7 @@ public sealed partial class Assert
 
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
-            string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
-            ReportAssertAreNotEqualFailed(notExpected, actual, delta, userMessage);
+            ReportAssertAreNotEqualFailed(notExpected, actual, delta, message, notExpectedExpression, actualExpression);
         }
     }
 
@@ -462,8 +463,7 @@ public sealed partial class Assert
 
         if (AreEqualFailing(expected, actual, delta))
         {
-            string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
-            ReportAssertAreEqualFailed(expected, actual, delta, userMessage);
+            ReportAssertAreEqualFailed(expected, actual, delta, message, expectedExpression, actualExpression);
         }
     }
 
@@ -514,8 +514,7 @@ public sealed partial class Assert
 
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
-            string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
-            ReportAssertAreNotEqualFailed(notExpected, actual, delta, userMessage);
+            ReportAssertAreNotEqualFailed(notExpected, actual, delta, message, notExpectedExpression, actualExpression);
         }
     }
 
@@ -541,17 +540,24 @@ public sealed partial class Assert
     }
 
     [DoesNotReturn]
-    private static void ReportAssertAreNotEqualFailed<T>(T notExpected, T actual, T delta, string userMessage)
+    private static void ReportAssertAreNotEqualFailed<T>(T notExpected, T actual, T delta, string? userMessage, string notExpectedExpression, string actualExpression)
         where T : struct, IConvertible
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.AreNotEqualDeltaFailMsg,
-            userMessage,
-            notExpected.ToString(CultureInfo.CurrentCulture.NumberFormat),
-            actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
-            delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-        ReportAssertFailed("Assert.AreNotEqual", finalMessage);
+        string notExpectedRendered = AssertionValueRenderer.RenderValue(notExpected);
+        string actualRendered = AssertionValueRenderer.RenderValue(actual);
+        string deltaRendered = AssertionValueRenderer.RenderValue(delta);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("not expected:", notExpectedRendered)
+            .AddLine("actual:", actualRendered)
+            .AddLine("delta:", deltaRendered);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.AreNotEqualDeltaFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual($"not {notExpectedRendered}", actualRendered);
+        structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreNotEqual", notExpectedExpression, actualExpression, string.Empty, "<notExpected>", "<actual>", "<delta>"));
+
+        ReportAssertFailed(structured);
     }
 
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters

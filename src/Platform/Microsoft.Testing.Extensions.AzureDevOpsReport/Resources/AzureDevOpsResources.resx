@@ -136,6 +136,35 @@
     <value>Severity to use for the reported event. Options are: error (default) and warning.</value>
     <comment>{Locked="error"}{Locked="warning"}</comment>
   </data>
+  <data name="UploadArtifactExcludeOptionDescription" xml:space="preserve">
+    <value>Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.</value>
+  </data>
+  <data name="UploadArtifactIncludeOptionDescription" xml:space="preserve">
+    <value>Include files in Azure DevOps artifact upload using glob patterns relative to the test results directory. Defaults to '**/*'.</value>
+    <comment>{Locked="**/*"}</comment>
+  </data>
+  <data name="UploadArtifactNameOptionDescription" xml:space="preserve">
+    <value>Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.</value>
+    <comment>{Locked="TestResults_{assemblyName}_{tfm}"}</comment>
+  </data>
+  <data name="UploadArtifactsOptionDescription" xml:space="preserve">
+    <value>Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.</value>
+    <comment>{Locked="off"}{Locked="tags-only"}{Locked="files"}{Locked="all"}</comment>
+  </data>
+  <data name="InvalidArtifactUploadGlob" xml:space="preserve">
+    <value>Invalid glob pattern {0}.</value>
+  </data>
+  <data name="InvalidArtifactUploadMode" xml:space="preserve">
+    <value>Invalid artifact upload mode {0}.</value>
+  </data>
+  <data name="ArtifactUploadOptionsRequireUploadArtifacts" xml:space="preserve">
+    <value>'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</value>
+    <comment>{Locked="--report-azdo-upload-artifact-include"}{Locked="--report-azdo-upload-artifact-exclude"}{Locked="--report-azdo-upload-artifact-name"}{Locked="--report-azdo-upload-artifacts"}{Locked="off"}</comment>
+  </data>
+  <data name="ArtifactUploadRequiresTfBuildWarning" xml:space="preserve">
+    <value>Azure DevOps artifact upload was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps artifact upload and build tags.</value>
+    <comment>{Locked="TF_BUILD"}{Locked="true"}</comment>
+  </data>
   <data name="AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps" xml:space="preserve">
     <value>'--report-azdo-demote-known-flaky' requires '--report-azdo' to be enabled</value>
   </data>

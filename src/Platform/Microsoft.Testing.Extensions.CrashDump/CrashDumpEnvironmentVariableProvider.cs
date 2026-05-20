@@ -16,8 +16,6 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     private const string EnableMiniDumpVariable = "DbgEnableMiniDump";
     private const string MiniDumpTypeVariable = "DbgMiniDumpType";
     private const string MiniDumpNameVariable = "DbgMiniDumpName";
-    private const string CreateDumpDiagnosticsVariable = "CreateDumpDiagnostics";
-    private const string CreateDumpVerboseDiagnosticsVariable = "CreateDumpVerboseDiagnostics";
     private const string EnableCrashReportVariable = "EnableCrashReport";
     private const string EnableCrashReportOnlyVariable = "EnableCrashReportOnly";
     private const string EnabledValue = "1";
@@ -69,8 +67,6 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         foreach (string prefix in Prefixes)
         {
             environmentVariables.SetVariable(new($"{prefix}{EnableMiniDumpVariable}", EnabledValue, false, true));
-            environmentVariables.SetVariable(new($"{prefix}{CreateDumpDiagnosticsVariable}", EnabledValue, false, true));
-            environmentVariables.SetVariable(new($"{prefix}{CreateDumpVerboseDiagnosticsVariable}", EnabledValue, false, true));
         }
 
         if (crashReportEnabled)
@@ -159,8 +155,6 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         bool crashReportEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
 
         ValidateBothPrefixes(EnableMiniDumpVariable, EnabledValue);
-        ValidateBothPrefixes(CreateDumpDiagnosticsVariable, EnabledValue);
-        ValidateBothPrefixes(CreateDumpVerboseDiagnosticsVariable, EnabledValue);
 
         if (crashReportEnabled)
         {

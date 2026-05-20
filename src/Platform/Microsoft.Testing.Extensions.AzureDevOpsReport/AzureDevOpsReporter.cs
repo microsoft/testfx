@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
@@ -69,7 +69,7 @@ internal sealed class AzureDevOpsReporter :
         _outputDisplay = outputDisplay;
         _historyService = historyService;
         _logger = loggerFactory.CreateLogger<AzureDevOpsReporter>();
-        _targetFrameworkMoniker = GetTargetFrameworkMoniker();
+        _targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
     }
 
     public Type[] DataTypesConsumed { get; } =
@@ -396,10 +396,6 @@ internal sealed class AzureDevOpsReporter :
         _quarantineFile = LoadQuarantineFile();
         _hasLoadedEnabledConfiguration = true;
     }
-
-    private static string GetTargetFrameworkMoniker()
-        => TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
-            ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
 
     private static string GetTestName(TestNode testNode)
         => testNode.Properties
