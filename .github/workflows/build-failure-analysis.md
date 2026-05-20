@@ -121,13 +121,25 @@ steps:
         "$GITHUB_WORKSPACE/${{ steps.find-binlog.outputs.path }}" \
         /tmp/binlog-data
 
+  # On `workflow_dispatch` runs, `github.sha` is the SHA of the dispatched ref
+  # (usually the default branch), NOT the PR head. Look up the real PR head
+  # SHA via the API so permalinks and inline comment placement match the PR.
+  - name: Resolve PR head SHA (workflow_dispatch only)
+    if: github.event_name == 'workflow_dispatch' && inputs.pr-number != ''
+    id: resolve-pr-sha
+    env:
+      GH_TOKEN: ${{ github.token }}
+    run: |
+      SHA=$(gh api "repos/${{ github.repository }}/pulls/${{ inputs.pr-number }}" --jq .head.sha)
+      echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
   - name: Export agent context
     run: |
       {
         echo "GH_AW_BUILD_OUTCOME=${{ steps.build.outcome }}"
         echo "GH_AW_BINLOG_PATH=${{ steps.find-binlog.outputs.path }}"
         echo "GH_AW_PR_NUMBER=${{ github.event.pull_request.number || github.event.issue.number || inputs.pr-number }}"
-        echo "GH_AW_PR_HEAD_SHA=${{ github.event.pull_request.head.sha || github.sha }}"
+        echo "GH_AW_PR_HEAD_SHA=${{ steps.resolve-pr-sha.outputs.sha || github.event.pull_request.head.sha || github.sha }}"
         echo "GH_AW_WORKSPACE=${{ github.workspace }}"
       } >> "$GITHUB_ENV"
 

@@ -96,13 +96,25 @@ steps:
         "$GITHUB_WORKSPACE/${{ steps.find-binlog.outputs.path }}" \
         /tmp/binlog-data
 
+  # `pull_request_comment` events use the `issues` event payload, so
+  # `github.sha` is the default branch tip — NOT the PR head. Always resolve
+  # the real PR head SHA via the API so permalinks and inline comment
+  # placement match the PR.
+  - name: Resolve PR head SHA
+    id: resolve-pr-sha
+    env:
+      GH_TOKEN: ${{ github.token }}
+    run: |
+      SHA=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.issue.number }}" --jq .head.sha)
+      echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
   - name: Export agent context
     run: |
       {
         echo "GH_AW_BUILD_OUTCOME=${{ steps.build.outcome }}"
         echo "GH_AW_BINLOG_PATH=${{ steps.find-binlog.outputs.path }}"
         echo "GH_AW_PR_NUMBER=${{ github.event.issue.number }}"
-        echo "GH_AW_PR_HEAD_SHA=${{ github.sha }}"
+        echo "GH_AW_PR_HEAD_SHA=${{ steps.resolve-pr-sha.outputs.sha || github.sha }}"
         echo "GH_AW_WORKSPACE=${{ github.workspace }}"
       } >> "$GITHUB_ENV"
 
