@@ -159,8 +159,18 @@ internal sealed class TestClassInfo
     /// The snapshot is shallow: reference-type values stored in the bag are shared (aliased)
     /// across every context the snapshot is merged into.
     /// </para>
+    /// <para>
+    /// Reads and writes use <see cref="Volatile"/> so that callers on the cached-result fast
+    /// path of <see cref="GetResultOrRunClassInitializeAsync"/> (which intentionally bypasses
+    /// <see cref="_testClassExecuteSyncSemaphore"/>) safely observe the snapshot published by
+    /// the thread that ran <c>ClassInitialize</c>.
+    /// </para>
     /// </summary>
-    internal IReadOnlyDictionary<string, object?>? PostClassInitProperties { get; private set; }
+    internal IReadOnlyDictionary<string, object?>? PostClassInitProperties
+    {
+        get => Volatile.Read(ref field);
+        private set => Volatile.Write(ref field, value);
+    }
 
     /// <summary>
     /// Gets or sets the class cleanup method.

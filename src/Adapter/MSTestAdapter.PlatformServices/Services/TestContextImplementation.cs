@@ -293,6 +293,14 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <see cref="TestContext.TestNameLabel"/>, which are preserved).
     /// Used to flow properties set during <c>AssemblyInitialize</c> / <c>ClassInitialize</c>
     /// into subsequent contexts.
+    /// <para>
+    /// Merge precedence: keys in <paramref name="propertiesToMerge"/> WIN over keys already
+    /// present in this context's bag. This is intentional — lifecycle snapshots typically
+    /// flow on top of the seeded source-level parameters (e.g. <c>TestRunParameters</c> from
+    /// <c>.runsettings</c>), so a user's explicit assignment in <c>AssemblyInitialize</c> /
+    /// <c>ClassInitialize</c> overrides any same-named runsettings value for the rest of
+    /// the lifecycle (class init, tests, class cleanup, assembly cleanup).
+    /// </para>
     /// </summary>
     /// <param name="propertiesToMerge">The properties to merge in. May be <see langword="null"/>.</param>
     internal void MergeProperties(IReadOnlyDictionary<string, object?>? propertiesToMerge)
@@ -326,19 +334,34 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// shared across every context the snapshot is later merged into. Mutations of those
     /// reference-type instances are visible everywhere.
     /// </para>
+    /// <para>
+    /// Enumeration is performed under a lock on <c>_properties</c> so that snapshot capture
+    /// is safe against concurrent calls to this method or <see cref="MergeProperties"/> on
+    /// the same context. Note: writes made via the public <see cref="Properties"/> indexer
+    /// do NOT take this lock, so a lifecycle method that spawns a background thread which
+    /// keeps mutating <see cref="Properties"/> past method return can still race with the
+    /// capture - that is treated as user error and is consistent with the pre-existing
+    /// thread-affinity expectation of <c>AssemblyInitialize</c> / <c>ClassInitialize</c>.
+    /// </para>
     /// </summary>
     /// <returns>A read-only snapshot of the current properties.</returns>
     internal IReadOnlyDictionary<string, object?> CaptureLifecycleProperties()
     {
-        var snapshot = new Dictionary<string, object?>(_properties.Count);
-        foreach (KeyValuePair<string, object?> kvp in _properties)
+        Dictionary<string, object?> snapshot;
+        lock (_properties)
         {
-            if (kvp.Key == FullyQualifiedTestClassNameLabel || kvp.Key == TestNameLabel)
+#pragma warning disable IDE0028 // Collection initialization can be simplified - capacity hint is intentional.
+            snapshot = new Dictionary<string, object?>(_properties.Count);
+#pragma warning restore IDE0028
+            foreach (KeyValuePair<string, object?> kvp in _properties)
             {
-                continue;
-            }
+                if (kvp.Key == FullyQualifiedTestClassNameLabel || kvp.Key == TestNameLabel)
+                {
+                    continue;
+                }
 
-            snapshot[kvp.Key] = kvp.Value;
+                snapshot[kvp.Key] = kvp.Value;
+            }
         }
 
         return new ReadOnlyDictionary<string, object?>(snapshot);

@@ -427,6 +427,26 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation.Properties["Key"].Should().Be("Overwritten");
     }
 
+    public void MergePropertiesShouldOverrideSeededSourceLevelParameters()
+    {
+        // Seeded source-level parameters (the bag the runner forwards from runsettings
+        // TestRunParameters) sit in _properties at construction time; lifecycle snapshots
+        // from AssemblyInitialize / ClassInitialize MUST override them on key collision so
+        // a user's explicit assignment wins for the rest of the lifecycle.
+        var seeded = new Dictionary<string, object?>
+        {
+            ["RunSettingsKey"] = "FromRunSettings",
+        };
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, seeded, null, null);
+
+        _testContextImplementation.MergeProperties(new Dictionary<string, object?>
+        {
+            ["RunSettingsKey"] = "FromAssemblyInit",
+        });
+
+        _testContextImplementation.Properties["RunSettingsKey"].Should().Be("FromAssemblyInit");
+    }
+
     public void MergePropertiesShouldIgnoreNull()
     {
         _testContextImplementation = CreateTestContextImplementation();

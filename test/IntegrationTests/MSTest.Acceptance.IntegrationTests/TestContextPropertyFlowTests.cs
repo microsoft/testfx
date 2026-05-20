@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
@@ -194,6 +195,118 @@ public sealed class DataRowFlowTests
         Assert.AreEqual("AssemblyInitValue", TestContext.Properties["AssemblyInitKey"]);
         Assert.AreEqual("DataRowClassInitValue", TestContext.Properties["DataRowClassInitKey"]);
         Assert.IsTrue(rowNumber > 0);
+    }
+}
+""";
+    }
+
+    public TestContext TestContext { get; set; } = null!;
+}
+
+/// <summary>
+/// Acceptance test for the <c>ClassCleanupManager.ForceCleanup</c> fallback path that runs
+/// when execution stops early (e.g. via <c>--maximum-failed-tests</c>). It validates that
+/// <c>ClassCleanup</c> and <c>AssemblyCleanup</c> invoked via that fallback still observe
+/// the lifecycle property snapshots captured during <c>AssemblyInitialize</c> and
+/// <c>ClassInitialize</c>.
+/// </summary>
+[TestClass]
+public sealed class TestContextPropertyFlowForceCleanupTests : AcceptanceTestBase<TestContextPropertyFlowForceCleanupTests.TestAssetFixture>
+{
+    private const string ClassCleanupMarker = "FORCECLEANUP_CLASSCLEANUP_OK";
+    private const string AssemblyCleanupMarker = "FORCECLEANUP_ASSEMBLYCLEANUP_OK";
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task ForceCleanupSeesAssemblyAndClassInitProperties(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 1", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedForMaxFailedTests);
+        // ClassCleanup and AssemblyCleanup invoked via ForceCleanup must see both snapshots.
+        // The cleanup methods emit a sentinel marker only when their assertions pass; the
+        // markers' presence proves the snapshots flowed correctly into the fallback contexts.
+        Assert.Contains(ClassCleanupMarker, testHostResult.StandardOutput);
+        Assert.Contains(AssemblyCleanupMarker, testHostResult.StandardOutput);
+    }
+
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
+    {
+        public const string ProjectName = "TestContextPropertyFlowForceCleanup";
+
+        public string ProjectPath => GetAssetPath(ProjectName);
+
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
+                SourceCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+        private const string SourceCode = """
+#file TestContextPropertyFlowForceCleanup.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <LangVersion>preview</LangVersion>
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+  </ItemGroup>
+
+</Project>
+
+#file UnitTest1.cs
+using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public sealed class ForceCleanupFlowTests
+{
+    public TestContext TestContext { get; set; } = null!;
+
+    [AssemblyInitialize]
+    public static void AssemblyInit(TestContext context)
+        => context.Properties["AssemblyInitKey"] = "AssemblyInitValue";
+
+    [ClassInitialize]
+    public static void ClassInit(TestContext context)
+        => context.Properties["ClassInitKey"] = "ClassInitValue";
+
+    // Failing test triggers --maximum-failed-tests=1 graceful stop, leaving the
+    // remaining tests un-run; the normal end-of-class / end-of-assembly cleanup is
+    // skipped, so cleanup must come through the ForceCleanup fallback path.
+    [TestMethod]
+    public void TestA_Fails() => Assert.Fail("intentional fail to trigger graceful stop");
+
+    [TestMethod]
+    public void TestB_Passes() { }
+
+    [TestMethod]
+    public void TestC_Passes() { }
+
+    [ClassCleanup]
+    public static void ClassCleanup(TestContext context)
+    {
+        Assert.AreEqual("AssemblyInitValue", context.Properties["AssemblyInitKey"]);
+        Assert.AreEqual("ClassInitValue", context.Properties["ClassInitKey"]);
+        Console.WriteLine("FORCECLEANUP_CLASSCLEANUP_OK");
+    }
+
+    [AssemblyCleanup]
+    public static void AssemblyCleanup(TestContext context)
+    {
+        // AssemblyCleanup must see AssemblyInit-set values. ClassInit-set values are
+        // class-scoped and must NOT flow to AssemblyCleanup even via the fallback path.
+        Assert.AreEqual("AssemblyInitValue", context.Properties["AssemblyInitKey"]);
+        Assert.IsFalse(
+            context.Properties.ContainsKey("ClassInitKey"),
+            "Properties set by ClassInitialize must not flow to AssemblyCleanup, even via ForceCleanup.");
+        Console.WriteLine("FORCECLEANUP_ASSEMBLYCLEANUP_OK");
     }
 }
 """;
