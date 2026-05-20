@@ -1,7 +1,7 @@
 # TestFX Test Improver Memory
 
 ## Last Updated
-2026-05-19
+2026-05-20
 
 ## Build/Test Commands
 
@@ -58,6 +58,7 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
   - SA1516: Internal interface declarations at file scope need blank lines between them
   - MSTEST0037: Use `Assert.IsEmpty`/`Assert.HasCount` instead of `Assert.AreEqual(0/N, ...)` for collections
   - MSTEST0017: `Assert.AreEqual/AreNotEqual` — expected comes FIRST, actual second
+  - PlatformResources in test project only exposes a limited set under `!IS_CORE_MTP` — CommandLineParserResponseFileNotFound and CommandLineParserFailedToReadResponseFile are NOT available; use `Assert.Contains(path, errors[0])` instead
 
 ## Testing Backlog (prioritized)
 
@@ -72,25 +73,29 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 9. ✅ **DONE** Quality improvements to `LoggingManagerTests.cs` → merged via #8129 (2026-05-14)
 10. ✅ **DONE** `StopPoliciesService` unit tests → patch in 2026-05-14 run
 11. ✅ **DONE** `CommandLineParseResult` unit tests → PR #8249 merged 2026-05-15
-12. ✅ **DONE** `ResponseFileHelper.SplitCommandLine` — tests already in repo
-13. ✅ **DONE** `CommandLineOption` validation & equality — tests already in repo
-14. 🔄 `ResponseFileHelper.TryReadResponseFile` — patch created 2026-05-19 (6 new tests, bundle: aw-test-assist-response-file-helper-tests)
+12. ✅ **DONE** `ResponseFileHelper.SplitCommandLine` — tests already in repo / PR #8325 merged 2026-05-19
+13. ✅ **DONE** `CommandLineOption` validation & equality — PR #8319 merged 2026-05-18
+14. 🔄 `ResponseFileHelper.TryReadResponseFile` — 6 tests in patch aw-test-assist-response-file-helper-try-read (2026-05-20)
 15. Code fix test coverage for MSTEST0040 when `AvoidUsingAssertsInAsyncVoidContextFixer` lands (#7891)
 16. `TestFramework.UnitTests` assertion edge cases
 
 ## Completed Work
 
+### 2026-05-20
+- **Task 3**: Added 6 unit tests for `ResponseFileHelper.TryReadResponseFile` (file-not-found, valid file, comments, blank lines, quoted args, empty file). All 44 tests pass. Patch: aw-test-assist-response-file-helper-try-read.
+- **Task 4**: No open Test Improver PRs — nothing to maintain.
+- **Task 7**: Created new Monthly Summary issue for May 2026.
+
 ### 2026-05-19
-- **Task 3**: Added 6 unit tests for `ResponseFileHelper.TryReadResponseFile` (FileNotFound, valid file, comments, blank lines, quoted args, empty file). 44 total ResponseFileHelper tests pass. PR push fell back to patch artifact (bundle: aw-test-assist-response-file-helper-tests).
+- **Task 3**: Added 6 unit tests for `ResponseFileHelper.TryReadResponseFile`. PR push fell back to patch artifact.
 - **Task 7**: Created new Monthly Summary issue for May 2026.
 
 ### 2026-05-18
-- **Task 3**: Implemented 26 unit tests for `CommandLineOption`. PR push fell back to patch artifact.
+- **Task 3**: Implemented 26 unit tests for `CommandLineOption`. PR #8319 merged.
 - **Task 7**: Updated Monthly Summary issue #8301.
 
 ### 2026-05-17
-- **Task 3**: Implemented 14 unit tests for `ResponseFileHelper.SplitCommandLine`. PR push fell back to patch artifact.
-- **Task 7**: Created new Monthly Summary issue for May 2026.
+- **Task 3**: Implemented 14 unit tests for `ResponseFileHelper.SplitCommandLine`. PR #8325 merged.
 
 ### 2026-05-15
 - **Task 3**: Created 20 unit tests for `CommandLineParseResult` → PR #8249 merged same day.
@@ -114,15 +119,15 @@ dotnet test test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testin
 |------|----------|
 | Task 1: Discover commands | 2026-04-24 |
 | Task 2: Identify opportunities | 2026-05-15 |
-| Task 3: Implement tests | 2026-05-19 |
-| Task 4: Maintain PRs | 2026-05-12 |
+| Task 3: Implement tests | 2026-05-20 |
+| Task 4: Maintain PRs | 2026-05-20 |
 | Task 5: Comment on issues | 2026-05-08 |
 | Task 6: Test infrastructure | 2026-04-29 |
-| Task 7: Monthly summary | 2026-05-19 |
+| Task 7: Monthly summary | 2026-05-20 |
 
 ## Maintainer Priorities
 - PRs merged quickly by Evangelink — receptive to focused test PRs for MTP and MSTest
-- Evangelink closed monthly issues #7969, #8206, #8301 — will keep creating new ones each run
+- Evangelink closes monthly issues each run — will keep creating new ones each run
 - **PR CREATION**: `safeoutputs-create_pull_request` consistently falls back to patch artifact. Patch files are at `/tmp/gh-aw/aw-test-assist-*.patch`.
 
 ## Notes
