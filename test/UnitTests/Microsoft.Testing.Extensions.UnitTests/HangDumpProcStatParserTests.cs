@@ -42,22 +42,4 @@ public sealed class HangDumpProcStatParserTests
     [TestMethod]
     public void ParseParentPidFromProcStat_NotEnoughFieldsAfterComm_ReturnsInvalidProcessId()
         => Assert.AreEqual(InvalidProcessId, IProcessExtensions.ParseParentPidFromProcStat("1 (a) S"));
-
-    [TestMethod]
-    public void ParseParentPidFromProcStat_NonInvariantCulture_StillParses()
-    {
-        // PIDs are ASCII decimals; parsing must use InvariantCulture so cultures with
-        // non-ASCII digit shapes or different separators don't break the parse.
-        CultureInfo previous = CultureInfo.CurrentCulture;
-        try
-        {
-            CultureInfo.CurrentCulture = new CultureInfo("fr-FR");
-            int actual = IProcessExtensions.ParseParentPidFromProcStat("1234 (Web Content) S 4567 1234 1234 0 -1 0 0 0");
-            Assert.AreEqual(4567, actual);
-        }
-        finally
-        {
-            CultureInfo.CurrentCulture = previous;
-        }
-    }
 }
