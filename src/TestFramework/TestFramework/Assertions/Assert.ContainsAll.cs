@@ -355,7 +355,7 @@ public sealed partial class Assert
 
     private static void DoesNotContainAllImpl<T>(IEnumerable<T?> notExpected, IEnumerable<T?> collection, IEqualityComparer<T> comparer, string? comparerName, string? message, string notExpectedExpression, string collectionExpression)
     {
-        List<T?> notExpectedList = notExpected is List<T?> el ? el : [.. notExpected];
+        List<T?> notExpectedList = notExpected is List<T?> nel ? nel : [.. notExpected];
         List<T?> collectionList = collection is List<T?> cl ? cl : [.. collection];
 
         if (!HasAnyMissingElement(notExpectedList, collectionList, comparer))
@@ -530,13 +530,14 @@ public sealed partial class Assert
         ReportAssertFailed(structured);
     }
 
-    private static string? BuildCallSiteWithComparer(string assertionMethodName, string expectedExpression, string collectionExpression, bool hasComparer, string firstArgPlaceholder = "<expected>")
+    private static string? BuildCallSiteWithComparer(string assertionMethodName, string firstArgExpression, string secondArgExpression, bool hasComparer, string firstArgPlaceholder = "<expected>")
         => hasComparer
             // No [CallerArgumentExpression] is captured for the comparer parameter, so the third
             // expression slot is always unavailable. Pass the "<comparer>" placeholder directly as
             // the third expression to ensure the call site is rendered (e.g. as
-            // "Assert.ContainsAll(<expected>, <collection>, <comparer>)") even when callers do not
-            // support [CallerArgumentExpression] and the other expressions are also empty.
-            ? FormatCallSiteExpression(assertionMethodName, expectedExpression, collectionExpression, expression3: "<comparer>", firstArgPlaceholder, "<collection>", "<comparer>")
-            : FormatCallSiteExpression(assertionMethodName, expectedExpression, collectionExpression, firstArgPlaceholder, "<collection>");
+            // "Assert.ContainsAll(<expected>, <collection>, <comparer>)" or
+            // "Assert.DoesNotContainAll(<notExpected>, <collection>, <comparer>)") even when callers
+            // do not support [CallerArgumentExpression] and the other expressions are also empty.
+            ? FormatCallSiteExpression(assertionMethodName, firstArgExpression, secondArgExpression, expression3: "<comparer>", firstArgPlaceholder, "<collection>", "<comparer>")
+            : FormatCallSiteExpression(assertionMethodName, firstArgExpression, secondArgExpression, firstArgPlaceholder, "<collection>");
 }
