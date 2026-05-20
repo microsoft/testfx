@@ -87,19 +87,34 @@ internal static class IProcessExtensions
     /// <returns>The process id.</returns>
     [UnsupportedOSPlatform("browser")]
     internal static int GetParentPidLinux(Process process)
+        => ParseParentPidFromProcStat(File.ReadAllText($"/proc/{process.Id}/stat"));
+
+    /// <summary>
+    /// Parses the parent PID out of a line read from <c>/proc/&lt;pid&gt;/stat</c>.
+    /// </summary>
+    /// <remarks>
+    /// Per <c>proc(5)</c>, the line has the format <c>pid (comm) state ppid pgrp ...</c>.
+    /// The <c>comm</c> field is allowed to contain spaces and parentheses (the kernel only
+    /// truncates it to 16 chars and does not escape its content), so the line cannot be split
+    /// on <c>' '</c>. The kernel does guarantee that <c>)</c> terminates <c>comm</c>, so the
+    /// last <c>)</c> in the line marks its end. After that, fields are space-separated:
+    /// <c>[0] = state</c>, <c>[1] = ppid</c>, <c>[2] = pgrp</c>, ...
+    /// </remarks>
+    /// <param name="stat">The full contents of <c>/proc/&lt;pid&gt;/stat</c>.</param>
+    /// <returns>The parent process id, or <see cref="InvalidProcessId"/> if the input is malformed.</returns>
+    internal static int ParseParentPidFromProcStat(string stat)
     {
-        int pid = process.Id;
+        int commEnd = stat.LastIndexOf(')');
+        if (commEnd < 0 || commEnd + 2 >= stat.Length)
+        {
+            return InvalidProcessId;
+        }
 
-        // read /proc/<pid>/stat
-        // 4th column will contain the ppid, 92 in the example below
-        // ex: 93 (bash) S 92 93 2 4294967295 ...
-        string path = $"/proc/{pid}/stat";
-        string stat = File.ReadAllText(path);
-        string[] parts = stat.Split(' ');
-
-        int ppid = parts.Length < 5 ? InvalidProcessId : int.Parse(parts[3], CultureInfo.CurrentCulture);
-
-        return ppid;
+        string[] afterComm = stat.Substring(commEnd + 2).Split(' ');
+        return afterComm.Length >= 2
+            && int.TryParse(afterComm[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out int ppid)
+            ? ppid
+            : InvalidProcessId;
     }
 
     [UnsupportedOSPlatform("browser")]
