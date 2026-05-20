@@ -294,4 +294,296 @@ public sealed class AvoidAssertsInCatchBlocksAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task AssertInconclusiveInFilteredCatch_NoDiagnostic()
+    {
+        // Exemption: Assert.Inconclusive inside a filtered catch (catch ... when ...) is the only
+        // way to demote a caught failure to an Inconclusive outcome and must remain allowed.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    try
+                    {
+                        throw new AssertFailedException("no exception was thrown.");
+                    }
+                    catch (AssertFailedException ex) when (ex.Message.Contains("no exception was thrown."))
+                    {
+                        Assert.Inconclusive("Environment is not properly set up");
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task AssertInconclusiveInUnfilteredCatch_Diagnostic()
+    {
+        // Unfiltered catch still falls through silently if no exception is thrown, so keep flagging it.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    try
+                    {
+                        // code
+                    }
+                    catch (Exception)
+                    {
+                        [|Assert.Inconclusive("Environmental issue")|];
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task AssertFailInFilteredCatch_Diagnostic()
+    {
+        // Assert.Fail has no unique value in a catch — even with a filter — because MSTest already
+        // converts any unhandled exception in a test method to a Failed outcome.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    try
+                    {
+                        // code
+                    }
+                    catch (Exception ex) when (ex.Message.Contains("foo"))
+                    {
+                        [|Assert.Fail("Got foo, but unexpected")|];
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task ThrowNewAssertFailedExceptionInCatchBlock_Diagnostic()
+    {
+        // Desugared form of Assert.Fail — same fall-through risk, same diagnostic.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    try
+                    {
+                        // code
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        [|throw new AssertFailedException("wrapped", ex);|]
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task ThrowNewAssertInconclusiveExceptionInUnfilteredCatch_Diagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    try
+                    {
+                        // code
+                    }
+                    catch (Exception)
+                    {
+                        [|throw new AssertInconclusiveException("inconclusive");|]
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task ThrowNewAssertInconclusiveExceptionInFilteredCatch_NoDiagnostic()
+    {
+        // Same exemption as Assert.Inconclusive in a filtered catch: outcome demotion is legitimate.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    try
+                    {
+                        throw new AssertFailedException("no exception was thrown.");
+                    }
+                    catch (AssertFailedException ex) when (ex.Message.Contains("no exception was thrown."))
+                    {
+                        throw new AssertInconclusiveException("Environment is not properly set up");
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task RethrowInCatchBlock_NoDiagnostic()
+    {
+        // Bare 'throw;' rethrow propagates the caught exception unchanged — no new MSTest outcome
+        // is being introduced at the catch site, so the rule should not fire.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    try
+                    {
+                        throw new AssertFailedException("boom");
+                    }
+                    catch (AssertFailedException)
+                    {
+                        throw;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task ThrowCaughtAssertFailedExceptionVariableInCatchBlock_NoDiagnostic()
+    {
+        // 'throw ex;' propagates an already-thrown exception; not flagged because no new exception
+        // is being constructed in the catch.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    try
+                    {
+                        throw new AssertFailedException("boom");
+                    }
+                    catch (AssertFailedException ex)
+                    {
+                        throw ex;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task ThrowNewAssertFailedExceptionOutsideCatchBlock_NoDiagnostic()
+    {
+        // The rule is specific to catch blocks. Throwing AssertFailedException directly from a test
+        // body is allowed (it is equivalent to Assert.Fail and outside the rule's scope).
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    throw new AssertFailedException("direct fail");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task ThrowNewAssertFailedExceptionDerivedTypeInCatchBlock_Diagnostic()
+    {
+        // Derived MSTest assertion exception types are still flagged — same fall-through risk.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyAssertFailedException : AssertFailedException
+            {
+                public MyAssertFailedException(string message) : base(message) { }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    try
+                    {
+                        // code
+                    }
+                    catch (Exception)
+                    {
+                        [|throw new MyAssertFailedException("derived");|]
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }
