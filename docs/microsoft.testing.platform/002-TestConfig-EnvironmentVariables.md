@@ -117,7 +117,7 @@ The `environmentVariables` section must be a **flat JSON object whose values are
 | `"environmentVariables": { "FOO": "bar" }`              | ✅ Sets `FOO=bar`                              |
 | `"environmentVariables": { "FOO": "" }`                 | ✅ Sets `FOO=""`                               |
 | `"environmentVariables": { "FOO": 42, "BAR": true }`    | ✅ Coerced to text: `FOO=42`, `BAR=True`       |
-| `"environmentVariables": { "FOO": null }`               | ⚠️ Runtime-dependent (see [Edge cases](#edge-cases)) |
+| `"environmentVariables": { "FOO": null }`               | ⚠️ Runtime-dependent (see [Edge cases](#edge-cases-and-limitations)) |
 | `"environmentVariables": {}`                            | ✅ No-op; controller process model **not** triggered |
 | (section absent)                                        | ✅ No-op; controller process model **not** triggered |
 | `"environmentVariables": "oops"`                        | ❌ Throws – section must be a JSON object       |
