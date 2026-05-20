@@ -81,8 +81,8 @@ public partial class AssertTests : TestContainer
                 """
                 Assertion failed. Expected collection to not contain all specified items.
 
-                expected:   [1, 1]
-                collection: [1, 1, 2]
+                notExpected: [1, 1]
+                collection:  [1, 1, 2]
 
                 Assert.DoesNotContainAll(new[] { 1, 1 }, new[] { 1, 1, 2 })
                 """);
@@ -235,8 +235,8 @@ public partial class AssertTests : TestContainer
                 """
                 Assertion failed. Expected collection to not contain all specified items.
 
-                expected:   [1, 2]
-                collection: [1, 2, 3]
+                notExpected: [1, 2]
+                collection:  [1, 2, 3]
 
                 Assert.DoesNotContainAll(new[] { 1, 2 }, new[] { 1, 2, 3 })
                 """);
@@ -251,8 +251,8 @@ public partial class AssertTests : TestContainer
                 Assertion failed. Expected collection to not contain all specified items.
                 User-provided message
 
-                expected:   [1]
-                collection: [1, 2]
+                notExpected: [1]
+                collection:  [1, 2]
 
                 Assert.DoesNotContainAll(new[] { 1 }, new[] { 1, 2 })
                 """);
@@ -269,9 +269,9 @@ public partial class AssertTests : TestContainer
                 """
                 Assertion failed. Expected collection to not contain all specified items.
 
-                expected:   ["A"]
-                collection: ["a", "b"]
-                comparer:   CaseInsensitiveStringComparer
+                notExpected: ["A"]
+                collection:  ["a", "b"]
+                comparer:    CaseInsensitiveStringComparer
 
                 Assert.DoesNotContainAll(new[] { "A" }, new[] { "a", "b" }, <comparer>)
                 """);
@@ -281,7 +281,7 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.DoesNotContainAll(null, new[] { 1, 2 });
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.DoesNotContainAll failed. The parameter 'expected' is invalid. The value cannot be null.");
+            .WithMessage("Assert.DoesNotContainAll failed. The parameter 'notExpected' is invalid. The value cannot be null.");
     }
 
     public void DoesNotContainAll_Generic_NullCollection_ShouldFail()
@@ -323,7 +323,7 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.DoesNotContainAll(null, new ArrayList { 1, 2 });
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.DoesNotContainAll failed. The parameter 'expected' is invalid. The value cannot be null.");
+            .WithMessage("Assert.DoesNotContainAll failed. The parameter 'notExpected' is invalid. The value cannot be null.");
     }
 
     public void DoesNotContainAll_NonGeneric_NullCollection_ShouldFail()
@@ -348,8 +348,8 @@ public partial class AssertTests : TestContainer
                 """
                 Assertion failed. Expected collection to not contain all specified items.
 
-                expected:   []
-                collection: []
+                notExpected: []
+                collection:  []
 
                 Assert.DoesNotContainAll(Array.Empty<int>(), Array.Empty<int>())
                 """);
@@ -363,8 +363,8 @@ public partial class AssertTests : TestContainer
                 """
                 Assertion failed. Expected collection to not contain all specified items.
 
-                expected:   []
-                collection: [1]
+                notExpected: []
+                collection:  [1]
 
                 Assert.DoesNotContainAll(Array.Empty<int>(), new[] { 1 })
                 """);
@@ -372,19 +372,19 @@ public partial class AssertTests : TestContainer
 
     public void DoesNotContainAll_NonGeneric_WithComparer_AllPresent_ShouldFail()
     {
-        IEnumerable expected = new ArrayList { "A" };
+        IEnumerable notExpected = new ArrayList { "A" };
         IEnumerable collection = new ArrayList { "a", "b" };
-        Action action = () => Assert.DoesNotContainAll(expected, collection, new CaseInsensitiveStringComparer());
+        Action action = () => Assert.DoesNotContainAll(notExpected, collection, new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
                 Assertion failed. Expected collection to not contain all specified items.
 
-                expected:   ["A"]
-                collection: ["a", "b"]
-                comparer:   CaseInsensitiveStringComparer
+                notExpected: ["A"]
+                collection:  ["a", "b"]
+                comparer:    CaseInsensitiveStringComparer
 
-                Assert.DoesNotContainAll(expected, collection, <comparer>)
+                Assert.DoesNotContainAll(notExpected, collection, <comparer>)
                 """);
     }
 
@@ -424,18 +424,18 @@ public partial class AssertTests : TestContainer
             new[] { "a", "b" },
             new CaseInsensitiveStringComparer(),
             message: null,
-            expectedExpression: string.Empty,
+            notExpectedExpression: string.Empty,
             collectionExpression: string.Empty);
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
                 Assertion failed. Expected collection to not contain all specified items.
 
-                expected:   ["A"]
-                collection: ["a", "b"]
-                comparer:   CaseInsensitiveStringComparer
+                notExpected: ["A"]
+                collection:  ["a", "b"]
+                comparer:    CaseInsensitiveStringComparer
 
-                Assert.DoesNotContainAll(<expected>, <collection>, <comparer>)
+                Assert.DoesNotContainAll(<notExpected>, <collection>, <comparer>)
                 """);
     }
 
