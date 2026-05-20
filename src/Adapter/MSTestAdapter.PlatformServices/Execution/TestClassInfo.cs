@@ -144,6 +144,25 @@ internal sealed class TestClassInfo
     public Exception? ClassCleanupException { get; internal set; }
 
     /// <summary>
+    /// Gets a snapshot of <see cref="TestContext.Properties"/> captured after the
+    /// <c>ClassInitialize</c> method completes. Used to flow properties set during
+    /// <c>ClassInitialize</c> into subsequent contexts (test execution, class cleanup).
+    /// <see langword="null"/> if no <c>ClassInitialize</c> method was registered or it has
+    /// not yet executed successfully.
+    /// <para>
+    /// When the test class inherits from a base class that has a <c>ClassInitialize</c>
+    /// method declared with <see cref="InheritanceBehavior.BeforeEachDerivedClass"/>, all
+    /// class-init bodies in the chain run against the same context, so the captured snapshot
+    /// includes properties set by both base and derived class-init methods.
+    /// </para>
+    /// <para>
+    /// The snapshot is shallow: reference-type values stored in the bag are shared (aliased)
+    /// across every context the snapshot is merged into.
+    /// </para>
+    /// </summary>
+    internal IReadOnlyDictionary<string, object?>? PostClassInitProperties { get; private set; }
+
+    /// <summary>
     /// Gets or sets the class cleanup method.
     /// </summary>
     public MethodInfo? ClassCleanupMethod
@@ -441,6 +460,18 @@ internal sealed class TestClassInfo
             {
                 // This runs the ClassInitialize methods only once but saves the
                 await RunClassInitializeAsync(testContext.Context).ConfigureAwait(false);
+
+                // Capture a snapshot of TestContext.Properties so that values set during
+                // ClassInitialize (and any base-class ClassInitialize methods that ran in the
+                // same RunClassInitializeAsync call) flow to subsequent contexts
+                // (test execution, class cleanup).
+                // The `is` check is defensive: this method is part of an internal but mockable
+                // surface, so unit tests can legitimately pass an ITestContext wrapping a mock.
+                // Production callers always wrap a TestContextImplementation.
+                if (testContext.Context is TestContextImplementation classInitContextImpl)
+                {
+                    PostClassInitProperties = classInitContextImpl.CaptureLifecycleProperties();
+                }
             }
             catch (TestFailedException ex)
             {
