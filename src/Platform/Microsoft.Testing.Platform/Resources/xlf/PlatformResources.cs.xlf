@@ -164,7 +164,7 @@
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
         <source>Command line: {0}</source>
-        <target state="new">Command line: {0}</target>
+        <target state="translated">Příkazový řádek: {0}</target>
         <note>{0} is the command line used to run the application.</note>
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
@@ -518,14 +518,14 @@ Dostupné hodnoty jsou Trace, Debug, Information, Warning, Error a Critical.</ta
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
         <source>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</source>
-        <target state="new">'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <target state="translated">Parametr --list-tests přijal neočekávanou hodnotu {0}. Podporované hodnoty: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.
 Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</source>
-        <target state="new">List available tests.
-Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</target>
+        <target state="translated">Umožňuje zobrazit seznam dostupných testů.
+Volitelně přijímá hodnotu „text“ (výchozí výstup čitelný pro člověka) nebo „json“, která vypíše zjištěné testy jako dokument JSON na standardním výstupu.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">

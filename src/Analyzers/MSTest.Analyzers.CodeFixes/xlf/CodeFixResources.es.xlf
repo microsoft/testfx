@@ -24,17 +24,17 @@
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsEquivalentFix">
         <source>Replace with `Assert.{0}`</source>
-        <target state="new">Replace with `Assert.{0}`</target>
+        <target state="translated">Reemplazar por `Assert.{0}`</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsInAnyOrderFix">
         <source>Replace with `Assert.{0}(..., SequenceOrder.InAnyOrder)`</source>
-        <target state="new">Replace with `Assert.{0}(..., SequenceOrder.InAnyOrder)`</target>
+        <target state="translated">Reemplazar por `Assert.{0}(..., SequenceOrder.InAnyOrder)`</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsOrderedFix">
         <source>Replace with `Assert.{0}` (ordered)</source>
-        <target state="new">Replace with `Assert.{0}` (ordered)</target>
+        <target state="translated">Reemplazar por `Assert.{0}` (ordenado)</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesFix">
@@ -54,7 +54,7 @@
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextFix">
         <source>Change return type to 'Task'</source>
-        <target state="new">Change return type to 'Task'</target>
+        <target state="translated">Cambiar el tipo de valor devuelto a 'Task'</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
@@ -159,7 +159,7 @@
       </trans-unit>
       <trans-unit id="UseAsyncAssertionFix">
         <source>Use async assertion</source>
-        <target state="new">Use async assertion</target>
+        <target state="translated">Usar aserción asincrónica</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">

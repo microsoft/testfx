@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="CannotFindExpectedCrashReportFile">
         <source>Expected crash report file '{0}' could not be found, all files matching the '{1}' pattern will be copied to the result folder</source>
-        <target state="new">Expected crash report file '{0}' could not be found, all files matching the '{1}' pattern will be copied to the result folder</target>
+        <target state="translated">No se encontró el archivo de informe de bloqueo esperado "{0}", todos los archivos que coincidan con el patrón "{1}" se copiarán en la carpeta de resultados</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpArtifactDescription">
@@ -54,12 +54,12 @@
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
         <source>Test host process with PID '{0}' crashed, but the expected diagnostic artifact(s) were not produced</source>
-        <target state="new">Test host process with PID '{0}' crashed, but the expected diagnostic artifact(s) were not produced</target>
+        <target state="translated">El proceso de host de prueba con PID "{0}" se bloqueó, pero no se generaron los artefactos de diagnóstico esperados</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpAndReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file and crash report were generated</source>
-        <target state="new">Test host process with PID '{0}' crashed, a dump file and crash report were generated</target>
+        <target state="translated">Se bloqueó el proceso de host de prueba con PID "{0}", se generó un archivo de volcado y un informe de bloqueo</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a crash report was generated</source>
-        <target state="new">Test host process with PID '{0}' crashed, a crash report was generated</target>
+        <target state="translated">Se bloqueó el proceso de host de prueba con PID "{0}"; se generó un informe de bloqueo</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
@@ -93,22 +93,22 @@ Para obtener más información, visite https://learn.microsoft.com/dotnet/core/d
       </trans-unit>
       <trans-unit id="CrashReportArtifactDescription">
         <source>The testhost process crash report file</source>
-        <target state="new">The testhost process crash report file</target>
+        <target state="translated">Archivo de informe de bloqueo del proceso testhost</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashReportArtifactDisplayName">
         <source>Crash report file</source>
-        <target state="new">Crash report file</target>
+        <target state="translated">Archivo de informe de bloqueo</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">
         <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crashdump' to generate a crash dump file instead.</source>
-        <target state="new">'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crashdump' to generate a crash dump file instead.</target>
+        <target state="translated">"--crash-report" no se admite en Windows porque el entorno de ejecución de .NET ignora las variables de entorno subyacentes "DOTNET_EnableCrashReport" y "DOTNET_EnableCrashReportOnly" en esta plataforma. Consulte https://github.com/dotnet/runtime/issues/80191. Use "--crashdump" para generar un archivo de volcado de memoria en su lugar.</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashReportOptionDescription">
         <source>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).</source>
-        <target state="new">[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).</target>
+        <target state="translated">[Solo Linux/macOS] Genere un informe de bloqueo JSON cuando el proceso de prueba se bloquee. Combine con "--crashdump" para generar también un archivo de volcado. Requiere .NET 7+ cuando se usa solo; .NET 6+ cuando se combina con "--crashdump". La herramienta no aplica este requisito de tiempo de ejecución: en los entornos de ejecución no admitidos, no se emitirá ningún informe de bloqueo. No se admite en Windows debido a una limitación del entorno de ejecución de .NET (dotnet/runtime#80191).</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">

@@ -4,32 +4,32 @@
     <body>
       <trans-unit id="ArtifactUploadOptionsRequireUploadArtifacts">
         <source>'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</source>
-        <target state="new">'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</target>
+        <target state="translated">"--report-azdo-upload-artifact-include"、"--report-azdo-upload-artifact-exclude" 和 "--report-azdo-upload-artifact-name" 要求 "--report-azdo-upload-artifacts" 设置为非 "off" 的值。</target>
         <note>{Locked="--report-azdo-upload-artifact-include"}{Locked="--report-azdo-upload-artifact-exclude"}{Locked="--report-azdo-upload-artifact-name"}{Locked="--report-azdo-upload-artifacts"}{Locked="off"}</note>
       </trans-unit>
       <trans-unit id="ArtifactUploadRequiresTfBuildWarning">
         <source>Azure DevOps artifact upload was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps artifact upload and build tags.</source>
-        <target state="new">Azure DevOps artifact upload was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps artifact upload and build tags.</target>
+        <target state="translated">已请求上传 Azure DevOps 项目，但 TF_BUILD 未设置为 "true"；正在跳过 Azure DevOps 项目上传和生成标记。</target>
         <note>{Locked="TF_BUILD"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps">
         <source>'--report-azdo-demote-known-flaky' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-demote-known-flaky' requires '--report-azdo' to be enabled</target>
+        <target state="translated">"--report-azdo-demote-known-flaky" 要求启用 "--report-azdo"</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsDemoteKnownFlakyRequiresFlakyHistory">
         <source>'--report-azdo-demote-known-flaky' requires '--report-azdo-flaky-history' to be enabled</source>
-        <target state="new">'--report-azdo-demote-known-flaky' requires '--report-azdo-flaky-history' to be enabled</target>
+        <target state="translated">"--report-azdo-demote-known-flaky" 要求启用 "--report-azdo-flaky-history"</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsFlakyHistoryRequiresAzureDevOps">
         <source>'--report-azdo-flaky-history' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-flaky-history' requires '--report-azdo' to be enabled</target>
+        <target state="translated">"--report-azdo-flaky-history" 要求启用 "--report-azdo"</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
         <source>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</target>
+        <target state="translated">"--report-azdo-quarantine-file" 要求启用 "--report-azdo"</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsReportSeverityRequiresAzureDevOps">
@@ -39,12 +39,12 @@
       </trans-unit>
       <trans-unit id="DemoteKnownFlakyOptionDescription">
         <source>Demote failures with an Azure DevOps flaky history of at least {0}% in the selected window to warnings.</source>
-        <target state="new">Demote failures with an Azure DevOps flaky history of at least {0}% in the selected window to warnings.</target>
+        <target state="translated">将所选时间窗口内 Azure DevOps 不可靠历史记录至少为 {0}% 的失败降级为警告。</target>
         <note>{0} is the percentage threshold (e.g., 25).</note>
       </trans-unit>
       <trans-unit id="Description">
         <source>Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
-        <target state="new">Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</target>
+        <target state="translated">Azure DevOps 报表生成器，以 Azure DevOps 可理解的方式将错误写入输出。</target>
         <note />
       </trans-unit>
       <trans-unit id="DisplayName">
@@ -54,57 +54,57 @@
       </trans-unit>
       <trans-unit id="FlakyHistoryFailureAnnotation">
         <source>[flaky: failed {0}/{1} in last {2}d]</source>
-        <target state="new">[flaky: failed {0}/{1} in last {2}d]</target>
+        <target state="translated">[flaky: failed {0}/{1} in last {2}d]</target>
         <note>{Locked="[flaky: failed {0}/{1} in last {2}d]"}</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadFailedWarning">
         <source>Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</source>
-        <target state="new">Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</target>
+        <target state="translated">无法加载 Azure DevOps 不可靠历史记录。继续执行，不添加历史记录注释。{0}</target>
         <note>{Locked='--report-azdo-flaky-history'}</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadTimedOutInfo">
         <source>Azure DevOps flaky history did not finish loading within {0} seconds. Continuing without history annotations.</source>
-        <target state="new">Azure DevOps flaky history did not finish loading within {0} seconds. Continuing without history annotations.</target>
+        <target state="translated">Azure DevOps 不可靠历史记录未在 {0} 秒内完成加载。继续执行，不添加历史记录注释。</target>
         <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryMissingEnvironmentWarning">
         <source>Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</source>
-        <target state="new">Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</target>
+        <target state="translated">已请求 Azure DevOps 不可靠历史记录，但缺少必需的 Azure DevOps 环境变量。继续执行，不添加历史记录注释。</target>
         <note>{Locked='--report-azdo-flaky-history'}</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryOptionDescription">
         <source>Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.</source>
-        <target state="new">Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.</target>
+        <target state="translated">查询过去 N 天(1-90)的 Azure DevOps 测试结果历史记录，并为报告的失败添加“不可靠上下文”注释。</target>
         <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryRegressionAnnotation">
         <source>[REGRESSION]</source>
-        <target state="new">[REGRESSION]</target>
+        <target state="translated">[REGRESSION]</target>
         <note>{Locked="[REGRESSION]"}</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryResultsPagingStoppedWarning">
         <source>Azure DevOps flaky history for run '{0}' exceeded {1} pages or returned an unchanged continuation token. Remaining results will be ignored.</source>
-        <target state="new">Azure DevOps flaky history for run '{0}' exceeded {1} pages or returned an unchanged continuation token. Remaining results will be ignored.</target>
+        <target state="translated">运行“{0}”的 Azure DevOps 不可靠历史记录超出 {1} 页，或返回未更改的延续令牌。剩余结果将被忽略。</target>
         <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryRunsCappedInfo">
         <source>Azure DevOps flaky history returned {0} runs. Only the first {1} runs will be inspected.</source>
-        <target state="new">Azure DevOps flaky history returned {0} runs. Only the first {1} runs will be inspected.</target>
+        <target state="translated">Azure DevOps 不可靠历史记录返回 {0} 次运行。仅检查前 {1} 次运行。</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
         <source>Invalid glob pattern {0}.</source>
-        <target state="new">Invalid glob pattern {0}.</target>
+        <target state="translated">glob 模式 {0} 无效。</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadMode">
         <source>Invalid artifact upload mode {0}.</source>
-        <target state="new">Invalid artifact upload mode {0}.</target>
+        <target state="translated">项目上传模式 {0} 无效。</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidFlakyHistoryDays">
         <source>Invalid value '{0}' for '--report-azdo-flaky-history'. Provide an integer between 1 and 90.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-flaky-history'. Provide an integer between 1 and 90.</target>
+        <target state="translated">"--report-azdo-flaky-history" 的值“{0}”无效。请提供 1 到 90 之间的整数。</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidSeverity">
@@ -114,37 +114,37 @@
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
-        <target state="new">Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</target>
+        <target state="translated">启用 Azure DevOps 报表生成器，以 Azure DevOps 可理解的方式将错误写入输出。</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">
         <source>Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</source>
-        <target state="new">Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</target>
+        <target state="translated">无法加载 Azure DevOps 隔离文件“{0}”。继续执行，不启用隔离感知。{1}</target>
         <note>{Locked='--report-azdo-quarantine-file'}</note>
       </trans-unit>
       <trans-unit id="QuarantineFileMissingWarning">
         <source>Azure DevOps quarantine file '{0}' does not exist. Continuing without quarantine awareness.</source>
-        <target state="new">Azure DevOps quarantine file '{0}' does not exist. Continuing without quarantine awareness.</target>
+        <target state="translated">Azure DevOps 隔离文件“{0}”不存在。继续执行，不启用隔离感知。</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantineFileOptionDescription">
         <source>Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.</source>
-        <target state="new">Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.</target>
+        <target state="translated">文本文件的路径，用于列出已隔离测试的完全限定的名称或 glob 模式。匹配的失败将报告为警告。</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantinePatternTooLongWarning">
         <source>Azure DevOps quarantine pattern exceeds the {0} character limit and will be ignored.</source>
-        <target state="new">Azure DevOps quarantine pattern exceeds the {0} character limit and will be ignored.</target>
+        <target state="translated">Azure DevOps 隔离模式超出 {0} 字符限制，将被忽略。</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantinePatternsCappedWarning">
         <source>Azure DevOps quarantine file contains more than {0} patterns. Remaining patterns will be ignored.</source>
-        <target state="new">Azure DevOps quarantine file contains more than {0} patterns. Remaining patterns will be ignored.</target>
+        <target state="translated">Azure DevOps 隔离文件包含超过 {0} 个模式。剩余模式将被忽略。</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantinedAnnotation">
         <source>[quarantined]</source>
-        <target state="new">[quarantined]</target>
+        <target state="translated">[quarantined]</target>
         <note>{Locked="[quarantined]"}</note>
       </trans-unit>
       <trans-unit id="SeverityOptionDescription">
@@ -154,22 +154,22 @@
       </trans-unit>
       <trans-unit id="UploadArtifactExcludeOptionDescription">
         <source>Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.</source>
-        <target state="new">Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.</target>
+        <target state="translated">使用相对于测试结果目录的 glob 模式，排除从 Azure DevOps 项目上传中排除文件。</target>
         <note />
       </trans-unit>
       <trans-unit id="UploadArtifactIncludeOptionDescription">
         <source>Include files in Azure DevOps artifact upload using glob patterns relative to the test results directory. Defaults to '**/*'.</source>
-        <target state="new">Include files in Azure DevOps artifact upload using glob patterns relative to the test results directory. Defaults to '**/*'.</target>
+        <target state="translated">使用相对于测试结果目录的 glob 模式，将文件包含在 Azure DevOps 项目上传中。默认为 "**/*"。</target>
         <note>{Locked="**/*"}</note>
       </trans-unit>
       <trans-unit id="UploadArtifactNameOptionDescription">
         <source>Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.</source>
-        <target state="new">Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.</target>
+        <target state="translated">替代 Azure DevOps 项目容器名称。默认为 "TestResults_{assemblyName}_{tfm}"。</target>
         <note>{Locked="TestResults_{assemblyName}_{tfm}"}</note>
       </trans-unit>
       <trans-unit id="UploadArtifactsOptionDescription">
         <source>Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.</source>
-        <target state="new">Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.</target>
+        <target state="translated">上传测试结果 files 和/或向 Azure DevOps 添加生成标记。选项包括: off (默认)、 tags-only、files 和 all。</target>
         <note>{Locked="off"}{Locked="tags-only"}{Locked="files"}{Locked="all"}</note>
       </trans-unit>
     </body>
