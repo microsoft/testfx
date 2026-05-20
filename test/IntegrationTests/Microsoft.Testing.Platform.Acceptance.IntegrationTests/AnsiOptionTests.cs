@@ -69,28 +69,21 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
     }
 
     [TestMethod]
-    public async Task AnsiOption_AutoExplicit_OverridesNoAnsiFlag()
+    public async Task AnsiOption_OnExplicit_AfterNoAnsi_StillForcesAnsiOutput()
     {
-        // Regression guard for the fix where `--ansi auto` must override the auto-injected `--no-ansi`.
-        // We discriminate with `GITHUB_ACTIONS=true`: when the override works, the platform picks the CI
-        // branch (`SimpleAnsi`) and writes ANSI color codes; when it does NOT work (regression), `--no-ansi`
-        // wins and the platform picks `NoAnsi` with no escape codes. Hence presence of the escape char proves
-        // that `--ansi auto` was honored over `--no-ansi`.
-        var environmentVariables = new Dictionary<string, string?>
-        {
-            ["GITHUB_ACTIONS"] = "true",
-            ["TF_BUILD"] = string.Empty,
-        };
+        // Regression guard for the rule "any explicit --ansi value overrides --no-ansi", order-independent.
+        // We use --ansi on rather than --ansi auto because ForceOn short-circuits both the CI check AND the
+        // LLM env-var check in TerminalOutputDevice.InitializeAsync, making the assertion immune to whatever
+        // CI / LLM environment a contributor or CI agent might be running from.
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult result = await testHost.ExecuteAsync(
-            "--no-ansi --ansi auto",
-            environmentVariables: environmentVariables,
+            "--no-ansi --ansi on",
             cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(ExitCode.Success);
         Assert.IsTrue(
             result.StandardOutput.Contains(EscapeCharacter, StringComparison.Ordinal),
-            $"Expected output to contain ANSI escape characters proving '--ansi auto' overrode '--no-ansi' (CI -> SimpleAnsi), but got:\n{result.StandardOutput}");
+            $"Expected output to contain ANSI escape characters proving '--ansi on' overrode the preceding '--no-ansi', but got:\n{result.StandardOutput}");
     }
 
     [TestMethod]
