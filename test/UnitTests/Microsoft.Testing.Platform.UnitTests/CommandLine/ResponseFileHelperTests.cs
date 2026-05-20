@@ -6,6 +6,136 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class ResponseFileHelperTests
 {
+    // TryReadResponseFile tests
+    [TestMethod]
+    public void TryReadResponseFile_FileNotFound_ReturnsFalseAndAddsError()
+    {
+        var errors = new List<string>();
+        string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".rsp");
+
+        bool result = ResponseFileHelper.TryReadResponseFile(path, errors, out string[]? args);
+
+        Assert.IsFalse(result);
+        Assert.IsNull(args);
+        Assert.HasCount(1, errors);
+        Assert.Contains(path, errors[0]);
+    }
+
+    [TestMethod]
+    public void TryReadResponseFile_ValidFile_ReturnsTrueWithArguments()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllLines(path, ["--verbose", "--filter TestClass1"]);
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(path, errors, out string[]? args);
+
+            Assert.IsTrue(result);
+            Assert.IsEmpty(errors);
+            Assert.IsNotNull(args);
+            Assert.HasCount(3, args);
+            Assert.AreEqual("--verbose", args[0]);
+            Assert.AreEqual("--filter", args[1]);
+            Assert.AreEqual("TestClass1", args[2]);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void TryReadResponseFile_FileWithComments_CommentsAreSkipped()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllLines(path, ["# this is a comment", "--verbose", "# another comment"]);
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(path, errors, out string[]? args);
+
+            Assert.IsTrue(result);
+            Assert.IsNotNull(args);
+            Assert.HasCount(1, args);
+            Assert.AreEqual("--verbose", args[0]);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void TryReadResponseFile_FileWithBlankLines_BlankLinesAreSkipped()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllLines(path, [string.Empty, "--opt", "   ", "--flag"]);
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(path, errors, out string[]? args);
+
+            Assert.IsTrue(result);
+            Assert.IsNotNull(args);
+            Assert.HasCount(2, args);
+            Assert.AreEqual("--opt", args[0]);
+            Assert.AreEqual("--flag", args[1]);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void TryReadResponseFile_FileWithQuotedArguments_QuotesAreStripped()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllLines(path, ["--filter \"FullyQualifiedName~My.Namespace\""]);
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(path, errors, out string[]? args);
+
+            Assert.IsTrue(result);
+            Assert.IsNotNull(args);
+            Assert.HasCount(2, args);
+            Assert.AreEqual("--filter", args[0]);
+            Assert.AreEqual("FullyQualifiedName~My.Namespace", args[1]);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void TryReadResponseFile_EmptyFile_ReturnsTrueWithEmptyArray()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, string.Empty);
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(path, errors, out string[]? args);
+
+            Assert.IsTrue(result);
+            Assert.IsEmpty(errors);
+            Assert.IsNotNull(args);
+            Assert.IsEmpty(args);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     [TestMethod]
     public void SplitCommandLine_EmptyString_ReturnsEmpty()
     {
