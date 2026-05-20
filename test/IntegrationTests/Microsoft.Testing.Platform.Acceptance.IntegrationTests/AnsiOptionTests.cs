@@ -52,10 +52,15 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
     {
         // `--ansi auto` is the default and means "let the platform decide".
         // It explicitly overrides any preceding `--no-ansi` (TestHost auto-injects `--no-ansi --no-progress`).
-        // The platform should then pick AnsiIfPossible and, because stdout is redirected to a pipe by the
-        // test runner, fall back to a NonAnsi terminal that does not emit escape codes.
+        // To make this test deterministic across CI and local runs, we explicitly clear `GITHUB_ACTIONS` and
+        // `TF_BUILD` so the platform does NOT short-circuit to `SimpleAnsi`. With those out of the way and
+        // stdout redirected to a pipe by the test runner, the platform should pick `AnsiIfPossible` and the
+        // detector then falls back to a NonAnsi terminal that does not emit escape codes.
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
-        TestHostResult result = await testHost.ExecuteAsync("--ansi auto", cancellationToken: TestContext.CancellationToken);
+        TestHostResult result = await testHost.ExecuteAsync(
+            "--ansi auto",
+            environmentVariables: NotInCIEnvironmentVariables,
+            cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(ExitCode.Success);
         Assert.IsFalse(
@@ -66,14 +71,26 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
     [TestMethod]
     public async Task AnsiOption_AutoExplicit_OverridesNoAnsiFlag()
     {
-        // Both --no-ansi and --ansi auto are present. --ansi wins (it always does when explicitly passed).
-        // The auto branch then picks AnsiIfPossible, which respects stdout redirection -> no ANSI codes.
-        // We verify the precedence by checking that the test still runs successfully and no escape codes are
-        // emitted because of redirection (not because --no-ansi forced NoAnsi).
+        // Regression guard for the fix where `--ansi auto` must override the auto-injected `--no-ansi`.
+        // We discriminate with `GITHUB_ACTIONS=true`: when the override works, the platform picks the CI
+        // branch (`SimpleAnsi`) and writes ANSI color codes; when it does NOT work (regression), `--no-ansi`
+        // wins and the platform picks `NoAnsi` with no escape codes. Hence presence of the escape char proves
+        // that `--ansi auto` was honored over `--no-ansi`.
+        var environmentVariables = new Dictionary<string, string?>
+        {
+            ["GITHUB_ACTIONS"] = "true",
+            ["TF_BUILD"] = string.Empty,
+        };
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
-        TestHostResult result = await testHost.ExecuteAsync("--no-ansi --ansi auto", cancellationToken: TestContext.CancellationToken);
+        TestHostResult result = await testHost.ExecuteAsync(
+            "--no-ansi --ansi auto",
+            environmentVariables: environmentVariables,
+            cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsTrue(
+            result.StandardOutput.Contains(EscapeCharacter, StringComparison.Ordinal),
+            $"Expected output to contain ANSI escape characters proving '--ansi auto' overrode '--no-ansi' (CI -> SimpleAnsi), but got:\n{result.StandardOutput}");
     }
 
     [TestMethod]
@@ -87,6 +104,14 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
     }
 
     public TestContext TestContext { get; set; } = null!;
+
+    // Env vars that make the platform consider it NOT to be in CI. Setting empty strings is enough
+    // because TerminalOutputDevice compares against the literal "true".
+    private static Dictionary<string, string?> NotInCIEnvironmentVariables => new()
+    {
+        ["GITHUB_ACTIONS"] = string.Empty,
+        ["TF_BUILD"] = string.Empty,
+    };
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
