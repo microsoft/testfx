@@ -20,6 +20,11 @@ Microsoft.Testing.Platform v*
 Usage {{TestAssetFixture.AllExtensionsAssetName}}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
+    --ansi
+        Control whether ANSI escape characters are emitted.
+        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+        When both --ansi and --no-ansi are provided, --ansi wins.
     --config-file
         Specifies a testconfig.json file.
     --debug
@@ -435,6 +440,13 @@ Registered command line providers:
     Version: *
     Description: Writes test results to terminal.
     Options:
+      --ansi
+        Arity: 1
+        Hidden: False
+        Description: Control whether ANSI escape characters are emitted.
+        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+        When both --ansi and --no-ansi are provided, --ansi wins.
       --no-ansi
         Arity: 0
         Hidden: False

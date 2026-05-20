@@ -142,22 +142,40 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _isServerMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
         bool noAnsi = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
 
+        // --ansi <auto|on|off> takes precedence over the legacy --no-ansi flag when both are provided.
+        AnsiOverride ansiOverride = AnsiOverride.None;
+        if (_commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.AnsiOption, out string[]? ansiArguments) && ansiArguments?.Length > 0)
+        {
+            string ansiValue = ansiArguments[0];
+            if (CommandLineOptionArgumentValidator.IsOnValue(ansiValue))
+            {
+                ansiOverride = AnsiOverride.ForceOn;
+            }
+            else if (CommandLineOptionArgumentValidator.IsOffValue(ansiValue))
+            {
+                ansiOverride = AnsiOverride.ForceOff;
+            }
+        }
+
         // TODO: Replace this with proper CI detection that we already have in telemetry. https://github.com/microsoft/testfx/issues/5533#issuecomment-2838893327
         bool inCI = string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase) || string.Equals(_environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase);
 
-        AnsiMode ansiMode = AnsiMode.AnsiIfPossible;
-        // In LLM environments, prefer simple text output so that LLM can parse it easily.
-        // Note that NoAnsi also implies no progress.
-        if (noAnsi || LLMEnvironmentDetector.IsLLMEnvironment())
+        AnsiMode ansiMode = ansiOverride switch
         {
-            // User explicitly specified --no-ansi.
-            // We should respect that.
-            ansiMode = AnsiMode.NoAnsi;
-        }
-        else if (inCI)
-        {
-            ansiMode = AnsiMode.SimpleAnsi;
-        }
+            // User explicitly forced ANSI on (e.g. `--ansi on`). Bypass CI / LLM / redirection detection
+            // so colors and cursor movement are emitted even when stdout is redirected.
+            AnsiOverride.ForceOn => AnsiMode.ForceAnsi,
+
+            // User explicitly disabled ANSI (--ansi off / --no-ansi).
+            // Note that NoAnsi also implies no progress.
+            AnsiOverride.ForceOff => AnsiMode.NoAnsi,
+
+            // No --ansi argument was provided (or `auto` was specified). Fall back to environment-based detection.
+            // In LLM environments, prefer simple text output so that the LLM can parse it easily.
+            _ when noAnsi || LLMEnvironmentDetector.IsLLMEnvironment() => AnsiMode.NoAnsi,
+            _ when inCI => AnsiMode.SimpleAnsi,
+            _ => AnsiMode.AnsiIfPossible,
+        };
 
         bool noProgress = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption);
 
@@ -214,6 +232,24 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 _ => OutputShowMode.All,
             }
             : OutputShowMode.All;
+
+    private enum AnsiOverride
+    {
+        /// <summary>
+        /// The <c>--ansi</c> option was not provided, or was provided with <c>auto</c>.
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// The <c>--ansi on</c> option was provided, forcing ANSI output regardless of environment.
+        /// </summary>
+        ForceOn,
+
+        /// <summary>
+        /// The <c>--ansi off</c> option was provided, disabling ANSI output.
+        /// </summary>
+        ForceOff,
+    }
 
     private static string GetShortArchitecture(string runtimeIdentifier)
     {
