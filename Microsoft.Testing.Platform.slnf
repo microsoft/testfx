@@ -11,6 +11,7 @@
       "src\\Platform\\Microsoft.Testing.Extensions.CrashDump\\Microsoft.Testing.Extensions.CrashDump.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.HangDump\\Microsoft.Testing.Extensions.HangDump.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.HotReload\\Microsoft.Testing.Extensions.HotReload.csproj",
+      "src\\Platform\\Microsoft.Testing.Extensions.HtmlReport\\Microsoft.Testing.Extensions.HtmlReport.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.Logging\\Microsoft.Testing.Extensions.Logging.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.MSBuild\\Microsoft.Testing.Extensions.MSBuild.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.OpenTelemetry\\Microsoft.Testing.Extensions.OpenTelemetry.csproj",
