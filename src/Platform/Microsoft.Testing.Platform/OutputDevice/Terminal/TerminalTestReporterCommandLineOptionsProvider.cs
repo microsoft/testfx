@@ -54,7 +54,7 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
         {
             NoProgressOption => ValidationResult.ValidTask,
             NoAnsiOption => ValidationResult.ValidTask,
-            AnsiOption => CommandLineOptionArgumentValidator.IsValidBooleanAutoArgument(arguments[0])
+            AnsiOption => arguments.Length == 1 && CommandLineOptionArgumentValidator.IsValidBooleanAutoArgument(arguments[0])
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(PlatformResources.TerminalAnsiOptionInvalidArgument),
             OutputOption => OutputOptionNormalArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase) || OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
