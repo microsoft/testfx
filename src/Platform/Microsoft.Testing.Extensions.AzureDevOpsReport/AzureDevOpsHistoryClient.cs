@@ -5,8 +5,8 @@ using System.Net;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
+using Microsoft.Testing.Extensions.AzureDevOpsReport.Helpers;
 using Microsoft.Testing.Platform;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 

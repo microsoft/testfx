@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
+using Microsoft.Testing.Extensions.AzureDevOpsReport.Helpers;
 using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
@@ -27,10 +28,10 @@ public static class AzureDevOpsExtensions
                 new AzureDevOpsArtifactUploader(
                     serviceProvider.GetCommandLineOptions(),
                     serviceProvider.GetConfiguration(),
-                    serviceProvider.GetEnvironment(),
-                    serviceProvider.GetFileSystem(),
+                    new SystemEnvironment(),
+                    new SystemFileSystem(),
                     serviceProvider.GetOutputDevice(),
-                    serviceProvider.GetTestApplicationModuleInfo(),
+                    new SystemTestApplicationModuleInfo(),
                     serviceProvider.GetLoggerFactory()));
 
         builder.TestHost.AddDataConsumer(serviceProvider =>
@@ -39,8 +40,8 @@ public static class AzureDevOpsExtensions
 
             return new AzureDevOpsReporter(
                 serviceProvider.GetCommandLineOptions(),
-                serviceProvider.GetEnvironment(),
-                serviceProvider.GetFileSystem(),
+                new SystemEnvironment(),
+                new SystemFileSystem(),
                 serviceProvider.GetOutputDevice(),
                 serviceProvider.GetLoggerFactory(),
                 historyService);
@@ -53,11 +54,15 @@ public static class AzureDevOpsExtensions
     }
 
     private static AzureDevOpsHistoryService CreateHistoryService(IServiceProvider serviceProvider)
-        => new(
+    {
+        var systemTask = new SystemTask();
+        var systemClock = new SystemClock();
+        return new(
             serviceProvider.GetCommandLineOptions(),
-            serviceProvider.GetEnvironment(),
-            serviceProvider.GetClock(),
-            new AzureDevOpsHistoryClient(serviceProvider.GetTask(), serviceProvider.GetClock()),
-            serviceProvider.GetTask(),
+            new SystemEnvironment(),
+            systemClock,
+            new AzureDevOpsHistoryClient(systemTask, systemClock),
+            systemTask,
             serviceProvider.GetLoggerFactory());
+    }
 }

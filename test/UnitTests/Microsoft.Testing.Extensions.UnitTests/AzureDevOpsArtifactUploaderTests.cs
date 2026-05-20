@@ -2,19 +2,23 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
+using Microsoft.Testing.Extensions.AzureDevOpsReport.Helpers;
 using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
 using Moq;
+
+// Disambiguate from Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo
+// (still visible to this test project via Platform's IVT).
+using ITestApplicationModuleInfo = Microsoft.Testing.Extensions.AzureDevOpsReport.Helpers.ITestApplicationModuleInfo;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 

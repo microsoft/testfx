@@ -1,0 +1,62 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Microsoft.Testing.Extensions.AzureDevOpsReport.Helpers;
+
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "This is the wrapper for Environment type.")]
+internal sealed class SystemEnvironment : IEnvironment
+{
+    public string CommandLine => Environment.CommandLine;
+
+    public string MachineName => Environment.MachineName;
+
+    public string NewLine => Environment.NewLine;
+
+#if !NETCOREAPP
+    public int ProcessId
+    {
+        get
+        {
+            int processId = field;
+            if (processId == 0)
+            {
+                field = processId = GetProcessId();
+                // Assume that process Id zero is invalid for user processes. It holds for all mainstream operating systems.
+                Debug.Assert(processId != 0, "processId is expected to be non-zero.");
+            }
+
+            return processId;
+
+            static int GetProcessId()
+            {
+                using var process = Process.GetCurrentProcess();
+                return process.Id;
+            }
+        }
+    }
+#else
+    public int ProcessId => Environment.ProcessId;
+#endif
+
+    public string OsVersion => Environment.OSVersion.ToString();
+
+#if NETCOREAPP
+    public string? ProcessPath => Environment.ProcessPath;
+#endif
+
+    public string[] GetCommandLineArgs() => Environment.GetCommandLineArgs();
+
+    public string? GetEnvironmentVariable(string name) => Environment.GetEnvironmentVariable(name);
+
+    public IDictionary GetEnvironmentVariables() => Environment.GetEnvironmentVariables();
+
+    public string GetFolderPath(Environment.SpecialFolder folder, Environment.SpecialFolderOption option) => Environment.GetFolderPath(folder, option);
+
+    public void FailFast(string? message, Exception? exception) => Environment.FailFast(message, exception);
+
+    public void FailFast(string? message) => Environment.FailFast(message);
+
+    public void SetEnvironmentVariable(string variable, string? value) => Environment.SetEnvironmentVariable(variable, value);
+
+    public void Exit(int exitCode) => Environment.Exit(exitCode);
+}

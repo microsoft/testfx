@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.AzureDevOpsReport.Helpers;
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Platform;
@@ -8,7 +9,6 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.TestInfrastructure;
@@ -397,11 +397,36 @@ internal sealed class AzureDevOpsReporter :
         _hasLoadedEnabledConfiguration = true;
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2075:Type.GetProperty requires public properties to be preserved", Justification = "Cross-extension property lookup by runtime type name; the SerializableKeyValuePairStringProperty type is preserved by Microsoft.Testing.Platform itself.")]
     private static string GetTestName(TestNode testNode)
-        => testNode.Properties
-            .OfType<SerializableKeyValuePairStringProperty>()
-            .FirstOrDefault(static property => property.Key == FullyQualifiedNamePropertyKey)?.Value
-            ?? testNode.DisplayName;
+    {
+        // Look up the VSTest "FullyQualifiedName" property without taking a dependency on the
+        // internal Microsoft.Testing.Platform.Extensions.Messages.SerializableKeyValuePairStringProperty
+        // type (so this extension can avoid the IVT to Microsoft.Testing.Platform).
+        // The VSTest bridge / adapter populates each TestNode with one such property per VSTest
+        // trait; we match it by runtime type name and read Key/Value via reflection.
+        foreach (IProperty property in testNode.Properties)
+        {
+            Type propertyType = property.GetType();
+            if (propertyType.Name != "SerializableKeyValuePairStringProperty")
+            {
+                continue;
+            }
+
+            string? key = propertyType.GetProperty("Key")?.GetValue(property) as string;
+            if (key != FullyQualifiedNamePropertyKey)
+            {
+                continue;
+            }
+
+            if (propertyType.GetProperty("Value")?.GetValue(property) is string value)
+            {
+                return value;
+            }
+        }
+
+        return testNode.DisplayName;
+    }
 
     /// <summary>
     /// Formats the reporter message so the test name lands on its own line.

@@ -6,7 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
-using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Extensions.AzureDevOpsReport.Helpers;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
