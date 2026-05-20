@@ -346,9 +346,19 @@ public sealed class TestApplication : ITestApplication
         // but fall back to the legacy TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX for backward compatibility.
         // See https://github.com/microsoft/testfx/issues/7159.
         string? environmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX);
+        string? legacyEnvironmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX);
+        if (!RoslynString.IsNullOrEmpty(legacyEnvironmentFilePrefix))
+        {
+            console.WriteLine(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.DeprecatedEnvironmentVariableWarning,
+                EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX,
+                EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX));
+        }
+
         if (RoslynString.IsNullOrEmpty(environmentFilePrefix))
         {
-            environmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX);
+            environmentFilePrefix = legacyEnvironmentFilePrefix;
         }
 
         if (!RoslynString.IsNullOrEmpty(environmentFilePrefix))
@@ -363,9 +373,19 @@ public sealed class TestApplication : ITestApplication
         // but fall back to the legacy TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE for backward compatibility.
         // See https://github.com/microsoft/testfx/issues/7159.
         string? environmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE);
+        string? legacyEnvironmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE);
+        if (!RoslynString.IsNullOrEmpty(legacyEnvironmentSynchronousWrite))
+        {
+            console.WriteLine(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.DeprecatedEnvironmentVariableWarning,
+                EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE,
+                EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE));
+        }
+
         if (RoslynString.IsNullOrEmpty(environmentSynchronousWrite))
         {
-            environmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE);
+            environmentSynchronousWrite = legacyEnvironmentSynchronousWrite;
         }
 
         if (!RoslynString.IsNullOrEmpty(environmentSynchronousWrite))

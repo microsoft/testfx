@@ -155,6 +155,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
             cancellationToken: TestContext.CancellationToken);
 
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
+        testHostResult.AssertOutputContains($"Warning: The environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX}' is deprecated and will be removed in a future major version. Use '{EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX}' instead.");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -175,6 +176,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
             cancellationToken: TestContext.CancellationToken);
 
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
+        testHostResult.AssertOutputDoesNotContain("is deprecated and will be removed in a future major version");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -196,6 +198,9 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
             cancellationToken: TestContext.CancellationToken);
 
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
+
+        // Setting the legacy env var should still warn even when the new one is also set and wins.
+        testHostResult.AssertOutputContains($"Warning: The environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX}' is deprecated and will be removed in a future major version. Use '{EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX}' instead.");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -216,6 +221,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
             cancellationToken: TestContext.CancellationToken);
 
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern, flushType: "sync");
+        testHostResult.AssertOutputContains($"Warning: The environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE}' is deprecated and will be removed in a future major version. Use '{EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE}' instead.");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -236,6 +242,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
             cancellationToken: TestContext.CancellationToken);
 
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern, flushType: "sync");
+        testHostResult.AssertOutputDoesNotContain("is deprecated and will be removed in a future major version");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
