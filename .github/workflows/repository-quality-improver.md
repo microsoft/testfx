@@ -56,20 +56,26 @@ Daily or on-demand, select a focus area for repository improvement, conduct anal
 
 - **Repository**: ${{ github.repository }}
 - **Run Date**: $(date +%Y-%m-%d)
-- **Cache Location**: `/tmp/gh-aw/cache-memory/focus-areas/`
+- **Cache Location**: `/tmp/gh-aw/cache-memory-focus-areas/`
 - **Strategy Distribution**: ~60% custom areas, ~30% standard categories, ~10% reuse for consistency
 
 ## Phase 0: Setup and Focus Area Selection
 
 ### 0.1 Load Focus Area History
 
-Check the cache memory folder `/tmp/gh-aw/cache-memory/focus-areas/` for previous focus area selections:
+Check the cache memory folder `/tmp/gh-aw/cache-memory-focus-areas/` for previous focus area selections:
 
 ```bash
-if [ -f /tmp/gh-aw/cache-memory/focus-areas/history.json ]; then
-  cat /tmp/gh-aw/cache-memory/focus-areas/history.json
+if [ -f /tmp/gh-aw/cache-memory-focus-areas/history.json ]; then
+  cat /tmp/gh-aw/cache-memory-focus-areas/history.json
 fi
 ```
+
+If `history.json` does not exist, treat it as an expected first-run cache miss:
+
+- Initialize an empty in-memory history object and continue.
+- **Do not** call `missing_data` for cache-memory misses.
+- Only use `missing_data` when required analysis data cannot be obtained from the repository or available tools.
 
 The history file should contain:
 
@@ -294,7 +300,7 @@ The following actionable tasks address the findings above.
 After generating the report, update the focus area history:
 
 ```bash
-mkdir -p /tmp/gh-aw/cache-memory/focus-areas/
+mkdir -p /tmp/gh-aw/cache-memory-focus-areas/
 # Write updated history.json with the new run appended
 ```
 
