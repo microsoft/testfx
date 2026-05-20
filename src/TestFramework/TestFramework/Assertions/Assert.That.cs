@@ -231,23 +231,30 @@ public static partial class AssertExtensions
                 // throws. The outer try/catch would then sentinel the parent, and a higher-level
                 // rebuild would re-execute the original assignment, running the RHS side effects
                 // a second time. Handle these inline:
-                //   1. Walk Left to capture diagnostics and cache any side-effecting sub-children
-                //      (receiver/index arguments). Reading a property getter on Left runs it once
-                //      as part of capturing the pre-assignment value.
+                //   1. Walk only the writable target's *sub-children* (receiver, index arguments).
+                //      We deliberately do NOT evaluate the writable wrapper node itself: doing so
+                //      would invoke its property/indexer getter once for caching, and the rebuilt
+                //      compound assignment would invoke it a second time as part of its semantics
+                //      (compound assignments must read the current value).
                 //   2. Walk Right exactly once.
                 //   3. Rebuild Left via ReplaceSubExpressionsWithConstants so its sub-children
                 //      (receiver, index arguments) become constants but the writable wrapper node
                 //      (MemberExpression/IndexExpression/ParameterExpression) is preserved.
                 //   4. Substitute Right with its cached constant and invoke the rebuilt assignment
                 //      exactly once. The cached binary value is the post-assignment value (for
-                //      compound assignments it is the result of the compound operation).
+                //      compound assignments it is the result of the compound operation). This same
+                //      value is the new value of Left for every assignment node type covered here,
+                //      so cache it on Left as well to keep diagnostic rendering useful without
+                //      triggering an extra getter call.
                 case BinaryExpression binaryExpr when IsAssignmentBinaryNodeType(binaryExpr.NodeType):
-                    EvaluateAllSubExpressions(binaryExpr.Left, cache);
+                    EvaluateAssignmentTargetSubChildren(binaryExpr.Left, cache);
                     EvaluateAllSubExpressions(binaryExpr.Right, cache);
                     Expression rebuiltAssignLeft = ReplaceSubExpressionsWithConstants(binaryExpr.Left, cache);
                     Expression rebuiltAssignRight = ReplaceChildWithConstant(binaryExpr.Right, cache);
                     BinaryExpression rebuiltAssign = binaryExpr.Update(rebuiltAssignLeft, binaryExpr.Conversion, rebuiltAssignRight);
-                    cache[binaryExpr] = Expression.Lambda(rebuiltAssign).Compile().DynamicInvoke();
+                    object? assignResult = Expression.Lambda(rebuiltAssign).Compile().DynamicInvoke();
+                    cache[binaryExpr] = assignResult;
+                    cache[binaryExpr.Left] = assignResult;
                     return;
 
                 case BinaryExpression binaryExpr:
@@ -266,15 +273,25 @@ public static partial class AssertExtensions
 
                 // Unary assignment-style nodes (PreIncrementAssign, PostIncrementAssign, etc.).
                 // The Operand is a writable target, so the generic rebuild path that replaces it
-                // with a ConstantExpression would produce an invalid node. Walk the Operand's
-                // sub-children so receiver/index arguments execute exactly once, then rebuild the
-                // unary with the Operand's sub-children substituted by cached constants — the
-                // writable wrapper node is preserved.
+                // with a ConstantExpression would produce an invalid node. Walk only the Operand's
+                // sub-children (receiver/index arguments) — never the writable wrapper itself, or
+                // its getter would run once here and once inside the rebuilt increment. Then
+                // rebuild the unary with the Operand's sub-children substituted by cached constants
+                // — the writable wrapper node is preserved. For Pre* variants, the unary result
+                // equals the post-Operand value, so cache it on Operand for diagnostic rendering.
+                // Post* variants would need a re-read to obtain the post-Operand value; we skip
+                // that to avoid an additional getter call on property/indexer Operand.
                 case UnaryExpression unaryExpr when IsAssignmentUnaryNodeType(unaryExpr.NodeType):
-                    EvaluateAllSubExpressions(unaryExpr.Operand, cache);
+                    EvaluateAssignmentTargetSubChildren(unaryExpr.Operand, cache);
                     Expression rebuiltUnaryOperand = ReplaceSubExpressionsWithConstants(unaryExpr.Operand, cache);
                     UnaryExpression rebuiltUnary = unaryExpr.Update(rebuiltUnaryOperand);
-                    cache[unaryExpr] = Expression.Lambda(rebuiltUnary).Compile().DynamicInvoke();
+                    object? unaryResult = Expression.Lambda(rebuiltUnary).Compile().DynamicInvoke();
+                    cache[unaryExpr] = unaryResult;
+                    if (unaryExpr.NodeType is ExpressionType.PreIncrementAssign or ExpressionType.PreDecrementAssign)
+                    {
+                        cache[unaryExpr.Operand] = unaryResult;
+                    }
+
                     return;
 
                 case UnaryExpression unaryExpr:
@@ -915,6 +932,46 @@ public static partial class AssertExtensions
             {
                 ExtractVariablesFromExpression(argument, details, evaluationCache, suppressIntermediateValues);
             }
+        }
+    }
+
+    /// <summary>
+    /// Evaluates only the *sub-children* of a writable assignment target (the Left of an Assign or
+    /// compound assignment, or the Operand of a Pre/Post Increment/Decrement). Walking the writable
+    /// wrapper itself would invoke its property/indexer getter once for caching, and the rebuilt
+    /// assignment would then invoke it a second time (compound assignments and Increment/Decrement
+    /// must read the current value). Restricting the walk to receiver/index arguments ensures the
+    /// getter runs exactly once — inside the rebuilt assignment.
+    ///
+    /// Writable targets are restricted by LINQ expression semantics to <see cref="MemberExpression"/>,
+    /// <see cref="IndexExpression"/>, or <see cref="ParameterExpression"/>; the latter has no
+    /// sub-children to walk.
+    /// </summary>
+#if NET7_0_OR_GREATER
+    [RequiresDynamicCode("Calls Microsoft.VisualStudio.TestTools.UnitTesting.AssertExtensions.EvaluateAllSubExpressions(Expression, Dictionary<Expression, Object>)")]
+#endif
+    private static void EvaluateAssignmentTargetSubChildren(Expression target, Dictionary<Expression, object?> cache)
+    {
+        // ParameterExpression and static-member MemberExpression are also valid writable targets,
+        // but they have no sub-children to walk.
+        switch (target)
+        {
+            case MemberExpression memberExpr when memberExpr.Expression is not null:
+                EvaluateAllSubExpressions(memberExpr.Expression, cache);
+                break;
+
+            case IndexExpression indexExpr:
+                if (indexExpr.Object is not null)
+                {
+                    EvaluateAllSubExpressions(indexExpr.Object, cache);
+                }
+
+                foreach (Expression argument in indexExpr.Arguments)
+                {
+                    EvaluateAllSubExpressions(argument, cache);
+                }
+
+                break;
         }
     }
 

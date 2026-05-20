@@ -1331,14 +1331,13 @@ public partial class AssertTests : TestContainer
     public void That_ManuallyConstructedAssign_EvaluatesRhsExactlyOnce()
     {
         var container = new MutableContainer();
+        var counter = new CountingComputeValue();
         FieldInfo innerFi = typeof(MutableContainer).GetField(nameof(MutableContainer.Inner))!;
         FieldInfo valueFi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
 
-        CountingComputeValue.Calls = 0;
-
         MemberExpression innerAccess = Expression.Field(Expression.Constant(container), innerFi);
         MemberExpression valueAccess = Expression.Field(innerAccess, valueFi);
-        MethodCallExpression rhs = Expression.Call(typeof(CountingComputeValue).GetMethod(nameof(CountingComputeValue.Get))!);
+        MethodCallExpression rhs = Expression.Call(Expression.Constant(counter), typeof(CountingComputeValue).GetMethod(nameof(CountingComputeValue.Get))!);
         BinaryExpression assign = Expression.Assign(valueAccess, rhs);
         BinaryExpression body = Expression.LessThan(assign, Expression.Constant(0));
         var lambda = Expression.Lambda<Func<bool>>(body);
@@ -1346,7 +1345,7 @@ public partial class AssertTests : TestContainer
         Action act = () => Assert.That(lambda);
 
         act.Should().Throw<AssertFailedException>();
-        CountingComputeValue.Calls.Should().Be(1);
+        counter.Calls.Should().Be(1);
         container.Inner.Value.Should().Be(42);
     }
 
@@ -1399,6 +1398,77 @@ public partial class AssertTests : TestContainer
         provider.Box.Value.Should().Be(42);
     }
 
+    // Regression: when the Left of Expression.Assign is a property, the wrapper must NOT be
+    // evaluated to populate the cache before the assignment runs. Previously, EvaluateAllSubExpressions
+    // invoked the getter once to capture a pre-assignment value, then the rebuilt Assign invoked
+    // the setter — leaving the getter unused but having been called. Plain Assign does not need
+    // to read the current value, so the getter should run zero times.
+    public void That_AssignToProperty_DoesNotInvokeGetter()
+    {
+        var holder = new CountingPropertyHolder();
+        PropertyInfo valuePi = typeof(CountingPropertyHolder).GetProperty(nameof(CountingPropertyHolder.Value))!;
+        MemberExpression valueAccess = Expression.Property(Expression.Constant(holder), valuePi);
+        BinaryExpression assign = Expression.Assign(valueAccess, Expression.Constant(42));
+        BinaryExpression body = Expression.LessThan(assign, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+
+        act.Should().Throw<AssertFailedException>();
+        // Plain Assign on a property: setter once, getter never.
+        holder.GetCalls.Should().Be(0);
+        holder.SetCalls.Should().Be(1);
+    }
+
+    // Regression: when the Left of a compound assignment (e.g., AddAssign) is a property, the
+    // getter must run exactly once — inside the rebuilt compound assignment. Previously the
+    // getter was invoked twice: once by EvaluateAllSubExpressions(Left) to cache the pre-value,
+    // and once again by the rebuilt AddAssign (which must read the current value). The fix walks
+    // only the Left's sub-children, leaving the getter call to happen exactly once during the
+    // actual assignment execution.
+    public void That_CompoundAssignToProperty_InvokesGetterExactlyOnce()
+    {
+        var holder = new CountingPropertyHolder();
+        PropertyInfo valuePi = typeof(CountingPropertyHolder).GetProperty(nameof(CountingPropertyHolder.Value))!;
+        MemberExpression valueAccess = Expression.Property(Expression.Constant(holder), valuePi);
+        BinaryExpression addAssign = Expression.AddAssign(valueAccess, Expression.Constant(7));
+        BinaryExpression body = Expression.LessThan(addAssign, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+
+        act.Should().Throw<AssertFailedException>();
+        // Compound assignment on a property: getter once (to read), setter once (to write).
+        holder.GetCalls.Should().Be(1);
+        holder.SetCalls.Should().Be(1);
+    }
+
+    private sealed class CountingPropertyHolder
+    {
+#pragma warning disable IDE0032 // Use auto property - intentional: Value has side-effecting accessors that need a backing field.
+        private int _value;
+#pragma warning restore IDE0032
+
+        public int GetCalls { get; private set; }
+
+        public int SetCalls { get; private set; }
+
+        public int Value
+        {
+            get
+            {
+                GetCalls++;
+                return _value;
+            }
+
+            set
+            {
+                SetCalls++;
+                _value = value;
+            }
+        }
+    }
+
     private sealed class MutableBoxProvider
     {
         public int Calls { get; private set; }
@@ -1412,13 +1482,11 @@ public partial class AssertTests : TestContainer
         }
     }
 
-    private static class CountingComputeValue
+    private sealed class CountingComputeValue
     {
-#pragma warning disable SA1401 // Fields should be private - intentional: test counter must be readable from the test assembly.
-        public static int Calls;
-#pragma warning restore SA1401
+        public int Calls { get; private set; }
 
-        public static int Get()
+        public int Get()
         {
             Calls++;
             return 42;
