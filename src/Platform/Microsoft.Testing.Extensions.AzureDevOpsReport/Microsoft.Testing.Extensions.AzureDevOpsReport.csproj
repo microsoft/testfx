@@ -49,6 +49,11 @@ This package extends Microsoft Testing Platform to provide a Azure DevOps report
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" />
+    <PackageReference Include="System.Text.Json" />
+  </ItemGroup>
+ 
+  <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
   </ItemGroup>
 
@@ -58,6 +63,7 @@ This package extends Microsoft Testing Platform to provide a Azure DevOps report
 
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
   </ItemGroup>
 
 </Project>

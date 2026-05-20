@@ -145,40 +145,21 @@ public sealed partial class Assert
     private static bool AreEqualFailing<T>(T? expected, T? actual, IEqualityComparer<T>? comparer)
         => !(comparer ?? EqualityComparer<T>.Default).Equals(expected!, actual!);
 
-    private static string FormatStringComparisonMessage(string? expected, string? actual, string userMessage)
+    private static void AppendStringDiffSummary(StructuredAssertionMessage structured, string expected, string actual)
+        => AppendStringDiffSummary(structured, expected, actual, FindFirstStringDifference(expected, actual));
+
+    private static void AppendStringDiffSummary(StructuredAssertionMessage structured, string expected, string actual, int diffIndex)
     {
-        // Handle null cases
-        if (expected is null && actual is null)
-        {
-            return string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                ReplaceNulls(actual));
-        }
-
-        if (expected is null || actual is null)
-        {
-            return string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                ReplaceNulls(actual));
-        }
-
-        // Find the first difference
-        int diffIndex = FindFirstStringDifference(expected, actual);
-
         if (diffIndex == -1)
         {
-            // Strings are equal - should not happen in practice, we call this method only when they are not equal.
             throw ApplicationStateGuard.Unreachable();
         }
 
-        // Format the enhanced string comparison message
-        return FormatStringDifferenceMessage(expected, actual, diffIndex, userMessage);
+        string diffSummary = expected.Length == actual.Length
+            ? string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthBothMsg, expected.Length, diffIndex)
+            : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthDifferentMsg, expected.Length, actual.Length, diffIndex);
+
+        structured.WithAdditionalSummaryLine(diffSummary);
     }
 
     private static int FindFirstStringDifference(string expected, string actual)
@@ -197,97 +178,40 @@ public sealed partial class Assert
         return expected.Length != actual.Length ? minLength : -1;
     }
 
-    private static string FormatStringDifferenceMessage(string expected, string actual, int diffIndex, string userMessage)
-    {
-        string lengthInfo = expected.Length == actual.Length
-            ? string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthBothMsg, expected.Length, diffIndex)
-            : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthDifferentMsg, expected.Length, actual.Length);
-
-        // Create contextual preview around the difference
-        const int contextLength = 41; // Show up to 20 characters of context on each side
-        Tuple<string, string, int> tuple = StringPreviewHelper.CreateStringPreviews(expected, actual, diffIndex, contextLength);
-        string expectedPreview = tuple.Item1;
-        string actualPreview = tuple.Item2;
-        int caretPosition = tuple.Item3;
-
-        // Get localized prefixes
-        string expectedPrefix = FrameworkMessages.AreEqualStringDiffExpectedPrefix;
-        string actualPrefix = FrameworkMessages.AreEqualStringDiffActualPrefix;
-
-        // Calculate the maximum prefix length to align the caret properly
-        int maxPrefixLength = Math.Max(expectedPrefix.Length, actualPrefix.Length);
-
-        // Pad shorter prefix to match the longer one for proper alignment
-        string paddedExpectedPrefix = expectedPrefix.PadRight(maxPrefixLength);
-        string paddedActualPrefix = actualPrefix.PadRight(maxPrefixLength);
-
-        // Build the formatted lines with proper alignment
-        string expectedLine = paddedExpectedPrefix + $"\"{expectedPreview}\"";
-        string actualLine = paddedActualPrefix + $"\"{actualPreview}\"";
-
-        // The caret should align under the difference in the string content
-        // For localized prefixes with different lengths, we need to account for the longer prefix
-        // to ensure proper alignment. But the caret position is relative to the string content.
-        int adjustedCaretPosition = maxPrefixLength + 1 + caretPosition; // +1 for the opening quote
-
-        // Format user message properly - add leading space if not empty, otherwise no extra formatting
-        string formattedUserMessage = string.IsNullOrEmpty(userMessage) ? string.Empty : $" {userMessage}";
-
-        return string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.AreEqualStringDiffFailMsg,
-            lengthInfo,
-            formattedUserMessage,
-            expectedLine,
-            actualLine,
-            new string('-', adjustedCaretPosition) + "^");
-    }
-
     [DoesNotReturn]
     private static void ReportAssertAreEqualFailed(object? expected, object? actual, string? message, string expectedExpression, string actualExpression)
     {
         string expectedRendered = AssertionValueRenderer.RenderValue(expected);
         string actualRendered = AssertionValueRenderer.RenderValue(actual);
 
-        string summary;
         EvidenceBlock evidence;
-        string? additionalSummaryLine = null;
+        StructuredAssertionMessage structured;
 
         if (actual is not null && expected is not null && !actual.GetType().Equals(expected.GetType()))
         {
             Type expectedType = expected.GetType();
             Type actualType = actual.GetType();
-            summary = FrameworkMessages.AreEqualDifferentTypesFailedSummary;
             evidence = EvidenceBlock.Create()
                 .AddLine("expected:", expectedRendered)
                 .AddLine("expected type:", expectedType.FullName ?? expectedType.Name)
                 .AddLine("actual:", actualRendered)
                 .AddLine("actual type:", actualType.FullName ?? actualType.Name);
+            structured = new(FrameworkMessages.AreEqualDifferentTypesFailedSummary);
         }
         else if (expected is string expectedString && actual is string actualString)
         {
-            summary = FrameworkMessages.AreEqualStringsFailedSummary;
-            int diffIndex = FindFirstStringDifference(expectedString, actualString);
-            additionalSummaryLine = expectedString.Length == actualString.Length
-                ? string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthBothMsg, expectedString.Length, diffIndex)
-                : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthDifferentMsg, expectedString.Length, actualString.Length);
-
             evidence = EvidenceBlock.Create()
                 .AddLine("expected:", expectedRendered)
                 .AddLine("actual:", actualRendered);
+            structured = new(FrameworkMessages.AreEqualStringsFailedSummary);
+            AppendStringDiffSummary(structured, expectedString, actualString);
         }
         else
         {
-            summary = FrameworkMessages.AreEqualFailedSummary;
             evidence = EvidenceBlock.Create()
                 .AddLine("expected:", expectedRendered)
                 .AddLine("actual:", actualRendered);
-        }
-
-        StructuredAssertionMessage structured = new(summary);
-        if (additionalSummaryLine is not null)
-        {
-            structured.WithAdditionalSummaryLine(additionalSummaryLine);
+            structured = new(FrameworkMessages.AreEqualFailedSummary);
         }
 
         structured.WithUserMessage(message);

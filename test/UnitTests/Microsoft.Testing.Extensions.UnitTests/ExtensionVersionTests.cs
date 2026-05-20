@@ -46,6 +46,13 @@ public sealed class ExtensionVersionTests
         AssertVersionMatchesAssembly(provider.Version, typeof(TrxReportGeneratorCommandLine).Assembly);
     }
 
+    [TestMethod]
+    public void HtmlReportGeneratorCommandLine_UsesItsOwnAssemblyVersion()
+    {
+        var provider = new Microsoft.Testing.Extensions.HtmlReport.HtmlReportGeneratorCommandLine();
+        AssertVersionMatchesAssembly(provider.Version, typeof(Microsoft.Testing.Extensions.HtmlReport.HtmlReportGeneratorCommandLine).Assembly);
+    }
+
     private static void AssertVersionMatchesAssembly(string reportedVersion, Assembly extensionAssembly)
     {
         Assert.IsFalse(string.IsNullOrEmpty(reportedVersion), "Reported version should not be null or empty.");

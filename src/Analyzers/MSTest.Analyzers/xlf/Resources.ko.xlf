@@ -117,6 +117,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">어설션 인수는 올바른 순서로 전달되어야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsDescription">
+        <source>`Assert.AreEqual` and `Assert.AreNotEqual` use `EqualityComparer&lt;T&gt;.Default`. For collection-like types this relies on the type's own equality semantics instead of comparing sequence elements, so `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` or `Assert.AreEquivalent`/`Assert.AreNotEquivalent` are usually the better fit.</source>
+        <target state="translated">`Assert.AreEqual` 및 `Assert.AreNotEqual`은 `EqualityComparer&lt;T&gt;.Default`를 사용합니다. 컬렉션과 비슷한 형식의 경우 시퀀스 요소를 비교하는 대신 형식 자체의 동등성 의미 체계를 사용하므로, 일반적으로 `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` 또는 `Assert.AreEquivalent`/`Assert.AreNotEquivalent`가 더 적합합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsMessageFormat">
+        <source>`{0}` on {1} (which implements IEnumerable&lt;T&gt;) does not perform element-wise sequence comparison. Use `Assert.AreSequenceEqual` for ordered element-wise comparison, `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` for unordered, or `Assert.AreEquivalent` for deep structural comparison.</source>
+        <target state="translated">IEnumerable&lt;T&gt;를 구현하는 {1}의 `{0}`은(는) 요소별 시퀀스 비교를 수행하지 않습니다. 정렬된 요소별 비교에는 `Assert.AreSequenceEqual`, 정렬되지 않은 비교에는 `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)`, 심층 구조 비교에는 `Assert.AreEquivalent`를 사용합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsTitle">
+        <source>Avoid Assert.AreEqual on collection types</source>
+        <target state="translated">컬렉션 형식에서 Assert.AreEqual 방지</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
         <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
         <target state="translated">값 형식을 비교할 때 'Assert.AreSame'/'Assert.AreNotSame' 대신 'Assert.AreEqual'/'Assert.AreNotEqual'을 사용합니다. 값 형식을 'Assert.AreSame'/'Assert.AreNotSame'에 전달하면 boxed(새 개체 만들기)됩니다. 'Assert.AreSame'/'Assert.AreNotSame'은 참조로 비교하므로 boxing이 발생할 때 'Assert.AreSame'이 실패하고 'Assert.AreNotSame'이 항상 전달됩니다.</target>
@@ -534,17 +549,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionDescription">
         <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</source>
-        <target state="new">When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</target>
+        <target state="translated">비동기 코드의 예외를 검증할 때 GetAwaiter().GetResult()를 사용하여 비동기 작업을 차단하는 대신 비동기 어설션 메서드를 사용합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
         <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
-        <target state="new">Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</target>
+        <target state="translated">'Assert.{1}'에서 비동기 호출을 차단하는 대신 'Assert.{0}'을(를) 사용합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionTitle">
         <source>Prefer async assertion methods</source>
-        <target state="new">Prefer async assertion methods</target>
+        <target state="translated">비동기 어설션 메서드 우선 사용</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">

@@ -69,4 +69,5 @@ internal static class DiagnosticIds
     public const string AvoidOutRefTestMethodParametersRuleId = "MSTEST0062";
     public const string TestClassConstructorShouldBeValidRuleId = "MSTEST0063";
     public const string PreferAsyncAssertionRuleId = "MSTEST0064";
+    public const string AvoidAssertAreEqualOnCollectionsRuleId = "MSTEST0065";
 }

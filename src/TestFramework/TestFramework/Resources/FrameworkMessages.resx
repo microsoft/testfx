@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- 
-    Microsoft ResX Schema 
-    
+  <!--
+    Microsoft ResX Schema
+
     Version 2.0
-    
-    The primary goals of this format is to allow a simple XML format 
-    that is mostly human readable. The generation and parsing of the 
-    various data types are done through the TypeConverter classes 
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
     associated with the data types.
-    
+
     Example:
-    
+
     ... ado.net/XML headers & schema ...
     <resheader name="resmimetype">text/microsoft-resx</resheader>
     <resheader name="version">2.0</resheader>
@@ -26,36 +26,36 @@
         <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
         <comment>This is a comment</comment>
     </data>
-                
-    There are any number of "resheader" rows that contain simple 
+
+    There are any number of "resheader" rows that contain simple
     name/value pairs.
-    
-    Each data row contains a name, and value. The row also contains a 
-    type or mimetype. Type corresponds to a .NET class that support 
-    text/value conversion through the TypeConverter architecture. 
-    Classes that don't support this are serialized and stored with the 
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion through the TypeConverter architecture.
+    Classes that don't support this are serialized and stored with the
     mimetype set.
-    
-    The mimetype is used for serialized objects, and tells the 
-    ResXResourceReader how to depersist the object. This is currently not 
+
+    The mimetype is used for serialized objects, and tells the
+    ResXResourceReader how to depersist the object. This is currently not
     extensible. For a given mimetype the value must be set accordingly:
-    
-    Note - application/x-microsoft.net.object.binary.base64 is the format 
-    that the ResXResourceWriter will generate, however the reader can 
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
     read any of the formats listed below.
-    
+
     mimetype: application/x-microsoft.net.object.binary.base64
-    value   : The object must be serialized with 
+    value   : The object must be serialized with
             : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
             : and then encoded with base64 encoding.
-    
+
     mimetype: application/x-microsoft.net.object.soap.base64
-    value   : The object must be serialized with 
+    value   : The object must be serialized with
             : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
             : and then encoded with base64 encoding.
 
     mimetype: application/x-microsoft.net.object.bytearray.base64
-    value   : The object must be serialized into a byte array 
+    value   : The object must be serialized into a byte array
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
@@ -129,8 +129,8 @@
   <data name="AreEqualFailMsg" xml:space="preserve">
     <value>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</value>
   </data>
-  <data name="AreEqualDeltaFailMsg" xml:space="preserve">
-    <value>Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</value>
+  <data name="AreEqualDeltaFailedSummary" xml:space="preserve">
+    <value>Expected values to be equal within tolerance.</value>
   </data>
   <data name="AreEqualCaseFailMsg" xml:space="preserve">
     <value>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</value>
@@ -151,10 +151,10 @@
     <value>But was:  </value>
   </data>
   <data name="AreEqualStringDiffLengthBothMsg" xml:space="preserve">
-    <value>String lengths are both {0} but differ at index {1}.</value>
+    <value>Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</value>
   </data>
   <data name="AreEqualStringDiffLengthDifferentMsg" xml:space="preserve">
-    <value>Expected string length {0} but was {1}.</value>
+    <value>Strings have different lengths (expected: {0}, actual: {1}) and differ at 1 location(s). First difference at index {2}.</value>
   </data>
   <data name="AreEquivalentFailedSummary" xml:space="preserve">
     <value>Expected values to be structurally equivalent.</value>
@@ -221,8 +221,8 @@
     <value>&lt;root&gt;</value>
     <comment>Placeholder used in equivalence-mismatch messages when the difference is at the top of the object graph.</comment>
   </data>
-  <data name="AreNotEqualDeltaFailMsg" xml:space="preserve">
-    <value>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</value>
+  <data name="AreNotEqualDeltaFailedSummary" xml:space="preserve">
+    <value>Expected values to differ beyond tolerance.</value>
   </data>
   <data name="AreNotEqualFailMsg" xml:space="preserve">
     <value>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</value>
@@ -239,6 +239,12 @@
   <data name="AreNotEquivalentFailedSummaryStrict" xml:space="preserve">
     <value>Expected values to be structurally different (strict mode).</value>
   </data>
+  <data name="AreNotSequenceEqualInAnyOrderFailedSummary" xml:space="preserve">
+    <value>Expected sequences to differ (in any order).</value>
+  </data>
+  <data name="AreNotSequenceEqualInOrderFailedSummary" xml:space="preserve">
+    <value>Expected sequences to differ.</value>
+  </data>
   <data name="AreSameExpectedIsNull" xml:space="preserve">
     <value>Expected is &lt;null&gt;. {0}</value>
   </data>
@@ -247,6 +253,21 @@
   </data>
   <data name="AreSameGivenValues" xml:space="preserve">
     <value>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</value>
+  </data>
+  <data name="AreSequenceEqualInAnyOrderFailedSummary" xml:space="preserve">
+    <value>Expected sequences to be equal (in any order).</value>
+  </data>
+  <data name="AreSequenceEqualInOrderFailedSummary" xml:space="preserve">
+    <value>Expected sequences to be equal.</value>
+  </data>
+  <data name="AreSequenceEqualLengthDiffMsg" xml:space="preserve">
+    <value>Sequences have different lengths (expected: {0}, actual: {1}).</value>
+  </data>
+  <data name="AreSequenceEqualMissingUnexpectedMsg" xml:space="preserve">
+    <value>Missing {0} element(s) from actual. Found {1} unexpected element(s).</value>
+  </data>
+  <data name="AreSequenceEqualSameLengthDiffMsg" xml:space="preserve">
+    <value>Sequences have {0} element(s). {1} element(s) differ. First difference at index {2}.</value>
   </data>
   <data name="AreNotSameBothNull" xml:space="preserve">
     <value>Both values are &lt;null&gt;. {0}</value>
@@ -454,6 +475,9 @@ Actual: {2}</value>
   <data name="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue" xml:space="preserve">
     <value>The maximum value must be greater than or equal to the minimum value.</value>
   </data>
+  <data name="AssertThatFailedToEvaluate" xml:space="preserve">
+    <value>&lt;Failed to evaluate&gt;</value>
+  </data>
   <data name="AssertScopeFailure" xml:space="preserve">
     <value>{0} assertion(s) failed within the assert scope.</value>
     <comment>{0} is the number of assertion failures collected in the scope.</comment>
@@ -491,11 +515,20 @@ Actual: {2}</value>
   <data name="AreEqualDifferentTypesFailedSummary" xml:space="preserve">
     <value>Expected values to be equal, but they are of different types.</value>
   </data>
+  <data name="AreEqualStringsCaseOnlyDifferenceMsg" xml:space="preserve">
+    <value>Strings differ only in case.</value>
+  </data>
   <data name="AreEqualStringsFailedSummary" xml:space="preserve">
     <value>Expected strings to be equal.</value>
   </data>
   <data name="AreNotEqualFailedSummary" xml:space="preserve">
-    <value>Expected values to not be equal.</value>
+    <value>Expected values to differ.</value>
+  </data>
+  <data name="AreNotEqualStringsCaseInsensitiveFailedSummary" xml:space="preserve">
+    <value>Expected strings to differ (case-insensitive).</value>
+  </data>
+  <data name="AreNotEqualStringsFailedSummary" xml:space="preserve">
+    <value>Expected strings to differ.</value>
   </data>
   <data name="AreAllNotNullFailedSummary" xml:space="preserve">
     <value>Expected all items in collection to be non-null.</value>
@@ -507,10 +540,10 @@ Actual: {2}</value>
     <value>Expected all items in collection to be of the specified type.</value>
   </data>
   <data name="MatchesRegexFailedSummary" xml:space="preserve">
-    <value>Expected string to match the specified regular expression.</value>
+    <value>Expected string to match the specified pattern.</value>
   </data>
   <data name="DoesNotMatchRegexFailedSummary" xml:space="preserve">
-    <value>Expected string to not match the specified regular expression.</value>
+    <value>Expected string to not match the specified pattern.</value>
   </data>
   <data name="ContainsAllFailedSummary" xml:space="preserve">
     <value>Expected collection to contain all specified items.</value>

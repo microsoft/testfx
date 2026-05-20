@@ -164,7 +164,7 @@
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
         <source>Command line: {0}</source>
-        <target state="new">Command line: {0}</target>
+        <target state="translated">コマンド ライン: {0}</target>
         <note>{0} is the command line used to run the application.</note>
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
@@ -518,14 +518,14 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
         <source>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</source>
-        <target state="new">'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <target state="translated">'--list-tests' が予期しない値 '{0}' を受け取りました。サポートされている値: {1}。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.
 Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</source>
-        <target state="new">List available tests.
-Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</target>
+        <target state="translated">使用可能なテストを一覧します。
+必要に応じて、'text' (既定の人間が判読できる出力) または 'json' を指定すると、検出されたテストを標準出力に JSON ドキュメントとして印刷します。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">

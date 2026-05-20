@@ -22,6 +22,21 @@
         <target state="translated">Déplacer l’accès conditionnel dans l’assertion pour séparer les case activée 'Assert.IsNotNull'</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsEquivalentFix">
+        <source>Replace with `Assert.{0}`</source>
+        <target state="new">Replace with `Assert.{0}`</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsInAnyOrderFix">
+        <source>Replace with `Assert.{0}(..., SequenceOrder.InAnyOrder)`</source>
+        <target state="new">Replace with `Assert.{0}(..., SequenceOrder.InAnyOrder)`</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsOrderedFix">
+        <source>Replace with `Assert.{0}` (ordered)</source>
+        <target state="new">Replace with `Assert.{0}` (ordered)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesFix">
         <source>Use '{0}'</source>
         <target state="translated">Utiliser « {0} »</target>

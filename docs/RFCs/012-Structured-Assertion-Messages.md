@@ -1,7 +1,7 @@
 # RFC 012 - Structured Assertion Messages
 
 - [x] Approved in principle
-- [ ] Under discussion
+- [x] Under discussion
 - [x] Implementation
 - [ ] Shipped
 

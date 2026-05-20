@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Linq.Expressions;
+using System.Reflection;
+
 using AwesomeAssertions;
 
 using TestFramework.ForTestingMSTest;
@@ -479,10 +482,10 @@ public partial class AssertTests : TestContainer
             .WithMessage($"""
                 Assert.That(() => new DateTime(year, month, day) == DateTime.MinValue) failed.
                 Details:
-                  DateTime.MinValue = {DateTime.MinValue.ToString(CultureInfo.CurrentCulture)}
+                  DateTime.MinValue = {DateTime.MinValue.ToString(CultureInfo.InvariantCulture)}
                   day = 25
                   month = 12
-                  new DateTime(year, month, day) = {new DateTime(year, month, day).ToString(CultureInfo.CurrentCulture)}
+                  new DateTime(year, month, day) = {new DateTime(year, month, day).ToString(CultureInfo.InvariantCulture)}
                   year = 2023
                 """);
     }
@@ -1042,4 +1045,523 @@ public partial class AssertTests : TestContainer
               nullVariable = null
             """);
     }
+
+    public void That_DoesNotEvaluateTwice_WhenAssertionFails()
+    {
+        var box = new Box();
+
+        // If we evaluate twice, box.GetValueWithSideEffect() is called once on comparison, and once when message for assertion is built.
+        // We compare to 0 to force failure.
+        Action act = () => Assert.That(() => box.GetValueWithSideEffect() == 0);
+
+        // GetValueWithSideEffect() should report 1, which is the value when we evaluate only once.
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => box.GetValueWithSideEffect() == 0) failed.
+            Details:
+              box.GetValueWithSideEffect() = 1
+            """);
+
+        // We call again, this should be second call now.
+        box.GetValueWithSideEffect().Should().Be(2);
+    }
+
+    public void That_DoesNotEvaluateTwice_WhenAssertionFails_NoSideEffect()
+    {
+        int i = 1;
+        Action act = () => Assert.That(() => i + i == 0);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => i + i == 0) failed.
+            Details:
+              i = 1
+            """);
+    }
+
+    public void That_DoesEvaluateTwice_WhenMethodIsLeaf()
+    {
+        var box = new Box();
+
+        // Compare to 0 to force failure.
+        Action act = () => Assert.That(() => box.GetValueWithSideEffect() + box.GetValueWithSideEffect() == 0);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => box.GetValueWithSideEffect() + box.GetValueWithSideEffect() == 0) failed.
+            Details:
+              box.GetValueWithSideEffect() = 1
+              box.GetValueWithSideEffect() (2) = 2
+            """);
+    }
+
+    public void That_FastPathFailure_StillExtractsDetails()
+    {
+        int x = 3;
+
+        Action act = () => Assert.That(() => x == 5);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => x == 5) failed.
+            Details:
+              x = 3
+            """);
+    }
+
+    public void That_FieldAccessWithSideEffectingParent_DoesNotEvaluateTwice()
+    {
+        var provider = new BoxProvider();
+
+        Action act = () => Assert.That(() => provider.GetBox().Value == 0);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => provider.GetBox().Value == 0) failed.
+            Details:
+              provider.GetBox().Value = 1
+            """);
+
+        provider.Calls.Should().Be(1);
+    }
+
+    public void That_AndAlso_ShortCircuits_DoesNotEvaluateRightWhenLeftIsFalse()
+    {
+        string? s = null;
+
+        // s != null is false; the right operand s.Length > 0 must NOT execute on the assertion
+        // path (it would NRE) and the diagnostic walk must not surface "<Failed to evaluate>"
+        // for the benign short-circuit.
+        Action act = () => Assert.That(() => s != null && s.Length > 0);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => s != null && s.Length > 0) failed.
+            Details:
+              s = null
+            """);
+    }
+
+    public void That_OrElse_ShortCircuit_PassingAssertion_DoesNotInvokeRight()
+    {
+        var counter = new SideEffectCounter();
+        bool leftTrue = true;
+
+        // Assertion passes because leftTrue is true; counter.Increment() must NOT run.
+        Action act = () => Assert.That(() => leftTrue || counter.Increment() > 0);
+
+        act.Should().NotThrow();
+        counter.Count.Should().Be(0);
+    }
+
+    public void That_Coalesce_ShortCircuit_PassingAssertion_DoesNotInvokeRight()
+    {
+        var counter = new SideEffectCounter();
+        string? value = "hello";
+
+        // Non-null value short-circuits the null-coalescing operator; counter.Increment() must NOT run.
+        Action act = () => Assert.That(() => (value ?? counter.Increment().ToString(CultureInfo.InvariantCulture)) == "hello");
+
+        act.Should().NotThrow();
+        counter.Count.Should().Be(0);
+    }
+
+    public void That_Conditional_PassingAssertion_DoesNotInvokeUnselectedBranch()
+    {
+        var counter = new SideEffectCounter();
+        bool useTrueBranch = true;
+
+        // useTrueBranch picks the IfTrue side; counter.Increment() in IfFalse must NOT run.
+        Action act = () => Assert.That(() => (useTrueBranch ? 1 : counter.Increment()) == 1);
+
+        act.Should().NotThrow();
+        counter.Count.Should().Be(0);
+    }
+
+    public void That_PropagatesUserExceptions_OnSinglePassPath()
+    {
+        var thrower = new Thrower();
+
+        // The lambda throws InvalidOperationException; previously the single-pass evaluator
+        // would swallow it and turn it into a confusing InvalidCastException ("<Failed to evaluate>" -> bool).
+        // Now the original exception must surface unchanged.
+        Action act = () => Assert.That(() => thrower.Throw());
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("boom");
+    }
+
+    public void That_NewExpressionWithSideEffectingArgument_DoesNotEvaluateTwice()
+    {
+        var counter = new SideEffectCounter();
+
+        Action act = () => Assert.That(() => new Wrapper(counter.Increment()).Value == 99);
+
+        act.Should().Throw<AssertFailedException>();
+        counter.Count.Should().Be(1);
+    }
+
+    public void That_NewArrayWithSideEffectingElement_DoesNotEvaluateTwice()
+    {
+        var counter = new SideEffectCounter();
+
+        Action act = () => Assert.That(() => new[] { counter.Increment() }.Length == 99);
+
+        act.Should().Throw<AssertFailedException>();
+        counter.Count.Should().Be(1);
+    }
+
+    public void That_InvocationWithSideEffectingArgument_DoesNotEvaluateTwice()
+    {
+        var counter = new SideEffectCounter();
+        Func<int, int> identity = x => x;
+
+        Action act = () => Assert.That(() => identity(counter.Increment()) == 99);
+
+        act.Should().Throw<AssertFailedException>();
+        counter.Count.Should().Be(1);
+    }
+
+    public void That_QueryableWithQuotedLambda_FailsAsAssertionFailure()
+    {
+        int[] items = [1, 2, 3];
+
+        // The Where/Any call uses a quoted lambda; the previous walker tried to unwrap the Quote
+        // and produced an InvalidCastException instead of an AssertFailedException.
+        Action act = () => Assert.That(() => items.AsQueryable().Any(i => i > 99));
+
+        act.Should().Throw<AssertFailedException>();
+    }
+
+    private sealed class SideEffectCounter
+    {
+        public int Count { get; private set; }
+
+        public int Increment()
+        {
+            Count++;
+            return Count;
+        }
+    }
+
+    private sealed class Thrower
+    {
+        public bool Throw() => throw new InvalidOperationException("boom");
+    }
+
+    private sealed class Wrapper(int value)
+    {
+        public int Value { get; } = value;
+    }
+
+    private class Box
+    {
+        private int _c;
+
+        public int GetValueWithSideEffect()
+        {
+            _c++;
+            return _c;
+        }
+    }
+
+    private sealed class BoxProvider
+    {
+        public int Calls { get; private set; }
+
+        public ValueBox GetBox()
+        {
+            Calls++;
+            return new ValueBox(Calls);
+        }
+    }
+
+    private readonly struct ValueBox(int value)
+    {
+        public int Value { get; } = value;
+    }
+
+    private sealed class MutableContainer
+    {
+#pragma warning disable SA1401 // Fields should be private - intentional: this type tests Expression.Assign on nested members.
+        public MutableBox Inner = new() { Value = 0 };
+#pragma warning restore SA1401
+    }
+
+    private sealed class MutableBox
+    {
+#pragma warning disable SA1401 // Fields should be private - intentional: this type tests Expression.Assign on a field.
+        public int Value;
+#pragma warning restore SA1401
+    }
+
+    public void That_ManuallyConstructedAssignExpression_SurfacesRhsAndPreservesSideEffect()
+    {
+        // Construct: (container.Inner.Value = ComputeValue()) < 0   — fails, so message must
+        // include enough context for diagnosis AND the assignment side-effect must apply.
+        var container = new MutableContainer();
+        FieldInfo innerFi = typeof(MutableContainer).GetField(nameof(MutableContainer.Inner))!;
+        FieldInfo valueFi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
+
+        MemberExpression innerAccess = Expression.Field(Expression.Constant(container), innerFi);
+        MemberExpression valueAccess = Expression.Field(innerAccess, valueFi);
+        MethodCallExpression rhs = Expression.Call(typeof(MutableBoxHelper).GetMethod(nameof(MutableBoxHelper.ComputeValue))!);
+        BinaryExpression assign = Expression.Assign(valueAccess, rhs);
+        BinaryExpression body = Expression.LessThan(assign, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        // Assert on the method name only (not the parenthesized rendering) so that future
+        // renderer tweaks (e.g., dropping/adding parentheses for nullary calls) don't break
+        // this regression test.
+        ex.Message.Should().Contain(nameof(MutableBoxHelper.ComputeValue));
+        // The Inner member of the receiver chain should surface in the failure details.
+        ex.Message.Should().Contain("Inner");
+        // The assignment side-effect must apply.
+        container.Inner.Value.Should().Be(42);
+    }
+
+    // Regression for Assign double-evaluation: the RHS of Expression.Assign was evaluated
+    // once during the bottom-up pass, but the generic "rebuild and compile" path then
+    // produced an invalid Assign(Constant, Constant) that the catch sentineled, and the
+    // parent LessThan was re-invoked from the original tree — re-running ComputeValue a
+    // second time. Assign is now special-cased so the RHS runs exactly once.
+    public void That_ManuallyConstructedAssign_EvaluatesRhsExactlyOnce()
+    {
+        var container = new MutableContainer();
+        var counter = new CountingComputeValue();
+        FieldInfo innerFi = typeof(MutableContainer).GetField(nameof(MutableContainer.Inner))!;
+        FieldInfo valueFi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
+
+        MemberExpression innerAccess = Expression.Field(Expression.Constant(container), innerFi);
+        MemberExpression valueAccess = Expression.Field(innerAccess, valueFi);
+        MethodCallExpression rhs = Expression.Call(Expression.Constant(counter), typeof(CountingComputeValue).GetMethod(nameof(CountingComputeValue.Get))!);
+        BinaryExpression assign = Expression.Assign(valueAccess, rhs);
+        BinaryExpression body = Expression.LessThan(assign, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+
+        act.Should().Throw<AssertFailedException>();
+        counter.Calls.Should().Be(1);
+        container.Inner.Value.Should().Be(42);
+    }
+
+    // Regression: a compound assignment whose only side effect is the assignment itself (no
+    // method or property reads triggering single-pass) was taking the side-effect-free fast
+    // path. The fast path ran the assignment once, then EvaluateAllSubExpressions ran it
+    // again on the failure-diagnostic path. RequiresSinglePassEvaluation now recognizes
+    // assignment node types so these expressions always take the single-pass evaluator.
+    public void That_CompoundAssignmentOnField_AppliesExactlyOnceOnFailure()
+    {
+        var container = new MutableContainer();
+        FieldInfo innerFi = typeof(MutableContainer).GetField(nameof(MutableContainer.Inner))!;
+        FieldInfo valueFi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
+
+        MemberExpression innerAccess = Expression.Field(Expression.Constant(container), innerFi);
+        MemberExpression valueAccess = Expression.Field(innerAccess, valueFi);
+        BinaryExpression addAssign = Expression.AddAssign(valueAccess, Expression.Constant(7));
+        BinaryExpression body = Expression.LessThan(addAssign, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+
+        act.Should().Throw<AssertFailedException>();
+        // Exactly one += 7 must apply — not two.
+        container.Inner.Value.Should().Be(7);
+    }
+
+    // Regression: assigning to a member whose receiver chain has a side effect (e.g.,
+    // `provider.GetBox().Value = 42`) previously ran the receiver method twice because the
+    // rebuild kept the original (unevaluated) Left in place. The Left's sub-children are
+    // now substituted with cached constants while the writable MemberExpression wrapper is
+    // preserved, so the receiver runs exactly once.
+    public void That_AssignToFieldOfSideEffectingReceiver_EvaluatesReceiverExactlyOnce()
+    {
+        var provider = new MutableBoxProvider();
+
+        MethodInfo getBoxMethod = typeof(MutableBoxProvider).GetMethod(nameof(MutableBoxProvider.GetBox))!;
+        MethodCallExpression getBoxCall = Expression.Call(Expression.Constant(provider), getBoxMethod);
+        FieldInfo valueFi = typeof(MutableBox).GetField(nameof(MutableBox.Value))!;
+        MemberExpression valueAccess = Expression.Field(getBoxCall, valueFi);
+        BinaryExpression assign = Expression.Assign(valueAccess, Expression.Constant(42));
+        BinaryExpression body = Expression.LessThan(assign, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+        act.Should().Throw<AssertFailedException>();
+
+        // Receiver method (GetBox) must run exactly once.
+        provider.Calls.Should().Be(1);
+        provider.Box.Value.Should().Be(42);
+    }
+
+    // Regression: when the Left of Expression.Assign is a property, the wrapper must NOT be
+    // evaluated to populate the cache before the assignment runs. Previously, EvaluateAllSubExpressions
+    // invoked the getter once to capture a pre-assignment value, then the rebuilt Assign invoked
+    // the setter — leaving the getter unused but having been called. Plain Assign does not need
+    // to read the current value, so the getter should run zero times.
+    public void That_AssignToProperty_DoesNotInvokeGetter()
+    {
+        var holder = new CountingPropertyHolder();
+        PropertyInfo valuePi = typeof(CountingPropertyHolder).GetProperty(nameof(CountingPropertyHolder.Value))!;
+        MemberExpression valueAccess = Expression.Property(Expression.Constant(holder), valuePi);
+        BinaryExpression assign = Expression.Assign(valueAccess, Expression.Constant(42));
+        BinaryExpression body = Expression.LessThan(assign, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+
+        act.Should().Throw<AssertFailedException>();
+        // Plain Assign on a property: setter once, getter never.
+        holder.GetCalls.Should().Be(0);
+        holder.SetCalls.Should().Be(1);
+    }
+
+    // Regression: when the Left of a compound assignment (e.g., AddAssign) is a property, the
+    // getter must run exactly once — inside the rebuilt compound assignment. Previously the
+    // getter was invoked twice: once by EvaluateAllSubExpressions(Left) to cache the pre-value,
+    // and once again by the rebuilt AddAssign (which must read the current value). The fix walks
+    // only the Left's sub-children, leaving the getter call to happen exactly once during the
+    // actual assignment execution.
+    public void That_CompoundAssignToProperty_InvokesGetterExactlyOnce()
+    {
+        var holder = new CountingPropertyHolder();
+        PropertyInfo valuePi = typeof(CountingPropertyHolder).GetProperty(nameof(CountingPropertyHolder.Value))!;
+        MemberExpression valueAccess = Expression.Property(Expression.Constant(holder), valuePi);
+        BinaryExpression addAssign = Expression.AddAssign(valueAccess, Expression.Constant(7));
+        BinaryExpression body = Expression.LessThan(addAssign, Expression.Constant(0));
+        var lambda = Expression.Lambda<Func<bool>>(body);
+
+        Action act = () => Assert.That(lambda);
+
+        act.Should().Throw<AssertFailedException>();
+        // Compound assignment on a property: getter once (to read), setter once (to write).
+        holder.GetCalls.Should().Be(1);
+        holder.SetCalls.Should().Be(1);
+    }
+
+    private sealed class CountingPropertyHolder
+    {
+#pragma warning disable IDE0032 // Use auto property - intentional: Value has side-effecting accessors that need a backing field.
+        private int _value;
+#pragma warning restore IDE0032
+
+        public int GetCalls { get; private set; }
+
+        public int SetCalls { get; private set; }
+
+        public int Value
+        {
+            get
+            {
+                GetCalls++;
+                return _value;
+            }
+
+            set
+            {
+                SetCalls++;
+                _value = value;
+            }
+        }
+    }
+
+    private sealed class MutableBoxProvider
+    {
+        public int Calls { get; private set; }
+
+        public MutableBox Box { get; } = new();
+
+        public MutableBox GetBox()
+        {
+            Calls++;
+            return Box;
+        }
+    }
+
+    private sealed class CountingComputeValue
+    {
+        public int Calls { get; private set; }
+
+        public int Get()
+        {
+            Calls++;
+            return 42;
+        }
+    }
+
+    // Regression: a member whose static type is Func/Action but whose runtime value is null should
+    // still appear in the failure details. Filtering must remain runtime-typed (via the cached
+    // value's GetType()) rather than static-typed at analysis time.
+    private sealed class HolderWithFuncField
+    {
+#pragma warning disable SA1401 // Fields should be private - intentional: test fixture exposing a delegate-typed field.
+        public Func<int>? Callback;
+#pragma warning restore SA1401
+    }
+
+    public void That_NullDelegateTypedMember_StillAppearsInDetails()
+    {
+        var holder = new HolderWithFuncField { Callback = null };
+
+        Action act = () => Assert.That(() => holder.Callback != null);
+
+        AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("Callback");
+        ex.Message.Should().Contain("null");
+    }
+
+    // ---- Object-typed sub-expressions: locks down current behavior when two side-effecting
+    // method calls return the same mutable reference. The cache stores reference values, so by
+    // the time details are extracted both slots point to the post-mutation object; with
+    // first-occurrence-by-name and "same value -> dedupe" semantics in TryAddExpressionValue,
+    // only one entry surfaces. This is a known UX limitation worth pinning down with a test.
+    public void That_TwoCallsReturningSameMutatedReference_DeduplicatesInDetails()
+    {
+        var box = new BoxOfShapes();
+
+        // Same reference returned twice but mutated between calls; the != check therefore returns
+        // false (same reference) so the assertion fails.
+        Action act = () => Assert.That(() => box.GetValueWithSideEffect() != box.GetValueWithSideEffect());
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assert.That(() => box.GetValueWithSideEffect() != box.GetValueWithSideEffect()) failed.
+                Details:
+                  box.GetValueWithSideEffect() = Shape: Circle
+                """);
+    }
+
+    private sealed class Shape
+    {
+        public string Name { get; set; } = string.Empty;
+
+        public override string ToString() => $"Shape: {Name}";
+    }
+
+    private sealed class BoxOfShapes
+    {
+        private Shape? _c;
+
+        public Shape GetValueWithSideEffect()
+        {
+            if (_c is null)
+            {
+                _c = new Shape { Name = "Square" };
+                return _c;
+            }
+
+            _c.Name = "Circle";
+            return _c;
+        }
+    }
+}
+
+internal static class MutableBoxHelper
+{
+    public static int ComputeValue() => 42;
 }

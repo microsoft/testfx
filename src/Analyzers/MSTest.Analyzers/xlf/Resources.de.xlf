@@ -117,6 +117,21 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">Assertionsargumente sollten in der richtigen Reihenfolge übergeben werden.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsDescription">
+        <source>`Assert.AreEqual` and `Assert.AreNotEqual` use `EqualityComparer&lt;T&gt;.Default`. For collection-like types this relies on the type's own equality semantics instead of comparing sequence elements, so `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` or `Assert.AreEquivalent`/`Assert.AreNotEquivalent` are usually the better fit.</source>
+        <target state="translated">`Assert.AreEqual` und `Assert.AreNotEqual` verwenden `EqualityComparer&lt;T&gt;.Default`. Bei sammlungsähnlichen Typen basiert dies auf der eigenen Gleichheitssemantik des Typs, anstatt Sequenzelemente zu vergleichen. Daher sind `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` oder `Assert.AreEquivalent`/`Assert.AreNotEquivalent` in der Regel die bessere Wahl.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsMessageFormat">
+        <source>`{0}` on {1} (which implements IEnumerable&lt;T&gt;) does not perform element-wise sequence comparison. Use `Assert.AreSequenceEqual` for ordered element-wise comparison, `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` for unordered, or `Assert.AreEquivalent` for deep structural comparison.</source>
+        <target state="translated">`{0}` für {1} (implementiert IEnumerable&lt;T&gt;) führt keinen elementweisen Sequenzvergleich durch. Verwenden Sie `Assert.AreSequenceEqual` für den geordneten elementweisen Vergleich, `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` für ungeordnete Elemente oder `Assert.AreEquivalent` für einen tiefen strukturellen Vergleich.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsTitle">
+        <source>Avoid Assert.AreEqual on collection types</source>
+        <target state="translated">„Assert.AreEqual“ für Sammlungstypen vermeiden</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
         <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
         <target state="translated">Verwenden Sie beim Vergleichen von Werttypen "Assert.AreEqual"/"Assert.AreNotEqual" anstelle von "Assert.AreSame"/"Assert.AreNotSame". Das Übergeben eines Werttyps an "Assert.AreSame"/"Assert.AreNotSame" wird geschachtelt (ein neues Objekt wird erstellt). Da "Assert.AreSame"/"Assert.AreNotSame" den Vergleich als Verweis führt, tritt bei "Assert.AreSame" beim Boxing ein Fehler auf, und "Assert.AreNotSame" wird immer übergeben.</target>
@@ -535,17 +550,17 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionDescription">
         <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</source>
-        <target state="new">When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</target>
+        <target state="translated">Wenn Sie Ausnahmen von asynchronem Code überprüfen, verwenden Sie die asynchronen Assertionsmethoden, anstatt den asynchronen Vorgang mit GetAwaiter().GetResult zu blockieren..</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
         <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
-        <target state="new">Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</target>
+        <target state="translated">Verwenden Sie „Assert.{0}“ anstatt einen asynchronen Aufruf in „Assert.{1}“ zu blockieren.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionTitle">
         <source>Prefer async assertion methods</source>
-        <target state="new">Prefer async assertion methods</target>
+        <target state="translated">Asynchrone Assertionsmethoden bevorzugen</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">

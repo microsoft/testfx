@@ -228,4 +228,13 @@
   <data name="UseAsyncAssertionFix" xml:space="preserve">
     <value>Use async assertion</value>
   </data>
+  <data name="AvoidAssertAreEqualOnCollectionsOrderedFix" xml:space="preserve">
+    <value>Replace with `Assert.{0}` (ordered)</value>
+  </data>
+  <data name="AvoidAssertAreEqualOnCollectionsInAnyOrderFix" xml:space="preserve">
+    <value>Replace with `Assert.{0}(..., SequenceOrder.InAnyOrder)`</value>
+  </data>
+  <data name="AvoidAssertAreEqualOnCollectionsEquivalentFix" xml:space="preserve">
+    <value>Replace with `Assert.{0}`</value>
+  </data>
 </root>

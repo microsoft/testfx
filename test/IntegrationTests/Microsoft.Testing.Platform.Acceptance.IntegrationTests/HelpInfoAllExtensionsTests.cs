@@ -109,8 +109,26 @@ Extension options:
         Publish test results live to the Azure DevOps Tests tab.
     --report-azdo
         Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.
+    --report-azdo-demote-known-flaky
+        Demote failures with an Azure DevOps flaky history of at least 25% in the selected window to warnings.
+    --report-azdo-flaky-history
+        Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.
+    --report-azdo-quarantine-file
+        Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.
     --report-azdo-severity
         Severity to use for the reported event. Options are: error (default) and warning.
+    --report-azdo-upload-artifact-exclude
+        Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.
+    --report-azdo-upload-artifact-include
+        Include files in Azure DevOps artifact upload using glob patterns relative to the test results directory. Defaults to '**/*'.
+    --report-azdo-upload-artifact-name
+        Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.
+    --report-azdo-upload-artifacts
+        Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.
+    --report-html
+        Enable generating an HTML report
+    --report-html-filename
+        The name of the generated HTML report
     --report-trx
         Enable generating TRX report
     --report-trx-filename
@@ -294,10 +312,38 @@ Registered command line providers:
         Arity: 0
         Hidden: False
         Description: Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.
+      --report-azdo-demote-known-flaky
+        Arity: 0
+        Hidden: False
+        Description: Demote failures with an Azure DevOps flaky history of at least 25% in the selected window to warnings.
+      --report-azdo-flaky-history
+        Arity: 1
+        Hidden: False
+        Description: Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.
+      --report-azdo-quarantine-file
+        Arity: 1
+        Hidden: False
+        Description: Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.
       --report-azdo-severity
         Arity: 1
         Hidden: False
         Description: Severity to use for the reported event. Options are: error (default) and warning.
+      --report-azdo-upload-artifact-exclude
+        Arity: 0..N
+        Hidden: False
+        Description: Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.
+      --report-azdo-upload-artifact-include
+        Arity: 0..N
+        Hidden: False
+        Description: Include files in Azure DevOps artifact upload using glob patterns relative to the test results directory. Defaults to '**/*'.
+      --report-azdo-upload-artifact-name
+        Arity: 1
+        Hidden: False
+        Description: Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.
+      --report-azdo-upload-artifacts
+        Arity: 1
+        Hidden: False
+        Description: Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.
   CrashDumpCommandLineProvider
     Name: Crash dump
     Version: *
@@ -349,6 +395,19 @@ Registered command line providers:
         Description: Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
         Default type is 'Full'
+  HtmlReportGeneratorCommandLine
+    Name: HTML report generator
+    Version: *
+    Description: Produce a self-contained HTML report for the current test session
+    Options:
+      --report-html
+        Arity: 0
+        Hidden: False
+        Description: Enable generating an HTML report
+      --report-html-filename
+        Arity: 1
+        Hidden: False
+        Description: The name of the generated HTML report
   MSBuildCommandLineProvider
     Name: MSBuildCommandLineProvider
     Version: *
@@ -472,6 +531,7 @@ Registered tools:
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>

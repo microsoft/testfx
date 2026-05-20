@@ -270,26 +270,6 @@ public sealed partial class Assert
     internal static string BuildUserMessage(string? format)
         => format ?? string.Empty;
 
-    private static string BuildUserMessageForTwoExpressions(string? format, string callerArgExpression1, string parameterName1, string callerArgExpression2, string parameterName2)
-    {
-        string userMessage = BuildUserMessage(format);
-        if (string.IsNullOrEmpty(callerArgExpression1) || string.IsNullOrEmpty(callerArgExpression2))
-        {
-            return userMessage;
-        }
-
-        string callerArgMessagePart = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, parameterName1, callerArgExpression1, parameterName2, callerArgExpression2);
-        return string.IsNullOrEmpty(userMessage)
-            ? callerArgMessagePart
-            : $"{callerArgMessagePart} {userMessage}";
-    }
-
-    private static string BuildUserMessageForExpectedExpressionAndActualExpression(string? format, string expectedExpression, string actualExpression)
-        => BuildUserMessageForTwoExpressions(format, expectedExpression, "expected", actualExpression, "actual");
-
-    private static string BuildUserMessageForNotExpectedExpressionAndActualExpression(string? format, string notExpectedExpression, string actualExpression)
-        => BuildUserMessageForTwoExpressions(format, notExpectedExpression, "notExpected", actualExpression, "actual");
-
     /// <summary>
     /// Checks the parameter for valid conditions.
     /// </summary>
