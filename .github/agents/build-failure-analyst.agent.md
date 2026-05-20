@@ -161,11 +161,14 @@ For each error whose `file:line` lies **inside the PR diff** (you can verify by 
 ```
 ```
 
-Hard caps:
+Hard caps and rules:
 
 - Maximum **10 inline suggestion comments** per run (the workflow's `create-pull-request-review-comment: max: 10` enforces this).
 - Suggestions must be valid C# / XML / etc. when applied — don't propose pseudo-code.
 - Only post inline on lines that are *part of the diff*; otherwise the GitHub API rejects the comment and the safe-output handler drops the whole batch.
+- When determining which lines are "in the diff", note that `\ No newline at end of file` markers in the patch are **not** code lines — skip them when computing line mappings.
+- The `suggestion` block must contain the **exact replacement line(s)** including original indentation. Do not include the line number, file name, or any prefix/suffix — just the raw code.
+- For multi-line suggestions, include all replacement lines inside the same `suggestion` block (each on its own line). The suggestion replaces the single line targeted by the comment.
 
 If the offending line is **not** in the diff but the root cause clearly is (e.g., a declaration change in a PR-touched file caused errors at unchanged call sites), pick a declaration line in a PR-changed file and post the suggestion there with a note explaining the cascade.
 
