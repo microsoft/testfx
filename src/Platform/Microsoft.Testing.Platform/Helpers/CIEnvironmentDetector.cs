@@ -1,13 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform;
+using Microsoft.CodeAnalysis;
 
-namespace Microsoft.Testing.Extensions.Telemetry;
+namespace Microsoft.Testing.Platform.Helpers;
 
 // Detection of CI: https://learn.microsoft.com/dotnet/core/tools/telemetry#continuous-integration-detection
-// From: https://github.com/dotnet/sdk/blob/main/src/Cli/dotnet/Telemetry/CIEnvironmentDetectorForTelemetry.cs
-internal sealed class CIEnvironmentDetectorForTelemetry
+// Based on: https://github.com/dotnet/sdk/blob/main/src/Cli/Microsoft.DotNet.Cli.Definitions/Telemetry/CIEnvironmentDetectorForTelemetry.cs
+[Embedded]
+internal sealed class CIEnvironmentDetector
 {
     // Systems that provide boolean values only, so we can simply parse and check for true
     private static readonly string[] BooleanVariables =
@@ -22,14 +23,13 @@ internal sealed class CIEnvironmentDetectorForTelemetry
         "APPVEYOR",
 
         // A general-use flag - Many of the major players support this: AzDo, GitHub, GitLab, AppVeyor, Travis CI, CircleCI.
-        // Given this, we could potentially remove all of these other options?
         "CI",
 
         // Travis CI - https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
         "TRAVIS",
 
         // CircleCI - https://circleci.com/docs/2.0/env-vars/#built-in-environment-variables
-        "CIRCLECI"
+        "CIRCLECI",
     ];
 
     // Systems where every variable must be present and not-null before returning true
@@ -52,14 +52,32 @@ internal sealed class CIEnvironmentDetectorForTelemetry
         "TEAMCITY_VERSION",
 
         // JetBrains Space - https://www.jetbrains.com/help/space/automation-environment-variables.html#general
-        "JB_SPACE_API_URL"
+        "JB_SPACE_API_URL",
     ];
 
-    public static bool IsCIEnvironment()
+    private readonly IEnvironment _environment;
+
+    /// <summary>
+    /// Gets the default instance that uses the real environment.
+    /// </summary>
+    public static CIEnvironmentDetector Instance { get; } = new(new SystemEnvironment());
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CIEnvironmentDetector"/> class.
+    /// </summary>
+    /// <param name="environment">The environment abstraction to use for reading environment variables.</param>
+    public CIEnvironmentDetector(IEnvironment environment)
+        => _environment = environment;
+
+    /// <summary>
+    /// Detects if the current environment is a CI environment.
+    /// </summary>
+    /// <returns><c>true</c> if running in a CI environment; otherwise, <c>false</c>.</returns>
+    public bool IsCIEnvironment()
     {
         foreach (string booleanVariable in BooleanVariables)
         {
-            if (bool.TryParse(Environment.GetEnvironmentVariable(booleanVariable), out bool envVar) && envVar)
+            if (bool.TryParse(_environment.GetEnvironmentVariable(booleanVariable), out bool envVar) && envVar)
             {
                 return true;
             }
@@ -67,7 +85,17 @@ internal sealed class CIEnvironmentDetectorForTelemetry
 
         foreach (string[] variables in AllNotNullVariables)
         {
-            if (variables.All(variable => !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable))))
+            bool allVariablesPresent = true;
+            foreach (string variable in variables)
+            {
+                if (RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable(variable)))
+                {
+                    allVariablesPresent = false;
+                    break;
+                }
+            }
+
+            if (allVariablesPresent)
             {
                 return true;
             }
@@ -75,7 +103,7 @@ internal sealed class CIEnvironmentDetectorForTelemetry
 
         foreach (string variable in IfNonNullVariables)
         {
-            if (!RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable)))
+            if (!RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable(variable)))
             {
                 return true;
             }
