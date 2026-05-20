@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming;
 using Microsoft.Testing.Extensions.TrxReport.Resources;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
@@ -93,7 +94,18 @@ internal sealed partial class TrxReportEngine
             string trxFileName;
             if (_commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
             {
-                trxFileName = ReplaceInvalidFileNameChars(ResolveTrxFileNamePlaceholders(fileName[0]));
+                // The argument may be a bare file name, a relative path or an absolute path. Placeholders
+                // are resolved first against the whole input. Only the leaf file name is sanitized for
+                // invalid characters — the directory portion is treated as a literal path so that it can
+                // contain path separators, drive letters or UNC prefixes. Invalid characters in the
+                // directory portion (e.g. introduced by an unexpected placeholder value) are deferred to
+                // the OS and will surface as an IOException at file creation time.
+                string resolved = ResolveTrxFileNamePlaceholders(fileName[0]);
+                string directoryPart = Path.GetDirectoryName(resolved) ?? string.Empty;
+                string sanitizedFileName = ReplaceInvalidFileNameChars(Path.GetFileName(resolved));
+                trxFileName = directoryPart.Length == 0
+                    ? sanitizedFileName
+                    : Path.Combine(directoryPart, sanitizedFileName);
                 isFileNameExplicitlyProvided = true;
             }
             else
@@ -131,7 +143,19 @@ internal sealed partial class TrxReportEngine
             }
 
             string outputDirectory = _configuration.GetTestResultDirectory(); // add var for this
+
+            // Path.Combine short-circuits when the second argument is rooted, so an absolute trxFileName
+            // overrides the test results directory while a relative one (including one with subdirectories)
+            // is nested under it.
             string finalFileName = Path.Combine(outputDirectory, trxFileName);
+
+            // Ensure intermediate directories exist when the user-provided file name introduced
+            // sub-directories or pointed at an absolute path under a directory that doesn't exist yet.
+            string? finalDirectory = Path.GetDirectoryName(finalFileName);
+            if (!RoslynString.IsNullOrEmpty(finalDirectory))
+            {
+                _fileSystem.CreateDirectory(finalDirectory);
+            }
 
             bool isFileNameExplicitlyProvidedAndFileExists = isFileNameExplicitlyProvided && _fileSystem.ExistFile(finalFileName);
 

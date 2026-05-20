@@ -40,14 +40,20 @@ internal sealed class TrxReportGeneratorCommandLine : ICommandLineOptionsProvide
     {
         if (commandOption.Name == TrxReportFileNameOptionName)
         {
-            if (!arguments[0].EndsWith(".trx", StringComparison.OrdinalIgnoreCase))
+            string argument = arguments[0];
+
+            // We accept relative or absolute paths, but the leaf must be a non-empty file name
+            // that ends with ".trx". The directory portion (if any) is treated as a literal
+            // path and validated by the OS when we open the file.
+            string fileNamePart = Path.GetFileName(argument);
+            if (RoslynString.IsNullOrWhiteSpace(fileNamePart))
             {
-                return ValidationResult.InvalidTask(ExtensionResources.TrxReportFileNameExtensionIsNotTrx);
+                return ValidationResult.InvalidTask(ExtensionResources.TrxReportFileNameMustNotBeEmpty);
             }
 
-            if (!RoslynString.IsNullOrEmpty(Path.GetDirectoryName(arguments[0])))
+            if (!fileNamePart.EndsWith(".trx", StringComparison.OrdinalIgnoreCase))
             {
-                return ValidationResult.InvalidTask(ExtensionResources.TrxReportFileNameShouldNotContainPath);
+                return ValidationResult.InvalidTask(ExtensionResources.TrxReportFileNameExtensionIsNotTrx);
             }
         }
 
