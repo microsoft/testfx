@@ -35,6 +35,11 @@ public sealed class TestConfigEnvironmentVariablesTests : AcceptanceTestBase<Tes
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContains("TEST_CONFIG_VAR_FROM_FILE=from-testconfig");
         testHostResult.AssertOutputContains("TEST_CONFIG_VAR_OTHER=second-value");
+        // When the environmentVariables section is non-empty, the test host must be relaunched
+        // under the test host controller process model so the variables can be applied to the
+        // child process via ProcessStartInfo. Assert the controller-injected env var is present.
+        testHostResult.AssertOutputDoesNotContain("TESTHOSTCONTROLLER_PARENTPID=<none>");
+        testHostResult.AssertOutputMatchesRegex(@"TESTHOSTCONTROLLER_PARENTPID=\d+");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -54,6 +59,10 @@ public sealed class TestConfigEnvironmentVariablesTests : AcceptanceTestBase<Tes
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         // Variable is not set, so the framework prints the sentinel.
         testHostResult.AssertOutputContains("TEST_CONFIG_VAR_FROM_FILE=<unset>");
+        // When the environmentVariables section is absent, the provider must report itself as
+        // disabled so the test host controller process model is not engaged and the test host
+        // runs in the current process. Assert the controller-injected env var is *not* set.
+        testHostResult.AssertOutputContains("TESTHOSTCONTROLLER_PARENTPID=<none>");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -162,6 +171,24 @@ public sealed class DummyTestFramework : ITestFramework, IDataProducer
             // Use a stable sentinel so acceptance tests can assert both presence and absence.
             Console.WriteLine($"{name}={value ?? "<unset>"}");
         }
+
+        // Surface whether the test host is running as a child of the test host controller.
+        // The platform sets a well-known variable of the form
+        // TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID_<controllerPid>=<controllerPid> on the
+        // spawned child process when the controller process model is engaged, so acceptance
+        // tests can assert that the environmentVariables section actually triggers (or does not
+        // trigger) the relaunch.
+        string? controllerParentPid = null;
+        foreach (System.Collections.DictionaryEntry entry in Environment.GetEnvironmentVariables())
+        {
+            if (entry.Key is string key && key.StartsWith("TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID_", StringComparison.Ordinal))
+            {
+                controllerParentPid = entry.Value?.ToString();
+                break;
+            }
+        }
+
+        Console.WriteLine($"TESTHOSTCONTROLLER_PARENTPID={controllerParentPid ?? "<none>"}");
 
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode
         {
