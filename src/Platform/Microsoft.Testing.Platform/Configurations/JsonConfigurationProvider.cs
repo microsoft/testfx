@@ -99,36 +99,43 @@ internal sealed partial class JsonConfigurationSource
         /// </remarks>
         internal IReadOnlyList<KeyValuePair<string, string?>> GetSection(string sectionName)
         {
-            if (_singleValueData is null || _propertyToAllChildren is null)
-            {
-                return [];
-            }
+            // Treat unloaded dictionaries as empty independently so a partially-populated state cannot
+            // silently mask a malformed section (e.g. a scalar value should still throw even if
+            // _propertyToAllChildren happens to be null).
+            Dictionary<string, string?> singleValueData = _singleValueData ?? [];
+            Dictionary<string, string?> propertyToAllChildren = _propertyToAllChildren ?? [];
 
             // The JsonConfigurationFileParser flattens scalars into _singleValueData and stores object/array
             // bodies into _propertyToAllChildren. Empty objects and empty arrays are encoded as a null entry
-            // in _singleValueData at the property's key (see JsonConfigurationFileParser.SetNullIfElementIsEmpty).
+            // in _singleValueData at the property's key (see JsonConfigurationFileParser.SetNullIfElementIsEmpty),
+            // and the raw JSON literal "{}" or "[]" is recorded in _propertyToAllChildren.
             //
             // Cases for the section key itself:
             //   - Not present anywhere: section absent -> return empty.
             //   - Present in _singleValueData with non-null value: section is a scalar (e.g. "environmentVariables": "oops") -> reject.
-            //   - Present in _singleValueData with null value: section is an empty object/array {} or [] -> return empty (no entries).
+            //   - Present in _singleValueData with null value: section is an empty object {} (return empty) or an empty array [] (reject).
             //   - Not in _singleValueData but in _propertyToAllChildren: section is a non-empty object or array (validated below).
-            if (_singleValueData.TryGetValue(sectionName, out string? sectionScalar))
+            if (singleValueData.TryGetValue(sectionName, out string? sectionScalar))
             {
                 if (sectionScalar is null)
                 {
-                    // Empty object/array at the section key -> no entries to apply.
+                    // The section value was either an empty object or an empty array. Disambiguate by
+                    // looking at the raw JSON text recorded in _propertyToAllChildren: arrays must be
+                    // rejected even when empty because the schema requires a JSON object.
+                    if (propertyToAllChildren.TryGetValue(sectionName, out string? emptyRaw)
+                        && emptyRaw is not null
+                        && StartsWithChar(emptyRaw, '['))
+                    {
+                        ThrowSectionMustBeAnObject(sectionName);
+                    }
+
                     return [];
                 }
 
-                throw new FormatException(string.Format(
-                    CultureInfo.InvariantCulture,
-                    PlatformResources.JsonConfigurationSectionMustBeAnObjectErrorMessage,
-                    sectionName,
-                    ConfigurationFile ?? "<unknown>"));
+                ThrowSectionMustBeAnObject(sectionName);
             }
 
-            if (!_propertyToAllChildren.TryGetValue(sectionName, out string? sectionRaw))
+            if (!propertyToAllChildren.TryGetValue(sectionName, out string? sectionRaw))
             {
                 return [];
             }
@@ -138,17 +145,13 @@ internal sealed partial class JsonConfigurationSource
             // We detect arrays by the first non-whitespace character of the raw text.
             if (sectionRaw is not null && StartsWithChar(sectionRaw, '['))
             {
-                throw new FormatException(string.Format(
-                    CultureInfo.InvariantCulture,
-                    PlatformResources.JsonConfigurationSectionMustBeAnObjectErrorMessage,
-                    sectionName,
-                    ConfigurationFile ?? "<unknown>"));
+                ThrowSectionMustBeAnObject(sectionName);
             }
 
             string sectionPrefix = sectionName + PlatformConfigurationConstants.KeyDelimiter;
             List<KeyValuePair<string, string?>> entries = [];
 
-            foreach (KeyValuePair<string, string?> kvp in _singleValueData)
+            foreach (KeyValuePair<string, string?> kvp in singleValueData)
             {
                 if (!kvp.Key.StartsWith(sectionPrefix, StringComparison.OrdinalIgnoreCase))
                 {
@@ -200,5 +203,12 @@ internal sealed partial class JsonConfigurationSource
 
             return false;
         }
+
+        private void ThrowSectionMustBeAnObject(string sectionName)
+            => throw new FormatException(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.JsonConfigurationSectionMustBeAnObjectErrorMessage,
+                sectionName,
+                ConfigurationFile ?? "<unknown>"));
     }
 }

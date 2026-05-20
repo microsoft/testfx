@@ -12,7 +12,7 @@ public sealed class TestConfigEnvironmentVariablesTests : AcceptanceTestBase<Tes
     [TestMethod]
     public async Task EnvironmentVariablesSection_DeclaredVariables_AreVisibleToTestHostProcess(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         using TempDirectory clone = new();
         await clone.CopyDirectoryAsync(testHost.DirectoryName, clone.Path, retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         testHost = TestInfrastructure.TestHost.LocateFrom(clone.Path, AssetName);
@@ -41,7 +41,7 @@ public sealed class TestConfigEnvironmentVariablesTests : AcceptanceTestBase<Tes
     [TestMethod]
     public async Task EnvironmentVariablesSection_Absent_TestHostRunsInProcess(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         using TempDirectory clone = new();
         await clone.CopyDirectoryAsync(testHost.DirectoryName, clone.Path, retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         testHost = TestInfrastructure.TestHost.LocateFrom(clone.Path, AssetName);
@@ -60,7 +60,7 @@ public sealed class TestConfigEnvironmentVariablesTests : AcceptanceTestBase<Tes
     [TestMethod]
     public async Task EnvironmentVariablesSection_InvalidShape_FailsWithClearError(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         using TempDirectory clone = new();
         await clone.CopyDirectoryAsync(testHost.DirectoryName, clone.Path, retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         testHost = TestInfrastructure.TestHost.LocateFrom(clone.Path, AssetName);

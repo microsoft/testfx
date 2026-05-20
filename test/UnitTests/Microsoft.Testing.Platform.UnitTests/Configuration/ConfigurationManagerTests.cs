@@ -218,6 +218,16 @@ public sealed class ConfigurationManagerTests
     }
 
     [TestMethod]
+    public async ValueTask GetTestConfigJsonSection_EmptyArrayValue_Throws()
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedConfigurationAsync(
+            "{\"environmentVariables\": []}");
+
+        FormatException exception = Assert.Throws<FormatException>(() => configuration.GetTestConfigJsonSection("environmentVariables"));
+        Assert.Contains("environmentVariables", exception.Message);
+    }
+
+    [TestMethod]
     public async ValueTask GetTestConfigJsonSection_NumericAndBoolValues_AreCoercedToText()
     {
         AggregatedConfiguration configuration = await BuildAggregatedConfigurationAsync(

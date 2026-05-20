@@ -42,6 +42,9 @@ internal sealed class TestConfigurationEnvironmentVariableProvider : ITestHostEn
         IReadOnlyList<KeyValuePair<string, string?>> entries = _configuration.GetTestConfigJsonSection(EnvironmentVariablesSectionName);
         if (entries.Count == 0)
         {
+            // Clear any cached entries from a previous call so we never apply stale state if the
+            // method is invoked more than once on the same instance.
+            _entries = null;
             return Task.FromResult(false);
         }
 
