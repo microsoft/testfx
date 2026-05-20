@@ -159,6 +159,47 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task Diag_EnableWithEnvironmentVariables_CustomPrefix_NewName_Succeeded(string tfm)
+    {
+        string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
+        string diagPathPattern = Path.Combine(diagPath, @"MyPrefix_.*.diag").Replace(@"\", @"\\");
+
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            null,
+            new Dictionary<string, string?>
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
+                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX, "MyPrefix" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Diag_EnableWithEnvironmentVariables_CustomPrefix_NewNameTakesPrecedence(string tfm)
+    {
+        string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
+        string diagPathPattern = Path.Combine(diagPath, @"NewPrefix_.*.diag").Replace(@"\", @"\\");
+
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            null,
+            new Dictionary<string, string?>
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
+                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX, "OldPrefix" },
+                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX, "NewPrefix" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Diag_EnableWithEnvironmentVariables_SynchronousWrite_Succeeded(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
@@ -171,6 +212,26 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE, "1" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern, flushType: "sync");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Diag_EnableWithEnvironmentVariables_SynchronousWrite_NewName_Succeeded(string tfm)
+    {
+        string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
+        string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
+
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            null,
+            new Dictionary<string, string?>
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
+                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE, "1" },
             },
             cancellationToken: TestContext.CancellationToken);
 

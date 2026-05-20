@@ -341,8 +341,16 @@ public sealed class TestApplication : ITestApplication
             prefixName = prefixNameArg[0];
         }
 
-        // Override the prefix name
-        string? environmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX);
+        // Override the prefix name.
+        // Prefer the new TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX env var (matching the --diagnostic-file-prefix CLI option),
+        // but fall back to the legacy TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX for backward compatibility.
+        // See https://github.com/microsoft/testfx/issues/7159.
+        string? environmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX);
+        if (RoslynString.IsNullOrEmpty(environmentFilePrefix))
+        {
+            environmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX);
+        }
+
         if (!RoslynString.IsNullOrEmpty(environmentFilePrefix))
         {
             prefixName = environmentFilePrefix;
@@ -350,8 +358,16 @@ public sealed class TestApplication : ITestApplication
 
         bool synchronousWrite = result.IsOptionSet(PlatformCommandLineProvider.DiagnosticFileLoggerSynchronousWriteOptionKey);
 
-        // Override the synchronous write
-        string? environmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE);
+        // Override the synchronous write.
+        // Prefer the new TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE env var (matching the --diagnostic-synchronous-write CLI option),
+        // but fall back to the legacy TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE for backward compatibility.
+        // See https://github.com/microsoft/testfx/issues/7159.
+        string? environmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE);
+        if (RoslynString.IsNullOrEmpty(environmentSynchronousWrite))
+        {
+            environmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE);
+        }
+
         if (!RoslynString.IsNullOrEmpty(environmentSynchronousWrite))
         {
             synchronousWrite = environmentSynchronousWrite == "1";
