@@ -139,6 +139,7 @@ public sealed class ResponseFileHelperTests
             bool result = ResponseFileHelper.TryReadResponseFile(path, errors, out string[]? args);
 
             Assert.IsTrue(result);
+            Assert.IsEmpty(errors);
             Assert.IsNotNull(args);
             Assert.HasCount(2, args);
             Assert.AreEqual("--filter", args[0]);
