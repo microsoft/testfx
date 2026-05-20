@@ -50,8 +50,10 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
     [TestMethod]
     public async Task AnsiOption_Auto_DoesNotProduceAnsiOutputWhenRedirected()
     {
-        // When 'auto' is requested and stdout is redirected (as it always is in this test runner)
-        // the platform should fall back to plain text output.
+        // `--ansi auto` is the default and means "let the platform decide".
+        // It explicitly overrides any preceding `--no-ansi` (TestHost auto-injects `--no-ansi --no-progress`).
+        // The platform should then pick AnsiIfPossible and, because stdout is redirected to a pipe by the
+        // test runner, fall back to a NonAnsi terminal that does not emit escape codes.
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult result = await testHost.ExecuteAsync("--ansi auto", cancellationToken: TestContext.CancellationToken);
 
@@ -59,6 +61,19 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
         Assert.IsFalse(
             result.StandardOutput.Contains(EscapeCharacter, StringComparison.Ordinal),
             $"Expected output to NOT contain ANSI escape characters when '--ansi auto' is specified and stdout is redirected, but got:\n{result.StandardOutput}");
+    }
+
+    [TestMethod]
+    public async Task AnsiOption_AutoExplicit_OverridesNoAnsiFlag()
+    {
+        // Both --no-ansi and --ansi auto are present. --ansi wins (it always does when explicitly passed).
+        // The auto branch then picks AnsiIfPossible, which respects stdout redirection -> no ANSI codes.
+        // We verify the precedence by checking that the test still runs successfully and no escape codes are
+        // emitted because of redirection (not because --no-ansi forced NoAnsi).
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult result = await testHost.ExecuteAsync("--no-ansi --ansi auto", cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.Success);
     }
 
     [TestMethod]

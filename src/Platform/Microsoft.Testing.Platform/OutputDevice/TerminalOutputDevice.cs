@@ -142,20 +142,21 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _isServerMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
         bool noAnsi = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
 
-        // --ansi <auto|on|off> takes precedence over the legacy --no-ansi flag when both are provided.
+        // --ansi <auto|on|off>, when present (with any value), takes precedence over the legacy --no-ansi flag.
+        // This keeps the help text honest: passing --ansi at all overrides --no-ansi.
         AnsiOverride ansiOverride = AnsiOverride.None;
-        if (_commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.AnsiOption, out string[]? ansiArguments) && ansiArguments?.Length > 0)
+        if (_commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.AnsiOption, out string[]? ansiArguments))
         {
             string ansiValue = ansiArguments[0];
-            if (CommandLineOptionArgumentValidator.IsOnValue(ansiValue))
-            {
-                ansiOverride = AnsiOverride.ForceOn;
-            }
-            else if (CommandLineOptionArgumentValidator.IsOffValue(ansiValue))
-            {
-                ansiOverride = AnsiOverride.ForceOff;
-            }
+            ansiOverride = CommandLineOptionArgumentValidator.IsOnValue(ansiValue)
+                ? AnsiOverride.ForceOn
+                : CommandLineOptionArgumentValidator.IsOffValue(ansiValue)
+                    ? AnsiOverride.ForceOff
+                    : AnsiOverride.Auto;
         }
+
+        // When --ansi auto is explicitly specified, it overrides --no-ansi too.
+        bool effectiveNoAnsi = noAnsi && ansiOverride == AnsiOverride.None;
 
         // TODO: Replace this with proper CI detection that we already have in telemetry. https://github.com/microsoft/testfx/issues/5533#issuecomment-2838893327
         bool inCI = string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase) || string.Equals(_environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase);
@@ -166,13 +167,14 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             // so colors and cursor movement are emitted even when stdout is redirected.
             AnsiOverride.ForceOn => AnsiMode.ForceAnsi,
 
-            // User explicitly disabled ANSI (--ansi off / --no-ansi).
+            // User explicitly disabled ANSI (`--ansi off`).
             // Note that NoAnsi also implies no progress.
             AnsiOverride.ForceOff => AnsiMode.NoAnsi,
 
-            // No --ansi argument was provided (or `auto` was specified). Fall back to environment-based detection.
+            // No --ansi argument was provided, or `--ansi auto` was provided.
+            // Fall back to environment-based detection.
             // In LLM environments, prefer simple text output so that the LLM can parse it easily.
-            _ when noAnsi || LLMEnvironmentDetector.IsLLMEnvironment() => AnsiMode.NoAnsi,
+            _ when effectiveNoAnsi || LLMEnvironmentDetector.IsLLMEnvironment() => AnsiMode.NoAnsi,
             _ when inCI => AnsiMode.SimpleAnsi,
             _ => AnsiMode.AnsiIfPossible,
         };
@@ -236,9 +238,15 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private enum AnsiOverride
     {
         /// <summary>
-        /// The <c>--ansi</c> option was not provided, or was provided with <c>auto</c>.
+        /// The <c>--ansi</c> option was not provided.
         /// </summary>
         None,
+
+        /// <summary>
+        /// The <c>--ansi auto</c> option was provided. The user explicitly opts in to auto-detection
+        /// (and out of the legacy <c>--no-ansi</c> flag if it was also passed).
+        /// </summary>
+        Auto,
 
         /// <summary>
         /// The <c>--ansi on</c> option was provided, forcing ANSI output regardless of environment.
