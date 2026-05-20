@@ -22,6 +22,7 @@ internal sealed class AzureDevOpsReporter :
     internal const double KnownFlakyFailureRateThreshold = 0.25;
     private const string DeterministicBuildRoot = "/_/";
     private const string FullyQualifiedNamePropertyKey = "vstest.TestCase.FullyQualifiedName";
+    private const string SerializableKeyValuePairStringPropertyTypeName = "Microsoft.Testing.Platform.Extensions.Messages.SerializableKeyValuePairStringProperty";
     private const int MinSamplesForRegressionAnnotation = 5;
     private const string QuarantineBuildTagLine = "##vso[build.addbuildtag]has-quarantined-test-failure";
     private const string WarningSeverity = "warning";
@@ -404,11 +405,11 @@ internal sealed class AzureDevOpsReporter :
         // internal Microsoft.Testing.Platform.Extensions.Messages.SerializableKeyValuePairStringProperty
         // type (so this extension can avoid the IVT to Microsoft.Testing.Platform).
         // The VSTest bridge / adapter populates each TestNode with one such property per VSTest
-        // trait; we match it by runtime type name and read Key/Value via reflection.
+        // trait; we match it by runtime type full name and read Key/Value via reflection.
         foreach (IProperty property in testNode.Properties)
         {
             Type propertyType = property.GetType();
-            if (propertyType.Name != "SerializableKeyValuePairStringProperty")
+            if (propertyType.FullName != SerializableKeyValuePairStringPropertyTypeName)
             {
                 continue;
             }
