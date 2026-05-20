@@ -61,6 +61,24 @@ internal sealed class AggregatedConfiguration(
     public /* for testing */ void SetCurrentWorkingDirectory(string workingDirectory) =>
         _currentWorkingDirectory = workingDirectory;
 
+    /// <summary>
+    /// Returns the immediate (one-level) string entries declared under <paramref name="sectionName"/>
+    /// in the loaded testconfig.json file. Returns an empty list if no JSON configuration source is
+    /// active or the section is absent.
+    /// </summary>
+    internal IReadOnlyList<KeyValuePair<string, string?>> GetTestConfigJsonSection(string sectionName)
+    {
+        foreach (IConfigurationProvider provider in _configurationProviders)
+        {
+            if (provider is JsonConfigurationSource.JsonConfigurationProvider jsonProvider)
+            {
+                return jsonProvider.GetSection(sectionName);
+            }
+        }
+
+        return [];
+    }
+
     public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(IFileLoggerProvider? fileLoggerProvider)
     {
         _resultsDirectory = _fileSystem.CreateDirectory(this[PlatformConfigurationConstants.PlatformResultDirectory]!);

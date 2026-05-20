@@ -96,6 +96,17 @@ internal sealed partial class TestHostBuilder
         context.Configuration = (AggregatedConfiguration)await ((ConfigurationManager)Configuration).BuildAsync(loggingState.FileLoggerProvider, loggingState.CommandLineParseResult).ConfigureAwait(false);
         serviceProvider.TryAddService(context.Configuration);
 
+#pragma warning disable CA1416 // Browser does not support the test host controller process model. The provider itself is marked [UnsupportedOSPlatform("browser")].
+        if (!OperatingSystem.IsBrowser())
+        {
+            // Register the built-in provider that applies env vars declared in the
+            // 'environmentVariables' section of testconfig.json. Registered first (before any
+            // user-supplied providers) so that later providers - including the VSTest bridge
+            // runsettings provider - can override these values when both sources are present.
+            TestHostControllers.AddEnvironmentVariableProvider(sp => new TestConfigurationEnvironmentVariableProvider(sp.GetConfiguration()));
+        }
+#pragma warning restore CA1416
+
         if (((TelemetryManager)Telemetry).BuildOTelProvider(serviceProvider) is { } otelService)
         {
             serviceProvider.AddService(otelService);

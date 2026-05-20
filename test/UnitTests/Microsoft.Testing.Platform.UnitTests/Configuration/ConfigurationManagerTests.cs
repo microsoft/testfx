@@ -138,6 +138,112 @@ public sealed class ConfigurationManagerTests
         await Assert.ThrowsAsync<InvalidOperationException>(() => configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), [])));
     }
 
+    [TestMethod]
+    public async ValueTask GetTestConfigJsonSection_AbsentSection_ReturnsEmpty()
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedConfigurationAsync("{\"other\": {}}");
+        IReadOnlyList<KeyValuePair<string, string?>> entries = configuration.GetTestConfigJsonSection("environmentVariables");
+
+        Assert.IsEmpty(entries);
+    }
+
+    [TestMethod]
+    public async ValueTask GetTestConfigJsonSection_EmptyObject_ReturnsEmpty()
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedConfigurationAsync("{\"environmentVariables\": {}}");
+        IReadOnlyList<KeyValuePair<string, string?>> entries = configuration.GetTestConfigJsonSection("environmentVariables");
+
+        Assert.IsEmpty(entries);
+    }
+
+    [TestMethod]
+    public async ValueTask GetTestConfigJsonSection_FlatStringEntries_ReturnsAll()
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedConfigurationAsync(
+            "{\"environmentVariables\": {\"DOTNET_ENVIRONMENT\": \"Development\", \"HEADED\": \"1\"}}");
+
+        IReadOnlyList<KeyValuePair<string, string?>> entries = configuration.GetTestConfigJsonSection("environmentVariables");
+
+        Assert.HasCount(2, entries);
+        Assert.AreEqual("Development", entries.Single(e => e.Key == "DOTNET_ENVIRONMENT").Value);
+        Assert.AreEqual("1", entries.Single(e => e.Key == "HEADED").Value);
+    }
+
+    [TestMethod]
+    public async ValueTask GetTestConfigJsonSection_ScalarSectionValue_Throws()
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedConfigurationAsync(
+            "{\"environmentVariables\": \"oops\"}");
+
+        FormatException exception = Assert.Throws<FormatException>(() => configuration.GetTestConfigJsonSection("environmentVariables"));
+        Assert.Contains("environmentVariables", exception.Message);
+    }
+
+    [TestMethod]
+    public async ValueTask GetTestConfigJsonSection_ArraySectionValue_Throws()
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedConfigurationAsync(
+            "{\"environmentVariables\": [\"a\", \"b\"]}");
+
+        FormatException exception = Assert.Throws<FormatException>(() => configuration.GetTestConfigJsonSection("environmentVariables"));
+        Assert.Contains("environmentVariables", exception.Message);
+    }
+
+    [TestMethod]
+    public async ValueTask GetTestConfigJsonSection_NestedObjectEntry_Throws()
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedConfigurationAsync(
+            "{\"environmentVariables\": {\"FOO\": {\"NESTED\": \"x\"}}}");
+
+        FormatException exception = Assert.Throws<FormatException>(() => configuration.GetTestConfigJsonSection("environmentVariables"));
+        Assert.Contains("FOO", exception.Message);
+    }
+
+    [TestMethod]
+    public async ValueTask GetTestConfigJsonSection_NestedArrayEntry_Throws()
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedConfigurationAsync(
+            "{\"environmentVariables\": {\"FOO\": [\"a\", \"b\"]}}");
+
+        Assert.Throws<FormatException>(() => configuration.GetTestConfigJsonSection("environmentVariables"));
+    }
+
+    [TestMethod]
+    public async ValueTask GetTestConfigJsonSection_EmptyObjectEntry_Throws()
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedConfigurationAsync(
+            "{\"environmentVariables\": {\"FOO\": {}}}");
+
+        Assert.Throws<FormatException>(() => configuration.GetTestConfigJsonSection("environmentVariables"));
+    }
+
+    [TestMethod]
+    public async ValueTask GetTestConfigJsonSection_NumericAndBoolValues_AreCoercedToText()
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedConfigurationAsync(
+            "{\"environmentVariables\": {\"COUNT\": 42, \"ENABLED\": true}}");
+
+        IReadOnlyList<KeyValuePair<string, string?>> entries = configuration.GetTestConfigJsonSection("environmentVariables");
+
+        Assert.HasCount(2, entries);
+        Assert.AreEqual("42", entries.Single(e => e.Key == "COUNT").Value);
+        // The parser titlecases booleans on both runtimes.
+        Assert.AreEqual("True", entries.Single(e => e.Key == "ENABLED").Value);
+    }
+
+    private static async Task<AggregatedConfiguration> BuildAggregatedConfigurationAsync(string jsonFileContent)
+    {
+        Mock<IFileSystem> fileSystem = new();
+        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read))
+            .Returns(() => new MemoryFileStream(Encoding.UTF8.GetBytes(jsonFileContent)));
+        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
+        ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo, new SystemEnvironment());
+        configurationManager.AddConfigurationSource(() => new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
+        IConfiguration configuration = await configurationManager.BuildAsync(null, new CommandLineParseResult(null, new List<CommandLineParseOption>(), []));
+        return (AggregatedConfiguration)configuration;
+    }
+
     private class FakeConfigurationSource : IConfigurationSource, IAsyncInitializableExtension
     {
         public string Uid => nameof(FakeConfigurationSource);
@@ -159,7 +265,7 @@ public sealed class ConfigurationManagerTests
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
     }
 
-    private class MemoryFileStream : IFileStream
+    internal sealed class MemoryFileStream : IFileStream
     {
         private readonly MemoryStream _stream;
 
