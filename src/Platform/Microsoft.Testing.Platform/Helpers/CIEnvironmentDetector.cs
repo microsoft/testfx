@@ -8,6 +8,7 @@ namespace Microsoft.Testing.Platform.Helpers;
 // Detection of CI: https://learn.microsoft.com/dotnet/core/tools/telemetry#continuous-integration-detection
 // Based on: https://github.com/dotnet/sdk/blob/main/src/Cli/Microsoft.DotNet.Cli.Definitions/Telemetry/CIEnvironmentDetectorForTelemetry.cs
 [Embedded]
+[ExcludeFromCodeCoverage]
 internal sealed class CIEnvironmentDetector
 {
     // Systems that provide boolean values only, so we can simply parse and check for true
@@ -56,11 +57,6 @@ internal sealed class CIEnvironmentDetector
     ];
 
     private readonly IEnvironment _environment;
-
-    /// <summary>
-    /// Gets the default instance that uses the real environment.
-    /// </summary>
-    public static CIEnvironmentDetector Instance { get; } = new(new SystemEnvironment());
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CIEnvironmentDetector"/> class.
