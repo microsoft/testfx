@@ -293,7 +293,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             };
 
             await logger.LogDebugAsync($"Starting test host process, attempt {attemptCount}/{userMaxRetryCount}").ConfigureAwait(false);
-            IProcess testHostProcess = _serviceProvider.GetProcessHandler().Start(processStartInfo)
+            using IProcess testHostProcess = _serviceProvider.GetProcessHandler().Start(processStartInfo)
                 ?? throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsCannotStartProcessErrorMessage, processStartInfo.FileName));
 
             using var processExitedCancellationToken = new CancellationTokenSource();
@@ -303,8 +303,14 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 {
                     processExitedCancellationToken.Cancel();
                 }
-                catch (ObjectDisposedException)
+                catch (ObjectDisposedException ex)
                 {
+                    // The handler can race with the end-of-iteration cleanup: if the OS process
+                    // exit signal is queued to the thread pool before we detach the handler but
+                    // executes after the CTS has been disposed, Cancel() throws. Log at debug
+                    // level so an unexpected pattern stays observable without becoming a fatal
+                    // failure in the retry loop.
+                    logger.LogDebug($"CancellationTokenSource already disposed when process exited: {ex.Message}");
                 }
 
                 logger.LogDebug($"Test host process exited, PID: '{(sender as Process)?.Id}'");
