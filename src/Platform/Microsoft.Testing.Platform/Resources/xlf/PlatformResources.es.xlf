@@ -164,7 +164,7 @@
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
         <source>Command line: {0}</source>
-        <target state="new">Command line: {0}</target>
+        <target state="translated">Línea de comandos: {0}</target>
         <note>{0} is the command line used to run the application.</note>
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
@@ -518,14 +518,14 @@ Los valores disponibles son 'Seguimiento', 'Depurar', 'Información', 'Advertenc
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
         <source>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</source>
-        <target state="new">'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <target state="translated">El valor "{0}" no es compatible con '--list-tests'. Los valores admitidos son: {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.
 Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</source>
-        <target state="new">List available tests.
-Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</target>
+        <target state="translated">Enumera las pruebas disponibles.
+Opcionalmente, acepta "text" (la salida legible por el usuario predeterminada) o "json" para imprimir las pruebas detectadas como un documento JSON en la salida estándar.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
