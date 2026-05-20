@@ -362,7 +362,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .Which.Message.Should().Be(
                 """
-                Assertion failed. Expected values to not be equal.
+                Assertion failed. Expected values to differ.
 
                 notExpected: 0
                 actual:      0
@@ -503,7 +503,7 @@ public partial class AssertTests : TestContainer
         (await action.Should().ThrowAsync<Exception>())
             .Which.Message.Should().Be(
                 $"""
-                Assertion failed. Expected values to not be equal.
+                Assertion failed. Expected values to differ.
                 User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}
 
                 notExpected: 0

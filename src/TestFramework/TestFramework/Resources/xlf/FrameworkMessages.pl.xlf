@@ -454,8 +454,8 @@
         <note />
       </trans-unit>
       <trans-unit id="DoesNotMatchRegexFailedSummary">
-        <source>Expected string to not match the specified regular expression.</source>
-        <target state="new">Expected string to not match the specified regular expression.</target>
+        <source>Expected string to not match the specified pattern.</source>
+        <target state="new">Expected string to not match the specified pattern.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
@@ -633,8 +633,8 @@ Rzeczywiste: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEqualFailedSummary">
-        <source>Expected values to not be equal.</source>
-        <target state="new">Expected values to not be equal.</target>
+        <source>Expected values to differ.</source>
+        <target state="new">Expected values to differ.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringsFailedSummary">
@@ -668,8 +668,8 @@ Rzeczywiste: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="MatchesRegexFailedSummary">
-        <source>Expected string to match the specified regular expression.</source>
-        <target state="new">Expected string to match the specified regular expression.</target>
+        <source>Expected string to match the specified pattern.</source>
+        <target state="new">Expected string to match the specified pattern.</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
