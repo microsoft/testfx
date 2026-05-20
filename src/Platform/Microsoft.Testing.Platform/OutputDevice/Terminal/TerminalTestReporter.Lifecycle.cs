@@ -57,12 +57,13 @@ internal sealed partial class TerminalTestReporter
         _terminalWithProgress.WriteToTerminal(_isDiscovery ? AppendTestDiscoverySummary : AppendTestRunSummary);
 
         NativeMethods.RestoreConsoleMode(_originalConsoleMode);
+        // Consume the saved console mode so a later Dispose does not try to restore again.
+        _originalConsoleMode = null;
 
         // This is relevant for HotReload scenarios. We want the next test sessions to start
         // on a new TestProgressState
         _testProgressState = null;
 
-        _buildErrorsCount = 0;
         _testExecutionStartTime = null;
         _testExecutionEndTime = null;
     }

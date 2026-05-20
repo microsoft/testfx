@@ -33,6 +33,8 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     /// </summary>
     private Thread? _refresher;
     private long _counter;
+    private bool _stopped;
+    private bool _disposed;
 
     public event EventHandler? OnProgressStartUpdate;
 
@@ -74,8 +76,22 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         {
             // When we dispose _cts too early this will throw.
         }
+        catch (Exception)
+        {
+            // Any other failure (broken pipe, IO error writing to the console, etc.) must not silently
+            // tear down the refresher without making a best-effort attempt to clean up the screen. We
+            // intentionally swallow because there is no other thread to surface this to and the test
+            // run itself should still be allowed to complete.
+        }
 
-        _terminal.EraseProgress();
+        try
+        {
+            _terminal.EraseProgress();
+        }
+        catch
+        {
+            // Best-effort cleanup; we are already in teardown.
+        }
     }
 
     public TestProgressStateAwareTerminal(ITerminal terminal, Func<bool?> showProgress)
@@ -117,18 +133,43 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
     internal void StopShowingProgress()
     {
-        if (GetShowProgress())
+        if (_stopped || !GetShowProgress())
         {
-            _cts.Cancel();
-            _refresher?.Join();
+            return;
+        }
 
+        _stopped = true;
+        _cts.Cancel();
+        _refresher?.Join();
+
+        try
+        {
             _terminal.EraseProgress();
             _terminal.StopBusyIndicator();
         }
+        catch
+        {
+            // Best-effort cleanup; we are already in teardown.
+        }
     }
 
-    public void Dispose() =>
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        // Ensure that even when callers forget to call StopShowingProgress (e.g. because the process
+        // is being torn down by an unhandled exception), we still bring the refresher thread down,
+        // erase any in-flight progress, restore the busy-indicator and show the cursor again so the
+        // user's terminal is left in a sane state.
+        StopShowingProgress();
+
         ((IDisposable)_cts).Dispose();
+    }
 
     internal void WriteToTerminal(Action<ITerminal> write)
     {
