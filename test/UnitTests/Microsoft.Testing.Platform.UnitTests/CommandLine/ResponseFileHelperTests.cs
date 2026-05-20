@@ -10,8 +10,12 @@ public sealed class ResponseFileHelperTests
     [TestMethod]
     public void TryReadResponseFile_FileNotFound_ReturnsFalseAndAddsError()
     {
+        // Guarantee the path does not exist (avoid collisions / leftover temp files).
+        string path = Path.GetTempFileName();
+        File.Delete(path);
+        Assert.IsFalse(File.Exists(path));
+
         var errors = new List<string>();
-        string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".rsp");
 
         bool result = ResponseFileHelper.TryReadResponseFile(path, errors, out string[]? args);
 
@@ -19,6 +23,36 @@ public sealed class ResponseFileHelperTests
         Assert.IsNull(args);
         Assert.HasCount(1, errors);
         Assert.Contains(path, errors[0]);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public void TryReadResponseFile_FileLocked_ReturnsFalseAndAddsError()
+    {
+        // File locking semantics differ across platforms; FileShare.None is only honored on Windows
+        // in a way that reliably triggers IOException during File.ReadAllLines.
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "--verbose");
+
+            // Hold the file open exclusively so the read inside TryReadResponseFile fails with IOException.
+            using (new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+                var errors = new List<string>();
+
+                bool result = ResponseFileHelper.TryReadResponseFile(path, errors, out string[]? args);
+
+                Assert.IsFalse(result);
+                Assert.IsNull(args);
+                Assert.HasCount(1, errors);
+                Assert.Contains(path, errors[0]);
+            }
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [TestMethod]
@@ -58,6 +92,7 @@ public sealed class ResponseFileHelperTests
             bool result = ResponseFileHelper.TryReadResponseFile(path, errors, out string[]? args);
 
             Assert.IsTrue(result);
+            Assert.IsEmpty(errors);
             Assert.IsNotNull(args);
             Assert.HasCount(1, args);
             Assert.AreEqual("--verbose", args[0]);
@@ -80,6 +115,7 @@ public sealed class ResponseFileHelperTests
             bool result = ResponseFileHelper.TryReadResponseFile(path, errors, out string[]? args);
 
             Assert.IsTrue(result);
+            Assert.IsEmpty(errors);
             Assert.IsNotNull(args);
             Assert.HasCount(2, args);
             Assert.AreEqual("--opt", args[0]);
