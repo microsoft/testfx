@@ -129,10 +129,10 @@ internal sealed partial class TrxReportEngine
             {
                 if (builder is not null)
                 {
-                    _ = builder.Append(current);
+                    builder.Append(current);
                     if (isValidSurrogatePair)
                     {
-                        _ = builder.Append(str[++i]);
+                        builder.Append(str[++i]);
                     }
                 }
                 else if (isValidSurrogatePair)
@@ -144,7 +144,7 @@ internal sealed partial class TrxReportEngine
             }
 
             builder ??= new StringBuilder(str.Length).Append(str, 0, i);
-            _ = builder.Append(ReplaceInvalidCharacterWithUniCodeEscapeSequence(current));
+            builder.Append(ReplaceInvalidCharacterWithUniCodeEscapeSequence(current));
         }
 
         return builder?.ToString() ?? str;

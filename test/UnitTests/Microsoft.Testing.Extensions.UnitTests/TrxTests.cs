@@ -488,7 +488,7 @@ public class TrxTests
         Assert.AreEqual($"stdout {supplementaryCharacter}", xml.Descendants(xmlNamespace + "StdOut").Single().Value);
         Assert.AreEqual($"message {supplementaryCharacter}", xml.Descendants(xmlNamespace + "Message").Single().Value);
         Assert.AreEqual($"stack {supplementaryCharacter}", xml.Descendants(xmlNamespace + "StackTrace").Single().Value);
-        Assert.Contains(supplementaryCharacter, trxContent, trxContent);
+        Assert.Contains(supplementaryCharacter, trxContent, "TRX content should preserve supplementary Unicode characters.");
         Assert.DoesNotContain(@"\ud83d\ude00", trxContent, "TRX content should not contain escaped surrogate pair.");
     }
 
