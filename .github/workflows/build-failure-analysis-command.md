@@ -89,11 +89,13 @@ steps:
   - name: Dump binlog as JSON
     if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
     continue-on-error: true
+    env:
+      BINLOG_PATH: ${{ steps.find-binlog.outputs.path }}
     run: |
       mkdir -p /tmp/binlog-data
       cd .github/workflows/scripts
       timeout 120 node dump-binlog.js \
-        "$GITHUB_WORKSPACE/${{ steps.find-binlog.outputs.path }}" \
+        "$GITHUB_WORKSPACE/$BINLOG_PATH" \
         /tmp/binlog-data
 
   # `pull_request_comment` events use the `issues` event payload, so
@@ -104,18 +106,26 @@ steps:
     id: resolve-pr-sha
     env:
       GH_TOKEN: ${{ github.token }}
+      GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
+      GH_AW_GITHUB_EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
     run: |
-      SHA=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.issue.number }}" --jq .head.sha)
+      SHA=$(gh api "repos/${GH_AW_GITHUB_REPOSITORY}/pulls/${GH_AW_GITHUB_EVENT_ISSUE_NUMBER}" --jq .head.sha)
       echo "sha=$SHA" >> "$GITHUB_OUTPUT"
 
   - name: Export agent context
+    env:
+      GH_AW_STEPS_BUILD_OUTCOME: ${{ steps.build.outcome }}
+      GH_AW_BINLOG_PATH_VALUE: ${{ steps.find-binlog.outputs.path }}
+      GH_AW_GITHUB_EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
+      GH_AW_PR_HEAD_SHA_VALUE: ${{ steps.resolve-pr-sha.outputs.sha || github.sha }}
+      GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
     run: |
       {
-        echo "GH_AW_BUILD_OUTCOME=${{ steps.build.outcome }}"
-        echo "GH_AW_BINLOG_PATH=${{ steps.find-binlog.outputs.path }}"
-        echo "GH_AW_PR_NUMBER=${{ github.event.issue.number }}"
-        echo "GH_AW_PR_HEAD_SHA=${{ steps.resolve-pr-sha.outputs.sha || github.sha }}"
-        echo "GH_AW_WORKSPACE=${{ github.workspace }}"
+        echo "GH_AW_BUILD_OUTCOME=${GH_AW_STEPS_BUILD_OUTCOME}"
+        echo "GH_AW_BINLOG_PATH=${GH_AW_BINLOG_PATH_VALUE}"
+        echo "GH_AW_PR_NUMBER=${GH_AW_GITHUB_EVENT_ISSUE_NUMBER}"
+        echo "GH_AW_PR_HEAD_SHA=${GH_AW_PR_HEAD_SHA_VALUE}"
+        echo "GH_AW_WORKSPACE=${GH_AW_GITHUB_WORKSPACE}"
       } >> "$GITHUB_ENV"
 
 tools:
