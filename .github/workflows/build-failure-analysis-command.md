@@ -12,6 +12,7 @@ on:
   slash_command:
     name: analyze-build-failure
     events: [pull_request_comment]
+    strategy: centralized
   roles: [admin, maintainer, write]
   reaction: "eyes"
 

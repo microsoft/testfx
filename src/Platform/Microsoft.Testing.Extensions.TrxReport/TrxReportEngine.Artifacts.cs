@@ -97,16 +97,10 @@ internal sealed partial class TrxReportEngine
         int nameCounter = 0;
 
         // If the file already exists, append a number to the end of the file name
-        while (true)
+        while (File.Exists(destination))
         {
-            if (File.Exists(destination))
-            {
-                nameCounter++;
-                destination = Path.Combine(artifactDirectory, $"{Path.GetFileNameWithoutExtension(fileName)}_{nameCounter}{Path.GetExtension(fileName)}");
-                continue;
-            }
-
-            break;
+            nameCounter++;
+            destination = Path.Combine(artifactDirectory, $"{Path.GetFileNameWithoutExtension(fileName)}_{nameCounter}{Path.GetExtension(fileName)}");
         }
 
         _fileSystem.CopyFile(artifact.FullName, new FileInfo(destination).FullName);
