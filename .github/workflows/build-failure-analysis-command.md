@@ -26,6 +26,7 @@ concurrency:
 
 env:
   BINLOG_MCP_VERSION: '1.0.0-preview.26268.3'
+  NUGET_MCP_VERSION: '1.4.3'
 
 timeout-minutes: 30
 
@@ -83,9 +84,10 @@ steps:
         --version "$BINLOG_MCP_VERSION"
       echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
-  - name: Install MCP SDK for dump-binlog.js
+  - name: Install NuGet MCP Server
     if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
-    run: cd .github/workflows/scripts && npm ci --ignore-scripts
+    continue-on-error: true
+    run: dotnet tool install --global NuGet.Mcp.Server --version "$NUGET_MCP_VERSION"
 
   - name: Dump binlog as JSON
     if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
@@ -94,8 +96,7 @@ steps:
       BINLOG_PATH: ${{ steps.find-binlog.outputs.path }}
     run: |
       mkdir -p /tmp/binlog-data
-      cd .github/workflows/scripts
-      timeout 120 node dump-binlog.js \
+      timeout 120 dotnet run --project .github/workflows/scripts/DumpBinlog -- \
         "$GITHUB_WORKSPACE/$BINLOG_PATH" \
         /tmp/binlog-data
 
