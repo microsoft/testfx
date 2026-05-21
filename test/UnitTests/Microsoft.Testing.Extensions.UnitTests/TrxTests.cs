@@ -461,6 +461,59 @@ public class TrxTests
     }
 
     [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithSupplementaryUnicode_TrxPreservesCharacter()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        const string supplementaryCharacter = "\U0001F600";
+        PropertyBag propertyBag = new(
+            new FailedTestNodeStateProperty("test failed"),
+            new TrxMessagesProperty([new StandardOutputTrxMessage($"stdout {supplementaryCharacter}")]),
+            new TrxExceptionProperty($"message {supplementaryCharacter}", $"stack {supplementaryCharacter}"));
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", $"TestMethod {supplementaryCharacter}", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        AssertExpectedTrxFileName(fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
+        XNamespace xmlNamespace = xml.Root!.Name.Namespace;
+        string trxContent = xml.ToString();
+
+        XElement unitTestResult = xml.Descendants(xmlNamespace + "UnitTestResult").Single();
+        Assert.AreEqual($"TestMethod {supplementaryCharacter}", unitTestResult.Attribute("testName")?.Value);
+        Assert.AreEqual($"stdout {supplementaryCharacter}", xml.Descendants(xmlNamespace + "StdOut").Single().Value);
+        Assert.AreEqual($"message {supplementaryCharacter}", xml.Descendants(xmlNamespace + "Message").Single().Value);
+        Assert.AreEqual($"stack {supplementaryCharacter}", xml.Descendants(xmlNamespace + "StackTrace").Single().Value);
+        Assert.DoesNotContain(@"\ud83d\ude00", trxContent, trxContent);
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithUnpairedSurrogates_TrxEscapesInvalidCharacters()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        PropertyBag propertyBag = new(
+            new PassedTestNodeStateProperty(),
+            new TrxMessagesProperty([new StandardOutputTrxMessage("stdout \uD800 \uDC00")]));
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        AssertExpectedTrxFileName(fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
+        XNamespace xmlNamespace = xml.Root!.Name.Namespace;
+        Assert.AreEqual(@"stdout \ud800 \udc00", xml.Descendants(xmlNamespace + "StdOut").Single().Value);
+    }
+
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithTestFailed_TrxContainsDebugTrace()
     {
         // Arrange

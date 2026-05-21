@@ -116,13 +116,12 @@ internal sealed partial class TrxReportEngine
 
     // From xml spec (http://www.w3.org/TR/xml/#charsets) valid chars:
     // #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
-    // we are handling only #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD]
-    // because C# support unicode character in range \u0000 to \uFFFF
+    // surrogate pairs represent the [#x10000-#x10FFFF] range and are valid.
 #if NET7_0_OR_GREATER
-    [GeneratedRegex(@"[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD]")]
+    [GeneratedRegex(@"[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]|[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD\uD800-\uDFFF]")]
     private static partial Regex BuildInvalidXmlCharReplace();
 #else
-    private static Regex BuildInvalidXmlCharReplace() => new(@"[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD]");
+    private static Regex BuildInvalidXmlCharReplace() => new(@"[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]|[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD\uD800-\uDFFF]");
 #endif
 
     private static string RemoveInvalidXmlChar(string str) => InvalidXmlCharReplace.Replace(str, InvalidXmlEvaluator);
