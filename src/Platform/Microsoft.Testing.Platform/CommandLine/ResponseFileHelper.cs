@@ -23,6 +23,10 @@ internal static class ResponseFileHelper
         {
             errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserFailedToReadResponseFile, rspFilePath, e.ToString()));
         }
+        catch (UnauthorizedAccessException e)
+        {
+            errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserFailedToReadResponseFile, rspFilePath, e.Message));
+        }
         catch (FormatException e)
         {
             errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserFailedToReadResponseFile, rspFilePath, e.Message));
@@ -150,8 +154,8 @@ internal static class ResponseFileHelper
                 if (seekingQuote == Boundary.QuoteEnd)
                 {
                     throw new FormatException(lineNumber is null
-                        ? "Unclosed quote in command line."
-                        : string.Format(CultureInfo.InvariantCulture, "Unclosed quote in response file at line {0}.", lineNumber));
+                        ? PlatformResources.CommandLineParserUnclosedQuoteInCommandLine
+                        : string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnclosedQuoteInResponseFile, lineNumber));
                 }
 
                 switch (seeking)
