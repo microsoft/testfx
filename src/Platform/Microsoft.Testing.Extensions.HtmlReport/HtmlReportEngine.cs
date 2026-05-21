@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.HtmlReport;
@@ -147,9 +148,16 @@ internal sealed class HtmlReportEngine
         string user = _environment.GetEnvironmentVariable("UserName")
             ?? _environment.GetEnvironmentVariable("USER")
             ?? "user";
-        string raw = $"{user}_{_environment.MachineName}_{finishTime:yyyy-MM-dd_HH_mm_ss}.html";
+        string moduleName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+        string targetFrameworkMoniker = GetTargetFrameworkMoniker();
+        string raw = $"{user}_{_environment.MachineName}_{moduleName}_{targetFrameworkMoniker}_{finishTime:yyyy-MM-dd_HH_mm_ss}.html";
         return ReplaceInvalidFileNameChars(raw);
     }
+
+    private static string GetTargetFrameworkMoniker()
+        => TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
+            ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription)
+            ?? "unknown";
 
     private static string ReplaceInvalidFileNameChars(string fileName)
     {

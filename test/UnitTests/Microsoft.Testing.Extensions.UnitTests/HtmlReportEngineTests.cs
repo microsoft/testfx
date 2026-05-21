@@ -293,6 +293,45 @@ public class HtmlReportEngineTests
     }
 
     [TestMethod]
+    public async Task GenerateReportAsync_DefaultFileName_IncludesModuleNameAndTargetFramework()
+    {
+        string? pathSeen = null;
+        _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.CreateNew))
+            .Returns<string, FileMode>((path, _) =>
+            {
+                pathSeen = path;
+                return new MemoryFileStream();
+            });
+
+        _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns("out");
+        _ = _environmentMock.SetupGet(_ => _.MachineName).Returns("M");
+        _ = _environmentMock.Setup(_ => _.GetEnvironmentVariable(It.IsAny<string>())).Returns("u");
+        _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns(Path.Combine("tmp", "My.Test.Module.dll"));
+        _ = _testFrameworkMock.SetupGet(_ => _.Uid).Returns("uid");
+        _ = _testFrameworkMock.SetupGet(_ => _.Version).Returns("0.0");
+        _ = _testFrameworkMock.SetupGet(_ => _.DisplayName).Returns("F");
+        _ = _clockMock.SetupGet(_ => _.UtcNow).Returns(new DateTimeOffset(2026, 2, 3, 4, 5, 6, TimeSpan.Zero));
+
+        var engine = new HtmlReportEngine(
+            _fileSystem.Object,
+            _testApplicationModuleInfoMock.Object,
+            _environmentMock.Object,
+            _commandLineOptionsMock.Object,
+            _configurationMock.Object,
+            _clockMock.Object,
+            _testFrameworkMock.Object,
+            DateTimeOffset.UtcNow,
+            0,
+            CancellationToken.None);
+
+        (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
+
+        Assert.AreEqual(pathSeen, finalPath);
+        Assert.IsTrue(Regex.IsMatch(Path.GetFileName(finalPath), "^u_M_My\\.Test\\.Module_net[0-9]+(\\.[0-9]+)?_2026-02-03_04_05_06\\.html$"));
+    }
+
+    [TestMethod]
     public async Task GenerateReportAsync_AppendsDisambiguatingSuffix_When_DefaultFileExists()
     {
         // Set up file system: pretend the default file already exists, then succeed on
