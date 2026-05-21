@@ -525,6 +525,7 @@ public sealed class TerminalTestReporterTests
         progressAwareTerminal.StopShowingProgress();
 
         Assert.HasCount(2, terminal.Events.Where(e => e == "StartBusyIndicator"));
+        Assert.HasCount(2, terminal.Events.Where(e => e == "EraseProgress"));
         Assert.HasCount(2, terminal.Events.Where(e => e == "StopBusyIndicator"));
     }
 

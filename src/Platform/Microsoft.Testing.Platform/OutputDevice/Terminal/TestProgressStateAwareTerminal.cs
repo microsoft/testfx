@@ -27,14 +27,15 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     private CancellationTokenSource? _cts;
     private TestProgressState?[] _progressItems = [];
     private bool? _showProgressCached;
+    private int _progressErased;
 
     /// <summary>
     /// The thread that performs periodic refresh of the console output.
     /// </summary>
     private Thread? _refresher;
     private long _counter;
-    private bool _stopped;
-    private bool _disposed;
+    private int _stopped;
+    private int _disposed;
 
     public event EventHandler? OnProgressStartUpdate;
 
@@ -78,15 +79,15 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         }
         catch (Exception)
         {
-            // Any other failure (broken pipe, IO error writing to the console, etc.) must not silently
-            // tear down the refresher without making a best-effort attempt to clean up the screen. We
-            // intentionally swallow because there is no other thread to surface this to and the test
-            // run itself should still be allowed to complete.
+            // Swallow so that the unconditional EraseProgress() below still runs.
+            // There is no other thread to surface this to; the test run itself should
+            // still be allowed to complete.
         }
 
         try
         {
             _terminal.EraseProgress();
+            Interlocked.Exchange(ref _progressErased, 1);
         }
         catch (Exception)
         {
@@ -127,7 +128,8 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         }
 
         _progressItems = new TestProgressState[workerCount];
-        _stopped = false;
+        Interlocked.Exchange(ref _progressErased, 0);
+        Interlocked.Exchange(ref _stopped, 0);
 
         var cancellationTokenSource = new CancellationTokenSource();
         _cts = cancellationTokenSource;
@@ -140,12 +142,10 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
     internal void StopShowingProgress()
     {
-        if (_stopped || !GetShowProgress())
+        if (Interlocked.CompareExchange(ref _stopped, 1, 0) != 0 || !GetShowProgress())
         {
             return;
         }
-
-        _stopped = true;
 
         CancellationTokenSource? cancellationTokenSource = _cts;
         Thread? refresher = _refresher;
@@ -158,7 +158,11 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
         try
         {
-            _terminal.EraseProgress();
+            if (Interlocked.CompareExchange(ref _progressErased, 1, 0) == 0)
+            {
+                _terminal.EraseProgress();
+            }
+
             _terminal.StopBusyIndicator();
         }
         catch (Exception ex) when (ex is ObjectDisposedException or InvalidOperationException or System.IO.IOException)
@@ -169,12 +173,10 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
     public void Dispose()
     {
-        if (_disposed)
+        if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0)
         {
             return;
         }
-
-        _disposed = true;
 
         // Ensure that even when callers forget to call StopShowingProgress (e.g. because the process
         // is being torn down by an unhandled exception), we still bring the refresher thread down,
