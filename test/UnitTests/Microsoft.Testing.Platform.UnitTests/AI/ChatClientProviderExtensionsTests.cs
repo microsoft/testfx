@@ -16,23 +16,40 @@ public sealed class ChatClientProviderExtensionsTests
     public async Task GetChatClientAsync_WhenProviderIsUnavailable_ReturnsNull()
     {
         ServiceProvider serviceProvider = new();
-        serviceProvider.AddService(new UnavailableChatClientProvider());
+        UnavailableChatClientProvider provider = new();
+        serviceProvider.AddService(provider);
 
         IChatClient? chatClient = await serviceProvider.GetChatClientAsync(CancellationToken.None).ConfigureAwait(false);
 
         Assert.IsNull(chatClient);
+        Assert.AreEqual(1, provider.IsAvailableCallCount);
+        Assert.AreEqual(0, provider.CreateChatClientAsyncCallCount);
     }
 
     private sealed class UnavailableChatClientProvider : IChatClientProvider
     {
-        public bool IsAvailable => false;
+        public int IsAvailableCallCount { get; private set; }
+
+        public int CreateChatClientAsyncCallCount { get; private set; }
+
+        public bool IsAvailable
+        {
+            get
+            {
+                IsAvailableCallCount++;
+                return false;
+            }
+        }
 
         public bool HasToolsCapability => false;
 
         public string ModelName => "Unavailable";
 
         public Task<IChatClient> CreateChatClientAsync(CancellationToken cancellationToken)
-            => throw new InvalidOperationException("CreateChatClientAsync should not be called for unavailable providers.");
+        {
+            CreateChatClientAsyncCallCount++;
+            throw new InvalidOperationException("CreateChatClientAsync should not be called for unavailable providers.");
+        }
     }
 }
 

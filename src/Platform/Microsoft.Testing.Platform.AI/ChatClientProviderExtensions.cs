@@ -33,7 +33,7 @@ public static class ChatClientProviderExtensions
     /// </summary>
     /// <param name="serviceProvider">The service provider.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>A task representing the asynchronous operation that returns an instance of <see cref="IChatClient"/>.</returns>
+    /// <returns>A task representing the asynchronous operation that returns an instance of <see cref="IChatClient"/>, or <see langword="null"/> when no available provider is registered.</returns>
     public static async Task<IChatClient?> GetChatClientAsync(this IServiceProvider serviceProvider, CancellationToken cancellationToken)
     {
         var provider = (IChatClientProvider?)serviceProvider.GetService(typeof(IChatClientProvider));
