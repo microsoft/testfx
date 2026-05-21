@@ -65,7 +65,7 @@ public sealed class CrashDumpTests
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.AreEqual("You specified one or more crash dump parameters but did not enable it, add --crashdump or --crash-report to the command line", validateOptionsResult.ErrorMessage);
+        Assert.AreEqual(CrashDumpResources.MissingCrashDumpMainOption, validateOptionsResult.ErrorMessage);
     }
 
     [TestMethod]
