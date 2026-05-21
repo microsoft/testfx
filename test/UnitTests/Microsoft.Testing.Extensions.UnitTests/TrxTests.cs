@@ -667,9 +667,10 @@ public class TrxTests
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
+        string[] resultFilePaths = [.. xml.Descendants().Where(x => x.Name.LocalName == "ResultFile").Select(x => x.Attribute("path")!.Value)];
+        Assert.Contains("MachineName/goodFile", resultFilePaths);
+        Assert.DoesNotContain(path => path.Contains("badFile", StringComparison.Ordinal), resultFilePaths);
         string trxContent = xml.ToString();
-        Assert.Contains(@"<ResultFile path=""MachineName/goodFile"" />", trxContent);
-        Assert.IsFalse(trxContent.Contains("badFile\" />", StringComparison.Ordinal), trxContent);
         Assert.Contains(@"outcome=""Warning""", trxContent);
         Assert.Contains("Unable to copy attachment", trxContent);
         Assert.Contains("badFile", trxContent);
