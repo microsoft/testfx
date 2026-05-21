@@ -73,8 +73,8 @@ steps:
       <configuration>
         <packageSources>
           <clear />
-          <add key="dotnet-eng"
-               value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json" />
+          <add key="dotnet-tools"
+               value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" />
         </packageSources>
       </configuration>
       EOF

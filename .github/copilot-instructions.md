@@ -2,6 +2,52 @@
 
 This is a .NET based repository that contains the MSTest testing framework and Microsoft.Testing.Platform (aka MTP) testing platform. Please follow these guidelines when contributing:
 
+## Repository layout
+
+The codebase ships several distinct (but related) products. Knowing which product a change belongs to is essential because they have different conventions, target frameworks, and public API surfaces:
+
+- `src/Platform/Microsoft.Testing.Platform` — Microsoft.Testing.Platform (MTP), a lightweight, in-process test host that replaces VSTest. Most other folders under `src/Platform/` are MTP extensions (`TrxReport`, `CrashDump`, `HangDump`, `HotReload`, `Retry`, `Telemetry`, `HtmlReport`, `AzureDevOpsReport`, `MSBuild`, `VSTestBridge`, …).
+- `src/TestFramework` — MSTest itself: the public `Microsoft.VisualStudio.TestTools.UnitTesting` API (attributes, `Assert`, `TestContext`, …) plus `TestFramework.Extensions`.
+- `src/Adapter` — bridges MSTest to test hosts: `MSTest.TestAdapter` (VSTest adapter), `MSTestAdapter.PlatformServices` (platform-services abstraction shared by both hosts), and `MSTest.Engine` (MTP-native execution engine used by source-generated tests).
+- `src/Analyzers` — Roslyn analyzers and code fixes shipped as `MSTest.Analyzers`.
+- `src/Package/MSTest.Sdk` — the MSBuild project SDK that wires the pieces together for consumers.
+- `test/UnitTests/<Project>.UnitTests` — fast unit tests for each project.
+- `test/IntegrationTests/<Project>.IntegrationTests` or `<Package>.Acceptance.IntegrationTests` — file-system / process-level tests; acceptance tests consume the packed NuGets from `artifacts/packages/<Configuration>/Shipping`.
+- `test/Utilities/TestFramework.ForTestingMSTest` — the internal `TestContainer`-based framework used to unit-test MSTest itself (any public parameterless method on a `TestContainer` subclass is a test; no `[TestMethod]` needed).
+- `test/Utilities/Microsoft.Testing.TestInfrastructure` — shared helpers for acceptance/integration tests (test asset fixtures, runners, etc.).
+- `eng/` — Arcade-based build infrastructure. Do not hand-edit `eng/common/`: it is mirrored from `dotnet/arcade` and overwritten by automation.
+
+Solution files: `TestFx.slnx` is the full solution; `MSTest.slnf`, `Microsoft.Testing.Platform.slnf`, and `NonWindowsTests.slnf` are filtered views.
+
+## Build, test, and debug commands
+
+Always use the repo-local toolchain via the build scripts — they restore the pinned .NET SDK from `global.json` into `.dotnet/` (or reuse a matching `DOTNET_INSTALL_DIR`) and prepend that `dotnet` location to `PATH`.
+
+| Task | Windows | Linux/macOS |
+|---|---|---|
+| Restore + build (Debug) | `.\build.cmd` | `./build.sh` |
+| Release build | `.\build.cmd -c Release` | `./build.sh -c Release` |
+| Produce NuGet packages | `.\build.cmd -pack` | `./build.sh -pack` |
+| Unit tests | `.\build.cmd -test` | `./build.sh -test` |
+| Integration + acceptance tests | `.\build.cmd -pack -test -integrationTest` | `./build.sh -pack -test -integrationTest` |
+| Open the solution in VS with the right env | `.\open-vs.cmd` | n/a |
+
+Acceptance integration tests (anything under `test/IntegrationTests/*.Acceptance.IntegrationTests`) consume the packed NuGets from `artifacts/packages/<Configuration>/Shipping`, so you **must** run `-pack` (and rerun it after every source change you want to test) before invoking them. Plain unit tests do not need `-pack`.
+
+### Running a single test
+
+Once the desired project has been built, invoke its test host directly. Note that CLI options differ by host: `--filter-uid` is available on both MSTest and MTP-based hosts, while `--treenode-filter` is MTP-only:
+
+```powershell
+# Filter by UID — works with both MSTest and MTP-based hosts
+dotnet run --project test\UnitTests\MSTest.Analyzers.UnitTests -f net8.0 --no-build -c Debug -- --filter-uid <TestUid>
+
+# Tree-node / wildcard filter — MTP-only (faster to type than a UID)
+dotnet run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests -f net8.0 --no-build -- --treenode-filter "/*/*/*/MyTestClass/MyTestMethod"
+```
+
+For acceptance tests that drive generated assets, prefer running them through the test explorer or `dotnet test --filter "FullyQualifiedName~MyTest"` on the specific project, after `-pack`.
+
 ## Code Standards
 
 You MUST follow all code-formatting and naming conventions defined in [`.editorconfig`](../.editorconfig).
@@ -29,7 +75,8 @@ You MUST minimize adding public API surface area but any newly added public API 
 When making change to resource files, you MUST:
 
 - Add a corresponding entry in the resource file (`.resx`).
-- NEVER manually modify `*.xlf` files. Instead, build the project to automatically generate the corresponding `*.xlf` files.
+- NEVER manually modify `*.xlf` files. Instead, regenerate them by running `dotnet msbuild <project>.csproj /t:UpdateXlf` on the owning project (e.g. `src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj`, `src/TestFramework/TestFramework/TestFramework.csproj`, or the matching analyzer project). A full repo build also regenerates them but is slower.
+- A few resource accessors are hand-maintained — notably `PlatformResources.cs` has an `IS_MTP_UNIT_TESTS` block that must be updated when a unit test needs to read a newly added string.
 
 ## Public API guidelines
 
@@ -39,9 +86,12 @@ When making change to resource files, you MUST:
 
 ## Testing Guidelines
 
-- Tests for MTP and MSTest analyzers MUST use MSTest.
-- Unit tests for MSTest MUST use the internal test framework defined in [`TestFramework.ForTestingMSTest`](../test/Utilities/TestFramework.ForTestingMSTest).
-- All assertions must be written using FluentAssertions style of assertion.
+- Tests for MTP and the MSTest analyzers MUST use MSTest.
+- Unit tests for MSTest itself MUST use the internal test framework in [`TestFramework.ForTestingMSTest`](../test/Utilities/TestFramework.ForTestingMSTest) (a `TestContainer`-based framework where any public parameterless method is a test).
+- The assertion style is project-specific and enforced by each project's `BannedSymbols.txt`. Check it before writing assertions:
+  - Most MTP unit-test projects (and `MSTest.Analyzers.UnitTests`, `MSTest.SelfRealExamples.UnitTests`) ban `AwesomeAssertions` and require MSTest `Assert`/`StringAssert`/`CollectionAssert`.
+  - The adapter unit-test projects (`MSTestAdapter.UnitTests`, `MSTestAdapter.PlatformServices.UnitTests`) ban MSTest's `Assert` family and require `AwesomeAssertions` (FluentAssertions-style API).
+- Acceptance integration tests run with assembly-level method parallelization. Classes that share a single generated mutable test asset across multiple methods must be marked `[DoNotParallelize]` to avoid races on `bin/obj` outputs.
 - When running acceptance tests, you must first run `./build.sh -pack` on Linux/macOS or `.\build.cmd -pack` on Windows.
 
 ## CLI options guidelines
@@ -65,6 +115,10 @@ Agentic workflows live in `.github/workflows/*.md` and `*.agent.md` and are comp
   - NEVER add `strict: false` to a workflow's frontmatter.
   - When in doubt, pass `--strict` explicitly to `gh aw compile` to enforce strict-mode validation across all workflows (action pinning, network config, safe-outputs, no write permissions, no deprecated fields).
 - After editing any agentic workflow `.md` source (or its frontmatter), run `gh aw compile <workflow-id>` and commit the regenerated `.lock.yml` in the same change. NEVER hand-edit `.lock.yml` files.
+
+## TODO comment policy
+
+`TODO` comments without a tracked issue are rejected during review. Every `TODO` MUST reference a GitHub issue, e.g. `// TODO(#1234): Refactor this once the new API is available`. If the note doesn't warrant an issue, rewrite it as a plain comment explaining the rationale.
 
 ## Pull Request guidelines
 

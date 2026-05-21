@@ -119,7 +119,7 @@
       </trans-unit>
       <trans-unit id="FlakyHistoryFailureAnnotation">
         <source>[flaky: failed {0}/{1} in last {2}d]</source>
-        <target state="new">[flaky: failed {0}/{1} in last {2}d]</target>
+        <target state="translated">[flaky: failed {0}/{1} in last {2}d]</target>
         <note>{Locked="[flaky: failed {0}/{1} in last {2}d]"}</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadFailedWarning">
@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="FlakyHistoryRegressionAnnotation">
         <source>[REGRESSION]</source>
-        <target state="new">[REGRESSION]</target>
+        <target state="translated">[REGRESSION]</target>
         <note>{Locked="[REGRESSION]"}</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryResultsPagingStoppedWarning">
@@ -224,7 +224,7 @@
       </trans-unit>
       <trans-unit id="QuarantinedAnnotation">
         <source>[quarantined]</source>
-        <target state="new">[quarantined]</target>
+        <target state="translated">[quarantined]</target>
         <note>{Locked="[quarantined]"}</note>
       </trans-unit>
       <trans-unit id="SeverityOptionDescription">
