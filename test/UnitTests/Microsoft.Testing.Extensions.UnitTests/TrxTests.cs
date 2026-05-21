@@ -644,6 +644,45 @@ public class TrxTests
     }
 
     [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithArtifactsByTestNodeAndCopyFailure_SkipsBadResultFileAndAddsRunInfo()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        _ = _fileSystem.Setup(x => x.CopyFile(
+                It.Is<string>(source => source.EndsWith("badFile", StringComparison.Ordinal)),
+                It.IsAny<string>()))
+            .Throws(new UnauthorizedAccessException("Access denied"));
+        var propertyBag = new PropertyBag(
+            new PassedTestNodeStateProperty(),
+            new FileArtifactProperty(new FileInfo("badFile"), "TestMethod", "description"),
+            new FileArtifactProperty(new FileInfo("goodFile"), "TestMethod", "description"));
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        AssertExpectedTrxFileName(fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
+        AssertTrxOutcome(xml, "Completed");
+        IEnumerable<XElement> resultFileElements = xml.Descendants().Where(element => element.Name.LocalName == "ResultFile");
+        string[] resultFilePaths = resultFileElements
+            .Select(element => element.Attribute("path"))
+            .OfType<XAttribute>()
+            .Select(attribute => attribute.Value)
+            .ToArray();
+        Assert.Contains(path => path.EndsWith("goodFile", StringComparison.Ordinal), resultFilePaths);
+        Assert.DoesNotContain("badFile", string.Join(Environment.NewLine, resultFilePaths));
+        XElement warningRunInfo = xml.Descendants().Single(element => element.Name.LocalName == "RunInfo" && element.Attribute("outcome")?.Value == "Warning");
+        string warningText = warningRunInfo.Descendants().Single(element => element.Name.LocalName == "Text").Value;
+        Assert.Contains("Unable to copy attachment", warningText);
+        Assert.Contains("badFile", warningText);
+        Assert.Contains("UnauthorizedAccessException", warningText);
+    }
+
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithArtifactsByExtension_TrxContainsCollectorDataEntries()
     {
         // Arrange
