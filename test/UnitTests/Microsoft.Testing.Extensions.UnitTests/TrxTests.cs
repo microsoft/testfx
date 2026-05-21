@@ -668,10 +668,11 @@ public class TrxTests
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         IEnumerable<XElement> resultFileElements = xml.Descendants().Where(element => element.Name.LocalName == "ResultFile");
-        string[] resultFilePaths = [.. resultFileElements
+        string[] resultFilePaths = resultFileElements
             .Select(element => element.Attribute("path"))
             .OfType<XAttribute>()
-            .Select(attribute => attribute.Value)];
+            .Select(attribute => attribute.Value)
+            .ToArray();
         Assert.Contains(path => path.EndsWith("goodFile", StringComparison.Ordinal), resultFilePaths);
         Assert.DoesNotContain("badFile", string.Join(Environment.NewLine, resultFilePaths));
         XElement warningRunInfo = xml.Descendants().Single(element => element.Name.LocalName == "RunInfo" && element.Attribute("outcome")?.Value == "Warning");
