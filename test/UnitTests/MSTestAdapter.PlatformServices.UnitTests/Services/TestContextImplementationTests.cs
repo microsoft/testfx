@@ -523,6 +523,25 @@ public class TestContextImplementationTests : TestContainer
         ((List<int>)snapshot["RefKey"]!).Should().BeEquivalentTo(new[] { 1, 2 });
     }
 
+    public void CaptureLifecyclePropertiesAndMergePropertiesShouldNotLockOnExposedPropertyBag()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+
+        lock (_testContextImplementation.Properties)
+        {
+            Task.WhenAll(
+                    Task.Run(() => _ = _testContextImplementation.CaptureLifecycleProperties()),
+                    Task.Run(() => _testContextImplementation.MergeProperties(new Dictionary<string, object?>
+                    {
+                        ["Key"] = "Value",
+                    })))
+                .Wait(TimeSpan.FromSeconds(10))
+                .Should().BeTrue();
+        }
+
+        _testContextImplementation.Properties["Key"].Should().Be("Value");
+    }
+
     public void ConstructorShouldNotThrowWhenSeededPropertiesAlreadyContainFullyQualifiedTestClassName()
     {
         _testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");

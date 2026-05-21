@@ -66,6 +66,11 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// Properties.
     /// </summary>
     private readonly Dictionary<string, object?> _properties;
+#if NET9_0_OR_GREATER
+    private readonly Lock _propertiesLock = new();
+#else
+    private readonly object _propertiesLock = new();
+#endif
     private readonly IMessageLogger? _messageLogger;
 
     private CancellationTokenRegistration? _cancellationTokenRegistration;
@@ -310,11 +315,11 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
             return;
         }
 
-        // Take the same lock as CaptureLifecycleProperties so a snapshot capture cannot race
-        // with a merge on the same context (which would otherwise corrupt the Dictionary
-        // iterator or cause a missed write). Writes via the public Properties indexer still
-        // bypass this lock - see the remarks on CaptureLifecycleProperties.
-        lock (_properties)
+        // Take the same internal lock as CaptureLifecycleProperties so a snapshot capture
+        // cannot race with a merge on the same context (which would otherwise corrupt the
+        // Dictionary iterator or cause a missed write). Writes via the public Properties
+        // indexer still bypass this lock - see the remarks on CaptureLifecycleProperties.
+        lock (_propertiesLock)
         {
             foreach (KeyValuePair<string, object?> kvp in propertiesToMerge)
             {
@@ -342,9 +347,9 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// reference-type instances are visible everywhere.
     /// </para>
     /// <para>
-    /// Enumeration is performed under a lock on <c>_properties</c> so that snapshot capture
-    /// is safe against concurrent calls to this method or <see cref="MergeProperties"/> on
-    /// the same context. Note: writes made via the public <see cref="Properties"/> indexer
+    /// Enumeration is performed under a private synchronization lock so that snapshot
+    /// capture is safe against concurrent calls to this method or <see cref="MergeProperties"/>
+    /// on the same context. Note: writes made via the public <see cref="Properties"/> indexer
     /// do NOT take this lock, so a lifecycle method that spawns a background thread which
     /// keeps mutating <see cref="Properties"/> past method return can still race with the
     /// capture - that is treated as user error and is consistent with the pre-existing
@@ -355,7 +360,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     internal IReadOnlyDictionary<string, object?> CaptureLifecycleProperties()
     {
         Dictionary<string, object?> snapshot;
-        lock (_properties)
+        lock (_propertiesLock)
         {
 #pragma warning disable IDE0028 // Collection initialization can be simplified - capacity hint is intentional.
             snapshot = new Dictionary<string, object?>(_properties.Count);
