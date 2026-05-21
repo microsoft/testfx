@@ -20,6 +20,12 @@ if (args.Length == 0)
     return 1;
 }
 
+if (string.IsNullOrWhiteSpace(args[0]))
+{
+    Console.Error.WriteLine("Error: binlog path argument is empty");
+    return 1;
+}
+
 var binlogPath = Path.GetFullPath(args[0]);
 var outputDir = args.Length > 1 ? args[1] : "/tmp";
 
@@ -59,6 +65,20 @@ try
 catch (Exception ex)
 {
     Console.Error.WriteLine($"fatal: {ex}");
+
+    // Guarantee the three output files exist so downstream `cat` steps and the
+    // agent always have something structured to read. The agent treats an
+    // `{ "error": ... }` payload as "tool failed; fall back to /tmp/build-output.log".
+    var fatal = new { error = $"DumpBinlog fatal: {ex.Message}" };
+    var fatalJson = JsonSerializer.Serialize(fatal, jsonOptions);
+    foreach (var name in new[] { "binlog-overview.json", "binlog-errors.json", "binlog-warnings.json" })
+    {
+        var path = Path.Combine(outputDir, name);
+        if (!File.Exists(path))
+        {
+            try { File.WriteAllText(path, fatalJson); } catch { }
+        }
+    }
     return 1;
 }
 

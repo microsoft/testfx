@@ -4,7 +4,7 @@ description: >-
   Runs `./build.sh --binaryLog` on every PR; when the build fails, delegates
   to the `build-failure-analyst` agent (which reads JSON dumps produced from
   the binlog) to identify root causes, post a PR comment summarizing them,
-  and attach inline ```suggestion blocks tied to the diff.
+  and attach inline `suggestion` blocks tied to the diff.
 
 # This workflow is **advisory**, not gating:
 #  - It posts an analysis comment / inline suggestions when the build fails.
@@ -83,6 +83,7 @@ steps:
       BINLOG=$(find artifacts/log -name '*.binlog' -type f -printf '%T@ %p\n' 2>/dev/null \
         | sort -rn | head -1 | cut -d' ' -f2-)
       if [ -n "$BINLOG" ] && [ -f "$BINLOG" ]; then
+        BINLOG=$(realpath "$BINLOG")
         echo "found=true"   >> "$GITHUB_OUTPUT"
         echo "path=$BINLOG" >> "$GITHUB_OUTPUT"
       else
@@ -120,8 +121,8 @@ steps:
       BINLOG_PATH: ${{ steps.find-binlog.outputs.path }}
     run: |
       mkdir -p /tmp/binlog-data
-      timeout 120 dotnet run --project .github/workflows/scripts/DumpBinlog -- \
-        "$GITHUB_WORKSPACE/$BINLOG_PATH" \
+      timeout 180 dotnet run --project .github/workflows/scripts/DumpBinlog -- \
+        "$BINLOG_PATH" \
         /tmp/binlog-data
 
   # On `workflow_dispatch` runs, `github.sha` is the SHA of the dispatched ref
@@ -167,6 +168,8 @@ tools:
     - "uniq"
     - "ls"
     - "find"
+    - "dotnet"
+    - "NuGet.Mcp.Server"
 
 safe-outputs:
   add-comment:

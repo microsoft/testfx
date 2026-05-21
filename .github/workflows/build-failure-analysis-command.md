@@ -59,6 +59,7 @@ steps:
       BINLOG=$(find artifacts/log -name '*.binlog' -type f -printf '%T@ %p\n' 2>/dev/null \
         | sort -rn | head -1 | cut -d' ' -f2-)
       if [ -n "$BINLOG" ] && [ -f "$BINLOG" ]; then
+        BINLOG=$(realpath "$BINLOG")
         echo "found=true"   >> "$GITHUB_OUTPUT"
         echo "path=$BINLOG" >> "$GITHUB_OUTPUT"
       else
@@ -96,8 +97,8 @@ steps:
       BINLOG_PATH: ${{ steps.find-binlog.outputs.path }}
     run: |
       mkdir -p /tmp/binlog-data
-      timeout 120 dotnet run --project .github/workflows/scripts/DumpBinlog -- \
-        "$GITHUB_WORKSPACE/$BINLOG_PATH" \
+      timeout 180 dotnet run --project .github/workflows/scripts/DumpBinlog -- \
+        "$BINLOG_PATH" \
         /tmp/binlog-data
 
   # `pull_request_comment` events use the `issues` event payload, so
@@ -143,6 +144,8 @@ tools:
     - "uniq"
     - "ls"
     - "find"
+    - "dotnet"
+    - "NuGet.Mcp.Server"
 
 safe-outputs:
   add-comment:
