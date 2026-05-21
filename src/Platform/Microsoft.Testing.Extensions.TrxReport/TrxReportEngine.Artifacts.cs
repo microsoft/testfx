@@ -76,11 +76,7 @@ internal sealed partial class TrxReportEngine
             href = CopyArtifactIntoTrxDirectoryAndReturnHrefValue(artifact, runDeploymentRoot, relativeResultsDirectory);
             return true;
         }
-        catch (IOException ex)
-        {
-            AddAttachmentWarning(artifact, ex, attachmentWarnings);
-        }
-        catch (UnauthorizedAccessException ex)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             AddAttachmentWarning(artifact, ex, attachmentWarnings);
         }
