@@ -89,8 +89,8 @@ internal sealed partial class TerminalTestReporter
         TimeSpan runDuration = _testExecutionStartTime != null && _testExecutionEndTime != null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
 
         bool colorizeFailed = failed > 0;
-        bool colorizePassed = passed > 0 && _buildErrorsCount == 0 && failed == 0;
-        bool colorizeSkipped = skipped > 0 && skipped == total && _buildErrorsCount == 0 && failed == 0;
+        bool colorizePassed = passed > 0 && failed == 0;
+        bool colorizeSkipped = skipped > 0 && skipped == total && failed == 0;
 
         string totalText = $"{SingleIndentation}{PlatformResources.TotalLowercase}: {total}";
         string failedText = $"{SingleIndentation}{PlatformResources.FailedLowercase}: {failed}";
