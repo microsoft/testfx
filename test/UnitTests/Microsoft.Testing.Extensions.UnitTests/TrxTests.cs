@@ -482,6 +482,7 @@ public class TrxTests
         XDocument xml = memoryStream.TrxContent;
         XNamespace xmlNamespace = xml.Root!.Name.Namespace;
         string trxContent = xml.ToString();
+        const string escapedEmojiSurrogatePair = @"\ud83d\ude00";
 
         XElement unitTestResult = xml.Descendants(xmlNamespace + "UnitTestResult").Single();
         Assert.AreEqual($"TestMethod {emojiGrinningFace}", unitTestResult.Attribute("testName")?.Value);
@@ -489,7 +490,7 @@ public class TrxTests
         Assert.AreEqual($"message {emojiGrinningFace}", xml.Descendants(xmlNamespace + "Message").Single().Value);
         Assert.AreEqual($"stack {emojiGrinningFace}", xml.Descendants(xmlNamespace + "StackTrace").Single().Value);
         Assert.Contains(emojiGrinningFace, trxContent, "TRX content should preserve supplementary Unicode characters.");
-        Assert.DoesNotContain(@"\ud83d\ude00", trxContent, "TRX content should not contain escaped surrogate pair.");
+        Assert.DoesNotContain(escapedEmojiSurrogatePair, trxContent, "TRX content should not contain escaped surrogate pair.");
     }
 
     [TestMethod]

@@ -119,7 +119,7 @@ internal sealed partial class TrxReportEngine
     {
         StringBuilder? builder = null;
         // Invalid UTF-16 code units expand to six-character escape sequences.
-        int builderCapacity = str.Length <= int.MaxValue / 2 ? str.Length * 2 : str.Length;
+        int builderCapacity = GetInvalidXmlCharBuilderCapacity(str.Length);
 
         for (int i = 0; i < str.Length; i++)
         {
@@ -145,7 +145,7 @@ internal sealed partial class TrxReportEngine
                 continue;
             }
 
-            builder ??= new StringBuilder(builderCapacity).Append(str, 0, i);
+            builder ??= new StringBuilder(str, 0, i, builderCapacity);
             builder.Append(ReplaceInvalidCharacterWithUniCodeEscapeSequence(current));
         }
 
@@ -154,6 +154,12 @@ internal sealed partial class TrxReportEngine
 
     private static bool IsValidXmlChar(char value) =>
         value is '\t' or '\n' or '\r' or (>= '\x20' and <= '\uD7FF') or (>= '\uE000' and <= '\uFFFD');
+
+    private static int GetInvalidXmlCharBuilderCapacity(int length)
+    {
+        int extraCapacity = length / 2;
+        return length <= int.MaxValue - extraCapacity ? length + extraCapacity : length;
+    }
 
     private static string ReplaceInvalidCharacterWithUniCodeEscapeSequence(char x) => $@"\u{(ushort)x:x4}";
 }
