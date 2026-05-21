@@ -161,7 +161,7 @@ internal sealed partial class TrxReportEngine
             {
                 foreach (TrxTestFileArtifact testFileArtifact in testResult.FileArtifacts)
                 {
-                    if (!TryCopyArtifactIntoTrxDirectoryAndReturnHrefValue(new FileInfo(testFileArtifact.FullPath), runDeploymentRoot, executionId, attachmentWarnings, out string? href))
+                    if (!TryCopyArtifactAndGetHref(new FileInfo(testFileArtifact.FullPath), runDeploymentRoot, executionId, attachmentWarnings, out string? href))
                     {
                         continue;
                     }
