@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"799ed300107f6fc9670ebffaa4c0d4c197e34e1fd916240db38a468b10cb0aaf","compiler_version":"v0.74.8","strict":true,"agent_id":"copilot"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"37ee8c62d25b7c1ae4c41f2154ec9d790a677bc5c61fa81a778b6bec2c51d009","compiler_version":"v0.74.8","strict":true,"agent_id":"copilot"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"efa55847f72aadb03490d955263ff911bf758700","version":"v0.74.8"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.49"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.49"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.49"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.9","digest":"sha256:64828b42a4482f58fab16509d7f8f495a6d97c972a98a68aff20543531ac0388","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.3.9@sha256:64828b42a4482f58fab16509d7f8f495a6d97c972a98a68aff20543531ac0388"},{"image":"ghcr.io/github/github-mcp-server:v1.0.4","digest":"sha256:e3816a476a977cfb836e7d221510011436c654d11861db66ecfd826601aba6a4","pinned_image":"ghcr.io/github/github-mcp-server:v1.0.4@sha256:e3816a476a977cfb836e7d221510011436c654d11861db66ecfd826601aba6a4"},{"image":"node:lts-alpine","digest":"sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f","pinned_image":"node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -245,20 +245,20 @@ jobs:
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_98dc6db86aada721_EOF'
+          cat << 'GH_AW_PROMPT_519ddc0e11ef3141_EOF'
           <system>
-          GH_AW_PROMPT_98dc6db86aada721_EOF
+          GH_AW_PROMPT_519ddc0e11ef3141_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_98dc6db86aada721_EOF'
+          cat << 'GH_AW_PROMPT_519ddc0e11ef3141_EOF'
           <safe-output-tools>
           Tools: add_comment, create_pull_request_review_comment(max:10), missing_tool, missing_data, noop
           </safe-output-tools>
-          GH_AW_PROMPT_98dc6db86aada721_EOF
+          GH_AW_PROMPT_519ddc0e11ef3141_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_98dc6db86aada721_EOF'
+          cat << 'GH_AW_PROMPT_519ddc0e11ef3141_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if github.actor}}
@@ -287,13 +287,13 @@ jobs:
           {{/if}}
           </github-context>
           
-          GH_AW_PROMPT_98dc6db86aada721_EOF
+          GH_AW_PROMPT_519ddc0e11ef3141_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_98dc6db86aada721_EOF'
+          cat << 'GH_AW_PROMPT_519ddc0e11ef3141_EOF'
           </system>
           {{#runtime-import .github/workflows/shared/build-failure-analysis-shared.md}}
           {{#runtime-import .github/workflows/build-failure-analysis.md}}
-          GH_AW_PROMPT_98dc6db86aada721_EOF
+          GH_AW_PROMPT_519ddc0e11ef3141_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -446,72 +446,37 @@ jobs:
         run: echo "$PWD/.dotnet" >> $GITHUB_PATH
       - id: find-binlog
         name: Locate binlog
-        run: |
-          BINLOG=$(find artifacts/log -name '*.binlog' -type f -printf '%T@ %p\n' 2>/dev/null \
-            | sort -rn | head -1 | cut -d' ' -f2-)
-          if [ -n "$BINLOG" ] && [ -f "$BINLOG" ]; then
-            echo "found=true"   >> "$GITHUB_OUTPUT"
-            echo "path=$BINLOG" >> "$GITHUB_OUTPUT"
-          else
-            echo "found=false" >> "$GITHUB_OUTPUT"
-          fi
+        run: "BINLOG=$(find artifacts/log -name '*.binlog' -type f -printf '%T@ %p\\n' 2>/dev/null \\\n  | sort -rn | head -1 | cut -d' ' -f2-)\nif [ -n \"$BINLOG\" ] && [ -f \"$BINLOG\" ]; then\n  echo \"found=true\"   >> \"$GITHUB_OUTPUT\"\n  echo \"path=$BINLOG\" >> \"$GITHUB_OUTPUT\"\nelse\n  echo \"found=false\" >> \"$GITHUB_OUTPUT\"\nfi\n"
       - if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
         name: Install binlog-mcp
-        run: |
-          mkdir -p /tmp/binlog-tool
-          cat > /tmp/binlog-tool/nuget.config <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <configuration>
-            <packageSources>
-              <clear />
-              <add key="dotnet-eng"
-                   value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json" />
-            </packageSources>
-          </configuration>
-          EOF
-          dotnet tool install --global AITools.BinlogMcp \
-            --configfile /tmp/binlog-tool/nuget.config \
-            --version "$BINLOG_MCP_VERSION"
-          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+        run: "mkdir -p /tmp/binlog-tool\ncat > /tmp/binlog-tool/nuget.config <<'EOF'\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<configuration>\n  <packageSources>\n    <clear />\n    <add key=\"dotnet-eng\"\n         value=\"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json\" />\n  </packageSources>\n</configuration>\nEOF\ndotnet tool install --global AITools.BinlogMcp \\\n  --configfile /tmp/binlog-tool/nuget.config \\\n  --version \"$BINLOG_MCP_VERSION\"\necho \"$HOME/.dotnet/tools\" >> \"$GITHUB_PATH\"\n"
       - if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
         name: Install MCP SDK for dump-binlog.js
         run: cd .github/workflows/scripts && npm ci --ignore-scripts
       - continue-on-error: true
         env:
-          GH_AW_EXPR_DA06E2FF: ${{ steps.find-binlog.outputs.path }}
+          BINLOG_PATH: ${{ steps.find-binlog.outputs.path }}
         if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
         name: Dump binlog as JSON
-        run: |
-          mkdir -p /tmp/binlog-data
-          cd .github/workflows/scripts
-          timeout 120 node dump-binlog.js \
-            "$GITHUB_WORKSPACE/$GH_AW_EXPR_DA06E2FF" \
-            /tmp/binlog-data
+        run: "mkdir -p /tmp/binlog-data\ncd .github/workflows/scripts\ntimeout 120 node dump-binlog.js \\\n  \"$GITHUB_WORKSPACE/$BINLOG_PATH\" \\\n  /tmp/binlog-data\n"
       - env:
-          GH_AW_EXPR_8DF6F8A9: ${{ inputs.pr-number }}
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
+          GH_AW_INPUTS_PR_NUMBER: ${{ inputs.pr-number }}
           GH_TOKEN: ${{ github.token }}
         id: resolve-pr-sha
         if: github.event_name == 'workflow_dispatch' && inputs.pr-number != ''
         name: Resolve PR head SHA (workflow_dispatch only)
         run: |
-          SHA=$(gh api "repos/$GH_AW_GITHUB_REPOSITORY/pulls/$GH_AW_EXPR_8DF6F8A9" --jq .head.sha)
+          SHA=$(gh api "repos/${GH_AW_GITHUB_REPOSITORY}/pulls/${GH_AW_INPUTS_PR_NUMBER}" --jq .head.sha)
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
       - env:
-          GH_AW_EXPR_DA06E2FF: ${{ steps.find-binlog.outputs.path }}
-          GH_AW_EXPR_E6C30885: ${{ steps.resolve-pr-sha.outputs.sha || github.event.pull_request.head.sha || github.sha }}
-          GH_AW_EXPR_E7899BB1: ${{ github.event.pull_request.number || github.event.issue.number || inputs.pr-number }}
+          GH_AW_BINLOG_PATH_VALUE: ${{ steps.find-binlog.outputs.path }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
+          GH_AW_PR_HEAD_SHA_VALUE: ${{ steps.resolve-pr-sha.outputs.sha || github.event.pull_request.head.sha || github.sha }}
+          GH_AW_PR_NUMBER_VALUE: ${{ github.event.pull_request.number || github.event.issue.number || inputs.pr-number }}
           GH_AW_STEPS_BUILD_OUTCOME: ${{ steps.build.outcome }}
         name: Export agent context
-        run: |
-          {
-            echo "GH_AW_BUILD_OUTCOME=$GH_AW_STEPS_BUILD_OUTCOME"
-            echo "GH_AW_BINLOG_PATH=$GH_AW_EXPR_DA06E2FF"
-            echo "GH_AW_PR_NUMBER=$GH_AW_EXPR_E7899BB1"
-            echo "GH_AW_PR_HEAD_SHA=$GH_AW_EXPR_E6C30885"
-            echo "GH_AW_WORKSPACE=$GH_AW_GITHUB_WORKSPACE"
-          } >> "$GITHUB_ENV"
+        run: "{\n  echo \"GH_AW_BUILD_OUTCOME=${GH_AW_STEPS_BUILD_OUTCOME}\"\n  echo \"GH_AW_BINLOG_PATH=${GH_AW_BINLOG_PATH_VALUE}\"\n  echo \"GH_AW_PR_NUMBER=${GH_AW_PR_NUMBER_VALUE}\"\n  echo \"GH_AW_PR_HEAD_SHA=${GH_AW_PR_HEAD_SHA_VALUE}\"\n  echo \"GH_AW_WORKSPACE=${GH_AW_GITHUB_WORKSPACE}\"\n} >> \"$GITHUB_ENV\"\n"
 
       - name: Configure Git credentials
         env:
@@ -579,9 +544,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_0f1e9354d5dfab31_EOF'
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_3d14ab2d6899467a_EOF'
           {"add_comment":{"hide_older_comments":true,"max":1},"create_pull_request_review_comment":{"max":10,"side":"RIGHT"},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"false"},"report_incomplete":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_0f1e9354d5dfab31_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_3d14ab2d6899467a_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -813,7 +778,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_89cac75e4a436ab9_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_62fb194425d39b86_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "github": {
@@ -854,7 +819,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_89cac75e4a436ab9_EOF
+          GH_AW_MCP_CONFIG_62fb194425d39b86_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
