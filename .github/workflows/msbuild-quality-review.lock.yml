@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"8ac8d86aaf67daadc419a9d4763dc93d1fb547ea77ae190d3e2b2ea1af5e7de5","compiler_version":"v0.74.4","strict":true,"agent_id":"copilot"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"e9984c823cf24f03182d3981017bdf385996f22aa7ca5872a2f068c0a59b2d3a","compiler_version":"v0.74.4","strict":true,"agent_id":"copilot"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_CI_TRIGGER_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"373c709c69115d41ff229c7e5df9f8788daa9553","version":"v9"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/github-script","sha":"d746ffe35508b1917358783b479e04febd2b8f71","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"d3abfe96a194bce3a523ed2093ddedd5704cdf62","version":"v0.74.4"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.46"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.46"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.46"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.9","digest":"sha256:64828b42a4482f58fab16509d7f8f495a6d97c972a98a68aff20543531ac0388","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.3.9@sha256:64828b42a4482f58fab16509d7f8f495a6d97c972a98a68aff20543531ac0388"},{"image":"ghcr.io/github/github-mcp-server:v1.0.4"},{"image":"node:lts-alpine","digest":"sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f","pinned_image":"node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -22,13 +22,11 @@
 #
 # For more information: https://github.github.com/gh-aw/introduction/overview/
 #
-# Reviews .props and .targets files for MSBuild authoring anti-patterns, correctness issues,
-# and adherence to canonical patterns (target chains, property defaults, item management,
-# extension points). Creates an issue with findings and can submit draft PRs for safe fixes.
+# Scheduled scan of `.props`, `.targets`, `Directory.Build.*`, `Directory.Packages.props`, and NuGet `build/`, `buildTransitive/`, `buildMultiTargeting/` extensions for authoring anti-patterns, correctness issues, and adherence to canonical patterns. Delegates to the `msbuild-reviewer` agent and posts an issue (or a draft PR for safe fixes).
 #
 # Resolved workflow manifest:
 #   Imports:
-#     - shared/reporting.md
+#     - shared/msbuild-review-shared.md
 #
 # Secrets used:
 #   - COPILOT_GITHUB_TOKEN
@@ -189,29 +187,28 @@ jobs:
           GH_AW_GITHUB_ACTOR: ${{ github.actor }}
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
-          GH_AW_GITHUB_SERVER_URL: ${{ github.server_url }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
         # poutine:ignore untrusted_checkout_exec
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_ee7c24ae3e1ccc02_EOF'
+          cat << 'GH_AW_PROMPT_bff405802a9d7bf4_EOF'
           <system>
-          GH_AW_PROMPT_ee7c24ae3e1ccc02_EOF
+          GH_AW_PROMPT_bff405802a9d7bf4_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_ee7c24ae3e1ccc02_EOF'
+          cat << 'GH_AW_PROMPT_bff405802a9d7bf4_EOF'
           <safe-output-tools>
           Tools: create_issue, create_pull_request, missing_tool, missing_data, noop
-          GH_AW_PROMPT_ee7c24ae3e1ccc02_EOF
+          GH_AW_PROMPT_bff405802a9d7bf4_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_create_pull_request.md"
-          cat << 'GH_AW_PROMPT_ee7c24ae3e1ccc02_EOF'
+          cat << 'GH_AW_PROMPT_bff405802a9d7bf4_EOF'
           </safe-output-tools>
-          GH_AW_PROMPT_ee7c24ae3e1ccc02_EOF
+          GH_AW_PROMPT_bff405802a9d7bf4_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_ee7c24ae3e1ccc02_EOF'
+          cat << 'GH_AW_PROMPT_bff405802a9d7bf4_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if github.actor}}
@@ -240,22 +237,19 @@ jobs:
           {{/if}}
           </github-context>
           
-          GH_AW_PROMPT_ee7c24ae3e1ccc02_EOF
+          GH_AW_PROMPT_bff405802a9d7bf4_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_ee7c24ae3e1ccc02_EOF'
+          cat << 'GH_AW_PROMPT_bff405802a9d7bf4_EOF'
           </system>
-          {{#runtime-import .github/workflows/shared/reporting.md}}
+          {{#runtime-import .github/workflows/shared/msbuild-review-shared.md}}
           {{#runtime-import .github/workflows/msbuild-quality-review.md}}
-          GH_AW_PROMPT_ee7c24ae3e1ccc02_EOF
+          GH_AW_PROMPT_bff405802a9d7bf4_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
           GH_AW_ENGINE_ID: "copilot"
-          GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
-          GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
-          GH_AW_GITHUB_SERVER_URL: ${{ github.server_url }}
         with:
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
@@ -273,7 +267,6 @@ jobs:
           GH_AW_GITHUB_ACTOR: ${{ github.actor }}
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
-          GH_AW_GITHUB_SERVER_URL: ${{ github.server_url }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
           GH_AW_MCP_CLI_SERVERS_LIST: '- `safeoutputs` — run `safeoutputs --help` to see available tools'
         with:
@@ -294,7 +287,6 @@ jobs:
                 GH_AW_GITHUB_ACTOR: process.env.GH_AW_GITHUB_ACTOR,
                 GH_AW_GITHUB_REPOSITORY: process.env.GH_AW_GITHUB_REPOSITORY,
                 GH_AW_GITHUB_RUN_ID: process.env.GH_AW_GITHUB_RUN_ID,
-                GH_AW_GITHUB_SERVER_URL: process.env.GH_AW_GITHUB_SERVER_URL,
                 GH_AW_GITHUB_WORKSPACE: process.env.GH_AW_GITHUB_WORKSPACE,
                 GH_AW_MCP_CLI_SERVERS_LIST: process.env.GH_AW_MCP_CLI_SERVERS_LIST
               }
@@ -455,9 +447,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_6fa61bd43e1829d5_EOF'
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_50c7a1b99a0edb93_EOF'
           {"create_issue":{"expires":168,"labels":["automation","msbuild","code-quality"],"max":1,"title_prefix":"[msbuild-quality] "},"create_pull_request":{"draft":true,"labels":["automation","msbuild","code-quality"],"max":1,"max_patch_files":100,"max_patch_size":1024,"protect_top_level_dot_folders":true,"protected_files":["package.json","bun.lockb","bunfig.toml","deno.json","deno.jsonc","deno.lock","global.json","NuGet.Config","Directory.Packages.props","mix.exs","mix.lock","go.mod","go.sum","stack.yaml","stack.yaml.lock","pom.xml","build.gradle","build.gradle.kts","settings.gradle","settings.gradle.kts","gradle.properties","package-lock.json","yarn.lock","pnpm-lock.yaml","npm-shrinkwrap.json","requirements.txt","Pipfile","Pipfile.lock","pyproject.toml","setup.py","setup.cfg","Gemfile","Gemfile.lock","uv.lock","CODEOWNERS","DESIGN.md","README.md","CONTRIBUTING.md","CHANGELOG.md","SECURITY.md","CODE_OF_CONDUCT.md","AGENTS.md","CLAUDE.md","GEMINI.md"],"protected_files_policy":"fallback-to-issue","title_prefix":"[msbuild-quality] "},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"false"},"report_incomplete":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_6fa61bd43e1829d5_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_50c7a1b99a0edb93_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -707,7 +699,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_d8c00956473249e6_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_eae2fed5b5bdf0ab_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "github": {
@@ -717,7 +709,7 @@ jobs:
                   "GITHUB_HOST": "\${GITHUB_SERVER_URL}",
                   "GITHUB_PERSONAL_ACCESS_TOKEN": "\${GITHUB_MCP_SERVER_TOKEN}",
                   "GITHUB_READ_ONLY": "1",
-                  "GITHUB_TOOLSETS": "context,repos,issues,pull_requests"
+                  "GITHUB_TOOLSETS": "issues,repos"
                 },
                 "guard-policies": {
                   "allow-only": {
@@ -748,7 +740,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_d8c00956473249e6_EOF
+          GH_AW_MCP_CONFIG_eae2fed5b5bdf0ab_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
@@ -1244,7 +1236,7 @@ jobs:
         uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
         env:
           WORKFLOW_NAME: "MSBuild Quality Review"
-          WORKFLOW_DESCRIPTION: "Reviews .props and .targets files for MSBuild authoring anti-patterns, correctness issues,\nand adherence to canonical patterns (target chains, property defaults, item management,\nextension points). Creates an issue with findings and can submit draft PRs for safe fixes."
+          WORKFLOW_DESCRIPTION: "Scheduled scan of `.props`, `.targets`, `Directory.Build.*`, `Directory.Packages.props`, and NuGet `build/`, `buildTransitive/`, `buildMultiTargeting/` extensions for authoring anti-patterns, correctness issues, and adherence to canonical patterns. Delegates to the `msbuild-reviewer` agent and posts an issue (or a draft PR for safe fixes)."
           HAS_PATCH: ${{ needs.agent.outputs.has_patch }}
         with:
           script: |
