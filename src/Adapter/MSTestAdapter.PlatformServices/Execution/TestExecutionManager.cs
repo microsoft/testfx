@@ -66,7 +66,7 @@ internal class TestExecutionManager
 
     private static Task DefaultFactoryAsync(Func<Task> taskGetter)
     {
-        if (MSTestSettings.RunConfigurationSettings.ExecutionApartmentState == ApartmentState.STA
+        if (MSTestSettings.GetEffectiveExecutionApartmentState() == ApartmentState.STA
             && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             TaskCompletionSource<int> tcs = new();
