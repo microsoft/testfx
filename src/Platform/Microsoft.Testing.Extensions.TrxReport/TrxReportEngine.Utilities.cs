@@ -118,6 +118,7 @@ internal sealed partial class TrxReportEngine
     private static string RemoveInvalidXmlChar(string str)
     {
         StringBuilder? builder = null;
+        int builderCapacity = str.Length <= int.MaxValue / 2 ? str.Length * 2 : str.Length;
 
         for (int i = 0; i < str.Length; i++)
         {
@@ -143,7 +144,7 @@ internal sealed partial class TrxReportEngine
                 continue;
             }
 
-            builder ??= new StringBuilder(str.Length <= int.MaxValue / 2 ? str.Length * 2 : str.Length).Append(str, 0, i);
+            builder ??= new StringBuilder(builderCapacity).Append(str, 0, i);
             builder.Append(ReplaceInvalidCharacterWithUniCodeEscapeSequence(current));
         }
 

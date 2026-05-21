@@ -513,6 +513,7 @@ public class TrxTests
         XDocument xml = memoryStream.TrxContent;
         XNamespace xmlNamespace = xml.Root!.Name.Namespace;
         Assert.AreEqual(@"stdout \ud800 \udc00", xml.Descendants(xmlNamespace + "StdOut").Single().Value);
+        Assert.Contains(@"\ud800 \udc00", xml.ToString(), "TRX content should escape unpaired surrogate characters.");
     }
 
     [TestMethod]
