@@ -118,6 +118,7 @@ internal sealed partial class TrxReportEngine
     private static string RemoveInvalidXmlChar(string str)
     {
         StringBuilder? builder = null;
+        // Invalid UTF-16 code units expand to six-character escape sequences.
         int builderCapacity = str.Length <= int.MaxValue / 2 ? str.Length * 2 : str.Length;
 
         for (int i = 0; i < str.Length; i++)
@@ -152,7 +153,7 @@ internal sealed partial class TrxReportEngine
     }
 
     private static bool IsValidXmlChar(char value) =>
-        value is '\t' or '\n' or '\r' or >= '\x20' and <= '\uD7FF' or >= '\uE000' and <= '\uFFFD';
+        value is '\t' or '\n' or '\r' or (>= '\x20' and <= '\uD7FF') or (>= '\uE000' and <= '\uFFFD');
 
     private static string ReplaceInvalidCharacterWithUniCodeEscapeSequence(char x) => $@"\u{(ushort)x:x4}";
 }

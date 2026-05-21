@@ -465,15 +465,15 @@ public class TrxTests
     {
         // Arrange
         using MemoryFileStream memoryStream = new();
-        const string supplementaryCharacter = "\U0001F600";
+        const string emojiGrinningFace = "\U0001F600";
         PropertyBag propertyBag = new(
             new FailedTestNodeStateProperty("test failed"),
-            new TrxMessagesProperty([new StandardOutputTrxMessage($"stdout {supplementaryCharacter}")]),
-            new TrxExceptionProperty($"message {supplementaryCharacter}", $"stack {supplementaryCharacter}"));
+            new TrxMessagesProperty([new StandardOutputTrxMessage($"stdout {emojiGrinningFace}")]),
+            new TrxExceptionProperty($"message {emojiGrinningFace}", $"stack {emojiGrinningFace}"));
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         // Act
-        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", $"TestMethod {supplementaryCharacter}", propertyBag)]);
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", $"TestMethod {emojiGrinningFace}", propertyBag)]);
 
         // Assert
         Assert.IsNull(warning);
@@ -484,11 +484,11 @@ public class TrxTests
         string trxContent = xml.ToString();
 
         XElement unitTestResult = xml.Descendants(xmlNamespace + "UnitTestResult").Single();
-        Assert.AreEqual($"TestMethod {supplementaryCharacter}", unitTestResult.Attribute("testName")?.Value);
-        Assert.AreEqual($"stdout {supplementaryCharacter}", xml.Descendants(xmlNamespace + "StdOut").Single().Value);
-        Assert.AreEqual($"message {supplementaryCharacter}", xml.Descendants(xmlNamespace + "Message").Single().Value);
-        Assert.AreEqual($"stack {supplementaryCharacter}", xml.Descendants(xmlNamespace + "StackTrace").Single().Value);
-        Assert.Contains(supplementaryCharacter, trxContent, "TRX content should preserve supplementary Unicode characters.");
+        Assert.AreEqual($"TestMethod {emojiGrinningFace}", unitTestResult.Attribute("testName")?.Value);
+        Assert.AreEqual($"stdout {emojiGrinningFace}", xml.Descendants(xmlNamespace + "StdOut").Single().Value);
+        Assert.AreEqual($"message {emojiGrinningFace}", xml.Descendants(xmlNamespace + "Message").Single().Value);
+        Assert.AreEqual($"stack {emojiGrinningFace}", xml.Descendants(xmlNamespace + "StackTrace").Single().Value);
+        Assert.Contains(emojiGrinningFace, trxContent, "TRX content should preserve supplementary Unicode characters.");
         Assert.DoesNotContain(@"\ud83d\ude00", trxContent, "TRX content should not contain escaped surrogate pair.");
     }
 
