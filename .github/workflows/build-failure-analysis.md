@@ -18,7 +18,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     branches: [main, 'rel/*']
-    # Fork PRs are skipped: they cannot install from dotnet-eng (auth-gated)
+    # Fork PRs are skipped: they cannot install from dotnet-tools (auth-gated)
     # and the agent token would lack the `pull-requests: write` scope needed
     # by safe-outputs.
     forks: []
@@ -97,8 +97,8 @@ steps:
       <configuration>
         <packageSources>
           <clear />
-          <add key="dotnet-eng"
-               value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json" />
+          <add key="dotnet-tools"
+               value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" />
         </packageSources>
       </configuration>
       EOF
