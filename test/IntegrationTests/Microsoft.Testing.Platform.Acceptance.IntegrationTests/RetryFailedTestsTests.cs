@@ -269,8 +269,10 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
 
-        // Use --treenode-filter to select tests TestMethod1 and TestMethod2. Test 1 will fail on first attempt,
-        // pass on second. TestMethod3 is not matched by the filter, so it should never run.
+        // Use --treenode-filter to select tests TestMethod1 and TestMethod2. The filter intentionally starts
+        // with '/' because TreeNodeFilter expressions are matched against slash-prefixed node paths such as
+        // '/TestMethod1'. Test 1 will fail on first attempt, pass on second. TestMethod3 is not matched by
+        // the filter, so it should never run.
         // On retry, the orchestrator strips --treenode-filter and replaces it with --filter-uid for the failed
         // tests only; this test guards against issue #5673 (Retry + tree node filter must not stack filters).
         TestHostResult testHostResult = await testHost.ExecuteAsync(
