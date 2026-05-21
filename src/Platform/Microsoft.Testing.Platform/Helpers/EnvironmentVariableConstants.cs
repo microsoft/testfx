@@ -23,8 +23,14 @@ internal static class EnvironmentVariableConstants
     public const string TESTINGPLATFORM_DIAGNOSTIC = nameof(TESTINGPLATFORM_DIAGNOSTIC);
     public const string TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY = nameof(TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY);
     public const string TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_DIRECTORY = nameof(TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_DIRECTORY);
+
+    [Obsolete("Use " + nameof(TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX) + " instead. This name matches the renamed --diagnostic-file-prefix CLI option (see https://github.com/microsoft/testfx/issues/7159). Kept for backward compatibility and may be removed in a future major version.", error: false)]
     public const string TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX = nameof(TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX);
+    public const string TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX = nameof(TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX);
+
+    [Obsolete("Use " + nameof(TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE) + " instead. This name matches the renamed --diagnostic-synchronous-write CLI option (see https://github.com/microsoft/testfx/issues/7159). Kept for backward compatibility and may be removed in a future major version.", error: false)]
     public const string TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE = nameof(TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE);
+    public const string TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE = nameof(TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE);
     public const string TESTINGPLATFORM_NOBANNER = nameof(TESTINGPLATFORM_NOBANNER);
     public const string TESTINGPLATFORM_EXITCODE_IGNORE = nameof(TESTINGPLATFORM_EXITCODE_IGNORE);
 

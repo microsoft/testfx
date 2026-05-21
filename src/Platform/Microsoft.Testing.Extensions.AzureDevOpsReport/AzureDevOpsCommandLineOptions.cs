@@ -18,4 +18,6 @@ internal static class AzureDevOpsCommandLineOptions
     public const string AzureDevOpsUploadArtifactsModeFiles = "files";
     public const string AzureDevOpsUploadArtifactsModeOff = "off";
     public const string AzureDevOpsUploadArtifactsModeTagsOnly = "tags-only";
+    public const string PublishAzureDevOpsRunNameOptionName = "publish-azdo-run-name";
+    public const string PublishAzureDevOpsTestResultsOptionName = "publish-azdo-test-results";
 }
