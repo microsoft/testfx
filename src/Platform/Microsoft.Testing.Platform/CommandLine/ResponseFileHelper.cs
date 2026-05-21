@@ -23,6 +23,10 @@ internal static class ResponseFileHelper
         {
             errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserFailedToReadResponseFile, rspFilePath, e.ToString()));
         }
+        catch (FormatException e)
+        {
+            errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserFailedToReadResponseFile, rspFilePath, e.Message));
+        }
 
         newArguments = null;
         return false;
@@ -36,14 +40,14 @@ internal static class ResponseFileHelper
             {
                 string line = lines[i];
 
-                foreach (string p in SplitLine(line))
+                foreach (string p in SplitLine(line, i + 1))
                 {
                     yield return p;
                 }
             }
         }
 
-        static IEnumerable<string> SplitLine(string line)
+        static IEnumerable<string> SplitLine(string line, int lineNumber)
         {
             string arg = line.Trim();
 
@@ -52,7 +56,7 @@ internal static class ResponseFileHelper
                 yield break;
             }
 
-            foreach (string word in SplitCommandLine(arg))
+            foreach (string word in SplitCommandLine(arg, lineNumber))
             {
                 yield return word;
             }
@@ -68,6 +72,9 @@ internal static class ResponseFileHelper
     }
 
     public static IEnumerable<string> SplitCommandLine(string commandLine)
+        => SplitCommandLine(commandLine, lineNumber: null);
+
+    private static IEnumerable<string> SplitCommandLine(string commandLine, int? lineNumber)
     {
         int startTokenIndex = 0;
 
@@ -140,6 +147,13 @@ internal static class ResponseFileHelper
 
             if (IsAtEndOfInput())
             {
+                if (seekingQuote == Boundary.QuoteEnd)
+                {
+                    throw new FormatException(lineNumber is null
+                        ? "Unclosed quote in command line."
+                        : string.Format(CultureInfo.InvariantCulture, "Unclosed quote in response file at line {0}.", lineNumber));
+                }
+
                 switch (seeking)
                 {
                     case Boundary.TokenStart:
