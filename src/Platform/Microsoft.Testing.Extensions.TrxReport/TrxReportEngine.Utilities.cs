@@ -143,7 +143,7 @@ internal sealed partial class TrxReportEngine
                 continue;
             }
 
-            builder ??= new StringBuilder(str.Length).Append(str, 0, i);
+            builder ??= new StringBuilder(str.Length <= int.MaxValue / 2 ? str.Length * 2 : str.Length).Append(str, 0, i);
             builder.Append(ReplaceInvalidCharacterWithUniCodeEscapeSequence(current));
         }
 
