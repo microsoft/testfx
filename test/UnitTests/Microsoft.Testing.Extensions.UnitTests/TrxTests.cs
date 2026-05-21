@@ -668,13 +668,13 @@ public class TrxTests
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
-        Assert.Contains(@"<ResultFile path=""MachineName/goodFile"" />", trxContent, trxContent);
+        Assert.Contains(@"<ResultFile path=""MachineName/goodFile"" />", trxContent);
         Assert.IsFalse(trxContent.Contains("badFile\" />", StringComparison.Ordinal), trxContent);
-        Assert.Contains(@"outcome=""Warning""", trxContent, trxContent);
-        Assert.Contains("Unable to copy attachment", trxContent, trxContent);
-        Assert.Contains("badFile", trxContent, trxContent);
-        Assert.Contains("UnauthorizedAccessException", trxContent, trxContent);
-        Assert.Contains("Access denied", trxContent, trxContent);
+        Assert.Contains(@"outcome=""Warning""", trxContent);
+        Assert.Contains("Unable to copy attachment", trxContent);
+        Assert.Contains("badFile", trxContent);
+        Assert.Contains("UnauthorizedAccessException", trxContent);
+        Assert.Contains("Access denied", trxContent);
     }
 
     [TestMethod]
