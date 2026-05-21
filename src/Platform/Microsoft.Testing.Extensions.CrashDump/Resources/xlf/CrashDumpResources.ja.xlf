@@ -111,6 +111,11 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
         <target state="translated">[Linux/macOS のみ] テスト プロセスがクラッシュしたときに JSON クラッシュ レポートを生成します。'--crashdump' と組み合わせて、ダンプ ファイルも生成できます。単独で使用する場合は .NET 7 以降、'--crashdump' と組み合わせる場合は .NET 6 以降が必要です。このランタイム要件はツールでは強制されません。サポートされていないランタイムではクラッシュ レポートは出力されません。.NET ランタイムの制限により、Windows ではサポートされません (dotnet/runtime#80191)。</target>
         <note />
       </trans-unit>
+      <trans-unit id="MissingCrashDumpMainOption">
+        <source>You specified one or more crash dump parameters but did not enable it, add --crashdump or --crash-report to the command line</source>
+        <target state="new">You specified one or more crash dump parameters but did not enable it, add --crashdump or --crash-report to the command line</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
         <target state="translated">型 '{0}' の要求はサポートされていません</target>

@@ -141,6 +141,9 @@
   <data name="CrashDumpInvalidEnvironmentVariableValueErrorMessage" xml:space="preserve">
     <value>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</value>
   </data>
+  <data name="MissingCrashDumpMainOption" xml:space="preserve">
+    <value>You specified one or more crash dump parameters but did not enable it, add --crashdump or --crash-report to the command line</value>
+  </data>
   <data name="CrashDumpNotSupportedInNonNetCoreErrorMessage" xml:space="preserve">
     <value>Crash dump feature is only available in .NET (Core)</value>
   </data>

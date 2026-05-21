@@ -111,6 +111,11 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
         <target state="translated">[仅 Linux/macOS] 测试进程故障时生成 JSON 故障报表。与 "--crashdump" 结合使用时，还会生成转储文件。单独使用时需要 .NET 7+；与 "--crashdump" 结合使用时需要 .NET 6+。此工具不强制执行此运行时要求: 在不受支持的运行时上，不会生成故障报表。由于 .NET 运行时限制(dotnet/runtime#80191)，在 Windows 上不受支持。</target>
         <note />
       </trans-unit>
+      <trans-unit id="MissingCrashDumpMainOption">
+        <source>You specified one or more crash dump parameters but did not enable it, add --crashdump or --crash-report to the command line</source>
+        <target state="new">You specified one or more crash dump parameters but did not enable it, add --crashdump or --crash-report to the command line</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
         <target state="translated">不支持类型为“{0}”的请求</target>

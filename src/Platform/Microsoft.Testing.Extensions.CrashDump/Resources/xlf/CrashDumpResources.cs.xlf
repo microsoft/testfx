@@ -111,6 +111,11 @@ Další informace najdete na https://learn.microsoft.com/dotnet/core/diagnostics
         <target state="translated">[Pouze Linux/macOS] Při chybovém ukončení testovacího procesu vygeneruje zprávu o chybovém ukončení ve formátu JSON. Pokud chcete vygenerovat také soubor výpisu paměti, zkombinujte s parametrem --crashdump. Pokud se používá samostatně, vyžaduje .NET 7+; při kombinaci s parametrem --crashdump vyžaduje .NET 6+. Tento požadavek na modul runtime není nástrojem vynucován: v případě nepodporovaných modulů runtime nebude vygenerována žádná zpráva o chybovém ukončení. Nepodporuje se ve Windows kvůli omezení modulu runtime .NET (dotnet/runtime#80191).</target>
         <note />
       </trans-unit>
+      <trans-unit id="MissingCrashDumpMainOption">
+        <source>You specified one or more crash dump parameters but did not enable it, add --crashdump or --crash-report to the command line</source>
+        <target state="new">You specified one or more crash dump parameters but did not enable it, add --crashdump or --crash-report to the command line</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
         <target state="translated">Žádosti typu {0} nejsou podporovány.</target>

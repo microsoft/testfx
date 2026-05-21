@@ -111,6 +111,11 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
         <target state="translated">[Linux/macOS만 해당] 테스트 프로세스가 충돌할 때 JSON 크래시 보고서를 생성합니다. '--crashdump'와 함께 사용하면 덤프 파일도 생성합니다. 단독으로 사용할 때는 .NET 7+가 필요합니다. '--crashdump'와 함께 사용할 때는 .NET 6+가 필요합니다. 이 런타임 요구 사항은 도구에서 강제하지 않습니다. 지원되지 않는 런타임에서는 크래시 보고서가 생성되지 않습니다. .NET 런타임 제한(dotnet/runtime#80191)으로 인해 Windows에서는 지원되지 않습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="MissingCrashDumpMainOption">
+        <source>You specified one or more crash dump parameters but did not enable it, add --crashdump or --crash-report to the command line</source>
+        <target state="new">You specified one or more crash dump parameters but did not enable it, add --crashdump or --crash-report to the command line</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
         <target state="translated">'{0}' 유형의 요청은 지원되지 않습니다.</target>

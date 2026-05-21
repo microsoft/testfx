@@ -53,6 +53,57 @@ public sealed class CrashDumpTests
     }
 
     [TestMethod]
+    [DataRow(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName)]
+    [DataRow(CrashDumpCommandLineOptions.CrashDumpTypeOptionName)]
+    public async Task Missing_CrashDumpMainOption_ShouldReturn_IsInvalid(string crashDumpArgument)
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { crashDumpArgument, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual("You specified one or more crash dump parameters but did not enable it, add --crashdump or --crash-report to the command line", validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName)]
+    [DataRow(CrashDumpCommandLineOptions.CrashDumpTypeOptionName)]
+    public async Task If_CrashDumpMainOption_IsSpecified_ShouldReturn_IsValid(string crashDumpArgument)
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { crashDumpArgument, [] },
+            { CrashDumpCommandLineOptions.CrashDumpOptionName, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows, IgnoreMessage = "Crash report is not supported on Windows (dotnet/runtime#80191)")]
+    [DataRow(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName)]
+    [DataRow(CrashDumpCommandLineOptions.CrashDumpTypeOptionName)]
+    public async Task If_CrashReportMainOption_IsSpecified_ShouldReturn_IsValid(string crashDumpArgument)
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { crashDumpArgument, [] },
+            { CrashDumpCommandLineOptions.CrashReportOptionName, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
     [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows, IgnoreMessage = "Crash report is not supported on Windows (dotnet/runtime#80191)")]
     public async Task CrashReport_Without_CrashDump_Is_Valid()
     {
