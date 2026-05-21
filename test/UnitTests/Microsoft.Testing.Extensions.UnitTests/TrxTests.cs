@@ -644,6 +644,40 @@ public class TrxTests
     }
 
     [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithArtifactsByTestNodeAndCopyFailure_SkipsBadResultFileAndAddsRunInfo()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        _ = _fileSystem.Setup(x => x.CopyFile(
+                It.Is<string>(source => source.EndsWith("badFile", StringComparison.Ordinal)),
+                It.IsAny<string>()))
+            .Throws(new UnauthorizedAccessException("Access denied"));
+        var propertyBag = new PropertyBag(
+            new PassedTestNodeStateProperty(),
+            new FileArtifactProperty(new FileInfo("badFile"), "TestMethod", "description"),
+            new FileArtifactProperty(new FileInfo("goodFile"), "TestMethod", "description"));
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        AssertExpectedTrxFileName(fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
+        AssertTrxOutcome(xml, "Completed");
+        string trxContent = xml.ToString();
+        Assert.Contains(@"<ResultFile path=""MachineName/goodFile"" />", trxContent, trxContent);
+        Assert.IsFalse(trxContent.Contains("badFile\" />", StringComparison.Ordinal), trxContent);
+        Assert.Contains(@"outcome=""Warning""", trxContent, trxContent);
+        Assert.Contains("Unable to copy attachment", trxContent, trxContent);
+        Assert.Contains("badFile", trxContent, trxContent);
+        Assert.Contains("UnauthorizedAccessException", trxContent, trxContent);
+        Assert.Contains("Access denied", trxContent, trxContent);
+    }
+
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithArtifactsByExtension_TrxContainsCollectorDataEntries()
     {
         // Arrange

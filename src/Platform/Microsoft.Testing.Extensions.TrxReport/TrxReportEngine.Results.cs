@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 internal sealed partial class TrxReportEngine
 {
-    private SummaryCounts AddResults(IReadOnlyList<TrxTestResult> testResults, string testAppModule, XElement testRun, string runDeploymentRoot, XElement testDefinitions, XElement testEntries)
+    private SummaryCounts AddResults(IReadOnlyList<TrxTestResult> testResults, string testAppModule, XElement testRun, string runDeploymentRoot, XElement testDefinitions, XElement testEntries, List<string> attachmentWarnings)
     {
         int passed = 0;
         int failed = 0;
@@ -161,12 +161,15 @@ internal sealed partial class TrxReportEngine
             {
                 foreach (TrxTestFileArtifact testFileArtifact in testResult.FileArtifacts)
                 {
-                    resultFiles ??= new XElement("ResultFiles");
+                    if (!TryCopyArtifactIntoTrxDirectoryAndReturnHrefValue(new FileInfo(testFileArtifact.FullPath), runDeploymentRoot, executionId, attachmentWarnings, out string? href))
+                    {
+                        continue;
+                    }
 
-                    string href = CopyArtifactIntoTrxDirectoryAndReturnHrefValue(new FileInfo(testFileArtifact.FullPath), runDeploymentRoot, executionId);
+                    resultFiles ??= new XElement("ResultFiles");
                     resultFiles.Add(new XElement(
                         "ResultFile",
-                        new XAttribute("path", href)));
+                        new XAttribute("path", href!)));
                 }
             }
 
