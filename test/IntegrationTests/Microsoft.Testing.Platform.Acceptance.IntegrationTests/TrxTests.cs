@@ -167,7 +167,7 @@ Out of process file artifacts produced:
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {relativePath}", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("Error: '--report-trx-filename' relative paths must stay under the test results directory");
+        testHostResult.AssertOutputContains("'--report-trx-filename' relative paths must stay under the test results directory");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
