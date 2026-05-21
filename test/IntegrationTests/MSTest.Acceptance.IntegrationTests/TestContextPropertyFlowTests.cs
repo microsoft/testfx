@@ -283,6 +283,7 @@ public sealed class TestContextPropertyFlowForceCleanupTests : AcceptanceTestBas
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <LangVersion>preview</LangVersion>
+    <Nullable>enable</Nullable>
     <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
   </PropertyGroup>
 
