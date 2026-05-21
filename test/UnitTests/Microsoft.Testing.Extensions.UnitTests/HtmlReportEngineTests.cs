@@ -327,8 +327,9 @@ public class HtmlReportEngineTests
 
         (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
 
+        const string ExpectedFileNamePattern = "^u_M_My\\.Test\\.Module_net[0-9]+(\\.[0-9]+)?_2026-02-03_04_05_06\\.html$";
         Assert.AreEqual(pathSeen, finalPath);
-        Assert.IsTrue(Regex.IsMatch(Path.GetFileName(finalPath), "^u_M_My\\.Test\\.Module_net[0-9]+(\\.[0-9]+)?_2026-02-03_04_05_06\\.html$"));
+        Assert.IsTrue(Regex.IsMatch(Path.GetFileName(finalPath), ExpectedFileNamePattern));
     }
 
     [TestMethod]
