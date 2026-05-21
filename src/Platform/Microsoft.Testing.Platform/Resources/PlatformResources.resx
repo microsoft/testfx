@@ -731,6 +731,10 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
     <value>Exception during the cancellation of request id '{0}'</value>
     <comment>{0} is the request id</comment>
   </data>
+  <data name="DeprecatedEnvironmentVariableWarning" xml:space="preserve">
+    <value>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</value>
+    <comment>{0} is the deprecated environment variable name, {1} is the replacement environment variable name.</comment>
+  </data>
   <data name="PlatformCommandLineMaxFailedTestsOptionDescription" xml:space="preserve">
     <value>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</value>
   </data>
