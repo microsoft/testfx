@@ -149,7 +149,7 @@ public class AssertStackTraceHiddenTests : TestContainer
     {
         Type[] nestedTypes = ownerType.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic);
         Type[] handlers = nestedTypes
-            .Where(static t => t.Name.EndsWith("InterpolatedStringHandler", StringComparison.Ordinal))
+            .Where(static t => t.Name.Contains("InterpolatedStringHandler", StringComparison.Ordinal))
             .ToArray();
 
         // Sanity check: the assertion API exposes several InterpolatedStringHandler types; if
