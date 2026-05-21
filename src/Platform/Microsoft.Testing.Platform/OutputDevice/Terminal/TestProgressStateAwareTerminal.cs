@@ -10,11 +10,6 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 {
     /// <summary>
-    /// A cancellation token to signal the rendering thread that it should exit.
-    /// </summary>
-    private readonly CancellationTokenSource _cts = new();
-
-    /// <summary>
     /// Protects access to state shared between the logger callbacks and the rendering thread.
     /// </summary>
 #if NET9_0_OR_GREATER
@@ -25,6 +20,11 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
     private readonly ITerminal _terminal;
     private readonly Func<bool?> _showProgress;
+
+    /// <summary>
+    /// A cancellation token to signal the rendering thread that it should exit.
+    /// </summary>
+    private CancellationTokenSource? _cts;
     private TestProgressState?[] _progressItems = [];
     private bool? _showProgressCached;
 
@@ -43,7 +43,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     /// <summary>
     /// The <see cref="_refresher"/> thread proc.
     /// </summary>
-    private void ThreadProc()
+    private void ThreadProc(CancellationTokenSource cancellationTokenSource)
     {
         try
         {
@@ -51,7 +51,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
             // update every half second, because we only show seconds on the screen, so it is good enough.
             // When writing to non-ANSI, we never show progress as the output can get long and messy.
             const int AnsiUpdateCadenceInMs = 500;
-            while (!_cts.Token.WaitHandle.WaitOne(AnsiUpdateCadenceInMs))
+            while (!cancellationTokenSource.Token.WaitHandle.WaitOne(AnsiUpdateCadenceInMs))
             {
                 // Note: OnProgressStartUpdate is invoked outside the lock to avoid a deadlock where
                 // a test subscriber blocks the event handler (e.g. with WaitOne) while the lock is held,
@@ -74,7 +74,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         }
         catch (ObjectDisposedException)
         {
-            // When we dispose _cts too early this will throw.
+            // When we dispose the cancellation token source too early this will throw.
         }
         catch (Exception)
         {
@@ -88,7 +88,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         {
             _terminal.EraseProgress();
         }
-        catch
+        catch (Exception)
         {
             // Best-effort cleanup; we are already in teardown.
         }
@@ -121,14 +121,21 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
     public void StartShowingProgress(int workerCount)
     {
-        if (GetShowProgress())
+        if (!GetShowProgress())
         {
-            _progressItems = new TestProgressState[workerCount];
-            _terminal.StartBusyIndicator();
-            // If we crash unexpectedly without completing this thread we don't want it to keep the process running.
-            _refresher = new Thread(ThreadProc) { IsBackground = true };
-            _refresher.Start();
+            return;
         }
+
+        _progressItems = new TestProgressState[workerCount];
+        _stopped = false;
+
+        var cancellationTokenSource = new CancellationTokenSource();
+        _cts = cancellationTokenSource;
+
+        _terminal.StartBusyIndicator();
+        // If we crash unexpectedly without completing this thread we don't want it to keep the process running.
+        _refresher = new Thread(() => ThreadProc(cancellationTokenSource)) { IsBackground = true };
+        _refresher.Start();
     }
 
     internal void StopShowingProgress()
@@ -139,15 +146,22 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         }
 
         _stopped = true;
-        _cts.Cancel();
-        _refresher?.Join();
+
+        CancellationTokenSource? cancellationTokenSource = _cts;
+        Thread? refresher = _refresher;
+        _cts = null;
+        _refresher = null;
+
+        cancellationTokenSource?.Cancel();
+        refresher?.Join();
+        cancellationTokenSource?.Dispose();
 
         try
         {
             _terminal.EraseProgress();
             _terminal.StopBusyIndicator();
         }
-        catch
+        catch (Exception ex) when (ex is ObjectDisposedException or InvalidOperationException or System.IO.IOException)
         {
             // Best-effort cleanup; we are already in teardown.
         }
@@ -167,8 +181,6 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         // erase any in-flight progress, restore the busy-indicator and show the cursor again so the
         // user's terminal is left in a sane state.
         StopShowingProgress();
-
-        ((IDisposable)_cts).Dispose();
     }
 
     internal void WriteToTerminal(Action<ITerminal> write)

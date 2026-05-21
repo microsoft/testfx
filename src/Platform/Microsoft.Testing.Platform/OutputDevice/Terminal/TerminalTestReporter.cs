@@ -53,7 +53,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private readonly object _lock = new();
 #endif
 
-    private uint? _originalConsoleMode;
+    private readonly uint? _originalConsoleMode;
 
     private TestProgressState? _testProgressState;
 
