@@ -117,7 +117,7 @@ Out of process file artifacts produced:
     [TestMethod]
     public async Task Trx_WhenReportTrxIsSpecifiedWithFullPath_TrxReportIsGeneratedAtThatPath(string tfm)
     {
-        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, "aaa", "Release", tfm, "TestResults");
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), "Release", tfm, "TestResults");
         string fileName = $"{Guid.NewGuid():N}.trx";
         string fullPath = Path.Combine(testResultsPath, fileName);
 

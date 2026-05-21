@@ -40,6 +40,11 @@ internal sealed class TrxReportGeneratorCommandLine : ICommandLineOptionsProvide
     {
         if (commandOption.Name == TrxReportFileNameOptionName)
         {
+            if (arguments.Length is 0)
+            {
+                return ValidationResult.InvalidTask(ExtensionResources.TrxReportFileNameMustNotBeEmpty);
+            }
+
             string argument = arguments[0];
 
             // We accept relative or absolute paths, but the leaf must be a non-empty file name

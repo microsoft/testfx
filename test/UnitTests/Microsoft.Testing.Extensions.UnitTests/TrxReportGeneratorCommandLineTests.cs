@@ -15,7 +15,7 @@ public sealed class TrxReportGeneratorCommandLineTests
     [DataRow("sub/foo.trx")]
     [DataRow("sub\\foo.trx")]
     [DataRow("../foo.trx")]
-    public async Task IsValid_If_TrxFile_And_Only_TargetFilename_Is_Provided(string filename)
+    public async Task IsValid_If_TrxFile_And_FileNameOrRelativePath_Is_Provided(string filename)
     {
         var provider = new TrxReportGeneratorCommandLine();
         Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == TrxReportGeneratorCommandLine.TrxReportFileNameOptionName);
@@ -59,6 +59,17 @@ public sealed class TrxReportGeneratorCommandLineTests
         Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == TrxReportGeneratorCommandLine.TrxReportFileNameOptionName);
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [filename]).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(TrxReport.Resources.ExtensionResources.TrxReportFileNameMustNotBeEmpty, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_If_TrxFile_Name_Is_Missing()
+    {
+        var provider = new TrxReportGeneratorCommandLine();
+        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == TrxReportGeneratorCommandLine.TrxReportFileNameOptionName);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, []).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
         Assert.AreEqual(TrxReport.Resources.ExtensionResources.TrxReportFileNameMustNotBeEmpty, validateOptionsResult.ErrorMessage);
     }
