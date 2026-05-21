@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 internal sealed partial class TrxReportEngine
 {
-    private void AddResultSummary(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, int exitCode, SummaryCounts summaryCounts, bool isTestHostCrashed = false)
+    private void AddResultSummary(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, int exitCode, SummaryCounts summaryCounts, List<string> attachmentWarnings, bool isTestHostCrashed = false)
     {
         // TODO: VSTest adds Output/StdOut element to ResultSummary which we don't add.
         // VSTest adds mainly two things in that element:
@@ -47,44 +47,47 @@ internal sealed partial class TrxReportEngine
         // 1. Messages published with TestMessageLevel.Warning or TestMessageLevel.Error
         // 2. Errors when constructing result files.
         // In addition, in these cases, it turns TRX outcome to error.
+        XElement? runInfos = null;
         if (isTestHostCrashed)
         {
-            var runInfos = new XElement(NamespaceUri + "RunInfos");
-            resultSummary.Add(runInfos);
-            var runInfo = new XElement(
-                NamespaceUri + "RunInfo",
-                new XAttribute("computerName", _environment.MachineName),
-                new XAttribute("outcome", "Error"),
-                new XAttribute("timestamp", _clock.UtcNow.DateTime));
-            var text = new XElement(NamespaceUri + "Text", testHostCrashInfo);
-            runInfo.Add(text);
-            runInfos.Add(runInfo);
+            AddRunInfo(resultSummary, ref runInfos, "Error", testHostCrashInfo);
         }
         else if (exitCode != (int)ExitCode.Success)
         {
-            var runInfos = new XElement(NamespaceUri + "RunInfos");
-            resultSummary.Add(runInfos);
-            var runInfo = new XElement(
-                NamespaceUri + "RunInfo",
-                new XAttribute("computerName", _environment.MachineName),
-                new XAttribute("outcome", "Error"),
-                new XAttribute("timestamp", _clock.UtcNow.DateTime));
-            var text = new XElement(NamespaceUri + "Text", $"Exit code indicates failure: '{exitCode}'. Please refer to https://aka.ms/testingplatform/exitcodes for more information.");
-            runInfo.Add(text);
-            runInfos.Add(runInfo);
+            AddRunInfo(resultSummary, ref runInfos, "Error", $"Exit code indicates failure: '{exitCode}'. Please refer to https://aka.ms/testingplatform/exitcodes for more information.");
         }
 
-        if (_artifactsByExtension.Count == 0)
+        if (_artifactsByExtension.Count != 0)
         {
-            return;
+            // TODO: VSTest seems to also add ResultFiles element, and not only CollectorDataEntries.
+            // TODO: Revise VSTest implementation for Converter.ToCollectionEntries and Converter.ToResultFiles
+            var collectorDataEntries = new XElement(NamespaceUri + "CollectorDataEntries");
+            resultSummary.Add(collectorDataEntries);
+
+            AddArtifactsToCollection(_artifactsByExtension, collectorDataEntries, runDeploymentRoot, attachmentWarnings);
         }
 
-        // TODO: VSTest seems to also add ResultFiles element, and not only CollectorDataEntries.
-        // TODO: Revise VSTest implementation for Converter.ToCollectionEntries and Converter.ToResultFiles
-        var collectorDataEntries = new XElement(NamespaceUri + "CollectorDataEntries");
-        resultSummary.Add(collectorDataEntries);
+        foreach (string attachmentWarning in attachmentWarnings)
+        {
+            AddRunInfo(resultSummary, ref runInfos, "Warning", attachmentWarning);
+        }
+    }
 
-        AddArtifactsToCollection(_artifactsByExtension, collectorDataEntries, runDeploymentRoot);
+    private void AddRunInfo(XElement resultSummary, ref XElement? runInfos, string outcome, string text)
+    {
+        if (runInfos is null)
+        {
+            runInfos = new XElement(NamespaceUri + "RunInfos");
+            resultSummary.Add(runInfos);
+        }
+
+        var runInfo = new XElement(
+            NamespaceUri + "RunInfo",
+            new XAttribute("computerName", _environment.MachineName),
+            new XAttribute("outcome", outcome),
+            new XAttribute("timestamp", _clock.UtcNow.DateTime));
+        runInfo.Add(new XElement(NamespaceUri + "Text", RemoveInvalidXmlChar(text)));
+        runInfos.Add(runInfo);
     }
 
     private static void AddTestLists(XElement testRun)

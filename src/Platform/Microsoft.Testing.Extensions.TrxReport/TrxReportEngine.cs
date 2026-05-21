@@ -104,7 +104,8 @@ internal sealed partial class TrxReportEngine
 
             var testDefinitions = new XElement("TestDefinitions");
             var testEntries = new XElement("TestEntries");
-            SummaryCounts summaryCounts = AddResults(testResults, testAppModule, testRun, runDeploymentRoot, testDefinitions, testEntries);
+            var attachmentWarnings = new List<string>();
+            SummaryCounts summaryCounts = AddResults(testResults, testAppModule, testRun, runDeploymentRoot, testDefinitions, testEntries, attachmentWarnings);
             testRun.Add(testDefinitions);
             testRun.Add(testEntries);
             AddTestLists(testRun);
@@ -112,7 +113,7 @@ internal sealed partial class TrxReportEngine
             bool hasFailedTests = summaryCounts.Failed > 0 || summaryCounts.Timedout > 0;
             string trxOutcome = isTestHostCrashed || _exitCode != (int)ExitCode.Success || hasFailedTests ? "Failed" : "Completed";
 
-            AddResultSummary(testRun, trxOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, summaryCounts, isTestHostCrashed);
+            AddResultSummary(testRun, trxOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, summaryCounts, attachmentWarnings, isTestHostCrashed);
 
             // will need catch Unauthorized access
             document.Add(testRun);

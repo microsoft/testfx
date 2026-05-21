@@ -27,7 +27,13 @@ internal sealed partial class TrxReportEngine
             resultSummary.Add(collectorDataEntries);
         }
 
-        AddArtifactsToCollection(artifacts, collectorDataEntries, runDeploymentRoot);
+        var attachmentWarnings = new List<string>();
+        AddArtifactsToCollection(artifacts, collectorDataEntries, runDeploymentRoot, attachmentWarnings);
+        XElement? runInfos = resultSummary.Element(NamespaceUri + "RunInfos");
+        foreach (string attachmentWarning in attachmentWarnings)
+        {
+            AddRunInfo(resultSummary, ref runInfos, "Warning", attachmentWarning);
+        }
 
         using FileStream fs = File.OpenWrite(trxFile.FullName);
 #if NETCOREAPP
@@ -37,7 +43,7 @@ internal sealed partial class TrxReportEngine
 #endif
     }
 
-    private void AddArtifactsToCollection(Dictionary<IExtension, List<SessionFileArtifact>> artifacts, XElement collectorDataEntries, string runDeploymentRoot)
+    private void AddArtifactsToCollection(Dictionary<IExtension, List<SessionFileArtifact>> artifacts, XElement collectorDataEntries, string runDeploymentRoot, List<string> attachmentWarnings)
     {
         foreach (KeyValuePair<IExtension, List<SessionFileArtifact>> extensionArtifacts in artifacts)
         {
@@ -53,11 +59,34 @@ internal sealed partial class TrxReportEngine
 
             foreach (SessionFileArtifact artifact in extensionArtifacts.Value)
             {
-                string href = CopyArtifactIntoTrxDirectoryAndReturnHrefValue(artifact.FileInfo, runDeploymentRoot);
-                uriAttachments.Add(new XElement(NamespaceUri + "UriAttachment", new XElement(NamespaceUri + "A", new XAttribute("href", href))));
+                if (!TryCopyArtifactAndGetHref(artifact.FileInfo, runDeploymentRoot, null, attachmentWarnings, out string? href))
+                {
+                    continue;
+                }
+
+                uriAttachments.Add(new XElement(NamespaceUri + "UriAttachment", new XElement(NamespaceUri + "A", new XAttribute("href", href!))));
             }
         }
     }
+
+    private bool TryCopyArtifactAndGetHref(FileInfo artifact, string runDeploymentRoot, string? relativeResultsDirectory, List<string> attachmentWarnings, out string? href)
+    {
+        try
+        {
+            href = CopyArtifactIntoTrxDirectoryAndReturnHrefValue(artifact, runDeploymentRoot, relativeResultsDirectory);
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            AddAttachmentWarning(artifact, ex, attachmentWarnings);
+        }
+
+        href = null;
+        return false;
+    }
+
+    private static void AddAttachmentWarning(FileInfo artifact, Exception exception, List<string> attachmentWarnings)
+        => attachmentWarnings.Add($"Unable to copy attachment '{artifact.FullName}' into the TRX results directory. The attachment will be skipped. Reason: {exception.GetType().Name}.");
 
     private string CopyArtifactIntoTrxDirectoryAndReturnHrefValue(FileInfo artifact, string runDeploymentRoot, string? relativeResultsDirectory = null)
     {
@@ -68,16 +97,10 @@ internal sealed partial class TrxReportEngine
         int nameCounter = 0;
 
         // If the file already exists, append a number to the end of the file name
-        while (true)
+        while (File.Exists(destination))
         {
-            if (File.Exists(destination))
-            {
-                nameCounter++;
-                destination = Path.Combine(artifactDirectory, $"{Path.GetFileNameWithoutExtension(fileName)}_{nameCounter}{Path.GetExtension(fileName)}");
-                continue;
-            }
-
-            break;
+            nameCounter++;
+            destination = Path.Combine(artifactDirectory, $"{Path.GetFileNameWithoutExtension(fileName)}_{nameCounter}{Path.GetExtension(fileName)}");
         }
 
         _fileSystem.CopyFile(artifact.FullName, new FileInfo(destination).FullName);

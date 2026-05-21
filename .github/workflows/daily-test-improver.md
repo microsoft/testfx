@@ -15,6 +15,7 @@ on:
   workflow_dispatch:
   slash_command:
     name: test-assist
+    strategy: centralized
   reaction: "eyes"
 
 timeout-minutes: 30
