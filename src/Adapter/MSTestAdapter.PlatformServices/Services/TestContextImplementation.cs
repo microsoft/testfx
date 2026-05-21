@@ -471,7 +471,8 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// property bag, the message logger, the same test-run cancellation token, and on .NET
     /// Framework the current data connection), but registers its own cancellation callback and
     /// starts with no accumulated per-test state (no captured stdout/stderr/trace,
-    /// no diagnostic messages, no result files, no outcome, no exception, no data row).
+    /// no diagnostic messages, no result files, no exception, no data row, and the
+    /// default <see cref="UnitTestOutcome"/> value rather than the original's current outcome).
     /// This keeps the folded path structurally equivalent to the unfolded path, where each
     /// row gets its own <see cref="TestContextImplementation"/>.
     /// </para>

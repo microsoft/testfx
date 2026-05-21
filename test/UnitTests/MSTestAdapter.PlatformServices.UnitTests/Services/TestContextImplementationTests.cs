@@ -591,17 +591,22 @@ public class TestContextImplementationTests : TestContainer
     public void CloneForDataDrivenIterationShouldStartWithFreshOutcomeAndException()
     {
         _testContextImplementation = CreateTestContextImplementation();
-        _testContextImplementation.SetOutcome(UnitTestOutcome.Failed);
+
+        // Set outcome to a non-default value (Passed) on the original so the assertion below
+        // actually verifies that the clone is reset to the default rather than inheriting
+        // from the original. If we left the original at the default UnitTestOutcome.Failed,
+        // a buggy clone that copied the outcome would still appear correct.
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
         _testContextImplementation.SetException(new InvalidOperationException("boom"));
 
         TestContextImplementation clone = _testContextImplementation.CloneForDataDrivenIteration();
 
-        clone.CurrentTestOutcome.Should().Be(UnitTestOutcome.Failed); // default initial value
+        clone.CurrentTestOutcome.Should().Be(UnitTestOutcome.Failed); // default value of UnitTestOutcome
         clone.TestException.Should().BeNull();
 
         // Setting outcome on the clone does not leak back to the original.
-        clone.SetOutcome(UnitTestOutcome.Passed);
-        _testContextImplementation.CurrentTestOutcome.Should().Be(UnitTestOutcome.Failed);
+        clone.SetOutcome(UnitTestOutcome.Inconclusive);
+        _testContextImplementation.CurrentTestOutcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     public void CloneForDataDrivenIterationShouldStartWithFreshResultFiles()
