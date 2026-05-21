@@ -159,6 +159,19 @@ Out of process file artifacts produced:
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task Trx_WhenReportTrxIsSpecifiedWithRelativeParentTraversal_ErrorIsDisplayed(string tfm)
+    {
+        string relativePath = Path.Combine("nested", "..", $"{Guid.NewGuid():N}.trx");
+
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {relativePath}", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        testHostResult.AssertOutputContains("Error: '--report-trx-filename' relative paths must stay under the test results directory");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Trx_WhenReportTrxIsNotSpecifiedAndReportTrxPathIsSpecified_ErrorIsDisplayed(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);

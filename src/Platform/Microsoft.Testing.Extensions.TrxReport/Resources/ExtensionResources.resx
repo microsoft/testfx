@@ -164,6 +164,9 @@ Example: MyReport_{tfm}.trx</value>
   <data name="TrxReportFileNameMustNotBeEmpty" xml:space="preserve">
     <value>'--report-trx-filename' file name part must not be empty (e.g. --report-trx-filename myreport.trx)</value>
   </data>
+  <data name="TrxReportFileNameRelativePathMustStayUnderResultsDirectory" xml:space="preserve">
+    <value>'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</value>
+  </data>
   <data name="TrxReportFrameworkDoesNotSupportTrxReportCapability" xml:space="preserve">
     <value>The test framework '{0}' with UID '{1}' does not support the 'ITrxReportCapability' leading to missing or incomplete TRX reports</value>
   </data>

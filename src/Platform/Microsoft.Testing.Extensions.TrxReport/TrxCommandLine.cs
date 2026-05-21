@@ -48,8 +48,9 @@ internal sealed class TrxReportGeneratorCommandLine : ICommandLineOptionsProvide
             string argument = arguments[0];
 
             // We accept relative or absolute paths, but the leaf must be a non-empty file name
-            // that ends with ".trx". The directory portion (if any) is treated as a literal
-            // path and validated by the OS when we open the file.
+            // that ends with ".trx". Relative paths must stay under the test results directory,
+            // while the directory portion of valid paths is treated as a literal path and validated
+            // by the OS when we open the file.
             string fileNamePart = Path.GetFileName(argument);
             if (RoslynString.IsNullOrWhiteSpace(fileNamePart))
             {
@@ -60,9 +61,36 @@ internal sealed class TrxReportGeneratorCommandLine : ICommandLineOptionsProvide
             {
                 return ValidationResult.InvalidTask(ExtensionResources.TrxReportFileNameExtensionIsNotTrx);
             }
+
+            if (ContainsRelativeParentTraversal(argument))
+            {
+                return ValidationResult.InvalidTask(ExtensionResources.TrxReportFileNameRelativePathMustStayUnderResultsDirectory);
+            }
         }
 
         return ValidationResult.ValidTask;
+    }
+
+    private static bool ContainsRelativeParentTraversal(string path)
+    {
+        if (Path.IsPathRooted(path))
+        {
+            return false;
+        }
+
+        char[] separators = Path.DirectorySeparatorChar == Path.AltDirectorySeparatorChar
+            ? [Path.DirectorySeparatorChar]
+            : [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
+
+        foreach (string segment in path.Split(separators, StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (segment == "..")
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)

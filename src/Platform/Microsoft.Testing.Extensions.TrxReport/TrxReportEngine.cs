@@ -145,8 +145,8 @@ internal sealed partial class TrxReportEngine
             string outputDirectory = _configuration.GetTestResultDirectory(); // add var for this
 
             // Path.Combine short-circuits when the second argument is rooted, so an absolute trxFileName
-            // overrides the test results directory while a relative one (including one with subdirectories)
-            // is nested under it.
+            // overrides the test results directory while a validated relative one (including one with
+            // subdirectories, but not parent traversal) stays nested under it.
             string finalFileName = Path.Combine(outputDirectory, trxFileName);
 
             // Ensure intermediate directories exist when the user-provided file name introduced

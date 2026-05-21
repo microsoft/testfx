@@ -24,8 +24,11 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", tfm);
+
+        // This test exercises multi-process dump collection, not dump completeness. Use a Mini dump so
+        // both crashing processes can finish writing within the child-process timeout on slower machines.
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--crashdump --results-directory {resultDirectory}",
+            $"--crashdump --crashdump-type Mini --results-directory {resultDirectory}",
             new Dictionary<string, string?>
             {
                 { "CRASHDUMP_SPAWN_CHILD_THAT_CRASHES", "1" },

@@ -71,6 +71,11 @@ Example: MyReport_{tfm}.trx</source>
 示例: MyReport_{tfm}.trx</target>
         <note />
       </trans-unit>
+      <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">
+        <source>'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</source>
+        <target state="new">'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TrxReportFileNameRequiresTrxReport">
         <source>'--report-trx-filename' requires '--report-trx' to be enabled</source>
         <target state="translated">“--report-trx-filename”需要启用“--report-trx”</target>
