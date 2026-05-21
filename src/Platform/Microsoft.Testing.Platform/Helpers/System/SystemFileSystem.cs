@@ -37,10 +37,10 @@ internal sealed class SystemFileSystem : IFileSystem
 #if NETCOREAPP
     public Task<string> ReadAllTextAsync(string path) => File.ReadAllTextAsync(path);
 #else
-    public Task<string> ReadAllTextAsync(string path)
+    public async Task<string> ReadAllTextAsync(string path)
     {
         using StreamReader reader = AsyncStreamReader(path, Encoding.UTF8);
-        return reader.ReadToEndAsync();
+        return await reader.ReadToEndAsync().ConfigureAwait(false);
 
         static StreamReader AsyncStreamReader(string path, Encoding encoding)
         {

@@ -229,6 +229,68 @@ public class TestAssemblyInfoTests : TestContainer
         result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
+    public async Task RunAssemblyInitializeShouldCapturePostAssemblyInitPropertiesOnSuccess()
+    {
+        DummyTestClass.AssemblyInitializeMethodBody = tc =>
+        {
+            var context = (TestContext)tc;
+            context.Properties["AssemblyInitKey"] = "AssemblyInitValue";
+            context.Properties["AnotherKey"] = 42;
+        };
+        _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
+
+        TestContextImplementation testContext = GetTestContext();
+        TestResult result = await _testAssemblyInfo.RunAssemblyInitializeAsync(testContext);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        _testAssemblyInfo.PostAssemblyInitProperties.Should().NotBeNull();
+        _testAssemblyInfo.PostAssemblyInitProperties!.Should().ContainKey("AssemblyInitKey");
+        _testAssemblyInfo.PostAssemblyInitProperties["AssemblyInitKey"].Should().Be("AssemblyInitValue");
+        _testAssemblyInfo.PostAssemblyInitProperties["AnotherKey"].Should().Be(42);
+    }
+
+    public async Task RunAssemblyInitializeShouldExcludePerContextLabelsFromPostAssemblyInitProperties()
+    {
+        DummyTestClass.AssemblyInitializeMethodBody = tc => ((TestContext)tc).Properties["UserKey"] = "UserValue";
+        _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
+
+        // Use a context with a class name so the FullyQualifiedTestClassName label is present.
+        TestContextImplementation testContext = new(null, "Dummy.ClassName", new Dictionary<string, object?>(), null, null);
+        TestResult result = await _testAssemblyInfo.RunAssemblyInitializeAsync(testContext);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        _testAssemblyInfo.PostAssemblyInitProperties.Should().NotBeNull();
+        _testAssemblyInfo.PostAssemblyInitProperties!.Should().NotContainKey(TestContext.FullyQualifiedTestClassNameLabel);
+        _testAssemblyInfo.PostAssemblyInitProperties.Should().NotContainKey(TestContext.TestNameLabel);
+        _testAssemblyInfo.PostAssemblyInitProperties.Should().ContainKey("UserKey");
+    }
+
+    public async Task RunAssemblyInitializeShouldLeavePostAssemblyInitPropertiesNullWhenAssemblyInitMethodIsNull()
+    {
+        _testAssemblyInfo.AssemblyInitializeMethod = null;
+
+        TestResult result = await _testAssemblyInfo.RunAssemblyInitializeAsync(null!);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        _testAssemblyInfo.PostAssemblyInitProperties.Should().BeNull();
+    }
+
+    public async Task RunAssemblyInitializeShouldLeavePostAssemblyInitPropertiesNullOnFailure()
+    {
+        DummyTestClass.AssemblyInitializeMethodBody = tc =>
+        {
+            ((TestContext)tc).Properties["AssemblyInitKey"] = "AssemblyInitValue";
+            throw new InvalidOperationException("boom");
+        };
+        _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
+
+        TestContextImplementation testContext = GetTestContext();
+        TestResult result = await _testAssemblyInfo.RunAssemblyInitializeAsync(testContext);
+
+        result.Outcome.Should().NotBe(UnitTestOutcome.Passed);
+        _testAssemblyInfo.PostAssemblyInitProperties.Should().BeNull();
+    }
+
     #endregion
 
     #region Run Assembly Cleanup tests

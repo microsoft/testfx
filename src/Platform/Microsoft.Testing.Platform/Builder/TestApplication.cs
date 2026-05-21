@@ -341,8 +341,28 @@ public sealed class TestApplication : ITestApplication
             prefixName = prefixNameArg[0];
         }
 
-        // Override the prefix name
-        string? environmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX);
+        // Override the prefix name.
+        // Prefer the new TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX env var (matching the --diagnostic-file-prefix CLI option),
+        // but fall back to the legacy TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX for backward compatibility.
+        // See https://github.com/microsoft/testfx/issues/7159.
+        string? environmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX);
+#pragma warning disable CS0618 // Type or member is obsolete - intentional back-compat fallback to the legacy env var.
+        string? legacyEnvironmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX);
+        if (!RoslynString.IsNullOrEmpty(legacyEnvironmentFilePrefix))
+        {
+            console.WriteLine(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.DeprecatedEnvironmentVariableWarning,
+                EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX,
+                EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX));
+        }
+#pragma warning restore CS0618
+
+        if (RoslynString.IsNullOrEmpty(environmentFilePrefix))
+        {
+            environmentFilePrefix = legacyEnvironmentFilePrefix;
+        }
+
         if (!RoslynString.IsNullOrEmpty(environmentFilePrefix))
         {
             prefixName = environmentFilePrefix;
@@ -350,8 +370,28 @@ public sealed class TestApplication : ITestApplication
 
         bool synchronousWrite = result.IsOptionSet(PlatformCommandLineProvider.DiagnosticFileLoggerSynchronousWriteOptionKey);
 
-        // Override the synchronous write
-        string? environmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE);
+        // Override the synchronous write.
+        // Prefer the new TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE env var (matching the --diagnostic-synchronous-write CLI option),
+        // but fall back to the legacy TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE for backward compatibility.
+        // See https://github.com/microsoft/testfx/issues/7159.
+        string? environmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE);
+#pragma warning disable CS0618 // Type or member is obsolete - intentional back-compat fallback to the legacy env var.
+        string? legacyEnvironmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE);
+        if (!RoslynString.IsNullOrEmpty(legacyEnvironmentSynchronousWrite))
+        {
+            console.WriteLine(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.DeprecatedEnvironmentVariableWarning,
+                EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE,
+                EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE));
+        }
+#pragma warning restore CS0618
+
+        if (RoslynString.IsNullOrEmpty(environmentSynchronousWrite))
+        {
+            environmentSynchronousWrite = legacyEnvironmentSynchronousWrite;
+        }
+
         if (!RoslynString.IsNullOrEmpty(environmentSynchronousWrite))
         {
             synchronousWrite = environmentSynchronousWrite == "1";

@@ -6,6 +6,8 @@ using System.Data;
 using System.Data.Common;
 #endif
 
+using System.Collections.ObjectModel;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -125,12 +127,15 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
             if (testClassFullName is not null)
             {
-                _properties.Add(FullyQualifiedTestClassNameLabel, testClassFullName);
+                // Use indexer assignment instead of Add so that re-seeding from a parent property
+                // snapshot that may already contain this key does not throw.
+                _properties[FullyQualifiedTestClassNameLabel] = testClassFullName;
             }
 
             if (testMethod is not null)
             {
-                _properties.Add(TestNameLabel, testMethod.Name);
+                // Use indexer assignment instead of Add for the same reason.
+                _properties[TestNameLabel] = testMethod.Name;
             }
         }
 
@@ -280,6 +285,64 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="propertyValue">The property value.</param>
     public void AddProperty(string propertyName, string propertyValue)
         => _properties.Add(propertyName, propertyValue);
+
+    /// <summary>
+    /// Merges the given properties into this context's property bag using indexer semantics
+    /// (existing keys are overwritten, except the per-context labels
+    /// <see cref="TestContext.FullyQualifiedTestClassNameLabel"/> and
+    /// <see cref="TestContext.TestNameLabel"/>, which are preserved).
+    /// Used to flow properties set during <c>AssemblyInitialize</c> / <c>ClassInitialize</c>
+    /// into subsequent contexts.
+    /// </summary>
+    /// <param name="propertiesToMerge">The properties to merge in. May be <see langword="null"/>.</param>
+    internal void MergeProperties(IReadOnlyDictionary<string, object?>? propertiesToMerge)
+    {
+        if (propertiesToMerge is null)
+        {
+            return;
+        }
+
+        foreach (KeyValuePair<string, object?> kvp in propertiesToMerge)
+        {
+            // Never overwrite the per-context labels.
+            if (kvp.Key == FullyQualifiedTestClassNameLabel || kvp.Key == TestNameLabel)
+            {
+                continue;
+            }
+
+            _properties[kvp.Key] = kvp.Value;
+        }
+    }
+
+    /// <summary>
+    /// Captures a snapshot of the current property bag, excluding the per-context labels
+    /// (<see cref="TestContext.FullyQualifiedTestClassNameLabel"/> and
+    /// <see cref="TestContext.TestNameLabel"/>). The returned dictionary is intended to be
+    /// stored on a <c>TestAssemblyInfo</c> / <c>TestClassInfo</c> and later merged into other
+    /// contexts via <see cref="MergeProperties(IReadOnlyDictionary{string, object?}?)"/>.
+    /// <para>
+    /// The snapshot is shallow: keys and value references are copied as-is. Reference-type
+    /// values stored in the bag (e.g. a mocked file system, a connection pool, a list) are
+    /// shared across every context the snapshot is later merged into. Mutations of those
+    /// reference-type instances are visible everywhere.
+    /// </para>
+    /// </summary>
+    /// <returns>A read-only snapshot of the current properties.</returns>
+    internal IReadOnlyDictionary<string, object?> CaptureLifecycleProperties()
+    {
+        var snapshot = new Dictionary<string, object?>(_properties.Count);
+        foreach (KeyValuePair<string, object?> kvp in _properties)
+        {
+            if (kvp.Key == FullyQualifiedTestClassNameLabel || kvp.Key == TestNameLabel)
+            {
+                continue;
+            }
+
+            snapshot[kvp.Key] = kvp.Value;
+        }
+
+        return new ReadOnlyDictionary<string, object?>(snapshot);
+    }
 
     /// <summary>
     /// Result files attached.

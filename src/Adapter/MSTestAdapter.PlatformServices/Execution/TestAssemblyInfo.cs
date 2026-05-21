@@ -94,6 +94,26 @@ internal sealed class TestAssemblyInfo
     public TestFailedException? AssemblyInitializationException { get; internal set; }
 
     /// <summary>
+    /// Gets a snapshot of <see cref="TestContext.Properties"/> captured after the
+    /// <c>AssemblyInitialize</c> method completes. Used to flow properties set during
+    /// <c>AssemblyInitialize</c> into subsequent contexts (class init, test execution,
+    /// class cleanup, assembly cleanup). <see langword="null"/> if no
+    /// <c>AssemblyInitialize</c> method was registered or it has not yet executed
+    /// successfully.
+    /// <para>
+    /// The snapshot is shallow: reference-type values stored in the bag are shared (aliased)
+    /// across every context the snapshot is merged into. Mutations of those reference-type
+    /// instances are visible everywhere.
+    /// </para>
+    /// <para>
+    /// Class-init properties are intentionally NOT included by callers when seeding the
+    /// assembly-cleanup context, because <c>AssemblyCleanup</c> is assembly-scoped and runs
+    /// once across many classes; including a single class's snapshot would be arbitrary.
+    /// </para>
+    /// </summary>
+    internal IReadOnlyDictionary<string, object?>? PostAssemblyInitProperties { get; private set; }
+
+    /// <summary>
     /// Gets the assembly cleanup exception.
     /// </summary>
     internal Exception? AssemblyCleanupException { get; private set; }
@@ -160,6 +180,25 @@ internal sealed class TestAssemblyInfo
                                 // **After** we have executed the assembly initialize, we save the current context.
                                 // This context will contain async locals set by the assembly initialize method.
                                 ExecutionContext = ExecutionContext.Capture();
+
+                                // The `is` check is defensive: this method is part of an internal
+                                // but mockable surface, so unit tests can legitimately pass a
+                                // mocked TestContext. Production callers always pass a
+                                // TestContextImplementation.
+                                if (testContext is TestContextImplementation testContextImpl)
+                                {
+                                    // Capture a snapshot of TestContext.Properties so that values
+                                    // set during AssemblyInitialize flow to subsequent contexts
+                                    // (class init, test execution, class cleanup, assembly cleanup).
+                                    // TODO: PostAssemblyInitProperties is published outside the
+                                    // _assemblyInfoExecuteSyncSemaphore via the
+                                    // IsAssemblyInitializeExecuted fast path in this method. This
+                                    // is consistent with the existing pattern used by
+                                    // AssemblyInitializationException and ExecutionContext;
+                                    // revisit memory-barrier semantics for all three together
+                                    // if it becomes a problem.
+                                    PostAssemblyInitProperties = testContextImpl.CaptureLifecycleProperties();
+                                }
                             },
                             testContext.CancellationTokenSource,
                             AssemblyInitializeMethodTimeoutMilliseconds,
