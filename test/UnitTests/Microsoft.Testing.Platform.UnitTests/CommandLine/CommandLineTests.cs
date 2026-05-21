@@ -198,6 +198,14 @@ public sealed class CommandLineTests
             new("option3", ["c"]),
             new("option4", ["d"]),
         }.ToArray(), []));
+        yield return (31, ["@31_test.rsp"], [
+            ("31_test.rsp",
+            """
+            mytool --option1 a
+            """)], new CommandLineParseResultWrapper("mytool", new List<CommandLineParseOption>
+        {
+            new("option1", ["a"]),
+        }.ToArray(), []));
     }
 
     [TestMethod]

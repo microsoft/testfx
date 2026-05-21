@@ -49,12 +49,13 @@ internal static class CommandLineParser
 
             if (currentArg.StartsWith("@", StringComparison.Ordinal) && ResponseFileHelper.TryReadResponseFile(currentArg.Substring(1), errors, out string[]? newArguments))
             {
-                args.InsertRange(i + 1, newArguments);
+                args.RemoveAt(i);
+                args.InsertRange(i, newArguments);
+                i--;
                 continue;
             }
 
             // If it's the first argument and it doesn't start with - then it's the tool name
-            // TODO: This won't work correctly if the first argument provided is a response file that contains the tool name.
             if (isFirstRealArgument && currentArg.Length > 0 && currentArg[0] != '-')
             {
                 toolName = currentArg;
