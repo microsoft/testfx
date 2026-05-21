@@ -21,7 +21,7 @@ Solution files: `TestFx.slnx` is the full solution; `MSTest.slnf`, `Microsoft.Te
 
 ## Build, test, and debug commands
 
-Always use the repo-local toolchain via the build scripts — they restore the pinned .NET SDK from `global.json` into `.dotnet/` and set `DOTNET_ROOT` accordingly.
+Always use the repo-local toolchain via the build scripts — they restore the pinned .NET SDK from `global.json` into `.dotnet/` (or reuse a matching `DOTNET_INSTALL_DIR`) and prepend that `dotnet` location to `PATH`.
 
 | Task | Windows | Linux/macOS |
 |---|---|---|
@@ -40,10 +40,10 @@ Once the desired project has been built, invoke its test host directly — both 
 
 ```powershell
 # MSTest-based unit-test project (Microsoft.Testing.Platform runner — see global.json)
-dotnet run --project test\UnitTests\MSTest.Analyzers.UnitTests --no-build -c Debug -- --filter-uid <TestUid>
+dotnet run --project test\UnitTests\MSTest.Analyzers.UnitTests -f net8.0 --no-build -c Debug -- --filter-uid <TestUid>
 
 # Tree-node / wildcard filter (faster to type than a UID)
-dotnet run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests --no-build -- --treenode-filter "/*/*/*/MyTestClass/MyTestMethod"
+dotnet run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests -f net8.0 --no-build -- --treenode-filter "/*/*/*/MyTestClass/MyTestMethod"
 ```
 
 For acceptance tests that drive generated assets, prefer running them through the test explorer or `dotnet test --filter "FullyQualifiedName~MyTest"` on the specific project, after `-pack`.
