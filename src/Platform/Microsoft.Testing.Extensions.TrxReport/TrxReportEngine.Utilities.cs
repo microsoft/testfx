@@ -8,8 +8,6 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 internal sealed partial class TrxReportEngine
 {
     private static readonly Regex ReservedFileNamesRegex = BuildReservedFileNameRegex();
-    private static readonly Regex InvalidXmlCharReplace = BuildInvalidXmlCharReplace();
-    private static readonly MatchEvaluator InvalidXmlEvaluator = ReplaceInvalidCharacterWithUniCodeEscapeSequence;
 
     private static readonly HashSet<char> InvalidFileNameChars =
     [
@@ -116,20 +114,52 @@ internal sealed partial class TrxReportEngine
 
     // From xml spec (http://www.w3.org/TR/xml/#charsets) valid chars:
     // #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
-    // we are handling only #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD]
-    // because C# support unicode character in range \u0000 to \uFFFF
-#if NET7_0_OR_GREATER
-    [GeneratedRegex(@"[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD]")]
-    private static partial Regex BuildInvalidXmlCharReplace();
-#else
-    private static Regex BuildInvalidXmlCharReplace() => new(@"[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD]");
-#endif
-
-    private static string RemoveInvalidXmlChar(string str) => InvalidXmlCharReplace.Replace(str, InvalidXmlEvaluator);
-
-    private static string ReplaceInvalidCharacterWithUniCodeEscapeSequence(Match match)
+    // surrogate pairs represent the [#x10000-#x10FFFF] range and are valid.
+    private static string RemoveInvalidXmlChar(string str)
     {
-        char x = match.Value[0];
-        return $@"\u{(ushort)x:x4}";
+        StringBuilder? builder = null;
+        // Invalid UTF-16 code units expand to six-character escape sequences.
+        int builderCapacity = GetInvalidXmlCharBuilderCapacity(str.Length);
+
+        for (int i = 0; i < str.Length; i++)
+        {
+            char current = str[i];
+            bool isValidChar = IsValidXmlChar(current);
+            bool isValidSurrogatePair = char.IsHighSurrogate(current) && i + 1 < str.Length && char.IsLowSurrogate(str[i + 1]);
+
+            if (isValidChar || isValidSurrogatePair)
+            {
+                if (builder is not null)
+                {
+                    builder.Append(current);
+                    if (isValidSurrogatePair)
+                    {
+                        builder.Append(str[++i]);
+                    }
+                }
+                else if (isValidSurrogatePair)
+                {
+                    i++;
+                }
+
+                continue;
+            }
+
+            builder ??= new StringBuilder(str, 0, i, builderCapacity);
+            builder.Append(ReplaceInvalidCharacterWithUniCodeEscapeSequence(current));
+        }
+
+        return builder?.ToString() ?? str;
     }
+
+    private static bool IsValidXmlChar(char value) =>
+        value is '\t' or '\n' or '\r' or (>= '\x20' and <= '\uD7FF') or (>= '\uE000' and <= '\uFFFD');
+
+    private static int GetInvalidXmlCharBuilderCapacity(int length)
+    {
+        int extraCapacity = length / 2;
+        return length <= int.MaxValue - extraCapacity ? length + extraCapacity : length;
+    }
+
+    private static string ReplaceInvalidCharacterWithUniCodeEscapeSequence(char x) => $@"\u{(ushort)x:x4}";
 }
