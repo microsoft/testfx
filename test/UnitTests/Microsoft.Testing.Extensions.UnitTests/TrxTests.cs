@@ -488,6 +488,7 @@ public class TrxTests
         Assert.AreEqual($"stdout {supplementaryCharacter}", xml.Descendants(xmlNamespace + "StdOut").Single().Value);
         Assert.AreEqual($"message {supplementaryCharacter}", xml.Descendants(xmlNamespace + "Message").Single().Value);
         Assert.AreEqual($"stack {supplementaryCharacter}", xml.Descendants(xmlNamespace + "StackTrace").Single().Value);
+        Assert.Contains(supplementaryCharacter, trxContent, trxContent);
         Assert.DoesNotContain(@"\ud83d\ude00", trxContent, "TRX content should not contain escaped surrogate pair.");
     }
 
@@ -496,9 +497,10 @@ public class TrxTests
     {
         // Arrange
         using MemoryFileStream memoryStream = new();
+        string stdoutWithUnpairedSurrogates = "stdout \uD800 \uDC00";
         PropertyBag propertyBag = new(
             new PassedTestNodeStateProperty(),
-            new TrxMessagesProperty([new StandardOutputTrxMessage("stdout \uD800 \uDC00")]));
+            new TrxMessagesProperty([new StandardOutputTrxMessage(stdoutWithUnpairedSurrogates)]));
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         // Act
