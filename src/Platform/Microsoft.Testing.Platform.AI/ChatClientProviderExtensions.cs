@@ -37,7 +37,7 @@ public static class ChatClientProviderExtensions
     public static async Task<IChatClient?> GetChatClientAsync(this IServiceProvider serviceProvider, CancellationToken cancellationToken)
     {
         var provider = (IChatClientProvider?)serviceProvider.GetService(typeof(IChatClientProvider));
-        return provider is null
+        return provider is null || !provider.IsAvailable
             ? null
             : await provider.CreateChatClientAsync(cancellationToken).ConfigureAwait(false);
     }
