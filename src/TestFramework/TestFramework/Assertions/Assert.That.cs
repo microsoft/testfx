@@ -891,9 +891,14 @@ public static partial class AssertExtensions
             // (to avoid showing both "list" and "list[0]")
             ExtractVariablesFromExpression(callExpr.Arguments[0], details, evaluationCache, suppressIntermediateValues);
         }
-        else if (callExpr.Method.Name == GetMethodName && callExpr.Object is not null && callExpr.Arguments.Count > 0)
+        else if (IsArrayGetCall(callExpr))
         {
-            // Handle multi-dimensional array indexers (e.g., array.Get(i, j) displayed as array[i, j])
+            // Handle array indexers (e.g., array.Get(i, j) displayed as array[i, j]).
+            // In practice this only fires for multidimensional arrays — single-dimensional
+            // arrays surface as ArrayIndex in LINQ expressions, not as a Get method call.
+            // We gate on the receiver actually being an array so arbitrary user-defined
+            // `Get(...)` methods on non-array types are NOT mis-rendered as `obj[...]`
+            // (issue #6691); they go through the regular method-call path below.
             string objectName = GetCleanMemberName(callExpr.Object);
             string indexDisplay = string.Join(", ", callExpr.Arguments.Select(GetIndexArgumentDisplay));
             string indexerDisplay = $"{objectName}[{indexDisplay}]";
@@ -919,9 +924,10 @@ public static partial class AssertExtensions
             }
             else
             {
-                // For non-boolean methods, capture the method call itself
-                // (e.g., "list.Count" when used in a comparison)
-                string methodCallDisplay = GetCleanMemberName(callExpr);
+                // For non-boolean methods, capture the method call itself using a friendly receiver
+                // (issue #6691): static methods get the declaring type, captured-this instance methods
+                // render as `this.Method(...)`, extension methods on `this` also render as `this.Method(...)`.
+                string methodCallDisplay = GetMethodCallDisplayName(callExpr);
                 TryAddExpressionValue(callExpr, methodCallDisplay, details, evaluationCache);
 
                 // Don't extract from the object to avoid duplication
@@ -934,6 +940,107 @@ public static partial class AssertExtensions
             }
         }
     }
+
+    /// <summary>
+    /// Matches <c>array.Get(i[, j[, k...]])</c> calls on an array receiver. In practice this only
+    /// fires for multidimensional arrays (e.g. <c>int[,]</c>) which expose runtime-synthesized
+    /// <c>Get</c>/<c>Set</c>/<c>Address</c> methods on the array type itself — not on
+    /// <see cref="Array"/>; single-dimensional arrays surface as <see cref="ExpressionType.ArrayIndex"/>
+    /// rather than a method call. Gating on the receiver actually being an array prevents arbitrary
+    /// user-defined instance methods named <c>Get</c> from being mis-rendered as <c>obj[...]</c>
+    /// (issue #6691).
+    /// </summary>
+    private static bool IsArrayGetCall(MethodCallExpression callExpr)
+        => callExpr.Method.Name == GetMethodName
+            && callExpr.Object is not null
+            && callExpr.Object.Type.IsArray
+            && callExpr.Arguments.Count > 0;
+
+    /// <summary>
+    /// Builds a friendly display name for a method-call expression so the failure message uses the
+    /// same syntax the user wrote. Static methods get prefixed with their declaring type's name;
+    /// instance methods on captured <c>this</c> render as <c>this.Method(...)</c>; extension methods
+    /// use the first argument as the receiver. Fixes issue #6691.
+    /// </summary>
+    private static string GetMethodCallDisplayName(MethodCallExpression callExpr)
+    {
+        string methodName = callExpr.Method.Name;
+
+        // Extension methods are static methods on a static class marked [Extension]; the receiver is the
+        // first argument. Render like the user wrote: receiver.Method(rest).
+        if (callExpr.Object is null
+            && callExpr.Method.IsDefined(typeof(ExtensionAttribute), inherit: false)
+            && callExpr.Arguments.Count > 0)
+        {
+            Expression firstArg = callExpr.Arguments[0];
+            Type receiverParamType = callExpr.Method.GetParameters()[0].ParameterType;
+            string receiver = IsCapturedThis(firstArg, receiverParamType)
+                ? "this"
+                : GetCleanMemberName(firstArg);
+            string extArgs = string.Join(", ", callExpr.Arguments.Skip(1).Select(static a => CleanExpressionText(a.ToString())));
+            return $"{receiver}.{methodName}({extArgs})";
+        }
+
+        string argsStr = string.Join(", ", callExpr.Arguments.Select(static a => CleanExpressionText(a.ToString())));
+
+        if (callExpr.Object is null)
+        {
+            // Regular static method: prefix with a friendly type display (no namespace, nested
+            // types separated with `.` instead of the reflection `+`) so nested types keep their
+            // nesting context (Outer.Inner.Method rather than Inner.Method).
+            string typeName = callExpr.Method.DeclaringType is { } dt
+                ? GetFriendlyTypeName(dt)
+                : NullAngleBrackets;
+            return $"{typeName}.{methodName}({argsStr})";
+        }
+
+        if (IsCapturedThis(callExpr.Object, callExpr.Method.DeclaringType))
+        {
+            return $"this.{methodName}({argsStr})";
+        }
+
+        string objectDisplay = GetCleanMemberName(callExpr.Object);
+        return $"{objectDisplay}.{methodName}({argsStr})";
+    }
+
+    /// <summary>
+    /// Returns a user-friendly display name for <paramref name="type"/>: BCL aliases via
+    /// <see cref="CleanTypeName(string)"/>, namespace stripped, and nested-type separators
+    /// (reflection's <c>+</c>) converted to <c>.</c>.
+    /// </summary>
+    private static string GetFriendlyTypeName(Type type)
+    {
+        string raw = type.Name;
+        string cleaned = CleanTypeName(raw);
+        if (!ReferenceEquals(cleaned, raw))
+        {
+            return cleaned;
+        }
+
+        // Walk up the nesting chain to produce Outer.Inner instead of Outer+Inner.
+        return type.IsNested && type.DeclaringType is { } declaring
+            ? $"{GetFriendlyTypeName(declaring)}.{type.Name}"
+            : type.Name;
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> if <paramref name="objectExpr"/> is a reference to the enclosing
+    /// instance (<c>this</c>) — either accessed via the compiler-synthesized display-class field
+    /// (named like <c>&lt;&gt;4__this</c>) or as a <see cref="ConstantExpression"/> representing
+    /// the enclosing instance (no-closure case). For the constant form we require the expression's
+    /// static type to exactly match its runtime type and be assignable to <paramref name="declaringType"/>,
+    /// so inherited methods on <c>this</c> still render as <c>this.Method(...)</c> without
+    /// mis-labeling base-typed locals as <c>this</c>.
+    /// </summary>
+    private static bool IsCapturedThis(Expression objectExpr, Type? declaringType)
+        => (objectExpr is MemberExpression me
+                && me.Member.Name.StartsWith("<>", StringComparison.Ordinal)
+                && me.Member.Name.EndsWith("__this", StringComparison.Ordinal))
+            || (declaringType is not null
+                && objectExpr is ConstantExpression ce
+                && ce.Value is not null
+                && ce.Type == ce.Value.GetType()
+                && declaringType.IsAssignableFrom(ce.Type));
 
     /// <summary>
     /// Evaluates only the *sub-children* of a writable assignment target (the Left of an Assign or

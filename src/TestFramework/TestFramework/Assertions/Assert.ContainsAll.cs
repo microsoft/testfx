@@ -179,8 +179,8 @@ public sealed partial class Assert
     #region DoesNotContainAll
 
     /// <summary>
-    /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="expected"/>
-    /// (with multiplicity) and throws an exception if every element in <paramref name="expected"/> occurs at
+    /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="notExpected"/>
+    /// (with multiplicity) and throws an exception if every element in <paramref name="notExpected"/> occurs at
     /// least as many times in <paramref name="collection"/>.
     /// </summary>
     /// <remarks>
@@ -188,18 +188,18 @@ public sealed partial class Assert
     /// (so this assertion would pass for those inputs).
     /// </remarks>
     /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">
-    /// The collection of items expected not to all be present in <paramref name="collection"/>.
+    /// <param name="notExpected">
+    /// The collection of items the test expects not to all be present in <paramref name="collection"/>.
     /// </param>
     /// <param name="collection">
-    /// The collection expected not to contain every item of <paramref name="expected"/>.
+    /// The collection expected not to contain every item of <paramref name="notExpected"/>.
     /// </param>
     /// <param name="message">
-    /// The message to include in the exception when every element in <paramref name="expected"/>
+    /// The message to include in the exception when every element in <paramref name="notExpected"/>
     /// is also found (with sufficient multiplicity) in <paramref name="collection"/>. The message is shown in test results.
     /// </param>
-    /// <param name="expectedExpression">
-    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <param name="collectionExpression">
@@ -207,18 +207,18 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if every element of <paramref name="expected"/> occurs at least as many times in <paramref name="collection"/>.
+    /// Thrown if every element of <paramref name="notExpected"/> occurs at least as many times in <paramref name="collection"/>.
     /// </exception>
-    public static void DoesNotContainAll<T>([NotNull] IEnumerable<T>? expected, [NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContainAll<T>([NotNull] IEnumerable<T>? notExpected, [NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        CheckParameterNotNull(expected, "Assert.DoesNotContainAll", "expected");
+        CheckParameterNotNull(notExpected, "Assert.DoesNotContainAll", "notExpected");
         CheckParameterNotNull(collection, "Assert.DoesNotContainAll", "collection");
-        DoesNotContainAllImpl(expected, collection, EqualityComparer<T>.Default, comparerName: null, message, expectedExpression, collectionExpression);
+        DoesNotContainAllImpl(notExpected, collection, EqualityComparer<T>.Default, comparerName: null, message, notExpectedExpression, collectionExpression);
     }
 
     /// <summary>
-    /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="expected"/>
-    /// (with multiplicity) and throws an exception if every element in <paramref name="expected"/> occurs at
+    /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="notExpected"/>
+    /// (with multiplicity) and throws an exception if every element in <paramref name="notExpected"/> occurs at
     /// least as many times in <paramref name="collection"/>.
     /// </summary>
     /// <remarks>
@@ -226,21 +226,21 @@ public sealed partial class Assert
     /// (so this assertion would pass for those inputs).
     /// </remarks>
     /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">
-    /// The collection of items expected not to all be present in <paramref name="collection"/>.
+    /// <param name="notExpected">
+    /// The collection of items the test expects not to all be present in <paramref name="collection"/>.
     /// </param>
     /// <param name="collection">
-    /// The collection expected not to contain every item of <paramref name="expected"/>.
+    /// The collection expected not to contain every item of <paramref name="notExpected"/>.
     /// </param>
     /// <param name="comparer">
     /// The equality comparer to use when comparing elements.
     /// </param>
     /// <param name="message">
-    /// The message to include in the exception when every element in <paramref name="expected"/>
+    /// The message to include in the exception when every element in <paramref name="notExpected"/>
     /// is also found (with sufficient multiplicity) in <paramref name="collection"/>. The message is shown in test results.
     /// </param>
-    /// <param name="expectedExpression">
-    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <param name="collectionExpression">
@@ -248,37 +248,37 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if every element of <paramref name="expected"/> occurs at least as many times in <paramref name="collection"/>.
+    /// Thrown if every element of <paramref name="notExpected"/> occurs at least as many times in <paramref name="collection"/>.
     /// </exception>
-    public static void DoesNotContainAll<T>([NotNull] IEnumerable<T>? expected, [NotNull] IEnumerable<T>? collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContainAll<T>([NotNull] IEnumerable<T>? notExpected, [NotNull] IEnumerable<T>? collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        CheckParameterNotNull(expected, "Assert.DoesNotContainAll", "expected");
+        CheckParameterNotNull(notExpected, "Assert.DoesNotContainAll", "notExpected");
         CheckParameterNotNull(collection, "Assert.DoesNotContainAll", "collection");
         CheckParameterNotNull(comparer, "Assert.DoesNotContainAll", "comparer");
-        DoesNotContainAllImpl(expected, collection, comparer, comparer.GetType().Name, message, expectedExpression, collectionExpression);
+        DoesNotContainAllImpl(notExpected, collection, comparer, comparer.GetType().Name, message, notExpectedExpression, collectionExpression);
     }
 
     /// <summary>
-    /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="expected"/>
-    /// (with multiplicity) and throws an exception if every element in <paramref name="expected"/> occurs at
+    /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="notExpected"/>
+    /// (with multiplicity) and throws an exception if every element in <paramref name="notExpected"/> occurs at
     /// least as many times in <paramref name="collection"/>.
     /// </summary>
     /// <remarks>
     /// Element multiplicity is significant: <c>[1]</c> is considered not to contain all of <c>[1, 1]</c>
     /// (so this assertion would pass for those inputs).
     /// </remarks>
-    /// <param name="expected">
-    /// The collection of items expected not to all be present in <paramref name="collection"/>.
+    /// <param name="notExpected">
+    /// The collection of items the test expects not to all be present in <paramref name="collection"/>.
     /// </param>
     /// <param name="collection">
-    /// The collection expected not to contain every item of <paramref name="expected"/>.
+    /// The collection expected not to contain every item of <paramref name="notExpected"/>.
     /// </param>
     /// <param name="message">
-    /// The message to include in the exception when every element in <paramref name="expected"/>
+    /// The message to include in the exception when every element in <paramref name="notExpected"/>
     /// is also found (with sufficient multiplicity) in <paramref name="collection"/>. The message is shown in test results.
     /// </param>
-    /// <param name="expectedExpression">
-    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <param name="collectionExpression">
@@ -286,40 +286,40 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if every element of <paramref name="expected"/> occurs at least as many times in <paramref name="collection"/>.
+    /// Thrown if every element of <paramref name="notExpected"/> occurs at least as many times in <paramref name="collection"/>.
     /// </exception>
-    public static void DoesNotContainAll([NotNull] IEnumerable? expected, [NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContainAll([NotNull] IEnumerable? notExpected, [NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        CheckParameterNotNull(expected, "Assert.DoesNotContainAll", "expected");
+        CheckParameterNotNull(notExpected, "Assert.DoesNotContainAll", "notExpected");
         CheckParameterNotNull(collection, "Assert.DoesNotContainAll", "collection");
 
-        DoesNotContainAllImpl(expected.Cast<object?>(), collection.Cast<object?>(), EqualityComparer<object?>.Default, comparerName: null, message, expectedExpression, collectionExpression);
+        DoesNotContainAllImpl(notExpected.Cast<object?>(), collection.Cast<object?>(), EqualityComparer<object?>.Default, comparerName: null, message, notExpectedExpression, collectionExpression);
     }
 
     /// <summary>
-    /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="expected"/>
-    /// (with multiplicity) and throws an exception if every element in <paramref name="expected"/> occurs at
+    /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="notExpected"/>
+    /// (with multiplicity) and throws an exception if every element in <paramref name="notExpected"/> occurs at
     /// least as many times in <paramref name="collection"/>.
     /// </summary>
     /// <remarks>
     /// Element multiplicity is significant: <c>[1]</c> is considered not to contain all of <c>[1, 1]</c>
     /// (so this assertion would pass for those inputs).
     /// </remarks>
-    /// <param name="expected">
-    /// The collection of items expected not to all be present in <paramref name="collection"/>.
+    /// <param name="notExpected">
+    /// The collection of items the test expects not to all be present in <paramref name="collection"/>.
     /// </param>
     /// <param name="collection">
-    /// The collection expected not to contain every item of <paramref name="expected"/>.
+    /// The collection expected not to contain every item of <paramref name="notExpected"/>.
     /// </param>
     /// <param name="comparer">
     /// The equality comparer to use when comparing elements.
     /// </param>
     /// <param name="message">
-    /// The message to include in the exception when every element in <paramref name="expected"/>
+    /// The message to include in the exception when every element in <paramref name="notExpected"/>
     /// is also found (with sufficient multiplicity) in <paramref name="collection"/>. The message is shown in test results.
     /// </param>
-    /// <param name="expectedExpression">
-    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <param name="collectionExpression">
@@ -327,15 +327,15 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if every element of <paramref name="expected"/> occurs at least as many times in <paramref name="collection"/>.
+    /// Thrown if every element of <paramref name="notExpected"/> occurs at least as many times in <paramref name="collection"/>.
     /// </exception>
-    public static void DoesNotContainAll([NotNull] IEnumerable? expected, [NotNull] IEnumerable? collection, [NotNull] IEqualityComparer? comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContainAll([NotNull] IEnumerable? notExpected, [NotNull] IEnumerable? collection, [NotNull] IEqualityComparer? comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        CheckParameterNotNull(expected, "Assert.DoesNotContainAll", "expected");
+        CheckParameterNotNull(notExpected, "Assert.DoesNotContainAll", "notExpected");
         CheckParameterNotNull(collection, "Assert.DoesNotContainAll", "collection");
         CheckParameterNotNull(comparer, "Assert.DoesNotContainAll", "comparer");
 
-        DoesNotContainAllImpl(expected.Cast<object?>(), collection.Cast<object?>(), new NonGenericEqualityComparerAdapter(comparer), comparer.GetType().Name, message, expectedExpression, collectionExpression);
+        DoesNotContainAllImpl(notExpected.Cast<object?>(), collection.Cast<object?>(), new NonGenericEqualityComparerAdapter(comparer), comparer.GetType().Name, message, notExpectedExpression, collectionExpression);
     }
 
     #endregion // DoesNotContainAll
@@ -353,14 +353,14 @@ public sealed partial class Assert
         }
     }
 
-    private static void DoesNotContainAllImpl<T>(IEnumerable<T?> expected, IEnumerable<T?> collection, IEqualityComparer<T> comparer, string? comparerName, string? message, string expectedExpression, string collectionExpression)
+    private static void DoesNotContainAllImpl<T>(IEnumerable<T?> notExpected, IEnumerable<T?> collection, IEqualityComparer<T> comparer, string? comparerName, string? message, string notExpectedExpression, string collectionExpression)
     {
-        List<T?> expectedList = expected is List<T?> el ? el : [.. expected];
+        List<T?> notExpectedList = notExpected is List<T?> nel ? nel : [.. notExpected];
         List<T?> collectionList = collection is List<T?> cl ? cl : [.. collection];
 
-        if (!HasAnyMissingElement(expectedList, collectionList, comparer))
+        if (!HasAnyMissingElement(notExpectedList, collectionList, comparer))
         {
-            ReportAssertDoesNotContainAllFailed(expectedList, collectionList, comparerName, message, expectedExpression, collectionExpression);
+            ReportAssertDoesNotContainAllFailed(notExpectedList, collectionList, comparerName, message, notExpectedExpression, collectionExpression);
         }
     }
 
@@ -507,13 +507,13 @@ public sealed partial class Assert
     }
 
     [DoesNotReturn]
-    private static void ReportAssertDoesNotContainAllFailed<T>(IEnumerable<T?> expected, IEnumerable<T?> collection, string? comparerName, string? message, string expectedExpression, string collectionExpression)
+    private static void ReportAssertDoesNotContainAllFailed<T>(IEnumerable<T?> notExpected, IEnumerable<T?> collection, string? comparerName, string? message, string notExpectedExpression, string collectionExpression)
     {
-        string expectedText = AssertionValueRenderer.RenderValue(expected);
+        string notExpectedText = AssertionValueRenderer.RenderValue(notExpected);
         string collectionText = AssertionValueRenderer.RenderValue(collection);
 
         EvidenceBlock evidence = EvidenceBlock.Create()
-            .AddLine("expected:", expectedText)
+            .AddLine("notExpected:", notExpectedText)
             .AddLine("collection:", collectionText);
 
         if (comparerName is not null)
@@ -525,18 +525,19 @@ public sealed partial class Assert
         structured.WithUserMessage(message);
         structured.WithEvidence(evidence);
         structured.WithExpectedAndActual(expectedText: null, actualText: collectionText);
-        structured.WithCallSiteExpression(BuildCallSiteWithComparer("Assert.DoesNotContainAll", expectedExpression, collectionExpression, comparerName is not null));
+        structured.WithCallSiteExpression(BuildCallSiteWithComparer("Assert.DoesNotContainAll", notExpectedExpression, collectionExpression, comparerName is not null, firstArgPlaceholder: "<notExpected>"));
 
         ReportAssertFailed(structured);
     }
 
-    private static string? BuildCallSiteWithComparer(string assertionMethodName, string expectedExpression, string collectionExpression, bool hasComparer)
+    private static string? BuildCallSiteWithComparer(string assertionMethodName, string firstArgExpression, string secondArgExpression, bool hasComparer, string firstArgPlaceholder = "<expected>")
         => hasComparer
             // No [CallerArgumentExpression] is captured for the comparer parameter, so the third
             // expression slot is always unavailable. Pass the "<comparer>" placeholder directly as
             // the third expression to ensure the call site is rendered (e.g. as
-            // "Assert.ContainsAll(<expected>, <collection>, <comparer>)") even when callers do not
-            // support [CallerArgumentExpression] and the other expressions are also empty.
-            ? FormatCallSiteExpression(assertionMethodName, expectedExpression, collectionExpression, expression3: "<comparer>", "<expected>", "<collection>", "<comparer>")
-            : FormatCallSiteExpression(assertionMethodName, expectedExpression, collectionExpression, "<expected>", "<collection>");
+            // "Assert.ContainsAll(<expected>, <collection>, <comparer>)" or
+            // "Assert.DoesNotContainAll(<notExpected>, <collection>, <comparer>)") even when callers
+            // do not support [CallerArgumentExpression] and the other expressions are also empty.
+            ? FormatCallSiteExpression(assertionMethodName, firstArgExpression, secondArgExpression, expression3: "<comparer>", firstArgPlaceholder, "<collection>", "<comparer>")
+            : FormatCallSiteExpression(assertionMethodName, firstArgExpression, secondArgExpression, firstArgPlaceholder, "<collection>");
 }

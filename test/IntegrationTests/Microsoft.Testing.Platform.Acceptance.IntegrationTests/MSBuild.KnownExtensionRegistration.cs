@@ -25,16 +25,19 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContains("--crashdump");
+        testHostResult.AssertOutputContains("--hangdump");
+        testHostResult.AssertOutputContains("--publish-azdo-run-name");
+        testHostResult.AssertOutputContains("--publish-azdo-test-results");
         testHostResult.AssertOutputContains("--report-html");
         testHostResult.AssertOutputContains("--report-trx");
         testHostResult.AssertOutputContains("--retry-failed-tests");
-        testHostResult.AssertOutputContains("--hangdump");
 
         SL.Build binLog = SL.Serialization.Read(binlogFile);
         SL.Target generateSelfRegisteredExtensions = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateSelfRegisteredExtensions");
         SL.Task testingPlatformSelfRegisteredExtensions = generateSelfRegisteredExtensions.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformSelfRegisteredExtensions");
         SL.Message generatedSource = testingPlatformSelfRegisteredExtensions.FindChildrenRecursive<SL.Message>().Single(m => m.Text.Contains("SelfRegisteredExtensions source:"));
 
+        Assert.Contains("Microsoft.Testing.Extensions.AzureDevOpsReport.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.CrashDump.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.HangDump.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.HotReload.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
@@ -69,6 +72,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingPlatformVersion$" />

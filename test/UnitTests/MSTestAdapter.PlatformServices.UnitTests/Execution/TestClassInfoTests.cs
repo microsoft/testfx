@@ -426,6 +426,79 @@ public class TestClassInfoTests : TestContainer
         exception.InnerException.Should().BeOfType<InvalidOperationException>();
     }
 
+    public async Task GetResultOrRunClassInitializeAsyncShouldCapturePostClassInitPropertiesOnSuccess()
+    {
+        DummyTestClass.ClassInitializeMethodBody = tc =>
+        {
+            var context = (TestContext)tc;
+            context.Properties["ClassInitKey"] = "ClassInitValue";
+            context.Properties["AnotherKey"] = 123;
+        };
+        _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassInitializeMethod));
+
+        TestContextImplementation realTestContext = new(null, _testClassType.FullName, new Dictionary<string, object?>(), null, null);
+        TestResult result = await _testClassInfo.GetResultOrRunClassInitializeAsync(realTestContext, string.Empty, string.Empty, string.Empty, string.Empty);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        _testClassInfo.PostClassInitProperties.Should().NotBeNull();
+        _testClassInfo.PostClassInitProperties!.Should().ContainKey("ClassInitKey");
+        _testClassInfo.PostClassInitProperties["ClassInitKey"].Should().Be("ClassInitValue");
+        _testClassInfo.PostClassInitProperties["AnotherKey"].Should().Be(123);
+        // The per-context label must never leak into the snapshot.
+        _testClassInfo.PostClassInitProperties.Should().NotContainKey(TestContext.FullyQualifiedTestClassNameLabel);
+    }
+
+    public async Task GetResultOrRunClassInitializeAsyncShouldLeavePostClassInitPropertiesNullWhenClassInitMethodIsNull()
+    {
+        _testClassInfo.ClassInitializeMethod = null;
+
+        TestContextImplementation realTestContext = new(null, _testClassType.FullName, new Dictionary<string, object?>(), null, null);
+        TestResult result = await _testClassInfo.GetResultOrRunClassInitializeAsync(realTestContext, string.Empty, string.Empty, string.Empty, string.Empty);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        _testClassInfo.PostClassInitProperties.Should().BeNull();
+    }
+
+    public async Task GetResultOrRunClassInitializeAsyncShouldLeavePostClassInitPropertiesNullOnFailure()
+    {
+        DummyTestClass.ClassInitializeMethodBody = tc =>
+        {
+            ((TestContext)tc).Properties["ClassInitKey"] = "ClassInitValue";
+            throw new InvalidOperationException("boom");
+        };
+        _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassInitializeMethod));
+
+        TestContextImplementation realTestContext = new(null, _testClassType.FullName, new Dictionary<string, object?>(), null, null);
+        TestResult result = await _testClassInfo.GetResultOrRunClassInitializeAsync(realTestContext, string.Empty, string.Empty, string.Empty, string.Empty);
+
+        result.Outcome.Should().NotBe(UnitTestOutcome.Passed);
+        _testClassInfo.PostClassInitProperties.Should().BeNull();
+    }
+
+    public async Task GetResultOrRunClassInitializeAsyncShouldCapturePropertiesFromBaseAndDerivedClassInitMethods()
+    {
+        // Base class init runs first (added via BaseClassInitMethods), then derived class init.
+        DummyBaseTestClass.ClassInitializeMethodBody = tc => ((TestContext)tc).Properties["BaseKey"] = "BaseValue";
+        DummyTestClass.ClassInitializeMethodBody = tc =>
+        {
+            var context = (TestContext)tc;
+            // Derived class init can see what base set.
+            context.Properties["BaseKey"].Should().Be("BaseValue");
+            context.Properties["DerivedKey"] = "DerivedValue";
+        };
+
+        _testClassInfo.BaseClassInitMethods.Add(typeof(DummyBaseTestClass).GetMethod(nameof(DummyBaseTestClass.InitBaseClassMethod))!);
+        _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassInitializeMethod));
+
+        TestContextImplementation realTestContext = new(null, _testClassType.FullName, new Dictionary<string, object?>(), null, null);
+        TestResult result = await _testClassInfo.GetResultOrRunClassInitializeAsync(realTestContext, string.Empty, string.Empty, string.Empty, string.Empty);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        _testClassInfo.PostClassInitProperties.Should().NotBeNull();
+        _testClassInfo.PostClassInitProperties!["BaseKey"].Should().Be("BaseValue");
+        _testClassInfo.PostClassInitProperties["DerivedKey"].Should().Be("DerivedValue");
+    }
+
     private TestResult GetResultOrRunClassInitialize()
         => GetResultOrRunClassInitialize(_testContext);
 

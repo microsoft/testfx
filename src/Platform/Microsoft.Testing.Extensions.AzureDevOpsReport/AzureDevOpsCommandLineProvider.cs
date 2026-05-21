@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.FileSystemGlobbing;
@@ -50,6 +50,8 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
             new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude, AzureDevOpsResources.UploadArtifactIncludeOptionDescription, ArgumentArity.ZeroOrMore, false),
             new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactName, AzureDevOpsResources.UploadArtifactNameOptionDescription, ArgumentArity.ExactlyOne, false),
             new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts, AzureDevOpsResources.UploadArtifactsOptionDescription, ArgumentArity.ExactlyOne, false),
+            new CommandLineOption(AzureDevOpsCommandLineOptions.PublishAzureDevOpsRunNameOptionName, AzureDevOpsResources.PublishAzdoRunNameOptionDescription, ArgumentArity.ExactlyOne, false),
+            new CommandLineOption(AzureDevOpsCommandLineOptions.PublishAzureDevOpsTestResultsOptionName, AzureDevOpsResources.PublishAzdoTestResultsOptionDescription, ArgumentArity.Zero, false),
         ];
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
@@ -96,6 +98,13 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
         if (errorMessage is null && HasArtifactUploadConfiguration(commandLineOptions) && IsArtifactUploadDisabled(commandLineOptions))
         {
             errorMessage = AzureDevOpsResources.ArtifactUploadOptionsRequireUploadArtifacts;
+        }
+
+        if (errorMessage is null
+            && commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.PublishAzureDevOpsRunNameOptionName)
+            && !commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.PublishAzureDevOpsTestResultsOptionName))
+        {
+            errorMessage = AzureDevOpsResources.PublishAzdoRunNameRequiresPublishAzdoTestResults;
         }
 
         return errorMessage is null

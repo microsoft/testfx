@@ -4,7 +4,6 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Testing.Platform.AI.Resources;
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.AI;
 
@@ -37,7 +36,7 @@ public static class ChatClientProviderExtensions
     /// <returns>A task representing the asynchronous operation that returns an instance of <see cref="IChatClient"/>.</returns>
     public static async Task<IChatClient?> GetChatClientAsync(this IServiceProvider serviceProvider, CancellationToken cancellationToken)
     {
-        IChatClientProvider? provider = serviceProvider.GetServiceInternal<IChatClientProvider>();
+        var provider = (IChatClientProvider?)serviceProvider.GetService(typeof(IChatClientProvider));
         return provider is null
             ? null
             : await provider.CreateChatClientAsync(cancellationToken).ConfigureAwait(false);

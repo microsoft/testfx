@@ -293,21 +293,36 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             };
 
             await logger.LogDebugAsync($"Starting test host process, attempt {attemptCount}/{userMaxRetryCount}").ConfigureAwait(false);
-            IProcess testHostProcess = _serviceProvider.GetProcessHandler().Start(processStartInfo)
+            using IProcess testHostProcess = _serviceProvider.GetProcessHandler().Start(processStartInfo)
                 ?? throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsCannotStartProcessErrorMessage, processStartInfo.FileName));
 
-            CancellationTokenSource processExitedCancellationToken = new();
-            testHostProcess.Exited += (sender, e) =>
+            using var processExitedCancellationToken = new CancellationTokenSource();
+            EventHandler exitedHandler = (sender, e) =>
             {
-                processExitedCancellationToken.Cancel();
-                var processExited = sender as Process;
-                logger.LogDebug($"Test host process exited, PID: '{processExited?.Id}'");
+                try
+                {
+                    processExitedCancellationToken.Cancel();
+                }
+                catch (ObjectDisposedException ex)
+                {
+                    // The handler can race with the end-of-iteration cleanup: if the OS process
+                    // exit signal is queued to the thread pool before we detach the handler but
+                    // executes after the CTS has been disposed, Cancel() throws. Log at debug
+                    // level so an unexpected pattern stays observable without becoming a fatal
+                    // failure in the retry loop.
+                    logger.LogDebug($"CancellationTokenSource already disposed when process exited: {ex.Message}");
+                }
+
+                logger.LogDebug($"Test host process exited, PID: '{(sender as Process)?.Id}'");
             };
 
-            using (var timeout = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout))
-            using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken))
-            using (var linkedToken2 = CancellationTokenSource.CreateLinkedTokenSource(linkedToken.Token, processExitedCancellationToken.Token))
+            testHostProcess.Exited += exitedHandler;
+            try
             {
+                using var timeout = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                using var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken);
+                using var linkedToken2 = CancellationTokenSource.CreateLinkedTokenSource(linkedToken.Token, processExitedCancellationToken.Token);
+
                 await logger.LogDebugAsync("Wait connection from the test host process").ConfigureAwait(false);
                 try
                 {
@@ -326,6 +341,10 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                     await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestHostProcessExitedBeforeRetryCouldConnect, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
                     return (int)ExitCode.GenericFailure;
                 }
+            }
+            finally
+            {
+                testHostProcess.Exited -= exitedHandler;
             }
 
             await testHostProcess.WaitForExitAsync().ConfigureAwait(false);
