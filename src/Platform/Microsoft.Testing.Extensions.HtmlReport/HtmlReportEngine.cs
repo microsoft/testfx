@@ -158,9 +158,13 @@ internal sealed class HtmlReportEngine
     {
         string? entryAssemblyTargetFramework = TargetFrameworkParser.GetShortTargetFramework(
             Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName);
-        string? runtimeTargetFramework = TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
+        if (entryAssemblyTargetFramework is not null)
+        {
+            return entryAssemblyTargetFramework;
+        }
 
-        return entryAssemblyTargetFramework ?? runtimeTargetFramework ?? "unknown";
+        string? runtimeTargetFramework = TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
+        return runtimeTargetFramework ?? "unknown";
     }
 
     private static string ReplaceInvalidFileNameChars(string fileName)
