@@ -667,7 +667,11 @@ public class TrxTests
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
-        string[] resultFilePaths = [.. xml.Descendants().Where(x => x.Name.LocalName == "ResultFile").Select(x => x.Attribute("path")).OfType<XAttribute>().Select(attribute => attribute.Value)];
+        IEnumerable<XElement> resultFileElements = xml.Descendants().Where(element => element.Name.LocalName == "ResultFile");
+        string[] resultFilePaths = [.. resultFileElements
+            .Select(element => element.Attribute("path"))
+            .OfType<XAttribute>()
+            .Select(attribute => attribute.Value)];
         Assert.Contains("MachineName/goodFile", resultFilePaths);
         Assert.DoesNotContain("badFile", string.Join(Environment.NewLine, resultFilePaths));
         string trxContent = xml.ToString();
