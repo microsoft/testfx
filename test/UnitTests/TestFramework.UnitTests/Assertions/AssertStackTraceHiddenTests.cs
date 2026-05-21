@@ -158,12 +158,9 @@ public class AssertStackTraceHiddenTests : TestContainer
         handlers.Should().NotBeEmpty($"{ownerType.FullName} is expected to expose nested *InterpolatedStringHandler structs");
 
         List<string> uncovered = [];
-        foreach (Type handler in handlers)
+        foreach (Type handler in handlers.Where(static handler => !HasStackTraceHiddenAttribute(handler)))
         {
-            if (!HasStackTraceHiddenAttribute(handler))
-            {
-                uncovered.Add(handler.FullName ?? handler.Name);
-            }
+            uncovered.Add(handler.FullName ?? handler.Name);
         }
 
         uncovered.Should().BeEmpty(
