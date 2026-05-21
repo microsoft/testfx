@@ -672,13 +672,13 @@ public class TrxTests
             .Select(element => element.Attribute("path"))
             .OfType<XAttribute>()
             .Select(attribute => attribute.Value)];
-        Assert.Contains("MachineName/goodFile", resultFilePaths);
+        Assert.Contains(path => path.EndsWith("goodFile", StringComparison.Ordinal), resultFilePaths);
         Assert.DoesNotContain("badFile", string.Join(Environment.NewLine, resultFilePaths));
-        string trxContent = xml.ToString();
-        Assert.Contains(@"outcome=""Warning""", trxContent);
-        Assert.Contains("Unable to copy attachment", trxContent);
-        Assert.Contains("badFile", trxContent);
-        Assert.Contains("UnauthorizedAccessException", trxContent);
+        XElement warningRunInfo = xml.Descendants().Single(element => element.Name.LocalName == "RunInfo" && element.Attribute("outcome")?.Value == "Warning");
+        string warningText = warningRunInfo.Descendants().Single(element => element.Name.LocalName == "Text").Value;
+        Assert.Contains("Unable to copy attachment", warningText);
+        Assert.Contains("badFile", warningText);
+        Assert.Contains("UnauthorizedAccessException", warningText);
     }
 
     [TestMethod]
