@@ -84,7 +84,7 @@ internal sealed class CIEnvironmentDetector
             bool allVariablesPresent = true;
             foreach (string variable in variables)
             {
-                if (RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable(variable)))
+                if (global::Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable(variable)))
                 {
                     allVariablesPresent = false;
                     break;
@@ -99,7 +99,7 @@ internal sealed class CIEnvironmentDetector
 
         foreach (string variable in IfNonNullVariables)
         {
-            if (!RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable(variable)))
+            if (!global::Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable(variable)))
             {
                 return true;
             }
