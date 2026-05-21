@@ -289,10 +289,17 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
         testHostResult.AssertOutputContains("Tests suite failed, total failed tests: 1, exit code: 2, attempt: 1/4");
 
+        // Verify that the first attempt honored the treenode-filter.
+        string[] retryTrxFiles = Directory.GetFiles(Path.Combine(resultDirectory, "Retries"), "*.trx", SearchOption.AllDirectories);
+        Assert.HasCount(1, retryTrxFiles);
+
+        string retryTrxContent = File.ReadAllText(retryTrxFiles[0]);
+        Assert.Contains("TestMethod1", retryTrxContent);
+        Assert.Contains("TestMethod2", retryTrxContent);
+        Assert.DoesNotContain("TestMethod3", retryTrxContent);
+
         // Verify that the retry attempt only ran the failed test (TestMethod1) - i.e. the treenode-filter was
-        // dropped and replaced by --filter-uid 1, not stacked on top of it. If the filters had been stacked
-        // (or worse, both forwarded as separate options), the second attempt would have failed validation or
-        // produced no results.
+        // dropped and replaced by --filter-uid 1.
         // The TRX in the top-level results directory (not under Retries/) is from the last attempt.
         string[] topLevelTrxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.TopDirectoryOnly);
         Assert.HasCount(1, topLevelTrxFiles);
