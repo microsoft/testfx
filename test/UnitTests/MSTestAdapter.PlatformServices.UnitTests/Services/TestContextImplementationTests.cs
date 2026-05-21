@@ -303,6 +303,20 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation.DataConnection!.ConnectionString
             .Should().Be("Dsn=Excel Files;dbq=.\\data.xls;defaultdir=.; driverid=790;maxbuffersize=2048;pagetimeout=5");
     }
+
+    public void CloneForDataDrivenIterationShouldPreserveDataConnection()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+
+        DbProviderFactory factory = DbProviderFactories.GetFactory("System.Data.Odbc");
+        DbConnection connection = factory.CreateConnection();
+        connection.ConnectionString = @"Dsn=Excel Files;dbq=.\data.xls;defaultdir=.; driverid=790;maxbuffersize=2048;pagetimeout=5";
+        _testContextImplementation.SetDataConnection(connection);
+
+        TestContextImplementation clone = _testContextImplementation.CloneForDataDrivenIteration();
+
+        clone.DataConnection.Should().BeSameAs(connection);
+    }
 #endif
 
 #if NETCOREAPP

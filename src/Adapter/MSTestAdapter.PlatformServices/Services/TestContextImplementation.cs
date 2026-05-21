@@ -468,8 +468,9 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// of the folded data-driven test execution path.
     /// <para>
     /// The clone inherits the same configuration as this context (a shallow snapshot of the
-    /// property bag, the message logger, and the test-run cancellation token registration),
-    /// but starts with no accumulated per-test state (no captured stdout/stderr/trace,
+    /// property bag, the message logger, the same test-run cancellation token, and on .NET
+    /// Framework the current data connection), but registers its own cancellation callback and
+    /// starts with no accumulated per-test state (no captured stdout/stderr/trace,
     /// no diagnostic messages, no result files, no outcome, no exception, no data row).
     /// This keeps the folded path structurally equivalent to the unfolded path, where each
     /// row gets its own <see cref="TestContextImplementation"/>.
@@ -494,6 +495,10 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         // execution-attempt count of this test, not per-row state, so it must flow into
         // each iteration's context.
         clone.Context.TestRunCount = Context.TestRunCount;
+
+#if NETFRAMEWORK
+        clone.SetDataConnection(_dbConnection);
+#endif
 
         return clone;
     }
