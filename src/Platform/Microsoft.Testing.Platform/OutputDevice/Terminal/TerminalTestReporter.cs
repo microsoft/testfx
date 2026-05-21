@@ -62,8 +62,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private DateTimeOffset? _testExecutionEndTime;
 
-    private int _buildErrorsCount;
-
     private bool WasCancelled
     {
         get => field || _testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested;
@@ -145,7 +143,16 @@ internal sealed partial class TerminalTestReporter : IDisposable
         });
     }
 
-    public void Dispose() => _terminalWithProgress.Dispose();
+    public void Dispose()
+    {
+        _terminalWithProgress.Dispose();
+
+        // Restore the console mode that we may have changed when enabling ANSI output. If
+        // TestExecutionCompleted already ran, the saved mode was consumed there; if it did not
+        // (e.g. on an abnormal teardown path where Dispose is the only thing called), this is the
+        // last chance to leave the user's terminal in the state we found it in.
+        NativeMethods.RestoreConsoleMode(_originalConsoleMode);
+    }
 
     public void ArtifactAdded(bool outOfProcess, string? testName, string path)
         => _artifacts.Add(new TestRunArtifact(outOfProcess, testName, path));
