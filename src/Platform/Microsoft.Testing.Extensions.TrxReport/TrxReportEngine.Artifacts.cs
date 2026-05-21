@@ -90,7 +90,7 @@ internal sealed partial class TrxReportEngine
     }
 
     private static void AddAttachmentWarning(FileInfo artifact, Exception exception, List<string> attachmentWarnings)
-        => attachmentWarnings.Add($"Unable to copy attachment '{artifact.FullName}' into the TRX results directory. The attachment will be skipped. {exception.GetType().Name}: {exception.Message}");
+        => attachmentWarnings.Add($"Unable to copy attachment '{artifact.FullName}' into the TRX results directory. The attachment will be skipped. Reason: {exception.GetType().Name}.");
 
     private string CopyArtifactIntoTrxDirectoryAndReturnHrefValue(FileInfo artifact, string runDeploymentRoot, string? relativeResultsDirectory = null)
     {
