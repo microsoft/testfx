@@ -52,12 +52,12 @@ Spostamento dei file di asset dell'ultimo tentativo nella directory dei risultat
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
         <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</source>
-        <target state="new">Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</target>
+        <target state="translated">Aggiungi il ritardo tra i tentativi. Il ritardo è espresso come valore temporale, ad esempio 200, 1s, 2,5m, 1h. L'unità predefinita è il millisecondo.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
         <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 1s, 2.5m, 1h)</source>
-        <target state="new">Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 1s, 2.5m, 1h)</target>
+        <target state="translated">L'opzione '--retry-failed-tests-delay' richiede un valore di intervallo di tempo valido, non negativo e non superiore a 2147483647ms (~24.20:31:23.647) (ad esempio 200, 1s, 2.5m, 1h)</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">

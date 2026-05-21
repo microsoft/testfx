@@ -21,29 +21,29 @@ Solution files: `TestFx.slnx` is the full solution; `MSTest.slnf`, `Microsoft.Te
 
 ## Build, test, and debug commands
 
-Always use the repo-local toolchain via the build scripts — they restore the pinned .NET SDK from `global.json` into `.dotnet/` and set `DOTNET_ROOT` accordingly.
+Always use the repo-local toolchain via the build scripts — they restore the pinned .NET SDK from `global.json` into `.dotnet/` (or reuse a matching `DOTNET_INSTALL_DIR`) and prepend that `dotnet` location to `PATH`.
 
 | Task | Windows | Linux/macOS |
 |---|---|---|
 | Restore + build (Debug) | `.\build.cmd` | `./build.sh` |
 | Release build | `.\build.cmd -c Release` | `./build.sh -c Release` |
 | Produce NuGet packages | `.\build.cmd -pack` | `./build.sh -pack` |
-| Unit tests | `.\build.cmd -test` | `./build.sh --test` |
-| Integration + acceptance tests | `.\build.cmd -pack -test -integrationTest` | `./build.sh --pack --test --integrationTest` |
+| Unit tests | `.\build.cmd -test` | `./build.sh -test` |
+| Integration + acceptance tests | `.\build.cmd -pack -test -integrationTest` | `./build.sh -pack -test -integrationTest` |
 | Open the solution in VS with the right env | `.\open-vs.cmd` | n/a |
 
 Acceptance integration tests (anything under `test/IntegrationTests/*.Acceptance.IntegrationTests`) consume the packed NuGets from `artifacts/packages/<Configuration>/Shipping`, so you **must** run `-pack` (and rerun it after every source change you want to test) before invoking them. Plain unit tests do not need `-pack`.
 
 ### Running a single test
 
-Once the desired project has been built, invoke its test host directly — both MSTest and MTP-based hosts accept the same CLI options:
+Once the desired project has been built, invoke its test host directly. Note that CLI options differ by host: `--filter-uid` is available on both MSTest and MTP-based hosts, while `--treenode-filter` is MTP-only:
 
 ```powershell
-# MSTest-based unit-test project (Microsoft.Testing.Platform runner — see global.json)
-dotnet run --project test\UnitTests\MSTest.Analyzers.UnitTests --no-build -c Debug -- --filter-uid <TestUid>
+# Filter by UID — works with both MSTest and MTP-based hosts
+dotnet run --project test\UnitTests\MSTest.Analyzers.UnitTests -f net8.0 --no-build -c Debug -- --filter-uid <TestUid>
 
-# Tree-node / wildcard filter (faster to type than a UID)
-dotnet run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests --no-build -- --treenode-filter "/*/*/*/MyTestClass/MyTestMethod"
+# Tree-node / wildcard filter — MTP-only (faster to type than a UID)
+dotnet run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests -f net8.0 --no-build -- --treenode-filter "/*/*/*/MyTestClass/MyTestMethod"
 ```
 
 For acceptance tests that drive generated assets, prefer running them through the test explorer or `dotnet test --filter "FullyQualifiedName~MyTest"` on the specific project, after `-pack`.
