@@ -256,7 +256,7 @@ public sealed class TestContextPropertyFlowForceCleanupTests : AcceptanceTestBas
             {
                 Directory.Delete(markerDirectory, recursive: true);
             }
-            catch
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 // Best-effort cleanup of the temporary marker directory.
             }

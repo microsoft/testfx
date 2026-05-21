@@ -85,8 +85,19 @@ internal sealed class TestAssemblyInfo
 
     /// <summary>
     /// Gets or sets a value indicating whether <c>AssemblyInitialize</c> has been executed.
+    /// <para>
+    /// Reads and writes use <see cref="Volatile"/> because this flag acts as the fast-path
+    /// guard that lets callers bypass <see cref="_assemblyInfoExecuteSyncSemaphore"/>. The
+    /// release semantics on the publishing write ensure that the prior
+    /// <see cref="PostAssemblyInitProperties"/> snapshot publication is also visible to any
+    /// reader that observes this flag as <see langword="true"/> on the fast path.
+    /// </para>
     /// </summary>
-    public bool IsAssemblyInitializeExecuted { get; internal set; }
+    public bool IsAssemblyInitializeExecuted
+    {
+        get => Volatile.Read(ref field);
+        internal set => Volatile.Write(ref field, value);
+    }
 
     /// <summary>
     /// Gets or sets the assembly initialization exception.
@@ -114,7 +125,11 @@ internal sealed class TestAssemblyInfo
     /// Reads and writes use <see cref="Volatile"/> so that callers on the
     /// <see cref="IsAssemblyInitializeExecuted"/> fast path (which intentionally bypasses
     /// <see cref="_assemblyInfoExecuteSyncSemaphore"/>) safely observe the snapshot published
-    /// by the thread that ran <c>AssemblyInitialize</c>.
+    /// by the thread that ran <c>AssemblyInitialize</c>. The publishing thread writes this
+    /// snapshot before writing <see cref="IsAssemblyInitializeExecuted"/>, and both writes go
+    /// through <see cref="Volatile"/>, so any reader that observes
+    /// <see cref="IsAssemblyInitializeExecuted"/> as <see langword="true"/> is guaranteed to
+    /// also see the published snapshot.
     /// </para>
     /// </summary>
     internal IReadOnlyDictionary<string, object?>? PostAssemblyInitProperties
