@@ -68,15 +68,11 @@ internal sealed class AggregatedConfiguration(
     /// </summary>
     internal IReadOnlyList<KeyValuePair<string, string?>> GetTestConfigJsonSection(string sectionName)
     {
-        foreach (IConfigurationProvider provider in _configurationProviders)
-        {
-            if (provider is JsonConfigurationSource.JsonConfigurationProvider jsonProvider)
-            {
-                return jsonProvider.GetSection(sectionName);
-            }
-        }
+        JsonConfigurationSource.JsonConfigurationProvider? jsonProvider = _configurationProviders
+            .OfType<JsonConfigurationSource.JsonConfigurationProvider>()
+            .FirstOrDefault();
 
-        return [];
+        return jsonProvider?.GetSection(sectionName) ?? [];
     }
 
     public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(IFileLoggerProvider? fileLoggerProvider)
