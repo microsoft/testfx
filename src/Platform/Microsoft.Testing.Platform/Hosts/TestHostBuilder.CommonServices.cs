@@ -99,11 +99,17 @@ internal sealed partial class TestHostBuilder
 #pragma warning disable CA1416 // Browser does not support the test host controller process model. The provider itself is marked [UnsupportedOSPlatform("browser")].
         if (!OperatingSystem.IsBrowser())
         {
-            // Register the built-in provider that applies env vars declared in the
-            // 'environmentVariables' section of testconfig.json. Registered first (before any
-            // user-supplied providers) so that later providers - including the VSTest bridge
-            // runsettings provider - can override these values when both sources are present.
-            TestHostControllers.AddEnvironmentVariableProvider(sp => new TestConfigurationEnvironmentVariableProvider(sp.GetConfiguration()));
+            // Insert the built-in provider at the front so later user-supplied providers -
+            // including the VSTest bridge runsettings provider - can still override these
+            // unlocked values when both sources are present.
+            if (TestHostControllers is TestHostControllersManager testHostControllersManager)
+            {
+                testHostControllersManager.AddEnvironmentVariableProviderFirst(sp => new TestConfigurationEnvironmentVariableProvider(sp.GetConfiguration()));
+            }
+            else
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
         }
 #pragma warning restore CA1416
 

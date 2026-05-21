@@ -145,14 +145,24 @@ public static class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        string controllerParentPid = "<none>";
+        for (int i = 0; i < args.Length - 1; i++)
+        {
+            if (args[i] == "--internal-testhostcontroller-pid")
+            {
+                controllerParentPid = args[i + 1];
+                break;
+            }
+        }
+
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new DummyTestFramework());
+        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new DummyTestFramework(controllerParentPid));
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
 }
 
-public sealed class DummyTestFramework : ITestFramework, IDataProducer
+public sealed class DummyTestFramework(string controllerParentPid) : ITestFramework, IDataProducer
 {
     public string Uid => nameof(DummyTestFramework);
     public string Version => "1.0.0";
@@ -172,23 +182,11 @@ public sealed class DummyTestFramework : ITestFramework, IDataProducer
             Console.WriteLine($"{name}={value ?? "<unset>"}");
         }
 
-        // Surface whether the test host is running as a child of the test host controller.
-        // The platform sets a well-known variable of the form
-        // TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID_<controllerPid>=<controllerPid> on the
-        // spawned child process when the controller process model is engaged, so acceptance
-        // tests can assert that the environmentVariables section actually triggers (or does not
-        // trigger) the relaunch.
-        string? controllerParentPid = null;
-        foreach (System.Collections.DictionaryEntry entry in Environment.GetEnvironmentVariables())
-        {
-            if (entry.Key is string key && key.StartsWith("TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID_", StringComparison.Ordinal))
-            {
-                controllerParentPid = entry.Value?.ToString();
-                break;
-            }
-        }
-
-        Console.WriteLine($"TESTHOSTCONTROLLER_PARENTPID={controllerParentPid ?? "<none>"}");
+        // Surface whether the test host was relaunched under the test host controller process
+        // model. The controller adds the hidden --internal-testhostcontroller-pid option only to
+        // the spawned child process, which avoids false positives from inherited environment
+        // variables when the outer acceptance test process itself runs under a controller.
+        Console.WriteLine($"TESTHOSTCONTROLLER_PARENTPID={controllerParentPid}");
 
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode
         {
