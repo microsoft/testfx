@@ -228,11 +228,14 @@ public static partial class AssertExtensions
             pos++;
         }
 
-        // Check for collection type names
+        // Check for collection type names. Use an indexed for loop (instead of foreach +
+        // implicit filter) to satisfy the CodeQL "missed Where" heuristic without paying for a
+        // LINQ FirstOrDefault/Where delegate allocation on the diagnostic cleanup hot path.
         string matchedType = string.Empty;
 
-        foreach (string type in ListInitCollectionTypes)
+        for (int typeIndex = 0; typeIndex < ListInitCollectionTypes.Length; typeIndex++)
         {
+            string type = ListInitCollectionTypes[typeIndex];
             if (HasSubstringAt(input, pos, type))
             {
                 matchedType = type;
