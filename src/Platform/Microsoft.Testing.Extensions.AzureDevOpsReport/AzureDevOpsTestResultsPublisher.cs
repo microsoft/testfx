@@ -364,6 +364,7 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                         _retryResults.Push(batch[i]);
                     }
 
+                    // Reset the interval countdown so a transient failure does not cause a tight retry loop.
                     _lastFlushTime = _clock.UtcNow;
                     _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
                     return;
