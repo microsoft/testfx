@@ -75,6 +75,11 @@ Przeniesienie plików zasobów ostatniej próby do domyślnego katalogu wyników
         <target state="translated">Wyłącz mechanizm ponawiania prób, jeśli procent testów zakończonych niepowodzeniem jest większy niż określona wartość</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
+        <source>Option '{0}' expects an integer argument between 0 and 100</source>
+        <target state="new">Option '{0}' expects an integer argument between 0 and 100</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
         <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
         <target state="translated">Wyłącz mechanizm ponawiania prób, jeśli liczba testów zakończonych niepowodzeniem jest większa niż określona wartość</target>
@@ -100,9 +105,9 @@ Przeniesienie plików zasobów ostatniej próby do domyślnego katalogu wyników
         <target state="translated">Opcja „{0}” wymaga określenia opcji „{1}”</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage">
-        <source>Option '{0}' expects a single integer argument</source>
-        <target state="translated">Opcja „{0}” oczekuje argumentu pojedynczej liczby całkowitej</target>
+      <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
+        <source>Option '{0}' expects a non-negative integer argument</source>
+        <target state="new">Option '{0}' expects a non-negative integer argument</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">

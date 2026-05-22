@@ -75,6 +75,11 @@ Son deneme varlık dosyaları, varsayılan sonuç dizinine taşınıyor
         <target state="translated">Başarısız testlerin yüzdesi belirtilen değerden büyükse yeniden deneme mekanizmasını devre dışı bırak</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
+        <source>Option '{0}' expects an integer argument between 0 and 100</source>
+        <target state="new">Option '{0}' expects an integer argument between 0 and 100</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
         <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
         <target state="translated">Başarısız testlerin yüzdesi belirtilen değerden büyükse yeniden deneme mekanizmasını devre dışı bırak</target>
@@ -100,9 +105,9 @@ Son deneme varlık dosyaları, varsayılan sonuç dizinine taşınıyor
         <target state="translated">'{0}' seçeneği, '{1}' seçeneğinin belirtilmesini gerektirir</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage">
-        <source>Option '{0}' expects a single integer argument</source>
-        <target state="translated">Seçenek '{0}' tek bir tamsayı argümanı bekliyor</target>
+      <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
+        <source>Option '{0}' expects a non-negative integer argument</source>
+        <target state="new">Option '{0}' expects a non-negative integer argument</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">

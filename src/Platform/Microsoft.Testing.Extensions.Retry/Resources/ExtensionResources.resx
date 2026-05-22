@@ -176,8 +176,11 @@ Moving last attempt asset files to the default result directory
   <data name="RetryFailedTestsOptionIsMissingErrorMessage" xml:space="preserve">
     <value>Option '{0}' requires option '{1}' to be specified</value>
   </data>
-  <data name="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage" xml:space="preserve">
-    <value>Option '{0}' expects a single integer argument</value>
+  <data name="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage" xml:space="preserve">
+    <value>Option '{0}' expects a non-negative integer argument</value>
+  </data>
+  <data name="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage" xml:space="preserve">
+    <value>Option '{0}' expects an integer argument between 0 and 100</value>
   </data>
   <data name="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage" xml:space="preserve">
     <value>Options '{0}' and '{1}' cannot be used together</value>

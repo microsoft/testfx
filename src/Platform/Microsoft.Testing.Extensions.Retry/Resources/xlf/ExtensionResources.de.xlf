@@ -75,6 +75,11 @@ Medienobjektdateien des letzten Versuchs werden in das Standardergebnisverzeichn
         <target state="translated">Wiederholungsmechanismus deaktivieren, wenn der Prozentsatz fehlerhafter Tests größer als der angegebene Wert ist</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
+        <source>Option '{0}' expects an integer argument between 0 and 100</source>
+        <target state="new">Option '{0}' expects an integer argument between 0 and 100</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
         <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
         <target state="translated">Wiederholungsmechanismus deaktivieren, wenn die Anzahl fehlerhafter Tests größer als der angegebene Wert ist</target>
@@ -100,9 +105,9 @@ Medienobjektdateien des letzten Versuchs werden in das Standardergebnisverzeichn
         <target state="translated">Die "{0}"-Option erfordert, dass "{1}" angegeben ist</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage">
-        <source>Option '{0}' expects a single integer argument</source>
-        <target state="translated">Option "{0}" erwartet ein einzelnes ganzzahliges Argument</target>
+      <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
+        <source>Option '{0}' expects a non-negative integer argument</source>
+        <target state="new">Option '{0}' expects a non-negative integer argument</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">

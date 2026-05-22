@@ -75,6 +75,11 @@ Moving last attempt asset files to the default result directory
         <target state="translated">失敗したテストの割合が指定した値を超える場合は再試行メカニズムを無効にする</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
+        <source>Option '{0}' expects an integer argument between 0 and 100</source>
+        <target state="new">Option '{0}' expects an integer argument between 0 and 100</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
         <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
         <target state="translated">失敗したテストの数が指定した値を超える場合は再試行メカニズムを無効にする</target>
@@ -100,9 +105,9 @@ Moving last attempt asset files to the default result directory
         <target state="translated">オプション '{0}' では、オプション '{1}' を指定する必要があります</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage">
-        <source>Option '{0}' expects a single integer argument</source>
-        <target state="translated">オプション '{0}' には 1 つの整数引数が必要です</target>
+      <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
+        <source>Option '{0}' expects a non-negative integer argument</source>
+        <target state="new">Option '{0}' expects a non-negative integer argument</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
