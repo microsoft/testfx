@@ -1,7 +1,7 @@
 ---
+source: "githubnext/agentics/workflows/issue-arborist.md@main"
 description: Daily workflow that analyzes open issues and links related issues as sub-issues to improve issue organization
 name: Issue Arborist
-
 on:
   schedule: daily
   workflow_dispatch:
@@ -20,7 +20,7 @@ tools:
     lockdown: true
     toolsets:
       - issues
-    min-integrity: none
+    min-integrity: none # This workflow is allowed to examine and comment on any issues
   bash:
     - "cat *"
     - "jq *"
@@ -29,56 +29,32 @@ steps:
   - name: Fetch issues data
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      GH_AW_ORIGINAL_GITHUB_API_URL: ${{ github.api_url }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     run: |
       # Create output directory
       mkdir -p /tmp/gh-aw/issues-data
 
       echo "⬇ Downloading the last 100 open issues (excluding sub-issues)..."
 
-      # Use REST API directly to avoid gh CLI /meta check blocked by DIFC proxy.
-      # Fetches the most recently created 100 issues (intentional limit matching previous behavior).
-      # State is normalized to uppercase (OPEN/CLOSED) to match gh CLI GraphQL output format.
-      curl -s \
-        -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-        -H "Accept: application/vnd.github+json" \
-        --get \
-        --data-urlencode "q=repo:${{ github.repository }} is:issue is:open -is:sub-issue" \
-        --data-urlencode "sort=created" \
-        --data-urlencode "order=desc" \
-        --data-urlencode "per_page=100" \
-        "${GH_AW_ORIGINAL_GITHUB_API_URL}/search/issues" \
-        | jq '.items // [] | map({
-            number: .number,
-            title: .title,
-            author: {login: .user.login},
-            createdAt: .created_at,
-            state: (.state | ascii_upcase),
-            url: .html_url,
-            body: .body,
-            labels: [.labels[] | {name: .name}],
-            updatedAt: .updated_at,
-            closedAt: .closed_at,
-            milestone: (if .milestone != null then {title: .milestone.title} else null end),
-            assignees: [.assignees[] | {login: .login}]
-          })' \
-        > /tmp/gh-aw/issues-data/issues.json \
-        || echo '[]' > /tmp/gh-aw/issues-data/issues.json
+      # Fetch the last 100 open issues that don't have a parent issue
+      gh issue list --repo ${{ github.repository }} \
+        --search "-parent-issue:*" \
+        --state open \
+        --json number,title,author,createdAt,state,url,body,labels,updatedAt,closedAt,milestone,assignees \
+        --limit 100 \
+        > /tmp/gh-aw/issues-data/issues.json
 
       echo "✓ Issues data saved to /tmp/gh-aw/issues-data/issues.json"
       echo "Total issues fetched: $(jq 'length' /tmp/gh-aw/issues-data/issues.json)"
-
 safe-outputs:
   create-issue:
     expires: 2d
-    title-prefix: "[Parent] "
+    title-prefix: "[parent] "
     max: 5
     group: true
   link-sub-issue:
     max: 50
-  noop:
-    report-as-issue: false
-
+  noop: {}
 timeout-minutes: 15
 ---
 
@@ -93,7 +69,6 @@ Analyze the last 100 open issues in repository ${{ github.repository }} and iden
 ## Pre-Downloaded Data
 
 The issue data has been pre-downloaded and is available at:
-
 - **Issues data**: `/tmp/gh-aw/issues-data/issues.json` - Contains the last 100 open issues (excluding those that are already sub-issues)
 
 Use `cat /tmp/gh-aw/issues-data/issues.json | jq ...` to query and analyze the issues.
@@ -103,12 +78,10 @@ Use `cat /tmp/gh-aw/issues-data/issues.json | jq ...` to query and analyze the i
 ### Step 1: Load and Analyze Issues
 
 Read the pre-downloaded issues data from `/tmp/gh-aw/issues-data/issues.json`. The data includes:
-
 - Issue number, title, body/description
 - Labels, state, author, assignees, milestone, timestamps
 
 Use `jq` to filter and analyze the data:
-
 ```bash
 # Get count of issues
 jq 'length' /tmp/gh-aw/issues-data/issues.json
@@ -122,7 +95,7 @@ jq '[.[] | select(.labels | any(.name == "bug"))]' /tmp/gh-aw/issues-data/issues
 Examine the issues to identify potential parent-child relationships. Look for:
 
 1. **Feature with Tasks**: A high-level feature request (parent) with specific implementation tasks (sub-issues)
-2. **Epic Patterns**: Issues with "[Epic]", "[Parent]" or similar prefixes that encompass smaller work items
+2. **Epic Patterns**: Issues with "[Epic]", "[parent]" or similar prefixes that encompass smaller work items
 3. **Bug with Root Cause**: A symptom bug (sub-issue) that relates to a root cause issue (parent)
 4. **Tracking Issues**: Issues that track multiple related work items
 5. **Semantic Similarity**: Issues with highly related titles, labels, or content that suggest hierarchy
@@ -131,22 +104,19 @@ Examine the issues to identify potential parent-child relationships. Look for:
 ### Step 3: Make Linking Decisions
 
 For each potential relationship, evaluate:
-
 - Is there a clear parent-child hierarchy? (parent should be broader/higher-level)
 - Are both issues in a state where linking makes sense?
 - Would linking improve organization and traceability?
 - Is the relationship strong enough to warrant a permanent link?
 
 **Creating Parent Issues for Orphan Clusters:**
-
 - If you identify a cluster of **5 or more related issues** that lack a parent issue, you may create a new parent issue
-- The parent issue should have a clear, descriptive title starting with "[Parent] " that captures the common theme
+- The parent issue should have a clear, descriptive title starting with "[parent] " that captures the common theme
 - Include a body that explains the cluster and references all related issues
 - Use temporary IDs (format: `aw_` + 3-8 alphanumeric characters) for newly created parent issues
 - After creating the parent, link all related issues as sub-issues using the temporary ID
 
 **Constraints:**
-
 - Maximum 5 parent issues created per run
 - Maximum 50 sub-issue links per run
 - Only create a parent issue if there are 5+ strongly related issues without a parent
@@ -157,21 +127,18 @@ For each potential relationship, evaluate:
 ### Step 4: Create Parent Issues and Execute Links
 
 **For orphan clusters (5+ related issues without a parent):**
-
 1. Create a parent issue using the `create_issue` tool with a temporary ID:
-   - Format: `{"type": "create_issue", "temporary_id": "aw_XXXXXXXX", "title": "[Parent] Theme Description", "body": "Description with references to related issues"}`
+   - Format: `{"type": "create_issue", "temporary_id": "aw_XXXXXXXX", "title": "[parent] Theme Description", "body": "Description with references to related issues"}`
    - Temporary ID must be `aw_` followed by 3-8 alphanumeric characters (e.g., `aw_abc123`, `aw_Test123`)
 2. Link each related issue to the parent using `link_sub_issue` tool with the temporary ID:
    - Format: `{"type": "link_sub_issue", "parent_issue_number": "aw_XXXXXXXX", "sub_issue_number": 123}`
 
 **For existing parent-child relationships:**
-
 - Use the `link_sub_issue` tool with actual issue numbers to create the parent-child relationship
 
 ### Step 5: Done
 
 After completing your analysis and any linking actions, if no action was needed, call the `noop` tool with a summary:
-
 ```json
 {"noop": {"message": "Analyzed N issues - no new parent-child relationships identified"}}
 ```

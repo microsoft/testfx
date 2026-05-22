@@ -4,62 +4,62 @@
     <body>
       <trans-unit id="HtmlReportArtifactDescription">
         <source>Self-contained HTML test report</source>
-        <target state="new">Self-contained HTML test report</target>
+        <target state="translated">獨立式 HTML 測試報告</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportArtifactDisplayName">
         <source>HTML Report</source>
-        <target state="new">HTML Report</target>
+        <target state="translated">HTML 報告</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileExistsAndWillBeOverwritten">
         <source>Warning: HTML report file '{0}' already exists and will be overwritten.</source>
-        <target state="new">Warning: HTML report file '{0}' already exists and will be overwritten.</target>
+        <target state="translated">警告: HTML 報告檔案 '{0}' 已經存在，將會被覆寫。</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameExtensionIsNotHtml">
         <source>'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</source>
-        <target state="new">'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</target>
+        <target state="translated">'--report-html-filename' 檔名引數的結尾必須是 '.html' (例如 --report-html-filename myreport.html)</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameOptionDescription">
         <source>The name of the generated HTML report</source>
-        <target state="new">The name of the generated HTML report</target>
+        <target state="translated">產生的 TRX 報告名稱</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRequiresHtmlReport">
         <source>'--report-html-filename' requires '--report-html' to be enabled</source>
-        <target state="new">'--report-html-filename' requires '--report-html' to be enabled</target>
+        <target state="translated">'--report-html-filename' 需要啟用 '--report-html'</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameShouldNotContainPath">
         <source>file name argument must not contain a path or invalid characters (e.g. --report-html-filename myreport.html)</source>
-        <target state="new">file name argument must not contain a path or invalid characters (e.g. --report-html-filename myreport.html)</target>
+        <target state="translated">檔案名稱引數不能包含路徑或無效字元 (例如 --report-html-filename myreport.html)</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDescription">
         <source>Produce a self-contained HTML report for the current test session</source>
-        <target state="new">Produce a self-contained HTML report for the current test session</target>
+        <target state="translated">為目前的測試工作階段產生獨立式 HTML 報告</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDisplayName">
         <source>HTML report generator</source>
-        <target state="new">HTML report generator</target>
+        <target state="translated">TRX 報告產生器</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportIsNotValidForDiscovery">
         <source>'--report-html' cannot be enabled when using '--list-tests'</source>
-        <target state="new">'--report-html' cannot be enabled when using '--list-tests'</target>
+        <target state="translated">使用 '--list-tests' 時，無法啟用 '--report-html'</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportOptionDescription">
         <source>Enable generating an HTML report</source>
-        <target state="new">Enable generating an HTML report</target>
+        <target state="translated">啟用產生 HTML 報告</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="new">HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
+        <target state="translated">HTML 報表產生器只能與類型為 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 的建立器一起運作</target>
         <note />
       </trans-unit>
     </body>

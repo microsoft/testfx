@@ -1,6 +1,7 @@
 ---
+source: "githubnext/agentics/workflows/test-improver.md@main"
 description: |
-  A testing-focused repository assistant that runs daily to improve test quality and coverage.
+  A testing-focused repository assistant that runs regularly (daily by default) to improve test quality and coverage.
   Can also be triggered on-demand via '/test-assist <instructions>' to perform specific tasks.
   - Discovers and validates build, test, and coverage commands for the repository
   - Identifies testing gaps and high-value test opportunities
@@ -16,6 +17,18 @@ on:
   slash_command:
     name: test-assist
   reaction: "eyes"
+  permissions:
+    pull-requests: read
+  steps:
+    - id: check
+      run: |
+        MAX_OPEN_PRS=8
+        if [[ "$GITHUB_EVENT_NAME" != "schedule" ]]; then exit 0; fi
+        COUNT=$(gh pr list --repo ${{ github.repository }} --state open --search 'in:title "[test-improver]"' --json number --jq 'length')
+        [[ "$COUNT" -lt "$MAX_OPEN_PRS" ]]
+      # exits 0 if not scheduled or <MAX_OPEN_PRS open PRs, 1 if ≥MAX_OPEN_PRS
+
+if: needs.pre_activation.outputs.check_result == 'success'
 
 timeout-minutes: 30
 
@@ -25,9 +38,10 @@ network:
   allowed:
   - defaults
   - dotnet
-
-imports:
-  - shared/repo-build-setup.md
+  - node
+  - python
+  - rust
+  - java
 
 safe-outputs:
   add-comment:
@@ -36,36 +50,33 @@ safe-outputs:
     hide-older-comments: true
   create-pull-request:
     draft: true
-    title-prefix: "[Test Improver] "
+    title-prefix: "[test-improver] "
     labels: [automation, testing]
     max: 4
     protected-files: fallback-to-issue
   push-to-pull-request-branch:
     target: "*"
-    title-prefix: "[Test Improver] "
+    title-prefix: "[test-improver] "
     max: 4
   create-issue:
-    title-prefix: "[Test Improver] "
+    title-prefix: "[test-improver] "
     labels: [automation, testing]
     max: 4
   update-issue:
     target: "*"
-    title-prefix: "[Test Improver] "
+    title-prefix: "[test-improver] "
     max: 1
-  noop:
-    report-as-issue: false
 
 tools:
   web-fetch:
   bash: true
   github:
-    lockdown: true
-    toolsets: [repos, pull_requests, issues, discussions]
-    min-integrity: none
+    toolsets: [all]
   repo-memory: true
+
 ---
 
-# Daily Test Improver
+# Test Improver
 
 ## Command Mode
 
@@ -154,7 +165,7 @@ Always do Task 7 (Update Monthly Activity Summary Issue) every run. In all comme
    - Items aligned with maintainer priorities
    - Tests for critical or bug-prone code paths
    - Lower-risk, higher-confidence improvements
-3. Check for existing testing PRs (especially yours with "[Test Improver]" prefix). Avoid duplicate work.
+3. Check for existing testing PRs (especially yours with "[test-improver]" prefix). Avoid duplicate work.
 4. **Check for existing coverage pipeline**: Before generating coverage reports yourself, check if the repository has an existing coverage pipeline (CI jobs, coverage services like Codecov/Coveralls, or documented coverage commands). Use the existing pipeline when available - maintainers may rely on it for consistency.
 5. For the selected goal:
 
@@ -199,7 +210,7 @@ Always do Task 7 (Update Monthly Activity Summary Issue) every run. In all comme
 
 ### Task 4: Maintain Test Improver Pull Requests
 
-1. List all open PRs with the `[Test Improver]` title prefix.
+1. List all open PRs with the `[test-improver]` title prefix.
 2. For each PR:
    - Fix CI failures caused by your changes by pushing updates
    - Resolve merge conflicts
@@ -251,9 +262,9 @@ Always do Task 7 (Update Monthly Activity Summary Issue) every run. In all comme
 
 ### Task 7: Update Monthly Activity Summary Issue (ALWAYS DO THIS TASK IN ADDITION TO OTHERS)
 
-Maintain a single open issue titled `[Test Improver] Monthly Activity {YYYY}-{MM}` as a rolling summary of all Test Improver activity for the current month.
+Maintain a single open issue titled `[test-improver] Monthly Activity {YYYY}-{MM}` as a rolling summary of all Test Improver activity for the current month.
 
-1. Search for an open `[Test Improver] Monthly Activity` issue with label `testing`. If it's for the current month, update it. If for a previous month, close it and create a new one. Read any maintainer comments - they may contain instructions or priorities; note them in memory.
+1. Search for an open `[test-improver] Monthly Activity` issue with label `testing`. If it's for the current month, update it. If for a previous month, close it and create a new one. Read any maintainer comments - they may contain instructions or priorities; note them in memory.
 2. **Issue body format** - use **exactly** this structure:
 
    ```markdown
@@ -264,6 +275,12 @@ Maintain a single open issue titled `[Test Improver] Monthly Activity {YYYY}-{MM
    ## Suggested Actions for Maintainer
 
    **Comprehensive list** of all pending actions requiring maintainer attention (excludes items already actioned and checked off).
+   - Reread the issue you're updating before you update it - there may be new checkbox adjustments since your last update that require you to adjust the suggested actions.
+   - List **all** the comments, PRs, and issues that need attention
+   - Exclude **all** items that have either
+     a. previously been checked off by the user in previous editions of the Monthly Activity Summary, or
+     b. the items linked are closed/merged
+   - Use memory to keep track of items checked off by user.
    - Be concise - one line per item:
 
    * [ ] **Review PR** #<number>: <summary> - [Review](<link>)

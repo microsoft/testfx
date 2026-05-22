@@ -513,6 +513,23 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TestProgressStateAwareTerminal_CanStopProgressAcrossMultipleSessions()
+    {
+        var terminal = new RecordingTerminal();
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true);
+
+        progressAwareTerminal.StartShowingProgress(workerCount: 1);
+        progressAwareTerminal.StopShowingProgress();
+
+        progressAwareTerminal.StartShowingProgress(workerCount: 1);
+        progressAwareTerminal.StopShowingProgress();
+
+        Assert.HasCount(2, terminal.Events.Where(e => e == "StartBusyIndicator"));
+        Assert.HasCount(2, terminal.Events.Where(e => e == "EraseProgress"));
+        Assert.HasCount(2, terminal.Events.Where(e => e == "StopBusyIndicator"));
+    }
+
+    [TestMethod]
     public void NonAnsiTerminal_ShowOutputNone_DoesNotShowOutput()
     {
         string targetFramework = "net8.0";

@@ -29,67 +29,67 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
-        <target state="new">Azure DevOps live publishing failed to complete the test run.</target>
+        <target state="translated">Azure DevOps 即時發佈無法完成測試執行。</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCreateRunFailed">
         <source>Azure DevOps live publishing failed to create the test run.</source>
-        <target state="new">Azure DevOps live publishing failed to create the test run.</target>
+        <target state="translated">Azure DevOps 即時發佈無法建立測試執行。</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFailedToDeleteCoordinationFile">
         <source>Azure DevOps live publishing failed to delete coordination file</source>
-        <target state="new">Azure DevOps live publishing failed to delete coordination file</target>
+        <target state="translated">Azure DevOps 即時發佈無法刪除協調檔案</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFinalizeWaitTimedOut">
         <source>Azure DevOps live publishing timed out after {0} waiting for {1} participant file(s); finalizing the run anyway.</source>
-        <target state="new">Azure DevOps live publishing timed out after {0} waiting for {1} participant file(s); finalizing the run anyway.</target>
+        <target state="translated">Azure DevOps 即時發佈在 {0} 等待 {1} 個參與者檔案後逾時; 無論如何都要完成執行。</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingHttpError">
         <source>Azure DevOps REST API request failed with status code {0}. Response: {1}</source>
-        <target state="new">Azure DevOps REST API request failed with status code {0}. Response: {1}</target>
+        <target state="translated">Azure DevOps REST API 要求失敗，狀態碼為 {0}。回應: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingInvalidResponse">
         <source>Azure DevOps REST API returned an unexpected response payload.</source>
-        <target state="new">Azure DevOps REST API returned an unexpected response payload.</target>
+        <target state="translated">Azure DevOps REST API 傳回了未預期的回應承載。</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingConfiguration">
         <source>'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</source>
-        <target state="new">'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</target>
+        <target state="translated">'--publish-azdo-test-results' 已設定，但 Azure DevOps 即時發佈已停用，因為下列環境變數遺失或無效: {0}。</target>
         <note>{Locked='--publish-azdo-test-results'}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingRunIdFile">
         <source>Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</source>
-        <target state="new">Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</target>
+        <target state="translated">Azure DevOps 即時發佈找不到共用執行的 azdo-runid.&lt;buildId&gt;.json。</target>
         <note>{Locked="azdo-runid.&lt;buildId&gt;.json"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingPublishResultsFailed">
         <source>Azure DevOps live publishing failed to publish test results.</source>
-        <target state="new">Azure DevOps live publishing failed to publish test results.</target>
+        <target state="translated">Azure DevOps 即時發佈無法發佈測試結果。</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRequestFailed">
         <source>Azure DevOps REST API request failed after all retries.</source>
-        <target state="new">Azure DevOps REST API request failed after all retries.</target>
+        <target state="translated">在所有重試後，Azure DevOps REST API 要求失敗。</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunIdFileMismatch">
         <source>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</source>
-        <target state="new">Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</target>
+        <target state="translated">Azure DevOps 即時發佈找到不同 Azure DevOps 專案的 azdo-runid.&lt;buildId&gt;.json 檔案。</target>
         <note>{Locked="azdo-runid.&lt;buildId&gt;.json"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingTimeoutErrorMessage">
         <source>Timeout</source>
-        <target state="new">Timeout</target>
+        <target state="translated">逾時</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingTimeoutErrorMessageWithReason">
         <source>Timeout: {0}</source>
-        <target state="new">Timeout: {0}</target>
+        <target state="translated">逾時: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
@@ -184,17 +184,17 @@
       </trans-unit>
       <trans-unit id="PublishAzdoRunNameOptionDescription">
         <source>Custom Azure DevOps test run name for live test-result publishing.</source>
-        <target state="new">Custom Azure DevOps test run name for live test-result publishing.</target>
+        <target state="translated">即時測試結果發佈的自訂 Azure DevOps 測試執行名稱。</target>
         <note />
       </trans-unit>
       <trans-unit id="PublishAzdoRunNameRequiresPublishAzdoTestResults">
         <source>'--publish-azdo-run-name' requires '--publish-azdo-test-results' to be enabled</source>
-        <target state="new">'--publish-azdo-run-name' requires '--publish-azdo-test-results' to be enabled</target>
+        <target state="translated">'--publish-azdo-run-name' 需要啟用 '--publish-azdo-test-results'</target>
         <note>{Locked='--publish-azdo-run-name'}{Locked='--publish-azdo-test-results'}</note>
       </trans-unit>
       <trans-unit id="PublishAzdoTestResultsOptionDescription">
         <source>Publish test results live to the Azure DevOps Tests tab.</source>
-        <target state="new">Publish test results live to the Azure DevOps Tests tab.</target>
+        <target state="translated">將測試結果即時發佈至 Azure DevOps 測試索引標籤。</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">

@@ -68,3 +68,26 @@
 #*.RTF   diff=astextplain
 
 .github/workflows/*.lock.yml linguist-generated=true merge=ours
+
+###############################################################################
+# Localization resource files
+#
+# Edits to .resx and .xlf files are nearly always additive (new entries with
+# distinct keys), so the union merge driver concatenates both sides instead of
+# producing conflict markers. This significantly reduces friction when several
+# PRs add new strings in parallel.
+#
+# Caveats:
+#   * If two PRs add an entry with the SAME name/id, both will end up in the
+#     file and the build will fail with a duplicate-resource error. Resolve by
+#     editing the .resx and re-running the project's `/t:UpdateXlf` target.
+#   * If two PRs modify the SAME existing line (e.g. retouch the same English
+#     string or translation), union merges both sides silently with no
+#     conflict marker. Review resx/xlf hunks during PR review when both sides
+#     touched pre-existing entries.
+#   * XLF files are generated from the neutral .resx via the `UpdateXlf`
+#     MSBuild target, so any union artefact in an xlf can be recovered by
+#     running that target.
+###############################################################################
+*.resx merge=union
+*.xlf  merge=union

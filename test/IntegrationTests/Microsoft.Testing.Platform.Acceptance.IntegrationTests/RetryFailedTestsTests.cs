@@ -262,6 +262,54 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         Assert.DoesNotContain("TestMethod2", trxContent);
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_WithPreexistingTreeNodeFilter_ReplacesFilterOnRetry(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+
+        // Use --treenode-filter to select tests TestMethod1 and TestMethod2. The filter intentionally starts
+        // with '/' because TreeNodeFilter expressions are matched against slash-prefixed node paths such as
+        // '/TestMethod1'. Test 1 will fail on first attempt, pass on second. TestMethod3 is not matched by
+        // the filter, so it should never run.
+        // On retry, the orchestrator strips --treenode-filter and replaces it with --filter-uid for the failed
+        // tests only; this test guards against issue #5673 (Retry + tree node filter must not stack filters).
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 3 --treenode-filter \"/(TestMethod1|TestMethod2)\" --report-trx --results-directory {resultDirectory}",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "METHOD1", "1" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
+        testHostResult.AssertOutputContains("Tests suite failed, total failed tests: 1, exit code: 2, attempt: 1/4");
+
+        // Verify that the first attempt honored the treenode-filter.
+        string[] retryTrxFiles = Directory.GetFiles(Path.Combine(resultDirectory, "Retries"), "*.trx", SearchOption.AllDirectories);
+        Assert.HasCount(1, retryTrxFiles);
+
+        string retryTrxContent = File.ReadAllText(retryTrxFiles[0]);
+        Assert.Contains("TestMethod1", retryTrxContent);
+        Assert.Contains("TestMethod2", retryTrxContent);
+        Assert.DoesNotContain("TestMethod3", retryTrxContent);
+
+        // Verify that the retry attempt only ran the failed test (TestMethod1) - i.e. the treenode-filter was
+        // dropped and replaced by --filter-uid 1.
+        // The TRX in the top-level results directory (not under Retries/) is from the last attempt.
+        string[] topLevelTrxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.TopDirectoryOnly);
+        Assert.HasCount(1, topLevelTrxFiles);
+
+        string trxContent = File.ReadAllText(topLevelTrxFiles[0]);
+        Assert.Contains("TestMethod1", trxContent);
+        Assert.DoesNotContain("TestMethod2", trxContent);
+        Assert.DoesNotContain("TestMethod3", trxContent);
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
@@ -303,8 +351,10 @@ using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.MSBuild;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
@@ -314,6 +364,7 @@ public class Program
     public static async Task<int> Main(string[] args)
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        TreeNodeFilterExtension treeNodeFilterExtension = new();
         builder.RegisterTestFramework(
             sp => new TestFrameworkCapabilities(new TrxReportCapability()),
             (_,__) => new DummyTestFramework());
@@ -321,9 +372,19 @@ public class Program
         builder.AddTrxReportProvider();
         builder.AddRetryProvider();
         builder.AddMSBuild();
+        builder.AddTreeNodeFilterService(treeNodeFilterExtension);
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
+}
+
+public class TreeNodeFilterExtension : IExtension
+{
+    public string Uid => nameof(TreeNodeFilterExtension);
+    public string Version => "1.0.0";
+    public string DisplayName => nameof(TreeNodeFilterExtension);
+    public string Description => nameof(TreeNodeFilterExtension);
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 }
 
 public class TrxReportCapability : ITrxReportCapability
@@ -361,13 +422,15 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         string resultDir = Environment.GetEnvironmentVariable("RESULTDIR")!;
         bool crash = Environment.GetEnvironmentVariable("CRASH") == "1";
 
-        var uidFilter = (context.Request as TestExecutionRequest)?.Filter as TestNodeUidListFilter;
+        var filter = (context.Request as TestExecutionRequest)?.Filter;
+        var uidFilter = filter as TestNodeUidListFilter;
+        var treeNodeFilter = filter as TreeNodeFilter;
 
         var testMethod1Identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "TestMethod1", 0, Array.Empty<string>(), string.Empty);
         var testMethod2Identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "TestMethod2", 0, Array.Empty<string>(), string.Empty);
         var testMethod3Identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "TestMethod3", 0, Array.Empty<string>(), string.Empty);
 
-        if (IsIncluded(uidFilter, "1"))
+        if (IsIncluded(uidFilter, treeNodeFilter, "1", "TestMethod1"))
         {
             if (TestMethod1(fail, resultDir, crash))
             {
@@ -381,7 +444,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             }
         }
 
-        if (IsIncluded(uidFilter, "2"))
+        if (IsIncluded(uidFilter, treeNodeFilter, "2", "TestMethod2"))
         {
             if (TestMethod2(fail, resultDir))
             {
@@ -395,7 +458,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             }
         }
 
-        if (IsIncluded(uidFilter, "3"))
+        if (IsIncluded(uidFilter, treeNodeFilter, "3", "TestMethod3"))
         {
             if (TestMethod3(fail, resultDir))
             {
@@ -412,8 +475,20 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         context.Complete();
     }
 
-    private static bool IsIncluded(TestNodeUidListFilter? filter, string uid)
-        => filter is null || filter.TestNodeUids.Any(n => n.Value == uid);
+    private static bool IsIncluded(TestNodeUidListFilter? uidFilter, TreeNodeFilter? treeNodeFilter, string uid, string displayName)
+    {
+        if (uidFilter is not null && !uidFilter.TestNodeUids.Any(n => n.Value == uid))
+        {
+            return false;
+        }
+
+        if (treeNodeFilter is not null && !treeNodeFilter.MatchesFilter("/" + displayName, new PropertyBag()))
+        {
+            return false;
+        }
+
+        return true;
+    }
 
     private bool TestMethod1(bool fail, string resultDir, bool crash)
     {
