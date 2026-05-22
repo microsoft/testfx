@@ -85,8 +85,19 @@ internal sealed class TestAssemblyInfo
 
     /// <summary>
     /// Gets or sets a value indicating whether <c>AssemblyInitialize</c> has been executed.
+    /// <para>
+    /// Reads and writes use <see cref="Volatile"/> because this flag acts as the fast-path
+    /// guard that lets callers bypass <see cref="_assemblyInfoExecuteSyncSemaphore"/>. The
+    /// release semantics on the publishing write ensure that the prior
+    /// <see cref="PostAssemblyInitProperties"/> snapshot publication is also visible to any
+    /// reader that observes this flag as <see langword="true"/> on the fast path.
+    /// </para>
     /// </summary>
-    public bool IsAssemblyInitializeExecuted { get; internal set; }
+    public bool IsAssemblyInitializeExecuted
+    {
+        get => Volatile.Read(ref field);
+        internal set => Volatile.Write(ref field, value);
+    }
 
     /// <summary>
     /// Gets or sets the assembly initialization exception.
@@ -110,8 +121,22 @@ internal sealed class TestAssemblyInfo
     /// assembly-cleanup context, because <c>AssemblyCleanup</c> is assembly-scoped and runs
     /// once across many classes; including a single class's snapshot would be arbitrary.
     /// </para>
+    /// <para>
+    /// Reads and writes use <see cref="Volatile"/> so that callers on the
+    /// <see cref="IsAssemblyInitializeExecuted"/> fast path (which intentionally bypasses
+    /// <see cref="_assemblyInfoExecuteSyncSemaphore"/>) safely observe the snapshot published
+    /// by the thread that ran <c>AssemblyInitialize</c>. The publishing thread writes this
+    /// snapshot before writing <see cref="IsAssemblyInitializeExecuted"/>, and both writes go
+    /// through <see cref="Volatile"/>, so any reader that observes
+    /// <see cref="IsAssemblyInitializeExecuted"/> as <see langword="true"/> is guaranteed to
+    /// also see the published snapshot.
+    /// </para>
     /// </summary>
-    internal IReadOnlyDictionary<string, object?>? PostAssemblyInitProperties { get; private set; }
+    internal IReadOnlyDictionary<string, object?>? PostAssemblyInitProperties
+    {
+        get => Volatile.Read(ref field);
+        private set => Volatile.Write(ref field, value);
+    }
 
     /// <summary>
     /// Gets the assembly cleanup exception.
@@ -190,13 +215,10 @@ internal sealed class TestAssemblyInfo
                                     // Capture a snapshot of TestContext.Properties so that values
                                     // set during AssemblyInitialize flow to subsequent contexts
                                     // (class init, test execution, class cleanup, assembly cleanup).
-                                    // TODO: PostAssemblyInitProperties is published outside the
-                                    // _assemblyInfoExecuteSyncSemaphore via the
-                                    // IsAssemblyInitializeExecuted fast path in this method. This
-                                    // is consistent with the existing pattern used by
-                                    // AssemblyInitializationException and ExecutionContext;
-                                    // revisit memory-barrier semantics for all three together
-                                    // if it becomes a problem.
+                                    // PostAssemblyInitProperties uses Volatile.Read/Write so that
+                                    // callers on the IsAssemblyInitializeExecuted fast path
+                                    // (which bypasses _assemblyInfoExecuteSyncSemaphore) safely
+                                    // observe the published snapshot.
                                     PostAssemblyInitProperties = testContextImpl.CaptureLifecycleProperties();
                                 }
                             },
