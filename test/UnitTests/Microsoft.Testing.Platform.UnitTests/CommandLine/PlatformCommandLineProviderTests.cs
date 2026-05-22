@@ -40,20 +40,25 @@ public sealed class PlatformCommandLineProviderTests
     }
 
     [TestMethod]
-    public async Task IsValid_If_ClientPort_Is_Integer()
+    [DataRow("0")]
+    [DataRow("32")]
+    [DataRow("65535")]
+    public async Task IsValid_If_ClientPort_Is_ValidPort(string clientPort)
     {
         var provider = new PlatformCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ClientPortOptionKey);
 
-        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, ["32"]).ConfigureAwait(false);
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [clientPort]).ConfigureAwait(false);
         Assert.IsTrue(validateOptionsResult.IsValid);
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
 
     [TestMethod]
+    [DataRow("-1")]
     [DataRow("32.32")]
+    [DataRow("65536")]
     [DataRow("invalid")]
-    public async Task IsInvalid_If_ClientPort_Is_Not_Integer(string clientPort)
+    public async Task IsInvalid_If_ClientPort_Is_Not_ValidPort(string clientPort)
     {
         var provider = new PlatformCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ClientPortOptionKey);

@@ -113,7 +113,8 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDiscoverTestsInvalidArgument, arguments[0], SupportedDiscoverTestsValues));
         }
 
-        if (commandOption.Name == ClientPortOptionKey && (!int.TryParse(arguments[0], out int _)))
+        if (commandOption.Name == ClientPortOptionKey
+            && (!int.TryParse(arguments[0], out int port) || port < System.Net.IPEndPoint.MinPort || port > System.Net.IPEndPoint.MaxPort))
         {
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, ClientPortOptionKey));
         }
