@@ -359,12 +359,13 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    // Store retry results with the next item at the end so removals are O(1) and order is preserved.
+                    // Add results in reverse and remove them from the end to preserve the original batch order with O(1) removals.
                     for (int i = batch.Count - 1; i >= 0; i--)
                     {
                         _retryResults.Add(batch[i]);
                     }
 
+                    _lastFlushTime = _clock.UtcNow;
                     _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
                     return;
                 }
@@ -437,9 +438,12 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
     }
 
     private bool ShouldFlushUnsafe(bool force)
-        => force
-            ? _retryResults.Count > 0 || !_pendingResults.IsEmpty
-            : _retryResults.Count > 0 || _pendingResults.Count >= _options.BatchSize || (!_pendingResults.IsEmpty && _clock.UtcNow - _lastFlushTime >= _options.FlushInterval);
+    {
+        int pendingResultsCount = _retryResults.Count + _pendingResults.Count;
+        return force
+            ? pendingResultsCount > 0
+            : pendingResultsCount >= _options.BatchSize || (pendingResultsCount > 0 && _clock.UtcNow - _lastFlushTime >= _options.FlushInterval);
+    }
 
     private static AzureDevOpsTestCaseResult CreateResult(
         string displayName,
