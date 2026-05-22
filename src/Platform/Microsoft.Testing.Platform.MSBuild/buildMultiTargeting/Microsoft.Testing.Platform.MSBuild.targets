@@ -62,18 +62,43 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_DetectUserOwnedTestingPlatformConfigurationFile"
+          DependsOnTargets="AssignTargetPaths">
+    <!--
+      Determines whether the user already declared a CopyToOutputDirectory item (Content / None / EmbeddedResource)
+      whose TargetPath matches $(AssemblyName).testconfig.json. When that is the case the file ending up in the
+      output / publish directory is owned by the user and the stale-cleanup targets must not delete it.
+      We intentionally read from the *WithTargetPath items populated by AssignTargetPaths because the
+      _ThisProjectItemsToCopyToOutputDirectory* items computed by _GetCopyToOutputDirectoryItemsFromThisProject
+      are cleared at the end of GetCopyToOutputDirectoryItems.
+    -->
+    <ItemGroup>
+      <_UserOwnedTestingPlatformConfigurationFile Include="@(ContentWithTargetPath)" Condition=" '%(ContentWithTargetPath.TargetPath)' == '$(_TestingPlatformConfigurationFileName)' And '%(ContentWithTargetPath.CopyToOutputDirectory)' != '' And '%(ContentWithTargetPath.CopyToOutputDirectory)' != 'Never' " />
+      <_UserOwnedTestingPlatformConfigurationFile Include="@(_NoneWithTargetPath)" Condition=" '%(_NoneWithTargetPath.TargetPath)' == '$(_TestingPlatformConfigurationFileName)' And '%(_NoneWithTargetPath.CopyToOutputDirectory)' != '' And '%(_NoneWithTargetPath.CopyToOutputDirectory)' != 'Never' " />
+      <_UserOwnedTestingPlatformConfigurationFile Include="@(EmbeddedResourceWithTargetPath)" Condition=" '%(EmbeddedResourceWithTargetPath.TargetPath)' == '$(_TestingPlatformConfigurationFileName)' And '%(EmbeddedResourceWithTargetPath.CopyToOutputDirectory)' != '' And '%(EmbeddedResourceWithTargetPath.CopyToOutputDirectory)' != 'Never' " />
+    </ItemGroup>
+    <PropertyGroup>
+      <_TestingPlatformConfigurationFileIsUserOwned Condition=" '@(_UserOwnedTestingPlatformConfigurationFile)' != '' ">true</_TestingPlatformConfigurationFileIsUserOwned>
+    </PropertyGroup>
+  </Target>
+
   <Target Name="_RemoveStaleTestingPlatformConfigurationFileFromOutput"
           BeforeTargets="CopyFilesToOutputDirectory"
-          DependsOnTargets="_CalculateGenerateTestingPlatformConfigurationFile"
-          Condition=" '$(GenerateTestingPlatformConfigurationFile)' != 'true' Or !Exists('$(_TestingPlatformConfigurationFileSourcePath)') ">
-    <Delete Files="$(_TestingPlatformConfigurationFile)" />
+          DependsOnTargets="_CalculateGenerateTestingPlatformConfigurationFile;_DetectUserOwnedTestingPlatformConfigurationFile">
+    <!--
+      The condition is set on the task rather than on the target because the target condition can be
+      evaluated before $(_TestingPlatformConfigurationFileIsUserOwned) is computed by the dependency,
+      which would cause the Delete task to run and remove user-provided files.
+    -->
+    <Delete Files="$(_TestingPlatformConfigurationFile)"
+            Condition=" ('$(GenerateTestingPlatformConfigurationFile)' != 'true' Or !Exists('$(_TestingPlatformConfigurationFileSourcePath)')) And '$(_TestingPlatformConfigurationFileIsUserOwned)' != 'true' " />
   </Target>
 
   <Target Name="_RemoveStaleTestingPlatformConfigurationFileFromPublish"
           BeforeTargets="CopyFilesToPublishDirectory"
-          DependsOnTargets="_CalculateGenerateTestingPlatformConfigurationFile"
-          Condition=" ('$(GenerateTestingPlatformConfigurationFile)' != 'true' Or !Exists('$(_TestingPlatformConfigurationFileSourcePath)')) And '$(PublishDir)' != '' ">
-    <Delete Files="$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(PublishDir), $(_TestingPlatformConfigurationFileName)))" />
+          DependsOnTargets="_CalculateGenerateTestingPlatformConfigurationFile;_DetectUserOwnedTestingPlatformConfigurationFile">
+    <Delete Files="$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(PublishDir), $(_TestingPlatformConfigurationFileName)))"
+            Condition=" ('$(GenerateTestingPlatformConfigurationFile)' != 'true' Or !Exists('$(_TestingPlatformConfigurationFileSourcePath)')) And '$(PublishDir)' != '' And '$(_TestingPlatformConfigurationFileIsUserOwned)' != 'true' " />
   </Target>
 
 
