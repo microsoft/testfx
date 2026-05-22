@@ -62,6 +62,20 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_RemoveStaleTestingPlatformConfigurationFileFromOutput"
+          BeforeTargets="CopyFilesToOutputDirectory"
+          DependsOnTargets="_CalculateGenerateTestingPlatformConfigurationFile"
+          Condition=" '$(GenerateTestingPlatformConfigurationFile)' != 'true' Or !Exists('$(_TestingPlatformConfigurationFileSourcePath)') ">
+    <Delete Files="$(_TestingPlatformConfigurationFile)" />
+  </Target>
+
+  <Target Name="_RemoveStaleTestingPlatformConfigurationFileFromPublish"
+          BeforeTargets="CopyFilesToPublishDirectory"
+          DependsOnTargets="_CalculateGenerateTestingPlatformConfigurationFile"
+          Condition=" ('$(GenerateTestingPlatformConfigurationFile)' != 'true' Or !Exists('$(_TestingPlatformConfigurationFileSourcePath)')) And '$(PublishDir)' != '' ">
+    <Delete Files="$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), $(PublishDir), $(_TestingPlatformConfigurationFileName)))" />
+  </Target>
+
 
   <!--
     Inject application entry point a.k.a. Program.* file

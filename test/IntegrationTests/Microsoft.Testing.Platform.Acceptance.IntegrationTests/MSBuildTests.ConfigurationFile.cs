@@ -21,6 +21,7 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, "MSBuildTests", tfm, verb: verb, buildConfiguration: compilationMode);
         string generatedConfigurationFile = Path.Combine(testHost.DirectoryName, "MSBuildTests.testconfig.json");
+        string generatedConfigurationFileInBuildOutput = Path.Combine(testAsset.TargetAssetPath, "bin", compilationMode.ToString(), tfm, "MSBuildTests.testconfig.json");
         Assert.IsTrue(File.Exists(generatedConfigurationFile));
         Assert.AreEqual(ConfigurationContent.Trim(), File.ReadAllText(generatedConfigurationFile).Trim());
         Assert.Contains("Microsoft Testing Platform configuration file written", compilationResult.StandardOutput);
@@ -36,6 +37,22 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
 \s*_GenerateTestingPlatformConfigurationFileCore:
 \s*Skipping target "_GenerateTestingPlatformConfigurationFileCore" because all output files are up\-to\-date with respect to the input files\.
 """));
+
+        await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")} -v:normal {testAsset.TargetAssetPath} -c {compilationMode} /p:GenerateTestingPlatformConfigurationFile=false", cancellationToken: TestContext.CancellationToken);
+        Assert.IsFalse(File.Exists(generatedConfigurationFile));
+        Assert.IsFalse(File.Exists(generatedConfigurationFileInBuildOutput));
+
+        File.WriteAllText(generatedConfigurationFile, ConfigurationContent);
+        if (verb == Verb.publish)
+        {
+            File.WriteAllText(generatedConfigurationFileInBuildOutput, ConfigurationContent);
+        }
+
+        File.Delete(Path.Combine(testAsset.TargetAssetPath, "testconfig.json"));
+        await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")} -v:normal {testAsset.TargetAssetPath} -c {compilationMode}", cancellationToken: TestContext.CancellationToken);
+        Assert.IsFalse(File.Exists(generatedConfigurationFile));
+        Assert.IsFalse(File.Exists(generatedConfigurationFileInBuildOutput));
+
         await DotnetCli.RunAsync($"clean -c {compilationMode} -v:normal {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
 
         // dotnet clean doesn't clean the publish output folder
