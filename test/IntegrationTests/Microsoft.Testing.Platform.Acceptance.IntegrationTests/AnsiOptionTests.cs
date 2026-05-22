@@ -48,24 +48,24 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
     }
 
     [TestMethod]
-    public async Task AnsiOption_Auto_DoesNotProduceAnsiOutputWhenRedirected()
+    public async Task AnsiOption_Auto_OverridesNoAnsi_AndFollowsEnvironmentDetection()
     {
-        // `--ansi auto` is the default and means "let the platform decide".
-        // It explicitly overrides any preceding `--no-ansi` (TestHost auto-injects `--no-ansi --no-progress`).
-        // To make this test deterministic across CI and local runs, we explicitly clear `GITHUB_ACTIONS` and
-        // `TF_BUILD` so the platform does NOT short-circuit to `SimpleAnsi`. With those out of the way and
-        // stdout redirected to a pipe by the test runner, the platform should pick `AnsiIfPossible` and the
-        // detector then falls back to a NonAnsi terminal that does not emit escape codes.
+        // TestHost.ExecuteAsync auto-injects `--no-ansi --no-progress`. Asserting "no ESC" with
+        // `--ansi auto` would not actually prove `auto` won over `--no-ansi`: stdout-redirection
+        // alone also produces no ESC. To deterministically prove the override, we force the platform
+        // into a CI environment (which makes `auto` map to `SimpleAnsi`, which emits ESC) and clear
+        // known LLM env vars (which would otherwise force `NoAnsi`). With `--no-ansi` still on the
+        // command line, the only way ESC can appear in the output is if `--ansi auto` overrode it.
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult result = await testHost.ExecuteAsync(
             "--ansi auto",
-            environmentVariables: NotInCIEnvironmentVariables,
+            environmentVariables: InCIEnvironmentVariablesWithLLMCleared,
             cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(ExitCode.Success);
-        Assert.IsFalse(
+        Assert.IsTrue(
             result.StandardOutput.Contains(EscapeCharacter, StringComparison.Ordinal),
-            $"Expected output to NOT contain ANSI escape characters when '--ansi auto' is specified and stdout is redirected, but got:\n{result.StandardOutput}");
+            $"Expected output to contain ANSI escape characters proving '--ansi auto' overrode the auto-injected '--no-ansi' (SimpleAnsi mode in CI), but got:\n{result.StandardOutput}");
     }
 
     [TestMethod]
@@ -103,17 +103,45 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
         TestHostResult result = await testHost.ExecuteAsync("--ansi", cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        result.AssertOutputContains("--ansi expects a single parameter");
+
+        // When `--ansi` is supplied without a value, the platform's arity check
+        // (ArgumentArity.ExactlyOne) rejects it before the per-occurrence validator runs, so the
+        // user sees the generic "expects at least N arguments" message rather than the custom
+        // TerminalAnsiOptionInvalidArgument text used for invalid values.
+        result.AssertOutputContains("Option '--ansi' from provider 'Terminal test reporter' (UID: TerminalTestReporterCommandLineOptionsProvider) expects at least 1 arguments");
     }
 
     public TestContext TestContext { get; set; } = null!;
 
-    // Env vars that make the platform consider it NOT to be in CI. Setting empty strings is enough
-    // because TerminalOutputDevice compares against the literal "true".
-    private static Dictionary<string, string?> NotInCIEnvironmentVariables => new()
+    // Env vars that force the platform to consider it to be in CI while clearing the known LLM env
+    // vars (which would otherwise force NoAnsi mode and break tests relying on SimpleAnsi). Only
+    // GITHUB_ACTIONS is set to "true" because that is sufficient for CIEnvironmentDetector.
+    private static Dictionary<string, string?> InCIEnvironmentVariablesWithLLMCleared => new()
     {
-        ["GITHUB_ACTIONS"] = string.Empty,
-        ["TF_BUILD"] = string.Empty,
+        ["GITHUB_ACTIONS"] = "true",
+        ["CLAUDECODE"] = string.Empty,
+        ["CLAUDE_CODE_ENTRYPOINT"] = string.Empty,
+        ["CURSOR_EDITOR"] = string.Empty,
+        ["CURSOR_AI"] = string.Empty,
+        ["GEMINI_CLI"] = string.Empty,
+        ["GITHUB_COPILOT_CLI_MODE"] = string.Empty,
+        ["GH_COPILOT_WORKING_DIRECTORY"] = string.Empty,
+        ["COPILOT_CLI"] = string.Empty,
+        ["CODEX_CLI"] = string.Empty,
+        ["CODEX_SANDBOX"] = string.Empty,
+        ["OR_APP_NAME"] = string.Empty,
+        ["AMP_HOME"] = string.Empty,
+        ["QWEN_CODE"] = string.Empty,
+        ["DROID_CLI"] = string.Empty,
+        ["OPENCODE_AI"] = string.Empty,
+        ["ZED_ENVIRONMENT"] = string.Empty,
+        ["ZED_TERM"] = string.Empty,
+        ["KIMI_CLI"] = string.Empty,
+        ["GOOSE_TERMINAL"] = string.Empty,
+        ["CLINE_TASK_ID"] = string.Empty,
+        ["ROO_CODE_TASK_ID"] = string.Empty,
+        ["WINDSURF_SESSION"] = string.Empty,
+        ["AGENT_CLI"] = string.Empty,
     };
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
