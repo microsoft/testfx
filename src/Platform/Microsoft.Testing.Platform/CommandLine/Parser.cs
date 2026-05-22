@@ -49,9 +49,7 @@ internal static class CommandLineParser
 
             if (currentArg.StartsWith("@", StringComparison.Ordinal) && ResponseFileHelper.TryReadResponseFile(currentArg.Substring(1), errors, out string[]? newArguments))
             {
-                args.RemoveAt(i);
-                args.InsertRange(i, newArguments);
-                i--;
+                args.InsertRange(i + 1, newArguments);
                 continue;
             }
 
