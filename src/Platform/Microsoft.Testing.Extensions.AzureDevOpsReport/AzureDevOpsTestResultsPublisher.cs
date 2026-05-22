@@ -29,6 +29,7 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
     private readonly IClock _clock;
     private readonly ILogger _logger;
     private readonly AzureDevOpsTestResultsPublisherOptions _options;
+    private readonly List<AzureDevOpsTestCaseResult> _retryResults = [];
     private readonly ConcurrentQueue<AzureDevOpsTestCaseResult> _pendingResults = new();
     private readonly SemaphoreSlim _flushSemaphore = new(1, 1);
 
@@ -318,11 +319,6 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
             return;
         }
 
-        if (!force && _pendingResults.IsEmpty)
-        {
-            return;
-        }
-
         await _flushSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -334,6 +330,12 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                 }
 
                 List<AzureDevOpsTestCaseResult> batch = [];
+                while (batch.Count < _options.BatchSize && _retryResults.Count > 0)
+                {
+                    batch.Add(_retryResults[0]);
+                    _retryResults.RemoveAt(0);
+                }
+
                 while (batch.Count < _options.BatchSize && _pendingResults.TryDequeue(out AzureDevOpsTestCaseResult? result))
                 {
                     batch.Add(result);
@@ -356,11 +358,7 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    foreach (AzureDevOpsTestCaseResult result in batch)
-                    {
-                        _pendingResults.Enqueue(result);
-                    }
-
+                    _retryResults.InsertRange(0, batch);
                     _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
                     return;
                 }
@@ -434,8 +432,8 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
 
     private bool ShouldFlushUnsafe(bool force)
         => force
-            ? !_pendingResults.IsEmpty
-            : _pendingResults.Count >= _options.BatchSize || (!_pendingResults.IsEmpty && _clock.UtcNow - _lastFlushTime >= _options.FlushInterval);
+            ? _retryResults.Count > 0 || !_pendingResults.IsEmpty
+            : _retryResults.Count > 0 || _pendingResults.Count >= _options.BatchSize || (!_pendingResults.IsEmpty && _clock.UtcNow - _lastFlushTime >= _options.FlushInterval);
 
     private static AzureDevOpsTestCaseResult CreateResult(
         string displayName,
