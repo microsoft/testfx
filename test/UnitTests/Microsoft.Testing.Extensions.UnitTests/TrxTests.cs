@@ -265,6 +265,74 @@ public class TrxTests
     }
 
     [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithRelativeSubdirectoryInFileName_FileIsCreatedUnderResultsDirectory()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        string[]? argumentTrxReportFileName = [Path.Combine("nested", "sub", "report.trx")];
+        _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
+        PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        // The TRX file path keeps the user-provided sub-directories. The mocked results directory is
+        // string.Empty so Path.Combine returns the relative path unchanged.
+        Assert.AreEqual(Path.Combine("nested", "sub", "report.trx"), fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        _fileSystem.Verify(x => x.CreateDirectory(Path.Combine("nested", "sub")), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithAbsolutePathInFileName_FileIsCreatedAtAbsolutePath()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        string absoluteDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        string absolutePath = Path.Combine(absoluteDirectory, "report.trx");
+        string[]? argumentTrxReportFileName = [absolutePath];
+        _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
+        PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        // Absolute paths override the test results directory thanks to Path.Combine semantics.
+        Assert.AreEqual(absolutePath, fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        _fileSystem.Verify(x => x.CreateDirectory(absoluteDirectory), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithPathInFileName_OnlyFileNamePartIsSanitized()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        string[]? argumentTrxReportFileName = [Path.Combine("nested", "report_{pname}.trx")];
+        _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
+        PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+        // Have {pname} resolve to something that contains characters which would normally be sanitized
+        // by ReplaceInvalidFileNameChars (parentheses + space) so we can verify only the file-name leaf
+        // is sanitized while the user-supplied directory portion is left intact.
+        _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns(Path.Combine(Path.GetTempPath(), "bad (name).dll"));
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        Assert.AreEqual(Path.Combine("nested", "report_bad__name_.trx"), fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+    }
+
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithTimePlaceholder_TimeIsResolvedFromClock()
     {
         // Arrange
