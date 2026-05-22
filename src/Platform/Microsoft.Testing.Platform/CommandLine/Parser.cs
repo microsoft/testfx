@@ -54,7 +54,6 @@ internal static class CommandLineParser
             }
 
             // If it's the first argument and it doesn't start with - then it's the tool name
-            // TODO: This won't work correctly if the first argument provided is a response file that contains the tool name.
             if (isFirstRealArgument && currentArg.Length > 0 && currentArg[0] != '-')
             {
                 toolName = currentArg;

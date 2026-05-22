@@ -151,7 +151,7 @@
     <value>'--report-trx-filename' file name argument must end with '.trx' (e.g. --report-trx-filename myreport.trx)</value>
   </data>
   <data name="TrxReportFileNameOptionDescription" xml:space="preserve">
-    <value>The name of the generated TRX report.
+    <value>The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
 Example: MyReport_{tfm}.trx</value>
   </data>
@@ -160,6 +160,12 @@ Example: MyReport_{tfm}.trx</value>
   </data>
   <data name="TrxReportFileNameShouldNotContainPath" xml:space="preserve">
     <value>file name argument must not contain path (e.g. --report-trx-filename myreport.trx)</value>
+  </data>
+  <data name="TrxReportFileNameMustNotBeEmpty" xml:space="preserve">
+    <value>'--report-trx-filename' file name part must not be empty (e.g. --report-trx-filename myreport.trx)</value>
+  </data>
+  <data name="TrxReportFileNameRelativePathMustStayUnderResultsDirectory" xml:space="preserve">
+    <value>'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</value>
   </data>
   <data name="TrxReportFrameworkDoesNotSupportTrxReportCapability" xml:space="preserve">
     <value>The test framework '{0}' with UID '{1}' does not support the 'ITrxReportCapability' leading to missing or incomplete TRX reports</value>

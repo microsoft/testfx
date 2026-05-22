@@ -1,10 +1,10 @@
 ---
+source: "githubnext/agentics/workflows/markdown-linter.md@main"
 description: Runs Markdown quality checks using Super Linter and creates issues for violations
-
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 14 * * 1-5"
+    - cron: "0 14 * * 1-5" # 2 PM UTC, weekdays only
 
 permissions:
   contents: read
@@ -18,10 +18,12 @@ safe-outputs:
     title-prefix: "[linter] "
     labels: [automation, code-quality]
   noop:
-    report-as-issue: false
 
 name: Markdown Linter
 timeout-minutes: 15
+
+imports:
+  - shared/reporting.md
 
 jobs:
   super_linter:
@@ -38,7 +40,7 @@ jobs:
           persist-credentials: false
 
       - name: Super-linter
-        uses: super-linter/super-linter@v8.6.0
+        uses: super-linter/super-linter@v8.5.0
         id: super-linter
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -64,31 +66,22 @@ jobs:
 
       - name: Upload super-linter log
         if: always()
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7
         with:
           name: super-linter-log
           path: super-linter.log
           retention-days: 7
-
 steps:
   - name: Download super-linter log
-    uses: actions/download-artifact@v8.0.1
+    uses: actions/download-artifact@v8
     with:
       name: super-linter-log
       path: /tmp/gh-aw/
-
 tools:
   cache-memory: true
   edit:
   bash:
-    - "cat"
-    - "grep"
-    - "sed"
-    - "awk"
-    - "wc"
-    - "head"
-    - "tail"
-    - "mkdir"
+    - "*"
 ---
 
 # Markdown Quality Report
@@ -112,12 +105,11 @@ You are an expert documentation quality analyst. Your task is to analyze the Sup
 3. **Create a detailed issue** with the following structure:
 
 ### Issue Title
-
 Use format: "Markdown Quality Report - [Date] - [X] issues found"
 
 ### Issue Body Structure
 
-````markdown
+```markdown
 ## 🔍 Markdown Linter Summary
 
 **Date**: [Current date]
@@ -151,7 +143,7 @@ Use format: "Markdown Quality Report - [Date] - [X] issues found"
 <details>
 <summary>Click to expand complete linter log</summary>
 
-```text
+```
 [Include the full linter output here]
 ```
 
@@ -161,7 +153,7 @@ Use format: "Markdown Quality Report - [Date] - [X] issues found"
 
 - [Link to workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 - [Super Linter Documentation](https://github.com/super-linter/super-linter)
-````
+```
 
 ## Important Guidelines
 
@@ -172,7 +164,7 @@ Use format: "Markdown Quality Report - [Date] - [X] issues found"
 - **Use proper formatting**: Make the issue easy to read and navigate
 - **If no errors found**: Call `noop` celebrating clean markdown
 
-**Important**: Always call exactly one safe-output tool before finishing (`create-issue` or `noop`).
+**Important**: Always call exactly one safe-output tool before finishing (`create_issue` or `noop`).
 
 ```json
 {"noop": {"message": "No action needed: [brief explanation of what was analyzed and why]"}}
