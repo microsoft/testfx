@@ -13,8 +13,12 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public class RetryTests
 {
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, "32")]
+    [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, "0")]
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName, "32")]
+    [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName, "0")]
+    [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName, "100")]
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName, "32")]
+    [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName, "0")]
     [TestMethod]
     public async Task IsValid_If_CorrectInteger_Is_Provided_For_RetryOptions(string optionName, string retries)
     {
@@ -28,12 +32,16 @@ public class RetryTests
 
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, "invalid")]
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, "32.32")]
+    [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, "-1")]
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName, "invalid")]
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName, "32.32")]
+    [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName, "-1")]
+    [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName, "101")]
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName, "invalid")]
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName, "32.32")]
+    [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName, "-1")]
     [TestMethod]
-    public async Task IsInvalid_If_IncorrectInteger_Is_Provided_For_RetryOptions(string optionName, string retries)
+    public async Task IsInvalid_If_IncorrectInteger_Or_OutOfRangeValue_Is_Provided_For_RetryOptions(string optionName, string retries)
     {
         var provider = new RetryCommandLineOptionsProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == optionName);
