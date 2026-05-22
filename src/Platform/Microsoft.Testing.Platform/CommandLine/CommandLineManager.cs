@@ -4,6 +4,7 @@
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Tools;
 
@@ -56,7 +57,8 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, ITestAp
 
         ICommandLineOptionsProvider[] systemCommandLineOptionsProviders =
         [
-            new PlatformCommandLineProvider()
+            new PlatformCommandLineProvider(),
+            new TerminalTestReporterCommandLineOptionsProvider()
         ];
 
         return new CommandLineHandler(parseResult, commandLineOptionsProviders,
