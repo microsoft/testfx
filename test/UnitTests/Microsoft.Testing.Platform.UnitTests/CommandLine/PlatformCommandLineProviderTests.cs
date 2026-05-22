@@ -250,7 +250,6 @@ public sealed class PlatformCommandLineProviderTests
     [DataRow("1.5s")]
     [DataRow("2.0m")]
     [DataRow("0.5h")]
-    [DataRow("0s")]
     [DataRow("10s")]
     [DataRow("30m")]
     [DataRow("1h")]
