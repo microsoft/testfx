@@ -29,7 +29,7 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
     private readonly IClock _clock;
     private readonly ILogger _logger;
     private readonly AzureDevOpsTestResultsPublisherOptions _options;
-    // Access only while holding _flushSemaphore.
+    // Mutate only while holding _flushSemaphore.
     private readonly Stack<AzureDevOpsTestCaseResult> _retryResults = new();
     private readonly ConcurrentQueue<AzureDevOpsTestCaseResult> _pendingResults = new();
     private readonly SemaphoreSlim _flushSemaphore = new(1, 1);
