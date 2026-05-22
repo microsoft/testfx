@@ -114,8 +114,9 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         }
 
         if (commandOption.Name == ClientPortOptionKey
-            && (!int.TryParse(arguments[0], out int port) || port < System.Net.IPEndPoint.MinPort || port > System.Net.IPEndPoint.MaxPort))
-        {
+            && (!int.TryParse(arguments[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int port)
+                || port < System.Net.IPEndPoint.MinPort
+                || port > System.Net.IPEndPoint.MaxPort))
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, ClientPortOptionKey));
         }
 
