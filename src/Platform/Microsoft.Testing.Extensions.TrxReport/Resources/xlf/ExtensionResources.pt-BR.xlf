@@ -57,13 +57,23 @@
         <target state="translated">O argumento de nome de arquivo ''--report-trx-filename'' deve terminar com ''.trx'' (por exemplo, --report-trx-filename myreport.trx)</target>
         <note />
       </trans-unit>
+      <trans-unit id="TrxReportFileNameMustNotBeEmpty">
+        <source>'--report-trx-filename' file name part must not be empty (e.g. --report-trx-filename myreport.trx)</source>
+        <target state="new">'--report-trx-filename' file name part must not be empty (e.g. --report-trx-filename myreport.trx)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TrxReportFileNameOptionDescription">
-        <source>The name of the generated TRX report.
+        <source>The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
 Example: MyReport_{tfm}.trx</source>
-        <target state="translated">O nome do relatório TRX gerado.
+        <target state="needs-review-translation">O nome do relatório TRX gerado.
 Dá suporte aos seguintes espaços reservados: {pname} (nome do aplicativo de teste), {pid} (ID do processo), {asm} (nome do assembly de entrada), {tfm} (moniker da estrutura de destino), {time} (carimbo de data/hora).
 Exemplo: MyReport_{tfm}.trx</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">
+        <source>'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</source>
+        <target state="new">'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameRequiresTrxReport">

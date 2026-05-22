@@ -57,13 +57,23 @@
         <target state="translated">Das Dateinamenargument "--report-trx-filename" muss auf ".trx" enden (z. B. "--report-trx-filename myreport.trx")</target>
         <note />
       </trans-unit>
+      <trans-unit id="TrxReportFileNameMustNotBeEmpty">
+        <source>'--report-trx-filename' file name part must not be empty (e.g. --report-trx-filename myreport.trx)</source>
+        <target state="new">'--report-trx-filename' file name part must not be empty (e.g. --report-trx-filename myreport.trx)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TrxReportFileNameOptionDescription">
-        <source>The name of the generated TRX report.
+        <source>The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
 Example: MyReport_{tfm}.trx</source>
-        <target state="translated">Der Name des generierten TRX-Berichts.
+        <target state="needs-review-translation">Der Name des generierten TRX-Berichts.
 Unterstützt die folgenden Platzhalter: {pname} (Name der Testanwendung), {pid} (Prozess-ID), {asm} (Name der Eintragsassembly), {tfm} (Zielframeworkmoniker), {time} (Zeitstempel).
 Beispiel: MyReport_{tfm}.trx</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">
+        <source>'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</source>
+        <target state="new">'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameRequiresTrxReport">
