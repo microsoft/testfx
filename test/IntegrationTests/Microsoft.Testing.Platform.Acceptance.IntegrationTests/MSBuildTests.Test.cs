@@ -294,7 +294,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-            $"build -t:Test -p:TestingPlatformCommandLineArguments=\"--treenode-filter <Test1>\" {testAsset.TargetAssetPath}",
+            $"build -t:Test -p:TestingPlatformCommandLineArguments=\"--treenode-filter /Test1\" {testAsset.TargetAssetPath}",
             workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: new Dictionary<string, string?>
             {
