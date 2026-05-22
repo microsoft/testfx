@@ -6,6 +6,7 @@ on:
   slash_command:
     name: review
     events: [pull_request_comment]
+    strategy: centralized
   roles: [admin, maintainer, write]
 
 permissions:
