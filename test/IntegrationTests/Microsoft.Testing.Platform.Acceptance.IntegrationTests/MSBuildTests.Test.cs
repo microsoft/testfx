@@ -286,6 +286,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     [TestMethod]
     public async Task InvokeTestingPlatform_Target_Should_Report_SkippedOnly_Run_As_Passed()
     {
+        const string test1TreeNodeFilter = "/Test1";
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
             SourceCode
@@ -294,7 +295,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-            $"build -t:Test -p:TestingPlatformCommandLineArguments=\"--treenode-filter /Test1\" {testAsset.TargetAssetPath}",
+            $"build -t:Test -p:TestingPlatformCommandLineArguments=\"--treenode-filter {test1TreeNodeFilter}\" {testAsset.TargetAssetPath}",
             workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: new Dictionary<string, string?>
             {
@@ -397,7 +398,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 {
     private IServiceProvider _sp;
     private MyExtension _myExtension;
-    private static TestNodeStateProperty Test1StateProperty => Environment.GetEnvironmentVariable("MSBUILD_TESTS_SKIP_TEST1") == "true"
+    private static TestNodeStateProperty GetTest1StateProperty() => Environment.GetEnvironmentVariable("MSBUILD_TESTS_SKIP_TEST1") == "true"
         ? SkippedTestNodeStateProperty.CachedInstance
         : PassedTestNodeStateProperty.CachedInstance;
 
@@ -431,7 +432,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             new TestNode { Uid = "1", DisplayName = "Test1", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
 
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode { Uid = "1", DisplayName = "Test1", Properties = new(Test1StateProperty) }));
+            new TestNode { Uid = "1", DisplayName = "Test1", Properties = new(GetTest1StateProperty()) }));
 
         if (!_sp.GetCommandLineOptions().TryGetOptionArgumentList("--treenode-filter", out _))
         {
