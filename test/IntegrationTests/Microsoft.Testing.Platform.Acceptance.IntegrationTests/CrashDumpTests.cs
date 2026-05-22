@@ -25,12 +25,8 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", tfm);
 
-        // Request a Mini dump (instead of the default Full dump). On macOS Debug builds the runtime's
-        // createdump writes a Full dump (multi-GB) that can take several minutes per process, which
-        // exceeds the parent's 60s WaitForExit timeout on the child. When the timeout fires the parent
-        // kills the child, interrupting the in-progress dump write and leaving only the testhost dump
-        // on disk. The DbgMiniDumpType env var set by the extension is inherited by the spawned child,
-        // so this keeps both dumps fast enough to complete reliably across all CI configurations.
+        // This test exercises multi-process dump collection, not dump completeness. Use a Mini dump so
+        // both crashing processes can finish writing within the child-process timeout on slower machines.
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--crashdump --crashdump-type Mini --results-directory {resultDirectory}",
             new Dictionary<string, string?>
