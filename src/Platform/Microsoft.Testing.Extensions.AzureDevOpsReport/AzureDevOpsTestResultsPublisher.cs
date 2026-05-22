@@ -29,7 +29,7 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
     private readonly IClock _clock;
     private readonly ILogger _logger;
     private readonly AzureDevOpsTestResultsPublisherOptions _options;
-    private readonly List<AzureDevOpsTestCaseResult> _retryResults = [];
+    private readonly Stack<AzureDevOpsTestCaseResult> _retryResults = new();
     private readonly ConcurrentQueue<AzureDevOpsTestCaseResult> _pendingResults = new();
     private readonly SemaphoreSlim _flushSemaphore = new(1, 1);
 
@@ -332,9 +332,7 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                 List<AzureDevOpsTestCaseResult> batch = [];
                 while (batch.Count < _options.BatchSize && _retryResults.Count > 0)
                 {
-                    int retryResultIndex = _retryResults.Count - 1;
-                    batch.Add(_retryResults[retryResultIndex]);
-                    _retryResults.RemoveAt(retryResultIndex);
+                    batch.Add(_retryResults.Pop());
                 }
 
                 while (batch.Count < _options.BatchSize && _pendingResults.TryDequeue(out AzureDevOpsTestCaseResult? result))
@@ -359,10 +357,10 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    // Add results in reverse and remove them from the end to preserve the original batch order with O(1) removals.
+                    // Push results in reverse so Pop retries them in the original batch order.
                     for (int i = batch.Count - 1; i >= 0; i--)
                     {
-                        _retryResults.Add(batch[i]);
+                        _retryResults.Push(batch[i]);
                     }
 
                     _lastFlushTime = _clock.UtcNow;
