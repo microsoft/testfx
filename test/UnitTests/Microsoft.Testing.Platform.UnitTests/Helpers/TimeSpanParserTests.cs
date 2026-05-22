@@ -32,6 +32,11 @@ public sealed class TimeSpanParserTests
     [DataRow("abc")]
     [DataRow("ms")]
     [DataRow("-1s")]
+    [DataRow("1monkey")] // not a recognized unit suffix
+    [DataRow("1hotdog")] // not a recognized unit suffix
+    [DataRow("1xyz")]
+    [DataRow("1e3s")] // scientific notation not supported
+    [DataRow("+1s")] // explicit positive sign not supported
     public void TryParse_InvalidInput_ReturnsFalse(string input)
     {
         bool result = TimeSpanParser.TryParse(input, out TimeSpan value);
@@ -44,6 +49,8 @@ public sealed class TimeSpanParserTests
     [DataRow("invalid")]
     [DataRow("abc")]
     [DataRow("-1s")]
+    [DataRow("1monkey")]
+    [DataRow("1xyz")]
     public void Parse_InvalidInput_ThrowsFormatException(string input)
         => Assert.ThrowsExactly<FormatException>(() => TimeSpanParser.Parse(input));
 
@@ -169,6 +176,147 @@ public sealed class TimeSpanParserTests
     {
         TimeSpan result = TimeSpanParser.Parse("5400s");
         Assert.AreEqual(TimeSpan.FromSeconds(5400), result);
+    }
+
+    [TestMethod]
+    [DataRow("1S")] // uppercase single-char suffix
+    [DataRow("1M")]
+    [DataRow("1H")]
+    [DataRow("1D")]
+    [DataRow("1Hour")] // mixed case long form
+    [DataRow("1MINUTES")] // upper case long form
+    public void TryParse_UppercaseSuffix_ParsesCorrectly(string input)
+    {
+        bool result = TimeSpanParser.TryParse(input, out TimeSpan value);
+
+        Assert.IsTrue(result);
+        Assert.AreNotEqual(TimeSpan.Zero, value);
+    }
+
+    [TestMethod]
+    public void TryParse_OverflowValue_ReturnsFalseInsteadOfThrowing()
+    {
+        // 10^18 days is far beyond TimeSpan.MaxValue.
+        bool result = TimeSpanParser.TryParse("1000000000000000000d", out TimeSpan value);
+
+        Assert.IsFalse(result);
+        Assert.AreEqual(TimeSpan.Zero, value);
+    }
+
+    [TestMethod]
+    [DataRow("90")]
+    [DataRow("90 ")]
+    [DataRow("")]
+    public void TryParseRequireSuffix_BareNumberFails(string input)
+    {
+        bool result = TimeSpanParser.TryParseRequireSuffix(input, out TimeSpan _);
+
+        Assert.IsFalse(result);
+    }
+
+    [TestMethod]
+    public void TryParseRequireSuffix_BareZeroFails()
+        => Assert.IsFalse(TimeSpanParser.TryParseRequireSuffix("0", out TimeSpan _));
+
+    [TestMethod]
+    public void TryParse_WithDefaultUnitMilliseconds_BareNumberUsesMilliseconds()
+    {
+        Assert.IsTrue(TimeSpanParser.TryParse("250", TimeSpanDefaultUnit.Milliseconds, out TimeSpan value));
+        Assert.AreEqual(TimeSpan.FromMilliseconds(250), value);
+    }
+
+    [TestMethod]
+    public void TryParse_WithDefaultUnitSeconds_BareNumberUsesSeconds()
+    {
+        Assert.IsTrue(TimeSpanParser.TryParse("30", TimeSpanDefaultUnit.Seconds, out TimeSpan value));
+        Assert.AreEqual(TimeSpan.FromSeconds(30), value);
+    }
+
+    [TestMethod]
+    public void TryParse_WithDefaultUnitMinutes_BareNumberUsesMinutes()
+    {
+        Assert.IsTrue(TimeSpanParser.TryParse("5", TimeSpanDefaultUnit.Minutes, out TimeSpan value));
+        Assert.AreEqual(TimeSpan.FromMinutes(5), value);
+    }
+
+    [TestMethod]
+    public void TryParse_WithDefaultUnitHours_BareNumberUsesHours()
+    {
+        Assert.IsTrue(TimeSpanParser.TryParse("2", TimeSpanDefaultUnit.Hours, out TimeSpan value));
+        Assert.AreEqual(TimeSpan.FromHours(2), value);
+    }
+
+    [TestMethod]
+    public void TryParse_WithDefaultUnitDays_BareNumberUsesDays()
+    {
+        Assert.IsTrue(TimeSpanParser.TryParse("1", TimeSpanDefaultUnit.Days, out TimeSpan value));
+        Assert.AreEqual(TimeSpan.FromDays(1), value);
+    }
+
+    [TestMethod]
+    public void TryParse_WithDefaultUnit_ExplicitSuffixOverridesDefault_Smoke()
+    {
+        // Default is hours, but the explicit suffix is seconds.
+        Assert.IsTrue(TimeSpanParser.TryParse("30s", TimeSpanDefaultUnit.Hours, out TimeSpan value));
+        Assert.AreEqual(TimeSpan.FromSeconds(30), value);
+    }
+
+    [TestMethod]
+    public void TryParseRequireSuffix_ExplicitSuffixSucceeds()
+    {
+        Assert.IsTrue(TimeSpanParser.TryParseRequireSuffix("90m", out TimeSpan value));
+        Assert.AreEqual(TimeSpan.FromMinutes(90), value);
+    }
+
+    [TestMethod]
+    public void TryParse_ExplicitSuffix_AlwaysOverridesDefaultUnit()
+    {
+        var cases = new (string Input, TimeSpan Expected)[]
+        {
+            ("90ms", TimeSpan.FromMilliseconds(90)),
+            ("30s", TimeSpan.FromSeconds(30)),
+            ("2m", TimeSpan.FromMinutes(2)),
+            ("1h", TimeSpan.FromHours(1)),
+            ("1d", TimeSpan.FromDays(1)),
+        };
+
+        foreach ((string input, TimeSpan expected) in cases)
+        {
+            // The explicit suffix in the input must always take precedence over the supplied default.
+            foreach (TimeSpanDefaultUnit unit in (TimeSpanDefaultUnit[])Enum.GetValues(typeof(TimeSpanDefaultUnit)))
+            {
+                Assert.IsTrue(TimeSpanParser.TryParse(input, unit, out TimeSpan value), $"Should parse '{input}' with default {unit}");
+                Assert.AreEqual(expected, value, $"Mismatch for '{input}' with default {unit}");
+            }
+        }
+    }
+
+    [TestMethod]
+    [DataRow("  1s")] // leading whitespace not allowed
+    [DataRow("1s ")] // trailing whitespace not allowed
+    public void TryParse_OuterWhitespace_Fails(string input)
+        => Assert.IsFalse(TimeSpanParser.TryParse(input, out TimeSpan _));
+
+    [TestMethod]
+    public void TryParse_InnerWhitespaceBetweenValueAndSuffix_Succeeds()
+    {
+        // The regex permits optional whitespace between number and suffix.
+        Assert.IsTrue(TimeSpanParser.TryParse("1 s", out TimeSpan value));
+        Assert.AreEqual(TimeSpan.FromSeconds(1), value);
+    }
+
+    [TestMethod]
+    public void ParseRequireSuffix_BareNumberThrows()
+    {
+        FormatException ex = Assert.ThrowsExactly<FormatException>(() => TimeSpanParser.ParseRequireSuffix("90"));
+        Assert.Contains("A unit suffix is required", ex.Message);
+    }
+
+    [TestMethod]
+    public void Parse_WithDefaultUnit_BareNumberMessageMentionsDefault()
+    {
+        FormatException ex = Assert.ThrowsExactly<FormatException>(() => TimeSpanParser.Parse("not-a-duration", TimeSpanDefaultUnit.Seconds));
+        Assert.Contains("defaults to seconds", ex.Message);
     }
 
     [TestMethod]

@@ -62,14 +62,14 @@ Options:
     --retry-failed-tests
         Retry failed tests the given number of times
     --retry-failed-tests-delay
-        Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.
+        Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.
     --retry-failed-tests-max-percentage
         Disable retry mechanism if the percentage of failed tests is greater than the specified value
     --retry-failed-tests-max-tests
         Disable retry mechanism if the number of failed tests is greater than the specified value
     --timeout
         A global test execution timeout.
-        Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
+        Takes one argument as a time value with an explicit unit suffix. Accepted units are 'ms', 's', 'm', 'h', 'd' (long forms 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted), e.g. '500ms', '5400s', '90m', '1.5h', '1d'.
 Extension options:
     --crash-report
         [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).
@@ -88,9 +88,12 @@ Extension options:
     --hangdump-timeout
         Specify the timeout after which the dump will be generated.
         The timeout value is specified in one of the following formats:
-            1.5h, 1.5hour, 1.5hours,
+            500ms, 500mil, 500millisecond, 500milliseconds,
+            5400s, 5400sec, 5400second, 5400seconds,
             90m, 90min, 90minute, 90minutes,
-            5400s, 5400sec, 5400second, 5400seconds.
+            1.5h, 1.5hour, 1.5hours,
+            1d, 1day, 1days.
+            A bare number (with no suffix) is interpreted as milliseconds.
             Default is 30m.
     --hangdump-type
         Specify the type of the dump.
@@ -293,7 +296,7 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: A global test execution timeout.
-        Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
+        Takes one argument as a time value with an explicit unit suffix. Accepted units are 'ms', 's', 'm', 'h', 'd' (long forms 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted), e.g. '500ms', '5400s', '90m', '1.5h', '1d'.
 Registered command line providers:
   AzureDevOpsCommandLineProvider
     Name: Azure DevOps report generator
@@ -385,9 +388,12 @@ Registered command line providers:
         Hidden: False
         Description: Specify the timeout after which the dump will be generated.
         The timeout value is specified in one of the following formats:
-            1.5h, 1.5hour, 1.5hours,
+            500ms, 500mil, 500millisecond, 500milliseconds,
+            5400s, 5400sec, 5400second, 5400seconds,
             90m, 90min, 90minute, 90minutes,
-            5400s, 5400sec, 5400second, 5400seconds.
+            1.5h, 1.5hour, 1.5hours,
+            1d, 1day, 1days.
+            A bare number (with no suffix) is interpreted as milliseconds.
             Default is 30m.
       --hangdump-type
         Arity: 1
@@ -433,7 +439,7 @@ Registered command line providers:
       --retry-failed-tests-delay
         Arity: 1
         Hidden: False
-        Description: Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.
+        Description: Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.
       --retry-failed-tests-max-percentage
         Arity: 1
         Hidden: False

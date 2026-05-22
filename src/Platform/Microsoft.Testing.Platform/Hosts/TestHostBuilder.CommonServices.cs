@@ -197,20 +197,10 @@ internal sealed partial class TestHostBuilder
         if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey)
             && commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args))
         {
-            string arg = args[0];
-            int size = arg.Length;
-            if (!float.TryParse(arg[..(size - 1)], NumberStyles.Float, CultureInfo.InvariantCulture, out float value))
+            if (!TimeSpanParser.TryParseRequireSuffix(args[0], out TimeSpan timeout))
             {
                 throw ApplicationStateGuard.Unreachable();
             }
-
-            TimeSpan timeout = char.ToLowerInvariant(arg[size - 1]) switch
-            {
-                'h' => TimeSpan.FromHours(value),
-                'm' => TimeSpan.FromMinutes(value),
-                's' => TimeSpan.FromSeconds(value),
-                _ => throw ApplicationStateGuard.Unreachable(),
-            };
 
             context.TestApplicationCancellationTokenSource.CancelAfter(timeout);
         }

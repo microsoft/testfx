@@ -51,13 +51,13 @@ Déplacement des fichiers de ressources de la dernière tentative vers le réper
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
-        <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</source>
-        <target state="translated">Ajoutez un délai entre les nouvelles tentatives. Le délai s’exprime sous forme de durée, par exemple 200, 1 s, 2,5 m, 1 h. L’unité par défaut est la milliseconde.</target>
+        <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</source>
+        <target state="needs-review-translation">Ajoutez un délai entre les nouvelles tentatives. Le délai s’exprime sous forme de durée, par exemple 200, 1 s, 2,5 m, 1 h. L’unité par défaut est la milliseconde.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
-        <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 1s, 2.5m, 1h)</source>
-        <target state="translated">L’option « --retry-failed-tests-delay » requiert une valeur d’intervalle de temps valide, non négative et inférieure ou égale à 2147483647 ms (~24.20:31:23.647) (par exemple 200, 1 s, 2,5 m, 1 h)</target>
+        <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</source>
+        <target state="needs-review-translation">L’option « --retry-failed-tests-delay » requiert une valeur d’intervalle de temps valide, non négative et inférieure ou égale à 2147483647 ms (~24.20:31:23.647) (par exemple 200, 1 s, 2,5 m, 1 h)</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">

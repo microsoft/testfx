@@ -67,7 +67,7 @@ Options:
         The default is TestResults in the directory that contains the test application.
     --timeout
         A global test execution timeout.
-        Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
+        Takes one argument as a time value with an explicit unit suffix. Accepted units are 'ms', 's', 'm', 'h', 'd' (long forms 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted), e.g. '500ms', '5400s', '90m', '1.5h', '1d'.
 Extension options:
     --filter
         Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.

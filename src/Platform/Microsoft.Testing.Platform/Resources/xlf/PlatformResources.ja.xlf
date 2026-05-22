@@ -655,14 +655,14 @@ The default is TestResults in the directory that contains the test application.<
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</source>
-        <target state="translated">'timeout' オプションには、1 つの引数を文字列として &lt;value&gt;[h|m|s] の形式で指定する必要があります。この場合、'value' は float です</target>
+        <source>'timeout' option should have one argument as a time value with an explicit unit suffix, e.g. '500ms', '5400s', '90m', '1.5h', '1d' (long forms like 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted)</source>
+        <target state="needs-review-translation">'timeout' オプションには、1 つの引数を文字列として &lt;value&gt;[h|m|s] の形式で指定する必要があります。この場合、'value' は float です</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
-Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
-        <target state="translated">グローバル テスト実行のタイムアウト。
+Takes one argument as a time value with an explicit unit suffix. Accepted units are 'ms', 's', 'm', 'h', 'd' (long forms 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted), e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
+        <target state="needs-review-translation">グローバル テスト実行のタイムアウト。
 1 つの引数を文字列として &lt;value&gt;[h|m|s] の形式で使用します。この場合、'value' は float です。</target>
         <note />
       </trans-unit>

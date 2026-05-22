@@ -654,14 +654,14 @@ La valeur par défaut est TestResults dans le répertoire qui contient l’appli
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</source>
-        <target state="translated">L’option « timeout » doit avoir un argument sous forme de chaîne au format &lt;value&gt;[h|m|s] où « value » est float</target>
+        <source>'timeout' option should have one argument as a time value with an explicit unit suffix, e.g. '500ms', '5400s', '90m', '1.5h', '1d' (long forms like 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted)</source>
+        <target state="needs-review-translation">L’option « timeout » doit avoir un argument sous forme de chaîne au format &lt;value&gt;[h|m|s] où « value » est float</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
-Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
-        <target state="translated">Délai global d’exécution du test.
+Takes one argument as a time value with an explicit unit suffix. Accepted units are 'ms', 's', 'm', 'h', 'd' (long forms 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted), e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
+        <target state="needs-review-translation">Délai global d’exécution du test.
 Prend un argument sous forme de chaîne au format &lt;value&gt;[h|m|s] où « value » est float.</target>
         <note />
       </trans-unit>

@@ -123,14 +123,16 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitSingleArgument, ExitOnProcessExitOptionKey));
         }
 
-        if (commandOption.Name == TimeoutOptionKey)
+        // CancellationTokenSource.CancelAfter caps at Timer.MaxSupportedTimeout
+        // (uint.MaxValue - 1 ms, ~49.7 days). Reject values above that range here so the
+        // user gets a friendly CLI error instead of an ArgumentOutOfRangeException from
+        // CancelAfter when the value is consumed later.
+        if (commandOption.Name == TimeoutOptionKey
+            && (!TimeSpanParser.TryParseRequireSuffix(arguments[0], out TimeSpan timeout)
+                || timeout <= TimeSpan.Zero
+                || timeout.TotalMilliseconds > uint.MaxValue - 1))
         {
-            string arg = arguments[0];
-            int size = arg.Length;
-            if ((char.ToLowerInvariant(arg[size - 1]) != 'h' && char.ToLowerInvariant(arg[size - 1]) != 'm' && char.ToLowerInvariant(arg[size - 1]) != 's') || !float.TryParse(arg[..(size - 1)], NumberStyles.Float, CultureInfo.InvariantCulture, out float _))
-            {
-                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage);
-            }
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage);
         }
 
         if (commandOption.Name == ConfigFileOptionKey)
