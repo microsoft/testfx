@@ -41,6 +41,17 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task TimeoutWithInvalidArg_WithNegativeValue_OutputInvalidMessage(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout -1s", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task TimeoutWithValidArg_WithTestTimeOut_OutputContainsCancelingMessage(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);

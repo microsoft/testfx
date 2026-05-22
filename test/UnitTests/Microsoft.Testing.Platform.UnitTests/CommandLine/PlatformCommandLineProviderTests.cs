@@ -250,6 +250,7 @@ public sealed class PlatformCommandLineProviderTests
     [DataRow("1.5s")]
     [DataRow("2.0m")]
     [DataRow("0.5h")]
+    [DataRow("0s")]
     [DataRow("10s")]
     [DataRow("30m")]
     [DataRow("1h")]
@@ -283,6 +284,8 @@ public sealed class PlatformCommandLineProviderTests
     [DataRow("invalid")]
     [DataRow("1.5")] // Missing unit
     [DataRow("abc.5s")]
+    [DataRow("-1s")]
+    [DataRow("-0.5m")]
     public async Task IsInvalid_If_Timeout_Has_IncorrectFormat(string timeout)
     {
         var provider = new PlatformCommandLineProvider();
