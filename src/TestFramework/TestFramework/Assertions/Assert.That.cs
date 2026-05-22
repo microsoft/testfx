@@ -8,6 +8,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Provides That extension to Assert class.
 /// </summary>
+[StackTraceHidden]
 public static partial class AssertExtensions
 {
     // Constants for standardized display values

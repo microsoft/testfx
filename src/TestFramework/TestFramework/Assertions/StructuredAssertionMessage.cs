@@ -14,6 +14,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// &lt;call-site expression&gt;
 /// </code>
 /// </summary>
+[StackTraceHidden]
 internal sealed class StructuredAssertionMessage
 {
     private const string AssertionPrefix = "Assertion failed.";

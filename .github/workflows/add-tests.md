@@ -5,6 +5,7 @@ on:
   slash_command:
     name: add-tests
     events: [pull_request_comment]
+    strategy: centralized
 
 permissions:
   contents: read
