@@ -107,13 +107,13 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
-    public void GetWriteDumpFileName_WindowsPathWithSpaces_QuotesOnlyWriteDumpArgument()
+    public void GetDumpFileNames_WindowsPathWithSpaces_QuotesOnlyWriteDumpArgument()
     {
         string dumpFileName = Path.Combine("C:", "results directory with spaces", "hangdump.dmp");
 
-        string writeDumpFileName = HangDumpProcessLifetimeHandler.GetWriteDumpFileName(dumpFileName, isWindows: true);
+        (string writeDumpFileName, string artifactDumpFileName) = HangDumpProcessLifetimeHandler.GetDumpFileNames(dumpFileName, isWindows: true);
 
         Assert.AreEqual($"\"{dumpFileName}\"", writeDumpFileName);
-        Assert.DoesNotContain("\"", dumpFileName);
+        Assert.AreEqual(dumpFileName, artifactDumpFileName);
     }
 }

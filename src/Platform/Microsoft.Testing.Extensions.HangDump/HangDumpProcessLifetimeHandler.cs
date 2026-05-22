@@ -372,7 +372,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 
-        string writeDumpFileName = GetWriteDumpFileName(finalDumpFileName);
+        (string writeDumpFileName, string artifactDumpFileName) = GetDumpFileNames(finalDumpFileName);
 
         try
         {
@@ -380,7 +380,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             if (dumpType.HasValue)
             {
                 diagnosticsClient.WriteDump(dumpType.Value, writeDumpFileName, logDumpGeneration: false);
-                _dumpFiles.Add(finalDumpFileName);
+                _dumpFiles.Add(artifactDumpFileName);
             }
         }
         catch (Exception e)
@@ -416,15 +416,15 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 #endif
     }
 
-    private static string GetWriteDumpFileName(string dumpFileName)
-        => GetWriteDumpFileName(dumpFileName, RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+    private static (string WriteDumpFileName, string ArtifactDumpFileName) GetDumpFileNames(string dumpFileName)
+        => GetDumpFileNames(dumpFileName, RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
 
     // Wrap the dump path into "" when it has space in it, this is a workaround for this runtime issue: https://github.com/dotnet/diagnostics/issues/5020
     // It only affects windows. Otherwise the dump creation fails with: [createdump] The pid argument is no longer supported
-    internal static string GetWriteDumpFileName(string dumpFileName, bool isWindows)
-        => isWindows && dumpFileName.Contains(' ')
+    internal static (string WriteDumpFileName, string ArtifactDumpFileName) GetDumpFileNames(string dumpFileName, bool isWindows)
+        => (isWindows && dumpFileName.Contains(' ')
             ? $"\"{dumpFileName}\""
-            : dumpFileName;
+            : dumpFileName, dumpFileName);
 
     private static void NotifyCrashDumpServiceIfEnabled()
         => AppDomain.CurrentDomain.SetData("ProcessKilledByHangDump", "true");
