@@ -111,6 +111,11 @@ Daha fazla bilgi için https://learn.microsoft.com/dotnet/core/diagnostics/colle
         <target state="translated">`[Yalnızca Linux/macOS] Test işlemi kilitlendiğinde bir JSON kilitlenme raporu oluşturun. Ayrıca bir döküm dosyası oluşturmak için '--crashdump' ile birlikte kullanın. Tek başına kullanıldığında .NET 7+ gerektirir. '--crashdump' ile birlikte kullanıldığında .NET 6+ gerektirir. Bu çalışma zamanı gereksinimi araç tarafından zorunlu kılınmaz. Desteklenmeyen çalışma zamanlarında kilitlenme raporu oluşturulmaz. .NET çalışma zamanı sınırlaması nedeniyle Windows'ta desteklenmez (dotnet/runtime#80191).</target>
         <note />
       </trans-unit>
+      <trans-unit id="MissingCrashDumpMainOption">
+        <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
+        <target state="new">You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
         <target state="translated">'{0}' türündeki istek desteklenmiyor</target>

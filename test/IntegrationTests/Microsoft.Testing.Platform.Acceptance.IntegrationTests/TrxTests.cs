@@ -115,28 +115,59 @@ Out of process file artifacts produced:
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
-    public async Task Trx_WhenReportTrxIsSpecifiedWithFullPath_TrxReportShouldFail(string tfm)
+    public async Task Trx_WhenReportTrxIsSpecifiedWithFullPath_TrxReportIsGeneratedAtThatPath(string tfm)
     {
-        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, "aaa", "Release", tfm, "TestResults");
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), "Release", tfm, "TestResults");
+        string fileName = $"{Guid.NewGuid():N}.trx";
+        string fullPath = Path.Combine(testResultsPath, fileName);
 
         Assert.IsFalse(Directory.Exists(testResultsPath));
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {Path.Combine(testResultsPath, "report.trx")}", cancellationToken: TestContext.CancellationToken);
+        try
+        {
+            var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+            TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename \"{fullPath}\"", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("Option '--report-trx-filename' has invalid arguments: file name argument must not contain path (e.g. --report-trx-filename myreport.trx)");
+            testHostResult.AssertExitCodeIs(ExitCode.Success);
+            Assert.IsTrue(File.Exists(fullPath), $"Expected TRX report at '{fullPath}' but it was not found.");
+        }
+        finally
+        {
+            if (Directory.Exists(testResultsPath))
+            {
+                Directory.Delete(testResultsPath, recursive: true);
+            }
+        }
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
-    public async Task Trx_WhenReportTrxIsSpecifiedWithRelativePath_TrxReportShouldFail(string tfm)
+    public async Task Trx_WhenReportTrxIsSpecifiedWithRelativePath_TrxReportIsGeneratedUnderResultsDirectory(string tfm)
     {
+        string fileName = $"{Guid.NewGuid():N}.trx";
+        string relativePath = Path.Combine("nested", "sub", fileName);
+
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {Path.Combine("aaa", "report.trx")}", cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {relativePath}", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+
+        string[] trxFiles = Directory.GetFiles(testHost.DirectoryName, fileName, SearchOption.AllDirectories);
+        Assert.HasCount(1, trxFiles, $"Expected exactly one trx file but found {trxFiles.Length}: {string.Join(", ", trxFiles)}");
+        Assert.Contains(Path.Combine("nested", "sub", fileName), trxFiles[0]);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Trx_WhenReportTrxIsSpecifiedWithRelativeParentTraversal_ErrorIsDisplayed(string tfm)
+    {
+        string relativePath = Path.Combine("nested", "..", $"{Guid.NewGuid():N}.trx");
+
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {relativePath}", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("Option '--report-trx-filename' has invalid arguments: file name argument must not contain path (e.g. --report-trx-filename myreport.trx)");
+        testHostResult.AssertOutputContains("'--report-trx-filename' relative paths must stay under the test results directory");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]

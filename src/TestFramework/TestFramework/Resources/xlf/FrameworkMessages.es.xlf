@@ -455,7 +455,7 @@
       </trans-unit>
       <trans-unit id="DoesNotMatchRegexFailedSummary">
         <source>Expected string to not match the specified pattern.</source>
-        <target state="new">Expected string to not match the specified pattern.</target>
+        <target state="translated">Se esperaba que la cadena no coincidía con el patrón especificado.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
@@ -634,7 +634,7 @@ Real: {2}</target>
       </trans-unit>
       <trans-unit id="AreNotEqualFailedSummary">
         <source>Expected values to differ.</source>
-        <target state="new">Expected values to differ.</target>
+        <target state="translated">Se esperaba que los valores variaran.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringsFailedSummary">
@@ -669,7 +669,7 @@ Real: {2}</target>
       </trans-unit>
       <trans-unit id="MatchesRegexFailedSummary">
         <source>Expected string to match the specified pattern.</source>
-        <target state="new">Expected string to match the specified pattern.</target>
+        <target state="translated">Se esperaba que la cadena coincidía con el patrón especificado.</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">

@@ -111,6 +111,11 @@ Para obter mais informações, visite https://learn.microsoft.com/dotnet/core/di
         <target state="translated">[Somente Linux/macOS] Gere um relatório de falha em JSON quando o processo de teste travar. Combine com '--crashdump' para também gerar um arquivo de despejo. Requer o .NET 7+ quando usado sozinho; .NET 6+ quando combinado com '--crashdump'. Esse requisito de runtime não é imposto pela ferramenta: em runtimes sem suporte. Nenhum relatório de falha será emitido. Sem suporte no Windows devido a uma limitação de runtime do .NET (dotnet/runtime#80191).</target>
         <note />
       </trans-unit>
+      <trans-unit id="MissingCrashDumpMainOption">
+        <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
+        <target state="new">You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
         <target state="translated">Não há suporte para solicitações de tipo ''{0}''</target>

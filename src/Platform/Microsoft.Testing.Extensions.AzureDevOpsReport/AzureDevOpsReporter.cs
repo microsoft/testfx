@@ -258,7 +258,7 @@ internal sealed class AzureDevOpsReporter :
                     logger.LogTrace($"Using relative path '{relativePath}'.");
                 }
             }
-            else if (file.StartsWith(repoRoot, StringComparison.CurrentCultureIgnoreCase))
+            else if (file.StartsWith(repoRoot, StringComparison.OrdinalIgnoreCase))
             {
                 if (logger.IsEnabled(LogLevel.Trace))
                 {

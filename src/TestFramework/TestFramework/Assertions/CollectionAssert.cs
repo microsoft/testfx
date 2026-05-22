@@ -8,6 +8,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// with collections within unit tests. If the condition being tested is not
 /// met, an exception is thrown.
 /// </summary>
+[StackTraceHidden]
 public sealed partial class CollectionAssert
 {
     #region Singleton constructor
