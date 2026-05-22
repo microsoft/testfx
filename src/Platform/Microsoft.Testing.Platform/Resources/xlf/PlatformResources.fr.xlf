@@ -654,8 +654,8 @@ La valeur par défaut est TestResults dans le répertoire qui contient l’appli
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</source>
-        <target state="translated">L’option « timeout » doit avoir un argument sous forme de chaîne au format &lt;value&gt;[h|m|s] où « value » est float</target>
+        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
+        <target state="needs-review-translation">L’option « timeout » doit avoir un argument sous forme de chaîne au format &lt;value&gt;[h|m|s] où « value » est float</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">

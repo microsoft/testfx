@@ -123,18 +123,10 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitSingleArgument, ExitOnProcessExitOptionKey));
         }
 
-        if (commandOption.Name == TimeoutOptionKey)
+        if (commandOption.Name == TimeoutOptionKey
+            && !TryParseTimeoutArgument(arguments[0], out _))
         {
-            string arg = arguments[0];
-            int size = arg.Length;
-            if ((char.ToLowerInvariant(arg[size - 1]) != 'h' && char.ToLowerInvariant(arg[size - 1]) != 'm' && char.ToLowerInvariant(arg[size - 1]) != 's')
-                || !float.TryParse(arg[..(size - 1)], NumberStyles.Float, CultureInfo.InvariantCulture, out float value)
-                || float.IsNaN(value)
-                || float.IsInfinity(value)
-                || value < 0)
-            {
-                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage);
-            }
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage);
         }
 
         if (commandOption.Name == ConfigFileOptionKey)
@@ -182,6 +174,48 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             && (arguments.Length != 1 || !int.TryParse(arguments[0], out int value) || value == 0)
             ? ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionSingleArgument)
             : ValidationResult.ValidTask;
+
+    internal static bool TryParseTimeoutArgument(string arg, out TimeSpan timeout)
+    {
+        timeout = TimeSpan.Zero;
+
+        // We need at least one digit plus a unit suffix (e.g. "1s").
+        if (arg is null || arg.Length < 2)
+        {
+            return false;
+        }
+
+        char unit = char.ToLowerInvariant(arg[arg.Length - 1]);
+        if (unit is not 'h' and not 'm' and not 's')
+        {
+            return false;
+        }
+
+        if (!float.TryParse(arg[..(arg.Length - 1)], NumberStyles.Float, CultureInfo.InvariantCulture, out float value)
+            || float.IsNaN(value)
+            || float.IsInfinity(value)
+            || value < 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            timeout = unit switch
+            {
+                'h' => TimeSpan.FromHours(value),
+                'm' => TimeSpan.FromMinutes(value),
+                's' => TimeSpan.FromSeconds(value),
+                _ => throw ApplicationStateGuard.Unreachable(),
+            };
+        }
+        catch (OverflowException)
+        {
+            return false;
+        }
+
+        return true;
+    }
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
     {

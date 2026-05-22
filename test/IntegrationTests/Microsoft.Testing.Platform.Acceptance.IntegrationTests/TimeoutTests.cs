@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -14,7 +14,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -25,7 +25,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5y", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -36,7 +36,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5h6m", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -47,7 +47,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout -1s", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
