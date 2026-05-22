@@ -332,7 +332,13 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                 List<AzureDevOpsTestCaseResult> batch = [];
                 while (batch.Count < _options.BatchSize && _retryResults.Count > 0)
                 {
-                    batch.Add(_retryResults.First!.Value);
+                    LinkedListNode<AzureDevOpsTestCaseResult>? retryResult = _retryResults.First;
+                    if (retryResult is null)
+                    {
+                        break;
+                    }
+
+                    batch.Add(retryResult.Value);
                     _retryResults.RemoveFirst();
                 }
 
@@ -358,6 +364,7 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
+                    // Add failed results back to the front in their original order so retry batches stay stable.
                     for (int i = batch.Count - 1; i >= 0; i--)
                     {
                         _retryResults.AddFirst(batch[i]);
