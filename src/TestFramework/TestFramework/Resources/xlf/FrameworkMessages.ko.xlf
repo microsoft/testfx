@@ -455,7 +455,7 @@
       </trans-unit>
       <trans-unit id="DoesNotMatchRegexFailedSummary">
         <source>Expected string to not match the specified pattern.</source>
-        <target state="new">Expected string to not match the specified pattern.</target>
+        <target state="translated">문자열이 지정된 패턴과 일치하지 않아야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
@@ -634,7 +634,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="AreNotEqualFailedSummary">
         <source>Expected values to differ.</source>
-        <target state="new">Expected values to differ.</target>
+        <target state="translated">값이 서로 다를 것으로 예상됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringsFailedSummary">
@@ -669,7 +669,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="MatchesRegexFailedSummary">
         <source>Expected string to match the specified pattern.</source>
-        <target state="new">Expected string to match the specified pattern.</target>
+        <target state="translated">문자열이 지정된 패턴과 일치해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
