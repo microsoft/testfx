@@ -326,6 +326,34 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_PublishFailureRetriesBatchOnFinalFlush()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(1, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out _);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(104);
+
+        List<IReadOnlyList<AzureDevOpsTestCaseResult>> publishedBatches = [];
+        int publishAttempts = 0;
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            publishAttempts++;
+            publishedBatches.Add(results.ToArray());
+            return publishAttempts == 1
+                ? Task.FromException(new JsonException("publish failed"))
+                : Task.CompletedTask;
+        };
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(CreateNode("test-1", new PassedTestNodeStateProperty(), clock.UtcNow)), CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.AreEqual(2, publishAttempts);
+        Assert.HasCount(2, publishedBatches);
+        Assert.AreEqual("test-1", publishedBatches[0][0].AutomatedTestName);
+        Assert.AreEqual("test-1", publishedBatches[1][0].AutomatedTestName);
+    }
+
+    [TestMethod]
     public async Task RunIdCoordinator_CreateAndReadFlowSharesRunIdAcrossProcesses()
     {
         using TestDirectory directory = CreateTestDirectory();

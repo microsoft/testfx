@@ -356,7 +356,13 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
+                    foreach (AzureDevOpsTestCaseResult result in batch)
+                    {
+                        _pendingResults.Enqueue(result);
+                    }
+
                     _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+                    return;
                 }
             }
         }
