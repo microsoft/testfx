@@ -329,7 +329,7 @@ public sealed class AzureDevOpsLivePublishingTests
     public async Task ConsumeAsync_PublishFailureRetriesBatchOnFinalFlush()
     {
         using TestDirectory directory = CreateTestDirectory();
-        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(1, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out _);
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(1, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out CollectingLogger logger);
         client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(104);
 
         List<IReadOnlyList<AzureDevOpsTestCaseResult>> publishedBatches = [];
@@ -351,6 +351,7 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.HasCount(2, publishedBatches);
         Assert.AreEqual("test-1", publishedBatches[0][0].AutomatedTestName);
         Assert.AreEqual("test-1", publishedBatches[1][0].AutomatedTestName);
+        Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed, string.Join(Environment.NewLine, logger.Logs));
     }
 
     [TestMethod]
