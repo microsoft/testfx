@@ -77,6 +77,23 @@ public sealed class TrxReportGeneratorCommandLineTests
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task IsInvalid_If_TrxFile_Uses_DriveRelativePath_OnWindows()
+    {
+        // Drive-relative paths such as "C:foo.trx" are "rooted" but not fully qualified, so they would
+        // silently escape the test results directory. Validate that they are rejected on Windows.
+        var provider = new TrxReportGeneratorCommandLine();
+        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == TrxReportGeneratorCommandLine.TrxReportFileNameOptionName);
+
+        foreach (string filename in new[] { "C:foo.trx", "C:..\\foo.trx" })
+        {
+            ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [filename]).ConfigureAwait(false);
+            Assert.IsFalse(validateOptionsResult.IsValid, filename);
+            Assert.AreEqual(TrxReport.Resources.ExtensionResources.TrxReportFileNameRelativePathMustStayUnderResultsDirectory, validateOptionsResult.ErrorMessage, filename);
+        }
+    }
+
+    [TestMethod]
     public async Task IsInvalid_If_TrxFile_Name_Is_Missing()
     {
         var provider = new TrxReportGeneratorCommandLine();

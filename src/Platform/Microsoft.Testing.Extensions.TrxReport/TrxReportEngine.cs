@@ -143,7 +143,7 @@ internal sealed partial class TrxReportEngine
                 node.Name = node.Parent!.Name.Namespace + node.Name.LocalName;
             }
 
-            string outputDirectory = _configuration.GetTestResultDirectory(); // add var for this
+            string outputDirectory = _configuration.GetTestResultDirectory();
 
             // Path.Combine short-circuits when the second argument is rooted, so an absolute trxFileName
             // overrides the test results directory while a validated relative one (including one with

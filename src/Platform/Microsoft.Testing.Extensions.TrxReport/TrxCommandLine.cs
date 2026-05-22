@@ -14,6 +14,8 @@ internal sealed class TrxReportGeneratorCommandLine : ICommandLineOptionsProvide
     public const string TrxReportOptionName = "report-trx";
     public const string TrxReportFileNameOptionName = "report-trx-filename";
 
+    private static readonly char[] DirectorySeparators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
+
     /// <inheritdoc />
     public string Uid => nameof(TrxReportGeneratorCommandLine);
 
@@ -62,7 +64,7 @@ internal sealed class TrxReportGeneratorCommandLine : ICommandLineOptionsProvide
                 return ValidationResult.InvalidTask(ExtensionResources.TrxReportFileNameExtensionIsNotTrx);
             }
 
-            if (ContainsRelativeParentTraversal(argument))
+            if (EscapesResultsDirectory(argument))
             {
                 return ValidationResult.InvalidTask(ExtensionResources.TrxReportFileNameRelativePathMustStayUnderResultsDirectory);
             }
@@ -71,26 +73,63 @@ internal sealed class TrxReportGeneratorCommandLine : ICommandLineOptionsProvide
         return ValidationResult.ValidTask;
     }
 
-    private static bool ContainsRelativeParentTraversal(string path)
+    private static bool EscapesResultsDirectory(string path)
     {
-        if (Path.IsPathRooted(path))
+        // Fully-qualified paths (e.g. "C:\foo.trx", "\\server\share\foo.trx" or "/foo.trx") are accepted
+        // as-is and validated by the OS when we open the file - the user explicitly opted out of writing
+        // under the test results directory.
+        if (IsPathFullyQualified(path))
         {
             return false;
         }
 
-        char[] separators = Path.DirectorySeparatorChar == Path.AltDirectorySeparatorChar
-            ? [Path.DirectorySeparatorChar]
-            : [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
-
-        foreach (string segment in path.Split(separators, StringSplitOptions.RemoveEmptyEntries))
+        // Drive-relative paths on Windows such as "C:foo.trx" are "rooted" but not fully qualified -
+        // they resolve against the current directory of the drive, which is unpredictable and would
+        // silently escape the test results directory. Reject them.
+        if (Path.IsPathRooted(path))
         {
-            if (segment == "..")
-            {
-                return true;
-            }
+            return true;
         }
 
-        return false;
+        // Any remaining ".." segment in a relative path would escape the test results directory.
+        return path.Split(DirectorySeparators, StringSplitOptions.RemoveEmptyEntries).Any(segment => segment == "..");
+    }
+
+    private static bool IsPathFullyQualified(string path)
+    {
+#if NETCOREAPP
+        return Path.IsPathFullyQualified(path);
+#else
+        // Mirrors the runtime implementation that is missing on .NET Framework and netstandard2.0.
+        if (path.Length < 2)
+        {
+            return false;
+        }
+
+        // UNC paths like "\\server\share" (or with forward slashes).
+        if (IsDirectorySeparator(path[0]) && IsDirectorySeparator(path[1]))
+        {
+            return true;
+        }
+
+        // On Unix, only paths starting with "/" are fully qualified.
+        if (Path.DirectorySeparatorChar == '/')
+        {
+            return path[0] == '/';
+        }
+
+        // On Windows, fully qualified drive paths must be "X:\" or "X:/".
+        return path.Length >= 3
+            && IsValidDriveLetter(path[0])
+            && path[1] == ':'
+            && IsDirectorySeparator(path[2]);
+
+        static bool IsDirectorySeparator(char c)
+            => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar;
+
+        static bool IsValidDriveLetter(char c)
+            => c is (>= 'A' and <= 'Z') or (>= 'a' and <= 'z');
+#endif
     }
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
