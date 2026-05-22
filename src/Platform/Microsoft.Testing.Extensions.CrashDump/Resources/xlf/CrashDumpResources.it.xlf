@@ -111,6 +111,11 @@ Per altre informazioni, visitare https://learn.microsoft.com/dotnet/core/diagnos
         <target state="translated">[Solo Linux/macOS] Generare un report di arresto anomalo JSON quando il processo di test si arresta in modo anomalo. Combinare con ''--crashdump'' per generare anche un file di dump. Richiede .NET 7+ se usato da solo; .NET 6+ in combinazione con ''--crashdump''. Questo requisito di runtime non viene applicato dallo strumento: nei runtime non supportati non verrà generato alcun rapporto di arresto anomalo. Non supportato in Windows a causa di una limitazione del runtime .NET (dotnet/runtime#80191).</target>
         <note />
       </trans-unit>
+      <trans-unit id="MissingCrashDumpMainOption">
+        <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
+        <target state="new">You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
         <target state="translated">Le richieste di tipo '{0}' non sono supportate</target>
