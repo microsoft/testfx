@@ -46,8 +46,23 @@ internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
     }
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName)
-            && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+        => IsCrashDumpMainOptionMissing(commandLineOptions)
+            ? ValidationResult.InvalidTask(CrashDumpResources.MissingCrashDumpMainOption)
+            : IsCrashReportUnsupportedOnCurrentPlatform(commandLineOptions)
             ? ValidationResult.InvalidTask(CrashDumpResources.CrashReportNotSupportedOnWindowsErrorMessage)
             : ValidationResult.ValidTask;
+
+    private static bool IsCrashReportUnsupportedOnCurrentPlatform(ICommandLineOptions commandLineOptions)
+        => commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName) &&
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+    private static bool IsCrashDumpMainOptionMissing(ICommandLineOptions commandLineOptions)
+    {
+        bool hasCrashDumpSubOption = commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName) ||
+            commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpTypeOptionName);
+        bool hasCrashDumpMainOption = commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) ||
+            commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
+
+        return hasCrashDumpSubOption && !hasCrashDumpMainOption;
+    }
 }

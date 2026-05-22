@@ -111,6 +111,11 @@ Para obtener más información, visite https://learn.microsoft.com/dotnet/core/d
         <target state="translated">[Solo Linux/macOS] Genere un informe de bloqueo JSON cuando el proceso de prueba se bloquee. Combine con "--crashdump" para generar también un archivo de volcado. Requiere .NET 7+ cuando se usa solo; .NET 6+ cuando se combina con "--crashdump". La herramienta no aplica este requisito de tiempo de ejecución: en los entornos de ejecución no admitidos, no se emitirá ningún informe de bloqueo. No se admite en Windows debido a una limitación del entorno de ejecución de .NET (dotnet/runtime#80191).</target>
         <note />
       </trans-unit>
+      <trans-unit id="MissingCrashDumpMainOption">
+        <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
+        <target state="new">You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
         <target state="translated">No se admiten solicitudes de tipo '{0}'</target>
