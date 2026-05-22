@@ -1,6 +1,6 @@
 ---
 name: build-failure-analyst
-description: "Expert build-failure analyst for .NET / MSBuild repositories. Invoke when a build produced a binary log (`*.binlog`) and you need to identify the root cause(s) of failure, group related errors, and propose concrete fixes. Reads pre-dumped binlog JSON files (overview/errors/warnings) produced by `.github/workflows/scripts/dump-binlog.js` and posts an analysis comment plus inline ```suggestion blocks on the originating PR."
+description: "Expert build-failure analyst for .NET / MSBuild repositories. Invoke when a build produced a binary log (`*.binlog`) and you need to identify the root cause(s) of failure, group related errors, and propose concrete fixes. Reads pre-dumped binlog JSON files (overview/errors/warnings) produced by `.github/workflows/scripts/DumpBinlog` and posts an analysis comment plus inline `suggestion` blocks on the originating PR."
 ---
 
 # Expert Build Failure Analyst
@@ -18,7 +18,7 @@ You are read-only with respect to the repository. You ship findings via the gh-a
 
 ## Inputs the Calling Workflow Provides
 
-The caller (typically `build-failure-analysis.md` or `build-failure-analysis-command.md`) runs the build, dumps the binlog as JSON files (via the `dump-binlog.js` helper in `.github/workflows/scripts/`), and sets the environment variables below. You must read all of them before doing anything else.
+The caller (typically `build-failure-analysis.md` or `build-failure-analysis-command.md`) runs the build, dumps the binlog as JSON files (via the `DumpBinlog` helper in `.github/workflows/scripts/`), and sets the environment variables below. You must read all of them before doing anything else.
 
 | Variable                | Meaning |
 | ----------------------- | ------- |
@@ -48,7 +48,7 @@ If you need deeper drill-down (e.g., a full-text search over the binlog), you ca
 2. If the value is `success`, post a `noop` with the message `Build succeeded — no analysis required.` and stop. (The workflow should have skipped you in this case, but be defensive.)
 3. If the value is `failure` but `GH_AW_BINLOG_PATH` is empty or points at a missing file, post a single comment via `add_comment` with the body:
 
-   > 🔍 **Build Failure Analysis** — the build failed but no binary log was produced. See the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for raw logs.
+   > 🔍 **Build Failure Analysis** — the build failed but no binary log was produced. See the [workflow run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}) for raw logs.
    >
    > `<!-- build-failure-analysis -->`
 
@@ -77,10 +77,33 @@ Common .NET / MSBuild root-cause patterns. Use these as a starting point, but tr
 | StyleCop violation | `SA####` | Trailing whitespace, missing newline, tuple casing, etc. |
 | Analyzer rule violation | `CA####` | Code-quality rule. Pay attention to `WarnAsError` lift. |
 | MSBuild task / target failure | `MSB####` | Missing file, malformed XML, broken import. |
-| NuGet resolution failure | `NU####`, `NETSDK####` | Package not found, version conflict, TFM not supported, banned dependency. |
+| NuGet resolution failure | `NU####`, `NETSDK####` | Package not found, version conflict, TFM not supported, banned dependency. **Use the NuGet MCP server** to resolve. |
 | Localization regression | `xlf` parsing error, `LCMessages` | `.resx` modified without rebuild; never hand-edit `.xlf`. |
 
 Group every error in the binlog under exactly one root-cause cluster. If two clusters share a probable common cause (e.g., a single deleted method causes both `CS0103` and `RS0017`), merge them.
+
+### Step 3b — Use NuGet MCP Server for package issues
+
+When the errors include NuGet resolution failures (`NU1605`, `NU1608`, `NU1100`, `NU1102`, etc.) or vulnerable package warnings, use the **NuGet MCP Server** (installed as a dotnet global tool) via the `bash` tool:
+
+```bash
+# Get a remediation plan for vulnerable/conflicting packages
+dotnet NuGet.Mcp.Server -- --source https://api.nuget.org/v3/index.json --project /path/to/project.csproj
+```
+
+The NuGet MCP Server can resolve version conflicts by analyzing the full transitive dependency graph. Use it to generate concrete version updates for `Directory.Packages.props` or `.csproj` files.
+
+Available capabilities:
+1. **Fix vulnerable packages** — resolves version conflicts including transitive dependencies.
+2. **Get latest package version** — finds the latest compatible version of a package.
+3. **Update package** — plans upgrades based on the project's dependency graph.
+
+**Example workflow for NU1605:**
+1. Read the error to identify which package was downgraded and which projects are involved.
+2. Run `NuGet.Mcp.Server` via bash with `fix_vulnerable_packages` to get a resolution plan.
+3. Use the resolution plan to construct a concrete `suggestion` block (e.g., updating the version in `Directory.Packages.props`).
+
+> **Note:** The NuGet MCP server operates on the workspace's actual project files and NuGet configuration. It has access to the repository's NuGet feeds and can resolve transitive dependency chains that are impossible to reason about from error messages alone.
 
 ### Step 4 — Read source context for the highest-confidence fix
 
@@ -88,7 +111,7 @@ For each root cause, identify the **smallest set of files** that need to change.
 
 - For Roslyn / C# errors: read 6 lines above and 10 lines below the reported line.
 - For MSBuild errors: read the offending element and the surrounding `<PropertyGroup>` / `<ItemGroup>` / `<Target>`.
-- For NuGet failures: read the `.csproj`, `Directory.Packages.props`, and `eng/Versions.props` rows mentioning the package.
+- For NuGet failures: read the `.csproj`, `Directory.Packages.props`, and `eng/Versions.props` rows mentioning the package. Then run `dotnet NuGet.Mcp.Server` to get a concrete resolution plan.
 
 If the source line at the reported `file:line` does not look like a plausible cause (sometimes the compiler reports the *call site*, not the *declaration site*), search the PR-changed files for the symbol named in the error message and use that as the suggestion target.
 
@@ -144,10 +167,10 @@ Template:
 
 ---
 
-<sub>🤖 Generated by the [Build Failure Analysis workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) using <a href="https://dev.azure.com/dnceng/public/_artifacts/feed/dotnet-tools/NuGet/AITools.BinlogMcp">binlog-mcp</a> · commit ${GH_AW_PR_HEAD_SHA}</sub>
+<sub>🤖 Generated by the [Build Failure Analysis workflow](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}) using <a href="https://dev.azure.com/dnceng/public/_artifacts/feed/dotnet-tools/NuGet/Microsoft.AITools.BinlogMcp">binlog-mcp</a> · commit ${GH_AW_PR_HEAD_SHA}</sub>
 ```
 
-Build links to source using `${{ github.server_url }}/${{ github.repository }}/blob/${GH_AW_PR_HEAD_SHA}/<relative-path>#L<line>`.
+Build links to source using `${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${GH_AW_PR_HEAD_SHA}/<relative-path>#L<line>`.
 
 ### Step 6 — Post inline suggestions
 

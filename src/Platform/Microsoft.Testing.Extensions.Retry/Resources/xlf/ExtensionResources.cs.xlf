@@ -75,6 +75,11 @@ Přesouvání souborů prostředků posledního pokusu do výchozího adresáře
         <target state="translated">Zakázat mechanismus opakování, pokud je procento neúspěšných testů větší než zadaná hodnota</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
+        <source>Option '{0}' expects an integer argument between 0 and 100</source>
+        <target state="new">Option '{0}' expects an integer argument between 0 and 100</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
         <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
         <target state="translated">Zakázat mechanismus opakování, pokud je počet neúspěšných testů větší než zadaná hodnota</target>
@@ -100,9 +105,9 @@ Přesouvání souborů prostředků posledního pokusu do výchozího adresáře
         <target state="translated">Možnost {0} vyžaduje, aby byla zadaná možnost {1}.</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage">
-        <source>Option '{0}' expects a single integer argument</source>
-        <target state="translated">Možnost {0} očekává jeden celočíselný argument.</target>
+      <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
+        <source>Option '{0}' expects a non-negative integer argument</source>
+        <target state="new">Option '{0}' expects a non-negative integer argument</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">

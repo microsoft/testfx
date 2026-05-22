@@ -73,6 +73,12 @@ internal sealed class UnitTestRunner
         _typeCache = new TypeCache(reflectHelper);
 
         _classCleanupManager = new ClassCleanupManager(testsToRun);
+
+        // Expose the planned (post-filter) test list so that user code (typically [AssemblyInitialize]
+        // or fixtures) can query TestRun.Current.PlannedTests to decide whether expensive setup is
+        // needed. Set here so the snapshot lives in the same AppDomain/process that will execute the
+        // assembly initialize and the tests themselves.
+        TestRun.SetCurrent(TestRunInfo.CreateFrom(testsToRun));
     }
 
 #pragma warning disable CA1822 // Mark members as static
