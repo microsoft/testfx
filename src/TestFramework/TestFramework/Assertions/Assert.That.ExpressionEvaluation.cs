@@ -325,7 +325,7 @@ public static partial class AssertExtensions
                 cache[expr] = result;
             }
         }
-        catch
+        catch (Exception)
         {
             // If evaluation fails (e.g., null reference, division by zero), cache the failure
             // sentinel so other branches can still be diagnosed. The root caller (EvaluateExpression)

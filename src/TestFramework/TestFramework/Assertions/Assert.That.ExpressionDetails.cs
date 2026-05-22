@@ -455,7 +455,7 @@ public static partial class AssertExtensions
                 ? FormatValue(constExpr.Value)
                 : CleanExpressionText(indexArg.ToString());
         }
-        catch
+        catch (Exception)
         {
             return CleanExpressionText(indexArg.ToString());
         }

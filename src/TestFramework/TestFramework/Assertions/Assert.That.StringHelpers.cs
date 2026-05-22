@@ -8,6 +8,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public static partial class AssertExtensions
 {
+    // Hoisted to a static field so TryMatchListInitPattern is allocation-free on the
+    // diagnostic text cleanup hot path (CleanListInitializers can call it repeatedly).
+    private static readonly string[] ListInitCollectionTypes = ["List", "IList", "ICollection", "IEnumerable"];
+
     private static string FormatValue(object? value)
         => value switch
         {
@@ -225,10 +229,9 @@ public static partial class AssertExtensions
         }
 
         // Check for collection type names
-        string[] collectionTypes = ["List", "IList", "ICollection", "IEnumerable"];
         string matchedType = string.Empty;
 
-        foreach (string type in collectionTypes)
+        foreach (string type in ListInitCollectionTypes)
         {
             if (HasSubstringAt(input, pos, type))
             {
@@ -455,9 +458,9 @@ public static partial class AssertExtensions
     private static bool TryRemoveWrapper(string input, ref int index, string pattern,
         Func<string, string> transform, StringBuilder result)
     {
-        // Check if the pattern exists at the current index
-        if (index > input.Length - pattern.Length ||
-            !string.Equals(input.Substring(index, pattern.Length), pattern, StringComparison.Ordinal))
+        // Check if the pattern exists at the current index (non-allocating ordinal compare
+        // to avoid per-probe Substring allocations on the diagnostic cleanup hot path).
+        if (!HasSubstringAt(input, index, pattern))
         {
             return false;
         }
