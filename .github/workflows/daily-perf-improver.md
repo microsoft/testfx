@@ -16,6 +16,7 @@ on:
   slash_command:
     name: perf-assist
     events: [pull_request_comment]
+    strategy: centralized
   reaction: "eyes"
 
 permissions:

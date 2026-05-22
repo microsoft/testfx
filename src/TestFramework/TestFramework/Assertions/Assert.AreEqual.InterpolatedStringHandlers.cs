@@ -12,6 +12,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public sealed partial class Assert
 {
+    [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
@@ -86,6 +87,7 @@ public sealed partial class Assert
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
+    [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
     public readonly struct AssertAreNotEqualInterpolatedStringHandler<TArgument>
@@ -152,6 +154,7 @@ public sealed partial class Assert
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
+    [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
     public readonly struct AssertNonGenericAreEqualInterpolatedStringHandler
@@ -263,6 +266,7 @@ public sealed partial class Assert
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
+    [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
     public readonly struct AssertNonGenericAreNotEqualInterpolatedStringHandler

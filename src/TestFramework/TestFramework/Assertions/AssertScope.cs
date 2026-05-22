@@ -9,6 +9,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Represents a scope in which assertion failures are collected instead of thrown immediately.
 /// When the scope is disposed, all collected failures are thrown as a single <see cref="AssertFailedException"/>.
 /// </summary>
+[StackTraceHidden]
 internal sealed class AssertScope : IDisposable
 {
     private static readonly AsyncLocal<AssertScope?> CurrentScope = new();

@@ -72,6 +72,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     private readonly object _propertiesLock = new();
 #endif
     private readonly IMessageLogger? _messageLogger;
+    private readonly TestRunCancellationToken? _testRunCancellationToken;
 
     private CancellationTokenRegistration? _cancellationTokenRegistration;
 
@@ -145,6 +146,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         }
 
         _messageLogger = messageLogger;
+        _testRunCancellationToken = testRunCancellationToken;
         _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
     }
 
@@ -495,4 +497,45 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
     internal string? GetAndClearTrace()
         => _traceStringBuilder?.GetAndClear();
+
+    /// <summary>
+    /// Creates a sibling <see cref="TestContextImplementation"/> for use by a single iteration
+    /// of the folded data-driven test execution path.
+    /// <para>
+    /// The clone inherits the same configuration as this context (a shallow snapshot of the
+    /// property bag, the message logger, the same test-run cancellation token, and on .NET
+    /// Framework the current data connection), but registers its own cancellation callback and
+    /// starts with no accumulated per-test state (no captured stdout/stderr/trace,
+    /// no diagnostic messages, no result files, no exception, no data row, and the
+    /// default <see cref="UnitTestOutcome"/> value rather than the original's current outcome).
+    /// This keeps the folded path structurally equivalent to the unfolded path, where each
+    /// row gets its own <see cref="TestContextImplementation"/>.
+    /// </para>
+    /// </summary>
+    /// <returns>A fresh context suitable for one folded data-driven iteration.</returns>
+    internal TestContextImplementation CloneForDataDrivenIteration()
+    {
+        // Take a shallow snapshot of the current property bag so that the clone starts with
+        // the same properties (including TestNameLabel / FullyQualifiedTestClassNameLabel and
+        // anything merged from AssemblyInitialize / ClassInitialize) but is otherwise isolated.
+        // Per-iteration mutations to the clone's property bag won't leak back to this instance
+        // nor to subsequent iterations.
+        var snapshot = new Dictionary<string, object?>(_properties);
+
+        // Pass testMethod: null and testClassFullName: null because the relevant labels are
+        // already in the snapshot. The constructor will copy the snapshot as-is.
+        var clone = new TestContextImplementation(testMethod: null, testClassFullName: null, snapshot, _messageLogger, _testRunCancellationToken);
+
+        // Preserve TestRunCount so user code that observes it (e.g. retry-aware tests) sees
+        // the same value it would see in the unfolded path. TestRunCount represents the
+        // execution-attempt count of this test, not per-row state, so it must flow into
+        // each iteration's context.
+        clone.Context.TestRunCount = Context.TestRunCount;
+
+#if NETFRAMEWORK
+        clone.SetDataConnection(_dbConnection);
+#endif
+
+        return clone;
+    }
 }

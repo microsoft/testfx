@@ -6,8 +6,8 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
-/// Simple terminal that uses 4-bit ANSI for colors but does not move cursor and does not do other fancy stuff to stay compatible with CI systems like AzDO.
-/// The colors are set on start of every line to properly color multiline strings in AzDO output.
+/// Simple terminal that uses 4-bit ANSI for colors but does not move cursor and does not do other fancy stuff to stay compatible with CI systems.
+/// The colors are set on start of every line to properly color multiline strings in CI log viewers that reset color state at each newline (e.g. Azure DevOps).
 /// </summary>
 internal sealed class SimpleAnsiTerminal : SimpleTerminal
 {

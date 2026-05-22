@@ -8,6 +8,7 @@ on:
   slash_command:
     name: autofix
     events: [pull_request_comment]
+    strategy: centralized
   roles: [admin, maintainer, write]
   reaction: "eyes"
 

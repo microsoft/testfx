@@ -30,6 +30,7 @@ steps:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_AW_ORIGINAL_GITHUB_API_URL: ${{ github.api_url }}
+      GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
     run: |
       # Create output directory
       mkdir -p /tmp/gh-aw/issues-data
@@ -43,7 +44,7 @@ steps:
         -H "Authorization: Bearer ${GITHUB_TOKEN}" \
         -H "Accept: application/vnd.github+json" \
         --get \
-        --data-urlencode "q=repo:${{ github.repository }} is:issue is:open -is:sub-issue" \
+        --data-urlencode "q=repo:${GH_AW_GITHUB_REPOSITORY} is:issue is:open -is:sub-issue" \
         --data-urlencode "sort=created" \
         --data-urlencode "order=desc" \
         --data-urlencode "per_page=100" \

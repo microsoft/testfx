@@ -93,7 +93,7 @@ internal sealed partial class AppInsightsProvider :
         string sessionId)
     {
         _ = bool.TryParse(configuration[PlatformConfigurationConstants.PlatformTelemetryIsDevelopmentRepository], out _isDevelopmentRepository);
-        _isCi = CIEnvironmentDetectorForTelemetry.IsCIEnvironment();
+        _isCi = new CIEnvironmentDetector(environment).IsCIEnvironment();
         _environment = environment;
         _currentSessionId = sessionId;
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
