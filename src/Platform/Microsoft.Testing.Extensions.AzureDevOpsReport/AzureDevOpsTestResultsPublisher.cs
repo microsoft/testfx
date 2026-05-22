@@ -29,7 +29,7 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
     private readonly IClock _clock;
     private readonly ILogger _logger;
     private readonly AzureDevOpsTestResultsPublisherOptions _options;
-    private readonly LinkedList<AzureDevOpsTestCaseResult> _retryResults = [];
+    private readonly List<AzureDevOpsTestCaseResult> _retryResults = [];
     private readonly ConcurrentQueue<AzureDevOpsTestCaseResult> _pendingResults = new();
     private readonly SemaphoreSlim _flushSemaphore = new(1, 1);
 
@@ -332,14 +332,9 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                 List<AzureDevOpsTestCaseResult> batch = [];
                 while (batch.Count < _options.BatchSize && _retryResults.Count > 0)
                 {
-                    LinkedListNode<AzureDevOpsTestCaseResult>? retryResult = _retryResults.First;
-                    if (retryResult is null)
-                    {
-                        break;
-                    }
-
-                    batch.Add(retryResult.Value);
-                    _retryResults.RemoveFirst();
+                    int retryResultIndex = _retryResults.Count - 1;
+                    batch.Add(_retryResults[retryResultIndex]);
+                    _retryResults.RemoveAt(retryResultIndex);
                 }
 
                 while (batch.Count < _options.BatchSize && _pendingResults.TryDequeue(out AzureDevOpsTestCaseResult? result))
@@ -364,10 +359,10 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    // Add failed results back to the front in their original order so retry batches stay stable.
+                    // Store retry results with the next item at the end so removals are O(1) and order is preserved.
                     for (int i = batch.Count - 1; i >= 0; i--)
                     {
-                        _retryResults.AddFirst(batch[i]);
+                        _retryResults.Add(batch[i]);
                     }
 
                     _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
