@@ -90,13 +90,14 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
         Log.LogMessage(MessageImportance.Normal, $"SelfRegisteredExtensionsSourcePath: '{SelfRegisteredExtensionsSourcePath.ItemSpec}'");
         Log.LogMessage(MessageImportance.Normal, $"Language: '{Language.ItemSpec}'");
 
-        if (SelfRegisteredExtensionsBuilderHook.Length > 0)
+        ITaskItem[] selfRegisteredExtensionsBuilderHook = ValidateAndDeduplicateBuilderHooks();
+
+        if (selfRegisteredExtensionsBuilderHook.Length > 0)
         {
             StringBuilder stringBuilder = new();
             stringBuilder.AppendLine("TestingPlatformExtensionFullTypeNames:");
 
-            // Distinct by ItemSpec and take the first one.
-            foreach (ITaskItem item in SelfRegisteredExtensionsBuilderHook.GroupBy(x => x.ItemSpec).Select(x => x.First()))
+            foreach (ITaskItem item in selfRegisteredExtensionsBuilderHook)
             {
                 if (RoslynString.IsNullOrEmpty(item.GetMetadata(DisplayNameMetadataName)))
                 {
@@ -125,12 +126,39 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
             }
             else
             {
-                GenerateCode(Language.ItemSpec, RootNamespace, SelfRegisteredExtensionsBuilderHook, SelfRegisteredExtensionsSourcePath, _fileSystem, Log);
+                GenerateCode(Language.ItemSpec, RootNamespace, selfRegisteredExtensionsBuilderHook, SelfRegisteredExtensionsSourcePath, _fileSystem, Log);
                 SelfRegisteredExtensionsGeneratedFilePath = SelfRegisteredExtensionsSourcePath;
             }
         }
 
         return !Log.HasLoggedErrors;
+    }
+
+    private ITaskItem[] ValidateAndDeduplicateBuilderHooks()
+    {
+        List<ITaskItem> distinctBuilderHooks = [];
+
+        foreach (IGrouping<string, ITaskItem> group in SelfRegisteredExtensionsBuilderHook.GroupBy(x => x.ItemSpec))
+        {
+            ITaskItem firstItem = group.First();
+            foreach (ITaskItem duplicateItem in group.Skip(1))
+            {
+                if (!StringComparer.Ordinal.Equals(firstItem.GetMetadata(DisplayNameMetadataName), duplicateItem.GetMetadata(DisplayNameMetadataName)) ||
+                    !StringComparer.Ordinal.Equals(firstItem.GetMetadata(TypeFullNameMetadataName), duplicateItem.GetMetadata(TypeFullNameMetadataName)))
+                {
+                    Log.LogError(
+                        "Duplicate 'TestingPlatformBuilderHook' item with Include '{0}' has conflicting metadata. Items with the same Include value must have identical '{1}' and '{2}' metadata.",
+                        firstItem.ItemSpec,
+                        DisplayNameMetadataName,
+                        TypeFullNameMetadataName);
+                    break;
+                }
+            }
+
+            distinctBuilderHooks.Add(firstItem);
+        }
+
+        return [.. distinctBuilderHooks];
     }
 
     private static void GenerateCode(string language, string? rootNamespace, ITaskItem[] taskItems, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
