@@ -455,7 +455,7 @@
       </trans-unit>
       <trans-unit id="DoesNotMatchRegexFailedSummary">
         <source>Expected string to not match the specified pattern.</source>
-        <target state="new">Expected string to not match the specified pattern.</target>
+        <target state="translated">应为不匹配指定模式的字符串。</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
@@ -634,7 +634,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="AreNotEqualFailedSummary">
         <source>Expected values to differ.</source>
-        <target state="new">Expected values to differ.</target>
+        <target state="translated">预期值应不同。</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringsFailedSummary">
@@ -669,7 +669,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="MatchesRegexFailedSummary">
         <source>Expected string to match the specified pattern.</source>
-        <target state="new">Expected string to match the specified pattern.</target>
+        <target state="translated">应为匹配指定模式的字符串。</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">

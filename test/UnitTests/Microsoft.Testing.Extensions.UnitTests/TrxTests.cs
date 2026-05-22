@@ -461,6 +461,63 @@ public class TrxTests
     }
 
     [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithSupplementaryUnicode_TrxPreservesCharacter()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        const string emojiGrinningFace = "\U0001F600";
+        PropertyBag propertyBag = new(
+            new FailedTestNodeStateProperty("test failed"),
+            new TrxMessagesProperty([new StandardOutputTrxMessage($"stdout {emojiGrinningFace}")]),
+            new TrxExceptionProperty($"message {emojiGrinningFace}", $"stack {emojiGrinningFace}"));
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", $"TestMethod {emojiGrinningFace}", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        AssertExpectedTrxFileName(fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
+        XNamespace xmlNamespace = xml.Root!.Name.Namespace;
+        string trxContent = xml.ToString();
+        const string escapedEmojiSurrogatePair = @"\ud83d\ude00";
+
+        XElement unitTestResult = xml.Descendants(xmlNamespace + "UnitTestResult").Single();
+        Assert.AreEqual($"TestMethod {emojiGrinningFace}", unitTestResult.Attribute("testName")?.Value);
+        Assert.AreEqual($"stdout {emojiGrinningFace}", xml.Descendants(xmlNamespace + "StdOut").Single().Value);
+        Assert.AreEqual($"message {emojiGrinningFace}", xml.Descendants(xmlNamespace + "Message").Single().Value);
+        Assert.AreEqual($"stack {emojiGrinningFace}", xml.Descendants(xmlNamespace + "StackTrace").Single().Value);
+        Assert.Contains(emojiGrinningFace, trxContent, "TRX content should preserve supplementary Unicode characters.");
+        Assert.DoesNotContain(escapedEmojiSurrogatePair, trxContent, "TRX content should not contain escaped surrogate pair.");
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithUnpairedSurrogates_TrxEscapesInvalidCharacters()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        string stdoutWithUnpairedSurrogates = "stdout \uD800 \uDC00";
+        PropertyBag propertyBag = new(
+            new PassedTestNodeStateProperty(),
+            new TrxMessagesProperty([new StandardOutputTrxMessage(stdoutWithUnpairedSurrogates)]));
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        AssertExpectedTrxFileName(fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
+        XNamespace xmlNamespace = xml.Root!.Name.Namespace;
+        Assert.AreEqual(@"stdout \ud800 \udc00", xml.Descendants(xmlNamespace + "StdOut").Single().Value);
+        Assert.Contains(@"\ud800 \udc00", xml.ToString(), "TRX content should escape unpaired surrogate characters.");
+    }
+
+    [TestMethod]
     public async Task TrxReportEngine_GenerateReportAsync_WithTestFailed_TrxContainsDebugTrace()
     {
         // Arrange
@@ -641,6 +698,45 @@ public class TrxTests
                     expectedDestinationSuffix,
                     StringComparison.Ordinal))),
             Times.Once);
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithArtifactsByTestNodeAndCopyFailure_SkipsBadResultFileAndAddsRunInfo()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        _ = _fileSystem.Setup(x => x.CopyFile(
+                It.Is<string>(source => source.EndsWith("badFile", StringComparison.Ordinal)),
+                It.IsAny<string>()))
+            .Throws(new UnauthorizedAccessException("Access denied"));
+        var propertyBag = new PropertyBag(
+            new PassedTestNodeStateProperty(),
+            new FileArtifactProperty(new FileInfo("badFile"), "TestMethod", "description"),
+            new FileArtifactProperty(new FileInfo("goodFile"), "TestMethod", "description"));
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
+
+        // Act
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsNull(warning);
+        AssertExpectedTrxFileName(fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XDocument xml = memoryStream.TrxContent;
+        AssertTrxOutcome(xml, "Completed");
+        IEnumerable<XElement> resultFileElements = xml.Descendants().Where(element => element.Name.LocalName == "ResultFile");
+        string[] resultFilePaths = resultFileElements
+            .Select(element => element.Attribute("path"))
+            .OfType<XAttribute>()
+            .Select(attribute => attribute.Value)
+            .ToArray();
+        Assert.Contains(path => path.EndsWith("goodFile", StringComparison.Ordinal), resultFilePaths);
+        Assert.DoesNotContain("badFile", string.Join(Environment.NewLine, resultFilePaths));
+        XElement warningRunInfo = xml.Descendants().Single(element => element.Name.LocalName == "RunInfo" && element.Attribute("outcome")?.Value == "Warning");
+        string warningText = warningRunInfo.Descendants().Single(element => element.Name.LocalName == "Text").Value;
+        Assert.Contains("Unable to copy attachment", warningText);
+        Assert.Contains("badFile", warningText);
+        Assert.Contains("UnauthorizedAccessException", warningText);
     }
 
     [TestMethod]

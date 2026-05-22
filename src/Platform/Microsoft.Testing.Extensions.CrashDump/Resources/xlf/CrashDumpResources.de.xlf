@@ -111,6 +111,11 @@ Weitere Informationen finden Sie unter https://learn.microsoft.com/dotnet/core/d
         <target state="translated">[Nur Linux/macOS] Generieren Sie einen JSON-Absturzbericht, wenn der Testprozess abstürzt. Kombinieren Sie dies mit „--crashdump“, um auch eine Absturzabbilddatei zu generieren. Erfordert .NET 7 und höher, wenn es allein verwendet wird; .NET 6+ in Kombination mit „--crashdump“. Diese Runtimeanforderung wird vom Tool nicht erzwungen: Bei nicht unterstützten Runtimes wird kein Absturzbericht ausgegeben. Wird unter Windows aufgrund einer .NET-Runtimeeinschränkung nicht unterstützt (dotnet/runtime#80191).</target>
         <note />
       </trans-unit>
+      <trans-unit id="MissingCrashDumpMainOption">
+        <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
+        <target state="new">You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
         <target state="translated">Anforderungen vom Typ "{0}" werden nicht unterstützt</target>

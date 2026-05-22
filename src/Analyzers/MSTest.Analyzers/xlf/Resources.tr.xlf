@@ -119,17 +119,17 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsDescription">
         <source>`Assert.AreEqual` and `Assert.AreNotEqual` use `EqualityComparer&lt;T&gt;.Default`. For collection-like types this relies on the type's own equality semantics instead of comparing sequence elements, so `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` or `Assert.AreEquivalent`/`Assert.AreNotEquivalent` are usually the better fit.</source>
-        <target state="new">`Assert.AreEqual` and `Assert.AreNotEqual` use `EqualityComparer&lt;T&gt;.Default`. For collection-like types this relies on the type's own equality semantics instead of comparing sequence elements, so `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` or `Assert.AreEquivalent`/`Assert.AreNotEquivalent` are usually the better fit.</target>
+        <target state="translated">`Assert.AreEqual` ve `Assert.AreNotEqual`, `EqualityComparer&lt;T&gt;.Default` kullanır. Koleksiyon benzeri türlerde bu, dizi öğelerini karşılaştırmak yerine türün kendi eşitlik semantiğine dayanır. Bu nedenle genellikle `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` ya da `Assert.AreEquivalent`/`Assert.AreNotEquivalent` daha uygundur.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsMessageFormat">
         <source>`{0}` on {1} (which implements IEnumerable&lt;T&gt;) does not perform element-wise sequence comparison. Use `Assert.AreSequenceEqual` for ordered element-wise comparison, `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` for unordered, or `Assert.AreEquivalent` for deep structural comparison.</source>
-        <target state="new">`{0}` on {1} (which implements IEnumerable&lt;T&gt;) does not perform element-wise sequence comparison. Use `Assert.AreSequenceEqual` for ordered element-wise comparison, `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` for unordered, or `Assert.AreEquivalent` for deep structural comparison.</target>
+        <target state="translated">`{0}` üzerinde {1} (IEnumerable&lt;T&gt; uygulayan) öğe bazında dizi karşılaştırması yapmaz. Sıralı öğe bazında karşılaştırma için `Assert.AreSequenceEqual`, sırasız karşılaştırma için `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` ya da derin yapısal karşılaştırma için `Assert.AreEquivalent` kullanın.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsTitle">
         <source>Avoid Assert.AreEqual on collection types</source>
-        <target state="new">Avoid Assert.AreEqual on collection types</target>
+        <target state="translated">Koleksiyon türleri için Assert.AreEqual kullanmaktan kaçının</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
@@ -549,17 +549,17 @@ Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionDescription">
         <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</source>
-        <target state="new">When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</target>
+        <target state="translated">Zaman uyumsuz koddan gelen özel durumları doğrularken GetAwaiter().GetResult() ile zaman uyumsuz işlemi engellemek yerine zaman uyumsuz onaylama yöntemlerini kullanın.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
         <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
-        <target state="new">Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</target>
+        <target state="translated">'Assert.{0}' içinde zaman uyumsuz bir çağrıyı engellemek yerine 'Assert.{1}' kullanın</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionTitle">
         <source>Prefer async assertion methods</source>
-        <target state="new">Prefer async assertion methods</target>
+        <target state="translated">Zaman uyumsuz doğrulama yöntemlerini tercih edin</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">

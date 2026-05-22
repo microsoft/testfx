@@ -142,8 +142,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _isServerMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
         bool noAnsi = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
 
-        // TODO: Replace this with proper CI detection that we already have in telemetry. https://github.com/microsoft/testfx/issues/5533#issuecomment-2838893327
-        bool inCI = string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase) || string.Equals(_environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase);
+        bool inCI = new CIEnvironmentDetector(_environment).IsCIEnvironment();
 
         AnsiMode ansiMode = AnsiMode.AnsiIfPossible;
         // In LLM environments, prefer simple text output so that LLM can parse it easily.
