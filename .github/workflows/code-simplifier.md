@@ -1,7 +1,7 @@
 ---
+source: "githubnext/agentics/workflows/code-simplifier.md@main"
 name: Code Simplifier
 description: Analyzes recently modified code and creates pull requests with simplifications that improve clarity, consistency, and maintainability while preserving functionality
-
 on:
   schedule: daily
   skip-if-match: 'is:pr is:open in:title "[code-simplifier]"'
@@ -10,17 +10,20 @@ network:
   allowed:
   - defaults
   - dotnet
+  - node
+  - python
+  - rust
+  - java
 
 permissions: read-all
 
 tracker-id: code-simplifier
 
 imports:
-  - shared/repo-build-setup.md
+  - shared/formatting.md
+  - shared/reporting.md
 
 safe-outputs:
-  noop:
-    report-as-issue: false
   create-pull-request:
     title-prefix: "[code-simplifier] "
     labels: [refactoring, code-quality, automation]
@@ -30,11 +33,12 @@ safe-outputs:
 tools:
   github:
     toolsets: [default]
-  bash: [git, dotnet, date, grep, find, cat, head, tail, sed, mkdir]
-  edit:
 
 timeout-minutes: 30
 ---
+
+<!-- This prompt will be imported in the agentic workflow .github/workflows/code-simplifier.md at runtime. -->
+<!-- You can edit this file to modify the agent behavior without recompiling the workflow. -->
 
 # Code Simplifier Agent
 
@@ -65,7 +69,6 @@ git log --since="24 hours ago" --pretty=format:"%H %s" --no-merges
 ```
 
 Use GitHub tools to:
-
 - Search for pull requests merged in the last 24 hours: `repo:${{ github.repository }} is:pr is:merged merged:>=${YESTERDAY}`
 - Get details of merged PRs to understand what files were changed
 - List commits from the last 24 hours to identify modified files
@@ -73,17 +76,16 @@ Use GitHub tools to:
 ### 1.2 Extract Changed Files
 
 For each merged PR or recent commit:
-
 - Use `pull_request_read` with `method: get_files` to list changed files
 - Use `get_commit` to see file changes in recent commits
-- Focus on source code files (`.cs`, `.fs`, `.vb`, `.csproj`, `.props`, `.targets`)
+- Focus on source code files (common extensions: `.go`, `.js`, `.ts`, `.tsx`, `.jsx`, `.py`, `.rb`, `.java`, `.cs`, `.php`, `.cpp`, `.c`, `.rs`, etc.)
 - Exclude test files, lock files, generated files, and vendored dependencies
 
 ### 1.3 Determine Scope
 
-If **no files were changed in the last 24 hours**, invoke the `noop` safe output to exit gracefully without creating a PR or an issue:
+If **no files were changed in the last 24 hours**, exit gracefully without creating a PR:
 
-```text
+```
 ✅ No code changes detected in the last 24 hours.
 Code simplifier has nothing to process today.
 ```
@@ -95,9 +97,8 @@ If **files were changed**, proceed to Phase 2.
 ### 2.1 Review Project Standards
 
 Before simplifying, review the project's coding standards from relevant documentation:
-
 - Check for style guides, coding conventions, or contribution guidelines in the repository
-- Look for language-specific conventions (e.g., `.editorconfig`, `CONTRIBUTING.md`, `README.md`)
+- Look for language-specific conventions (e.g., `STYLE.md`, `CONTRIBUTING.md`, `README.md`)
 - Identify established patterns in the codebase
 
 ### 2.2 Simplification Principles
@@ -105,13 +106,11 @@ Before simplifying, review the project's coding standards from relevant document
 Apply these refinements to the recently modified code:
 
 #### 1. Preserve Functionality
-
 - **NEVER** change what the code does - only how it does it
 - All original features, outputs, and behaviors must remain intact
 - Run tests before and after to ensure no behavioral changes
 
 #### 2. Enhance Clarity
-
 - Reduce unnecessary complexity and nesting
 - Eliminate redundant code and abstractions
 - Improve readability through clear variable and function names
@@ -121,16 +120,13 @@ Apply these refinements to the recently modified code:
 - Choose clarity over brevity - explicit code is often better than compact code
 
 #### 3. Apply Project Standards
-
 - Use project-specific conventions and patterns
 - Follow established naming conventions
 - Apply consistent formatting
 - Use appropriate language features (modern syntax where beneficial)
 
 #### 4. Maintain Balance
-
 Avoid over-simplification that could:
-
 - Reduce code clarity or maintainability
 - Create overly clever solutions that are hard to understand
 - Combine too many concerns into single functions
@@ -164,25 +160,49 @@ Use the **edit** tool to modify files with targeted improvements. Make surgical,
 
 ### 3.1 Run Tests
 
-After making simplifications, run the project's test suite to ensure no functionality was broken:
+After making simplifications, run the project's test suite to ensure no functionality was broken. Adapt commands to the project's build system:
 
 ```bash
-./build.sh
+# Common test commands (adapt to the project)
+make test          # If Makefile exists
+npm test           # For Node.js projects
+pytest             # For Python projects
+./gradlew test     # For Gradle projects
+mvn test           # For Maven projects
+cargo test         # For Rust projects
 ```
 
 If tests fail:
-
 - Review the failures carefully
 - Revert changes that broke functionality
 - Adjust simplifications to preserve behavior
 - Re-run tests until they pass
 
-### 3.2 Check Build
+### 3.2 Run Linters
+
+Ensure code style is consistent (if linters are configured):
+
+```bash
+# Common lint commands (adapt to the project)
+make lint          # If Makefile exists
+npm run lint       # For Node.js projects
+pylint . || flake8 . # For Python projects
+cargo clippy       # For Rust projects
+```
+
+Fix any linting issues introduced by the simplifications.
+
+### 3.3 Check Build
 
 Verify the project still builds successfully:
 
 ```bash
-./build.sh
+# Common build commands (adapt to the project)
+make build         # If Makefile exists
+npm run build      # For Node.js projects
+./gradlew build    # For Gradle projects
+mvn package        # For Maven projects
+cargo build        # For Rust projects
 ```
 
 ## Phase 4: Create Pull Request
@@ -190,15 +210,15 @@ Verify the project still builds successfully:
 ### 4.1 Determine If PR Is Needed
 
 Only create a PR if:
-
 - ✅ You made actual code simplifications
 - ✅ All tests pass (or no tests exist)
-- ✅ Build succeeds
+- ✅ Linting is clean (or no linter configured)
+- ✅ Build succeeds (or no build step exists)
 - ✅ Changes improve code quality without breaking functionality
 
-If no improvements were made or changes broke tests, invoke the `noop` safe output to exit gracefully without creating a PR or an issue:
+If no improvements were made or changes broke tests, exit gracefully:
 
-```text
+```
 ✅ Code analyzed from last 24 hours.
 No simplifications needed - code already meets quality standards.
 ```
@@ -214,8 +234,8 @@ This PR simplifies recently modified code to improve clarity, consistency, and m
 
 ### Files Simplified
 
-- `path/to/file1.cs` - [Brief description of improvements]
-- `path/to/file2.cs` - [Brief description of improvements]
+- `path/to/file1.ext` - [Brief description of improvements]
+- `path/to/file2.ext` - [Brief description of improvements]
 
 ### Improvements Made
 
@@ -236,8 +256,9 @@ Recent changes from:
 
 ### Testing
 
-- ✅ All tests pass
-- ✅ Build succeeds
+- ✅ All tests pass (or indicate if no tests exist)
+- ✅ Linting passes (or indicate if no linter configured)
+- ✅ Build succeeds (or indicate if no build step)
 - ✅ No functional changes - behavior is identical
 
 ### Review Focus
@@ -260,23 +281,19 @@ Create the pull request using the safe-outputs tool with the generated descripti
 ## Important Guidelines
 
 ### Scope Control
-
 - **Focus on recent changes**: Only refine code modified in the last 24 hours
 - **Don't over-refactor**: Avoid touching unrelated code
 - **Preserve interfaces**: Don't change public APIs
 - **Incremental improvements**: Make targeted, surgical changes
 
 ### Quality Standards
-
 - **Test first**: Always run tests after simplifications (when available)
 - **Preserve behavior**: Functionality must remain identical
 - **Follow conventions**: Apply project-specific patterns consistently
 - **Clear over clever**: Prioritize readability and maintainability
 
 ### Exit Conditions
-
 Exit gracefully without creating a PR if:
-
 - No code was changed in the last 24 hours
 - No simplifications are beneficial
 - Tests fail after changes
@@ -287,8 +304,8 @@ Exit gracefully without creating a PR if:
 
 Your output MUST either:
 
-1. **If no changes in last 24 hours**: Invoke the `noop` safe output with a brief status message
-2. **If no simplifications beneficial**: Invoke the `noop` safe output with a brief status message
+1. **If no changes in last 24 hours**: Output a brief status message
+2. **If no simplifications beneficial**: Output a brief status message
 3. **If simplifications made**: Create a PR with the changes
 
 Begin your code simplification analysis now.

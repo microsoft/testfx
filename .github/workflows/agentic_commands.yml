@@ -1,12 +1,10 @@
-# gh-aw-commands: {"payload_version":"v1","schema_version":"v1","compiler_version":"v0.74.8","commands":["add-tests","analyze-build-failure","autofix","perf-assist","review","test-assist"],"workflows":["add-tests","autofix.agent","build-failure-analysis-command","daily-perf-improver","daily-test-improver","review.agent"]}
+# gh-aw-commands: {"payload_version":"v1","schema_version":"v1","compiler_version":"v0.74.8","commands":["add-tests","analyze-build-failure","autofix","review"],"workflows":["add-tests","autofix.agent","build-failure-analysis-command","review.agent"]}
 # Routing summary (sorted):
 #   slash commands:
 #     /add-tests -> add-tests [pull_request_comment] reaction=eyes
 #     /analyze-build-failure -> build-failure-analysis-command [pull_request_comment] reaction=eyes
 #     /autofix -> autofix.agent [pull_request_comment] reaction=eyes
-#     /perf-assist -> daily-perf-improver [pull_request_comment] reaction=eyes
 #     /review -> review.agent [pull_request_comment] reaction=eyes
-#     /test-assist -> daily-test-improver [discussion,discussion_comment,issue_comment,issues,pull_request,pull_request_comment,pull_request_review_comment] reaction=eyes
 #   labels:
 #     (none)
 #    ___                   _   _      
@@ -34,17 +32,7 @@
 name: "Agentic Commands"
 
 on:
-  issues:
-    types: [edited, opened, reopened]
   issue_comment:
-    types: [created, edited]
-  pull_request:
-    types: [edited, opened, reopened]
-  pull_request_review_comment:
-    types: [created, edited]
-  discussion:
-    types: [created, edited]
-  discussion_comment:
     types: [created, edited]
 
 permissions: {}
@@ -56,8 +44,6 @@ jobs:
       actions: write
       contents: read
       issues: write
-      pull-requests: write
-      discussions: write
 
     steps:
       - name: Checkout repository
@@ -71,7 +57,7 @@ jobs:
       - name: Route slash command
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          GH_AW_SLASH_ROUTING: '{"add-tests":[{"workflow":"add-tests","events":["pull_request_comment"],"ai_reaction":"eyes"}],"analyze-build-failure":[{"workflow":"build-failure-analysis-command","events":["pull_request_comment"],"ai_reaction":"eyes"}],"autofix":[{"workflow":"autofix.agent","events":["pull_request_comment"],"ai_reaction":"eyes"}],"perf-assist":[{"workflow":"daily-perf-improver","events":["pull_request_comment"],"ai_reaction":"eyes"}],"review":[{"workflow":"review.agent","events":["pull_request_comment"],"ai_reaction":"eyes"}],"test-assist":[{"workflow":"daily-test-improver","events":["discussion","discussion_comment","issue_comment","issues","pull_request","pull_request_comment","pull_request_review_comment"],"ai_reaction":"eyes"}]}'
+          GH_AW_SLASH_ROUTING: '{"add-tests":[{"workflow":"add-tests","events":["pull_request_comment"],"ai_reaction":"eyes"}],"analyze-build-failure":[{"workflow":"build-failure-analysis-command","events":["pull_request_comment"],"ai_reaction":"eyes"}],"autofix":[{"workflow":"autofix.agent","events":["pull_request_comment"],"ai_reaction":"eyes"}],"review":[{"workflow":"review.agent","events":["pull_request_comment"],"ai_reaction":"eyes"}]}'
           GH_AW_LABEL_ROUTING: '{}'
         with:
           script: |
