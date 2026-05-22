@@ -161,8 +161,10 @@ internal sealed partial class JsonConfigurationSource
                 string remainder = kvp.Key.Substring(sectionPrefix.Length);
 
                 // Reject nested objects/arrays: their leaves produce keys like "environmentVariables:FOO:BAR"
-                // or "environmentVariables:FOO:0" (array index).
-                if (remainder.Length == 0 || remainder.IndexOf(PlatformConfigurationConstants.KeyDelimiter, StringComparison.Ordinal) >= 0)
+                // or "environmentVariables:FOO:0" (array index). We deliberately allow an empty remainder
+                // (i.e. an empty child key such as {"environmentVariables": {"": "x"}}) through so the
+                // consumer can run its own name validation (and surface a dedicated error message).
+                if (remainder.IndexOf(PlatformConfigurationConstants.KeyDelimiter, StringComparison.Ordinal) >= 0)
                 {
                     throw new FormatException(string.Format(
                         CultureInfo.InvariantCulture,

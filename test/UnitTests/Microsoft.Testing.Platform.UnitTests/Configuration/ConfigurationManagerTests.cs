@@ -228,6 +228,23 @@ public sealed class ConfigurationManagerTests
     }
 
     [TestMethod]
+    public async ValueTask GetTestConfigJsonSection_EmptyChildKey_PassesThroughForConsumerValidation()
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedConfigurationAsync(
+            "{\"environmentVariables\": {\"\": \"x\"}}");
+
+        // GetSection itself must not throw the "must be scalar" error for an empty child key. Empty
+        // remainders represent a direct (top-level) child of the section with a scalar value, so the
+        // entry is returned and the consumer (e.g. TestConfigurationEnvironmentVariableProvider) can
+        // run its own dedicated empty-name validation/error message.
+        IReadOnlyList<KeyValuePair<string, string?>> entries = configuration.GetTestConfigJsonSection("environmentVariables");
+
+        Assert.HasCount(1, entries);
+        Assert.AreEqual(string.Empty, entries[0].Key);
+        Assert.AreEqual("x", entries[0].Value);
+    }
+
+    [TestMethod]
     public async ValueTask GetTestConfigJsonSection_NumericAndBoolValues_AreCoercedToText()
     {
         AggregatedConfiguration configuration = await BuildAggregatedConfigurationAsync(

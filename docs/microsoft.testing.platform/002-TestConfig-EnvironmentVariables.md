@@ -67,17 +67,20 @@ A new internal method `JsonConfigurationProvider.GetSection(string sectionName)`
 
 ### Registration
 
-`TestHostBuilder.SetupCommonServicesAsync` registers the provider immediately after the configuration is built:
+`TestHostBuilder.SetupCommonServicesAsync` registers the provider immediately after the configuration is built and inserts it at the front of the controller ordering so later user/VSTest providers can still override:
 
 ```csharp
 if (!OperatingSystem.IsBrowser())
 {
-    TestHostControllers.AddEnvironmentVariableProvider(
+    // Internal API: inserts the provider at the front of the controller ordering so any
+    // later user-supplied or VSTest-bridge provider registered via the public
+    // TestHostControllers.AddEnvironmentVariableProvider(...) still wins for the same key.
+    testHostControllersManager.AddEnvironmentVariableProviderFirst(
         sp => new TestConfigurationEnvironmentVariableProvider(sp.GetConfiguration()));
 }
 ```
 
-It is registered **before** any user-supplied or extension-supplied provider runs. This ordering choice has a concrete consequence — see [Precedence](#precedence-and-ordering).
+It is registered **first** in the controller ordering so any user-supplied or extension-supplied provider runs after it and can override the testconfig.json values. This ordering choice has a concrete consequence — see [Precedence](#precedence-and-ordering).
 
 ### Provider behavior
 
