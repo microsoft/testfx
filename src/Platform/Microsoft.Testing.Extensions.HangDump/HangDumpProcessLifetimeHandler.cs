@@ -372,15 +372,15 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 
-        (string writeDumpFileName, string artifactDumpFileName) = GetDumpFileNames(finalDumpFileName);
+        DumpFileNames dumpFileNames = GetDumpFileNames(finalDumpFileName);
 
         try
         {
             // Skip creating the dump if the option is set to none, and just kill the process.
             if (dumpType.HasValue)
             {
-                diagnosticsClient.WriteDump(dumpType.Value, writeDumpFileName, logDumpGeneration: false);
-                _dumpFiles.Add(artifactDumpFileName);
+                diagnosticsClient.WriteDump(dumpType.Value, dumpFileNames.WriteDumpFileName, logDumpGeneration: false);
+                _dumpFiles.Add(dumpFileNames.ArtifactDumpFileName);
             }
         }
         catch (Exception e)
@@ -416,15 +416,19 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 #endif
     }
 
-    private static (string WriteDumpFileName, string ArtifactDumpFileName) GetDumpFileNames(string dumpFileName)
+    private static DumpFileNames GetDumpFileNames(string dumpFileName)
         => GetDumpFileNames(dumpFileName, RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
 
     // Wrap the dump path into "" when it has space in it, this is a workaround for this runtime issue: https://github.com/dotnet/diagnostics/issues/5020
     // It only affects windows. Otherwise the dump creation fails with: [createdump] The pid argument is no longer supported
-    internal static (string WriteDumpFileName, string ArtifactDumpFileName) GetDumpFileNames(string dumpFileName, bool isWindows)
-        => (isWindows && dumpFileName.Contains(' ')
-            ? $"\"{dumpFileName}\""
-            : dumpFileName, dumpFileName);
+    internal static DumpFileNames GetDumpFileNames(string dumpFileName, bool isWindows)
+        => new(
+            isWindows && dumpFileName.Contains(' ')
+                ? $"\"{dumpFileName}\""
+                : dumpFileName,
+            dumpFileName);
+
+    internal readonly record struct DumpFileNames(string WriteDumpFileName, string ArtifactDumpFileName);
 
     private static void NotifyCrashDumpServiceIfEnabled()
         => AppDomain.CurrentDomain.SetData("ProcessKilledByHangDump", "true");

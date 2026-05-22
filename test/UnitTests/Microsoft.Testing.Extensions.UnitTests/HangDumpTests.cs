@@ -111,9 +111,9 @@ public sealed class HangDumpTests
     {
         string dumpFileName = Path.Combine("C:", "results directory with spaces", "hangdump.dmp");
 
-        (string writeDumpFileName, string artifactDumpFileName) = HangDumpProcessLifetimeHandler.GetDumpFileNames(dumpFileName, isWindows: true);
+        HangDumpProcessLifetimeHandler.DumpFileNames dumpFileNames = HangDumpProcessLifetimeHandler.GetDumpFileNames(dumpFileName, isWindows: true);
 
-        Assert.AreEqual($"\"{dumpFileName}\"", writeDumpFileName);
-        Assert.AreEqual(dumpFileName, artifactDumpFileName);
+        Assert.AreEqual($"\"{dumpFileName}\"", dumpFileNames.WriteDumpFileName);
+        Assert.AreEqual(dumpFileName, dumpFileNames.ArtifactDumpFileName);
     }
 }
