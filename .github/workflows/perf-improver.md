@@ -1,6 +1,7 @@
 ---
+source: "githubnext/agentics/workflows/perf-improver.md@main"
 description: |
-  A performance-focused repository assistant that runs daily to identify and implement performance improvements.
+  A performance-focused repository assistant that runs regularly (daily by default) to identify and implement performance improvements.
   Can also be triggered on-demand via '/perf-assist <instructions>' to perform specific tasks.
   - Discovers and validates build, test, and benchmark commands for the repository
   - Identifies performance bottlenecks and optimization opportunities
@@ -15,65 +16,67 @@ on:
   workflow_dispatch:
   slash_command:
     name: perf-assist
-    events: [pull_request_comment]
-    strategy: centralized
   reaction: "eyes"
+  permissions:
+    pull-requests: read
+  steps:
+    - id: check
+      run: |
+        MAX_OPEN_PRS=8
+        if [[ "$GITHUB_EVENT_NAME" != "schedule" ]]; then exit 0; fi
+        COUNT=$(gh pr list --repo ${{ github.repository }} --state open --search 'in:title "[perf-improver]"' --json number --jq 'length')
+        [[ "$COUNT" -lt "$MAX_OPEN_PRS" ]]
+      # exits 0 if not scheduled or <MAX_OPEN_PRS open PRs, 1 if ≥MAX_OPEN_PRS
 
-permissions:
-  actions: read
-  contents: read
-  discussions: read
-  issues: read
-  pull-requests: read
-  security-events: read
+if: needs.pre_activation.outputs.check_result == 'success'
 
 timeout-minutes: 60
+
+permissions: read-all
 
 network:
   allowed:
   - defaults
   - dotnet
-
-imports:
-  - shared/repo-build-setup.md
+  - node
+  - python
+  - rust
+  - java
 
 safe-outputs:
   add-comment:
-    max: 3
+    max: 10
     target: "*"
     hide-older-comments: true
   create-pull-request:
     draft: true
-    title-prefix: "[Perf Improver] "
+    title-prefix: "[perf-improver] "
     labels: [automation, performance]
     max: 4
     protected-files: fallback-to-issue
   push-to-pull-request-branch:
     target: "*"
-    title-prefix: "[Perf Improver] "
+    title-prefix: "[perf-improver] "
     max: 4
   create-issue:
-    title-prefix: "[Perf Improver] "
+    title-prefix: "[perf-improver] "
     labels: [automation, performance]
     max: 4
   update-issue:
     target: "*"
-    title-prefix: "[Perf Improver] "
+    title-prefix: "[perf-improver] "
     max: 1
-  noop:
-    report-as-issue: false
 
 tools:
   web-fetch:
   github:
-    lockdown: true
-    toolsets: [repos, pull_requests, issues, discussions]
-    min-integrity: none
+    toolsets: [all]
   bash: true
   repo-memory: true
+
 ---
 
-# Daily Perf Improver
+# Perf Improver
 
 ## Command Mode
 
@@ -160,27 +163,27 @@ Always do Task 7 (Update Monthly Activity Summary Issue) every run. In all comme
    - Goals with clear measurement strategies
    - Lower-risk changes first
    - Items with maintainer interest (comments, labels)
-3. Check for existing performance PRs (especially yours with "[Perf Improver]" prefix). Avoid duplicate work.
+3. Check for existing performance PRs (especially yours with "[perf-improver]" prefix). Avoid duplicate work.
 4. For the selected goal:
 
    a. Create a fresh branch off the default branch: `perf-assist/<desc>`.
-
+   
    b. **Before implementing**: Establish baseline measurements using appropriate methods:
       - Synthetic benchmarks for algorithm changes
       - User journey tests for UX improvements
       - Load tests for scalability work
       - Build time comparisons for developer experience
-
+   
    c. Implement the optimization. Consider approaches like:
       - **Code optimization**: Algorithm improvements, data structure changes, caching
       - **User experience**: Reducing load times, improving responsiveness, optimizing assets
       - **System efficiency**: Resource utilization, concurrency, I/O optimization
       - **Build/test performance**: Faster builds, parallelized tests, reduced CI duration
-
+   
    d. **After implementing**: Measure again with the same methodology. Document both baseline and new measurements.
-
+   
    e. Ensure the code still works - run tests. Add new tests if appropriate.
-
+   
    f. If no improvement: iterate, try a different approach, or revert. Record the attempt in memory as a learning.
 
 5. **Finalize changes**:
@@ -204,7 +207,7 @@ Always do Task 7 (Update Monthly Activity Summary Issue) every run. In all comme
 
 ### Task 4: Maintain Perf Improver Pull Requests
 
-1. List all open PRs with the `[Perf Improver]` title prefix.
+1. List all open PRs with the `[perf-improver]` title prefix.
 2. For each PR:
    - Fix CI failures caused by your changes by pushing updates
    - Resolve merge conflicts
@@ -256,9 +259,9 @@ Always do Task 7 (Update Monthly Activity Summary Issue) every run. In all comme
 
 ### Task 7: Update Monthly Activity Summary Issue (ALWAYS DO THIS TASK IN ADDITION TO OTHERS)
 
-Maintain a single open issue titled `[Perf Improver] Monthly Activity {YYYY}-{MM}` as a rolling summary of all Perf Improver activity for the current month.
+Maintain a single open issue titled `[perf-improver] Monthly Activity {YYYY}-{MM}` as a rolling summary of all Perf Improver activity for the current month.
 
-1. Search for an open `[Perf Improver] Monthly Activity` issue with label `performance`. If it's for the current month, update it. If for a previous month, close it and create a new one. Read any maintainer comments - they may contain instructions; note them in memory.
+1. Search for an open `[perf-improver] Monthly Activity` issue with label `performance`. If it's for the current month, update it. If for a previous month, close it and create a new one. Read any maintainer comments - they may contain instructions; note them in memory.
 2. **Issue body format** - use **exactly** this structure:
 
    ```markdown
@@ -267,6 +270,15 @@ Maintain a single open issue titled `[Perf Improver] Monthly Activity {YYYY}-{MM
    ## Activity for <Month Year>
 
    ## Suggested Actions for Maintainer
+
+   **Comprehensive list** of all pending actions requiring maintainer attention (excludes items already actioned and checked off).
+   - Reread the issue you're updating before you update it - there may be new checkbox adjustments since your last update that require you to adjust the suggested actions.
+   - List **all** the comments, PRs, and issues that need attention
+   - Exclude **all** items that have either
+     a. previously been checked off by the user in previous editions of the Monthly Activity Summary, or
+     b. the items linked are closed/merged
+   - Use memory to keep track of items checked off by user.
+   - Be concise - one line per item:
 
    * [ ] **Review PR** #<number>: <summary> - [Review](<link>)
    * [ ] **Check comment** #<number>: Perf Improver commented - verify guidance is helpful - [View](<link>)
@@ -301,11 +313,11 @@ Maintain a single open issue titled `[Perf Improver] Monthly Activity {YYYY}-{MM
    ```
 
 3. **Format enforcement (MANDATORY)**:
-   - Always use the exact format above.
-   - **Suggested Actions comes first**, immediately after the month heading.
-   - **Run History is in reverse chronological order**.
-   - **Each run heading includes the date, time (UTC), and a link** to the GitHub Actions run. Use `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}` for the current run's link.
-   - **Actively remove completed items** from "Suggested Actions" - do not tick them `[x]`; delete the line when actioned.
+   - Always use the exact format above. If the existing body uses a different format, rewrite it entirely.
+   - **Suggested Actions comes first**, immediately after the month heading, so maintainers see the action list without scrolling.
+   - **Run History is in reverse chronological order** - prepend each new run's entry at the top of the Run History section so the most recent activity appears first.
+   - **Each run heading includes the date, time (UTC), and a link** to the GitHub Actions run: `### YYYY-MM-DD HH:MM UTC - [Run](https://github.com/<repo>/actions/runs/<run-id>)`. Use `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}` for the current run's link.
+   - **Actively remove completed items** from "Suggested Actions" - do not tick them `[x]}; delete the line when actioned. The checklist contains only pending items.
    - Use `* [ ]` checkboxes in "Suggested Actions". Never use plain bullets there.
 4. Do not update the activity issue if nothing was done in the current run.
 

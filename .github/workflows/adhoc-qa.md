@@ -1,6 +1,7 @@
 ---
+source: "githubnext/agentics/workflows/adhoc-qa.md@main"
 description: |
-  This workflow performs ad hoc quality assurance by validating project health daily.
+  This workflow performs ad hoc, subjective quality assurance by validating project health daily.
   Checks that code builds and runs, tests pass, documentation is clear, and code
   is well-structured. Creates discussions for findings and can submit draft PRs
   with improvements. Provides continuous quality monitoring throughout development.
@@ -8,29 +9,33 @@ description: |
 on:
   schedule: daily
   workflow_dispatch:
+  permissions:
+    pull-requests: read
+  steps:
+    - id: check
+      run: |
+        MAX_OPEN_PRS=8
+        if [[ "$GITHUB_EVENT_NAME" != "schedule" ]]; then exit 0; fi
+        COUNT=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --search 'in:title "[adhoc-qa]"' --json number --jq 'length')
+        [[ "$COUNT" -lt "$MAX_OPEN_PRS" ]]
+      # exits 0 if not scheduled or <MAX_OPEN_PRS open PRs, 1 if ≥MAX_OPEN_PRS
+
+if: needs.pre_activation.outputs.check_result == 'success'
 
 timeout-minutes: 15
 
 permissions: read-all
 
-network:
-  allowed:
-    - defaults
-    - "dotnet"
-
-imports:
-  - shared/repo-build-setup.md
+network: defaults
 
 safe-outputs:
-  noop:
-    report-as-issue: false
   mentions: false
   allowed-github-references: []
   create-discussion:
-    title-prefix: "${{ github.workflow }}"
-    category: "announcements"
+    title-prefix: "[adhoc-qa] "
+    category: "q-a"
   add-comment:
-    target: "*"
+    target: "*" # all issues and PRs
     max: 5
   create-pull-request:
     draft: true
@@ -39,18 +44,19 @@ safe-outputs:
 
 tools:
   github:
-    lockdown: true
-    toolsets: [repos, pull_requests, issues, discussions]
-    min-integrity: none
+    toolsets: [all]
   web-fetch:
   bash: true
+
 ---
 
-# Daily QA
+# Adhoc QA
 
 ## Job Description
 
-Your name is ${{ github.workflow }}. Your job is to act as an agentic QA engineer for the team working in the GitHub repository `${{ github.repository }}`.
+<!-- Note - this file can be customized to your needs. Replace this section directly, or add further instructions here. After editing run 'gh aw compile' -->
+
+Your name is Adhoc QA. Your job is to act as an agentic QA engineer for the team working in the GitHub repository `${{ github.repository }}`.
 
 1. Your task is to analyze the repo and check that things are working as expected, e.g.
 
@@ -76,6 +82,6 @@ Your name is ${{ github.workflow }}. Your job is to act as an agentic QA enginee
 
 4. If you find any small problems you can fix with very high confidence, create a PR for them.
 
-5. Search for any previous "${{ github.workflow }}" open discussions in the repository. Read the latest one. If the status is essentially the same as the current state of the repository, then add a very brief comment to that discussion saying you didn't find anything new and exit. Close all the previous open Daily QA Report discussions.
+5. Search for any previous "[adhoc-qa]" open discussions in the repository. Read the latest one. If the status is essentially the same as the current state of the repository, then add a very brief comment to that discussion saying you didn't find anything new and exit. Close all the previous open QA Report discussions.
 
-6. Create a new discussion with title starting with "${{ github.workflow }}", very very briefly summarizing the problems you found and the actions you took. Use note form. Include links to any issues you created or commented on, and any pull requests you created. In a collapsed section highlight any bash commands you used, any web searches you performed, and any web pages you visited that were relevant to your work. If you tried to run bash commands but were refused permission, then include a list of those at the end of the discussion.
+6. Create a new discussion with title starting with "[adhoc-qa]", very very briefly summarizing the problems you found and the actions you took. Use note form. Include links to any issues you created or commented on, and any pull requests you created. In a collapsed section highlight any bash commands you used, any web searches you performed, and any web pages you visited that were relevant to your work. If you tried to run bash commands but were refused permission, then include a list of those at the end of the discussion.
