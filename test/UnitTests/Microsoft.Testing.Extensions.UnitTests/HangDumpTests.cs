@@ -109,7 +109,7 @@ public sealed class HangDumpTests
     [TestMethod]
     public void GetDumpFileNames_WindowsPathWithSpaces_QuotesOnlyWriteDumpArgument()
     {
-        string dumpFileName = Path.Combine("C:", "results directory with spaces", "hangdump.dmp");
+        string dumpFileName = @"C:\results directory with spaces\hangdump.dmp";
 
         HangDumpProcessLifetimeHandler.DumpFileNames dumpFileNames = HangDumpProcessLifetimeHandler.GetDumpFileNames(dumpFileName, isWindows: true);
 
