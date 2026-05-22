@@ -143,8 +143,8 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
             ITaskItem firstItem = group.First();
             foreach (ITaskItem duplicateItem in group.Skip(1))
             {
-                if (!StringComparer.Ordinal.Equals(firstItem.GetMetadata(DisplayNameMetadataName), duplicateItem.GetMetadata(DisplayNameMetadataName)) ||
-                    !StringComparer.Ordinal.Equals(firstItem.GetMetadata(TypeFullNameMetadataName), duplicateItem.GetMetadata(TypeFullNameMetadataName)))
+                if (!string.Equals(firstItem.GetMetadata(DisplayNameMetadataName), duplicateItem.GetMetadata(DisplayNameMetadataName), StringComparison.Ordinal) ||
+                    !string.Equals(firstItem.GetMetadata(TypeFullNameMetadataName), duplicateItem.GetMetadata(TypeFullNameMetadataName), StringComparison.Ordinal))
                 {
                     Log.LogError(
                         "Duplicate 'TestingPlatformBuilderHook' item with Include '{0}' has conflicting metadata. Items with the same Include value must have identical '{1}' and '{2}' metadata.",
@@ -158,7 +158,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
             distinctBuilderHooks.Add(firstItem);
         }
 
-        return [.. distinctBuilderHooks];
+        return distinctBuilderHooks.ToArray();
     }
 
     private static void GenerateCode(string language, string? rootNamespace, ITaskItem[] taskItems, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
