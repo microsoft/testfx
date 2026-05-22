@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.ExceptionServices;
+
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
@@ -26,7 +28,8 @@ public sealed class TestHostBuilderTests
 
         try
         {
-            MethodInfo method = typeof(TestHostBuilder).GetMethod("ConnectToTestHostProcessMonitorIfAvailableAsync", BindingFlags.NonPublic | BindingFlags.Static)!;
+            MethodInfo method = typeof(TestHostBuilder).GetMethod("ConnectToTestHostProcessMonitorIfAvailableAsync", BindingFlags.NonPublic | BindingFlags.Static)
+                ?? throw new InvalidOperationException("Could not find TestHostBuilder.ConnectToTestHostProcessMonitorIfAvailableAsync.");
             TestHostControllerInfo testHostControllerInfo = new(new CommandLineParseResult(
                 null,
                 [new CommandLineParseOption(PlatformCommandLineProvider.TestHostControllerPIDOptionKey, [testHostControllerPid.ToString(CultureInfo.InvariantCulture)])],
@@ -52,7 +55,18 @@ public sealed class TestHostBuilderTests
         SystemEnvironment environment)
     {
         using CTRLPlusCCancellationTokenSource cancellationTokenSource = new();
-        var connectTask = (Task)method.Invoke(null, [cancellationTokenSource, new NopLogger(), testHostControllerInfo, configuration, environment])!;
+        Task connectTask;
+        try
+        {
+            connectTask = (Task?)method.Invoke(null, [cancellationTokenSource, new NopLogger(), testHostControllerInfo, configuration, environment])
+                ?? throw new InvalidOperationException("TestHostBuilder.ConnectToTestHostProcessMonitorIfAvailableAsync returned null.");
+        }
+        catch (TargetInvocationException ex) when (ex.InnerException is not null)
+        {
+            ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+            throw;
+        }
+
         await connectTask;
     }
 }
