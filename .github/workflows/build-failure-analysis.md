@@ -4,7 +4,7 @@ description: >-
   Runs `./build.sh --binaryLog` on every PR; when the build fails, delegates
   to the `build-failure-analyst` agent (which reads JSON dumps produced from
   the binlog) to identify root causes, post a PR comment summarizing them,
-  and attach inline ```suggestion blocks tied to the diff.
+  and attach inline `suggestion` blocks tied to the diff.
 
 # This workflow is **advisory**, not gating:
 #  - It posts an analysis comment / inline suggestions when the build fails.
@@ -45,6 +45,7 @@ concurrency:
 
 env:
   BINLOG_MCP_VERSION: '1.0.0-preview.26268.3'
+  NUGET_MCP_VERSION: '1.4.3'
 
 timeout-minutes: 30
 
@@ -82,6 +83,7 @@ steps:
       BINLOG=$(find artifacts/log -name '*.binlog' -type f -printf '%T@ %p\n' 2>/dev/null \
         | sort -rn | head -1 | cut -d' ' -f2-)
       if [ -n "$BINLOG" ] && [ -f "$BINLOG" ]; then
+        BINLOG=$(realpath "$BINLOG")
         echo "found=true"   >> "$GITHUB_OUTPUT"
         echo "path=$BINLOG" >> "$GITHUB_OUTPUT"
       else
@@ -107,9 +109,10 @@ steps:
         --version "$BINLOG_MCP_VERSION"
       echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
-  - name: Install MCP SDK for dump-binlog.js
+  - name: Install NuGet MCP Server
     if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
-    run: cd .github/workflows/scripts && npm ci --ignore-scripts
+    continue-on-error: true
+    run: dotnet tool install --global NuGet.Mcp.Server --version "$NUGET_MCP_VERSION"
 
   - name: Dump binlog as JSON
     if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
@@ -118,9 +121,8 @@ steps:
       BINLOG_PATH: ${{ steps.find-binlog.outputs.path }}
     run: |
       mkdir -p /tmp/binlog-data
-      cd .github/workflows/scripts
-      timeout 120 node dump-binlog.js \
-        "$GITHUB_WORKSPACE/$BINLOG_PATH" \
+      timeout 180 dotnet run --project .github/workflows/scripts/DumpBinlog -- \
+        "$BINLOG_PATH" \
         /tmp/binlog-data
 
   # On `workflow_dispatch` runs, `github.sha` is the SHA of the dispatched ref
@@ -166,6 +168,8 @@ tools:
     - "uniq"
     - "ls"
     - "find"
+    - "dotnet"
+    - "NuGet.Mcp.Server"
 
 safe-outputs:
   add-comment:
