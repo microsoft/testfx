@@ -66,9 +66,9 @@
         <source>The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
 Example: MyReport_{tfm}.trx</source>
-        <target state="new">The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
-Example: MyReport_{tfm}.trx</target>
+        <target state="needs-review-translation">Nome del report TRX generato.
+Supporta i segnaposto seguenti: {pname} (nome applicazione di test), {pid} (ID processo), {asm} (nome assembly voce), {tfm} (moniker framework di destinazione), {time} (timestamp).
+Esempio: MyReport_{tfm}.trx</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">
