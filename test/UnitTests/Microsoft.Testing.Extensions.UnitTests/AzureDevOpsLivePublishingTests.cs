@@ -123,8 +123,7 @@ public sealed class AzureDevOpsLivePublishingTests
         };
 
         await StartPublisherAsync(publisher);
-        TestNodeUpdateMessage message = CreateMessage(CreateNode("test-1", new PassedTestNodeStateProperty(), clock.UtcNow));
-        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), message, CancellationToken.None);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(CreateNode("test-1", new PassedTestNodeStateProperty(), clock.UtcNow)), CancellationToken.None);
         await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.HasCount(1, publishedBatches);
@@ -320,7 +319,8 @@ public sealed class AzureDevOpsLivePublishingTests
         client.PublishTestResultsAsyncFunc = (_, _, _, _) => Task.FromException(new JsonException("publish failed"));
 
         await StartPublisherAsync(publisher);
-        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(CreateNode("test-1", new PassedTestNodeStateProperty(), clock.UtcNow)), CancellationToken.None);
+        TestNodeUpdateMessage message = CreateMessage(CreateNode("test-1", new PassedTestNodeStateProperty(), clock.UtcNow));
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), message, CancellationToken.None);
         await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed, string.Join(Environment.NewLine, logger.Logs));
