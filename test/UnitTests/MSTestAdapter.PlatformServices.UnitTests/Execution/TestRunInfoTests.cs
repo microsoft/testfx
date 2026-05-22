@@ -84,6 +84,21 @@ public sealed class TestRunInfoTests : TestContainer
         TestRun.Current.PlannedTests.Should().BeEmpty();
     }
 
+    public void CreateFromMapsDefaultDisplayNameToNull()
+    {
+        // TestMethod.DisplayName defaults to TestMethod.Name when no display name is explicitly provided.
+        // PlannedTest.TestDisplayName should be null in that case so consumers can distinguish
+        // "no explicit display name" from "display name set".
+        var testMethod = new TestMethod("MyMethod", "Tests.MyClass", "MyTests.dll", displayName: null);
+        var element = new UnitTestElement(testMethod);
+
+        var info = TestRunInfo.CreateFrom([element]);
+
+        PlannedTest planned = info.PlannedTests.Single();
+        planned.TestName.Should().Be("MyMethod");
+        planned.TestDisplayName.Should().BeNull();
+    }
+
     public void PlannedTestCopiesInputCollections()
     {
         string[] categories = ["Smoke"];

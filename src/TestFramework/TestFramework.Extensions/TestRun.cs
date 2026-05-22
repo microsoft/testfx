@@ -22,7 +22,7 @@ public static class TestRun
     /// <summary>
     /// Gets information about the currently-executing test run. Never returns <see langword="null"/>.
     /// </summary>
-    public static ITestRunInfo Current { get; internal set; } = EmptyTestRunInfo.Instance;
+    public static ITestRunInfo Current { get; private set; } = EmptyTestRunInfo.Instance;
 
     /// <summary>
     /// Set by the platform before executing tests for an assembly. Pass <see langword="null"/> to

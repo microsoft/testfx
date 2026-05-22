@@ -40,30 +40,36 @@ internal sealed class TestRunInfo : ITestRunInfo
     private static PlannedTest ToPlannedTest(UnitTestElement element)
     {
         Trait[]? traits = element.Traits;
-        IReadOnlyCollection<KeyValuePair<string, string>> testProperties;
+        KeyValuePair<string, string>[] testProperties;
         if (traits is { Length: > 0 })
         {
-            var converted = new KeyValuePair<string, string>[traits.Length];
+            testProperties = new KeyValuePair<string, string>[traits.Length];
             for (int i = 0; i < traits.Length; i++)
             {
-                converted[i] = new KeyValuePair<string, string>(traits[i].Name, traits[i].Value);
+                testProperties[i] = new KeyValuePair<string, string>(traits[i].Name, traits[i].Value);
             }
-
-            testProperties = converted;
         }
         else
         {
             testProperties = EmptyProperties;
         }
 
-        IReadOnlyCollection<string> categories = element.TestCategory is { Length: > 0 }
+        string[] categories = element.TestCategory is { Length: > 0 }
             ? element.TestCategory
             : EmptyCategories;
 
-        return new PlannedTest(
+        // TestMethod.DisplayName defaults to TestMethod.Name when no display name was explicitly set;
+        // surface that distinction by passing null to PlannedTest so consumers can tell them apart.
+        string testName = element.TestMethod.Name;
+        string adapterDisplayName = element.TestMethod.DisplayName;
+        string? testDisplayName = string.Equals(adapterDisplayName, testName, StringComparison.Ordinal)
+            ? null
+            : adapterDisplayName;
+
+        return PlannedTest.CreateFromOwnedArrays(
             fullyQualifiedTestClassName: element.TestMethod.FullClassName,
-            testName: element.TestMethod.Name,
-            testDisplayName: element.TestMethod.DisplayName,
+            testName: testName,
+            testDisplayName: testDisplayName,
             assemblyPath: element.TestMethod.AssemblyName,
             managedTypeName: element.TestMethod.ManagedTypeName,
             managedMethodName: element.TestMethod.ManagedMethodName,

@@ -59,6 +59,60 @@ public sealed class PlannedTest
         TestProperties = copiedTestProperties;
     }
 
+    private PlannedTest(
+        string fullyQualifiedTestClassName,
+        string testName,
+        string? testDisplayName,
+        string assemblyPath,
+        string? managedTypeName,
+        string? managedMethodName,
+        string? declaringFilePath,
+        int? declaringLineNumber,
+        string[] testCategories,
+        KeyValuePair<string, string>[] testProperties,
+        bool _ /* trusted-arrays marker */)
+    {
+        FullyQualifiedTestClassName = fullyQualifiedTestClassName;
+        TestName = testName;
+        TestDisplayName = testDisplayName;
+        AssemblyPath = assemblyPath;
+        ManagedTypeName = managedTypeName;
+        ManagedMethodName = managedMethodName;
+        DeclaringFilePath = declaringFilePath;
+        DeclaringLineNumber = declaringLineNumber;
+        TestCategories = testCategories;
+        TestProperties = testProperties;
+    }
+
+    /// <summary>
+    /// Internal factory used by the adapter to construct a <see cref="PlannedTest"/> without the
+    /// defensive copy performed by the public constructor. The supplied arrays MUST NOT be retained
+    /// or mutated by the caller after this call.
+    /// </summary>
+    internal static PlannedTest CreateFromOwnedArrays(
+        string fullyQualifiedTestClassName,
+        string testName,
+        string? testDisplayName,
+        string assemblyPath,
+        string? managedTypeName,
+        string? managedMethodName,
+        string? declaringFilePath,
+        int? declaringLineNumber,
+        string[] testCategories,
+        KeyValuePair<string, string>[] testProperties)
+        => new(
+            fullyQualifiedTestClassName,
+            testName,
+            testDisplayName,
+            assemblyPath,
+            managedTypeName,
+            managedMethodName,
+            declaringFilePath,
+            declaringLineNumber,
+            testCategories,
+            testProperties,
+            _: true);
+
     /// <summary>
     /// Gets the fully-qualified name of the class declaring the test method.
     /// Mirrors <see cref="TestContext.FullyQualifiedTestClassName"/>.
