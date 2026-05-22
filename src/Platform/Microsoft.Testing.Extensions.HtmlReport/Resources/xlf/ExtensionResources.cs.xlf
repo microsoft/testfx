@@ -4,62 +4,62 @@
     <body>
       <trans-unit id="HtmlReportArtifactDescription">
         <source>Self-contained HTML test report</source>
-        <target state="new">Self-contained HTML test report</target>
+        <target state="translated">Samostatná testovací sestava HTML</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportArtifactDisplayName">
         <source>HTML Report</source>
-        <target state="new">HTML Report</target>
+        <target state="translated">Sestava HTML</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileExistsAndWillBeOverwritten">
         <source>Warning: HTML report file '{0}' already exists and will be overwritten.</source>
-        <target state="new">Warning: HTML report file '{0}' already exists and will be overwritten.</target>
+        <target state="translated">Upozornění: Soubor sestavy HTML {0} již existuje a bude přepsán.</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameExtensionIsNotHtml">
         <source>'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</source>
-        <target state="new">'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</target>
+        <target state="translated">Argument názvu souboru „--report-html-filename“ musí končit na .html (např. --report-html-filename myreport.html)</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameOptionDescription">
         <source>The name of the generated HTML report</source>
-        <target state="new">The name of the generated HTML report</target>
+        <target state="translated">Název vygenerované sestavy HTML</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRequiresHtmlReport">
         <source>'--report-html-filename' requires '--report-html' to be enabled</source>
-        <target state="new">'--report-html-filename' requires '--report-html' to be enabled</target>
+        <target state="translated">„--report-html-filename“ vyžaduje povolení „--report-html“</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameShouldNotContainPath">
         <source>file name argument must not contain a path or invalid characters (e.g. --report-html-filename myreport.html)</source>
-        <target state="new">file name argument must not contain a path or invalid characters (e.g. --report-html-filename myreport.html)</target>
+        <target state="translated">Argument názvu souboru nesmí obsahovat cestu nebo neplatné znaky (např. --report-html-filename myreport.html)</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDescription">
         <source>Produce a self-contained HTML report for the current test session</source>
-        <target state="new">Produce a self-contained HTML report for the current test session</target>
+        <target state="translated">Vytvoření samostatné sestavy HTML pro aktuální testovací relaci</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDisplayName">
         <source>HTML report generator</source>
-        <target state="new">HTML report generator</target>
+        <target state="translated">Generátor sestav HTML</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportIsNotValidForDiscovery">
         <source>'--report-html' cannot be enabled when using '--list-tests'</source>
-        <target state="new">'--report-html' cannot be enabled when using '--list-tests'</target>
+        <target state="translated">Možnost „--report-html“ nejde povolit, pokud se používá možnost „--list-tests“</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportOptionDescription">
         <source>Enable generating an HTML report</source>
-        <target state="new">Enable generating an HTML report</target>
+        <target state="translated">Povolit generování sestavy HTML</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="new">HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
+        <target state="translated">Generátor sestav HTML funguje pouze s tvůrci typu Microsoft.Testing.Platform.Builder.TestApplicationBuilder</target>
         <note />
       </trans-unit>
     </body>
