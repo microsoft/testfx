@@ -111,11 +111,6 @@ Aby uzyskać więcej informacji, odwiedź stronę https://learn.microsoft.com/do
         <target state="translated">[Tylko Linux/macOS] Generuj raport JSON o awarii, gdy proces testowy ulegnie awarii. Połącz to z elementem „--crashdump”, aby też wygenerować plik zrzutu. Gdy używasz tego samodzielnie, wymaga to platformy .NET 7+; gdy używasz razem z elementem „--crashdump” — platformy .NET 6+. To wymaganie dotyczące środowiska uruchomieniowego nie jest wymuszane przez narzędzie: w nieobsługiwanych środowiskach uruchomieniowych nie będzie emitowany żaden raport o awarii. Nieobsługiwane w systemie Windows z powodu ograniczenia środowiska uruchomieniowego platformy .NET (dotnet/runtime#80191).</target>
         <note />
       </trans-unit>
-      <trans-unit id="MissingCrashDumpMainOption">
-        <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
-        <target state="new">You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
         <target state="translated">Żądania typu „{0}” nie są obsługiwane</target>
