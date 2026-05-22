@@ -117,6 +117,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             && (!int.TryParse(arguments[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int port)
                 || port < System.Net.IPEndPoint.MinPort
                 || port > System.Net.IPEndPoint.MaxPort))
+        {
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, ClientPortOptionKey));
         }
 
