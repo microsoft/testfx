@@ -17,6 +17,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ICommandLineOptions _commandLineOptions;
+    private readonly Stopwatch _sessionStopwatch = new();
     private MSBuildTestApplicationLifecycleCallbacks? _msBuildTestApplicationLifecycleCallbacks;
     private bool _sessionEnded;
     private int _totalTests;
@@ -33,7 +34,6 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
     public Type[] DataTypesConsumed { get; } =
     [
         typeof(TestNodeUpdateMessage),
-        typeof(TestRequestExecutionTimeInfo),
     ];
 
     public string Uid => nameof(MSBuildConsumer);
@@ -51,13 +51,16 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
     {
         // We get the pipe from the MSBuildTestApplicationLifecycleCallbacks only if we're enabled.
         _msBuildTestApplicationLifecycleCallbacks = _serviceProvider.GetRequiredService<MSBuildTestApplicationLifecycleCallbacks>();
+        _sessionStopwatch.Start();
         return Task.CompletedTask;
     }
 
-    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
+        _sessionStopwatch.Stop();
         _sessionEnded = true;
-        return Task.CompletedTask;
+
+        await HandleSummaryAsync(_sessionStopwatch.Elapsed, testSessionContext.CancellationToken).ConfigureAwait(false);
     }
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
@@ -70,91 +73,85 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
             return;
         }
 
-        switch (value)
+        if (value is not TestNodeUpdateMessage testNodeStateChanged)
         {
-            case TestNodeUpdateMessage testNodeStateChanged:
-                TimingProperty? timingProperty = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>();
-                string? duration = timingProperty is null ? null :
-                    ToHumanReadableDuration(timingProperty.GlobalTiming.Duration.TotalMilliseconds);
+            return;
+        }
 
-                TestFileLocationProperty? testFileLocationProperty = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestFileLocationProperty>();
+        TimingProperty? timingProperty = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>();
+        string? duration = timingProperty is null ? null :
+            ToHumanReadableDuration(timingProperty.GlobalTiming.Duration.TotalMilliseconds);
 
-                switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
-                {
-                    case ErrorTestNodeStateProperty errorState:
-                        await HandleFailuresAsync(
-                            testNodeStateChanged.TestNode.DisplayName,
-                            isCanceled: false,
-                            duration: duration,
-                            errorMessage: errorState.Exception?.Message ?? errorState.Explanation,
-                            errorStackTrace: errorState.Exception?.StackTrace,
-                            expected: null,
-                            actual: null,
-                            testFileLocationProperty?.FilePath,
-                            testFileLocationProperty?.LineSpan.Start.Line ?? 0,
-                            cancellationToken).ConfigureAwait(false);
-                        break;
+        TestFileLocationProperty? testFileLocationProperty = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestFileLocationProperty>();
 
-                    case FailedTestNodeStateProperty failedState:
-                        await HandleFailuresAsync(
-                            testNodeStateChanged.TestNode.DisplayName,
-                            isCanceled: false,
-                            duration: duration,
-                            errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
-                            errorStackTrace: failedState.Exception?.StackTrace,
-                            expected: failedState.Exception?.Data["assert.expected"] as string,
-                            actual: failedState.Exception?.Data["assert.actual"] as string,
-                            testFileLocationProperty?.FilePath,
-                            testFileLocationProperty?.LineSpan.Start.Line ?? 0,
-                            cancellationToken).ConfigureAwait(false);
-                        break;
-
-                    case TimeoutTestNodeStateProperty timeoutState:
-                        await HandleFailuresAsync(
-                            testNodeStateChanged.TestNode.DisplayName,
-                            isCanceled: true,
-                            duration: duration,
-                            errorMessage: timeoutState.Exception?.Message ?? timeoutState.Explanation,
-                            errorStackTrace: timeoutState.Exception?.StackTrace,
-                            expected: null,
-                            actual: null,
-                            testFileLocationProperty?.FilePath,
-                            testFileLocationProperty?.LineSpan.Start.Line ?? 0,
-                            cancellationToken).ConfigureAwait(false);
-                        break;
-
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-                    case CancelledTestNodeStateProperty canceledState:
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-                        await HandleFailuresAsync(
-                            testNodeStateChanged.TestNode.DisplayName,
-                            isCanceled: true,
-                            duration: duration,
-                            errorMessage: canceledState.Exception?.Message ?? canceledState.Explanation,
-                            errorStackTrace: canceledState.Exception?.StackTrace,
-                            expected: null,
-                            actual: null,
-                            testFileLocationProperty?.FilePath,
-                            testFileLocationProperty?.LineSpan.Start.Line ?? 0,
-                            cancellationToken).ConfigureAwait(false);
-                        break;
-
-                    case PassedTestNodeStateProperty:
-                        _totalTests++;
-                        _totalPassedTests++;
-                        break;
-
-                    case SkippedTestNodeStateProperty:
-                        _totalTests++;
-                        _totalSkippedTests++;
-                        break;
-                }
-
+        switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
+        {
+            case ErrorTestNodeStateProperty errorState:
+                await HandleFailuresAsync(
+                    testNodeStateChanged.TestNode.DisplayName,
+                    isCanceled: false,
+                    duration: duration,
+                    errorMessage: errorState.Exception?.Message ?? errorState.Explanation,
+                    errorStackTrace: errorState.Exception?.StackTrace,
+                    expected: null,
+                    actual: null,
+                    testFileLocationProperty?.FilePath,
+                    testFileLocationProperty?.LineSpan.Start.Line ?? 0,
+                    cancellationToken).ConfigureAwait(false);
                 break;
 
-            case TestRequestExecutionTimeInfo testRequestExecutionTimeInfo:
-                await HandleSummaryAsync(testRequestExecutionTimeInfo, cancellationToken).ConfigureAwait(false);
+            case FailedTestNodeStateProperty failedState:
+                await HandleFailuresAsync(
+                    testNodeStateChanged.TestNode.DisplayName,
+                    isCanceled: false,
+                    duration: duration,
+                    errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
+                    errorStackTrace: failedState.Exception?.StackTrace,
+                    expected: failedState.Exception?.Data["assert.expected"] as string,
+                    actual: failedState.Exception?.Data["assert.actual"] as string,
+                    testFileLocationProperty?.FilePath,
+                    testFileLocationProperty?.LineSpan.Start.Line ?? 0,
+                    cancellationToken).ConfigureAwait(false);
+                break;
 
+            case TimeoutTestNodeStateProperty timeoutState:
+                await HandleFailuresAsync(
+                    testNodeStateChanged.TestNode.DisplayName,
+                    isCanceled: true,
+                    duration: duration,
+                    errorMessage: timeoutState.Exception?.Message ?? timeoutState.Explanation,
+                    errorStackTrace: timeoutState.Exception?.StackTrace,
+                    expected: null,
+                    actual: null,
+                    testFileLocationProperty?.FilePath,
+                    testFileLocationProperty?.LineSpan.Start.Line ?? 0,
+                    cancellationToken).ConfigureAwait(false);
+                break;
+
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
+            case CancelledTestNodeStateProperty canceledState:
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
+                await HandleFailuresAsync(
+                    testNodeStateChanged.TestNode.DisplayName,
+                    isCanceled: true,
+                    duration: duration,
+                    errorMessage: canceledState.Exception?.Message ?? canceledState.Explanation,
+                    errorStackTrace: canceledState.Exception?.StackTrace,
+                    expected: null,
+                    actual: null,
+                    testFileLocationProperty?.FilePath,
+                    testFileLocationProperty?.LineSpan.Start.Line ?? 0,
+                    cancellationToken).ConfigureAwait(false);
+                break;
+
+            case PassedTestNodeStateProperty:
+                _totalTests++;
+                _totalPassedTests++;
+                break;
+
+            case SkippedTestNodeStateProperty:
+                _totalTests++;
+                _totalSkippedTests++;
                 break;
         }
     }
@@ -169,9 +166,9 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
         await _msBuildTestApplicationLifecycleCallbacks.PipeClient.RequestReplyAsync<FailedTestInfoRequest, VoidResponse>(failedTestInfoRequest, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task HandleSummaryAsync(TestRequestExecutionTimeInfo timeInfo, CancellationToken cancellationToken)
+    private async Task HandleSummaryAsync(TimeSpan elapsed, CancellationToken cancellationToken)
     {
-        string? duration = ToHumanReadableDuration(timeInfo.TimingInfo.Duration.TotalMilliseconds);
+        string? duration = ToHumanReadableDuration(elapsed.TotalMilliseconds);
 
         ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks != null);
         ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks.PipeClient != null);
