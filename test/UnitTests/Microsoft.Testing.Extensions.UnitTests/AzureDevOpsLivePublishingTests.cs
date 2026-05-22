@@ -123,7 +123,8 @@ public sealed class AzureDevOpsLivePublishingTests
         };
 
         await StartPublisherAsync(publisher);
-        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(CreateNode("test-1", new PassedTestNodeStateProperty(), clock.UtcNow)), CancellationToken.None);
+        TestNodeUpdateMessage message = CreateMessage(CreateNode("test-1", new PassedTestNodeStateProperty(), clock.UtcNow));
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), message, CancellationToken.None);
         await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.HasCount(1, publishedBatches);
