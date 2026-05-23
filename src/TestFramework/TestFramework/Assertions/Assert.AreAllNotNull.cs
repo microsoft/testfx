@@ -34,6 +34,7 @@ public sealed partial class Assert
     /// </exception>
     public static void AreAllNotNull([NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllNotNull");
         CheckParameterNotNull(collection, "Assert.AreAllNotNull", "collection");
         AreAllNotNullImpl(collection.Cast<object?>(), message, collectionExpression);
     }
@@ -59,6 +60,7 @@ public sealed partial class Assert
     /// </exception>
     public static void AreAllNotNull<T>([NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllNotNull");
         CheckParameterNotNull(collection, "Assert.AreAllNotNull", "collection");
         AreAllNotNullImpl(collection, message, collectionExpression);
     }

@@ -36,6 +36,7 @@ public sealed partial class Assert
     /// </exception>
     public static void AreAllDistinct<T>([NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllDistinct");
         CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
         AreAllDistinctImpl(collection, EqualityComparer<T>.Default, comparerTypeName: null, message, collectionExpression);
     }
@@ -65,6 +66,7 @@ public sealed partial class Assert
     /// </exception>
     public static void AreAllDistinct<T>([NotNull] IEnumerable<T>? collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllDistinct");
         CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
         CheckParameterNotNull(comparer, "Assert.AreAllDistinct", "comparer");
         AreAllDistinctImpl(collection, comparer, comparerTypeName: comparer.GetType().Name, message, collectionExpression);
@@ -91,6 +93,7 @@ public sealed partial class Assert
     /// </exception>
     public static void AreAllDistinct([NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllDistinct");
         CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
         AreAllDistinctImpl(collection.Cast<object?>(), EqualityComparer<object?>.Default, comparerTypeName: null, message, collectionExpression);
     }
@@ -119,6 +122,7 @@ public sealed partial class Assert
     /// </exception>
     public static void AreAllDistinct([NotNull] IEnumerable? collection, [NotNull] IEqualityComparer? comparer, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllDistinct");
         CheckParameterNotNull(collection, "Assert.AreAllDistinct", "collection");
         CheckParameterNotNull(comparer, "Assert.AreAllDistinct", "comparer");
         AreAllDistinctImpl(collection.Cast<object?>(), new NonGenericEqualityComparerAdapter(comparer), comparerTypeName: comparer.GetType().Name, message, collectionExpression);
