@@ -1,4 +1,4 @@
-# RFC 014 - Command-line option mappings
+# RFC 015 - Command-line option mappings
 
 - [ ] Approved in principle
 - [ ] Under discussion
@@ -46,7 +46,7 @@ A naive workaround — making, say, the TRX extension own `--logger` and dispatc
 
 Earlier discussion (issue [#7249](https://github.com/microsoft/testfx/issues/7249)) proposed the term **alias**. Feedback noted that "alias" in CLI conventions usually means a pure rename (`-v` ≡ `--verbose`) with identical arity and semantics, whereas this feature actually rewrites one option into one *or more* options with potentially different arity. Shell aliases (`alias ll='ls -la'`) and Git aliases are precedents for the broader meaning, but the ambiguity is real for API consumers.
 
-This RFC uses **mapping** in the public API surface (`ICommandLineOptionMapping`, `CommandLineOptionMapping`, `CommandLineMappings`). Rationale:
+This RFC uses **mapping** in the public API surface (`ICommandLineOptionMappingProvider`, `CommandLineOptionMapping`, `ICommandLineMappingManager`). Rationale:
 
 - "Mapping" honestly conveys *one user-facing token mapped to one or more canonical options*.
 - It avoids the rename connotation of "alias".
@@ -84,8 +84,8 @@ public interface ICommandLineOptionMappingProvider : IExtension
 
 /// <summary>
 /// A single mapping registration. Multiple providers may register mappings with the same
-/// <see cref="Name"/>; exactly one of them is expected to return true from
-/// <see cref="TryMap"/> for any given argument list.
+/// <see cref="Name"/>; exactly one of them is expected to return true from the
+/// <see cref="Map"/> delegate for any given argument list.
 /// </summary>
 public sealed class CommandLineOptionMapping
 {
@@ -111,11 +111,11 @@ public sealed class CommandLineOptionMapping
 /// <summary>
 /// Attempts to rewrite a single occurrence of a mapped option.
 /// </summary>
-/// <param name="arguments">The argument list provided to that occurrence. Never null; length respects <see cref="CommandLineOptionMapping.Arity"/>.</param>
-/// <param name="result">When the method returns true, the canonical options this occurrence expands into; otherwise empty.</param>
-/// <returns>True if this mapping claims the occurrence; false otherwise.</returns>
+/// <param name="arguments">The argument list provided to that occurrence. Never null; count respects <see cref="CommandLineOptionMapping.Arity"/>.</param>
+/// <param name="result">When the method returns true, the canonical options this occurrence expands into; MUST be non-null and non-empty. Otherwise empty.</param>
+/// <returns>True if this mapping claims the occurrence; false otherwise. Returning true with an empty <paramref name="result"/> is a contract violation and produces a platform-level error.</returns>
 public delegate bool CommandLineOptionMapper(
-    ReadOnlySpan<string> arguments,
+    IReadOnlyList<string> arguments,
     out IReadOnlyList<CommandLineOptionMappingResult> result);
 
 /// <summary>
@@ -123,7 +123,7 @@ public delegate bool CommandLineOptionMapper(
 /// </summary>
 public sealed class CommandLineOptionMappingResult
 {
-    public CommandLineOptionMappingResult(string optionName, params string[] arguments);
+    public CommandLineOptionMappingResult(string optionName, IReadOnlyList<string> arguments);
 
     /// <summary>The canonical MTP option name (without leading dashes).</summary>
     public string OptionName { get; }
@@ -138,7 +138,7 @@ Registration mirrors the existing `ICommandLineOptionsProvider` pattern:
 ```csharp
 namespace Microsoft.Testing.Platform.Builder;
 
-public interface ICommandLineMappingsManager
+public interface ICommandLineMappingManager
 {
     void AddProvider(Func<IServiceProvider, ICommandLineOptionMappingProvider> providerFactory);
 }
@@ -146,7 +146,7 @@ public interface ICommandLineMappingsManager
 public interface ITestApplicationBuilder
 {
     // existing members ...
-    ICommandLineMappingsManager CommandLineMappings { get; }
+    ICommandLineMappingManager CommandLineMappings { get; }
 }
 ```
 
@@ -172,24 +172,44 @@ internal sealed class TrxLoggerMapping : ICommandLineOptionMappingProvider
             map: TryMap),
     ];
 
-    private static bool TryMap(ReadOnlySpan<string> arguments, out IReadOnlyList<CommandLineOptionMappingResult> result)
+    private static bool TryMap(IReadOnlyList<string> arguments, out IReadOnlyList<CommandLineOptionMappingResult> result)
     {
         string value = arguments[0];
 
-        if (value == "trx")
+        if (string.Equals(value, "trx", StringComparison.OrdinalIgnoreCase))
         {
-            result = [new CommandLineOptionMappingResult("report-trx")];
+            result = [new CommandLineOptionMappingResult("report-trx", Array.Empty<string>())];
             return true;
         }
 
         if (value.StartsWith("trx;", StringComparison.OrdinalIgnoreCase))
         {
-            List<CommandLineOptionMappingResult> expanded = [new CommandLineOptionMappingResult("report-trx")];
-            foreach (string segment in value.AsSpan(4).ToString().Split(';'))
+            // Defensive coding: callers cannot bound the number of sub-options the user types
+            // (e.g. `--logger "trx;a=1;b=2;...;z=99"`). Mapping authors SHOULD apply a sensible
+            // upper bound on the number of segments they walk through to avoid quadratic work
+            // or excessive allocations from malformed input.
+            const int MaxTrxSubOptions = 16;
+            List<CommandLineOptionMappingResult> expanded = [new CommandLineOptionMappingResult("report-trx", Array.Empty<string>())];
+            string[] segments = value.Substring("trx;".Length).Split(';');
+            int processed = 0;
+            foreach (string segment in segments)
             {
+                if (++processed > MaxTrxSubOptions)
+                {
+                    break;
+                }
+
+                // Recommended handling for malformed known options (e.g. "LogFileName" with no
+                // '=' or with empty value): treat as a no-op and surface a post-DI warning rather
+                // than failing the whole command line. The platform does not prescribe a specific
+                // policy — mappings are free to be stricter if they prefer.
                 if (segment.StartsWith("LogFileName=", StringComparison.OrdinalIgnoreCase))
                 {
-                    expanded.Add(new CommandLineOptionMappingResult("report-trx-filename", segment.Substring("LogFileName=".Length)));
+                    string fileName = segment.Substring("LogFileName=".Length);
+                    if (!string.IsNullOrEmpty(fileName))
+                    {
+                        expanded.Add(new CommandLineOptionMappingResult("report-trx-filename", new[] { fileName }));
+                    }
                 }
                 // unknown segments fall through; see "Unknown sub-options" below.
             }
@@ -198,7 +218,7 @@ internal sealed class TrxLoggerMapping : ICommandLineOptionMappingProvider
             return true;
         }
 
-        result = [];
+        result = Array.Empty<CommandLineOptionMappingResult>();
         return false;
     }
 }
@@ -222,11 +242,11 @@ internal sealed class CodeCoverageCollectMapping : ICommandLineOptionMappingProv
                 if (string.Equals(args[0], "XPlat Code Coverage", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(args[0], "Code Coverage", StringComparison.OrdinalIgnoreCase))
                 {
-                    result = [new CommandLineOptionMappingResult("coverage")];
+                    result = [new CommandLineOptionMappingResult("coverage", Array.Empty<string>())];
                     return true;
                 }
 
-                result = [];
+                result = Array.Empty<CommandLineOptionMappingResult>();
                 return false;
             }),
     ];
@@ -240,22 +260,27 @@ internal sealed class CodeCoverageCollectMapping : ICommandLineOptionMappingProv
 1. Build a lookup table `MappingsByName : string → List<CommandLineOptionMapping>` from every registered provider.
 2. For each parsed option occurrence `--X v1 v2`:
    - If `X` is not in `MappingsByName`, keep the occurrence unchanged.
-   - Otherwise, for every mapping registered under `X`, call `TryMap` exactly once.
+   - Otherwise, for every mapping registered under `X`, call its `Map` delegate exactly once.
      - **Zero claimants** → emit an error: `No registered mapping for '--X' can handle value 'v1'. Run '--help' to see canonical alternatives.`
      - **Multiple claimants** → emit an error: `Multiple mappings claim '--X v1': <provider Uids>. This is a configuration bug — at most one mapping may handle a given value.`
-     - **Exactly one claimant** → replace the occurrence with the canonical occurrences it returned.
+     - **Exactly one claimant returning a non-empty result** → replace the occurrence with the canonical occurrences it returned.
+     - **Exactly one claimant returning true with an empty or null result** → contract violation; emit an error: `Mapping '--X' claimed value 'v1' but produced no canonical options. This is a bug in the mapping provider <provider Uid>.`
 3. After all occurrences are resolved, re-run aggregation and arity validation against the resulting canonical-option set (existing `CommandLineOptionsValidator` code path, unchanged).
 
 The user's original `string[] args` is preserved alongside the expanded set for diagnostics (`--info`, error messages, telemetry).
 
 ### Cross-cutting validation rules
 
-Enforced at platform startup, before any user input is processed:
+Some rules can be enforced **at platform startup**, before any user input is processed:
 
 - A mapping name MUST NOT collide with any registered canonical `CommandLineOption.Name`. Diagnostic: `Mapping '--X' conflicts with the canonical option '--X' provided by <provider>. Rename one.`
-- A `CommandLineOptionMappingResult.OptionName` MUST refer to a registered canonical `CommandLineOption`. Diagnostic: `Mapping '--X' rewrites to unknown option '--Y'.`
-- A `CommandLineOptionMappingResult.OptionName` MUST NOT itself be a mapping name (no mapping-to-mapping rewriting; prevents loops and makes the resolution algorithm finite by construction).
+- A mapping name MUST NOT collide with another mapping registered with a different `description` from a provider that has the same `Uid` (per-provider uniqueness check).
 - Mapping names follow the same character set as canonical option names (letters, digits, `-`, `?`).
+
+Other rules are inherently **runtime** because the `Map` delegate is opaque at registration time:
+
+- A `CommandLineOptionMappingResult.OptionName` MUST refer to a registered canonical `CommandLineOption`. Checked when the delegate runs; on violation the platform emits a clear error naming the offending mapping and the unknown option (`Mapping '--X' rewrites to unknown option '--Y'.`) and aborts with `ExitCode.InvalidCommandLine`. There is no startup-time scan because the set of returned options can depend on user input.
+- A `CommandLineOptionMappingResult.OptionName` MUST NOT itself be a mapping name (no mapping-to-mapping rewriting; prevents loops). Same runtime enforcement strategy as above.
 
 ### Interaction with existing surfaces
 
@@ -347,7 +372,7 @@ Each phase is independently shippable. Phase 1 alone is useless to users; phase 
 
 ## Unresolved questions
 
-1. **Mapping-author warning channel.** Should `TryMap` be able to surface a non-fatal warning (e.g. "ignored unknown sub-option `Foo`")? A pre-DI synchronous callback into a buffered `List<string>` is the cheapest design; this RFC defers the decision but reserves the option of adding a `warnings` out-parameter later in an additive way.
+1. **Mapping-author warning channel.** Should the `Map` delegate be able to surface a non-fatal warning (e.g. "ignored unknown sub-option `Foo`")? A pre-DI synchronous callback into a buffered `List<string>` is the cheapest design. **Because adding a third out-parameter to a delegate is a binary-breaking change**, this RFC must pick a forward-compatible shape *before* shipping. The current proposal keeps the binary delegate signature minimal and defers the warning channel; an additive future iteration would introduce a sibling delegate type (`CommandLineOptionMapperV2`) or a richer context-object overload rather than mutate `CommandLineOptionMapper`. Reviewers should confirm whether they prefer to introduce the context-object shape upfront to avoid the future bifurcation.
 2. **Help integration depth.** Should mappings appear interleaved with the canonical options that they expand to, or in a separate "VSTest-style options" section? Current proposal is a separate section; reviewers may prefer interleaving for discoverability.
 3. **MSBuild / `RunSettings` interplay.** VSTest's `--logger`/`--collect` can also be specified through `.runsettings`. Whether MTP's MSBuild integration should translate `.runsettings` data-collector entries into mapping invocations is out of scope for this RFC but is the natural follow-up.
 4. **Telemetry granularity.** Reporting the *value* a mapping handled (e.g. `trx`, `XPlat Code Coverage`) is potentially valuable for prioritising which mappings to invest in, but mapping authors might receive arbitrary user-supplied strings. The current proposal logs only a boolean; an allowlist of well-known values could be added later.
