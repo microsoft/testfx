@@ -11,7 +11,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
+#pragma warning disable CA1001 // Types that own disposable fields should be disposable - not important to dispose the SemaphoreSlim, we don't access AvailableWaitHandle.
 internal sealed partial class TestClassInfo
+#pragma warning restore CA1001 // Types that own disposable fields should be disposable
 {
     /// <summary>
     /// Runs the class initialize method.
