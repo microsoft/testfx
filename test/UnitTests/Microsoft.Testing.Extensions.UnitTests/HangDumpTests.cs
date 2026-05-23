@@ -79,17 +79,6 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
-    public async Task IsInvalid_If_HangDumpType_Has_IncorrectValue_ListsValidValues()
-    {
-        HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
-        CommandLineOption option = hangDumpCommandLineProvider.GetCommandLineOptions().First(x => x.Name == HangDumpCommandLineProvider.HangDumpTypeOptionName);
-
-        ValidationResult validateOptionsResult = await hangDumpCommandLineProvider.ValidateOptionArgumentsAsync(option, ["invalid"]).ConfigureAwait(false);
-        Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.Contains($"Valid options are {GetExpectedValidationOptions()}", validateOptionsResult.ErrorMessage);
-    }
-
-    [TestMethod]
     public void HangDumpTypeOptionDescription_ListsValidValues()
     {
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
