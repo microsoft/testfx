@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
@@ -18,7 +17,7 @@ using Microsoft.Testing.Platform.TestHost;
 namespace Microsoft.Testing.Platform.Requests;
 
 [SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "HotReload needs to inherit and override ExecuteRequestAsync")]
-internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : ITestFrameworkInvoker, IOutputDeviceDataProducer, IDataProducer
+internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : ITestFrameworkInvoker, IOutputDeviceDataProducer
 {
     protected IServiceProvider ServiceProvider { get; } = serviceProvider;
 
@@ -29,8 +28,6 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
     public string DisplayName => string.Empty;
 
     public string Description => string.Empty;
-
-    public Type[] DataTypesProduced => [typeof(TestRequestExecutionTimeInfo)];
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
@@ -47,8 +44,6 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
             }
         }
 
-        DateTimeOffset startTime = DateTimeOffset.UtcNow;
-        var stopwatch = Stopwatch.StartNew();
         SessionUid sessionId = ServiceProvider.GetTestSessionContext().SessionUid;
 
         IPlatformOpenTelemetryService? otelService = ServiceProvider.GetPlatformOTelService();
@@ -78,9 +73,6 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
             CloseTestSessionResult closeTestSessionResult = await testFramework.CloseTestSessionAsync(new(sessionId, cancellationToken)).ConfigureAwait(false);
             await HandleTestSessionResultAsync(closeTestSessionResult.IsSuccess, closeTestSessionResult.WarningMessage, closeTestSessionResult.ErrorMessage, cancellationToken).ConfigureAwait(false);
         }
-
-        DateTimeOffset endTime = DateTimeOffset.UtcNow;
-        await messageBus.PublishAsync(this, new TestRequestExecutionTimeInfo(new TimingInfo(startTime, endTime, stopwatch.Elapsed))).ConfigureAwait(false);
     }
 
     public virtual async Task ExecuteRequestAsync(ITestFramework testFramework, TestExecutionRequest request, IMessageBus messageBus, CancellationToken cancellationToken)
