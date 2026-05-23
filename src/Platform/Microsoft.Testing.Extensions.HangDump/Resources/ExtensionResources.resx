@@ -188,12 +188,12 @@ The timeout value is specified in one of the following formats:
   </data>
   <data name="HangDumpTypeOptionDescription" xml:space="preserve">
     <value>Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
+Valid values are {0}.
 Default type is 'Full'</value>
   </data>
   <data name="HangDumpTypeOptionInvalidType" xml:space="preserve">
     <value>'{0}' is not a valid dump type.
-Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</value>
+Valid options are {1}</value>
   </data>
   <data name="HangDumpUnsupportedRequestTypeErrorMessage" xml:space="preserve">
     <value>Request of type '{0}' is not supported</value>

@@ -50,6 +50,7 @@ public sealed class HangDumpTests
     [DataRow("Mini")]
     [DataRow("Heap")]
     [DataRow("Full")]
+    [DataRow("None")]
     public async Task IsValid_If_HangDumpType_Has_CorrectValue(string dumpType)
     {
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
@@ -68,7 +69,33 @@ public sealed class HangDumpTests
 
         ValidationResult validateOptionsResult = await hangDumpCommandLineProvider.ValidateOptionArgumentsAsync(option, ["invalid"]).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionInvalidType, "invalid"), validateOptionsResult.ErrorMessage);
+        Assert.AreEqual(
+            string.Format(
+                CultureInfo.InvariantCulture,
+                ExtensionResources.HangDumpTypeOptionInvalidType,
+                "invalid",
+                GetExpectedValidationOptions()),
+            validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_If_HangDumpType_Has_IncorrectValue_ListsValidValues()
+    {
+        HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
+        CommandLineOption option = hangDumpCommandLineProvider.GetCommandLineOptions().First(x => x.Name == HangDumpCommandLineProvider.HangDumpTypeOptionName);
+
+        ValidationResult validateOptionsResult = await hangDumpCommandLineProvider.ValidateOptionArgumentsAsync(option, ["invalid"]).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.Contains($"Valid options are {GetExpectedValidationOptions()}", validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public void HangDumpTypeOptionDescription_ListsValidValues()
+    {
+        HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
+        CommandLineOption option = hangDumpCommandLineProvider.GetCommandLineOptions().First(x => x.Name == HangDumpCommandLineProvider.HangDumpTypeOptionName);
+
+        Assert.Contains($"Valid values are {GetExpectedDescriptionOptions()}.", option.Description);
     }
 
     [TestMethod]
@@ -105,4 +132,14 @@ public sealed class HangDumpTests
         Assert.IsTrue(validateOptionsResult.IsValid);
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
+
+#if NETCOREAPP
+    private static string GetExpectedDescriptionOptions() => "'Mini', 'Heap', 'Full', 'Triage' or 'None'";
+
+    private static string GetExpectedValidationOptions() => "'Mini', 'Heap', 'Full', 'Triage' and 'None'";
+#else
+    private static string GetExpectedDescriptionOptions() => "'Mini', 'Heap', 'Full' or 'None'";
+
+    private static string GetExpectedValidationOptions() => "'Mini', 'Heap', 'Full' and 'None'";
+#endif
 }

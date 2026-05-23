@@ -244,7 +244,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
         testHostResult.AssertOutputContains("""
             Option '--hangdump-type' has invalid arguments: 'invalid' is not a valid dump type.
-            Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'
+            Valid options are 'Mini', 'Heap', 'Full', 'Triage' and 'None'
             """);
     }
 

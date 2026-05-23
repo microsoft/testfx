@@ -22,12 +22,20 @@ internal sealed class HangDumpCommandLineProvider : ICommandLineOptionsProvider
     private static readonly string[] HangDumpTypeOptions = ["Mini", "Heap", "Full", "None"];
 #endif
 
+    private static readonly string HangDumpTypeOptionsForDescription = FormatHangDumpTypeOptions("or");
+
+    private static readonly string HangDumpTypeOptionsForValidation = FormatHangDumpTypeOptions("and");
+
     private static readonly IReadOnlyCollection<CommandLineOption> CachedCommandLineOptions =
     [
         new(HangDumpOptionName, ExtensionResources.HangDumpOptionDescription, ArgumentArity.Zero, false),
         new(HangDumpTimeoutOptionName, ExtensionResources.HangDumpTimeoutOptionDescription, ArgumentArity.ExactlyOne, false),
         new(HangDumpFileNameOptionName, ExtensionResources.HangDumpFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
-        new(HangDumpTypeOptionName, ExtensionResources.HangDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false)
+        new(
+            HangDumpTypeOptionName,
+            string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionDescription, HangDumpTypeOptionsForDescription),
+            ArgumentArity.ExactlyOne,
+            false)
     ];
 
     public string Uid => nameof(HangDumpCommandLineProvider);
@@ -53,7 +61,11 @@ internal sealed class HangDumpCommandLineProvider : ICommandLineOptionsProvider
         {
             if (!HangDumpTypeOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase))
             {
-                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionInvalidType, arguments[0]));
+                return ValidationResult.InvalidTask(string.Format(
+                    CultureInfo.InvariantCulture,
+                    ExtensionResources.HangDumpTypeOptionInvalidType,
+                    arguments[0],
+                    HangDumpTypeOptionsForValidation));
             }
         }
 
@@ -67,4 +79,10 @@ internal sealed class HangDumpCommandLineProvider : ICommandLineOptionsProvider
             !commandLineOptions.IsOptionSet(HangDumpOptionName)
             ? ValidationResult.InvalidTask(ExtensionResources.MissingHangDumpMainOption)
             : ValidationResult.ValidTask;
+
+    private static string FormatHangDumpTypeOptions(string conjunction)
+    {
+        string[] quotedOptions = HangDumpTypeOptions.Select(option => $"'{option}'").ToArray();
+        return string.Join(", ", quotedOptions.Take(quotedOptions.Length - 1)) + $" {conjunction} " + quotedOptions[^1];
+    }
 }
