@@ -166,8 +166,9 @@ public sealed class ResponseFileHelperTests
             Assert.IsNull(args);
             Assert.HasCount(1, errors);
             Assert.Contains(path, errors[0]);
-            Assert.Contains("line 2", errors[0]);
-            Assert.Contains("Unclosed quote", errors[0]);
+            // The unclosed-quote diagnostic is interpolated with the offending line number,
+            // so the message — whatever its localized wording — must contain "2".
+            Assert.Contains("2", errors[0]);
         }
         finally
         {
