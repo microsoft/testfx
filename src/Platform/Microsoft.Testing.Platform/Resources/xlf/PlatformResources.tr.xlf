@@ -209,7 +209,7 @@
       </trans-unit>
       <trans-unit id="DeprecatedEnvironmentVariableWarning">
         <source>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</source>
-        <target state="new">Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</target>
+        <target state="translated">Uyarı: '{0}' ortam değişkeni kullanım dışı bırakıldı ve gelecekteki bir birincil sürümde kaldırılacak. Bunun yerine '{1}' kullanın.</target>
         <note>{0} is the deprecated environment variable name, {1} is the replacement environment variable name.</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
@@ -664,8 +664,8 @@ Varsayılan değer, test uygulamasını içeren dizindeki TestResults'dır.</tar
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
-        <target state="needs-review-translation">'timeout' seçeneği, 'value' değerinin kayan olduğu &lt;value&gt;[h|m|s] biçiminde dize olarak bir bağımsız değişkene sahip olmalıdır</target>
+        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</source>
+        <target state="translated">'timeout' seçeneği, 'value' değerinin kayan olduğu &lt;value&gt;[h|m|s] biçiminde dize olarak bir bağımsız değişkene sahip olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">

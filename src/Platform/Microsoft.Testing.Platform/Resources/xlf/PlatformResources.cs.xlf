@@ -664,8 +664,8 @@ Výchozí hodnota je TestResults v adresáři, který obsahuje testovací aplika
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
-        <target state="needs-review-translation">Možnost timeout by měla mít jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s], kde value je hodnota datového typu float.</target>
+        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</source>
+        <target state="translated">Možnost timeout by měla mít jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s], kde value je hodnota datového typu float.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">

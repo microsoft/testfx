@@ -664,8 +664,8 @@ Der Standardwert ist "TestResults" im Verzeichnis, das die Testanwendung enthäl
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
-        <target state="needs-review-translation">Die Option "timeout" muss ein Argument als Zeichenfolge im Format &lt;value&gt;[h|m|s] aufweisen, wobei "value" auf "float" festgelegt ist.</target>
+        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</source>
+        <target state="translated">Die Option "timeout" muss ein Argument als Zeichenfolge im Format &lt;value&gt;[h|m|s] aufweisen, wobei "value" auf "float" festgelegt ist.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
