@@ -4,62 +4,62 @@
     <body>
       <trans-unit id="HtmlReportArtifactDescription">
         <source>Self-contained HTML test report</source>
-        <target state="new">Self-contained HTML test report</target>
+        <target state="translated">Bağımsız HTML test raporu</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportArtifactDisplayName">
         <source>HTML Report</source>
-        <target state="new">HTML Report</target>
+        <target state="translated">HTML Raporu</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileExistsAndWillBeOverwritten">
         <source>Warning: HTML report file '{0}' already exists and will be overwritten.</source>
-        <target state="new">Warning: HTML report file '{0}' already exists and will be overwritten.</target>
+        <target state="translated">Uyarı: '{0}' HTML rapor dosyası zaten mevcut ve üzerine yazılacak.</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameExtensionIsNotHtml">
         <source>'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</source>
-        <target state="new">'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</target>
+        <target state="translated">'--report-html-filename' dosya adı bağımsız değişkeni '.html' ile bitmelidir (ör. --report-html-filename myreport.html)</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameOptionDescription">
         <source>The name of the generated HTML report</source>
-        <target state="new">The name of the generated HTML report</target>
+        <target state="translated">Oluşturulan HTML raporunun adı</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRequiresHtmlReport">
         <source>'--report-html-filename' requires '--report-html' to be enabled</source>
-        <target state="new">'--report-html-filename' requires '--report-html' to be enabled</target>
+        <target state="translated">'--report-html-filename', '--report-html' seçeneğinin etkinleştirilmesini gerektirir</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameShouldNotContainPath">
         <source>file name argument must not contain a path or invalid characters (e.g. --report-html-filename myreport.html)</source>
-        <target state="new">file name argument must not contain a path or invalid characters (e.g. --report-html-filename myreport.html)</target>
+        <target state="translated">Dosya adı bağımsız değişkeni yol veya geçersiz karakterler içermemelidir (ör. --report-html-filename myreport.html)</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDescription">
         <source>Produce a self-contained HTML report for the current test session</source>
-        <target state="new">Produce a self-contained HTML report for the current test session</target>
+        <target state="translated">Geçerli test oturumu için bağımsız bir HTML raporu oluşturun</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDisplayName">
         <source>HTML report generator</source>
-        <target state="new">HTML report generator</target>
+        <target state="translated">HTML rapor oluşturucusu</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportIsNotValidForDiscovery">
         <source>'--report-html' cannot be enabled when using '--list-tests'</source>
-        <target state="new">'--report-html' cannot be enabled when using '--list-tests'</target>
+        <target state="translated">'--list-tests' kullanılırken '--report-html' etkinleştirilemez</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportOptionDescription">
         <source>Enable generating an HTML report</source>
-        <target state="new">Enable generating an HTML report</target>
+        <target state="translated">HTML raporu oluşturmayı etkinleştirin</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="new">HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
+        <target state="translated">HTML rapor oluşturucu yalnızca 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' türündeki oluşturucularla çalışır</target>
         <note />
       </trans-unit>
     </body>

@@ -4,62 +4,62 @@
     <body>
       <trans-unit id="HtmlReportArtifactDescription">
         <source>Self-contained HTML test report</source>
-        <target state="new">Self-contained HTML test report</target>
+        <target state="translated">Samodzielny raport testowy HTML</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportArtifactDisplayName">
         <source>HTML Report</source>
-        <target state="new">HTML Report</target>
+        <target state="translated">Raport HTML</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileExistsAndWillBeOverwritten">
         <source>Warning: HTML report file '{0}' already exists and will be overwritten.</source>
-        <target state="new">Warning: HTML report file '{0}' already exists and will be overwritten.</target>
+        <target state="translated">Ostrzeżenie: plik raportu HTML „{0}” już istnieje i zostanie zastąpiony.</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameExtensionIsNotHtml">
         <source>'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</source>
-        <target state="new">'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</target>
+        <target state="translated">Argument nazwy pliku „--report-html-filename” musi kończyć się ciągiem „.html” (np. --report-html-filename myreport.html)</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameOptionDescription">
         <source>The name of the generated HTML report</source>
-        <target state="new">The name of the generated HTML report</target>
+        <target state="translated">Nazwa wygenerowanego raportu HTML</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRequiresHtmlReport">
         <source>'--report-html-filename' requires '--report-html' to be enabled</source>
-        <target state="new">'--report-html-filename' requires '--report-html' to be enabled</target>
+        <target state="translated">Element „--report-html-filename” wymaga włączenia parametru „--report-html”</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameShouldNotContainPath">
         <source>file name argument must not contain a path or invalid characters (e.g. --report-html-filename myreport.html)</source>
-        <target state="new">file name argument must not contain a path or invalid characters (e.g. --report-html-filename myreport.html)</target>
+        <target state="translated">argument nazwy pliku nie może zawierać ścieżki ani nieprawidłowych znaków (np. --report-html-filename myreport.html)</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDescription">
         <source>Produce a self-contained HTML report for the current test session</source>
-        <target state="new">Produce a self-contained HTML report for the current test session</target>
+        <target state="translated">Tworzenie samodzielnego raportu HTML dla bieżącej sesji testowej</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDisplayName">
         <source>HTML report generator</source>
-        <target state="new">HTML report generator</target>
+        <target state="translated">Generator raportów HTML</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportIsNotValidForDiscovery">
         <source>'--report-html' cannot be enabled when using '--list-tests'</source>
-        <target state="new">'--report-html' cannot be enabled when using '--list-tests'</target>
+        <target state="translated">Nie można włączyć opcji „--report-html” w przypadku używania polecenia „--list-tests”</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportOptionDescription">
         <source>Enable generating an HTML report</source>
-        <target state="new">Enable generating an HTML report</target>
+        <target state="translated">Włącz generowanie raportu HTML</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="new">HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
+        <target state="translated">Generator raportów HTML działa tylko z konstruktorami typu „Microsoft.Testing.Platform.Builder.TestApplicationBuilder”</target>
         <note />
       </trans-unit>
     </body>
