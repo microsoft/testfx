@@ -51,7 +51,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
     {
         // We get the pipe from the MSBuildTestApplicationLifecycleCallbacks only if we're enabled.
         _msBuildTestApplicationLifecycleCallbacks = _serviceProvider.GetRequiredService<MSBuildTestApplicationLifecycleCallbacks>();
-        _sessionStopwatch.Start();
+        _sessionStopwatch.Restart();
         return Task.CompletedTask;
     }
 
