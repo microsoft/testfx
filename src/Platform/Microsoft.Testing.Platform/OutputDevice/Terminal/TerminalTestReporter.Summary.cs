@@ -45,6 +45,15 @@ internal sealed partial class TerminalTestReporter
         int totalFailedTests = _testProgressState?.FailedTests ?? 0;
         int totalSkippedTests = _testProgressState?.SkippedTests ?? 0;
 
+        // DESIGN: `allTestsWereSkipped` is intentionally treated as a failed run. Skipped tests don't count as
+        // "ran", so an all-skipped (or zero-test) run is reported in red as "Zero tests ran". This is the strict
+        // default chosen in #3216 / #3243 ("Skipped tests count as not run") to flag the common "invalid filter
+        // ran nothing" mistake. Users who legitimately expect all-skipped runs should opt out via
+        // `--ignore-exit-code 8`.
+        //
+        // Two sibling sites mirror this decision and must stay in lockstep:
+        //   - TestApplicationResult.ConsumeAsync (excludes skipped from `_totalRanTests` -> exit code 8)
+        //   - Microsoft.Testing.Platform.MSBuild InvokeTestingPlatformTask (run-summary verdict)
         bool notEnoughTests = totalTests < _options.MinimumExpectedTests;
         bool allTestsWereSkipped = totalTests == 0 || totalTests == totalSkippedTests;
         bool anyTestFailed = totalFailedTests > 0;
