@@ -573,7 +573,6 @@ public class Program
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
-
 }
 
 public class DummyTestFramework : ITestFramework
