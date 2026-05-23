@@ -301,7 +301,26 @@ public sealed class PlatformCommandLineProviderTests
     [DataRow("invalid")]
     [DataRow("1.5")] // Missing unit
     [DataRow("abc.5s")]
+    [DataRow("")] // Empty value
+    [DataRow("s")] // Missing numeric value
     public async Task IsInvalid_If_Timeout_Has_IncorrectFormat(string timeout)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.TimeoutOptionKey);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [timeout]);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("-1s")] // Negative
+    [DataRow("-0.5m")] // Negative fractional
+    [DataRow("NaNs")] // Not a number
+    [DataRow("Infinitys")] // Positive infinity
+    [DataRow("-Infinitys")] // Negative infinity
+    [DataRow("1e30h")] // Overflows TimeSpan
+    public async Task IsInvalid_If_Timeout_Has_NonFiniteOrOutOfRangeValue(string timeout)
     {
         var provider = new PlatformCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.TimeoutOptionKey);

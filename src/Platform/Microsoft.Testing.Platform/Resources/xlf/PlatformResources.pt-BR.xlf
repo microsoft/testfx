@@ -664,8 +664,8 @@ O padrão é TestResults no diretório que contém o aplicativo de teste.</targe
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</source>
-        <target state="translated">A opção 'timeout' deve ter um argumento como cadeia de caracteres no formato &lt;value&gt;[h|m|s] onde 'value' é float</target>
+        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
+        <target state="needs-review-translation">A opção 'timeout' deve ter um argumento como cadeia de caracteres no formato &lt;value&gt;[h|m|s] onde 'value' é float</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">

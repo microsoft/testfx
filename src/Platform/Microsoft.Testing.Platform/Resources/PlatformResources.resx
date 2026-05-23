@@ -653,7 +653,7 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</value>
     <value>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</value>
   </data>
   <data name="PlatformCommandLineTimeoutArgumentErrorMessage" xml:space="preserve">
-    <value>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</value>
+    <value>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</value>
   </data>
   <data name="PlatformCommandLineTimeoutOptionDescription" xml:space="preserve">
     <value>A global test execution timeout.
