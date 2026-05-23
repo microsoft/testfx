@@ -75,6 +75,11 @@ Movendo arquivos de ativo da última tentativa para o diretório de resultados p
         <target state="translated">Desabilitar o mecanismo de repetição se a porcentagem de testes com falha for maior que o valor especificado</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
+        <source>Option '{0}' expects an integer argument between 0 and 100</source>
+        <target state="new">Option '{0}' expects an integer argument between 0 and 100</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
         <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
         <target state="translated">Desabilitar o mecanismo de repetição se o número de testes com falha for maior que o valor especificado</target>
@@ -100,9 +105,9 @@ Movendo arquivos de ativo da última tentativa para o diretório de resultados p
         <target state="translated">A opção ''{0}'' requer que a opção ''{1}'' seja especificada</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage">
-        <source>Option '{0}' expects a single integer argument</source>
-        <target state="translated">A opção ''{0}'' espera um único argumento inteiro</target>
+      <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
+        <source>Option '{0}' expects a non-negative integer argument</source>
+        <target state="new">Option '{0}' expects a non-negative integer argument</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">

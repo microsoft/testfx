@@ -71,6 +71,11 @@ Options:
         A global test execution timeout.
         Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
 Extension options:
+    --ansi
+        Control whether ANSI escape characters are emitted.
+        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+        When both --ansi and --no-ansi are provided, --ansi wins.
     --crash-report
         [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).
     --crashdump
@@ -447,6 +452,13 @@ Registered command line providers:
     Version: *
     Description: Writes test results to terminal.
     Options:
+      --ansi
+        Arity: 1
+        Hidden: False
+        Description: Control whether ANSI escape characters are emitted.
+        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+        When both --ansi and --no-ansi are provided, --ansi wins.
       --no-ansi
         Arity: 0
         Hidden: False

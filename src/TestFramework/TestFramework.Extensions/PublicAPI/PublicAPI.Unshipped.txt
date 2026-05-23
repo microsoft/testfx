@@ -1,1 +1,17 @@
 #nullable enable
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.ITestRunInfo
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.ITestRunInfo.PlannedTests.get -> System.Collections.Generic.IReadOnlyCollection<Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest!>!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.AssemblyPath.get -> string!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.DeclaringFilePath.get -> string?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.DeclaringLineNumber.get -> int?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.FullyQualifiedTestClassName.get -> string!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.ManagedMethodName.get -> string?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.ManagedTypeName.get -> string?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.PlannedTest(string! fullyQualifiedTestClassName, string! testName, string? testDisplayName, string! assemblyPath, string? managedTypeName, string? managedMethodName, string? declaringFilePath, int? declaringLineNumber, System.Collections.Generic.IReadOnlyCollection<string!>! testCategories, System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<string!, string!>>! testProperties) -> void
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.TestCategories.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.TestDisplayName.get -> string?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.TestName.get -> string!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.TestProperties.get -> System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<string!, string!>>!
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.TestRun
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.TestRun.Current.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ITestRunInfo!

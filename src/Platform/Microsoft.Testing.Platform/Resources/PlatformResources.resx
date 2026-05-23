@@ -150,6 +150,27 @@
   <data name="JsonConfigurationFileParserUnsupportedTokenErrorMessage" xml:space="preserve">
     <value>Unsupported JSON token '{0}' was found</value>
   </data>
+  <data name="JsonConfigurationSectionMustBeAnObjectErrorMessage" xml:space="preserve">
+    <value>The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</value>
+    <comment>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file.</comment>
+  </data>
+  <data name="JsonConfigurationSectionEntryMustBeScalarErrorMessage" xml:space="preserve">
+    <value>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</value>
+    <comment>{0} is the full dotted/colon-separated key. {1} is the section name. {2} is the path to the testconfig.json file.</comment>
+  </data>
+  <data name="TestConfigurationEnvironmentVariableProviderDisplayName" xml:space="preserve">
+    <value>testconfig.json environment variables provider</value>
+  </data>
+  <data name="TestConfigurationEnvironmentVariableProviderDescription" xml:space="preserve">
+    <value>Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</value>
+  </data>
+  <data name="TestConfigurationEnvironmentVariableNameCannotBeEmptyErrorMessage" xml:space="preserve">
+    <value>Environment variable names declared in the 'environmentVariables' section of the testconfig.json file must not be empty.</value>
+  </data>
+  <data name="TestConfigurationEnvironmentVariableInvalidNameErrorMessage" xml:space="preserve">
+    <value>Environment variable name '{0}' declared in the 'environmentVariables' section of the testconfig.json file is invalid. Names must not contain '=' or null characters.</value>
+    <comment>{0} is the invalid environment variable name.</comment>
+  </data>
   <data name="ServerTestExecutionFilterFactoryDescription" xml:space="preserve">
     <value>Creates the right test execution filter for server mode</value>
   </data>
@@ -594,6 +615,15 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   </data>
   <data name="TerminalNoAnsiOptionDescription" xml:space="preserve">
     <value>Disable outputting ANSI escape characters to screen.</value>
+  </data>
+  <data name="TerminalAnsiOptionDescription" xml:space="preserve">
+    <value>Control whether ANSI escape characters are emitted.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+When both --ansi and --no-ansi are provided, --ansi wins.</value>
+  </data>
+  <data name="TerminalAnsiOptionInvalidArgument" xml:space="preserve">
+    <value>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
   </data>
   <data name="TerminalNoProgressOptionDescription" xml:space="preserve">
     <value>Disable reporting progress to screen.</value>

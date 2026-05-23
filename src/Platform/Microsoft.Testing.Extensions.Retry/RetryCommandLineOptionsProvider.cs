@@ -68,19 +68,21 @@ internal sealed class RetryCommandLineOptionsProvider : ICommandLineOptionsProvi
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
-        if (commandOption.Name == RetryFailedTestsOptionName && !int.TryParse(arguments[0], out int _))
+        if (commandOption.Name == RetryFailedTestsOptionName && !TryParseNonNegativeInt(arguments[0], out int _))
         {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionSingleIntegerArgumentErrorMessage, RetryFailedTestsOptionName));
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage, RetryFailedTestsOptionName));
         }
 
-        if (commandOption.Name == RetryFailedTestsMaxPercentageOptionName && !int.TryParse(arguments[0], out int _))
+        if (commandOption.Name == RetryFailedTestsMaxPercentageOptionName
+            && (!TryParseNonNegativeInt(arguments[0], out int percentage)
+                || percentage > 100))
         {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionSingleIntegerArgumentErrorMessage, RetryFailedTestsMaxPercentageOptionName));
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage, RetryFailedTestsMaxPercentageOptionName));
         }
 
-        if (commandOption.Name == RetryFailedTestsMaxTestsOptionName && !int.TryParse(arguments[0], out int _))
+        if (commandOption.Name == RetryFailedTestsMaxTestsOptionName && !TryParseNonNegativeInt(arguments[0], out int _))
         {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionSingleIntegerArgumentErrorMessage, RetryFailedTestsMaxTestsOptionName));
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage, RetryFailedTestsMaxTestsOptionName));
         }
 
         if (commandOption.Name == RetryFailedTestsDelayOptionName
@@ -94,4 +96,7 @@ internal sealed class RetryCommandLineOptionsProvider : ICommandLineOptionsProvi
         // No problem found
         return ValidationResult.ValidTask;
     }
+
+    private static bool TryParseNonNegativeInt(string value, out int result)
+        => int.TryParse(value, out result) && result >= 0;
 }
