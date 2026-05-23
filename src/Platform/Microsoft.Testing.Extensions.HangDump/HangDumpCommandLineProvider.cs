@@ -83,11 +83,8 @@ internal sealed class HangDumpCommandLineProvider : ICommandLineOptionsProvider
     private static string FormatHangDumpTypeOptions(string conjunction)
     {
         string[] quotedOptions = HangDumpTypeOptions.Select(option => $"'{option}'").ToArray();
-        return quotedOptions.Length switch
-        {
-            0 => string.Empty,
-            1 => quotedOptions[0],
-            _ => string.Join(", ", quotedOptions.Take(quotedOptions.Length - 1)) + $" {conjunction} " + quotedOptions[^1],
-        };
+        return quotedOptions.Length == 1
+            ? quotedOptions[0]
+            : string.Join(", ", quotedOptions.Take(quotedOptions.Length - 1)) + $" {conjunction} " + quotedOptions[^1];
     }
 }

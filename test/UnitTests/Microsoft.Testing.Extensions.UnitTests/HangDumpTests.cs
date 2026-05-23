@@ -84,7 +84,9 @@ public sealed class HangDumpTests
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
         CommandLineOption option = hangDumpCommandLineProvider.GetCommandLineOptions().First(x => x.Name == HangDumpCommandLineProvider.HangDumpTypeOptionName);
 
-        Assert.Contains($"Valid values are {GetExpectedDescriptionOptions()}.", option.Description);
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionDescription, GetExpectedDescriptionOptions()),
+            option.Description);
     }
 
     [TestMethod]
