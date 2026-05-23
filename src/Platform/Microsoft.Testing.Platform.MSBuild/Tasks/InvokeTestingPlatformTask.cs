@@ -508,6 +508,17 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
         if (request is RunSummaryInfoRequest runSummaryInfoRequest)
         {
+            // DESIGN: `TotalPassed == 0` is intentionally treated as a failed run. Skipped tests don't count as
+            // "ran", so an all-skipped (or zero-test) run is reported as `Failed!`. This is the strict default
+            // chosen in #3216 / #3243 ("Skipped tests count as not run") to flag the common "invalid filter ran
+            // nothing" mistake. Users who legitimately expect all-skipped runs should opt out via
+            // `--ignore-exit-code 8` (in that scenario the MSBuild target will succeed but this summary line will
+            // still say `Failed!` until we plumb the effective outcome through `RunSummaryInfoRequest`).
+            //
+            // Two sibling sites mirror this decision and must stay in lockstep:
+            //   - TestApplicationResult.ConsumeAsync (excludes skipped from `_totalRanTests` -> exit code 8)
+            //   - TerminalTestReporter.Summary.cs (`allTestsWereSkipped` -> red "Zero tests ran")
+            // Do NOT relax this to `TotalFailed > 0` without revisiting those sites and the design discussion above.
             string summary = string.Format(
                 CultureInfo.CurrentCulture,
                 Resources.MSBuildResources.Summary,
