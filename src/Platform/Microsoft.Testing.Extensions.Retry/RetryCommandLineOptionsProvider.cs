@@ -27,8 +27,9 @@ internal sealed class RetryCommandLineOptionsProvider : ICommandLineOptionsProvi
 
     public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
         [
-            // Hide the extension for now, we will add tests and we will re-enable when will be good.
-            // We'd like to have some iteration in prod with our dogfooders before.
+            // The retry options are visible in --help today. We're still iterating on the feature
+            // with our dogfooders and may revisit visibility (and/or argument shapes) before
+            // declaring it stable.
             new(RetryFailedTestsOptionName, ExtensionResources.RetryFailedTestsOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
             new(RetryFailedTestsMaxPercentageOptionName, ExtensionResources.RetryFailedTestsMaxPercentageOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
             new(RetryFailedTestsMaxTestsOptionName, ExtensionResources.RetryFailedTestsMaxTestsOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
