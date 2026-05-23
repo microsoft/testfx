@@ -174,6 +174,19 @@ public sealed class PlatformCommandLineProviderTests
     }
 
     [TestMethod]
+    [DataRow("0")]
+    [DataRow("-1")]
+    public async Task IsInvalid_When_MinimumExpectedTests_Is_Not_Positive(string minimumExpectedTests)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.MinimumExpectedTestsOptionKey);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [minimumExpectedTests]).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionSingleArgument, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
     public async Task IsValid_When_DiscoverTests_HasNoArgument()
     {
         var provider = new PlatformCommandLineProvider();
