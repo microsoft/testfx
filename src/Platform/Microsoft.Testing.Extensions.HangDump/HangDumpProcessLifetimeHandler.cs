@@ -416,8 +416,10 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 #endif
     }
 
+#if NETCOREAPP
     private static DumpFileNames GetDumpFileNames(string dumpFileName)
         => GetDumpFileNames(dumpFileName, RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+#endif
 
     // Wrap the dump path into "" when it has space in it, this is a workaround for this runtime issue: https://github.com/dotnet/diagnostics/issues/5020
     // It only affects windows. Otherwise the dump creation fails with: [createdump] The pid argument is no longer supported
