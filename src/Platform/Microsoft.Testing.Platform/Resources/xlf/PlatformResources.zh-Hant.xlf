@@ -654,7 +654,7 @@ The default is TestResults in the directory that contains the test application.<
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as a time value with an explicit unit suffix, e.g. '500ms', '5400s', '90m', '1.5h', '1d' (long forms like 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted)</source>
+        <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Examples: '500ms', '5400s', '90m', '1.5h', '1d' (long forms like 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted)</source>
         <target state="needs-review-translation">'timeout' 選項應該有一個引數作為字串，格式為 &lt;value&gt;[h|m|s]，其中 'value' 為 float</target>
         <note />
       </trans-unit>

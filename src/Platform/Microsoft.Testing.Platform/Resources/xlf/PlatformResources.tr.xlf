@@ -654,7 +654,7 @@ Varsayılan değer, test uygulamasını içeren dizindeki TestResults'dır.</tar
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as a time value with an explicit unit suffix, e.g. '500ms', '5400s', '90m', '1.5h', '1d' (long forms like 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted)</source>
+        <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Examples: '500ms', '5400s', '90m', '1.5h', '1d' (long forms like 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted)</source>
         <target state="needs-review-translation">'timeout' seçeneği, 'value' değerinin kayan olduğu &lt;value&gt;[h|m|s] biçiminde dize olarak bir bağımsız değişkene sahip olmalıdır</target>
         <note />
       </trans-unit>

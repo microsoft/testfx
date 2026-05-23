@@ -654,7 +654,7 @@ Wartość domyślna to TestResults w katalogu zawierającym aplikację testową.
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as a time value with an explicit unit suffix, e.g. '500ms', '5400s', '90m', '1.5h', '1d' (long forms like 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted)</source>
+        <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Examples: '500ms', '5400s', '90m', '1.5h', '1d' (long forms like 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted)</source>
         <target state="needs-review-translation">Opcja „timeout” powinna mieć jeden argument jako ciąg w formacie &lt;value&gt;[h|m|s], gdzie element „value” ma wartość zmiennoprzecinkową</target>
         <note />
       </trans-unit>

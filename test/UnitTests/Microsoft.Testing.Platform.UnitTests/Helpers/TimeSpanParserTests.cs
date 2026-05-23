@@ -179,18 +179,27 @@ public sealed class TimeSpanParserTests
     }
 
     [TestMethod]
-    [DataRow("1S")] // uppercase single-char suffix
-    [DataRow("1M")]
-    [DataRow("1H")]
-    [DataRow("1D")]
-    [DataRow("1Hour")] // mixed case long form
-    [DataRow("1MINUTES")] // upper case long form
-    public void TryParse_UppercaseSuffix_ParsesCorrectly(string input)
+    [DataRow("1S", 1, "s")] // uppercase single-char suffix
+    [DataRow("1M", 1, "m")]
+    [DataRow("1H", 1, "h")]
+    [DataRow("1D", 1, "d")]
+    [DataRow("1Hour", 1, "h")] // mixed case long form
+    [DataRow("1MINUTES", 1, "m")] // upper case long form
+    public void TryParse_UppercaseSuffix_ParsesCorrectly(string input, double expectedValue, string expectedUnit)
     {
         bool result = TimeSpanParser.TryParse(input, out TimeSpan value);
 
         Assert.IsTrue(result);
-        Assert.AreNotEqual(TimeSpan.Zero, value);
+        TimeSpan expected = expectedUnit switch
+        {
+            "ms" => TimeSpan.FromMilliseconds(expectedValue),
+            "s" => TimeSpan.FromSeconds(expectedValue),
+            "m" => TimeSpan.FromMinutes(expectedValue),
+            "h" => TimeSpan.FromHours(expectedValue),
+            "d" => TimeSpan.FromDays(expectedValue),
+            _ => throw new ArgumentException($"Unknown unit '{expectedUnit}'", nameof(expectedUnit)),
+        };
+        Assert.AreEqual(expected, value);
     }
 
     [TestMethod]

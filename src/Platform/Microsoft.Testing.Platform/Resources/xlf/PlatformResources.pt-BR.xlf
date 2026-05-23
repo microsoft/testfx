@@ -654,7 +654,7 @@ O padrão é TestResults no diretório que contém o aplicativo de teste.</targe
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as a time value with an explicit unit suffix, e.g. '500ms', '5400s', '90m', '1.5h', '1d' (long forms like 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted)</source>
+        <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Examples: '500ms', '5400s', '90m', '1.5h', '1d' (long forms like 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted)</source>
         <target state="needs-review-translation">A opção 'timeout' deve ter um argumento como cadeia de caracteres no formato &lt;value&gt;[h|m|s] onde 'value' é float</target>
         <note />
       </trans-unit>
