@@ -440,9 +440,26 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
     private bool ShouldFlushUnsafe(bool force)
     {
         int pendingResultsCount = _retryResults.Count + _pendingResults.Count;
-        return force
-            ? pendingResultsCount > 0
-            : pendingResultsCount >= _options.BatchSize || (pendingResultsCount > 0 && _clock.UtcNow - _lastFlushTime >= _options.FlushInterval);
+        if (force)
+        {
+            return pendingResultsCount > 0;
+        }
+
+        if (pendingResultsCount == 0)
+        {
+            return false;
+        }
+
+        if (_clock.UtcNow - _lastFlushTime >= _options.FlushInterval)
+        {
+            return true;
+        }
+
+        // Only trigger a batch-size based flush from fresh pending results. When a previous publish
+        // failed and pushed a full batch back into _retryResults, the next ConsumeAsync would
+        // otherwise immediately satisfy this condition and tight-retry on every incoming result —
+        // wait for the flush interval (background loop) before retrying instead.
+        return _retryResults.Count == 0 && _pendingResults.Count >= _options.BatchSize;
     }
 
     private static AzureDevOpsTestCaseResult CreateResult(
