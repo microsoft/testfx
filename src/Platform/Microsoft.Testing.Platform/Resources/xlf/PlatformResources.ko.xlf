@@ -209,7 +209,7 @@
       </trans-unit>
       <trans-unit id="DeprecatedEnvironmentVariableWarning">
         <source>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</source>
-        <target state="new">Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</target>
+        <target state="translated">경고: 환경 변수 '{0}'은(는) 더 이상 사용되지 않으며 향후 주 버전에서 제거됩니다. 대신 '{1}'을(를) 사용합니다.</target>
         <note>{0} is the deprecated environment variable name, {1} is the replacement environment variable name.</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
