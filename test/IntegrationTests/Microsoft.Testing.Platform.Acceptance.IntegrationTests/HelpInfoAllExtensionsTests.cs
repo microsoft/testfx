@@ -133,7 +133,9 @@ Extension options:
     --report-html
         Enable generating an HTML report
     --report-html-filename
-        The name of the generated HTML report
+        The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+        Example: MyReport_{tfm}.html
     --report-trx
         Enable generating TRX report
     --report-trx-filename

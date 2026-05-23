@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.HtmlReport.Resources;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -64,11 +65,16 @@ internal sealed class HtmlReportEngine
             out string[]? providedFileName);
 
         string fileName = fileNameExplicitlyProvided
-            ? providedFileName![0]
+            ? ResolveHtmlFileName(providedFileName![0])
             : BuildDefaultFileName(finishTime);
 
         string outputDirectory = _configuration.GetTestResultDirectory();
         string finalPath = Path.Combine(outputDirectory, fileName);
+        string? finalDirectory = Path.GetDirectoryName(finalPath);
+        if (!RoslynString.IsNullOrEmpty(finalDirectory))
+        {
+            _fileSystem.CreateDirectory(finalDirectory);
+        }
 
         string template = LoadTemplate();
         string json = BuildJson(results, finishTime);
@@ -154,6 +160,19 @@ internal sealed class HtmlReportEngine
         return ReplaceInvalidFileNameChars(raw);
     }
 
+    private string ResolveHtmlFileName(string template)
+    {
+        string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+        string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
+        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(processName, processId, _clock.UtcNow);
+        string resolved = ArtifactNamingHelper.ResolveTemplate(template, replacements);
+        string directoryPart = Path.GetDirectoryName(resolved) ?? string.Empty;
+        string sanitizedFileName = ReplaceInvalidFileNameChars(Path.GetFileName(resolved));
+        return directoryPart.Length == 0
+            ? sanitizedFileName
+            : Path.Combine(directoryPart, sanitizedFileName);
+    }
+
     private static string GetTargetFrameworkMoniker()
         => TargetFrameworkParser.GetShortTargetFramework(
             Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
@@ -163,13 +182,44 @@ internal sealed class HtmlReportEngine
     private static string ReplaceInvalidFileNameChars(string fileName)
     {
         var sb = new StringBuilder(fileName.Length);
-        char[] invalid = Path.GetInvalidFileNameChars();
         foreach (char c in fileName)
         {
-            sb.Append(Array.IndexOf(invalid, c) >= 0 ? '_' : c);
+            sb.Append(IsInvalidFileNameChar(c) ? '_' : c);
         }
 
-        return sb.ToString();
+        string replaced = sb.ToString().TrimEnd();
+        if (IsReservedFileName(replaced))
+        {
+            replaced = '_' + replaced;
+        }
+
+        return replaced;
+    }
+
+    private static bool IsInvalidFileNameChar(char c)
+        => c is < ' ' or '"' or '<' or '>' or '|' or ':' or '*' or '?' or '\\' or '/' or '@' or '(' or ')' or '^' or ' ';
+
+    private static bool IsReservedFileName(string fileName)
+    {
+        string bareName = fileName;
+        int dot = bareName.IndexOf('.');
+        if (dot >= 0)
+        {
+            bareName = bareName.Substring(0, dot);
+        }
+
+        return bareName.Equals("CON", StringComparison.OrdinalIgnoreCase)
+            || bareName.Equals("PRN", StringComparison.OrdinalIgnoreCase)
+            || bareName.Equals("AUX", StringComparison.OrdinalIgnoreCase)
+            || bareName.Equals("NUL", StringComparison.OrdinalIgnoreCase)
+            || bareName.Equals("CLOCK$", StringComparison.OrdinalIgnoreCase)
+            || IsReservedNameWithNumber(bareName, "COM")
+            || IsReservedNameWithNumber(bareName, "LPT");
+
+        static bool IsReservedNameWithNumber(string bareName, string prefix)
+            => bareName.Length == 4
+                && bareName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                && bareName[3] is >= '1' and <= '9';
     }
 
     private static string LoadTemplate()
