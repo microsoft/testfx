@@ -39,7 +39,10 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
     private readonly IEnvironment _environment;
     private readonly IClock _clock;
     private readonly ILogger<CrashDumpSequenceLogger> _logger;
-    private readonly object _writeLock = new();
+
+    // SemaphoreSlim instead of a plain `lock` so we can `await` the write/flush calls inside the
+    // critical section without blocking a thread on synchronous I/O.
+    private readonly SemaphoreSlim _writeSemaphore = new(1, 1);
 
     private string? _sequenceFilePath;
     private StreamWriter? _writer;
@@ -75,7 +78,7 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
         return Task.FromResult(!RoslynString.IsNullOrEmpty(_sequenceFilePath));
     }
 
-    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
+    public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
         ApplicationStateGuard.Ensure(_sequenceFilePath is not null);
 
@@ -97,8 +100,8 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             // because a sequence file is not required to survive an OS-level crash or power loss.
             var fileStream = new FileStream(_sequenceFilePath, FileMode.Create, FileAccess.Write, FileShare.Read);
             _writer = new StreamWriter(fileStream, Encoding.UTF8) { AutoFlush = true };
-            _writer.WriteLine(FileHeader);
-            _writer.Flush();
+            await _writer.WriteLineAsync(FileHeader).ConfigureAwait(false);
+            await _writer.FlushAsync().ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or PathTooLongException or DirectoryNotFoundException or System.Security.SecurityException)
         {
@@ -106,25 +109,30 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             // full, ACLs deny write, the path is invalid, or any other filesystem-level error), we
             // trace the failure and behave as if the feature were disabled — failing the test run
             // for this would be worse than missing the diagnostic.
-            _logger.LogWarning($"Failed to open crash sequence file '{_sequenceFilePath}': {ex.Message}");
-            _writer?.Dispose();
-            _writer = null;
+            await _logger.LogWarningAsync($"Failed to open crash sequence file '{_sequenceFilePath}': {ex.Message}").ConfigureAwait(false);
+            if (_writer is not null)
+            {
+#if NETCOREAPP
+                await _writer.DisposeAsync().ConfigureAwait(false);
+#else
+                _writer.Dispose();
+#endif
+                _writer = null;
+            }
         }
-
-        return Task.CompletedTask;
     }
 
-    public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+    public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         if (_writer is null || value is not TestNodeUpdateMessage update)
         {
-            return Task.CompletedTask;
+            return;
         }
 
         TestNodeStateProperty? state = update.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
         if (state is null)
         {
-            return Task.CompletedTask;
+            return;
         }
 
         string? line = state switch
@@ -143,24 +151,25 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
 
         if (line is null)
         {
-            return Task.CompletedTask;
+            return;
         }
 
         // ConsumeAsync may be invoked concurrently from multiple data producers/threads; serialize
         // writes to keep the on-disk record consistent. Writes are tiny (one line each) so contention
         // is negligible.
-        lock (_writeLock)
+        await _writeSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            // Re-check under the lock to defend against a concurrent Dispose closing the writer
+            // Re-check under the semaphore to defend against a concurrent Dispose closing the writer
             // between the null check above and the write here.
             if (_writer is null)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             try
             {
-                _writer.WriteLine(line);
+                await _writer.WriteLineAsync(line).ConfigureAwait(false);
             }
             catch (ObjectDisposedException)
             {
@@ -169,35 +178,43 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             catch (IOException ex)
             {
                 // Best-effort logging only: dropping a single record is better than failing the test run.
-                _logger.LogWarning($"Failed to write to crash sequence file '{_sequenceFilePath}': {ex.Message}");
+                await _logger.LogWarningAsync($"Failed to write to crash sequence file '{_sequenceFilePath}': {ex.Message}").ConfigureAwait(false);
             }
         }
-
-        return Task.CompletedTask;
+        finally
+        {
+            _writeSemaphore.Release();
+        }
     }
 
-    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
         // Flush remaining bytes; the controller-side handler decides whether to publish (on crash) or
         // delete (on graceful exit) the file. We deliberately do not delete from here so that a crash
         // *during* finishing still leaves the sequence file behind for the controller to inspect.
-        lock (_writeLock)
+        await _writeSemaphore.WaitAsync(testSessionContext.CancellationToken).ConfigureAwait(false);
+        try
         {
-            try
+            if (_writer is not null)
             {
-                _writer?.Flush();
-            }
-            catch (ObjectDisposedException)
-            {
-                // Ignore - already disposed.
-            }
-            catch (IOException)
-            {
-                // Best-effort - ignore final flush failure.
+                try
+                {
+                    await _writer.FlushAsync().ConfigureAwait(false);
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Ignore - already disposed.
+                }
+                catch (IOException)
+                {
+                    // Best-effort - ignore final flush failure.
+                }
             }
         }
-
-        return Task.CompletedTask;
+        finally
+        {
+            _writeSemaphore.Release();
+        }
     }
 
     internal static string FormatLine(string eventName, DateTimeOffset timestamp, TestNodeUid uid, string lastField)
@@ -214,10 +231,41 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
         => value.Replace('\t', ' ').Replace('\r', ' ').Replace('\n', ' ');
 
 #if NETCOREAPP
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        Dispose();
-        return ValueTask.CompletedTask;
+        if (_disposed)
+        {
+            return;
+        }
+
+        await _writeSemaphore.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            if (_writer is not null)
+            {
+                try
+                {
+                    await _writer.DisposeAsync().ConfigureAwait(false);
+                }
+                catch (IOException)
+                {
+                    // Best-effort - ignore close failures.
+                }
+
+                _writer = null;
+            }
+        }
+        finally
+        {
+            _writeSemaphore.Release();
+            _writeSemaphore.Dispose();
+        }
     }
 #endif
 
@@ -228,7 +276,17 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             return;
         }
 
-        lock (_writeLock)
+        // Synchronous fallback for non-NETCOREAPP targets and for callers that don't observe
+        // IAsyncDisposable. We use the synchronous Wait() / Dispose() pair here intentionally:
+        // there is no async context to await on, and the wait is bounded by the brief duration of
+        // any concurrent ConsumeAsync write.
+        // CA1416: SemaphoreSlim.Wait() is unsupported on 'browser'; this code path is unreachable on
+        // browser because IsEnabledAsync returns false there (the controller-side env var provider
+        // requires a NETCOREAPP runtime which excludes browser).
+#pragma warning disable CA1416
+        _writeSemaphore.Wait();
+#pragma warning restore CA1416
+        try
         {
             if (_disposed)
             {
@@ -246,6 +304,11 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             }
 
             _writer = null;
+        }
+        finally
+        {
+            _writeSemaphore.Release();
+            _writeSemaphore.Dispose();
         }
     }
 }

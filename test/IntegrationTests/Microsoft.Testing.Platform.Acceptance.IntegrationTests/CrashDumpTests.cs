@@ -345,7 +345,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         string? tests = Environment.GetEnvironmentVariable("CRASHDUMP_PUBLISH_INPROGRESS_TESTS");
         if (!string.IsNullOrEmpty(tests) && context.Request is Microsoft.Testing.Platform.Requests.RunTestExecutionRequest runRequest)
         {
-            foreach (string testName in tests.Split(';', StringSplitOptions.RemoveEmptyEntries))
+            foreach (string testName in tests.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 var node = new TestNode
                 {
