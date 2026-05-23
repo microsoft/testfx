@@ -119,6 +119,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         {
             _totalRanTests++;
         }
+
         // DESIGN: Skipped tests are intentionally excluded from `_totalRanTests`.
         // `WellKnownTestNodeTestRunOutcomeProperties` does not contain `SkippedTestNodeStateProperty`, so an
         // all-skipped (or zero-test) run leaves `_totalRanTests == 0` and yields exit code `ExitCode.ZeroTests` (8)
