@@ -72,8 +72,7 @@ public sealed class HtmlReportGeneratorCommandLineTests
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
-    public async Task IsInvalid_If_HtmlFile_Uses_DriveRelativePath_OnWindows()
+    public async Task IsInvalid_If_HtmlFile_Uses_DriveRelativePath()
     {
         var provider = new HtmlReportGeneratorCommandLine();
         Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions()

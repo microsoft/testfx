@@ -78,8 +78,15 @@ internal sealed class HtmlReportGeneratorCommandLine : ICommandLineOptionsProvid
 
     private static bool EscapesResultsDirectory(string path)
         => !IsPathFullyQualified(path)
-            && (Path.IsPathRooted(path)
+            && (IsDriveRelativePath(path)
+                || Path.IsPathRooted(path)
                 || path.Split(DirectorySeparators, StringSplitOptions.RemoveEmptyEntries).Any(segment => segment == ".."));
+
+    private static bool IsDriveRelativePath(string path)
+        => path.Length >= 2
+            && IsValidDriveLetter(path[0])
+            && path[1] == ':'
+            && (path.Length == 2 || !IsAnyDirectorySeparator(path[2]));
 
     private static bool IsPathFullyQualified(string path)
     {
@@ -102,4 +109,10 @@ internal sealed class HtmlReportGeneratorCommandLine : ICommandLineOptionsProvid
             => c is (>= 'A' and <= 'Z') or (>= 'a' and <= 'z');
 #endif
     }
+
+    private static bool IsAnyDirectorySeparator(char c)
+        => c is '/' or '\\';
+
+    private static bool IsValidDriveLetter(char c)
+        => c is (>= 'A' and <= 'Z') or (>= 'a' and <= 'z');
 }

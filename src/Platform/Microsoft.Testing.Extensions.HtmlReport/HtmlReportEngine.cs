@@ -65,10 +65,13 @@ internal sealed class HtmlReportEngine
             out string[]? providedFileName);
 
         string fileName = fileNameExplicitlyProvided
-            ? ResolveHtmlFileName(providedFileName![0])
+            ? ResolveHtmlFileName(GetProvidedFileName(providedFileName))
             : BuildDefaultFileName(finishTime);
 
         string outputDirectory = _configuration.GetTestResultDirectory();
+        // Path.Combine short-circuits when the second argument is rooted, so an absolute
+        // user-provided file name overrides the test results directory while validated
+        // relative paths stay nested under it.
         string finalPath = Path.Combine(outputDirectory, fileName);
         string? finalDirectory = Path.GetDirectoryName(finalPath);
         if (!RoslynString.IsNullOrEmpty(finalDirectory))
@@ -87,6 +90,11 @@ internal sealed class HtmlReportEngine
 
         return await WriteWithRetryAsync(finalPath, bytes, fileNameExplicitlyProvided).ConfigureAwait(false);
     }
+
+    private static string GetProvidedFileName(string[]? providedFileName)
+        => providedFileName is { Length: > 0 }
+            ? providedFileName[0]
+            : throw ApplicationStateGuard.Unreachable();
 
     private async Task<(string FileName, string? Warning)> WriteWithRetryAsync(string finalPath, byte[] bytes, bool fileNameExplicitlyProvided)
     {
@@ -197,6 +205,8 @@ internal sealed class HtmlReportEngine
     }
 
     private static bool IsInvalidFileNameChar(char c)
+        // Keep the explicit file-name sanitization aligned with TRX report naming so
+        // placeholders and cross-platform reserved characters produce compatible names.
         => c is < ' ' or '"' or '<' or '>' or '|' or ':' or '*' or '?' or '\\' or '/' or '@' or '(' or ')' or '^' or ' ';
 
     private static bool IsReservedFileName(string fileName)
