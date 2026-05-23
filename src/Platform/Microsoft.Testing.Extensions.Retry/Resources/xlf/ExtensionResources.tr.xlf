@@ -52,12 +52,12 @@ Son deneme varlık dosyaları, varsayılan sonuç dizinine taşınıyor
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
         <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</source>
-        <target state="new">Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</target>
+        <target state="translated">Yeniden denemeler arasına gecikme süresi ekleyin. Gecikme süresi bir zaman değeri olarak ifade edilir. Örneğin 200, 1s, 2.5m, 1h. Varsayılan birim milisaniyedir.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
         <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 1s, 2.5m, 1h)</source>
-        <target state="new">Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 1s, 2.5m, 1h)</target>
+        <target state="translated">'--retry-failed-tests-delay' seçeneği için negatif olmayan ve 2147483647ms'yi (~24.20:31:23.647) aşmayan geçerli bir zaman aralığı değeri gerekir (örneğin 200, 1s, 2.5m, 1h)</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">
@@ -73,6 +73,11 @@ Son deneme varlık dosyaları, varsayılan sonuç dizinine taşınıyor
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
         <target state="translated">Başarısız testlerin yüzdesi belirtilen değerden büyükse yeniden deneme mekanizmasını devre dışı bırak</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
+        <source>Option '{0}' expects an integer argument between 0 and 100</source>
+        <target state="new">Option '{0}' expects an integer argument between 0 and 100</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
@@ -100,9 +105,9 @@ Son deneme varlık dosyaları, varsayılan sonuç dizinine taşınıyor
         <target state="translated">'{0}' seçeneği, '{1}' seçeneğinin belirtilmesini gerektirir</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage">
-        <source>Option '{0}' expects a single integer argument</source>
-        <target state="translated">Seçenek '{0}' tek bir tamsayı argümanı bekliyor</target>
+      <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
+        <source>Option '{0}' expects a non-negative integer argument</source>
+        <target state="new">Option '{0}' expects a non-negative integer argument</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">

@@ -437,6 +437,110 @@ public class TestMethodRunnerTests : TestContainer
         results[0].Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
+    public async Task RunTestMethodShouldUseFreshTestContextPerIterationForFoldedDataDrivenTests()
+    {
+        // Capture TestContext.Current per iteration so we can verify each row gets a distinct
+        // TestContextImplementation instance — see https://github.com/microsoft/testfx/issues/7933.
+#pragma warning disable MSTESTEXP // TestContext.Current is experimental.
+        var observedContexts = new List<TestContext?>();
+        DataRowAttribute dataRowAttribute1 = new(1);
+        DataRowAttribute dataRowAttribute2 = new(2);
+        DataRowAttribute dataRowAttribute3 = new(3);
+        var attributes = new Attribute[] { dataRowAttribute1, dataRowAttribute2, dataRowAttribute3 };
+
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo)).Returns(attributes);
+
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () =>
+        {
+            observedContexts.Add(TestContext.Current);
+            return new TestResult { Outcome = UnitTestOutcome.Passed };
+        });
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        _ = await testMethodRunner.RunTestMethodAsync();
+
+        observedContexts.Should().HaveCount(3);
+        observedContexts.Should().AllSatisfy(c => c.Should().NotBeNull());
+
+        // Each iteration must observe its own fresh context instance — none should be the
+        // outer shared context, and no two iterations should share an instance.
+        observedContexts.Should().OnlyHaveUniqueItems();
+        observedContexts.Should().NotContain(_testContextImplementation);
+#pragma warning restore MSTESTEXP
+    }
+
+    public async Task RunTestMethodShouldNotLeakCapturedOutputAcrossFoldedDataDrivenIterations()
+    {
+        // Each iteration writes to its own context's console-out buffer. With a fresh
+        // per-iteration context, the iteration that fires write N must observe an empty buffer
+        // before writing — without the fix, row 2 would observe row 1's content.
+        var observedLengthsBeforeWrite = new List<int>();
+        DataRowAttribute dataRowAttribute1 = new(1);
+        DataRowAttribute dataRowAttribute2 = new(2);
+        DataRowAttribute dataRowAttribute3 = new(3);
+        var attributes = new Attribute[] { dataRowAttribute1, dataRowAttribute2, dataRowAttribute3 };
+
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo)).Returns(attributes);
+
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () =>
+        {
+#pragma warning disable MSTESTEXP // TestContext.Current is experimental.
+            var current = (TestContextImplementation?)TestContext.Current;
+#pragma warning restore MSTESTEXP
+            current.Should().NotBeNull();
+            string? existing = current!.GetAndClearOutput();
+            observedLengthsBeforeWrite.Add(existing?.Length ?? 0);
+
+            // Write a fairly large chunk of console output. If contexts were shared, the next
+            // iteration would observe a non-zero existing length.
+            current.WriteConsoleOut(new string('x', 1024));
+            return new TestResult { Outcome = UnitTestOutcome.Passed };
+        });
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        _ = await testMethodRunner.RunTestMethodAsync();
+
+        observedLengthsBeforeWrite.Should().HaveCount(3);
+        observedLengthsBeforeWrite.Should().AllSatisfy(len => len.Should().Be(0));
+    }
+
+    public async Task RunTestMethodShouldNotLeakPropertyBagMutationsAcrossFoldedDataDrivenIterations()
+    {
+        // Each iteration adds a unique property key. If contexts were shared, row N would see
+        // the keys added by rows 1..N-1. With a fresh per-iteration context, every row starts
+        // with the same baseline property set.
+        var observedKeyCounts = new List<int>();
+        DataRowAttribute dataRowAttribute1 = new(1);
+        DataRowAttribute dataRowAttribute2 = new(2);
+        DataRowAttribute dataRowAttribute3 = new(3);
+        var attributes = new Attribute[] { dataRowAttribute1, dataRowAttribute2, dataRowAttribute3 };
+
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo)).Returns(attributes);
+
+        int iteration = 0;
+        var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () =>
+        {
+#pragma warning disable MSTESTEXP // TestContext.Current is experimental.
+            TestContext? current = TestContext.Current;
+#pragma warning restore MSTESTEXP
+            current.Should().NotBeNull();
+            observedKeyCounts.Add(current!.Properties.Count);
+            current.Properties[$"AddedByIteration_{iteration++}"] = "value";
+            return new TestResult { Outcome = UnitTestOutcome.Passed };
+        });
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        _ = await testMethodRunner.RunTestMethodAsync();
+
+        // All three iterations observe the same key count (no leak from prior iterations) and
+        // the outer context is unchanged.
+        observedKeyCounts.Should().HaveCount(3);
+        observedKeyCounts.Should().AllSatisfy(c => c.Should().Be(observedKeyCounts[0]));
+        _testContextImplementation.Properties.Should().NotContainKey("AddedByIteration_0");
+        _testContextImplementation.Properties.Should().NotContainKey("AddedByIteration_1");
+        _testContextImplementation.Properties.Should().NotContainKey("AddedByIteration_2");
+    }
+
     #region Test data
 
     private sealed class ExecutionContextUnsafeThreadTestMethodAttribute : TestMethodAttribute

@@ -85,13 +85,58 @@ internal sealed class TestAssemblyInfo
 
     /// <summary>
     /// Gets or sets a value indicating whether <c>AssemblyInitialize</c> has been executed.
+    /// <para>
+    /// Reads and writes use <see cref="Volatile"/> because this flag acts as the fast-path
+    /// guard that lets callers bypass <see cref="_assemblyInfoExecuteSyncSemaphore"/>. The
+    /// release semantics on the publishing write ensure that the prior
+    /// <see cref="PostAssemblyInitProperties"/> snapshot publication is also visible to any
+    /// reader that observes this flag as <see langword="true"/> on the fast path.
+    /// </para>
     /// </summary>
-    public bool IsAssemblyInitializeExecuted { get; internal set; }
+    public bool IsAssemblyInitializeExecuted
+    {
+        get => Volatile.Read(ref field);
+        internal set => Volatile.Write(ref field, value);
+    }
 
     /// <summary>
     /// Gets or sets the assembly initialization exception.
     /// </summary>
     public TestFailedException? AssemblyInitializationException { get; internal set; }
+
+    /// <summary>
+    /// Gets a snapshot of <see cref="TestContext.Properties"/> captured after the
+    /// <c>AssemblyInitialize</c> method completes. Used to flow properties set during
+    /// <c>AssemblyInitialize</c> into subsequent contexts (class init, test execution,
+    /// class cleanup, assembly cleanup). <see langword="null"/> if no
+    /// <c>AssemblyInitialize</c> method was registered or it has not yet executed
+    /// successfully.
+    /// <para>
+    /// The snapshot is shallow: reference-type values stored in the bag are shared (aliased)
+    /// across every context the snapshot is merged into. Mutations of those reference-type
+    /// instances are visible everywhere.
+    /// </para>
+    /// <para>
+    /// Class-init properties are intentionally NOT included by callers when seeding the
+    /// assembly-cleanup context, because <c>AssemblyCleanup</c> is assembly-scoped and runs
+    /// once across many classes; including a single class's snapshot would be arbitrary.
+    /// </para>
+    /// <para>
+    /// Reads and writes use <see cref="Volatile"/> so that callers on the
+    /// <see cref="IsAssemblyInitializeExecuted"/> fast path (which intentionally bypasses
+    /// <see cref="_assemblyInfoExecuteSyncSemaphore"/>) safely observe the snapshot published
+    /// by the thread that ran <c>AssemblyInitialize</c>. The publishing thread writes this
+    /// snapshot before writing <see cref="IsAssemblyInitializeExecuted"/>, and both writes go
+    /// through <see cref="Volatile"/>, so any reader that observes
+    /// <see cref="IsAssemblyInitializeExecuted"/> as <see langword="true"/> is guaranteed to
+    /// also see the published snapshot.
+    /// </para>
+    /// </summary>
+    internal IReadOnlyDictionary<string, object?>? PostAssemblyInitProperties
+    {
+        get => Volatile.Read(ref field);
+        private set => Volatile.Write(ref field, value);
+    }
 
     /// <summary>
     /// Gets the assembly cleanup exception.
@@ -160,6 +205,22 @@ internal sealed class TestAssemblyInfo
                                 // **After** we have executed the assembly initialize, we save the current context.
                                 // This context will contain async locals set by the assembly initialize method.
                                 ExecutionContext = ExecutionContext.Capture();
+
+                                // The `is` check is defensive: this method is part of an internal
+                                // but mockable surface, so unit tests can legitimately pass a
+                                // mocked TestContext. Production callers always pass a
+                                // TestContextImplementation.
+                                if (testContext is TestContextImplementation testContextImpl)
+                                {
+                                    // Capture a snapshot of TestContext.Properties so that values
+                                    // set during AssemblyInitialize flow to subsequent contexts
+                                    // (class init, test execution, class cleanup, assembly cleanup).
+                                    // PostAssemblyInitProperties uses Volatile.Read/Write so that
+                                    // callers on the IsAssemblyInitializeExecuted fast path
+                                    // (which bypasses _assemblyInfoExecuteSyncSemaphore) safely
+                                    // observe the published snapshot.
+                                    PostAssemblyInitProperties = testContextImpl.CaptureLifecycleProperties();
+                                }
                             },
                             testContext.CancellationTokenSource,
                             AssemblyInitializeMethodTimeoutMilliseconds,

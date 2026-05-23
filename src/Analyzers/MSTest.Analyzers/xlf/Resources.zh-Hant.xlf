@@ -117,6 +117,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">應該以正確的順序傳遞判斷提示引數</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsDescription">
+        <source>`Assert.AreEqual` and `Assert.AreNotEqual` use `EqualityComparer&lt;T&gt;.Default`. For collection-like types this relies on the type's own equality semantics instead of comparing sequence elements, so `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` or `Assert.AreEquivalent`/`Assert.AreNotEquivalent` are usually the better fit.</source>
+        <target state="translated">`Assert.AreEqual` 和 `Assert.AreNotEqual` 使用 `EqualityComparer&lt;T&gt;.Default`。對於類似集合的型別，這會依賴型別本身的相等語意，而不是比較序列元素，因此通常 `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` 或 `Assert.AreEquivalent`/`Assert.AreNotEquivalent` 更適合。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsMessageFormat">
+        <source>`{0}` on {1} (which implements IEnumerable&lt;T&gt;) does not perform element-wise sequence comparison. Use `Assert.AreSequenceEqual` for ordered element-wise comparison, `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` for unordered, or `Assert.AreEquivalent` for deep structural comparison.</source>
+        <target state="translated">{1} 上的 `{0}`(實作 IEnumerable&lt;T&gt;) 不會執行逐元素序列比較。請使用 `Assert.AreSequenceEqual` 進行有順序的逐元素比較、使用 `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` 進行無順序比較，或使用 `Assert.AreEquivalent` 進行深層結構比較。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsTitle">
+        <source>Avoid Assert.AreEqual on collection types</source>
+        <target state="translated">避免對集合類型使用 Assert.AreEqual</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
         <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
         <target state="translated">比較值類型時，請使用 'Assert.AreEqual'/'Assert.AreNotEqual' 取代 'Assert.AreSame'/'Assert.AreNotSame'。將值類型傳遞至 『Assert.AreSame』/'Assert.AreNotSame' 將會在建立新物件) (方塊化。因為 'Assert.AreSame'/'Assert.AreNotSame' 依參照進行比較，當進行拳擊時，'Assert.AreSame' 將會失敗，而且 'Assert.AreNotSame' 一律會通過。</target>
@@ -530,6 +545,21 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsTitle">
         <source>Use 'Assert.Fail' instead of an always-failing assert</source>
         <target state="translated">使用 'Assert.Fail'，而不是一直失敗的聲明</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferAsyncAssertionDescription">
+        <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</source>
+        <target state="translated">驗證非同步程式碼中的例外狀況時，請使用非同步判斷提示方法，而不要使用 GetAwaiter().GetResult() 來封鎖非同步作業。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferAsyncAssertionMessageFormat">
+        <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
+        <target state="translated">請使用 'Assert.{0}'，不要在 'Assert.{1}' 中封鎖非同步呼叫</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferAsyncAssertionTitle">
+        <source>Prefer async assertion methods</source>
+        <target state="translated">請優先使用非同步判斷提示方法</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
@@ -1010,8 +1040,8 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksDescription">
-        <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</source>
-        <target state="translated">在 Catch 區塊中使用斷言會有問題，因為即使沒有拋出例外且 Catch 區塊從未執行，測試仍會通過。請使用 'Assert.Throws'、'Assert.ThrowsExactly'、'Assert.ThrowsAsync' 或 'Assert.ThrowsExactlyAsync' 來驗證是否有拋出例外，然後在不使用 try-catch 區塊的情況下，對捕捉到的例外進行進一步判斷提示。</target>
+        <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block. The rule also flags 'throw new AssertFailedException(...)' and 'throw new AssertInconclusiveException(...)' (the desugared forms of 'Assert.Fail' and 'Assert.Inconclusive'). 'Assert.Inconclusive' (and 'throw new AssertInconclusiveException(...)') is exempt when used inside a filtered catch ('catch (...) when (...)'), because demoting a caught failure to an Inconclusive outcome is the only use case that cannot be expressed without a catch block. For other intentional bypasses (for example, attaching a runtime-built message to the failure), suppress the diagnostic with '#pragma warning disable MSTEST0058'.</source>
+        <target state="translated">在 Catch 區塊中使用斷言會有問題，因為即使沒有拋出例外且 Catch 區塊從未執行，測試仍會通過。請使用 'Assert.Throws'、'Assert.ThrowsExactly'、'Assert.ThrowsAsync' 或 'Assert.ThrowsExactlyAsync' 來驗證是否有拋出例外，然後在不使用 try-catch 區塊的情況下，對捕捉到的例外進行進一步判斷提示。此規則也會標記 'throw new AssertFailedException(...)' 和 'throw new AssertInconclusiveException(...)' ('Assert.Fail' 和 'Assert.Inconclusive' 的去糖化形式)。'Assert.Inconclusive' (和 'throw new AssertInconclusiveException(...)') 在篩選的 catch ('catch (...) when (...)') 內使用時豁免，因為將攔截失敗降級為不明結果是唯一使用 catch 區塊才能表達的使用案例。對於其他刻意的旁路 (例如，將執行階段內建訊息連結至失敗)，請隱藏具有 '#pragma warning disable MSTEST0058' 的診斷。</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">

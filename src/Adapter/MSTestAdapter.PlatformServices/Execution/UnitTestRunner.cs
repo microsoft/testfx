@@ -73,6 +73,12 @@ internal sealed class UnitTestRunner
         _typeCache = new TypeCache(reflectHelper);
 
         _classCleanupManager = new ClassCleanupManager(testsToRun);
+
+        // Expose the planned (post-filter) test list so that user code (typically [AssemblyInitialize]
+        // or fixtures) can query TestRun.Current.PlannedTests to decide whether expensive setup is
+        // needed. Set here so the snapshot lives in the same AppDomain/process that will execute the
+        // assembly initialize and the tests themselves.
+        TestRun.SetCurrent(TestRunInfo.CreateFrom(testsToRun));
     }
 
 #pragma warning disable CA1822 // Mark members as static
@@ -157,6 +163,10 @@ internal sealed class UnitTestRunner
 
                     testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, testContextForAssemblyInit.Context.CurrentTestOutcome);
 
+                    // Flow properties set during AssemblyInitialize into the class-init context so the
+                    // ClassInitialize method observes them.
+                    ((TestContextImplementation)testContextForClassInit.Context).MergeProperties(testMethodInfo.Parent.Parent.PostAssemblyInitProperties);
+
                     TestResult classInitializeResult = await testMethodInfo.Parent.GetResultOrRunClassInitializeAsync(testContextForClassInit, assemblyInitializeResult.LogOutput, assemblyInitializeResult.LogError, assemblyInitializeResult.DebugTrace, assemblyInitializeResult.TestContextMessages).ConfigureAwait(false);
                     DebugEx.Assert(testMethodInfo.Parent.IsClassInitializeExecuted, "IsClassInitializeExecuted should be true after attempting to run it.");
                     if (classInitializeResult.Outcome != UnitTestOutcome.Passed)
@@ -167,6 +177,16 @@ internal sealed class UnitTestRunner
                     {
                         // Run the test method
                         testContextForTestExecution.SetOutcome(testContextForClassInit.Context.CurrentTestOutcome);
+
+                        // Flow properties set during AssemblyInitialize and ClassInitialize into the
+                        // per-test execution context so the test class constructor, [TestInitialize],
+                        // the test method itself and [TestCleanup] observe them.
+                        // Note: when a test method has multiple data rows, the merge is applied once
+                        // before all rows; data rows share the same execution context (and bag).
+                        var testExecImpl = (TestContextImplementation)testContextForTestExecution.Context;
+                        testExecImpl.MergeProperties(testMethodInfo.Parent.Parent.PostAssemblyInitProperties);
+                        testExecImpl.MergeProperties(testMethodInfo.Parent.PostClassInitProperties);
+
                         RetryBaseAttribute? retryAttribute = testMethodInfo.RetryAttribute;
                         var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContextForTestExecution);
                         result = await testMethodRunner.ExecuteAsync(classInitializeResult.LogOutput, classInitializeResult.LogError, classInitializeResult.DebugTrace, classInitializeResult.TestContextMessages).ConfigureAwait(false);
@@ -190,6 +210,13 @@ internal sealed class UnitTestRunner
             {
                 if (testMethodInfo is not null)
                 {
+                    // Flow properties set during AssemblyInitialize and ClassInitialize so the
+                    // ClassCleanup method observes them. Done here rather than on every test to
+                    // avoid wasted dictionary copies for non-last tests.
+                    var classCleanupImpl = (TestContextImplementation)testContextForClassCleanup.Context;
+                    classCleanupImpl.MergeProperties(testMethodInfo.Parent.Parent.PostAssemblyInitProperties);
+                    classCleanupImpl.MergeProperties(testMethodInfo.Parent.PostClassInitProperties);
+
                     TestResult? cleanupResult = await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup, result).ConfigureAwait(false);
                     if (cleanupResult is not null)
                     {
@@ -216,6 +243,14 @@ internal sealed class UnitTestRunner
                 _classCleanupManager.ShouldRunEndOfAssemblyCleanup)
             {
                 testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
+
+                // Flow properties set during AssemblyInitialize so the AssemblyCleanup method
+                // observes them. Class-init properties are intentionally NOT flowed here because
+                // AssemblyCleanup is assembly-scoped and runs once across many classes; picking
+                // a single class's snapshot would be arbitrary.
+                // testMethodInfo is non-null inside this block thanks to the guard above.
+                ((TestContextImplementation)testContextForAssemblyCleanup.Context).MergeProperties(testMethodInfo.Parent.Parent.PostAssemblyInitProperties);
+
                 TestResult? assemblyCleanupResult = await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache, result).ConfigureAwait(false);
                 if (assemblyCleanupResult is not null)
                 {

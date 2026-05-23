@@ -17,25 +17,50 @@
         <target state="translated">找到了重复项: &lt;{1}&gt;。{0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AreEqualFailMsg">
-        <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="translated">应为: &lt;{1}&gt;，实际为: &lt;{2}&gt;。{0}</target>
-        <note></note>
+      <trans-unit id="AreAllDistinctFailedSummary">
+        <source>Expected all items in collection to be distinct.</source>
+        <target state="translated">预期集合中所有项均不重复。</target>
+        <note />
       </trans-unit>
-      <trans-unit id="AreEqualDeltaFailMsg">
-        <source>Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">预期值 &lt;{1}&gt; 和实际值 &lt;{2}&gt; 之间的差不应大于 &lt;{3}&gt;。{0}</target>
-        <note></note>
+      <trans-unit id="AreAllNotNullFailedSummary">
+        <source>Expected all items in collection to be non-null.</source>
+        <target state="translated">预期集合中所有项均不为 null。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreAllOfTypeFailedSummary">
+        <source>Expected all items in collection to be of the specified type.</source>
+        <target state="translated">预期集合中所有项均为指定类型。</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualCaseFailMsg">
         <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
         <target state="translated">应为: &lt;{1}&gt;。实际值的大小写有所不同: &lt;{2}&gt;。{0}</target>
-        <note></note>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualDeltaFailedSummary">
+        <source>Expected values to be equal within tolerance.</source>
+        <target state="translated">预期值在容差范围内相等。</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailMsg">
         <source>Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</source>
         <target state="translated">应为: &lt;{1} ({2})&gt;，实际为: &lt;{3} ({4})&gt;。{0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualFailMsg">
+        <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
+        <target state="translated">应为: &lt;{1}&gt;，实际为: &lt;{2}&gt;。{0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffActualPrefix">
+        <source>But was:  </source>
+        <target state="translated">但却是: </target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffExpectedPrefix">
+        <source>Expected: </source>
+        <target state="translated">应为:</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffFailMsg">
         <source>{0}{1}
@@ -48,25 +73,130 @@
 {4}</target>
         <note />
       </trans-unit>
-      <trans-unit id="AreEqualStringDiffExpectedPrefix">
-        <source>Expected: </source>
-        <target state="translated">应为:</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="AreEqualStringDiffActualPrefix">
-        <source>But was:  </source>
-        <target state="translated">但却是: </target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthBothMsg">
-        <source>String lengths are both {0} but differ at index {1}.</source>
-        <target state="translated">字符串长度均为 {0}，但在索引 {1} 处有所不同。</target>
+        <source>Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</source>
+        <target state="translated">字符串长度相同({0})，且有 1 处不同。首次差异位于索引 {1}。</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthDifferentMsg">
-        <source>Expected string length {0} but was {1}.</source>
-        <target state="translated">字符串长度应为 {0}，但为 {1}。</target>
-        <note></note>
+        <source>Strings have different lengths (expected: {0}, actual: {1}) and differ at 1 location(s). First difference at index {2}.</source>
+        <target state="translated">字符串长度不同(预期: {0}，实际: {1})，且有 1 处不同。首次差异位于索引 {2}。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringsCaseOnlyDifferenceMsg">
+        <source>Strings differ only in case.</source>
+        <target state="translated">字符串仅大小写不同。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentFailedSummary">
+        <source>Expected values to be structurally equivalent.</source>
+        <target state="translated">预期值在结构上等效。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentFailedSummaryStrict">
+        <source>Expected values to be structurally equivalent (strict mode).</source>
+        <target state="translated">预期值在结构上等效(严格模式)。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchActualDictionaryThrew">
+        <source>reading the actual dictionary threw {0}: {1}.</source>
+        <target state="translated">读取实际字典时引发 {0}: {1}。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchActualEnumerationThrew">
+        <source>enumerating the actual collection threw {0}: {1}.</source>
+        <target state="translated">枚举实际集合时引发 {0}: {1}。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchActualMemberThrew">
+        <source>reading the actual member threw {0}: {1}.</source>
+        <target state="translated">读取实际成员时引发 {0}: {1}。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchAt">
+        <source>Mismatch at '{0}': {1}</source>
+        <target state="translated">在“{0}”处不匹配: {1}</target>
+        <note>{0} is a member path (e.g., 'Order.Items[2].Price'), {1} is a localized reason describing the kind of mismatch.</note>
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExpectedDictionaryThrew">
+        <source>reading the expected dictionary threw {0}: {1}.</source>
+        <target state="translated">读取预期字典时引发 {0}: {1}。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExpectedEnumerationThrew">
+        <source>enumerating the expected collection threw {0}: {1}.</source>
+        <target state="translated">枚举预期集合时引发 {0}: {1}。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExpectedMemberThrew">
+        <source>reading the expected member threw {0}: {1}.</source>
+        <target state="translated">读取预期成员时引发 {0}: {1}。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExtraMembers">
+        <source>actual has unexpected members not present on expected: {0}.</source>
+        <target state="translated">实际值包含预期值中不存在的意外成员: {0}。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchIEquatableThrew">
+        <source>IEquatable.Equals threw {0}: {1}.</source>
+        <target state="translated">IEquatable.Equals 引发 {0}: {1}。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchLength">
+        <source>collections differ in length (expected {0} elements, actual {1}).</source>
+        <target state="translated">集合长度不同(预期 {0} 个元素，实际 {1} 个)。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchMaxDepth">
+        <source>comparison exceeded the maximum supported depth of {0}.</source>
+        <target state="translated">比较超出支持的最大深度 {0}。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchMissingKey">
+        <source>key {0} present on expected is missing from actual.</source>
+        <target state="translated">预期值中存在的键 {0} 在实际值中缺失。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchMissingMember">
+        <source>member '{0}' present on expected is missing from actual.</source>
+        <target state="translated">预期值中存在的成员“{0}”在实际值中缺失。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchNull">
+        <source>one side is null, the other is not.</source>
+        <target state="translated">一侧为 null，另一侧不为 null。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchTopology">
+        <source>graph topology differs (the same reference on one side appears paired with different references on the other side).</source>
+        <target state="translated">图拓扑不同(一侧的相同引用与另一侧的不同引用配对)。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchType">
+        <source>incompatible types (expected '{0}', actual '{1}').</source>
+        <target state="translated">类型不兼容(预期:“{0}”，实际:“{1}”)。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchUnexpectedKey">
+        <source>key {0} present on actual is not on expected.</source>
+        <target state="translated">实际值中存在的键 {0} 不在预期值中。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchValue">
+        <source>values are not equal.</source>
+        <target state="translated">值不相等。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentRootPath">
+        <source>&lt;root&gt;</source>
+        <target state="translated">&lt;根&gt;</target>
+        <note>Placeholder used in equivalence-mismatch messages when the difference is at the top of the object graph.</note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualDeltaFailedSummary">
+        <source>Expected values to differ beyond tolerance.</source>
+        <target state="translated">预期值差异超出容差范围。</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEquivalentFailedSummary">
         <source>Expected values to be structurally equivalent.</source>
@@ -178,10 +308,35 @@
         <target state="translated">应为: &lt;{1}&gt; 以外的任意值，实际为: &lt;{2}&gt;。{0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AreNotEqualDeltaFailMsg">
-        <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">预期值 &lt;{1}&gt; 和实际值 &lt;{2}&gt; 之间的差应大于 &lt;{3}&gt;。{0}</target>
-        <note></note>
+      <trans-unit id="AreNotEqualStringsCaseInsensitiveFailedSummary">
+        <source>Expected strings to differ (case-insensitive).</source>
+        <target state="translated">预期字符串不同(不区分大小写)。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEqualStringsFailedSummary">
+        <source>Expected strings to differ.</source>
+        <target state="translated">预期字符串不同。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentComparisonFailedSummary">
+        <source>Could not complete structural comparison.</source>
+        <target state="translated">无法完成结构比较。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentComparisonFailedSummaryStrict">
+        <source>Could not complete structural comparison (strict mode).</source>
+        <target state="translated">无法完成结构比较(严格模式)。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentFailedSummary">
+        <source>Expected values to be structurally different.</source>
+        <target state="translated">预期值在结构上不同。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentFailedSummaryStrict">
+        <source>Expected values to be structurally different (strict mode).</source>
+        <target state="translated">预期值在结构上不同(严格模式)。</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreNotEquivalentComparisonFailedSummary">
         <source>Could not complete structural comparison.</source>
@@ -208,6 +363,16 @@
         <target state="translated">两个值均为 &lt;null&gt;。{0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreNotSequenceEqualInAnyOrderFailedSummary">
+        <source>Expected sequences to differ (in any order).</source>
+        <target state="translated">预期序列不同(任意顺序)。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotSequenceEqualInOrderFailedSummary">
+        <source>Expected sequences to differ.</source>
+        <target state="translated">预期序列不同。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreSameActualIsNull">
         <source>Actual is &lt;null&gt;. {0}</source>
         <target state="translated">实际值为 &lt;null&gt;。{0}</target>
@@ -223,6 +388,31 @@
         <target state="translated">不要向 AreSame() 传递值类型。转换为 Object 的值将永远不会相等。请考虑使用 AreEqual()。{0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreSequenceEqualInAnyOrderFailedSummary">
+        <source>Expected sequences to be equal (in any order).</source>
+        <target state="translated">预期序列相等(任意顺序)。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualInOrderFailedSummary">
+        <source>Expected sequences to be equal.</source>
+        <target state="translated">预期序列相等。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualLengthDiffMsg">
+        <source>Sequences have different lengths (expected: {0}, actual: {1}).</source>
+        <target state="translated">序列长度不同(预期: {0}，实际: {1})。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualMissingUnexpectedMsg">
+        <source>Missing {0} element(s) from actual. Found {1} unexpected element(s).</source>
+        <target state="translated">实际值缺少 {0} 个元素。发现 {1} 个意外元素。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualSameLengthDiffMsg">
+        <source>Sequences have {0} element(s). {1} element(s) differ. First difference at index {2}.</source>
+        <target state="translated">序列包含 {0} 个元素。有 {1} 个元素不同。首次差异位于索引 {2}。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssertScopeFailure">
         <source>{0} assertion(s) failed within the assert scope.</source>
         <target state="translated">断言作用域内有 {0} 项断言失败。</target>
@@ -236,6 +426,11 @@
       <trans-unit id="AssertThatDetailsPrefix">
         <source>Details:</source>
         <target state="translated">详细信息:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatFailedToEvaluate">
+        <source>&lt;Failed to evaluate&gt;</source>
+        <target state="translated">&lt;评估失败&gt;</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThatMessageFormat">
@@ -283,6 +478,11 @@
         <target state="translated">{0}。{1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ContainsAllFailedSummary">
+        <source>Expected collection to contain all specified items.</source>
+        <target state="translated">预期集合包含所有指定项。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ContainsFail">
         <source>String '{0}' does not contain string '{1}'. {2}.</source>
         <target state="translated">字符串“{0}”不包含字符串“{1}”。{2}。</target>
@@ -295,7 +495,7 @@
       </trans-unit>
       <trans-unit id="ContainsItemFailedSummary">
         <source>Expected collection to contain the specified element.</source>
-        <target state="new">Expected collection to contain the specified element.</target>
+        <target state="translated">预期集合包含指定元素。</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">
@@ -305,7 +505,7 @@
       </trans-unit>
       <trans-unit id="ContainsPredicateFailedSummary">
         <source>Expected collection to contain an element matching the predicate.</source>
-        <target state="new">Expected collection to contain an element matching the predicate.</target>
+        <target state="translated">预期集合包含与谓词匹配的元素。</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleFailMsg">
@@ -315,7 +515,7 @@
       </trans-unit>
       <trans-unit id="ContainsSingleFailedSummary">
         <source>Expected collection to contain exactly one element.</source>
-        <target state="new">Expected collection to contain exactly one element.</target>
+        <target state="translated">预期集合仅包含一个元素。</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleMatchFailMsg">
@@ -325,12 +525,17 @@
       </trans-unit>
       <trans-unit id="ContainsSingleMatchFailedSummary">
         <source>Expected collection to contain exactly one element matching the predicate.</source>
-        <target state="new">Expected collection to contain exactly one element matching the predicate.</target>
+        <target state="translated">预期集合仅包含一个与谓词匹配的元素。</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSubstringFailedSummary">
         <source>Expected string to contain the specified substring.</source>
-        <target state="new">Expected string to contain the specified substring.</target>
+        <target state="translated">预期字符串包含指定子字符串。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotContainAllFailedSummary">
+        <source>Expected collection to not contain all specified items.</source>
+        <target state="translated">预期集合不包含所有指定项。</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainFail">
@@ -345,7 +550,7 @@
       </trans-unit>
       <trans-unit id="DoesNotContainItemFailedSummary">
         <source>Expected collection to not contain the specified element.</source>
-        <target state="new">Expected collection to not contain the specified element.</target>
+        <target state="translated">预期集合不包含指定元素。</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailMsg">
@@ -355,12 +560,12 @@
       </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailedSummary">
         <source>Expected collection to not contain an element matching the predicate.</source>
-        <target state="new">Expected collection to not contain an element matching the predicate.</target>
+        <target state="translated">预期集合不包含与谓词匹配的元素。</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainSubstringFailedSummary">
         <source>Expected string to not contain the specified substring.</source>
-        <target state="new">Expected string to not contain the specified substring.</target>
+        <target state="translated">预期字符串不包含指定的子字符串。</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotEndWithFail">
@@ -370,7 +575,12 @@
       </trans-unit>
       <trans-unit id="DoesNotEndWithFailedSummary">
         <source>Expected string to not end with the specified suffix.</source>
-        <target state="new">Expected string to not end with the specified suffix.</target>
+        <target state="translated">预期字符串不以指定后缀结尾。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotMatchRegexFailedSummary">
+        <source>Expected string to not match the specified pattern.</source>
+        <target state="translated">应为不匹配指定模式的字符串。</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
@@ -380,7 +590,7 @@
       </trans-unit>
       <trans-unit id="DoesNotStartWithFailedSummary">
         <source>Expected string to not start with the specified prefix.</source>
-        <target state="new">Expected string to not start with the specified prefix.</target>
+        <target state="translated">预期字符串不以指定前缀开头。</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidFieldLayout">
@@ -434,12 +644,17 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="EndsWithFailedSummary">
         <source>Expected string to end with the specified suffix.</source>
-        <target state="new">Expected string to end with the specified suffix.</target>
+        <target state="translated">预期字符串以指定后缀结尾。</target>
         <note />
       </trans-unit>
-      <trans-unit id="HasCountFailMsg">
-        <source>Expected collection of size {1}. Actual: {2}. {0}</source>
-        <target state="translated">大小 {1} 的预期集合。实际： {2}。{0}</target>
+      <trans-unit id="HasCountFailedSummary">
+        <source>Expected collection to contain a specific number of elements.</source>
+        <target state="translated">预期集合包含指定数量的元素。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InconclusivePrefix">
+        <source>Assert.Inconclusive.</source>
+        <target state="translated">Assert.Inconclusive。</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidAccessToTestContextProperty">
@@ -452,6 +667,11 @@ Actual: {2}</source>
         <target state="translated">GitHub 票证 URL 无效</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsEmptyFailedSummary">
+        <source>Expected collection to be empty.</source>
+        <target state="translated">预期集合为空。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsFalseFailedSummary">
         <source>Expected condition to be false.</source>
         <target state="translated">预期条件为 false。</target>
@@ -459,12 +679,12 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsGreaterThanFailedSummary">
         <source>Expected value to be greater than the lower bound.</source>
-        <target state="new">Expected value to be greater than the lower bound.</target>
+        <target state="translated">预期值大于下限。</target>
         <note />
       </trans-unit>
       <trans-unit id="IsGreaterThanOrEqualToFailedSummary">
         <source>Expected value to be greater than or equal to the lower bound.</source>
-        <target state="new">Expected value to be greater than or equal to the lower bound.</target>
+        <target state="translated">预期值大于或等于下限。</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeFail">
@@ -474,7 +694,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsInRangeFailedSummary">
         <source>Expected value to be within the inclusive range.</source>
-        <target state="new">Expected value to be within the inclusive range.</target>
+        <target state="translated">预期值在包含范围内。</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
@@ -489,12 +709,12 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsLessThanFailedSummary">
         <source>Expected value to be less than the upper bound.</source>
-        <target state="new">Expected value to be less than the upper bound.</target>
+        <target state="translated">预期值小于上限。</target>
         <note />
       </trans-unit>
       <trans-unit id="IsLessThanOrEqualToFailedSummary">
         <source>Expected value to be less than or equal to the upper bound.</source>
-        <target state="new">Expected value to be less than or equal to the upper bound.</target>
+        <target state="translated">预期值小于或等于上限。</target>
         <note />
       </trans-unit>
       <trans-unit id="IsMatchFail">
@@ -504,12 +724,12 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsNegativeFailedSummary">
         <source>Expected value to be negative.</source>
-        <target state="new">Expected value to be negative.</target>
+        <target state="translated">预期值为负数。</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsNotEmptyFailMsg">
-        <source>Expected collection to contain any item but it is empty. {0}</source>
-        <target state="translated">集合应包含任何项，但它为空。{0}</target>
+      <trans-unit id="IsNotEmptyFailedSummary">
+        <source>Expected collection to not be empty.</source>
+        <target state="translated">预期集合不为空。</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">
@@ -537,6 +757,26 @@ Actual: {2}</source>
         <target state="translated">预期值不应为 null。</target>
         <note />
       </trans-unit>
+      <trans-unit id="AreNotEqualFailedSummary">
+        <source>Expected values to differ.</source>
+        <target state="translated">预期值应不同。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringsFailedSummary">
+        <source>Expected strings to be equal.</source>
+        <target state="translated">预期字符串相等。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualDifferentTypesFailedSummary">
+        <source>Expected values to be equal, but they are of different types.</source>
+        <target state="translated">预期值相等，但类型不同。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualFailedSummary">
+        <source>Expected values to be equal.</source>
+        <target state="translated">预期值相等。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
         <target state="translated">预期值为 null。</target>
@@ -544,12 +784,17 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsPositiveFailedSummary">
         <source>Expected value to be positive.</source>
-        <target state="new">Expected value to be positive.</target>
+        <target state="translated">预期值为正数。</target>
         <note />
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">
         <source>Expected condition to be true.</source>
         <target state="translated">预期条件为 true。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MatchesRegexFailedSummary">
+        <source>Expected string to match the specified pattern.</source>
+        <target state="translated">应为匹配指定模式的字符串。</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
@@ -620,7 +865,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="StartsWithFailedSummary">
         <source>Expected string to start with the specified prefix.</source>
-        <target state="new">Expected string to start with the specified prefix.</target>
+        <target state="translated">预期字符串以指定前缀开头。</target>
         <note />
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">

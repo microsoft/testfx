@@ -117,6 +117,21 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <target state="translated">Os argumentos de asserção devem ser passados na ordem correta</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsDescription">
+        <source>`Assert.AreEqual` and `Assert.AreNotEqual` use `EqualityComparer&lt;T&gt;.Default`. For collection-like types this relies on the type's own equality semantics instead of comparing sequence elements, so `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` or `Assert.AreEquivalent`/`Assert.AreNotEquivalent` are usually the better fit.</source>
+        <target state="translated">`Assert.AreEqual` e `Assert.AreNotEqual` usam `EqualityComparer&lt;T&gt;.Default`. Para tipos de coleção, isso depende da própria semântica de igualdade do tipo em vez de comparar elementos de sequência, portanto, `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` ou `Assert.AreEquivalent`/`Assert.AreNotEquivalent` geralmente são a melhor opção.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsMessageFormat">
+        <source>`{0}` on {1} (which implements IEnumerable&lt;T&gt;) does not perform element-wise sequence comparison. Use `Assert.AreSequenceEqual` for ordered element-wise comparison, `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` for unordered, or `Assert.AreEquivalent` for deep structural comparison.</source>
+        <target state="translated">`{0}` em {1} (que implementa IEnumerable&lt;T&gt;) não executa a comparação de sequência elemento a elemento. Use `Assert.AreSequenceEqual` para comparação ordenada por elemento, `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` para não ordenado ou `Assert.AreEquivalent` para comparação estrutural profunda.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsTitle">
+        <source>Avoid Assert.AreEqual on collection types</source>
+        <target state="translated">Evite Assert.AreEqual em tipos de coleção</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
         <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
         <target state="translated">Use 'Assert.AreEqual'/'Assert.AreNotEqual' em vez de 'Assert.AreSame'/'Assert.AreNotSame' ao comparar tipos de valor. Passar um tipo de valor para 'Assert.AreSame'/'Assert.AreNotSame' será em caixa (criando um novo objeto). Como 'Assert.AreSame'/'Assert.AreNotSame' faz a comparação por referência, 'Assert.AreSame' falhará quando ocorrer boxing e 'Assert.AreNotSame' sempre será aprovado.</target>
@@ -530,6 +545,21 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsTitle">
         <source>Use 'Assert.Fail' instead of an always-failing assert</source>
         <target state="translated">Usar "Assert.Fail" em vez de uma asserção sempre com falha</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferAsyncAssertionDescription">
+        <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</source>
+        <target state="translated">Ao verificar exceções do código assíncrono, use os métodos de asserção assíncrona em vez de bloquear a operação assíncrona com GetAwaiter().GetResult().</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferAsyncAssertionMessageFormat">
+        <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
+        <target state="translated">Use "Assert.{0}" em vez de bloquear uma chamada assíncrona em "Assert.{1}"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferAsyncAssertionTitle">
+        <source>Prefer async assertion methods</source>
+        <target state="translated">Preferir métodos de asserção assíncrona</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
@@ -1010,8 +1040,8 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksDescription">
-        <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</source>
-        <target state="translated">Usar assertivas em blocos catch é problemático porque o teste será aprovado mesmo que nenhuma exceção seja lançada e o bloco catch nunca seja executado. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' ou 'Assert.ThrowsExactlyAsync' para verificar se uma exceção foi lançada e, em seguida, faça asserções adicionais sobre a exceção capturada sem usar o bloco try-catch.</target>
+        <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block. The rule also flags 'throw new AssertFailedException(...)' and 'throw new AssertInconclusiveException(...)' (the desugared forms of 'Assert.Fail' and 'Assert.Inconclusive'). 'Assert.Inconclusive' (and 'throw new AssertInconclusiveException(...)') is exempt when used inside a filtered catch ('catch (...) when (...)'), because demoting a caught failure to an Inconclusive outcome is the only use case that cannot be expressed without a catch block. For other intentional bypasses (for example, attaching a runtime-built message to the failure), suppress the diagnostic with '#pragma warning disable MSTEST0058'.</source>
+        <target state="translated">Usar assertivas em blocos catch é problemático porque o teste será aprovado mesmo que nenhuma exceção seja lançada e o bloco catch nunca seja executado. Use "Assert.Throws", "Assert.ThrowsExactly", "Assert.ThrowsAsync" ou "Assert.ThrowsExactlyAsync" para verificar se uma exceção foi lançada e, em seguida, faça asserções adicionais sobre a exceção capturada sem usar o bloco try-catch. A regra também sinaliza "throw new AssertFailedException(...)" e "throw new AssertInconclusiveException(...)" (as formas expandidas de "Assert.Fail" e "Assert.Inconclusive"). "Assert.Inconclusive" (e "throw new AssertInconclusiveException(...)") é isento quando usado dentro de um catch filtrado ("catch (...) when (...)"), porque rebaixar uma falha detectada para um resultado inconclusivo é o único caso de uso que não pode ser expresso sem um bloco catch. Para outros bypasses intencionais (por exemplo, anexar uma mensagem criada em runtime à falha), suprime o diagnóstico com "pragma warning disable MSTEST0058".</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">

@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="zh-Hans" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="HtmlReportArtifactDescription">
+        <source>Self-contained HTML test report</source>
+        <target state="translated">独立 HTML 测试报告</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportArtifactDisplayName">
+        <source>HTML Report</source>
+        <target state="translated">HTML 报表</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileExistsAndWillBeOverwritten">
+        <source>Warning: HTML report file '{0}' already exists and will be overwritten.</source>
+        <target state="translated">警告: HTML 报表文件“{0}”已存在，将被覆盖。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameExtensionIsNotHtml">
+        <source>'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</source>
+        <target state="translated">"--report-html-filename" 文件名参数必须以 ".html" 结尾(例如 --report-html-filename myreport.html)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameOptionDescription">
+        <source>The name of the generated HTML report</source>
+        <target state="translated">生成的 HTML 报表的名称</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameRequiresHtmlReport">
+        <source>'--report-html-filename' requires '--report-html' to be enabled</source>
+        <target state="translated">"--report-html-filename" 需要启用 "--report-html"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameShouldNotContainPath">
+        <source>file name argument must not contain a path or invalid characters (e.g. --report-html-filename myreport.html)</source>
+        <target state="translated">文件名参数不得包含路径或无效字符(例如 --report-html-filename myreport.html)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportGeneratorDescription">
+        <source>Produce a self-contained HTML report for the current test session</source>
+        <target state="translated">为当前测试会话生成独立的 HTML 报表</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportGeneratorDisplayName">
+        <source>HTML report generator</source>
+        <target state="translated">HTML 报表生成器</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportIsNotValidForDiscovery">
+        <source>'--report-html' cannot be enabled when using '--list-tests'</source>
+        <target state="translated">使用 "--list-tests" 时无法启用 "--report-html"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportOptionDescription">
+        <source>Enable generating an HTML report</source>
+        <target state="translated">启用生成 HTML 报表</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidTestApplicationBuilderType">
+        <source>HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="translated">HTML 报表生成器仅适用于 "Microsoft.Testing.Platform.Builder.TestApplicationBuilder" 类型的生成器</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

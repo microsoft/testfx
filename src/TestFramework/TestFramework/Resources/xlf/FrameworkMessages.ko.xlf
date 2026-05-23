@@ -17,25 +17,50 @@
         <target state="translated">중복된 항목이 있습니다. &lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AreEqualFailMsg">
-        <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="translated">예상 값: &lt;{1}&gt;. 실제 값: &lt;{2}&gt;. {0}</target>
-        <note></note>
+      <trans-unit id="AreAllDistinctFailedSummary">
+        <source>Expected all items in collection to be distinct.</source>
+        <target state="translated">컬렉션의 모든 항목이 서로 다를 것을 예상했습니다.</target>
+        <note />
       </trans-unit>
-      <trans-unit id="AreEqualDeltaFailMsg">
-        <source>Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">예상 값 &lt;{1}&gt;과(와) 실제 값 &lt;{2}&gt;의 차이가 &lt;{3}&gt;보다 크지 않아야 합니다. {0}</target>
-        <note></note>
+      <trans-unit id="AreAllNotNullFailedSummary">
+        <source>Expected all items in collection to be non-null.</source>
+        <target state="translated">컬렉션의 모든 항목이 null이 아닐 것을 예상했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreAllOfTypeFailedSummary">
+        <source>Expected all items in collection to be of the specified type.</source>
+        <target state="translated">컬렉션의 모든 항목이 지정된 형식일 것을 예상했습니다.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualCaseFailMsg">
         <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
         <target state="translated">예상 값: &lt;{1}&gt;. 대/소문자가 다른 실제 값: &lt;{2}&gt;. {0}</target>
-        <note></note>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualDeltaFailedSummary">
+        <source>Expected values to be equal within tolerance.</source>
+        <target state="translated">허용 오차 내에서 값이 같을 것을 예상했습니다.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailMsg">
         <source>Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</source>
         <target state="translated">예상 값: &lt;{1} ({2})&gt;. 실제 값: &lt;{3} ({4})&gt;. {0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualFailMsg">
+        <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
+        <target state="translated">예상 값: &lt;{1}&gt;. 실제 값: &lt;{2}&gt;. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffActualPrefix">
+        <source>But was:  </source>
+        <target state="translated">그러나 다음과 같습니다.  </target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffExpectedPrefix">
+        <source>Expected: </source>
+        <target state="translated">예상: </target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffFailMsg">
         <source>{0}{1}
@@ -48,25 +73,130 @@
 {4}</target>
         <note />
       </trans-unit>
-      <trans-unit id="AreEqualStringDiffExpectedPrefix">
-        <source>Expected: </source>
-        <target state="translated">예상: </target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="AreEqualStringDiffActualPrefix">
-        <source>But was:  </source>
-        <target state="translated">그러나 다음과 같습니다.  </target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthBothMsg">
-        <source>String lengths are both {0} but differ at index {1}.</source>
-        <target state="translated">문자열 길이는 둘 다 {0} 이지만 인덱스 {1}에서 다릅니다.</target>
+        <source>Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</source>
+        <target state="translated">문자열의 길이가 같고({0}) 1개 위치에서 다릅니다. 첫 번째 차이는 인덱스 {1}에 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthDifferentMsg">
-        <source>Expected string length {0} but was {1}.</source>
-        <target state="translated">문자열 길이 {0}(을)를 예상했지만 {1}입니다.</target>
-        <note></note>
+        <source>Strings have different lengths (expected: {0}, actual: {1}) and differ at 1 location(s). First difference at index {2}.</source>
+        <target state="translated">문자열의 길이가 다르고(예상: {0}, 실제: {1}) 1개 위치에서 다릅니다. 첫 번째 차이는 인덱스 {2}에 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringsCaseOnlyDifferenceMsg">
+        <source>Strings differ only in case.</source>
+        <target state="translated">문자열은 대/소문자만 다릅니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentFailedSummary">
+        <source>Expected values to be structurally equivalent.</source>
+        <target state="translated">값이 구조적으로 동일할 것을 예상했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentFailedSummaryStrict">
+        <source>Expected values to be structurally equivalent (strict mode).</source>
+        <target state="translated">값이 구조적으로 동일할 것을 예상했습니다(엄격 모드).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchActualDictionaryThrew">
+        <source>reading the actual dictionary threw {0}: {1}.</source>
+        <target state="translated">예상 사전을 읽는 동안 {0} 예외가 발생했습니다: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchActualEnumerationThrew">
+        <source>enumerating the actual collection threw {0}: {1}.</source>
+        <target state="translated">실제 컬렉션을 열거하는 동안 {0} 예외가 발생했습니다: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchActualMemberThrew">
+        <source>reading the actual member threw {0}: {1}.</source>
+        <target state="translated">실제 멤버를 읽는 동안 {0} 예외가 발생했습니다: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchAt">
+        <source>Mismatch at '{0}': {1}</source>
+        <target state="translated">'{0}'에 불일치가 있습니다: {1}</target>
+        <note>{0} is a member path (e.g., 'Order.Items[2].Price'), {1} is a localized reason describing the kind of mismatch.</note>
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExpectedDictionaryThrew">
+        <source>reading the expected dictionary threw {0}: {1}.</source>
+        <target state="translated">예상 딕셔너리를 읽는 중 {0} 예외가 발생했습니다: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExpectedEnumerationThrew">
+        <source>enumerating the expected collection threw {0}: {1}.</source>
+        <target state="translated">예상 컬렉션을 열거하는 동안 {0} 예외가 발생했습니다: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExpectedMemberThrew">
+        <source>reading the expected member threw {0}: {1}.</source>
+        <target state="translated">예상 멤버를 읽는 동안 {0} 예외가 발생했습니다: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExtraMembers">
+        <source>actual has unexpected members not present on expected: {0}.</source>
+        <target state="translated">실제에 예상에는 없는 예기치 않은 멤버가 포함되어 있습니다: {0}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchIEquatableThrew">
+        <source>IEquatable.Equals threw {0}: {1}.</source>
+        <target state="translated">IEquatable.Equals에서 {0} 예외가 발생했습니다: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchLength">
+        <source>collections differ in length (expected {0} elements, actual {1}).</source>
+        <target state="translated">컬렉션의 길이가 다릅니다(예상 요소 {0}, 실제 {1}).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchMaxDepth">
+        <source>comparison exceeded the maximum supported depth of {0}.</source>
+        <target state="translated">비교가 지원되는 최대 깊이 {0}을(를) 초과했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchMissingKey">
+        <source>key {0} present on expected is missing from actual.</source>
+        <target state="translated">예상에 있는 키 {0}이(가) 실제에 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchMissingMember">
+        <source>member '{0}' present on expected is missing from actual.</source>
+        <target state="translated">예상에 있는 멤버 '{0}'이(가) 실제에 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchNull">
+        <source>one side is null, the other is not.</source>
+        <target state="translated">한 쪽은 null이고 다른 쪽은 null이 아닙니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchTopology">
+        <source>graph topology differs (the same reference on one side appears paired with different references on the other side).</source>
+        <target state="translated">그래프 토폴로지가 다릅니다(한쪽의 동일한 참조가 다른 쪽에서는 서로 다른 참조와 쌍으로 표시됨).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchType">
+        <source>incompatible types (expected '{0}', actual '{1}').</source>
+        <target state="translated">호환되지 않는 형식(예상: '{0}', 실제 '{1}')입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchUnexpectedKey">
+        <source>key {0} present on actual is not on expected.</source>
+        <target state="translated">실제에 있는 키 {0}이(가) 예상에 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchValue">
+        <source>values are not equal.</source>
+        <target state="translated">값이 같지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentRootPath">
+        <source>&lt;root&gt;</source>
+        <target state="translated">&lt;루트&gt;</target>
+        <note>Placeholder used in equivalence-mismatch messages when the difference is at the top of the object graph.</note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualDeltaFailedSummary">
+        <source>Expected values to differ beyond tolerance.</source>
+        <target state="translated">값이 허용 오차를 벗어나 다를 것을 예상했습니다.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEquivalentFailedSummary">
         <source>Expected values to be structurally equivalent.</source>
@@ -178,10 +308,35 @@
         <target state="translated">예상 값: &lt;{1}&gt;을(를) 제외한 모든 값. 실제 값: &lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AreNotEqualDeltaFailMsg">
-        <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">예상 값 &lt;{1}&gt;과(와) 실제 값 &lt;{2}&gt;의 차이가 &lt;{3}&gt;보다 커야 합니다. {0}</target>
-        <note></note>
+      <trans-unit id="AreNotEqualStringsCaseInsensitiveFailedSummary">
+        <source>Expected strings to differ (case-insensitive).</source>
+        <target state="translated">문자열이 다를 것을 예상했습니다(대/소문자 구분 안 함).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEqualStringsFailedSummary">
+        <source>Expected strings to differ.</source>
+        <target state="translated">문자열이 다를 것을 예상했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentComparisonFailedSummary">
+        <source>Could not complete structural comparison.</source>
+        <target state="translated">구조 비교를 완료할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentComparisonFailedSummaryStrict">
+        <source>Could not complete structural comparison (strict mode).</source>
+        <target state="translated">구조 비교를 완료할 수 없습니다(엄격 모드).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentFailedSummary">
+        <source>Expected values to be structurally different.</source>
+        <target state="translated">값이 구조적으로 다를 것을 예상했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentFailedSummaryStrict">
+        <source>Expected values to be structurally different (strict mode).</source>
+        <target state="translated">값이 구조적으로 다를 것을 예상했습니다(엄격 모드).</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreNotEquivalentComparisonFailedSummary">
         <source>Could not complete structural comparison.</source>
@@ -208,6 +363,16 @@
         <target state="translated">두 값 모두 &lt;null&gt;입니다. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreNotSequenceEqualInAnyOrderFailedSummary">
+        <source>Expected sequences to differ (in any order).</source>
+        <target state="translated">시퀀스가 다를 것을 예상했습니다(순서와 관계없이).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotSequenceEqualInOrderFailedSummary">
+        <source>Expected sequences to differ.</source>
+        <target state="translated">시퀀스가 다를 것을 예상했습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreSameActualIsNull">
         <source>Actual is &lt;null&gt;. {0}</source>
         <target state="translated">실제 값은 &lt;null&gt;입니다. {0}</target>
@@ -223,6 +388,31 @@
         <target state="translated">AreSame()에 값 형식을 전달하면 안 됩니다. Object로 변환된 값은 동일한 값으로 간주되지 않습니다. AreEqual()을 사용해 보세요. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreSequenceEqualInAnyOrderFailedSummary">
+        <source>Expected sequences to be equal (in any order).</source>
+        <target state="translated">시퀀스가 동일할 것을 예상했습니다(순서와 관계없이).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualInOrderFailedSummary">
+        <source>Expected sequences to be equal.</source>
+        <target state="translated">시퀀스가 같을 것을 예상했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualLengthDiffMsg">
+        <source>Sequences have different lengths (expected: {0}, actual: {1}).</source>
+        <target state="translated">시퀀스의 길이가 다릅니다(예상: {0}, 실제: {1}).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualMissingUnexpectedMsg">
+        <source>Missing {0} element(s) from actual. Found {1} unexpected element(s).</source>
+        <target state="translated">실제에 {0}개 요소가 없습니다. 예기치 않은 {1}개 요소를 찾았습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualSameLengthDiffMsg">
+        <source>Sequences have {0} element(s). {1} element(s) differ. First difference at index {2}.</source>
+        <target state="translated">시퀀스에 {0}개 요소가 있습니다. {1}개 요소가 다릅니다. 첫 번째 차이는 인덱스 {2}에 있습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssertScopeFailure">
         <source>{0} assertion(s) failed within the assert scope.</source>
         <target state="translated">어설션 범위 내에서 {0}개의 어설션이 실패했습니다.</target>
@@ -236,6 +426,11 @@
       <trans-unit id="AssertThatDetailsPrefix">
         <source>Details:</source>
         <target state="translated">세부 정보:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatFailedToEvaluate">
+        <source>&lt;Failed to evaluate&gt;</source>
+        <target state="translated">&lt;평가 실패&gt;</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThatMessageFormat">
@@ -283,6 +478,11 @@
         <target state="translated">{0}. {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ContainsAllFailedSummary">
+        <source>Expected collection to contain all specified items.</source>
+        <target state="translated">컬렉션에 지정한 항목이 포함될 것을 예상했습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ContainsFail">
         <source>String '{0}' does not contain string '{1}'. {2}.</source>
         <target state="translated">'{0}' 문자열이 '{1}' 문자열을 포함하지 않습니다. {2}</target>
@@ -295,7 +495,7 @@
       </trans-unit>
       <trans-unit id="ContainsItemFailedSummary">
         <source>Expected collection to contain the specified element.</source>
-        <target state="new">Expected collection to contain the specified element.</target>
+        <target state="translated">컬렉션에 지정된 요소가 포함될 것을 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">
@@ -305,7 +505,7 @@
       </trans-unit>
       <trans-unit id="ContainsPredicateFailedSummary">
         <source>Expected collection to contain an element matching the predicate.</source>
-        <target state="new">Expected collection to contain an element matching the predicate.</target>
+        <target state="translated">컬렉션에 조건자와 일치하는 요소가 포함될 것을 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleFailMsg">
@@ -315,7 +515,7 @@
       </trans-unit>
       <trans-unit id="ContainsSingleFailedSummary">
         <source>Expected collection to contain exactly one element.</source>
-        <target state="new">Expected collection to contain exactly one element.</target>
+        <target state="translated">컬렉션에 정확히 하나의 요소가 포함될 것을 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleMatchFailMsg">
@@ -325,12 +525,17 @@
       </trans-unit>
       <trans-unit id="ContainsSingleMatchFailedSummary">
         <source>Expected collection to contain exactly one element matching the predicate.</source>
-        <target state="new">Expected collection to contain exactly one element matching the predicate.</target>
+        <target state="translated">컬렉션에 조건자와 일치하는 요소가 정확히 하나만 포함될 것을 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSubstringFailedSummary">
         <source>Expected string to contain the specified substring.</source>
-        <target state="new">Expected string to contain the specified substring.</target>
+        <target state="translated">문자열에 지정된 부분 문자열이 포함될 것을 예상했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotContainAllFailedSummary">
+        <source>Expected collection to not contain all specified items.</source>
+        <target state="translated">컬렉션에 지정한 항목이 포함되지 않을 것을 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainFail">
@@ -345,7 +550,7 @@
       </trans-unit>
       <trans-unit id="DoesNotContainItemFailedSummary">
         <source>Expected collection to not contain the specified element.</source>
-        <target state="new">Expected collection to not contain the specified element.</target>
+        <target state="translated">컬렉션에 지정된 요소가 포함되지 않을 것을 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailMsg">
@@ -355,12 +560,12 @@
       </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailedSummary">
         <source>Expected collection to not contain an element matching the predicate.</source>
-        <target state="new">Expected collection to not contain an element matching the predicate.</target>
+        <target state="translated">컬렉션에 조건자와 일치하는 요소가 포함되지 않을 것을 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainSubstringFailedSummary">
         <source>Expected string to not contain the specified substring.</source>
-        <target state="new">Expected string to not contain the specified substring.</target>
+        <target state="translated">문자열에 지정된 부분 문자열이 포함되지 않을 것을 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotEndWithFail">
@@ -370,7 +575,12 @@
       </trans-unit>
       <trans-unit id="DoesNotEndWithFailedSummary">
         <source>Expected string to not end with the specified suffix.</source>
-        <target state="new">Expected string to not end with the specified suffix.</target>
+        <target state="translated">문자열이 지정된 접미사로 끝나지 않을 것을 예상했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotMatchRegexFailedSummary">
+        <source>Expected string to not match the specified pattern.</source>
+        <target state="translated">문자열이 지정된 패턴과 일치하지 않아야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
@@ -380,7 +590,7 @@
       </trans-unit>
       <trans-unit id="DoesNotStartWithFailedSummary">
         <source>Expected string to not start with the specified prefix.</source>
-        <target state="new">Expected string to not start with the specified prefix.</target>
+        <target state="translated">문자열이 지정된 접두사로 시작하지 않을 것을 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidFieldLayout">
@@ -434,12 +644,17 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="EndsWithFailedSummary">
         <source>Expected string to end with the specified suffix.</source>
-        <target state="new">Expected string to end with the specified suffix.</target>
+        <target state="translated">문자열이 지정된 접미사로 끝날 것을 예상했습니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="HasCountFailMsg">
-        <source>Expected collection of size {1}. Actual: {2}. {0}</source>
-        <target state="translated">{1} 크기 컬렉션이 필요합니다. 실제: {2}. {0}</target>
+      <trans-unit id="HasCountFailedSummary">
+        <source>Expected collection to contain a specific number of elements.</source>
+        <target state="translated">컬렉션에 특정 수의 요소가 포함될 것을 예상했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InconclusivePrefix">
+        <source>Assert.Inconclusive.</source>
+        <target state="translated">Assert.Inconclusive입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidAccessToTestContextProperty">
@@ -452,6 +667,11 @@ Actual: {2}</source>
         <target state="translated">잘못된 GitHub 티켓 URL</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsEmptyFailedSummary">
+        <source>Expected collection to be empty.</source>
+        <target state="translated">컬렉션이 비어 있을 것을 예상했습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsFalseFailedSummary">
         <source>Expected condition to be false.</source>
         <target state="translated">조건이 false여야 합니다.</target>
@@ -459,12 +679,12 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsGreaterThanFailedSummary">
         <source>Expected value to be greater than the lower bound.</source>
-        <target state="new">Expected value to be greater than the lower bound.</target>
+        <target state="translated">값이 하한보다 클 것을 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsGreaterThanOrEqualToFailedSummary">
         <source>Expected value to be greater than or equal to the lower bound.</source>
-        <target state="new">Expected value to be greater than or equal to the lower bound.</target>
+        <target state="translated">값이 하한보다 크거나 같을 것을 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeFail">
@@ -474,7 +694,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsInRangeFailedSummary">
         <source>Expected value to be within the inclusive range.</source>
-        <target state="new">Expected value to be within the inclusive range.</target>
+        <target state="translated">값이 포함 범위 내에 있을 것을 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
@@ -489,12 +709,12 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsLessThanFailedSummary">
         <source>Expected value to be less than the upper bound.</source>
-        <target state="new">Expected value to be less than the upper bound.</target>
+        <target state="translated">값이 상한보다 작을 것을 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsLessThanOrEqualToFailedSummary">
         <source>Expected value to be less than or equal to the upper bound.</source>
-        <target state="new">Expected value to be less than or equal to the upper bound.</target>
+        <target state="translated">값이 상한보다 작거나 같을 것을 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsMatchFail">
@@ -504,12 +724,12 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsNegativeFailedSummary">
         <source>Expected value to be negative.</source>
-        <target state="new">Expected value to be negative.</target>
+        <target state="translated">값이 음수일 것을 예상했습니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsNotEmptyFailMsg">
-        <source>Expected collection to contain any item but it is empty. {0}</source>
-        <target state="translated">항목을 포함할 컬렉션이 필요한데 비어 있습니다. {0}</target>
+      <trans-unit id="IsNotEmptyFailedSummary">
+        <source>Expected collection to not be empty.</source>
+        <target state="translated">컬렉션이 비어 있지 않을 것을 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">
@@ -537,6 +757,26 @@ Actual: {2}</source>
         <target state="translated">값이 null이 아니어야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AreNotEqualFailedSummary">
+        <source>Expected values to differ.</source>
+        <target state="translated">값이 서로 다를 것으로 예상됩니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringsFailedSummary">
+        <source>Expected strings to be equal.</source>
+        <target state="translated">문자열이 같을 것을 예상했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualDifferentTypesFailedSummary">
+        <source>Expected values to be equal, but they are of different types.</source>
+        <target state="translated">값이 동일할 것을 예상했지만, 형식이 다릅니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualFailedSummary">
+        <source>Expected values to be equal.</source>
+        <target state="translated">값이 같을 것을 예상했습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
         <target state="translated">값이 null이어야 합니다.</target>
@@ -544,12 +784,17 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsPositiveFailedSummary">
         <source>Expected value to be positive.</source>
-        <target state="new">Expected value to be positive.</target>
+        <target state="translated">값이 양수일 것으로 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">
         <source>Expected condition to be true.</source>
         <target state="translated">조건이 true여야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MatchesRegexFailedSummary">
+        <source>Expected string to match the specified pattern.</source>
+        <target state="translated">문자열이 지정된 패턴과 일치해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
@@ -620,7 +865,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="StartsWithFailedSummary">
         <source>Expected string to start with the specified prefix.</source>
-        <target state="new">Expected string to start with the specified prefix.</target>
+        <target state="translated">문자열이 지정된 접두사로 시작할 것을 예상했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">

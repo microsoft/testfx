@@ -22,6 +22,10 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string NoBannerOptionKey = "no-banner";
     public const string SkipBuildersNumberCheckOptionKey = "internal-testingplatform-skipbuildercheck";
     public const string DiscoverTestsOptionKey = "list-tests";
+    public const string DiscoverTestsJsonArgument = "json";
+    public const string DiscoverTestsTextArgument = "text";
+
+    private static readonly string SupportedDiscoverTestsValues = $"'{DiscoverTestsTextArgument}', '{DiscoverTestsJsonArgument}'";
     public const string ResultDirectoryOptionKey = "results-directory";
     public const string IgnoreExitCodeOptionKey = "ignore-exit-code";
     public const string MinimumExpectedTestsOptionKey = "minimum-expected-tests";
@@ -55,7 +59,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         new(DiagnosticVerbosityOptionKey, PlatformResources.PlatformCommandLineDiagnosticVerbosityOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(DiagnosticFileLoggerSynchronousWriteOptionKey, PlatformResources.PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
         MinimumExpectedTests,
-        new(DiscoverTestsOptionKey, PlatformResources.PlatformCommandLineDiscoverTestsOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
+        new(DiscoverTestsOptionKey, PlatformResources.PlatformCommandLineDiscoverTestsOptionDescription, ArgumentArity.ZeroOrOne, false, isBuiltIn: true),
         new(IgnoreExitCodeOptionKey, PlatformResources.PlatformCommandLineIgnoreExitCodeOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(ExitOnProcessExitOptionKey, PlatformResources.PlatformCommandLineExitOnProcessExitOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(ConfigFileOptionKey, PlatformResources.PlatformCommandLineConfigFileOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
@@ -99,6 +103,14 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             {
                 return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage);
             }
+        }
+
+        if (commandOption.Name == DiscoverTestsOptionKey
+            && arguments.Length == 1
+            && !DiscoverTestsJsonArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
+            && !DiscoverTestsTextArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
+        {
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDiscoverTestsInvalidArgument, arguments[0], SupportedDiscoverTestsValues));
         }
 
         if (commandOption.Name == ClientPortOptionKey && (!int.TryParse(arguments[0], out int _)))
@@ -155,6 +167,11 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         ApplicationStateGuard.Ensure(commandLineOptions.TryGetOptionArgumentList(MinimumExpectedTestsOptionKey, out string[]? arguments));
         return int.Parse(arguments[0], CultureInfo.InvariantCulture);
     }
+
+    public static bool IsListTestsJsonOutput(ICommandLineOptions commandLineOptions)
+        => commandLineOptions.TryGetOptionArgumentList(DiscoverTestsOptionKey, out string[]? arguments)
+            && arguments is { Length: 1 }
+            && DiscoverTestsJsonArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase);
 
     private static Task<ValidationResult> IsMinimumExpectedTestsOptionValidAsync(CommandLineOption option, string[] arguments)
         => option.Name == MinimumExpectedTestsOptionKey

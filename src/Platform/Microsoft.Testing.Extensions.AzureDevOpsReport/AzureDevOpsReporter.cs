@@ -19,30 +19,57 @@ internal sealed class AzureDevOpsReporter :
     IDataConsumer,
     IOutputDeviceDataProducer
 {
+    internal const double KnownFlakyFailureRateThreshold = 0.25;
     private const string DeterministicBuildRoot = "/_/";
+    private const string FullyQualifiedNamePropertyKey = "vstest.TestCase.FullyQualifiedName";
+    private const int MinSamplesForRegressionAnnotation = 5;
+    private const string QuarantineBuildTagLine = "##vso[build.addbuildtag]has-quarantined-test-failure";
+    private const string WarningSeverity = "warning";
+    private static readonly char[] NewlineCharacters = ['\r', '\n'];
+
+    // Fully-qualified type prefixes for MSTest assertion implementations. A stack frame whose
+    // 'code' (i.e., the "Namespace.Type.Method(args)" portion) starts with any of these is treated
+    // as framework internals and skipped when looking for the user's call site to annotate.
+    // Matching on the type name (rather than the source file name) is robust to partial-class
+    // splits (e.g. Assert.AreEqual.cs, Assert.IComparable.cs) and extension-based assertion
+    // implementations such as Assert.That in Assert.That.cs, and it avoids false positives on user
+    // files innocently named *Assert.cs. See https://github.com/microsoft/testfx/issues/6925.
+    private static readonly string[] AssertionImplementationCodePrefixes =
+    [
+        "Microsoft.VisualStudio.TestTools.UnitTesting.Assert.",
+        "Microsoft.VisualStudio.TestTools.UnitTesting.AssertExtensions.",
+        "Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.",
+        "Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.",
+    ];
 
     private readonly IOutputDevice _outputDisplay;
     private readonly ILogger _logger;
-    private static readonly char[] NewlineCharacters = ['\r', '\n'];
     private readonly ICommandLineOptions _commandLine;
     private readonly IEnvironment _environment;
     private readonly IFileSystem _fileSystem;
+    private readonly IAzureDevOpsHistoryService _historyService;
     private readonly string _targetFrameworkMoniker;
-    private string _severity = "error";
+    private string? _severity;
+    private bool _demoteKnownFlaky;
+    private QuarantineFile? _quarantineFile;
+    private bool _hasLoadedEnabledConfiguration;
+    private int _quarantineBuildTagEmitted;
 
     public AzureDevOpsReporter(
         ICommandLineOptions commandLine,
         IEnvironment environment,
         IFileSystem fileSystem,
         IOutputDevice outputDisplay,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        IAzureDevOpsHistoryService historyService)
     {
         _commandLine = commandLine;
         _environment = environment;
         _fileSystem = fileSystem;
         _outputDisplay = outputDisplay;
+        _historyService = historyService;
         _logger = loggerFactory.CreateLogger<AzureDevOpsReporter>();
-        _targetFrameworkMoniker = GetTargetFrameworkMoniker();
+        _targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
     }
 
     public Type[] DataTypesConsumed { get; } =
@@ -77,34 +104,18 @@ internal sealed class AzureDevOpsReporter :
         }
 
         bool isEnabledByEnvVariable = string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase);
+        if (isEnabledByEnvVariable)
+        {
+            EnsureEnabledConfigurationLoaded();
+        }
+
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace($"TF_BUILD environment variable is {(isEnabledByEnvVariable ? "enabled. Will report errors to Azure DevOps, because we are running in CI." : "disabled. Will not report errors to Azure DevOps.")}.");
+            _logger.LogTrace($"TF_BUILD environment variable is {(isEnabledByEnvVariable ? "enabled. Will report errors to Azure DevOps, because we are running in CI." : "disabled. Will not report errors to Azure DevOps.")}");
+            _logger.LogTrace($"Severity is set to '{_severity ?? "error"}', you can override it by using --report-azdo-severity parameter.");
         }
 
-        if (!isEnabledByEnvVariable)
-        {
-            return Task.FromResult(false);
-        }
-
-        bool found = _commandLine.TryGetOptionArgumentList(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, out string[]? arguments);
-        if (found && arguments?.Length > 0)
-        {
-            _severity = arguments[0].ToLowerInvariant();
-            if (_logger.IsEnabled(LogLevel.Trace))
-            {
-                _logger.LogTrace($"Severity is set to '{_severity}', by --report-azdo-severity parameter.");
-            }
-        }
-        else
-        {
-            if (_logger.IsEnabled(LogLevel.Trace))
-            {
-                _logger.LogTrace($"Severity is set to '{_severity}', you can override it by using --report-azdo-severity parameter.");
-            }
-        }
-
-        return Task.FromResult(true);
+        return Task.FromResult(isEnabledByEnvVariable);
     }
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
@@ -116,38 +127,47 @@ internal sealed class AzureDevOpsReporter :
             return;
         }
 
+        EnsureEnabledConfigurationLoaded();
         TestNodeStateProperty? nodeState = nodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
-
         string testDisplayName = nodeUpdateMessage.TestNode.DisplayName;
+        string testName = GetTestName(nodeUpdateMessage.TestNode);
 
         switch (nodeState)
         {
             case FailedTestNodeStateProperty failed:
-                await WriteExceptionAsync(testDisplayName, failed.Explanation, failed.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, testName, failed.Explanation, failed.Exception, cancellationToken).ConfigureAwait(false);
                 break;
             case ErrorTestNodeStateProperty error:
-                await WriteExceptionAsync(testDisplayName, error.Explanation, error.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, testName, error.Explanation, error.Exception, cancellationToken).ConfigureAwait(false);
                 break;
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
             case CancelledTestNodeStateProperty cancelled:
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-                await WriteExceptionAsync(testDisplayName, cancelled.Explanation, cancelled.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, testName, cancelled.Explanation, cancelled.Exception, cancellationToken).ConfigureAwait(false);
                 break;
             case TimeoutTestNodeStateProperty timeout:
-                await WriteExceptionAsync(testDisplayName, timeout.Explanation, timeout.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, testName, timeout.Explanation, timeout.Exception, cancellationToken).ConfigureAwait(false);
                 break;
         }
     }
 
-    private async Task WriteExceptionAsync(string testDisplayName, string? explanation, Exception? exception, CancellationToken cancellationToken)
+    private async Task WriteExceptionAsync(string testDisplayName, string testName, string? explanation, Exception? exception, CancellationToken cancellationToken)
     {
         if (_logger.IsEnabled(LogLevel.Trace))
         {
             _logger.LogTrace("Failure received.");
         }
 
-        string? line = GetErrorText(testDisplayName, explanation, exception, _severity, _fileSystem, _logger, _targetFrameworkMoniker);
-        if (line == null)
+        bool isQuarantined = _quarantineFile?.Matches(testName) == true;
+        if (isQuarantined && Interlocked.Exchange(ref _quarantineBuildTagEmitted, 1) == 0)
+        {
+            await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(QuarantineBuildTagLine), cancellationToken).ConfigureAwait(false);
+        }
+
+        string severity = GetSeverity(testName, isQuarantined);
+        string annotationSuffix = BuildAnnotationSuffix(testName, isQuarantined);
+        string? line = GetErrorText(testDisplayName, explanation, exception, severity, _fileSystem, _logger, _targetFrameworkMoniker, annotationSuffix);
+        if (line is null)
         {
             if (_logger.IsEnabled(LogLevel.Trace))
             {
@@ -166,8 +186,11 @@ internal sealed class AzureDevOpsReporter :
     }
 
     internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker)
+        => GetErrorText(testDisplayName, explanation, exception, severity, fileSystem, logger, targetFrameworkMoniker, additionalMessageSuffix: null);
+
+    internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker, string? additionalMessageSuffix)
     {
-        if (exception == null || exception.StackTrace == null)
+        if (exception is null || exception.StackTrace is null)
         {
             if (logger.IsEnabled(LogLevel.Trace))
             {
@@ -178,8 +201,7 @@ internal sealed class AzureDevOpsReporter :
         }
 
         string message = explanation ?? exception.Message;
-
-        if (message == null)
+        if (message is null)
         {
             if (logger.IsEnabled(LogLevel.Trace))
             {
@@ -199,7 +221,7 @@ internal sealed class AzureDevOpsReporter :
         foreach (string? stackFrame in stackTrace.Split(NewlineCharacters, StringSplitOptions.RemoveEmptyEntries))
         {
             (string Code, string File, int LineNumber)? location = GetStackFrameLocation(stackFrame);
-            if (location == null)
+            if (location is null)
             {
                 if (logger.IsEnabled(LogLevel.Trace))
                 {
@@ -210,19 +232,18 @@ internal sealed class AzureDevOpsReporter :
             }
 
             string file = location.Value.File;
+            string code = location.Value.Code;
 
-            // TODO: We need better rule for stackframes to opt out from being interesting.
-            if (file.EndsWith("Assert.cs", StringComparison.Ordinal))
+            if (IsAssertionImplementationFrame(code))
             {
                 if (logger.IsEnabled(LogLevel.Trace))
                 {
-                    logger.LogTrace("StackFrame location ends with 'Assert.cs' this is a special pattern that we skip, continuing to next.");
+                    logger.LogTrace($"StackFrame code '{code}' is an MSTest assertion implementation, continuing to next.");
                 }
 
                 continue;
             }
 
-            // Deterministic build paths start with "/_/"
             string relativePath;
             if (file.StartsWith(DeterministicBuildRoot, StringComparison.OrdinalIgnoreCase))
             {
@@ -232,13 +253,12 @@ internal sealed class AzureDevOpsReporter :
                 }
 
                 relativePath = file.Substring(DeterministicBuildRoot.Length);
-
                 if (logger.IsEnabled(LogLevel.Trace))
                 {
                     logger.LogTrace($"Using relative path '{relativePath}'.");
                 }
             }
-            else if (file.StartsWith(repoRoot, StringComparison.CurrentCultureIgnoreCase))
+            else if (file.StartsWith(repoRoot, StringComparison.OrdinalIgnoreCase))
             {
                 if (logger.IsEnabled(LogLevel.Trace))
                 {
@@ -253,7 +273,6 @@ internal sealed class AzureDevOpsReporter :
             }
             else
             {
-                // Path does not belong to current repo, keep it null.
                 if (logger.IsEnabled(LogLevel.Trace))
                 {
                     logger.LogTrace($"Path '{file}' does not belong to current repo '{repoRoot}'. Continue to next.");
@@ -262,17 +281,9 @@ internal sealed class AzureDevOpsReporter :
                 continue;
             }
 
-            // Combine with repo root, to be able to resolve deterministic build paths.
             string fullPath = Path.Combine(repoRoot, relativePath);
             if (!fileSystem.ExistFile(fullPath))
             {
-                // Path does not belong to current repository or does not exist, no need to report it because it will not show up in the PR error, we will only see it details of the run, which is the same
-                // as not reporting it this way. Maybe there can be 2 modes, but right now we want this to be usable for GitHub + AzDo, not for pure AzDo.
-                //
-                // In case of deterministic build, all the paths will be relative, so if library carries symbols and matches our path we would see the error as coming from our file
-                // even though it would not. That change is slim and something we have to live with.
-                //
-                // Deterministic build will also have paths normalized to /, luckily File.Exist does not care about the slash direction (on Windows).
                 if (logger.IsEnabled(LogLevel.Trace))
                 {
                     logger.LogTrace($"Path '{fullPath}' does not exist on disk. Continue to next.");
@@ -281,35 +292,153 @@ internal sealed class AzureDevOpsReporter :
                 continue;
             }
 
-            // The slashes must be / for GitHub to render the error placement correctly.
             string relativeNormalizedPath = relativePath.Replace('\\', '/');
             if (logger.IsEnabled(LogLevel.Trace))
             {
                 logger.LogTrace($"Normalized path for GitHub '{relativeNormalizedPath}'.");
             }
 
-            string formattedMessage = $"[{testDisplayName}] [{targetFrameworkMoniker}] {message}";
+            string formattedMessage = $"{FormatErrorMessage(testDisplayName, targetFrameworkMoniker, message)}{additionalMessageSuffix}";
             string line = $"##vso[task.logissue type={severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{AzDoEscaper.Escape(formattedMessage)}";
             if (logger.IsEnabled(LogLevel.Trace))
             {
                 logger.LogTrace($"Reported full message '{line}'.");
             }
 
-            // Report the error only for the first stack frame that is useful.
             return line;
         }
 
         if (logger.IsEnabled(LogLevel.Trace))
         {
-            logger.LogTrace($"No stack trace line matched criteria, no failure line was reported.");
+            logger.LogTrace("No stack trace line matched criteria, no failure line was reported.");
         }
 
         return null;
     }
 
-    private static string GetTargetFrameworkMoniker()
-        => TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
-            ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
+    private string GetConfiguredSeverity()
+        => _commandLine.TryGetOptionArgumentList(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, out string[]? arguments)
+            && arguments is [string configuredSeverity]
+                ? configuredSeverity.ToLowerInvariant()
+                : "error";
+
+    private QuarantineFile? LoadQuarantineFile()
+    {
+        if (!_commandLine.TryGetOptionArgumentList(AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile, out string[]? arguments)
+            || arguments is not [string quarantineFilePath])
+        {
+            return null;
+        }
+
+        // NOTE: The value is treated as an explicit filesystem path supplied by the caller; this extension only validates existence and readability.
+        if (!_fileSystem.ExistFile(quarantineFilePath))
+        {
+            _logger.LogWarning(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.QuarantineFileMissingWarning, quarantineFilePath));
+            return null;
+        }
+
+        try
+        {
+            return new QuarantineFile(quarantineFilePath, _fileSystem, _logger);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.QuarantineFileLoadFailedWarning, quarantineFilePath, ex.Message));
+            return null;
+        }
+    }
+
+    private string GetSeverity(string testName, bool isQuarantined)
+        => isQuarantined || (_demoteKnownFlaky && _historyService.IsLikelyFlaky(testName, KnownFlakyFailureRateThreshold))
+            ? WarningSeverity
+            : _severity ?? "error";
+
+    private string BuildAnnotationSuffix(string testName, bool isQuarantined)
+    {
+        string? historyAnnotation = GetHistoryAnnotation(testName);
+        if (historyAnnotation is null && !isQuarantined)
+        {
+            return string.Empty;
+        }
+
+        StringBuilder builder = new();
+        if (historyAnnotation is not null)
+        {
+            builder.Append(' ').Append(historyAnnotation);
+        }
+
+        if (isQuarantined)
+        {
+            builder.Append(' ').Append(AzureDevOpsResources.QuarantinedAnnotation);
+        }
+
+        return builder.ToString();
+    }
+
+    private string? GetHistoryAnnotation(string testName)
+        => !_historyService.TryGetStats(testName, out FlakyStats stats) || stats.TotalCount == 0
+            ? null
+            : stats.FailCount == 0
+                ? stats.TotalCount >= MinSamplesForRegressionAnnotation
+                    ? AzureDevOpsResources.FlakyHistoryRegressionAnnotation
+                    : null
+                : string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryFailureAnnotation, stats.FailCount, stats.TotalCount, _historyService.HistoryWindowInDays);
+
+    private void EnsureEnabledConfigurationLoaded()
+    {
+        if (_hasLoadedEnabledConfiguration)
+        {
+            return;
+        }
+
+        _severity = GetConfiguredSeverity();
+        _demoteKnownFlaky = _commandLine.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky);
+        _quarantineFile = LoadQuarantineFile();
+        _hasLoadedEnabledConfiguration = true;
+    }
+
+    private static string GetTestName(TestNode testNode)
+        => testNode.Properties
+            .OfType<SerializableKeyValuePairStringProperty>()
+            .FirstOrDefault(static property => property.Key == FullyQualifiedNamePropertyKey)?.Value
+            ?? testNode.DisplayName;
+
+    /// <summary>
+    /// Formats the reporter message so the test name lands on its own line.
+    /// PR check UIs (GitHub Checks via the dotnet problem matcher and Azure DevOps)
+    /// render the first line of the message as the bold annotation title, so we
+    /// keep the test display name compact and push the assertion text to the body.
+    /// </summary>
+    /// <remarks>
+    /// MTP includes the TFM in the display name in multi-TFM mode (e.g. "MyTest (net8.0)").
+    /// To avoid noise like "MyTest (net8.0) [net8.0]" we skip the bracketed TFM
+    /// suffix when the display name already ends with "({tfm})" or "(\"{tfm}\")".
+    /// </remarks>
+    internal static /* for testing */ string FormatErrorMessage(string testDisplayName, string targetFrameworkMoniker, string message)
+    {
+        string titleLine = DisplayNameContainsTfm(testDisplayName, targetFrameworkMoniker)
+            ? testDisplayName
+            : $"{testDisplayName} [{targetFrameworkMoniker}]";
+
+        return $"{titleLine}\n{message}";
+    }
+
+    private static bool DisplayNameContainsTfm(string displayName, string tfm)
+        => displayName.EndsWith($"({tfm})", StringComparison.Ordinal)
+            || displayName.EndsWith($"(\"{tfm}\")", StringComparison.Ordinal);
+
+    private static bool IsAssertionImplementationFrame(string code)
+    {
+        foreach (string prefix in AssertionImplementationCodePrefixes)
+        {
+            if (code.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private static (string Code, string File, int LineNumber)? GetStackFrameLocation(string stackTraceLine)
     {
@@ -320,8 +449,7 @@ internal sealed class AzureDevOpsReporter :
         }
 
         string code = match.Groups["code"].Value;
-        bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(code);
-        if (!weHaveFilePathAndCodeLine)
+        if (RoslynString.IsNullOrWhiteSpace(code))
         {
             return null;
         }
@@ -333,7 +461,6 @@ internal sealed class AzureDevOpsReporter :
         }
 
         int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
-
         return (code, file, line);
     }
 }

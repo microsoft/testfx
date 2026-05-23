@@ -52,12 +52,12 @@ Moving last attempt asset files to the default result directory
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
         <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</source>
-        <target state="new">Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</target>
+        <target state="translated">Добавьте задержку между повторными попытками. Задержка выражается значением времени, например, 200, 1 с, 2,5 мин, 1 ч. Единица измерения по умолчанию: миллисекунды.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
         <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 1s, 2.5m, 1h)</source>
-        <target state="new">Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 1s, 2.5m, 1h)</target>
+        <target state="translated">Параметр "--retry-failed-tests-delay" требует допустимое значение диапазона времени: неотрицательное и не больше 2147483647 мс (~24.20:31:23.647) (например, 200, 1 с, 2,5 мин, 1 ч)</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">
@@ -73,6 +73,11 @@ Moving last attempt asset files to the default result directory
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
         <target state="translated">Отключить механизм повторных попыток, если процент неудачных тестов превышает указанное значение</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
+        <source>Option '{0}' expects an integer argument between 0 and 100</source>
+        <target state="new">Option '{0}' expects an integer argument between 0 and 100</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
@@ -100,9 +105,9 @@ Moving last attempt asset files to the default result directory
         <target state="translated">Параметр "{0}" требует указания параметра "{1}"</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage">
-        <source>Option '{0}' expects a single integer argument</source>
-        <target state="translated">Параметр "{0}" ожидает один целочисленный аргумент</target>
+      <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
+        <source>Option '{0}' expects a non-negative integer argument</source>
+        <target state="new">Option '{0}' expects a non-negative integer argument</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">

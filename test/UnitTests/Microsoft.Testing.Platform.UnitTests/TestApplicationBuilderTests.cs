@@ -122,6 +122,19 @@ public sealed class TestApplicationBuilderTests
     }
 
     [TestMethod]
+    public async Task TestHostControllerEnvironmentVariableProvider_InsertFirst_ShouldPreserveOrdering()
+    {
+        TestHostControllersManager testHostControllerManager = new();
+        testHostControllerManager.AddEnvironmentVariableProvider(_ => new TestHostEnvironmentVariableProvider("second"));
+        testHostControllerManager.AddEnvironmentVariableProviderFirst(_ => new TestHostEnvironmentVariableProvider("first"));
+
+        TestHostControllerConfiguration configuration = await testHostControllerManager.BuildAsync(_serviceProvider);
+
+        Assert.AreEqual("first", configuration.EnvironmentVariableProviders[0].Uid);
+        Assert.AreEqual("second", configuration.EnvironmentVariableProviders[1].Uid);
+    }
+
+    [TestMethod]
     public async Task TestHostControllerProcessLifetimeHandler_DuplicatedId_ShouldFail()
     {
         TestHostControllersManager testHostControllerManager = new();

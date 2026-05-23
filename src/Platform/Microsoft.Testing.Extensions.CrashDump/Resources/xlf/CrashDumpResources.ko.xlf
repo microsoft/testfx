@@ -7,6 +7,11 @@
         <target state="translated">필요한 크래시 덤프 파일 '{0}'을(를) 찾을 수 없습니다. '*.dmp' 패턴과 일치하는 모든 파일이 결과 폴더에 복사됩니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="CannotFindExpectedCrashReportFile">
+        <source>Expected crash report file '{0}' could not be found, all files matching the '{1}' pattern will be copied to the result folder</source>
+        <target state="translated">필요한 크래시 덤프 파일 '{0}'을(를) 찾을 수 없습니다. '{1}' 패턴과 일치하는 모든 파일이 결과 폴더에 복사됩니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CrashDumpArtifactDescription">
         <source>The testhost process crash dump file</source>
         <target state="translated">testhost 프로세스 크래시 덤프 파일</target>
@@ -47,8 +52,23 @@
         <target state="translated">[net6.0 이상만] 테스트 프로세스가 충돌하는 경우 덤프 파일 생성</target>
         <note />
       </trans-unit>
+      <trans-unit id="CrashDumpProcessCrashed">
+        <source>Test host process with PID '{0}' crashed, but the expected diagnostic artifact(s) were not produced</source>
+        <target state="translated">PID가 '{0}'인 테스트 호스트 프로세스가 충돌했지만 예상한 진단 아티팩트가 생성되지 않았습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpProcessCrashedDumpAndReportFileCreated">
+        <source>Test host process with PID '{0}' crashed, a dump file and crash report were generated</source>
+        <target state="translated">PID가 '{0}'인 테스트 호스트 프로세스가 충돌했습니다. 덤프 파일과 크래시 보고서가 생성되었습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
+        <target state="translated">PID가 '{0}'인 테스트 호스트 프로세스가 충돌했습니다. 덤프 파일이 생성되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpProcessCrashedReportFileCreated">
+        <source>Test host process with PID '{0}' crashed, a crash report was generated</source>
         <target state="translated">PID가 '{0}'인 테스트 호스트 프로세스가 충돌했습니다. 덤프 파일이 생성되었습니다.</target>
         <note />
       </trans-unit>
@@ -69,6 +89,31 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">
         <source>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</source>
         <target state="translated">'--crashdump-type'에는 단일 덤프 유형이 인수로 필요합니다(예: '--crashdump-type Heap').</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashReportArtifactDescription">
+        <source>The testhost process crash report file</source>
+        <target state="translated">testhost 프로세스 크래시 보고서 파일</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashReportArtifactDisplayName">
+        <source>Crash report file</source>
+        <target state="translated">크래시 보고서 파일</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">
+        <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crashdump' to generate a crash dump file instead.</source>
+        <target state="translated">Windows에서는 '--crash-report'를 지원하지 않습니다. 이 플랫폼에서는 .NET 런타임이 기본 'DOTNET_EnableCrashReport' 및 'DOTNET_EnableCrashReportOnly' 환경 변수를 무시하기 때문입니다. https://github.com/dotnet/runtime/issues/80191 참조하세요. 대신 '--crashdump'를 사용하여 크래시 덤프 파일을 생성합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashReportOptionDescription">
+        <source>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).</source>
+        <target state="translated">[Linux/macOS만 해당] 테스트 프로세스가 충돌할 때 JSON 크래시 보고서를 생성합니다. '--crashdump'와 함께 사용하면 덤프 파일도 생성합니다. 단독으로 사용할 때는 .NET 7+가 필요합니다. '--crashdump'와 함께 사용할 때는 .NET 6+가 필요합니다. 이 런타임 요구 사항은 도구에서 강제하지 않습니다. 지원되지 않는 런타임에서는 크래시 보고서가 생성되지 않습니다. .NET 런타임 제한(dotnet/runtime#80191)으로 인해 Windows에서는 지원되지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MissingCrashDumpMainOption">
+        <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
+        <target state="new">You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">

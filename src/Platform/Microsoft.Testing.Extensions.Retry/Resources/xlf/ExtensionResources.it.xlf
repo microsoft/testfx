@@ -52,12 +52,12 @@ Spostamento dei file di asset dell'ultimo tentativo nella directory dei risultat
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
         <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</source>
-        <target state="new">Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</target>
+        <target state="translated">Aggiungi il ritardo tra i tentativi. Il ritardo è espresso come valore temporale, ad esempio 200, 1s, 2,5m, 1h. L'unità predefinita è il millisecondo.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
         <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 1s, 2.5m, 1h)</source>
-        <target state="new">Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 1s, 2.5m, 1h)</target>
+        <target state="translated">L'opzione '--retry-failed-tests-delay' richiede un valore di intervallo di tempo valido, non negativo e non superiore a 2147483647ms (~24.20:31:23.647) (ad esempio 200, 1s, 2.5m, 1h)</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">
@@ -73,6 +73,11 @@ Spostamento dei file di asset dell'ultimo tentativo nella directory dei risultat
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
         <target state="translated">Disabilita il meccanismo di ripetizione dei tentativi se la percentuale di test non riusciti è maggiore del valore specificato.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
+        <source>Option '{0}' expects an integer argument between 0 and 100</source>
+        <target state="new">Option '{0}' expects an integer argument between 0 and 100</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
@@ -100,9 +105,9 @@ Spostamento dei file di asset dell'ultimo tentativo nella directory dei risultat
         <target state="translated">L'opzione '{0}' richiede l'opzione '{1}' da specificare</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage">
-        <source>Option '{0}' expects a single integer argument</source>
-        <target state="translated">L'opzione '{0}' prevede un singolo argomento integer</target>
+      <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
+        <source>Option '{0}' expects a non-negative integer argument</source>
+        <target state="new">Option '{0}' expects a non-negative integer argument</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">

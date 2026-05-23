@@ -7,6 +7,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Represents the evidence block of a structured assertion message, containing labeled value lines
 /// such as expected/actual values and assertion-specific details.
 /// </summary>
+[StackTraceHidden]
 internal sealed class EvidenceBlock
 {
     private readonly List<EvidenceLine> _lines = [];

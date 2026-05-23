@@ -144,6 +144,39 @@ internal sealed class TestClassInfo
     public Exception? ClassCleanupException { get; internal set; }
 
     /// <summary>
+    /// Gets a snapshot of <see cref="TestContext.Properties"/> captured after the
+    /// <c>ClassInitialize</c> method completes. Used to flow properties set during
+    /// <c>ClassInitialize</c> into subsequent contexts (test execution, class cleanup).
+    /// <see langword="null"/> if no <c>ClassInitialize</c> method was registered or it has
+    /// not yet executed successfully.
+    /// <para>
+    /// When the test class inherits from a base class that has a <c>ClassInitialize</c>
+    /// method declared with <see cref="InheritanceBehavior.BeforeEachDerivedClass"/>, all
+    /// class-init bodies in the chain run against the same context, so the captured snapshot
+    /// includes properties set by both base and derived class-init methods.
+    /// </para>
+    /// <para>
+    /// The snapshot is shallow: reference-type values stored in the bag are shared (aliased)
+    /// across every context the snapshot is merged into.
+    /// </para>
+    /// <para>
+    /// Reads and writes use <see cref="Volatile"/> so that callers on the cached-result fast
+    /// path of <see cref="GetResultOrRunClassInitializeAsync"/> (which intentionally bypasses
+    /// <see cref="_testClassExecuteSyncSemaphore"/>) safely observe the snapshot published by
+    /// the thread that ran <c>ClassInitialize</c>. The publishing thread writes this snapshot
+    /// before publishing <c>_classInitializeResult</c>, and both writes go through
+    /// <see cref="Volatile"/>, so any reader that observes the cached result via
+    /// <see cref="TryGetClonedCachedClassInitializeResult"/> is guaranteed to also see the
+    /// published snapshot.
+    /// </para>
+    /// </summary>
+    internal IReadOnlyDictionary<string, object?>? PostClassInitProperties
+    {
+        get => Volatile.Read(ref field);
+        private set => Volatile.Write(ref field, value);
+    }
+
+    /// <summary>
     /// Gets or sets the class cleanup method.
     /// </summary>
     public MethodInfo? ClassCleanupMethod
@@ -315,20 +348,26 @@ internal sealed class TestClassInfo
     }
 
     private TestResult? TryGetClonedCachedClassInitializeResult()
+    {
         // Historically, we were not caching class initialize result, and were always going through the logic in GetResultOrRunClassInitialize.
         // When caching is introduced, we found out that using the cached instance can change the behavior in some cases. For example,
         // if you have Console.WriteLine in class initialize, those will be present on the TestResult.
         // Before caching was introduced, these logs will be only in the first class initialize result (attached to the first test run in class)
         // By re-using the cached instance, it's now part of all tests.
         // To preserve the original behavior, we clone the cached instance so we keep only the information we are sure should be reused.
-        => _classInitializeResult is null
+        // Volatile.Read pairs with the Volatile.Write performed when the result is published, so
+        // that fast-path readers (which bypass _testClassExecuteSyncSemaphore) also observe the
+        // PostClassInitProperties snapshot written before the result on the publishing thread.
+        TestResult? cached = Volatile.Read(ref _classInitializeResult);
+        return cached is null
             ? null
             : new()
             {
-                Outcome = _classInitializeResult.Outcome,
-                IgnoreReason = _classInitializeResult.IgnoreReason,
-                TestFailureException = _classInitializeResult.TestFailureException,
+                Outcome = cached.Outcome,
+                IgnoreReason = cached.IgnoreReason,
+                TestFailureException = cached.TestFailureException,
             };
+    }
 
     internal async Task<TestResult> GetResultOrRunClassInitializeAsync(ITestContext testContext, string? initializationLogs, string? initializationErrorLogs, string? initializationTrace, string? initializationTestContextMessages)
     {
@@ -347,7 +386,9 @@ internal sealed class TestClassInfo
         if (ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
         {
             IsClassInitializeExecuted = true;
-            return _classInitializeResult = new() { Outcome = UnitTestOutcome.Passed };
+            var emptyResult = new TestResult { Outcome = UnitTestOutcome.Passed };
+            Volatile.Write(ref _classInitializeResult, emptyResult);
+            return emptyResult;
         }
 
         // At this point, maybe class initialize was executed by another thread such
@@ -441,6 +482,18 @@ internal sealed class TestClassInfo
             {
                 // This runs the ClassInitialize methods only once but saves the
                 await RunClassInitializeAsync(testContext.Context).ConfigureAwait(false);
+
+                // Capture a snapshot of TestContext.Properties so that values set during
+                // ClassInitialize (and any base-class ClassInitialize methods that ran in the
+                // same RunClassInitializeAsync call) flow to subsequent contexts
+                // (test execution, class cleanup).
+                // The `is` check is defensive: this method is part of an internal but mockable
+                // surface, so unit tests can legitimately pass an ITestContext wrapping a mock.
+                // Production callers always wrap a TestContextImplementation.
+                if (testContext.Context is TestContextImplementation classInitContextImpl)
+                {
+                    PostClassInitProperties = classInitContextImpl.CaptureLifecycleProperties();
+                }
             }
             catch (TestFailedException ex)
             {
@@ -464,7 +517,12 @@ internal sealed class TestClassInfo
                 result.TestContextMessages = initializationTestContextMessages + testContext.GetAndClearDiagnosticMessages();
             }
 
-            _classInitializeResult = result;
+            // Publish with Volatile.Write so callers on the cached-result fast path of
+            // GetResultOrRunClassInitializeAsync (which bypasses _testClassExecuteSyncSemaphore)
+            // safely observe the prior PostClassInitProperties snapshot publication: the
+            // release semantics ensure the snapshot write is visible before this assignment
+            // becomes observable.
+            Volatile.Write(ref _classInitializeResult, result);
             return result;
         }
     }

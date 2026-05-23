@@ -35,6 +35,7 @@ internal static class CommandLineParser
 
     private static CommandLineParseResult Parse(List<string> args, IEnvironment environment)
     {
+        string[] originalArgs = [.. args];
         List<CommandLineParseOption> options = [];
         List<string> errors = [];
 
@@ -53,7 +54,6 @@ internal static class CommandLineParser
             }
 
             // If it's the first argument and it doesn't start with - then it's the tool name
-            // TODO: This won't work correctly if the first argument provided is a response file that contains the tool name.
             if (isFirstRealArgument && currentArg.Length > 0 && currentArg[0] != '-')
             {
                 toolName = currentArg;
@@ -101,7 +101,7 @@ internal static class CommandLineParser
             options.Add(new(currentOption, [.. currentOptionArguments]));
         }
 
-        return new CommandLineParseResult(toolName, options, errors);
+        return new CommandLineParseResult(toolName, options, errors, originalArgs);
 
         static void ParseOptionAndSeparators(string arg, out string? currentOption, out string? currentArg)
         {

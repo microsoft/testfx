@@ -123,7 +123,7 @@ internal sealed class TestMethodRunner
             }
 
             object?[]? data = _test.ActualData ?? DataSerializationHelper.Deserialize(_test.SerializedData);
-            TestResult[] testResults = await ExecuteTestWithDataSourceAsync(null, data, actualDataAlreadyHandledDuringDiscovery: true).ConfigureAwait(false);
+            TestResult[] testResults = await ExecuteTestWithDataSourceAsync(_testContext, null, data, actualDataAlreadyHandledDuringDiscovery: true).ConfigureAwait(false);
             results.AddRange(testResults);
         }
         else if (await TryExecuteDataSourceBasedTestsAsync(results).ConfigureAwait(false))
@@ -137,7 +137,7 @@ internal sealed class TestMethodRunner
         else
         {
             _testContext.SetDisplayName(_test.DisplayName);
-            TestResult[] testResults = await ExecuteTestAsync(_testMethodInfo).ConfigureAwait(false);
+            TestResult[] testResults = await ExecuteTestAsync(_testContext, _testMethodInfo).ConfigureAwait(false);
 
             foreach (TestResult testResult in testResults)
             {
@@ -207,6 +207,8 @@ internal sealed class TestMethodRunner
     private async Task<bool> TryExecuteFoldedDataDrivenTestsAsync(List<TestResult> results)
     {
         bool hasTestDataSource = false;
+        var outerContext = (TestContextImplementation)_testContext.Context;
+
         foreach (Attribute attribute in PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached(_testMethodInfo.MethodInfo))
         {
             if (attribute is not UTF.ITestDataSource testDataSource)
@@ -227,15 +229,24 @@ internal sealed class TestMethodRunner
             foreach (object?[] data in testDataSource.GetData(_testMethodInfo.MethodInfo))
             {
                 dataSourceHasData = true;
+
+                // Create a fresh TestContextImplementation per iteration so the folded path is
+                // structurally equivalent to the unfolded path (where each row gets its own
+                // context). This isolates per-row state (captured output, diagnostic messages,
+                // result files, outcome, exception, property bag mutations, ...) so a leak in
+                // any current or future TestContextImplementation field cannot accumulate across
+                // rows. See https://github.com/microsoft/testfx/issues/7933.
+                TestContextImplementation iterationContext = outerContext.CloneForDataDrivenIteration();
                 try
                 {
-                    TestResult[] testResults = await ExecuteTestWithDataSourceAsync(testDataSource, data, actualDataAlreadyHandledDuringDiscovery: false).ConfigureAwait(false);
+                    TestResult[] testResults = await ExecuteTestWithDataSourceAsync(iterationContext, testDataSource, data, actualDataAlreadyHandledDuringDiscovery: false).ConfigureAwait(false);
 
                     results.AddRange(testResults);
                 }
                 finally
                 {
                     _testMethodInfo.SetArguments(null);
+                    iterationContext.Dispose();
                 }
             }
 
@@ -278,11 +289,23 @@ internal sealed class TestMethodRunner
             try
             {
                 int rowIndex = 0;
+                var outerContext = (TestContextImplementation)_testContext.Context;
 
                 foreach (object dataRow in dataRows)
                 {
-                    TestResult[] testResults = await ExecuteTestWithDataRowAsync(dataRow, rowIndex++).ConfigureAwait(false);
-                    results.AddRange(testResults);
+                    // Create a fresh TestContextImplementation per row for the same structural
+                    // reason as in TryExecuteFoldedDataDrivenTestsAsync — each row should
+                    // start with no accumulated per-test state.
+                    TestContextImplementation iterationContext = outerContext.CloneForDataDrivenIteration();
+                    try
+                    {
+                        TestResult[] testResults = await ExecuteTestWithDataRowAsync(iterationContext, dataRow, rowIndex++).ConfigureAwait(false);
+                        results.AddRange(testResults);
+                    }
+                    finally
+                    {
+                        iterationContext.Dispose();
+                    }
                 }
             }
             finally
@@ -303,7 +326,7 @@ internal sealed class TestMethodRunner
         }
     }
 
-    private async Task<TestResult[]> ExecuteTestWithDataSourceAsync(UTF.ITestDataSource? testDataSource, object?[]? data, bool actualDataAlreadyHandledDuringDiscovery)
+    private async Task<TestResult[]> ExecuteTestWithDataSourceAsync(ITestContext executionContext, UTF.ITestDataSource? testDataSource, object?[]? data, bool actualDataAlreadyHandledDuringDiscovery)
     {
         string? displayName = StringEx.IsNullOrWhiteSpace(_test.DisplayName)
             ? _test.Name
@@ -353,12 +376,12 @@ internal sealed class TestMethodRunner
 
         var stopwatch = Stopwatch.StartNew();
         _testMethodInfo.SetArguments(data);
-        _testContext.SetTestData(data);
-        _testContext.SetDisplayName(displayName);
+        executionContext.SetTestData(data);
+        executionContext.SetDisplayName(displayName);
 
         TestResult[] testResults = ignoreFromTestDataRow is not null
             ? [TestResult.CreateIgnoredResult(ignoreFromTestDataRow)]
-            : await ExecuteTestAsync(_testMethodInfo).ConfigureAwait(false);
+            : await ExecuteTestAsync(executionContext, _testMethodInfo).ConfigureAwait(false);
 
         stopwatch.Stop();
 
@@ -375,7 +398,7 @@ internal sealed class TestMethodRunner
         return testResults;
     }
 
-    private async Task<TestResult[]> ExecuteTestWithDataRowAsync(object dataRow, int rowIndex)
+    private async Task<TestResult[]> ExecuteTestWithDataRowAsync(ITestContext executionContext, object dataRow, int rowIndex)
     {
         string displayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, _test.DisplayName, rowIndex);
         Stopwatch? stopwatch = null;
@@ -384,13 +407,13 @@ internal sealed class TestMethodRunner
         try
         {
             stopwatch = Stopwatch.StartNew();
-            _testContext.SetDataRow(dataRow);
-            testResults = await ExecuteTestAsync(_testMethodInfo).ConfigureAwait(false);
+            executionContext.SetDataRow(dataRow);
+            testResults = await ExecuteTestAsync(executionContext, _testMethodInfo).ConfigureAwait(false);
         }
         finally
         {
             stopwatch?.Stop();
-            _testContext.SetDataRow(null);
+            executionContext.SetDataRow(null);
         }
 
         foreach (TestResult testResult in testResults)
@@ -402,7 +425,7 @@ internal sealed class TestMethodRunner
         return testResults;
     }
 
-    private async Task<TestResult[]> ExecuteTestAsync(TestMethodInfo testMethodInfo)
+    private async Task<TestResult[]> ExecuteTestAsync(ITestContext executionContext, TestMethodInfo testMethodInfo)
     {
         try
         {
@@ -415,9 +438,9 @@ internal sealed class TestMethodRunner
                 {
                     try
                     {
-                        using (TestContextImplementation.SetCurrentTestContext(_testContext as TestContext))
+                        using (TestContextImplementation.SetCurrentTestContext(executionContext as TestContext))
                         {
-                            testMethodInfo.TestContext = _testContext;
+                            testMethodInfo.TestContext = executionContext;
                             tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false));
                         }
                     }

@@ -5,7 +5,9 @@
 using System.Threading.Channels;
 #endif
 
+#if DEBUG
 using Microsoft.Testing.Platform;
+#endif
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -37,7 +39,6 @@ internal sealed partial class AppInsightsProvider :
     private readonly bool _isCi;
     private readonly IEnvironment _environment;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
-    private readonly ITask _task;
     private readonly IClock _clock;
     private readonly ITelemetryInformation _telemetryInformation;
     private readonly ITelemetryClientFactory _telemetryClientFactory;
@@ -92,11 +93,10 @@ internal sealed partial class AppInsightsProvider :
         string sessionId)
     {
         _ = bool.TryParse(configuration[PlatformConfigurationConstants.PlatformTelemetryIsDevelopmentRepository], out _isDevelopmentRepository);
-        _isCi = CIEnvironmentDetectorForTelemetry.IsCIEnvironment();
+        _isCi = new CIEnvironmentDetector(environment).IsCIEnvironment();
         _environment = environment;
         _currentSessionId = sessionId;
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
-        _task = task;
         _clock = clock;
         _telemetryInformation = telemetryInformation;
         _telemetryClientFactory = telemetryClientFactory;
@@ -199,7 +199,6 @@ internal sealed partial class AppInsightsProvider :
                                 break;
 #endif
                             case bool value:
-                                RoslynDebug.Assert(false, $"Telemetry entry '{pair.Key}' contains a boolean value, boolean values should always be converted to string using: .{nameof(TelemetryExtensions.AsTelemetryBool)}()");
                                 properties.Add(pair.Key, value.AsTelemetryBool());
                                 break;
                             default:

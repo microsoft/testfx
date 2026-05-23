@@ -552,6 +552,15 @@ The type declaring these methods should also respect the following rules:
   <data name="AvoidAssertAreSameWithValueTypesDescription" xml:space="preserve">
     <value>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</value>
   </data>
+  <data name="AvoidAssertAreEqualOnCollectionsTitle" xml:space="preserve">
+    <value>Avoid Assert.AreEqual on collection types</value>
+  </data>
+  <data name="AvoidAssertAreEqualOnCollectionsMessageFormat" xml:space="preserve">
+    <value>`{0}` on {1} (which implements IEnumerable&lt;T&gt;) does not perform element-wise sequence comparison. Use `Assert.AreSequenceEqual` for ordered element-wise comparison, `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` for unordered, or `Assert.AreEquivalent` for deep structural comparison.</value>
+  </data>
+  <data name="AvoidAssertAreEqualOnCollectionsDescription" xml:space="preserve">
+    <value>`Assert.AreEqual` and `Assert.AreNotEqual` use `EqualityComparer&lt;T&gt;.Default`. For collection-like types this relies on the type's own equality semantics instead of comparing sequence elements, so `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` or `Assert.AreEquivalent`/`Assert.AreNotEquivalent` are usually the better fit.</value>
+  </data>
   <data name="AvoidUsingAssertsInAsyncVoidContextTitle" xml:space="preserve">
     <value>Do not assert inside 'async void' contexts</value>
   </data>
@@ -697,7 +706,7 @@ The type declaring these methods should also respect the following rules:
     <value>Do not use asserts in catch blocks because they may not fail the test if no exception is thrown</value>
   </data>
   <data name="AvoidAssertsInCatchBlocksDescription" xml:space="preserve">
-    <value>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</value>
+    <value>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block. The rule also flags 'throw new AssertFailedException(...)' and 'throw new AssertInconclusiveException(...)' (the desugared forms of 'Assert.Fail' and 'Assert.Inconclusive'). 'Assert.Inconclusive' (and 'throw new AssertInconclusiveException(...)') is exempt when used inside a filtered catch ('catch (...) when (...)'), because demoting a caught failure to an Inconclusive outcome is the only use case that cannot be expressed without a catch block. For other intentional bypasses (for example, attaching a runtime-built message to the failure), suppress the diagnostic with '#pragma warning disable MSTEST0058'.</value>
   </data>
   <data name="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle" xml:space="preserve">
     <value>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</value>
@@ -746,5 +755,14 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="TestClassConstructorShouldBeValidDescription" xml:space="preserve">
     <value>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</value>
+  </data>
+  <data name="PreferAsyncAssertionTitle" xml:space="preserve">
+    <value>Prefer async assertion methods</value>
+  </data>
+  <data name="PreferAsyncAssertionMessageFormat" xml:space="preserve">
+    <value>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</value>
+  </data>
+  <data name="PreferAsyncAssertionDescription" xml:space="preserve">
+    <value>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</value>
   </data>
 </root>

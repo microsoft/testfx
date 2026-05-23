@@ -52,12 +52,12 @@ Moving last attempt asset files to the default result directory
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
         <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</source>
-        <target state="new">Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</target>
+        <target state="translated">재시도 간 지연을 추가합니다. 지연은 시간 값으로 표현됩니다(예: 200, 1s, 2.5m, 1h). 기본 단위는 밀리초입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
         <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 1s, 2.5m, 1h)</source>
-        <target state="new">Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 1s, 2.5m, 1h)</target>
+        <target state="translated">'--retry-failed-tests-delay' 옵션에는 음수가 아닌 2147483647ms(~24.20:31:23.647) 이하인 유효한 시간 범위 값이 필요합니다(예: 200, 1s, 2.5m, 1h)</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">
@@ -73,6 +73,11 @@ Moving last attempt asset files to the default result directory
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
         <target state="translated">실패한 테스트의 비율이 지정된 값보다 큰 경우 다시 시도 메커니즘을 사용하지 않도록 설정</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
+        <source>Option '{0}' expects an integer argument between 0 and 100</source>
+        <target state="new">Option '{0}' expects an integer argument between 0 and 100</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
@@ -100,9 +105,9 @@ Moving last attempt asset files to the default result directory
         <target state="translated">'{0}' 옵션을(를) 사용하려면 '{1}' 옵션을 지정해야 합니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsOptionSingleIntegerArgumentErrorMessage">
-        <source>Option '{0}' expects a single integer argument</source>
-        <target state="translated">'{0}' 옵션에는 단일 정수 인수가 필요합니다.</target>
+      <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
+        <source>Option '{0}' expects a non-negative integer argument</source>
+        <target state="new">Option '{0}' expects a non-negative integer argument</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">

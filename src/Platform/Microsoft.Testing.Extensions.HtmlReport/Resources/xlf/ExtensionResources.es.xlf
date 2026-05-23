@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="es" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="HtmlReportArtifactDescription">
+        <source>Self-contained HTML test report</source>
+        <target state="translated">Informe de prueba HTML independiente</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportArtifactDisplayName">
+        <source>HTML Report</source>
+        <target state="translated">Informe HTML</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileExistsAndWillBeOverwritten">
+        <source>Warning: HTML report file '{0}' already exists and will be overwritten.</source>
+        <target state="translated">Advertencia: el archivo de informe HTML "{0}" ya existe y se sobrescribirá.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameExtensionIsNotHtml">
+        <source>'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</source>
+        <target state="translated">El argumento del nombre de archivo '--report-html-filename' debe terminar en '.html' (por ejemplo, --report-html-filename myreport.html)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameOptionDescription">
+        <source>The name of the generated HTML report</source>
+        <target state="translated">Nombre del informe HTML generado</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameRequiresHtmlReport">
+        <source>'--report-html-filename' requires '--report-html' to be enabled</source>
+        <target state="translated">'--report-html-filename' requiere que '--report-html' esté habilitado</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameShouldNotContainPath">
+        <source>file name argument must not contain a path or invalid characters (e.g. --report-html-filename myreport.html)</source>
+        <target state="translated">el argumento de nombre de archivo no debe contener una ruta de acceso ni caracteres no válidos (por ejemplo, --report-html-filename myreport.html)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportGeneratorDescription">
+        <source>Produce a self-contained HTML report for the current test session</source>
+        <target state="translated">Generar un informe HTML independiente para la sesión de prueba actual</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportGeneratorDisplayName">
+        <source>HTML report generator</source>
+        <target state="translated">Generador de informes HTML</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportIsNotValidForDiscovery">
+        <source>'--report-html' cannot be enabled when using '--list-tests'</source>
+        <target state="translated">'--report-html' no se puede habilitar cuando se usa '--list-tests'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportOptionDescription">
+        <source>Enable generating an HTML report</source>
+        <target state="translated">Habilitar la generación de un informe HTML</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidTestApplicationBuilderType">
+        <source>HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="translated">El generador de informes HTML solo funciona con generadores de tipo "Microsoft.Testing.Platform.Builder.TestApplicationBuilder"</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

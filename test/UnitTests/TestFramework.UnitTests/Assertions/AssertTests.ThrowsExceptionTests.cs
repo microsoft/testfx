@@ -444,9 +444,9 @@ public partial class AssertTests
                 """);
     }
 
-    public void Throws_WhenActionExpressionContainsNewline_OmitsCallSiteLine()
+    public void Throws_WhenActionExpressionContainsNewline_UsesPlaceholderInCallSiteLine()
     {
-        // Multi-line action expressions can't be re-rendered as a single call-site line; the helper drops the line.
+        // Multi-line action expressions can't be re-rendered as a single call-site line; the helper substitutes the parameter placeholder.
 #pragma warning disable IDE0053 // Use expression body for lambda - intentional block body so the captured CallerArgumentExpression spans multiple lines.
         static void Action() => Assert.Throws<ArgumentException>(() =>
         {
@@ -463,6 +463,8 @@ public partial class AssertTests
                 expected type:    System.ArgumentException (or derived)
                 actual type:      System.InvalidOperationException
                 actual exception: System.InvalidOperationException: oops
+
+                Assert.Throws<ArgumentException>(<action>)
                 """);
     }
 

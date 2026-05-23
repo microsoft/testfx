@@ -6,6 +6,8 @@ using System.Data;
 using System.Data.Common;
 #endif
 
+using System.Collections.ObjectModel;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -64,7 +66,13 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// Properties.
     /// </summary>
     private readonly Dictionary<string, object?> _properties;
+#if NET9_0_OR_GREATER
+    private readonly Lock _propertiesLock = new();
+#else
+    private readonly object _propertiesLock = new();
+#endif
     private readonly IMessageLogger? _messageLogger;
+    private readonly TestRunCancellationToken? _testRunCancellationToken;
 
     private CancellationTokenRegistration? _cancellationTokenRegistration;
 
@@ -125,16 +133,20 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
             if (testClassFullName is not null)
             {
-                _properties.Add(FullyQualifiedTestClassNameLabel, testClassFullName);
+                // Use indexer assignment instead of Add so that re-seeding from a parent property
+                // snapshot that may already contain this key does not throw.
+                _properties[FullyQualifiedTestClassNameLabel] = testClassFullName;
             }
 
             if (testMethod is not null)
             {
-                _properties.Add(TestNameLabel, testMethod.Name);
+                // Use indexer assignment instead of Add for the same reason.
+                _properties[TestNameLabel] = testMethod.Name;
             }
         }
 
         _messageLogger = messageLogger;
+        _testRunCancellationToken = testRunCancellationToken;
         _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
     }
 
@@ -282,6 +294,94 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         => _properties.Add(propertyName, propertyValue);
 
     /// <summary>
+    /// Merges the given properties into this context's property bag using indexer semantics
+    /// (existing keys are overwritten, except the per-context labels
+    /// <see cref="TestContext.FullyQualifiedTestClassNameLabel"/> and
+    /// <see cref="TestContext.TestNameLabel"/>, which are preserved).
+    /// Used to flow properties set during <c>AssemblyInitialize</c> / <c>ClassInitialize</c>
+    /// into subsequent contexts.
+    /// <para>
+    /// Merge precedence: keys in <paramref name="propertiesToMerge"/> WIN over keys already
+    /// present in this context's bag. This is intentional — lifecycle snapshots typically
+    /// flow on top of the seeded source-level parameters (e.g. <c>TestRunParameters</c> from
+    /// <c>.runsettings</c>), so a user's explicit assignment in <c>AssemblyInitialize</c> /
+    /// <c>ClassInitialize</c> overrides any same-named runsettings value for the rest of
+    /// the lifecycle (class init, tests, class cleanup, assembly cleanup).
+    /// </para>
+    /// </summary>
+    /// <param name="propertiesToMerge">The properties to merge in. May be <see langword="null"/>.</param>
+    internal void MergeProperties(IReadOnlyDictionary<string, object?>? propertiesToMerge)
+    {
+        if (propertiesToMerge is null)
+        {
+            return;
+        }
+
+        // Take the same internal lock as CaptureLifecycleProperties so a snapshot capture
+        // cannot race with a merge on the same context (which would otherwise corrupt the
+        // Dictionary iterator or cause a missed write). Writes via the public Properties
+        // indexer still bypass this lock - see the remarks on CaptureLifecycleProperties.
+        lock (_propertiesLock)
+        {
+            foreach (KeyValuePair<string, object?> kvp in propertiesToMerge)
+            {
+                // Never overwrite the per-context labels.
+                if (kvp.Key == FullyQualifiedTestClassNameLabel || kvp.Key == TestNameLabel)
+                {
+                    continue;
+                }
+
+                _properties[kvp.Key] = kvp.Value;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Captures a snapshot of the current property bag, excluding the per-context labels
+    /// (<see cref="TestContext.FullyQualifiedTestClassNameLabel"/> and
+    /// <see cref="TestContext.TestNameLabel"/>). The returned dictionary is intended to be
+    /// stored on a <c>TestAssemblyInfo</c> / <c>TestClassInfo</c> and later merged into other
+    /// contexts via <see cref="MergeProperties(IReadOnlyDictionary{string, object?}?)"/>.
+    /// <para>
+    /// The snapshot is shallow: keys and value references are copied as-is. Reference-type
+    /// values stored in the bag (e.g. a mocked file system, a connection pool, a list) are
+    /// shared across every context the snapshot is later merged into. Mutations of those
+    /// reference-type instances are visible everywhere.
+    /// </para>
+    /// <para>
+    /// Enumeration is performed under a private synchronization lock so that snapshot
+    /// capture is safe against concurrent calls to this method or <see cref="MergeProperties"/>
+    /// on the same context. Note: writes made via the public <see cref="Properties"/> indexer
+    /// do NOT take this lock, so a lifecycle method that spawns a background thread which
+    /// keeps mutating <see cref="Properties"/> past method return can still race with the
+    /// capture - that is treated as user error and is consistent with the pre-existing
+    /// thread-affinity expectation of <c>AssemblyInitialize</c> / <c>ClassInitialize</c>.
+    /// </para>
+    /// </summary>
+    /// <returns>A read-only snapshot of the current properties.</returns>
+    internal IReadOnlyDictionary<string, object?> CaptureLifecycleProperties()
+    {
+        Dictionary<string, object?> snapshot;
+        lock (_propertiesLock)
+        {
+#pragma warning disable IDE0028 // Collection initialization can be simplified - capacity hint is intentional.
+            snapshot = new Dictionary<string, object?>(_properties.Count);
+#pragma warning restore IDE0028
+            foreach (KeyValuePair<string, object?> kvp in _properties)
+            {
+                if (kvp.Key == FullyQualifiedTestClassNameLabel || kvp.Key == TestNameLabel)
+                {
+                    continue;
+                }
+
+                snapshot[kvp.Key] = kvp.Value;
+            }
+        }
+
+        return new ReadOnlyDictionary<string, object?>(snapshot);
+    }
+
+    /// <summary>
     /// Result files attached.
     /// </summary>
     /// <returns>Results files generated in run.</returns>
@@ -397,4 +497,45 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
     internal string? GetAndClearTrace()
         => _traceStringBuilder?.GetAndClear();
+
+    /// <summary>
+    /// Creates a sibling <see cref="TestContextImplementation"/> for use by a single iteration
+    /// of the folded data-driven test execution path.
+    /// <para>
+    /// The clone inherits the same configuration as this context (a shallow snapshot of the
+    /// property bag, the message logger, the same test-run cancellation token, and on .NET
+    /// Framework the current data connection), but registers its own cancellation callback and
+    /// starts with no accumulated per-test state (no captured stdout/stderr/trace,
+    /// no diagnostic messages, no result files, no exception, no data row, and the
+    /// default <see cref="UnitTestOutcome"/> value rather than the original's current outcome).
+    /// This keeps the folded path structurally equivalent to the unfolded path, where each
+    /// row gets its own <see cref="TestContextImplementation"/>.
+    /// </para>
+    /// </summary>
+    /// <returns>A fresh context suitable for one folded data-driven iteration.</returns>
+    internal TestContextImplementation CloneForDataDrivenIteration()
+    {
+        // Take a shallow snapshot of the current property bag so that the clone starts with
+        // the same properties (including TestNameLabel / FullyQualifiedTestClassNameLabel and
+        // anything merged from AssemblyInitialize / ClassInitialize) but is otherwise isolated.
+        // Per-iteration mutations to the clone's property bag won't leak back to this instance
+        // nor to subsequent iterations.
+        var snapshot = new Dictionary<string, object?>(_properties);
+
+        // Pass testMethod: null and testClassFullName: null because the relevant labels are
+        // already in the snapshot. The constructor will copy the snapshot as-is.
+        var clone = new TestContextImplementation(testMethod: null, testClassFullName: null, snapshot, _messageLogger, _testRunCancellationToken);
+
+        // Preserve TestRunCount so user code that observes it (e.g. retry-aware tests) sees
+        // the same value it would see in the unfolded path. TestRunCount represents the
+        // execution-attempt count of this test, not per-row state, so it must flow into
+        // each iteration's context.
+        clone.Context.TestRunCount = Context.TestRunCount;
+
+#if NETFRAMEWORK
+        clone.SetDataConnection(_dbConnection);
+#endif
+
+        return clone;
+    }
 }

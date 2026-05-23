@@ -17,25 +17,50 @@
         <target state="translated">Doppeltes Element gefunden: &lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AreEqualFailMsg">
-        <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Erwartet:&lt;{1}&gt;. Tatsächlich:&lt;{2}&gt;. {0}</target>
-        <note></note>
+      <trans-unit id="AreAllDistinctFailedSummary">
+        <source>Expected all items in collection to be distinct.</source>
+        <target state="translated">Es wurde erwartet, dass alle Elemente in der Sammlung eindeutig sind.</target>
+        <note />
       </trans-unit>
-      <trans-unit id="AreEqualDeltaFailMsg">
-        <source>Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">Es wurde eine Differenz nicht größer als &lt;{3}&gt; zwischen dem erwarteten Wert &lt;{1}&gt; und dem tatsächlichen Wert &lt;{2}&gt; erwartet. {0}</target>
-        <note></note>
+      <trans-unit id="AreAllNotNullFailedSummary">
+        <source>Expected all items in collection to be non-null.</source>
+        <target state="translated">Es wurde erwartet, dass alle Elemente in der Sammlung ungleich NULL sind.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreAllOfTypeFailedSummary">
+        <source>Expected all items in collection to be of the specified type.</source>
+        <target state="translated">Es wurde erwartet, dass alle Elemente in der Sammlung den angegebenen Typ aufweisen.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualCaseFailMsg">
         <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
         <target state="translated">Erwartet:&lt;{1}&gt;. Die Großschreibung des tatsächlichen Werts weicht davon ab:&lt;{2}&gt;. {0}</target>
-        <note></note>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualDeltaFailedSummary">
+        <source>Expected values to be equal within tolerance.</source>
+        <target state="translated">Es wurde erwartet, dass die Werte innerhalb der Toleranz gleich sind.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailMsg">
         <source>Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</source>
         <target state="translated">Erwartet:&lt;{1} ({2})&gt;. Tatsächlich:&lt;{3} ({4})&gt;. {0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualFailMsg">
+        <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
+        <target state="translated">Erwartet:&lt;{1}&gt;. Tatsächlich:&lt;{2}&gt;. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffActualPrefix">
+        <source>But was:  </source>
+        <target state="translated">War aber:  </target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringDiffExpectedPrefix">
+        <source>Expected: </source>
+        <target state="translated">Erwartet: </target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffFailMsg">
         <source>{0}{1}
@@ -48,25 +73,130 @@
 {4}</target>
         <note />
       </trans-unit>
-      <trans-unit id="AreEqualStringDiffExpectedPrefix">
-        <source>Expected: </source>
-        <target state="translated">Erwartet: </target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="AreEqualStringDiffActualPrefix">
-        <source>But was:  </source>
-        <target state="translated">War aber:  </target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthBothMsg">
-        <source>String lengths are both {0} but differ at index {1}.</source>
-        <target state="translated">Die Zeichenfolgenlängen sind beide {0}, unterscheiden sich jedoch bei Index {1}.</target>
+        <source>Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</source>
+        <target state="translated">Zeichenfolgen haben dieselbe Länge ({0}) und unterscheiden sich an 1 Position(en). Erster Unterschied bei Index {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthDifferentMsg">
-        <source>Expected string length {0} but was {1}.</source>
-        <target state="translated">Die erwartete Länge der Zeichenfolge ist {0}, war aber {1}.</target>
-        <note></note>
+        <source>Strings have different lengths (expected: {0}, actual: {1}) and differ at 1 location(s). First difference at index {2}.</source>
+        <target state="translated">Zeichenfolgen haben unterschiedliche Längen (erwartet: {0}, tatsächlich: {1}) und unterscheiden sich an 1 Position(en). Erster Unterschied bei Index {2}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringsCaseOnlyDifferenceMsg">
+        <source>Strings differ only in case.</source>
+        <target state="translated">Zeichenfolgen unterscheiden sich nur in der Groß-/Kleinschreibung.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentFailedSummary">
+        <source>Expected values to be structurally equivalent.</source>
+        <target state="translated">Es wurde erwartet, dass die Werte strukturell gleichwertig sind.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentFailedSummaryStrict">
+        <source>Expected values to be structurally equivalent (strict mode).</source>
+        <target state="translated">Es wurde erwartet, dass die Werte strukturell äquivalent sind (strict-Modus).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchActualDictionaryThrew">
+        <source>reading the actual dictionary threw {0}: {1}.</source>
+        <target state="translated">Das Lesen des tatsächlichen Wörterbuchs hat {0}: {1} ausgelöst.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchActualEnumerationThrew">
+        <source>enumerating the actual collection threw {0}: {1}.</source>
+        <target state="translated">Beim Aufzählen der tatsächlichen Sammlung wurde {0}: {1} ausgelöst.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchActualMemberThrew">
+        <source>reading the actual member threw {0}: {1}.</source>
+        <target state="translated">Das Lesen des tatsächlichen Members hat {0}: {1} ausgelöst.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchAt">
+        <source>Mismatch at '{0}': {1}</source>
+        <target state="translated">Konflikt bei „{0}“: {1}</target>
+        <note>{0} is a member path (e.g., 'Order.Items[2].Price'), {1} is a localized reason describing the kind of mismatch.</note>
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExpectedDictionaryThrew">
+        <source>reading the expected dictionary threw {0}: {1}.</source>
+        <target state="translated">Das Lesen des erwarteten Wörterbuchs hat {0}: {1} ausgelöst.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExpectedEnumerationThrew">
+        <source>enumerating the expected collection threw {0}: {1}.</source>
+        <target state="translated">Beim Enumerieren der erwarteten Sammlung wurde {0}: {1} ausgelöst.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExpectedMemberThrew">
+        <source>reading the expected member threw {0}: {1}.</source>
+        <target state="translated">Beim Lesen des erwarteten Members wurde Folgendes ausgelöst {0}: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchExtraMembers">
+        <source>actual has unexpected members not present on expected: {0}.</source>
+        <target state="translated">„actual“ weist unerwartete Elemente auf, die nicht wie erwartet vorhanden sind: {0}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchIEquatableThrew">
+        <source>IEquatable.Equals threw {0}: {1}.</source>
+        <target state="translated">IEquatable.Equals hat {0}: {1} ausgelöst.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchLength">
+        <source>collections differ in length (expected {0} elements, actual {1}).</source>
+        <target state="translated">Sammlungen unterscheiden sich in der Länge (erwartet {0} Elemente, tatsächlich {1}).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchMaxDepth">
+        <source>comparison exceeded the maximum supported depth of {0}.</source>
+        <target state="translated">Der Vergleich hat die maximal unterstützte Tiefe von {0} überschritten.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchMissingKey">
+        <source>key {0} present on expected is missing from actual.</source>
+        <target state="translated">Der in der „expected“ vorhandene Schlüssel „{0}“ fehlt in „actual“.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchMissingMember">
+        <source>member '{0}' present on expected is missing from actual.</source>
+        <target state="translated">Das in der „expected“ vorhandene Member „{0}“ fehlt in „actual“.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchNull">
+        <source>one side is null, the other is not.</source>
+        <target state="translated">Eine Seite ist NULL, die andere nicht.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchTopology">
+        <source>graph topology differs (the same reference on one side appears paired with different references on the other side).</source>
+        <target state="translated">Die Graphtopologie unterscheidet sich (der gleiche Verweis auf der einen Seite wird mit unterschiedlichen Verweisen auf der anderen Seite gekoppelt angezeigt).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchType">
+        <source>incompatible types (expected '{0}', actual '{1}').</source>
+        <target state="translated">Inkompatible Typen (erwartet „{0}“, tatsächlich „{1}“).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchUnexpectedKey">
+        <source>key {0} present on actual is not on expected.</source>
+        <target state="translated">Schlüssel {0} ist in „actual“ vorhanden, aber nicht in „expected“.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentMismatchValue">
+        <source>values are not equal.</source>
+        <target state="translated">Werte sind nicht gleich.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEquivalentRootPath">
+        <source>&lt;root&gt;</source>
+        <target state="translated">&lt;root&gt;</target>
+        <note>Placeholder used in equivalence-mismatch messages when the difference is at the top of the object graph.</note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualDeltaFailedSummary">
+        <source>Expected values to differ beyond tolerance.</source>
+        <target state="translated">Es wurde erwartet, dass sich die Werte über die Toleranz hinaus unterscheiden.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEquivalentFailedSummary">
         <source>Expected values to be structurally equivalent.</source>
@@ -178,10 +308,35 @@
         <target state="translated">Es wurde ein beliebiger Wert erwartet außer:&lt;{1}&gt;. Tatsächlich:&lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AreNotEqualDeltaFailMsg">
-        <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">Es wurde eine Differenz größer als &lt;{3}&gt; zwischen dem erwarteten Wert &lt;{1}&gt; und dem tatsächlichen Wert &lt;{2}&gt; erwartet. {0}</target>
-        <note></note>
+      <trans-unit id="AreNotEqualStringsCaseInsensitiveFailedSummary">
+        <source>Expected strings to differ (case-insensitive).</source>
+        <target state="translated">Es wurde erwartet, dass sich Zeichenfolgen unterscheiden (Groß-/Kleinschreibung nicht beachtet).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEqualStringsFailedSummary">
+        <source>Expected strings to differ.</source>
+        <target state="translated">Es wurde erwartet, dass sich die Zeichenfolgen unterscheiden.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentComparisonFailedSummary">
+        <source>Could not complete structural comparison.</source>
+        <target state="translated">Der strukturelle Vergleich konnte nicht abgeschlossen werden.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentComparisonFailedSummaryStrict">
+        <source>Could not complete structural comparison (strict mode).</source>
+        <target state="translated">Der strukturelle Vergleich (strict-Modus) konnte nicht abgeschlossen werden.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentFailedSummary">
+        <source>Expected values to be structurally different.</source>
+        <target state="translated">Es wurde erwartet, dass sich die Werte strukturell unterscheiden.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotEquivalentFailedSummaryStrict">
+        <source>Expected values to be structurally different (strict mode).</source>
+        <target state="translated">Es wurde erwartet, dass sich die Werte strukturell unterscheiden (strict-Modus).</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreNotEquivalentComparisonFailedSummary">
         <source>Could not complete structural comparison.</source>
@@ -208,6 +363,16 @@
         <target state="translated">Beide Werte sind &lt;null&gt;. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreNotSequenceEqualInAnyOrderFailedSummary">
+        <source>Expected sequences to differ (in any order).</source>
+        <target state="translated">Es wurde erwartet, dass die Sequenzen sich unterscheiden (in beliebiger Reihenfolge).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotSequenceEqualInOrderFailedSummary">
+        <source>Expected sequences to differ.</source>
+        <target state="translated">Es wurde erwartet, dass sich die Sequenzen unterscheiden.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreSameActualIsNull">
         <source>Actual is &lt;null&gt;. {0}</source>
         <target state="translated">Aktuell ist &lt;null&gt;. {0}</target>
@@ -223,6 +388,31 @@
         <target state="translated">Übergeben Sie keine Werttypen an AreSame(). In ein Objekt konvertierte Werte sind niemals identisch. Verwenden Sie stattdessen AreEqual(). {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreSequenceEqualInAnyOrderFailedSummary">
+        <source>Expected sequences to be equal (in any order).</source>
+        <target state="translated">Es wurde erwartete, dass die Sequenzen gleich sind (in beliebiger Reihenfolge).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualInOrderFailedSummary">
+        <source>Expected sequences to be equal.</source>
+        <target state="translated">Es wurde erwartet, dass Sequenzen gleich sind.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualLengthDiffMsg">
+        <source>Sequences have different lengths (expected: {0}, actual: {1}).</source>
+        <target state="translated">Sequenzen haben unterschiedliche Längen (erwartet: {0}, tatsächlich: {1}).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualMissingUnexpectedMsg">
+        <source>Missing {0} element(s) from actual. Found {1} unexpected element(s).</source>
+        <target state="translated">Es fehlen {0} Elemente in „actual“. Es wurden {1} unerwartete Elemente gefunden.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSequenceEqualSameLengthDiffMsg">
+        <source>Sequences have {0} element(s). {1} element(s) differ. First difference at index {2}.</source>
+        <target state="translated">Sequenzen weisen {0} Elemente auf. {1} Element(e) unterscheiden sich. Erster Unterschied bei Index {2}.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssertScopeFailure">
         <source>{0} assertion(s) failed within the assert scope.</source>
         <target state="translated">{0} Assertion(en) innerhalb des Assert-Bereichs fehlgeschlagen.</target>
@@ -236,6 +426,11 @@
       <trans-unit id="AssertThatDetailsPrefix">
         <source>Details:</source>
         <target state="translated">Details:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatFailedToEvaluate">
+        <source>&lt;Failed to evaluate&gt;</source>
+        <target state="translated">&lt;Failed to evaluate&gt;</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThatMessageFormat">
@@ -283,6 +478,11 @@
         <target state="translated">{0}. {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="ContainsAllFailedSummary">
+        <source>Expected collection to contain all specified items.</source>
+        <target state="translated">Es wurde erwartet, dass die Sammlung das angegebene Element enthält.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ContainsFail">
         <source>String '{0}' does not contain string '{1}'. {2}.</source>
         <target state="translated">Die Zeichenfolge "{0}" enthält nicht die Zeichenfolge "{1}". {2}.</target>
@@ -295,7 +495,7 @@
       </trans-unit>
       <trans-unit id="ContainsItemFailedSummary">
         <source>Expected collection to contain the specified element.</source>
-        <target state="new">Expected collection to contain the specified element.</target>
+        <target state="translated">Es wurde erwartet, dass die Sammlung das angegebene Element enthält.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">
@@ -305,7 +505,7 @@
       </trans-unit>
       <trans-unit id="ContainsPredicateFailedSummary">
         <source>Expected collection to contain an element matching the predicate.</source>
-        <target state="new">Expected collection to contain an element matching the predicate.</target>
+        <target state="translated">Es wurde erwartet, dass die Sammlung ein Element enthält, das dem Prädikat entspricht.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleFailMsg">
@@ -315,7 +515,7 @@
       </trans-unit>
       <trans-unit id="ContainsSingleFailedSummary">
         <source>Expected collection to contain exactly one element.</source>
-        <target state="new">Expected collection to contain exactly one element.</target>
+        <target state="translated">Es wurde erwartet, dass die Sammlung genau ein Element enthält.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleMatchFailMsg">
@@ -325,12 +525,17 @@
       </trans-unit>
       <trans-unit id="ContainsSingleMatchFailedSummary">
         <source>Expected collection to contain exactly one element matching the predicate.</source>
-        <target state="new">Expected collection to contain exactly one element matching the predicate.</target>
+        <target state="translated">Es wurde erwartet, dass die Sammlung genau ein Element enthält, das dem Prädikat entspricht.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSubstringFailedSummary">
         <source>Expected string to contain the specified substring.</source>
-        <target state="new">Expected string to contain the specified substring.</target>
+        <target state="translated">Es wurde erwartet, dass die Zeichenfolge die angegebene Unterzeichenfolge enthält.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotContainAllFailedSummary">
+        <source>Expected collection to not contain all specified items.</source>
+        <target state="translated">Es wurde erwartet, dass die Sammlung das angegebene Element nicht enthält.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainFail">
@@ -345,7 +550,7 @@
       </trans-unit>
       <trans-unit id="DoesNotContainItemFailedSummary">
         <source>Expected collection to not contain the specified element.</source>
-        <target state="new">Expected collection to not contain the specified element.</target>
+        <target state="translated">Es wurde erwartet, dass die Sammlung das angegebene Element nicht enthält.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailMsg">
@@ -355,12 +560,12 @@
       </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailedSummary">
         <source>Expected collection to not contain an element matching the predicate.</source>
-        <target state="new">Expected collection to not contain an element matching the predicate.</target>
+        <target state="translated">Es wurde erwartet, dass die Sammlung kein Element enthält, das dem Prädikat entspricht.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainSubstringFailedSummary">
         <source>Expected string to not contain the specified substring.</source>
-        <target state="new">Expected string to not contain the specified substring.</target>
+        <target state="translated">Es wurde erwartet, dass die Zeichenfolge die angegebene Teilzeichenfolge nicht enthält.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotEndWithFail">
@@ -370,7 +575,12 @@
       </trans-unit>
       <trans-unit id="DoesNotEndWithFailedSummary">
         <source>Expected string to not end with the specified suffix.</source>
-        <target state="new">Expected string to not end with the specified suffix.</target>
+        <target state="translated">Es wurde erwartet, dass die Zeichenfolge nicht mit dem angegebenen Suffix endet.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotMatchRegexFailedSummary">
+        <source>Expected string to not match the specified pattern.</source>
+        <target state="translated">Es wurde erwartet, dass die Zeichenfolge nicht mit dem angegebenen Muster übereinstimmt.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
@@ -380,7 +590,7 @@
       </trans-unit>
       <trans-unit id="DoesNotStartWithFailedSummary">
         <source>Expected string to not start with the specified prefix.</source>
-        <target state="new">Expected string to not start with the specified prefix.</target>
+        <target state="translated">Es wurde erwartet, dass die Zeichenfolge nicht mit dem angegebenen Präfix beginnt.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidFieldLayout">
@@ -434,12 +644,17 @@ Tatsächlich: {2}</target>
       </trans-unit>
       <trans-unit id="EndsWithFailedSummary">
         <source>Expected string to end with the specified suffix.</source>
-        <target state="new">Expected string to end with the specified suffix.</target>
+        <target state="translated">Es wurde erwartet, dass die Zeichenfolge mit dem angegebenen Suffix endet.</target>
         <note />
       </trans-unit>
-      <trans-unit id="HasCountFailMsg">
-        <source>Expected collection of size {1}. Actual: {2}. {0}</source>
-        <target state="translated">Es wurde eine Sammlung mit einer Größe {1} erwartet. Tatsächlich: {2}. {0}</target>
+      <trans-unit id="HasCountFailedSummary">
+        <source>Expected collection to contain a specific number of elements.</source>
+        <target state="translated">Es wurde erwartet, dass die Sammlung eine bestimmte Anzahl von Elementen enthält.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InconclusivePrefix">
+        <source>Assert.Inconclusive.</source>
+        <target state="translated">Assert.Inconclusive.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidAccessToTestContextProperty">
@@ -452,6 +667,11 @@ Tatsächlich: {2}</target>
         <target state="translated">Ungültige GitHub-Ticket-URL.</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsEmptyFailedSummary">
+        <source>Expected collection to be empty.</source>
+        <target state="translated">Es wurde erwartet, dass die Sammlung leer ist.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsFalseFailedSummary">
         <source>Expected condition to be false.</source>
         <target state="translated">Es wurde erwartet, dass die Bedingung „falsch“ lautet.</target>
@@ -459,12 +679,12 @@ Tatsächlich: {2}</target>
       </trans-unit>
       <trans-unit id="IsGreaterThanFailedSummary">
         <source>Expected value to be greater than the lower bound.</source>
-        <target state="new">Expected value to be greater than the lower bound.</target>
+        <target state="translated">Es wurde erwartet, dass der Wert größer als die untere Grenze ist.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsGreaterThanOrEqualToFailedSummary">
         <source>Expected value to be greater than or equal to the lower bound.</source>
-        <target state="new">Expected value to be greater than or equal to the lower bound.</target>
+        <target state="translated">Es wurde erwartet, dass der Wert größer oder gleich der unteren Grenze ist.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeFail">
@@ -474,7 +694,7 @@ Tatsächlich: {2}</target>
       </trans-unit>
       <trans-unit id="IsInRangeFailedSummary">
         <source>Expected value to be within the inclusive range.</source>
-        <target state="new">Expected value to be within the inclusive range.</target>
+        <target state="translated">Erwarteter Wert liegt innerhalb des inklusiven Bereichs.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
@@ -489,12 +709,12 @@ Tatsächlich: {2}</target>
       </trans-unit>
       <trans-unit id="IsLessThanFailedSummary">
         <source>Expected value to be less than the upper bound.</source>
-        <target state="new">Expected value to be less than the upper bound.</target>
+        <target state="translated">Es wurde erwartet, dass der Wert kleiner als die Obergrenze ist.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsLessThanOrEqualToFailedSummary">
         <source>Expected value to be less than or equal to the upper bound.</source>
-        <target state="new">Expected value to be less than or equal to the upper bound.</target>
+        <target state="translated">Es wurde erwartet, dass der Wert kleiner oder gleich der oberen Grenze ist.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsMatchFail">
@@ -504,12 +724,12 @@ Tatsächlich: {2}</target>
       </trans-unit>
       <trans-unit id="IsNegativeFailedSummary">
         <source>Expected value to be negative.</source>
-        <target state="new">Expected value to be negative.</target>
+        <target state="translated">Es wurde erwartet, dass der Wert negativ ist.</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsNotEmptyFailMsg">
-        <source>Expected collection to contain any item but it is empty. {0}</source>
-        <target state="translated">Es wurde erwartet, dass die Sammlung ein beliebiges Element enthält, aber leer ist. {0}</target>
+      <trans-unit id="IsNotEmptyFailedSummary">
+        <source>Expected collection to not be empty.</source>
+        <target state="translated">Es wurde erwartet, dass die Sammlung nicht leer ist.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">
@@ -537,6 +757,26 @@ Tatsächlich: {2}</target>
         <target state="translated">Erwarteter Wert darf nicht null sein.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AreNotEqualFailedSummary">
+        <source>Expected values to differ.</source>
+        <target state="translated">Es wurde erwartet, dass sich die Werte unterscheiden.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualStringsFailedSummary">
+        <source>Expected strings to be equal.</source>
+        <target state="translated">Es wurde erwartet, dass Zeichenfolgen gleich sind.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualDifferentTypesFailedSummary">
+        <source>Expected values to be equal, but they are of different types.</source>
+        <target state="translated">Es wurde erwartet, dass die Werte gleich sind, aber sie weisen unterschiedliche Typen auf.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreEqualFailedSummary">
+        <source>Expected values to be equal.</source>
+        <target state="translated">Es wurde erwartet, dass die Werte gleich sind.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
         <target state="translated">Erwarteter Wert ist null.</target>
@@ -544,12 +784,17 @@ Tatsächlich: {2}</target>
       </trans-unit>
       <trans-unit id="IsPositiveFailedSummary">
         <source>Expected value to be positive.</source>
-        <target state="new">Expected value to be positive.</target>
+        <target state="translated">Es wurde erwartet, dass der Wert positiv ist.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">
         <source>Expected condition to be true.</source>
         <target state="translated">Es wurde erwartet, dass die Bedingung „wahr“ ist.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MatchesRegexFailedSummary">
+        <source>Expected string to match the specified pattern.</source>
+        <target state="translated">Es wurde erwartet, dass die Zeichenfolge mit dem angegebenen Muster übereinstimmt.</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
@@ -620,7 +865,7 @@ Tatsächlich: {2}</target>
       </trans-unit>
       <trans-unit id="StartsWithFailedSummary">
         <source>Expected string to start with the specified prefix.</source>
-        <target state="new">Expected string to start with the specified prefix.</target>
+        <target state="translated">Es wurde erwartet, dass die Zeichenfolge mit dem angegebenen Präfix beginnt.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">

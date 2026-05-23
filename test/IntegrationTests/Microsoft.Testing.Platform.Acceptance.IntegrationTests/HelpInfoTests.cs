@@ -52,6 +52,7 @@ Options:
         Display .NET test application information.
     --list-tests
         List available tests.
+        Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
     --results-directory
@@ -62,6 +63,11 @@ Options:
         A global test execution timeout.
         Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
 Extension options:
+    --ansi
+        Control whether ANSI escape characters are emitted.
+        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+        When both --ansi and --no-ansi are provided, --ansi wins.
     --no-ansi
         Disable outputting ANSI escape characters to screen.
     --no-progress
@@ -113,6 +119,7 @@ Options:
         const string wildcardMatchPattern = $"""
 Microsoft.Testing.Platform v*
 Unknown option '--{UnknownOption}'
+Command line: --no-ansi --no-progress -{UnknownOption}
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
@@ -223,9 +230,10 @@ Built-in command line providers:
         Hidden: True
         Description: For testing purposes
       --list-tests
-        Arity: 0
+        Arity: 0..1
         Hidden: False
         Description: List available tests\.
+        Optionally accepts 'text' \(the default human-readable output\) or 'json' to print the discovered tests as a JSON document on standard output\.
       --minimum-expected-tests
         Arity: 0\.\.1
         Hidden: False
@@ -255,6 +263,13 @@ Registered command line providers:
     Version: .+
     Description: Writes test results to terminal.
     Options:
+      --ansi
+        Arity: 1
+        Hidden: False
+        Description: Control whether ANSI escape characters are emitted\.
+        Valid values are 'auto' \(default\), 'on' \(also accepts 'true', 'enable', '1'\) or 'off' \(also accepts 'false', 'disable', '0'\)\.
+        'on' forces ANSI escape codes \(including cursor movement\) even when stdout is redirected; pair it with --no-progress if you only want colors\.
+        When both --ansi and --no-ansi are provided, --ansi wins\.
       --no-ansi
         Arity: 0
         Hidden: False

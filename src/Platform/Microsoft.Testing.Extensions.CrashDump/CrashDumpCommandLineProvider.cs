@@ -11,6 +11,13 @@ namespace Microsoft.Testing.Extensions.Diagnostics;
 internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
 {
     private static readonly string[] DumpTypeOptions = ["Mini", "Heap", "Triage", "Full"];
+    private static readonly IReadOnlyCollection<CommandLineOption> CachedCommandLineOptions =
+    [
+        new(CrashDumpCommandLineOptions.CrashDumpOptionName, CrashDumpResources.CrashDumpOptionDescription, ArgumentArity.Zero, false),
+        new(CrashDumpCommandLineOptions.CrashReportOptionName, CrashDumpResources.CrashReportOptionDescription, ArgumentArity.Zero, false),
+        new(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, CrashDumpResources.CrashDumpFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
+        new(CrashDumpCommandLineOptions.CrashDumpTypeOptionName, CrashDumpResources.CrashDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false)
+    ];
 
     public string Uid => nameof(CrashDumpCommandLineProvider);
 
@@ -22,13 +29,7 @@ internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        =>
-        [
-            new CommandLineOption(CrashDumpCommandLineOptions.CrashDumpOptionName, CrashDumpResources.CrashDumpOptionDescription, ArgumentArity.Zero, false),
-            new CommandLineOption(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, CrashDumpResources.CrashDumpFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
-            new CommandLineOption(CrashDumpCommandLineOptions.CrashDumpTypeOptionName, CrashDumpResources.CrashDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false)
-        ];
+    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() => CachedCommandLineOptions;
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
@@ -45,5 +46,23 @@ internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
     }
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => ValidationResult.ValidTask;
+        => IsCrashDumpMainOptionMissing(commandLineOptions)
+            ? ValidationResult.InvalidTask(CrashDumpResources.MissingCrashDumpMainOption)
+            : IsCrashReportUnsupportedOnCurrentPlatform(commandLineOptions)
+            ? ValidationResult.InvalidTask(CrashDumpResources.CrashReportNotSupportedOnWindowsErrorMessage)
+            : ValidationResult.ValidTask;
+
+    private static bool IsCrashReportUnsupportedOnCurrentPlatform(ICommandLineOptions commandLineOptions)
+        => commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName) &&
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+    private static bool IsCrashDumpMainOptionMissing(ICommandLineOptions commandLineOptions)
+    {
+        bool hasCrashDumpSubOption = commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName) ||
+            commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpTypeOptionName);
+        bool hasCrashDumpMainOption = commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) ||
+            commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
+
+        return hasCrashDumpSubOption && !hasCrashDumpMainOption;
+    }
 }

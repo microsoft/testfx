@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ko" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="HtmlReportArtifactDescription">
+        <source>Self-contained HTML test report</source>
+        <target state="translated">자체 포함 HTML 테스트 보고서</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportArtifactDisplayName">
+        <source>HTML Report</source>
+        <target state="translated">HTML 보고서</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileExistsAndWillBeOverwritten">
+        <source>Warning: HTML report file '{0}' already exists and will be overwritten.</source>
+        <target state="translated">경고: HTML 보고서 파일 '{0}'이(가) 이미 있으므로 덮어씁니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameExtensionIsNotHtml">
+        <source>'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</source>
+        <target state="translated">'--report-html-filename' 파일 이름 인수는 '.html'로 끝나야 합니다. 예: --report-html-filename myreport.html</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameOptionDescription">
+        <source>The name of the generated HTML report</source>
+        <target state="translated">생성된 HTML 보고서의 이름</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameRequiresHtmlReport">
+        <source>'--report-html-filename' requires '--report-html' to be enabled</source>
+        <target state="translated">'--report-html-filename'을 사용하려면 '--report-html'을 사용하도록 설정해야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameShouldNotContainPath">
+        <source>file name argument must not contain a path or invalid characters (e.g. --report-html-filename myreport.html)</source>
+        <target state="translated">파일 이름 인수에는 경로나 잘못된 문자가 포함되면 안 됩니다. 예: --report-html-filename myreport.html</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportGeneratorDescription">
+        <source>Produce a self-contained HTML report for the current test session</source>
+        <target state="translated">현재 테스트 세션에 대한 독립 실행형 HTML 보고서 생성</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportGeneratorDisplayName">
+        <source>HTML report generator</source>
+        <target state="translated">HTML 보고서 생성기</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportIsNotValidForDiscovery">
+        <source>'--report-html' cannot be enabled when using '--list-tests'</source>
+        <target state="translated">'--list-tests'를 사용하는 경우 '--report-html'을 사용하도록 설정할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportOptionDescription">
+        <source>Enable generating an HTML report</source>
+        <target state="translated">HTML 보고서 생성 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidTestApplicationBuilderType">
+        <source>HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="translated">HTML 보고서 생성기는 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 유형의 작성기에서만 작동합니다.</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

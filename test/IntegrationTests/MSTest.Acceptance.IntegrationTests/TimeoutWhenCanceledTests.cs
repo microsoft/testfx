@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -34,13 +34,11 @@ public sealed class TimeoutWhenCanceledTests : AcceptanceTestBase<TimeoutWhenCan
         => await RunAndAssertTestWasCanceledAsync(tfm, "TESTCONTEXT_CANCEL_", "baseClassInit");
 
     [TestMethod]
-    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/6198. The TestFailedException returned by InvokeGlobalInitializeMethodAsync is currently discarded in TestMethodInfo.Execution.cs, so cancellations on global test initialize methods do not fail the test.")]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task GlobalTestInitialize_WhenTestContextCanceled_GlobalTestInitializeTaskIsCanceled(string tfm)
         => await RunAndAssertTestWasCanceledAsync(tfm, "TESTCONTEXT_CANCEL_", "globalTestInit");
 
     [TestMethod]
-    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/6198. The TestFailedException returned by InvokeGlobalCleanupMethodAsync is currently discarded in TestMethodInfo.Lifecycle.cs, so cancellations on global test cleanup methods do not fail the test.")]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task GlobalTestCleanup_WhenTestContextCanceled_GlobalTestCleanupTaskIsCanceled(string tfm)
         => await RunAndAssertTestWasCanceledAsync(tfm, "TESTCONTEXT_CANCEL_", "globalTestCleanup");

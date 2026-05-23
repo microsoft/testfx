@@ -23,6 +23,13 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
     [UnsupportedOSPlatform("browser")]
     public void AddEnvironmentVariableProvider(Func<IServiceProvider, ITestHostEnvironmentVariableProvider> environmentVariableProviderFactory)
+        => AddEnvironmentVariableProvider(environmentVariableProviderFactory, insertAtStart: false);
+
+    [UnsupportedOSPlatform("browser")]
+    internal void AddEnvironmentVariableProviderFirst(Func<IServiceProvider, ITestHostEnvironmentVariableProvider> environmentVariableProviderFactory)
+        => AddEnvironmentVariableProvider(environmentVariableProviderFactory, insertAtStart: true);
+
+    private void AddEnvironmentVariableProvider(Func<IServiceProvider, ITestHostEnvironmentVariableProvider> environmentVariableProviderFactory, bool insertAtStart)
     {
         if (OperatingSystem.IsBrowser())
         {
@@ -30,6 +37,13 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         }
 
         _ = environmentVariableProviderFactory ?? throw new ArgumentNullException(nameof(environmentVariableProviderFactory));
+        if (insertAtStart)
+        {
+            _environmentVariableProviderFactories.Insert(0, environmentVariableProviderFactory);
+            _factoryOrdering.Insert(0, environmentVariableProviderFactory);
+            return;
+        }
+
         _environmentVariableProviderFactories.Add(environmentVariableProviderFactory);
         _factoryOrdering.Add(environmentVariableProviderFactory);
     }

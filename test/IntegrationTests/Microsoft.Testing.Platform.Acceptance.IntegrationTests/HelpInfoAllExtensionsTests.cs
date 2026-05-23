@@ -52,6 +52,7 @@ Options:
         Display .NET test application information.
     --list-tests
         List available tests.
+        Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
     --results-directory
@@ -70,6 +71,13 @@ Options:
         A global test execution timeout.
         Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
 Extension options:
+    --ansi
+        Control whether ANSI escape characters are emitted.
+        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+        When both --ansi and --no-ansi are provided, --ansi wins.
+    --crash-report
+        [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).
     --crashdump
         [net6.0+ only] Generate a dump file if the test process crashes
     --crashdump-filename
@@ -100,10 +108,36 @@ Extension options:
     --output
         Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+    --publish-azdo-run-name
+        Custom Azure DevOps test run name for live test-result publishing.
+    --publish-azdo-test-results
+        Publish test results live to the Azure DevOps Tests tab.
+    --report-azdo
+        Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.
+    --report-azdo-demote-known-flaky
+        Demote failures with an Azure DevOps flaky history of at least 25% in the selected window to warnings.
+    --report-azdo-flaky-history
+        Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.
+    --report-azdo-quarantine-file
+        Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.
+    --report-azdo-severity
+        Severity to use for the reported event. Options are: error (default) and warning.
+    --report-azdo-upload-artifact-exclude
+        Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.
+    --report-azdo-upload-artifact-include
+        Include files in Azure DevOps artifact upload using glob patterns relative to the test results directory. Defaults to '**/*'.
+    --report-azdo-upload-artifact-name
+        Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.
+    --report-azdo-upload-artifacts
+        Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.
+    --report-html
+        Enable generating an HTML report
+    --report-html-filename
+        The name of the generated HTML report
     --report-trx
         Enable generating TRX report
     --report-trx-filename
-        The name of the generated TRX report.
+        The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
         Example: MyReport_{tfm}.trx
     --show-stderr
@@ -238,9 +272,10 @@ Built-in command line providers:
         Hidden: True
         Description: For testing purposes
       --list-tests
-        Arity: 0
+        Arity: 0..1
         Hidden: False
         Description: List available tests.
+        Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.
       --minimum-expected-tests
         Arity: 0..1
         Hidden: False
@@ -265,11 +300,64 @@ Built-in command line providers:
         Description: A global test execution timeout.
         Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
 Registered command line providers:
+  AzureDevOpsCommandLineProvider
+    Name: Azure DevOps report generator
+    Version: *
+    Description: Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.
+    Options:
+      --publish-azdo-run-name
+        Arity: 1
+        Hidden: False
+        Description: Custom Azure DevOps test run name for live test-result publishing.
+      --publish-azdo-test-results
+        Arity: 0
+        Hidden: False
+        Description: Publish test results live to the Azure DevOps Tests tab.
+      --report-azdo
+        Arity: 0
+        Hidden: False
+        Description: Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.
+      --report-azdo-demote-known-flaky
+        Arity: 0
+        Hidden: False
+        Description: Demote failures with an Azure DevOps flaky history of at least 25% in the selected window to warnings.
+      --report-azdo-flaky-history
+        Arity: 1
+        Hidden: False
+        Description: Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.
+      --report-azdo-quarantine-file
+        Arity: 1
+        Hidden: False
+        Description: Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.
+      --report-azdo-severity
+        Arity: 1
+        Hidden: False
+        Description: Severity to use for the reported event. Options are: error (default) and warning.
+      --report-azdo-upload-artifact-exclude
+        Arity: 0..N
+        Hidden: False
+        Description: Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.
+      --report-azdo-upload-artifact-include
+        Arity: 0..N
+        Hidden: False
+        Description: Include files in Azure DevOps artifact upload using glob patterns relative to the test results directory. Defaults to '**/*'.
+      --report-azdo-upload-artifact-name
+        Arity: 1
+        Hidden: False
+        Description: Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.
+      --report-azdo-upload-artifacts
+        Arity: 1
+        Hidden: False
+        Description: Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.
   CrashDumpCommandLineProvider
     Name: Crash dump
     Version: *
     Description: [net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly
     Options:
+      --crash-report
+        Arity: 0
+        Hidden: False
+        Description: [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).
       --crashdump
         Arity: 0
         Hidden: False
@@ -312,6 +400,19 @@ Registered command line providers:
         Description: Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
         Default type is 'Full'
+  HtmlReportGeneratorCommandLine
+    Name: HTML report generator
+    Version: *
+    Description: Produce a self-contained HTML report for the current test session
+    Options:
+      --report-html
+        Arity: 0
+        Hidden: False
+        Description: Enable generating an HTML report
+      --report-html-filename
+        Arity: 1
+        Hidden: False
+        Description: The name of the generated HTML report
   MSBuildCommandLineProvider
     Name: MSBuildCommandLineProvider
     Version: *
@@ -351,6 +452,13 @@ Registered command line providers:
     Version: *
     Description: Writes test results to terminal.
     Options:
+      --ansi
+        Arity: 1
+        Hidden: False
+        Description: Control whether ANSI escape characters are emitted.
+        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+        When both --ansi and --no-ansi are provided, --ansi wins.
       --no-ansi
         Arity: 0
         Hidden: False
@@ -386,7 +494,7 @@ Registered command line providers:
       --report-trx-filename
         Arity: 1
         Hidden: False
-        Description: The name of the generated TRX report.
+        Description: The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
         Example: MyReport_{tfm}.trx
 Registered tools:
@@ -431,9 +539,11 @@ Registered tools:
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>

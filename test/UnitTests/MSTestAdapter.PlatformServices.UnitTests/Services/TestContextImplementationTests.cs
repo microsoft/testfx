@@ -303,6 +303,20 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation.DataConnection!.ConnectionString
             .Should().Be("Dsn=Excel Files;dbq=.\\data.xls;defaultdir=.; driverid=790;maxbuffersize=2048;pagetimeout=5");
     }
+
+    public void CloneForDataDrivenIterationShouldPreserveDataConnection()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+
+        DbProviderFactory factory = DbProviderFactories.GetFactory("System.Data.Odbc");
+        DbConnection connection = factory.CreateConnection();
+        connection.ConnectionString = @"Dsn=Excel Files;dbq=.\data.xls;defaultdir=.; driverid=790;maxbuffersize=2048;pagetimeout=5";
+        _testContextImplementation.SetDataConnection(connection);
+
+        TestContextImplementation clone = _testContextImplementation.CloneForDataDrivenIteration();
+
+        clone.DataConnection.Should().BeSameAs(connection);
+    }
 #endif
 
 #if NETCOREAPP
@@ -400,5 +414,278 @@ public class TestContextImplementationTests : TestContainer
         _ = testContextImplementation.GetAndClearError();
         _ = testContextImplementation.GetAndClearTrace();
         t.Join();
+    }
+
+    public void MergePropertiesShouldAddNewKeysIntoThePropertyBag()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        IReadOnlyDictionary<string, object?> snapshot = new Dictionary<string, object?>
+        {
+            ["NewKey"] = "NewValue",
+            ["AnotherKey"] = 42,
+        };
+
+        _testContextImplementation.MergeProperties(snapshot);
+
+        _testContextImplementation.Properties["NewKey"].Should().Be("NewValue");
+        _testContextImplementation.Properties["AnotherKey"].Should().Be(42);
+    }
+
+    public void MergePropertiesShouldOverwriteExistingKeys()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.Properties["Key"] = "Original";
+
+        _testContextImplementation.MergeProperties(new Dictionary<string, object?> { ["Key"] = "Overwritten" });
+
+        _testContextImplementation.Properties["Key"].Should().Be("Overwritten");
+    }
+
+    public void MergePropertiesShouldOverrideSeededSourceLevelParameters()
+    {
+        // Seeded source-level parameters (the bag the runner forwards from runsettings
+        // TestRunParameters) sit in _properties at construction time; lifecycle snapshots
+        // from AssemblyInitialize / ClassInitialize MUST override them on key collision so
+        // a user's explicit assignment wins for the rest of the lifecycle.
+        var seeded = new Dictionary<string, object?>
+        {
+            ["RunSettingsKey"] = "FromRunSettings",
+        };
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, seeded, null, null);
+
+        _testContextImplementation.MergeProperties(new Dictionary<string, object?>
+        {
+            ["RunSettingsKey"] = "FromAssemblyInit",
+        });
+
+        _testContextImplementation.Properties["RunSettingsKey"].Should().Be("FromAssemblyInit");
+    }
+
+    public void MergePropertiesShouldIgnoreNull()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.Properties["Key"] = "Original";
+
+        _testContextImplementation.MergeProperties(null);
+
+        _testContextImplementation.Properties["Key"].Should().Be("Original");
+    }
+
+    public void MergePropertiesShouldNotOverwritePerContextLabels()
+    {
+        _testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
+        _testMethod.Setup(tm => tm.Name).Returns("M");
+        _testContextImplementation = CreateTestContextImplementation();
+
+        _testContextImplementation.MergeProperties(new Dictionary<string, object?>
+        {
+            ["FullyQualifiedTestClassName"] = "Hacked.Class",
+            ["TestName"] = "HackedTestName",
+            ["LegitKey"] = "LegitValue",
+        });
+
+        _testContextImplementation.Properties["FullyQualifiedTestClassName"].Should().Be("A.C.M");
+        _testContextImplementation.Properties["TestName"].Should().Be("M");
+        _testContextImplementation.Properties["LegitKey"].Should().Be("LegitValue");
+    }
+
+    public void CaptureLifecyclePropertiesShouldReturnAllPropertiesExceptPerContextLabels()
+    {
+        _testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
+        _testMethod.Setup(tm => tm.Name).Returns("M");
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.Properties["UserKey"] = "UserValue";
+        _testContextImplementation.Properties["AnotherKey"] = 7;
+
+        IReadOnlyDictionary<string, object?> snapshot = _testContextImplementation.CaptureLifecycleProperties();
+
+        snapshot.Should().ContainKey("UserKey");
+        snapshot["UserKey"].Should().Be("UserValue");
+        snapshot.Should().ContainKey("AnotherKey");
+        snapshot["AnotherKey"].Should().Be(7);
+        snapshot.Should().NotContainKey("FullyQualifiedTestClassName");
+        snapshot.Should().NotContainKey("TestName");
+    }
+
+    public void CaptureLifecyclePropertiesShouldReturnSnapshotIndependentOfTheLiveBag()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.Properties["Key"] = "OriginalValue";
+
+        IReadOnlyDictionary<string, object?> snapshot = _testContextImplementation.CaptureLifecycleProperties();
+
+        // Mutating the live bag must not affect the snapshot.
+        _testContextImplementation.Properties["Key"] = "ChangedValue";
+        _testContextImplementation.Properties["NewKey"] = "NewValue";
+
+        snapshot["Key"].Should().Be("OriginalValue");
+        snapshot.Should().NotContainKey("NewKey");
+    }
+
+    public void CaptureLifecyclePropertiesShouldAliasReferenceTypeValues()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        var bag = new List<int> { 1 };
+        _testContextImplementation.Properties["RefKey"] = bag;
+
+        IReadOnlyDictionary<string, object?> snapshot = _testContextImplementation.CaptureLifecycleProperties();
+
+        // The snapshot is shallow: the snapshot's value and the live bag share the same instance.
+        // Mutating the instance must therefore be visible through both. This guards the documented
+        // contract on CaptureLifecycleProperties from accidentally regressing to a deep copy.
+        bag.Add(2);
+        ((List<int>)snapshot["RefKey"]!).Should().BeEquivalentTo(new[] { 1, 2 });
+    }
+
+    public void CaptureLifecyclePropertiesAndMergePropertiesShouldNotLockOnExposedPropertyBag()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+
+        lock (_testContextImplementation.Properties)
+        {
+            Task.WhenAll(
+                    Task.Run(() => _ = _testContextImplementation.CaptureLifecycleProperties()),
+                    Task.Run(() => _testContextImplementation.MergeProperties(new Dictionary<string, object?>
+                    {
+                        ["Key"] = "Value",
+                    })))
+                .Wait(TimeSpan.FromSeconds(10))
+                .Should().BeTrue();
+        }
+
+        _testContextImplementation.Properties["Key"].Should().Be("Value");
+    }
+
+    public void ConstructorShouldNotThrowWhenSeededPropertiesAlreadyContainFullyQualifiedTestClassName()
+    {
+        _testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
+        var seeded = new Dictionary<string, object?>
+        {
+            ["FullyQualifiedTestClassName"] = "Old.Class.Name",
+        };
+
+        // Should not throw — the ctor now uses indexer assignment for labels.
+        var ctx = new TestContextImplementation(_testMethod.Object, null, seeded, null, null);
+
+        // The per-context value wins.
+        ctx.Properties["FullyQualifiedTestClassName"].Should().Be("A.C.M");
+    }
+
+    public void CloneForDataDrivenIterationShouldCopyPropertyBagShallowly()
+    {
+        _testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
+        _testMethod.Setup(tm => tm.Name).Returns("M");
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.Properties["UserKey"] = "UserValue";
+
+        TestContextImplementation clone = _testContextImplementation.CloneForDataDrivenIteration();
+
+        clone.Properties["FullyQualifiedTestClassName"].Should().Be("A.C.M");
+        clone.Properties["TestName"].Should().Be("M");
+        clone.Properties["UserKey"].Should().Be("UserValue");
+    }
+
+    public void CloneForDataDrivenIterationShouldIsolatePropertyBagFromOriginal()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.Properties["Key"] = "Original";
+
+        TestContextImplementation clone = _testContextImplementation.CloneForDataDrivenIteration();
+
+        // Mutations on the clone must not leak back to the original.
+        clone.Properties["Key"] = "MutatedOnClone";
+        clone.Properties["NewKey"] = "AddedOnClone";
+
+        _testContextImplementation.Properties["Key"].Should().Be("Original");
+        _testContextImplementation.Properties.Should().NotContainKey("NewKey");
+
+        // And mutations on the original after the clone is created must not leak to the clone.
+        _testContextImplementation.Properties["Key"] = "MutatedOnOriginal";
+        clone.Properties["Key"].Should().Be("MutatedOnClone");
+    }
+
+    public void CloneForDataDrivenIterationShouldStartWithNoAccumulatedOutput()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.WriteConsoleOut("orig-out");
+        _testContextImplementation.WriteConsoleErr("orig-err");
+        _testContextImplementation.WriteTrace("orig-trace");
+        _testContextImplementation.WriteLine("orig-diag");
+
+        TestContextImplementation clone = _testContextImplementation.CloneForDataDrivenIteration();
+
+        // The clone has no captured output of its own yet.
+        clone.GetAndClearOutput().Should().BeNullOrEmpty();
+        clone.GetAndClearError().Should().BeNullOrEmpty();
+        clone.GetAndClearTrace().Should().BeNullOrEmpty();
+        clone.GetDiagnosticMessages().Should().BeNullOrEmpty();
+
+        // The clone's output buffers are independent: writing to the clone does not flow back
+        // to the original.
+        clone.WriteConsoleOut("clone-only");
+        _testContextImplementation.GetAndClearOutput().Should().Be("orig-out");
+        clone.GetAndClearOutput().Should().Be("clone-only");
+    }
+
+    public void CloneForDataDrivenIterationShouldStartWithFreshOutcomeAndException()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+
+        // Set outcome to a non-default value (Passed) on the original so the assertion below
+        // actually verifies that the clone is reset to the default rather than inheriting
+        // from the original. If we left the original at the default UnitTestOutcome.Failed,
+        // a buggy clone that copied the outcome would still appear correct.
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.SetException(new InvalidOperationException("boom"));
+
+        TestContextImplementation clone = _testContextImplementation.CloneForDataDrivenIteration();
+
+        clone.CurrentTestOutcome.Should().Be(UnitTestOutcome.Failed); // default value of UnitTestOutcome
+        clone.TestException.Should().BeNull();
+
+        // Setting outcome on the clone does not leak back to the original.
+        clone.SetOutcome(UnitTestOutcome.Inconclusive);
+        _testContextImplementation.CurrentTestOutcome.Should().Be(UnitTestOutcome.Passed);
+    }
+
+    public void CloneForDataDrivenIterationShouldStartWithFreshResultFiles()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.AddResultFile("C:\\original.txt");
+
+        TestContextImplementation clone = _testContextImplementation.CloneForDataDrivenIteration();
+
+        clone.GetResultFiles().Should().BeNull();
+
+        clone.AddResultFile("C:\\clone.txt");
+        IList<string>? originalResults = _testContextImplementation.GetResultFiles();
+        originalResults.Should().NotBeNull();
+        originalResults!.Should().Contain(s => s.EndsWith("original.txt", StringComparison.OrdinalIgnoreCase));
+        originalResults.Should().NotContain(s => s.EndsWith("clone.txt", StringComparison.OrdinalIgnoreCase));
+    }
+
+    public void CloneForDataDrivenIterationShouldCopyTestRunCount()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.Context.TestRunCount = 7;
+
+        TestContextImplementation clone = _testContextImplementation.CloneForDataDrivenIteration();
+
+        clone.Context.TestRunCount.Should().Be(7);
+
+        // After clone creation, TestRunCount on the original and clone are independent.
+        _testContextImplementation.Context.TestRunCount = 8;
+        clone.Context.TestRunCount.Should().Be(7);
+    }
+
+    public void CloneForDataDrivenIterationShouldShareMessageLogger()
+    {
+        var messageLoggerMock = new Mock<IMessageLogger>();
+        _testContextImplementation = CreateTestContextImplementation(messageLoggerMock.Object);
+
+        TestContextImplementation clone = _testContextImplementation.CloneForDataDrivenIteration();
+        clone.DisplayMessage(MessageLevel.Informational, "from-clone");
+
+        messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Informational, "from-clone"), Times.Once);
     }
 }

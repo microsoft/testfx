@@ -146,7 +146,7 @@ public class TestAssemblyInfoTests : TestContainer
         var exception = (await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext)).TestFailureException as TestFailedException;
         exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UnitTestOutcome.Failed);
-        exception.Message.Should().Be("Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure. Aborting test execution.");
+        exception.Message.Should().Be($"Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assertion failed.{Environment.NewLine}Test failure. Aborting test execution.");
         exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
             "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.DummyTestClass.AssemblyInitializeMethod");
         exception.InnerException.Should().BeOfType<AssertFailedException>();
@@ -162,7 +162,7 @@ public class TestAssemblyInfoTests : TestContainer
         var exception = (await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext)).TestFailureException as TestFailedException;
         exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
-        exception.Message.Should().Be("Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive. Aborting test execution.");
+        exception.Message.Should().Be("Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive. Test Inconclusive. Aborting test execution.");
         exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
             "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.DummyTestClass.AssemblyInitializeMethod");
         exception.InnerException.Should().BeOfType<AssertInconclusiveException>();
@@ -229,6 +229,68 @@ public class TestAssemblyInfoTests : TestContainer
         result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
+    public async Task RunAssemblyInitializeShouldCapturePostAssemblyInitPropertiesOnSuccess()
+    {
+        DummyTestClass.AssemblyInitializeMethodBody = tc =>
+        {
+            var context = (TestContext)tc;
+            context.Properties["AssemblyInitKey"] = "AssemblyInitValue";
+            context.Properties["AnotherKey"] = 42;
+        };
+        _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
+
+        TestContextImplementation testContext = GetTestContext();
+        TestResult result = await _testAssemblyInfo.RunAssemblyInitializeAsync(testContext);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        _testAssemblyInfo.PostAssemblyInitProperties.Should().NotBeNull();
+        _testAssemblyInfo.PostAssemblyInitProperties!.Should().ContainKey("AssemblyInitKey");
+        _testAssemblyInfo.PostAssemblyInitProperties["AssemblyInitKey"].Should().Be("AssemblyInitValue");
+        _testAssemblyInfo.PostAssemblyInitProperties["AnotherKey"].Should().Be(42);
+    }
+
+    public async Task RunAssemblyInitializeShouldExcludePerContextLabelsFromPostAssemblyInitProperties()
+    {
+        DummyTestClass.AssemblyInitializeMethodBody = tc => ((TestContext)tc).Properties["UserKey"] = "UserValue";
+        _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
+
+        // Use a context with a class name so the FullyQualifiedTestClassName label is present.
+        TestContextImplementation testContext = new(null, "Dummy.ClassName", new Dictionary<string, object?>(), null, null);
+        TestResult result = await _testAssemblyInfo.RunAssemblyInitializeAsync(testContext);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        _testAssemblyInfo.PostAssemblyInitProperties.Should().NotBeNull();
+        _testAssemblyInfo.PostAssemblyInitProperties!.Should().NotContainKey(TestContext.FullyQualifiedTestClassNameLabel);
+        _testAssemblyInfo.PostAssemblyInitProperties.Should().NotContainKey(TestContext.TestNameLabel);
+        _testAssemblyInfo.PostAssemblyInitProperties.Should().ContainKey("UserKey");
+    }
+
+    public async Task RunAssemblyInitializeShouldLeavePostAssemblyInitPropertiesNullWhenAssemblyInitMethodIsNull()
+    {
+        _testAssemblyInfo.AssemblyInitializeMethod = null;
+
+        TestResult result = await _testAssemblyInfo.RunAssemblyInitializeAsync(null!);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        _testAssemblyInfo.PostAssemblyInitProperties.Should().BeNull();
+    }
+
+    public async Task RunAssemblyInitializeShouldLeavePostAssemblyInitPropertiesNullOnFailure()
+    {
+        DummyTestClass.AssemblyInitializeMethodBody = tc =>
+        {
+            ((TestContext)tc).Properties["AssemblyInitKey"] = "AssemblyInitValue";
+            throw new InvalidOperationException("boom");
+        };
+        _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
+
+        TestContextImplementation testContext = GetTestContext();
+        TestResult result = await _testAssemblyInfo.RunAssemblyInitializeAsync(testContext);
+
+        result.Outcome.Should().NotBe(UnitTestOutcome.Passed);
+        _testAssemblyInfo.PostAssemblyInitProperties.Should().BeNull();
+    }
+
     #endregion
 
     #region Run Assembly Cleanup tests
@@ -264,7 +326,7 @@ public class TestAssemblyInfoTests : TestContainer
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod")!;
         string? actualErrorMessage = (await _testAssemblyInfo.ExecuteAssemblyCleanupAsync(GetTestContext()))?.Message;
         actualErrorMessage!.StartsWith(
-            "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Fail failed. Test Failure..", StringComparison.Ordinal).Should().BeTrue($"Value: {actualErrorMessage}");
+            $"Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assertion failed.{Environment.NewLine}Test Failure..", StringComparison.Ordinal).Should().BeTrue($"Value: {actualErrorMessage}");
     }
 
     public async Task RunAssemblyCleanupShouldReturnAssertInconclusiveExceptionDetails()
@@ -276,7 +338,7 @@ public class TestAssemblyInfoTests : TestContainer
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod")!;
         string? actualErrorMessage = (await _testAssemblyInfo.ExecuteAssemblyCleanupAsync(GetTestContext()))?.Message;
         actualErrorMessage!.StartsWith(
-            "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Inconclusive failed. Test Inconclusive..", StringComparison.Ordinal).Should().BeTrue($"Value: {actualErrorMessage}");
+            "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Inconclusive. Test Inconclusive..", StringComparison.Ordinal).Should().BeTrue($"Value: {actualErrorMessage}");
     }
 
     public async Task RunAssemblyCleanupShouldReturnExceptionDetailsOfNonAssertExceptions()

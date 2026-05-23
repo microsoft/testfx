@@ -150,6 +150,27 @@
   <data name="JsonConfigurationFileParserUnsupportedTokenErrorMessage" xml:space="preserve">
     <value>Unsupported JSON token '{0}' was found</value>
   </data>
+  <data name="JsonConfigurationSectionMustBeAnObjectErrorMessage" xml:space="preserve">
+    <value>The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</value>
+    <comment>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file.</comment>
+  </data>
+  <data name="JsonConfigurationSectionEntryMustBeScalarErrorMessage" xml:space="preserve">
+    <value>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</value>
+    <comment>{0} is the full dotted/colon-separated key. {1} is the section name. {2} is the path to the testconfig.json file.</comment>
+  </data>
+  <data name="TestConfigurationEnvironmentVariableProviderDisplayName" xml:space="preserve">
+    <value>testconfig.json environment variables provider</value>
+  </data>
+  <data name="TestConfigurationEnvironmentVariableProviderDescription" xml:space="preserve">
+    <value>Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</value>
+  </data>
+  <data name="TestConfigurationEnvironmentVariableNameCannotBeEmptyErrorMessage" xml:space="preserve">
+    <value>Environment variable names declared in the 'environmentVariables' section of the testconfig.json file must not be empty.</value>
+  </data>
+  <data name="TestConfigurationEnvironmentVariableInvalidNameErrorMessage" xml:space="preserve">
+    <value>Environment variable name '{0}' declared in the 'environmentVariables' section of the testconfig.json file is invalid. Names must not contain '=' or null characters.</value>
+    <comment>{0} is the invalid environment variable name.</comment>
+  </data>
   <data name="ServerTestExecutionFilterFactoryDescription" xml:space="preserve">
     <value>Creates the right test execution filter for server mode</value>
   </data>
@@ -308,6 +329,10 @@
   <data name="InvalidCommandLineArguments" xml:space="preserve">
     <value>Invalid command line arguments:</value>
   </data>
+  <data name="CommandLineValidationCommandLine" xml:space="preserve">
+    <value>Command line: {0}</value>
+    <comment>{0} is the command line used to run the application.</comment>
+  </data>
   <data name="CommandLineInvalidArityErrorMessage" xml:space="preserve">
     <value>Invalid arity, maximum must be greater than minimum</value>
   </data>
@@ -389,7 +414,11 @@ If not specified the file will be generated inside the default 'TestResults' dir
 The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</value>
   </data>
   <data name="PlatformCommandLineDiscoverTestsOptionDescription" xml:space="preserve">
-    <value>List available tests.</value>
+    <value>List available tests.
+Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</value>
+  </data>
+  <data name="PlatformCommandLineDiscoverTestsInvalidArgument" xml:space="preserve">
+    <value>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</value>
   </data>
   <data name="PlatformCommandLineHelpOptionDescription" xml:space="preserve">
     <value>Show the command line help.</value>
@@ -591,6 +620,15 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="TerminalNoAnsiOptionDescription" xml:space="preserve">
     <value>Disable outputting ANSI escape characters to screen.</value>
   </data>
+  <data name="TerminalAnsiOptionDescription" xml:space="preserve">
+    <value>Control whether ANSI escape characters are emitted.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+When both --ansi and --no-ansi are provided, --ansi wins.</value>
+  </data>
+  <data name="TerminalAnsiOptionInvalidArgument" xml:space="preserve">
+    <value>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
+  </data>
   <data name="TerminalNoProgressOptionDescription" xml:space="preserve">
     <value>Disable reporting progress to screen.</value>
   </data>
@@ -705,6 +743,10 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   <data name="ExceptionDuringCancellationWarningMessage" xml:space="preserve">
     <value>Exception during the cancellation of request id '{0}'</value>
     <comment>{0} is the request id</comment>
+  </data>
+  <data name="DeprecatedEnvironmentVariableWarning" xml:space="preserve">
+    <value>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</value>
+    <comment>{0} is the deprecated environment variable name, {1} is the replacement environment variable name.</comment>
   </data>
   <data name="PlatformCommandLineMaxFailedTestsOptionDescription" xml:space="preserve">
     <value>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</value>

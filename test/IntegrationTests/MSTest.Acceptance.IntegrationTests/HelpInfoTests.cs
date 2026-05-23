@@ -58,6 +58,7 @@ Options:
         Display .NET test application information.
     --list-tests
         List available tests.
+        Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
     --results-directory
@@ -68,6 +69,11 @@ Options:
         A global test execution timeout.
         Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
 Extension options:
+    --ansi
+        Control whether ANSI escape characters are emitted.
+        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+        When both --ansi and --no-ansi are provided, --ansi wins.
     --filter
         Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
     --maximum-failed-tests
