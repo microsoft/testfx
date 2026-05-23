@@ -15,6 +15,7 @@ internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
     [
         new(CrashDumpCommandLineOptions.CrashDumpOptionName, CrashDumpResources.CrashDumpOptionDescription, ArgumentArity.Zero, false),
         new(CrashDumpCommandLineOptions.CrashReportOptionName, CrashDumpResources.CrashReportOptionDescription, ArgumentArity.Zero, false),
+        new(CrashDumpCommandLineOptions.CrashSequenceOptionName, CrashDumpResources.CrashSequenceOptionDescription, ArgumentArity.ExactlyOne, false),
         new(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, CrashDumpResources.CrashDumpFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
         new(CrashDumpCommandLineOptions.CrashDumpTypeOptionName, CrashDumpResources.CrashDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false)
     ];
@@ -40,6 +41,13 @@ internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
                 return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpTypeOptionInvalidType, arguments[0]));
             }
         }
+        else if (commandOption.Name == CrashDumpCommandLineOptions.CrashSequenceOptionName)
+        {
+            if (!CommandLineOptionArgumentValidator.IsValidBooleanArgument(arguments[0]))
+            {
+                return ValidationResult.InvalidTask(CrashDumpResources.CrashSequenceOptionInvalidArgument);
+            }
+        }
 
         // TODO: Validate that the file name ends with '.dmp'?
         return ValidationResult.ValidTask;
@@ -59,7 +67,8 @@ internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
     private static bool IsCrashDumpMainOptionMissing(ICommandLineOptions commandLineOptions)
     {
         bool hasCrashDumpSubOption = commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName) ||
-            commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpTypeOptionName);
+            commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpTypeOptionName) ||
+            commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashSequenceOptionName);
         bool hasCrashDumpMainOption = commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) ||
             commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
 

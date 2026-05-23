@@ -72,6 +72,26 @@
         <target state="translated">Proces hosta testowego o identyfikatorze PID „{0}” uległ awarii, wygenerowano raport o awarii</target>
         <note />
       </trans-unit>
+      <trans-unit id="CrashDumpSequenceArtifactDescription">
+        <source>The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</source>
+        <target state="new">The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpSequenceArtifactDisplayName">
+        <source>Crash sequence file</source>
+        <target state="new">Crash sequence file</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpSequenceFileReadError">
+        <source>Failed to read the crash sequence file '{0}': {1}</source>
+        <target state="new">Failed to read the crash sequence file '{0}': {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpTestsRunningAtCrash">
+        <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
+        <target state="new">The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
@@ -109,6 +129,20 @@ Aby uzyskać więcej informacji, odwiedź stronę https://learn.microsoft.com/do
       <trans-unit id="CrashReportOptionDescription">
         <source>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).</source>
         <target state="translated">[Tylko Linux/macOS] Generuj raport JSON o awarii, gdy proces testowy ulegnie awarii. Połącz to z elementem „--crashdump”, aby też wygenerować plik zrzutu. Gdy używasz tego samodzielnie, wymaga to platformy .NET 7+; gdy używasz razem z elementem „--crashdump” — platformy .NET 6+. To wymaganie dotyczące środowiska uruchomieniowego nie jest wymuszane przez narzędzie: w nieobsługiwanych środowiskach uruchomieniowych nie będzie emitowany żaden raport o awarii. Nieobsługiwane w systemie Windows z powodu ograniczenia środowiska uruchomieniowego platformy .NET (dotnet/runtime#80191).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashSequenceOptionDescription">
+        <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
+        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashSequenceOptionInvalidArgument">
+        <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
+        <target state="new">--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
         <note />
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">

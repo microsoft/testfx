@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
@@ -120,6 +121,11 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         if (testHostProcessInformation.HasExitedGracefully
             || (AppDomain.CurrentDomain.GetData("ProcessKilledByHangDump") is string processKilledByHangDump && processKilledByHangDump == "true"))
         {
+            // No crash → the sequence file (if any) has no diagnostic value. Delete it so the user's
+            // results directory is not polluted with stale "tests still running" logs after a clean
+            // run. Hang-dump kills are handled identically because HangDump already produces its own
+            // .log of in-progress tests via IPC.
+            TryDeleteSequenceFile();
             return;
         }
 
@@ -264,6 +270,117 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
                     await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(crashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
                 }
             }
+        }
+
+        await TryPublishSequenceFileAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task TryPublishSequenceFileAsync(CancellationToken cancellationToken)
+    {
+        string? sequenceFilePath = _netCoreCrashDumpGeneratorConfiguration.SequenceFileName;
+        if (RoslynString.IsNullOrEmpty(sequenceFilePath) || !File.Exists(sequenceFilePath))
+        {
+            return;
+        }
+
+        // Parse the journal to compute the set of tests that started but never ended. We can tolerate
+        // a partially-written final line because the testhost flushes after each whole record; any
+        // half-written tail line would simply fail to parse and be ignored.
+        var inFlight = new Dictionary<string, (string DisplayName, DateTimeOffset StartedAt)>(StringComparer.Ordinal);
+        DateTimeOffset latestSeen = DateTimeOffset.MinValue;
+        try
+        {
+            foreach (string line in File.ReadLines(sequenceFilePath))
+            {
+                if (line.Length == 0 || line[0] == '#')
+                {
+                    continue;
+                }
+
+                // Format: <event>\t<isoTimestamp>\t<uid>\t<displayName-or-state>
+                string[] parts = line.Split('\t');
+                if (parts.Length < 4)
+                {
+                    continue;
+                }
+
+                if (!DateTimeOffset.TryParse(parts[1], CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTimeOffset timestamp))
+                {
+                    continue;
+                }
+
+                if (timestamp > latestSeen)
+                {
+                    latestSeen = timestamp;
+                }
+
+                string uid = parts[2];
+                // Any field originally containing tabs was sanitized to spaces by the testhost, so
+                // a 4-element split is sufficient. Defensively re-join any extras to tolerate future
+                // schema changes.
+                string lastField = parts.Length == 4 ? parts[3] : string.Join("\t", parts, 3, parts.Length - 3);
+
+                if (parts[0].Equals(CrashDumpSequenceLogger.StartedEvent, StringComparison.Ordinal))
+                {
+                    inFlight[uid] = (lastField, timestamp);
+                }
+                else if (parts[0].Equals(CrashDumpSequenceLogger.EndedEvent, StringComparison.Ordinal))
+                {
+                    inFlight.Remove(uid);
+                }
+            }
+        }
+        catch (IOException ex)
+        {
+            // Best-effort diagnostic. If we cannot read the sequence file we still publish it so the
+            // user can inspect it manually, but skip the friendly summary.
+            await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpSequenceFileReadError, sequenceFilePath, ex.Message)), cancellationToken).ConfigureAwait(false);
+            await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(sequenceFilePath), CrashDumpResources.CrashDumpSequenceArtifactDisplayName, CrashDumpResources.CrashDumpSequenceArtifactDescription)).ConfigureAwait(false);
+            return;
+        }
+
+        if (inFlight.Count > 0)
+        {
+            await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(CrashDumpResources.CrashDumpTestsRunningAtCrash), cancellationToken).ConfigureAwait(false);
+            DateTimeOffset anchor = latestSeen == DateTimeOffset.MinValue ? DateTimeOffset.UtcNow : latestSeen;
+            foreach (KeyValuePair<string, (string DisplayName, DateTimeOffset StartedAt)> entry in inFlight.OrderBy(static x => x.Value.StartedAt))
+            {
+                TimeSpan elapsed = anchor - entry.Value.StartedAt;
+                if (elapsed < TimeSpan.Zero)
+                {
+                    elapsed = TimeSpan.Zero;
+                }
+
+                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData($"[{elapsed}] {entry.Value.DisplayName}"), cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(sequenceFilePath), CrashDumpResources.CrashDumpSequenceArtifactDisplayName, CrashDumpResources.CrashDumpSequenceArtifactDescription)).ConfigureAwait(false);
+    }
+
+    private void TryDeleteSequenceFile()
+    {
+        string? sequenceFilePath = _netCoreCrashDumpGeneratorConfiguration.SequenceFileName;
+        if (RoslynString.IsNullOrEmpty(sequenceFilePath))
+        {
+            return;
+        }
+
+        try
+        {
+            if (File.Exists(sequenceFilePath))
+            {
+                File.Delete(sequenceFilePath);
+            }
+        }
+        catch (IOException)
+        {
+            // Best-effort cleanup; a leftover sequence file is harmless beyond cluttering the results
+            // directory. Avoid surfacing this as a user-visible error because the run itself succeeded.
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Same rationale as IOException.
         }
     }
 

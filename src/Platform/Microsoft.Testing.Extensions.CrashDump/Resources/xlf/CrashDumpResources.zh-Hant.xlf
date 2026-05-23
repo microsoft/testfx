@@ -72,6 +72,26 @@
         <target state="translated">PID '{0}' 損毀的測試主機處理常式，已產生損毀報告</target>
         <note />
       </trans-unit>
+      <trans-unit id="CrashDumpSequenceArtifactDescription">
+        <source>The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</source>
+        <target state="new">The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpSequenceArtifactDisplayName">
+        <source>Crash sequence file</source>
+        <target state="new">Crash sequence file</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpSequenceFileReadError">
+        <source>Failed to read the crash sequence file '{0}': {1}</source>
+        <target state="new">Failed to read the crash sequence file '{0}': {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpTestsRunningAtCrash">
+        <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
+        <target state="new">The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
@@ -109,6 +129,20 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
       <trans-unit id="CrashReportOptionDescription">
         <source>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).</source>
         <target state="translated">[僅限 Linux/macOS] 當測試處理序損毀時，產生 JSON 損毀報告。將此選項與 '--crashdump' 一起使用，也可產生傾印檔案。單獨使用時需要 .NET 7 以上版本；與 '--crashdump' 搭配使用時需要 .NET 6 以上版本。工具不會強制檢查此執行階段需求: 在不支援的執行階段上，不會輸出損毀報告。由於 .NET 執行階段的限制 (dotnet/runtime#80191)，Windows 不支援此功能。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashSequenceOptionDescription">
+        <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
+        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashSequenceOptionInvalidArgument">
+        <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
+        <target state="new">--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
         <note />
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">
