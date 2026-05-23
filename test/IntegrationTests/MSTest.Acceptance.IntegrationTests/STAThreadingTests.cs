@@ -17,10 +17,11 @@ public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.Tes
     {
         // Test cannot work on non-Windows OSes as the main method is marked with [STAThread].
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
-        {
-            ["MSTEST_THREAD_STATE_IS_STA"] = "1",
-        }, cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["MSTEST_THREAD_STATE_IS_STA"] = "1",
+            }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -34,10 +35,12 @@ public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.Tes
         // Test cannot work on non-Windows OSes as the main method is marked with [STAThread]
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
-        {
-            ["MSTEST_THREAD_STATE_IS_STA"] = "1",
-        }, cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--settings {runSettingsFilePath}",
+            environmentVariables: new()
+            {
+                ["MSTEST_THREAD_STATE_IS_STA"] = "1",
+            }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -51,10 +54,12 @@ public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.Tes
         // Test cannot work on non-Windows OSes as the main method is marked with [STAThread]
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
-        {
-            ["MSTEST_THREAD_STATE_IS_STA"] = "0",
-        }, cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--settings {runSettingsFilePath}",
+            environmentVariables: new()
+            {
+                ["MSTEST_THREAD_STATE_IS_STA"] = "0",
+            }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
