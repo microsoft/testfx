@@ -44,7 +44,8 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
     public async Task TimeoutWithInvalidArg_WithNegativeValue_OutputInvalidMessage(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout -1s", cancellationToken: TestContext.CancellationToken);
+        // Use the '=' delimiter so the negative value is not parsed as a short option.
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout=-1s", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
         testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration");
