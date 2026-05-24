@@ -11,10 +11,10 @@ internal abstract class NamedPipeSerializer<T> : BaseSerializer, INamedPipeSeria
 {
     public abstract int Id { get; }
 
-    public T Deserialize(Stream stream)
+    internal T Deserialize(Stream stream)
         => DeserializeCore(stream);
 
-    public void Serialize(T objectToSerialize, Stream stream)
+    internal void Serialize(T objectToSerialize, Stream stream)
         => SerializeCore(objectToSerialize, stream);
 
     object INamedPipeSerializer.Deserialize(Stream stream)
