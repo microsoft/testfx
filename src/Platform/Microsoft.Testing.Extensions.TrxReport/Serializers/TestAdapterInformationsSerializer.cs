@@ -19,21 +19,16 @@ internal sealed class TestAdapterInformationRequest : IRequest
     public string TestAdapterVersion { get; }
 }
 
-internal sealed class TestAdapterInformationRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class TestAdapterInformationRequestSerializer : NamedPipeSerializer<TestAdapterInformationRequest>, INamedPipeSerializer
 {
-    public int Id => 2;
+    public override int Id => 2;
 
-    public object Deserialize(Stream stream)
-    {
-        string testAdapterId = ReadString(stream);
-        string testAdapterVersion = ReadString(stream);
-        return new TestAdapterInformationRequest(testAdapterId, testAdapterVersion);
-    }
+    protected override TestAdapterInformationRequest DeserializeCore(Stream stream)
+        => new(ReadString(stream), ReadString(stream));
 
-    public void Serialize(object objectToSerialize, Stream stream)
+    protected override void SerializeCore(TestAdapterInformationRequest objectToSerialize, Stream stream)
     {
-        var testAdapterInformationRequest = (TestAdapterInformationRequest)objectToSerialize;
-        WriteString(stream, testAdapterInformationRequest.TestAdapterId);
-        WriteString(stream, testAdapterInformationRequest.TestAdapterVersion);
+        WriteString(stream, objectToSerialize.TestAdapterId);
+        WriteString(stream, objectToSerialize.TestAdapterVersion);
     }
 }

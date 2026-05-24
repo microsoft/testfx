@@ -15,14 +15,14 @@ internal sealed class ActivitySignalRequest : IRequest
     }
 }
 
-internal sealed class ActivitySignalRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class ActivitySignalRequestSerializer : NamedPipeSerializer<ActivitySignalRequest>, INamedPipeSerializer
 {
-    public int Id => 7;
+    public override int Id => 7;
 
-    public object Deserialize(Stream stream)
+    protected override ActivitySignalRequest DeserializeCore(Stream stream)
         => ActivitySignalRequest.Instance;
 
-    public void Serialize(object objectToSerialize, Stream stream)
+    protected override void SerializeCore(ActivitySignalRequest objectToSerialize, Stream stream)
     {
     }
 }

@@ -17,11 +17,11 @@ internal sealed record FailedTestInfoRequest(
     string? CodeFilePath,
     int LineNumber) : IRequest;
 
-internal sealed class FailedTestInfoRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class FailedTestInfoRequestSerializer : NamedPipeSerializer<FailedTestInfoRequest>, INamedPipeSerializer
 {
-    public int Id => 2;
+    public override int Id => 2;
 
-    public object Deserialize(Stream stream)
+    protected override FailedTestInfoRequest DeserializeCore(Stream stream)
         => new FailedTestInfoRequest(
             ReadString(stream),
             ReadInt(stream) == 1,
@@ -33,17 +33,16 @@ internal sealed class FailedTestInfoRequestSerializer : BaseSerializer, INamedPi
             ReadString(stream),
             ReadInt(stream));
 
-    public void Serialize(object objectToSerialize, Stream stream)
+    protected override void SerializeCore(FailedTestInfoRequest objectToSerialize, Stream stream)
     {
-        var failedTestInfoRequest = (FailedTestInfoRequest)objectToSerialize;
-        WriteString(stream, failedTestInfoRequest.DisplayName);
-        WriteInt(stream, failedTestInfoRequest.IsCanceled ? 1 : 0);
-        WriteString(stream, failedTestInfoRequest.Duration ?? string.Empty);
-        WriteString(stream, failedTestInfoRequest.ErrorMessage ?? string.Empty);
-        WriteString(stream, failedTestInfoRequest.ErrorStackTrace ?? string.Empty);
-        WriteString(stream, failedTestInfoRequest.Expected ?? string.Empty);
-        WriteString(stream, failedTestInfoRequest.Actual ?? string.Empty);
-        WriteString(stream, failedTestInfoRequest.CodeFilePath ?? string.Empty);
-        WriteInt(stream, failedTestInfoRequest.LineNumber);
+        WriteString(stream, objectToSerialize.DisplayName);
+        WriteInt(stream, objectToSerialize.IsCanceled ? 1 : 0);
+        WriteString(stream, objectToSerialize.Duration ?? string.Empty);
+        WriteString(stream, objectToSerialize.ErrorMessage ?? string.Empty);
+        WriteString(stream, objectToSerialize.ErrorStackTrace ?? string.Empty);
+        WriteString(stream, objectToSerialize.Expected ?? string.Empty);
+        WriteString(stream, objectToSerialize.Actual ?? string.Empty);
+        WriteString(stream, objectToSerialize.CodeFilePath ?? string.Empty);
+        WriteInt(stream, objectToSerialize.LineNumber);
     }
 }

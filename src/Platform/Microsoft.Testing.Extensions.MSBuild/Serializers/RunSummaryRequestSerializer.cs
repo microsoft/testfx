@@ -13,11 +13,11 @@ internal sealed record RunSummaryInfoRequest(
     int TotalSkipped,
     string? Duration) : IRequest;
 
-internal sealed class RunSummaryInfoRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class RunSummaryInfoRequestSerializer : NamedPipeSerializer<RunSummaryInfoRequest>, INamedPipeSerializer
 {
-    public int Id => 3;
+    public override int Id => 3;
 
-    public object Deserialize(Stream stream)
+    protected override RunSummaryInfoRequest DeserializeCore(Stream stream)
         => new RunSummaryInfoRequest(
             ReadInt(stream),
             ReadInt(stream),
@@ -25,13 +25,12 @@ internal sealed class RunSummaryInfoRequestSerializer : BaseSerializer, INamedPi
             ReadInt(stream),
             ReadString(stream));
 
-    public void Serialize(object objectToSerialize, Stream stream)
+    protected override void SerializeCore(RunSummaryInfoRequest objectToSerialize, Stream stream)
     {
-        var runSummaryInfoRequest = (RunSummaryInfoRequest)objectToSerialize;
-        WriteInt(stream, runSummaryInfoRequest.Total);
-        WriteInt(stream, runSummaryInfoRequest.TotalFailed);
-        WriteInt(stream, runSummaryInfoRequest.TotalPassed);
-        WriteInt(stream, runSummaryInfoRequest.TotalSkipped);
-        WriteString(stream, runSummaryInfoRequest.Duration ?? string.Empty);
+        WriteInt(stream, objectToSerialize.Total);
+        WriteInt(stream, objectToSerialize.TotalFailed);
+        WriteInt(stream, objectToSerialize.TotalPassed);
+        WriteInt(stream, objectToSerialize.TotalSkipped);
+        WriteString(stream, objectToSerialize.Duration ?? string.Empty);
     }
 }

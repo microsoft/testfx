@@ -11,19 +11,13 @@ internal sealed class TotalTestsRunRequest(int totalTests) : IRequest
     public int TotalTests { get; } = totalTests;
 }
 
-internal sealed class TotalTestsRunRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class TotalTestsRunRequestSerializer : NamedPipeSerializer<TotalTestsRunRequest>, INamedPipeSerializer
 {
-    public int Id => 4;
+    public override int Id => 4;
 
-    public object Deserialize(Stream stream)
-    {
-        int totalTestRun = ReadInt(stream);
-        return new TotalTestsRunRequest(totalTestRun);
-    }
+    protected override TotalTestsRunRequest DeserializeCore(Stream stream)
+        => new(ReadInt(stream));
 
-    public void Serialize(object obj, Stream stream)
-    {
-        var totalTestsRunRequest = (TotalTestsRunRequest)obj;
-        WriteInt(stream, totalTestsRunRequest.TotalTests);
-    }
+    protected override void SerializeCore(TotalTestsRunRequest objectToSerialize, Stream stream)
+        => WriteInt(stream, objectToSerialize.TotalTests);
 }
