@@ -5,9 +5,13 @@ using Newtonsoft.Json;
 
 namespace Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 
-public sealed record ClientInfo(
+public abstract record InfoRecord(
     [property:JsonProperty("name")]
     string Name,
 
     [property:JsonProperty("version")]
     string Version = "1.0.0");
+
+public sealed record ClientInfo(
+    string Name,
+    string Version = "1.0.0") : InfoRecord(Name, Version);

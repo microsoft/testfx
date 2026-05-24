@@ -59,11 +59,13 @@ internal sealed record CancelRequestArgs(int CancelRequestId);
 
 internal sealed record ExitRequestArgs;
 
-internal sealed record ClientInfo(string Name, string Version);
+internal abstract record InfoRecord(string Name, string Version);
+
+internal sealed record ClientInfo(string Name, string Version) : InfoRecord(Name, Version);
 
 internal sealed record ClientCapabilities(bool DebuggerProvider);
 
-internal sealed record ServerInfo(string Name, string Version);
+internal sealed record ServerInfo(string Name, string Version) : InfoRecord(Name, Version);
 
 internal sealed record ServerCapabilities(ServerTestingCapabilities TestingCapabilities);
 
