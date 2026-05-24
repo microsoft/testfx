@@ -7,6 +7,7 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 [Embedded]
 internal abstract class NamedPipeSerializer<T> : BaseSerializer, INamedPipeSerializer
+    where T : notnull
 {
     public abstract int Id { get; }
 
@@ -17,7 +18,7 @@ internal abstract class NamedPipeSerializer<T> : BaseSerializer, INamedPipeSeria
         => SerializeCore(objectToSerialize, stream);
 
     object INamedPipeSerializer.Deserialize(Stream stream)
-        => Deserialize(stream)!;
+        => Deserialize(stream);
 
     void INamedPipeSerializer.Serialize(object objectToSerialize, Stream stream)
         => Serialize((T)objectToSerialize, stream);

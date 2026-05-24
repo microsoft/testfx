@@ -153,7 +153,7 @@ public sealed class ProtocolTests
     private static void Serialize<TMessage>(object serializer, TMessage message, Stream stream)
         => serializer.GetType()
             .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-            .Single(method => method.Name == nameof(Serialize) && method.GetParameters() is [{ ParameterType: not null }, { ParameterType: var parameterType }] && parameterType == typeof(Stream))
+            .Single(method => method.Name == nameof(Serialize) && method.GetParameters() is [{ ParameterType: var messageType }, { ParameterType: var streamType }] && messageType == typeof(TMessage) && streamType == typeof(Stream))
             .Invoke(serializer, [message!, stream]);
 
     private static object Deserialize(object serializer, Stream stream)
