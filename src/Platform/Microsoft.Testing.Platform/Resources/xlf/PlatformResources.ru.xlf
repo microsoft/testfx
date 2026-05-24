@@ -383,12 +383,12 @@
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionEntryMustBeScalarErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</source>
-        <target state="new">The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</target>
+        <target state="translated">Запись "{0}" в разделе "{1}" файла testconfig.json ("{2}") должна быть строковым скалярным значением. Вложенные объекты и массивы не поддерживаются.</target>
         <note>{0} is the full dotted/colon-separated key. {1} is the section name. {2} is the path to the testconfig.json file.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionMustBeAnObjectErrorMessage">
         <source>The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</source>
-        <target state="new">The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</target>
+        <target state="translated">Раздел "{0}" в файле testconfig.json ("{1}") должен быть объектом JSON.</target>
         <note>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file.</note>
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerDescription">
@@ -825,15 +825,15 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</source>
-        <target state="new">Control whether ANSI escape characters are emitted.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
-When both --ansi and --no-ansi are provided, --ansi wins.</target>
+        <target state="translated">Управляйте тем, выводятся ли escape-символы ANSI.
+Допустимые значения: "auto" (по умолчанию), "on" (также принимает "true", "enable", "1") и "off" (также принимает "false", "disable", "0").
+"on" принудительно включает escape-коды ANSI (включая перемещение курсора), даже если stdout перенаправлен; используйте его вместе с --no-progress, если нужны только цвета.
+Если указаны и --ansi, и --no-ansi, используется --ansi.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--ansi ожидает один параметр со значением "auto", "on" (или "true", "enable", "1") либо "off" (или "false", "disable", "0").</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalNoAnsiOptionDescription">
@@ -929,22 +929,22 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableInvalidNameErrorMessage">
         <source>Environment variable name '{0}' declared in the 'environmentVariables' section of the testconfig.json file is invalid. Names must not contain '=' or null characters.</source>
-        <target state="new">Environment variable name '{0}' declared in the 'environmentVariables' section of the testconfig.json file is invalid. Names must not contain '=' or null characters.</target>
+        <target state="translated">Имя переменной среды "{0}", объявленное в разделе "environmentVariables" файла testconfig.json, недопустимо. Имена не должны содержать "=" или символы null.</target>
         <note>{0} is the invalid environment variable name.</note>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableNameCannotBeEmptyErrorMessage">
         <source>Environment variable names declared in the 'environmentVariables' section of the testconfig.json file must not be empty.</source>
-        <target state="new">Environment variable names declared in the 'environmentVariables' section of the testconfig.json file must not be empty.</target>
+        <target state="translated">Имена переменных среды, объявленные в разделе "environmentVariables" файла testconfig.json, не должны быть пустыми.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableProviderDescription">
         <source>Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</source>
-        <target state="new">Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</target>
+        <target state="translated">Применяет переменные среды, объявленные в разделе "environmentVariables" файла testconfig.json, к дочернему процессу узла тестов.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableProviderDisplayName">
         <source>testconfig.json environment variables provider</source>
-        <target state="new">testconfig.json environment variables provider</target>
+        <target state="translated">Поставщик переменных среды testconfig.json</target>
         <note />
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">
