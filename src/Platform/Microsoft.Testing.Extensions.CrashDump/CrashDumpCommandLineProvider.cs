@@ -8,7 +8,7 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
 
-internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
+internal sealed class CrashDumpCommandLineProvider : CommandLineOptionsProviderBase
 {
     private static readonly string[] DumpTypeOptions = ["Mini", "Heap", "Triage", "Full"];
     private static readonly IReadOnlyCollection<CommandLineOption> CachedCommandLineOptions =
@@ -19,19 +19,17 @@ internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
         new(CrashDumpCommandLineOptions.CrashDumpTypeOptionName, CrashDumpResources.CrashDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false)
     ];
 
-    public string Uid => nameof(CrashDumpCommandLineProvider);
+    public CrashDumpCommandLineProvider()
+        : base(
+            nameof(CrashDumpCommandLineProvider),
+            ExtensionVersion.DefaultSemVer,
+            CrashDumpResources.CrashDumpDisplayName,
+            CrashDumpResources.CrashDumpDescription,
+            CachedCommandLineOptions)
+    {
+    }
 
-    public string Version => ExtensionVersion.DefaultSemVer;
-
-    public string DisplayName => CrashDumpResources.CrashDumpDisplayName;
-
-    public string Description => CrashDumpResources.CrashDumpDescription;
-
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() => CachedCommandLineOptions;
-
-    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
         if (commandOption.Name == CrashDumpCommandLineOptions.CrashDumpTypeOptionName)
         {
@@ -45,7 +43,7 @@ internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
         return ValidationResult.ValidTask;
     }
 
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+    public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
         => IsCrashDumpMainOptionMissing(commandLineOptions)
             ? ValidationResult.InvalidTask(CrashDumpResources.MissingCrashDumpMainOption)
             : IsCrashReportUnsupportedOnCurrentPlatform(commandLineOptions)

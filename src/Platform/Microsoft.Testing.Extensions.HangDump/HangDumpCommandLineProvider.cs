@@ -9,7 +9,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
 
-internal sealed class HangDumpCommandLineProvider : ICommandLineOptionsProvider
+internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBase
 {
     public const string HangDumpOptionName = "hangdump";
     public const string HangDumpFileNameOptionName = "hangdump-filename";
@@ -30,19 +30,17 @@ internal sealed class HangDumpCommandLineProvider : ICommandLineOptionsProvider
         new(HangDumpTypeOptionName, ExtensionResources.HangDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false)
     ];
 
-    public string Uid => nameof(HangDumpCommandLineProvider);
+    public HangDumpCommandLineProvider()
+        : base(
+            nameof(HangDumpCommandLineProvider),
+            ExtensionVersion.DefaultSemVer,
+            ExtensionResources.HangDumpExtensionDisplayName,
+            ExtensionResources.HangDumpExtensionDescription,
+            CachedCommandLineOptions)
+    {
+    }
 
-    public string Version => ExtensionVersion.DefaultSemVer;
-
-    public string DisplayName => ExtensionResources.HangDumpExtensionDisplayName;
-
-    public string Description => ExtensionResources.HangDumpExtensionDescription;
-
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() => CachedCommandLineOptions;
-
-    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
         if (commandOption.Name == HangDumpTimeoutOptionName && !TimeSpanParser.TryParse(arguments[0], out TimeSpan _))
         {
@@ -60,7 +58,7 @@ internal sealed class HangDumpCommandLineProvider : ICommandLineOptionsProvider
         return ValidationResult.ValidTask;
     }
 
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+    public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
         => (commandLineOptions.IsOptionSet(HangDumpTimeoutOptionName) ||
             commandLineOptions.IsOptionSet(HangDumpFileNameOptionName) ||
             commandLineOptions.IsOptionSet(HangDumpTypeOptionName)) &&
