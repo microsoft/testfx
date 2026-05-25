@@ -131,7 +131,13 @@ internal readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>
 
 internal static class EquatableArrayExtensions
 {
+    private static readonly Func<object?, bool> NotNullTest = x => x is not null;
+
     public static EquatableArray<T> ToEquatableArray<T>(this IEnumerable<T> source)
         where T : IEquatable<T>
         => new(source.ToImmutableArray());
+
+    public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> source)
+        where T : class
+        => source.Where((Func<T?, bool>)NotNullTest)!;
 }

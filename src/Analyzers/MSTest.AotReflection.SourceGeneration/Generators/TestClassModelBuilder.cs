@@ -119,8 +119,7 @@ internal static class TestClassModelBuilder
 
         return attributes
             .Select(BuildAttribute)
-            .Where(static model => model is not null)
-            .Select(static model => model!)
+            .WhereNotNull()
             .ToEquatableArray();
     }
 
