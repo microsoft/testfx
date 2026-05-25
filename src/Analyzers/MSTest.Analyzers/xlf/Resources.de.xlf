@@ -991,13 +991,13 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <note />
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">
-        <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method</source>
-        <target state="translated">Ein von „RetryBaseAttribute“ abgeleitetes Attribut kann nur für eine Testmethode angegeben werden.</target>
+        <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</source>
+        <target state="new">An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</target>
         <note />
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodTitle">
-        <source>Use retry attribute on test method</source>
-        <target state="translated">Verwenden des Wiederholungsattributs für die Testmethode</target>
+        <source>Use retry attribute on test method or test class</source>
+        <target state="new">Use retry attribute on test method or test class</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">

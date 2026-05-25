@@ -98,7 +98,8 @@ Extension options:
     --hangdump
         Generate a dump file if the test process hangs
     --hangdump-filename
-        Specify the name of the dump file
+        Specify the name of the dump file.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.
     --hangdump-timeout
         Specify the timeout after which the dump will be generated.
         The timeout value is specified in one of the following formats:
@@ -111,7 +112,7 @@ Extension options:
             Default is 30m.
     --hangdump-type
         Specify the type of the dump.
-        Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
+        Valid values are {{GetExpectedHangDumpDescriptionOptions(tfm)}}.
         Default type is 'Full'
     --publish-azdo-run-name
         Custom Azure DevOps test run name for live test-result publishing.
@@ -434,7 +435,8 @@ Registered command line providers:
       --hangdump-filename
         Arity: 1
         Hidden: False
-        Description: Specify the name of the dump file
+        Description: Specify the name of the dump file.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.
       --hangdump-timeout
         Arity: 1
         Hidden: False
@@ -451,7 +453,7 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Specify the type of the dump.
-        Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
+        Valid values are {{GetExpectedHangDumpDescriptionOptions(tfm)}}.
         Default type is 'Full'
   HtmlReportGeneratorCommandLine
     Name: HTML report generator
@@ -541,6 +543,11 @@ Registered tools:
 
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
     }
+
+    private static string GetExpectedHangDumpDescriptionOptions(string tfm)
+        => TargetFrameworks.NetFramework.Contains(tfm)
+            ? "'Mini', 'Heap', 'Full', 'None'"
+            : "'Mini', 'Heap', 'Full', 'Triage', 'None'";
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {

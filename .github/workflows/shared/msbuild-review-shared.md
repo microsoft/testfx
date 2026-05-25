@@ -22,13 +22,13 @@ safe-outputs:
   # budget for a single weekly report plus an optional draft PR with safe fixes.
   create-issue:
     title-prefix: "[msbuild-quality] "
-    labels: [automation, msbuild, code-quality]
+    labels: [type/automation, area/mtp-msbuild, type/tech-debt]
     max: 1
     expires: 7d
   create-pull-request:
     draft: true
     title-prefix: "[msbuild-quality] "
-    labels: [automation, msbuild, code-quality]
+    labels: [type/automation, area/mtp-msbuild, type/tech-debt]
     max: 1
     protected-files: fallback-to-issue
   # NOTE: Consumers must also define this explicitly until workflow import/merge

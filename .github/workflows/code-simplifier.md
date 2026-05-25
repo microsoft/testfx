@@ -18,9 +18,8 @@ safe-outputs:
   create-pull-request:
     expires: 1d
     labels:
-    - refactoring
-    - code-quality
-    - automation
+    - type/tech-debt
+    - type/automation
     protected-files: fallback-to-issue
     title-prefix: "[code-simplifier] "
 description: Analyzes recently modified code and creates pull requests with simplifications that improve clarity, consistency, and maintainability while preserving functionality

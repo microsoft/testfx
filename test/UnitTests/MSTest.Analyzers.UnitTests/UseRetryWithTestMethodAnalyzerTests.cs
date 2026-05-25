@@ -112,4 +112,88 @@ public sealed class UseRetryWithTestMethodAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenTestClassHasRetryAttribute_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            internal sealed class MyTestClassAttribute : TestClassAttribute { }
+
+            [TestClass]
+            [Retry(maxRetryAttempts: 3)]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void M()
+                {
+                }
+            }
+
+            [Retry(maxRetryAttempts: 3)]
+            [TestClass]
+            public class MyTestClass2
+            {
+                [TestMethod]
+                public void M()
+                {
+                }
+            }
+
+            [MyTestClass]
+            [Retry(maxRetryAttempts: 3)]
+            public class MyTestClass3
+            {
+                [TestMethod]
+                public void M()
+                {
+                }
+            }
+
+            [Retry(maxRetryAttempts: 3)]
+            [MyTestClass]
+            public class MyTestClass4
+            {
+                [TestMethod]
+                public void M()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenNonTestClassHasRetryAttribute_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [Retry(maxRetryAttempts: 3)]
+            public class [|MyClass|]
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenNonTestClassDoesNotHaveRetryAttribute_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClass
+            {
+                public void M()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

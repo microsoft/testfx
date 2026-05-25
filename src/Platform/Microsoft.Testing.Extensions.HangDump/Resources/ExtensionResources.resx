@@ -167,7 +167,8 @@ Disk info:
 {1} - disk info detailing free space</comment>
   </data>
   <data name="HangDumpFileNameOptionDescription" xml:space="preserve">
-    <value>Specify the name of the dump file</value>
+    <value>Specify the name of the dump file.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</value>
   </data>
   <data name="HangDumpOptionDescription" xml:space="preserve">
     <value>Generate a dump file if the test process hangs</value>
@@ -191,12 +192,12 @@ The timeout value is specified in one of the following formats:
   </data>
   <data name="HangDumpTypeOptionDescription" xml:space="preserve">
     <value>Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
+Valid values are {0}.
 Default type is 'Full'</value>
   </data>
   <data name="HangDumpTypeOptionInvalidType" xml:space="preserve">
     <value>'{0}' is not a valid dump type.
-Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</value>
+Valid options are {1}</value>
   </data>
   <data name="HangDumpUnsupportedRequestTypeErrorMessage" xml:space="preserve">
     <value>Request of type '{0}' is not supported</value>

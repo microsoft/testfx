@@ -9,7 +9,7 @@ configuration:
   resourceManagementConfiguration:
     eventResponderTasks:
       - description: >-
-          Remove "State: No Recent Activity" when a pull request or issue is updated
+          Remove "state/stale" when a pull request or issue is updated
         if:
           - or:
               - payloadType: Pull_Request
@@ -21,10 +21,10 @@ configuration:
               isAction:
                 action: Closed
           - hasLabel:
-              label: "State: No Recent Activity"
+              label: "state/stale"
         then:
           - removeLabel:
-              label: "State: No Recent Activity"
+              label: "state/stale"
         # The policy service should not trigger itself here, or else the label would be removed immediately after being added
         triggerOnOwnActions: False
       - description: Clean email replies on every comment
@@ -32,20 +32,20 @@ configuration:
           - payloadType: Issue_Comment
         then:
           - cleanEmailReply
-      - description: Remove "Help-Wanted" label when an issue goes into PR
+      - description: Remove "help wanted" label when an issue goes into PR
         if:
           - payloadType: Issues
           - labelAdded:
-              label: In-PR
+              label: state/in-pr
           - hasLabel:
-              label: Help-Wanted
+              label: "help wanted"
         then:
           - removeLabel:
-              label: Help-Wanted
+              label: "help wanted"
       - description: >-
           If an author responds to an issue which needs author feedback
-          * Remove the "Needs: Author Feedback" Label
-          * Add the "Needs: Attention :wave:" Label
+          * Remove the "needs/author-feedback" Label
+          * Add the "needs/attention" Label
         if:
           - or:
               - payloadType: Pull_Request_Review
@@ -54,18 +54,18 @@ configuration:
           - isActivitySender:
               issueAuthor: True
           - hasLabel:
-              label: "Needs: Author Feedback"
+              label: "needs/author-feedback"
           - not:
               isAction:
                 action: Synchronize
         then:
           - removeLabel:
-              label: "Needs: Author Feedback"
+              label: "needs/author-feedback"
           - addLabel:
-              label: "Needs: Attention :wave:"
+              label: "needs/attention"
       - description: >-
           If team members respond to an issue which needs attention
-          * Remove the "Needs: Attention :wave:" Label
+          * Remove the "needs/attention" Label
         if:
           - or:
               - payloadType: Pull_Request_Review
@@ -74,7 +74,7 @@ configuration:
           - isActivitySender:
               issueAuthor: True
           - hasLabel:
-              label: "Needs: Attention :wave:"
+              label: "needs/attention"
           - not:
               isAction:
                 action: Synchronize
@@ -87,10 +87,10 @@ configuration:
                 association: Collaborator
         then:
           - removeLabel:
-              label: "Needs: Attention :wave:"
+              label: "needs/attention"
       - description: >-
           If team members respond to an issue which needs triage
-          * Remove the "Needs: Triage :mag:" Label
+          * Remove the "needs/triage" Label
         if:
           - or:
               - payloadType: Pull_Request_Review
@@ -99,7 +99,7 @@ configuration:
           - isActivitySender:
               issueAuthor: True
           - hasLabel:
-              label: "Needs: Triage :mag:"
+              label: "needs/triage"
           - not:
               isAction:
                 action: Synchronize
@@ -112,12 +112,12 @@ configuration:
                 association: Collaborator
         then:
           - removeLabel:
-              label: "Needs: Triage :mag:"
+              label: "needs/triage"
       - description: >-
           When changes are requested on a pull request
           * Disable automerge
           * Assign to the author
-          * Label with "Needs: Author Feedback"
+          * Label with "needs/author-feedback"
         if:
           - payloadType: Pull_Request_Review
           - isAction:
@@ -129,16 +129,16 @@ configuration:
           - assignTo:
               author: True
           - addLabel:
-              label: "Needs: Author Feedback"
+              label: "needs/author-feedback"
       - description: Sync labels from issues on all pull request events
         if:
           - payloadType: Pull_Request
         then:
           - labelSync:
-              pattern: "Area:"
+              pattern: "area/"
           - labelSync:
-              pattern: "Type:"
+              pattern: "type/"
           - inPrLabel:
-              label: In-PR
+              label: state/in-pr
 onFailure:
 onSuccess:
