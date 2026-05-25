@@ -40,7 +40,8 @@ public partial /* for codegen regx */ class ServerModeTestsBase<TFixture> : Acce
         }
 
         // We expect to not fail for unhandled exception in server mode for IDE needs.
-        environmentVariables.Add("TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION", "0");
+        // Use indexer assignment so that an inherited value (if any) is safely overridden.
+        environmentVariables[EnvironmentVariableConstants.TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION] = "0";
 
         if (additionalEnvironmentVariables is not null)
         {

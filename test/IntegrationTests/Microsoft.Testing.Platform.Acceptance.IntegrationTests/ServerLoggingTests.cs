@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
@@ -27,8 +27,8 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggi
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "ServerLoggingTests", tfm);
         Dictionary<string, string?> telemetryEnabledEnv = new()
         {
-            ["DOTNET_CLI_TELEMETRY_OPTOUT"] = "0",
-            ["TESTINGPLATFORM_TELEMETRY_OPTOUT"] = "0",
+            [EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT] = "0",
+            [EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT] = "0",
         };
         using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(testHost, telemetryEnabledEnv);
 
