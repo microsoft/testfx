@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\PipeNameEnvironmentVariableProviderBase.cs" Link="Helpers\PipeNameEnvironmentVariableProviderBase.cs" />
   </ItemGroup>
 
   <!-- NuGet properties -->

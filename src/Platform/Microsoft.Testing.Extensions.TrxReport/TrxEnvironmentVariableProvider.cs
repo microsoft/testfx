@@ -3,33 +3,30 @@
 
 using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
-internal sealed class TrxEnvironmentVariableProvider : ITestHostEnvironmentVariableProvider
+internal sealed class TrxEnvironmentVariableProvider : global::Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase
 {
     public const string TRXNAMEDPIPENAME = nameof(TRXNAMEDPIPENAME);
 
     private readonly ICommandLineOptions _commandLineOptions;
-    private readonly string _pipeName;
 
     public TrxEnvironmentVariableProvider(ICommandLineOptions commandLineOptions, string pipeName)
+        : base(pipeName, TRXNAMEDPIPENAME)
     {
         _commandLineOptions = commandLineOptions;
-        _pipeName = pipeName;
     }
 
-    public string Uid => nameof(TrxEnvironmentVariableProvider);
+    public override string Uid => nameof(TrxEnvironmentVariableProvider);
 
-    public string Version => ExtensionVersion.DefaultSemVer;
+    public override string DisplayName => ExtensionResources.TrxReportGeneratorDisplayName;
 
-    public string DisplayName => ExtensionResources.TrxReportGeneratorDisplayName;
+    public override string Description => ExtensionResources.TrxReportGeneratorDescription;
 
-    public string Description => ExtensionResources.TrxReportGeneratorDescription;
+    protected override bool ShouldValidatePipeNameValue => false;
 
-    public Task<bool> IsEnabledAsync()
+    public override Task<bool> IsEnabledAsync()
 #pragma warning disable SA1114 // Parameter list should follow declaration
         => Task.FromResult(
             // TrxReportGenerator is enabled only when trx report is enabled
@@ -38,22 +35,6 @@ internal sealed class TrxEnvironmentVariableProvider : ITestHostEnvironmentVaria
             && TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptions));
 #pragma warning restore SA1114 // Parameter list should follow declaration
 
-    public Task UpdateAsync(IEnvironmentVariables environmentVariables)
-    {
-        environmentVariables.SetVariable(new(TRXNAMEDPIPENAME, _pipeName, false, true));
-        return Task.CompletedTask;
-    }
-
-    public Task<ValidationResult> ValidateTestHostEnvironmentVariablesAsync(IReadOnlyEnvironmentVariables environmentVariables)
-    {
-        if (!environmentVariables.TryGetVariable(TRXNAMEDPIPENAME, out _))
-        {
-            return Task.FromResult(
-                ValidationResult.Invalid(
-                    string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable, TRXNAMEDPIPENAME)));
-        }
-
-        // No problem found
-        return ValidationResult.ValidTask;
-    }
+    protected override string GetMissingEnvironmentVariableErrorMessage(string environmentVariableName)
+        => string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable, environmentVariableName);
 }
