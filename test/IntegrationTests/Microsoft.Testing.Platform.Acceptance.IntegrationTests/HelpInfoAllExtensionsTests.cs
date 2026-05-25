@@ -534,8 +534,8 @@ Registered tools:
 
     private static string GetExpectedHangDumpDescriptionOptions(string tfm)
         => TargetFrameworks.NetFramework.Contains(tfm)
-            ? "'Mini', 'Heap', 'Full' or 'None'"
-            : "'Mini', 'Heap', 'Full', 'Triage' or 'None'";
+            ? "'Mini', 'Heap', 'Full', 'None'"
+            : "'Mini', 'Heap', 'Full', 'Triage', 'None'";
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {

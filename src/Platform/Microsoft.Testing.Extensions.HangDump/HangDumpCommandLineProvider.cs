@@ -22,9 +22,7 @@ internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBa
     private static readonly string[] HangDumpTypeOptions = ["Mini", "Heap", "Full", "None"];
 #endif
 
-    private static readonly string HangDumpTypeOptionsForDescription = FormatHangDumpTypeOptions("or");
-
-    private static readonly string HangDumpTypeOptionsForValidation = FormatHangDumpTypeOptions("and");
+    private static readonly string HangDumpTypeOptionsFormatted = string.Join(", ", Array.ConvertAll(HangDumpTypeOptions, option => $"'{option}'"));
 
     private static readonly IReadOnlyCollection<CommandLineOption> CachedCommandLineOptions =
     [
@@ -33,7 +31,7 @@ internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBa
         new(HangDumpFileNameOptionName, ExtensionResources.HangDumpFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
         new(
             HangDumpTypeOptionName,
-            string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionDescription, HangDumpTypeOptionsForDescription),
+            string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionDescription, HangDumpTypeOptionsFormatted),
             ArgumentArity.ExactlyOne,
             false)
     ];
@@ -63,7 +61,7 @@ internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBa
                     CultureInfo.InvariantCulture,
                     ExtensionResources.HangDumpTypeOptionInvalidType,
                     arguments[0],
-                    HangDumpTypeOptionsForValidation));
+                    HangDumpTypeOptionsFormatted));
             }
         }
 
@@ -77,12 +75,4 @@ internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBa
             !commandLineOptions.IsOptionSet(HangDumpOptionName)
             ? ValidationResult.InvalidTask(ExtensionResources.MissingHangDumpMainOption)
             : ValidationResult.ValidTask;
-
-    private static string FormatHangDumpTypeOptions(string conjunction)
-    {
-        string[] quotedOptions = Array.ConvertAll(HangDumpTypeOptions, option => $"'{option}'");
-        return quotedOptions.Length == 1
-            ? quotedOptions[0]
-            : string.Join(", ", quotedOptions, 0, quotedOptions.Length - 1) + $" {conjunction} " + quotedOptions[^1];
-    }
 }

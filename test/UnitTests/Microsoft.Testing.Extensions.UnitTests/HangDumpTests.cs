@@ -74,7 +74,7 @@ public sealed class HangDumpTests
                 CultureInfo.InvariantCulture,
                 ExtensionResources.HangDumpTypeOptionInvalidType,
                 "invalid",
-                GetExpectedValidationOptions()),
+                GetExpectedFormattedOptions()),
             validateOptionsResult.ErrorMessage);
     }
 
@@ -85,7 +85,7 @@ public sealed class HangDumpTests
         CommandLineOption option = hangDumpCommandLineProvider.GetCommandLineOptions().First(x => x.Name == HangDumpCommandLineProvider.HangDumpTypeOptionName);
 
         Assert.AreEqual(
-            string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionDescription, GetExpectedDescriptionOptions()),
+            string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionDescription, GetExpectedFormattedOptions()),
             option.Description);
     }
 
@@ -137,12 +137,8 @@ public sealed class HangDumpTests
     }
 
 #if NETCOREAPP
-    private static string GetExpectedDescriptionOptions() => "'Mini', 'Heap', 'Full', 'Triage' or 'None'";
-
-    private static string GetExpectedValidationOptions() => "'Mini', 'Heap', 'Full', 'Triage' and 'None'";
+    private static string GetExpectedFormattedOptions() => "'Mini', 'Heap', 'Full', 'Triage', 'None'";
 #else
-    private static string GetExpectedDescriptionOptions() => "'Mini', 'Heap', 'Full' or 'None'";
-
-    private static string GetExpectedValidationOptions() => "'Mini', 'Heap', 'Full' and 'None'";
+    private static string GetExpectedFormattedOptions() => "'Mini', 'Heap', 'Full', 'None'";
 #endif
 }
