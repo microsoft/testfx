@@ -42,25 +42,33 @@ public sealed class UseRetryWithTestMethodAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol) &&
-                context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingRetryBaseAttribute, out INamedTypeSymbol? retryBaseAttributeSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol)
+                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol)
+                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingRetryBaseAttribute, out INamedTypeSymbol? retryBaseAttributeSymbol))
             {
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, testMethodAttributeSymbol, retryBaseAttributeSymbol),
-                    SymbolKind.Method);
+                    context => AnalyzeSymbol(context, testMethodAttributeSymbol, testClassAttributeSymbol, retryBaseAttributeSymbol),
+                    SymbolKind.Method,
+                    SymbolKind.NamedType);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol retryBaseAttributeSymbol)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol retryBaseAttributeSymbol)
     {
         bool hasRetryBaseAttribute = false;
         foreach (AttributeData attribute in context.Symbol.GetAttributes())
         {
-            if (attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
+            if (context.Symbol.Kind == SymbolKind.Method && attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
             {
                 // We are looking for retry attributes that are not applied to test methods.
                 // If this is already a test method, we just return.
+                return;
+            }
+
+            if (context.Symbol.Kind == SymbolKind.NamedType && attribute.AttributeClass.Inherits(testClassAttributeSymbol))
+            {
+                // Similarly, if this is already a test class, we just return.
                 return;
             }
 
@@ -70,7 +78,7 @@ public sealed class UseRetryWithTestMethodAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        // We looked all attributes, and we found a retry attribute, but didn't find TestMethodAttribute.
+        // We looked all attributes, and we found a retry attribute, but didn't find TestMethodAttribute or TestClassAttribute.
         if (hasRetryBaseAttribute)
         {
             context.ReportDiagnostic(context.Symbol.CreateDiagnostic(UseRetryWithTestMethodRule));

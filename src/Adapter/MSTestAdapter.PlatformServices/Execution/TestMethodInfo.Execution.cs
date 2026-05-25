@@ -52,6 +52,19 @@ internal partial class TestMethodInfo
         throw new TypeInspectionException(errorMessage);
     }
 
+    [DoesNotReturn]
+    private void ThrowMultipleClassAttributesException(string attributeName)
+    {
+        // Note: even if the given attribute has AllowMultiple = false, we can
+        // still reach here if a derived attribute authored by the user re-defines AttributeUsage
+        string errorMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_MultipleAttributesOnTestClass,
+            Parent.ClassType.FullName,
+            attributeName);
+        throw new TypeInspectionException(errorMessage);
+    }
+
     /// <summary>
     /// Execute test without timeout.
     /// </summary>

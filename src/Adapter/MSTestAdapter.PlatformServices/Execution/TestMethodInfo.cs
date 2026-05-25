@@ -174,15 +174,45 @@ internal partial class TestMethodInfo : ITestMethod
     }
 
     /// <summary>
-    /// Gets the number of retries this test method should make in case of failure.
+    /// Resolves the retry attribute that applies to this test method, considering both
+    /// method-level and class-level <see cref="RetryBaseAttribute"/> attributes.
     /// </summary>
+    /// <remarks>
+    /// A method-level retry attribute fully overrides any class-level retry attribute.
+    /// Class-level retry attributes are always validated (even when the method has its own
+    /// retry) so that misuse on the test class is reported regardless of method overrides.
+    /// </remarks>
     /// <returns>
-    /// The number of retries, which is always greater than or equal to 1.
-    /// If RetryAttribute is not present, returns 1.
+    /// The resolved <see cref="RetryBaseAttribute"/>, or <see langword="null"/> if neither
+    /// the method nor the declaring class is decorated.
     /// </returns>
     private RetryBaseAttribute? GetRetryAttribute()
     {
-        Attribute[] attributes = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached(MethodInfo);
+        RetryBaseAttribute? methodRetry = GetSingleRetryAttribute(
+            PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached(MethodInfo),
+            RetryAttributeScope.Method);
+
+        // Always scan the class as well so a misuse there (multiple class-level retry
+        // attributes) is reported even when the method has its own retry override.
+        RetryBaseAttribute? classRetry = GetSingleRetryAttribute(
+            PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached(Parent.ClassType),
+            RetryAttributeScope.Class);
+
+        // Method-level retry fully overrides class-level retry when present.
+        return methodRetry ?? classRetry;
+    }
+
+    /// <summary>
+    /// Returns the single <see cref="RetryBaseAttribute"/> found in <paramref name="attributes"/>,
+    /// or <see langword="null"/> if none is present.
+    /// </summary>
+    /// <param name="attributes">The attribute set to scan (method-level or class-level).</param>
+    /// <param name="scope">Indicates whether <paramref name="attributes"/> comes from a method or a class; only used to pick the right error message when more than one retry attribute is found.</param>
+    /// <exception cref="ObjectModel.TypeInspectionException">
+    /// Thrown when <paramref name="attributes"/> contains more than one <see cref="RetryBaseAttribute"/>.
+    /// </exception>
+    private RetryBaseAttribute? GetSingleRetryAttribute(Attribute[] attributes, RetryAttributeScope scope)
+    {
         RetryBaseAttribute? result = null;
         foreach (Attribute attribute in attributes)
         {
@@ -190,7 +220,14 @@ internal partial class TestMethodInfo : ITestMethod
             {
                 if (result is not null)
                 {
-                    ThrowMultipleAttributesException(nameof(RetryBaseAttribute));
+                    if (scope == RetryAttributeScope.Class)
+                    {
+                        ThrowMultipleClassAttributesException(nameof(RetryBaseAttribute));
+                    }
+                    else
+                    {
+                        ThrowMultipleAttributesException(nameof(RetryBaseAttribute));
+                    }
                 }
 
                 result = retryAttribute;
@@ -198,5 +235,11 @@ internal partial class TestMethodInfo : ITestMethod
         }
 
         return result;
+    }
+
+    private enum RetryAttributeScope
+    {
+        Method,
+        Class,
     }
 }
