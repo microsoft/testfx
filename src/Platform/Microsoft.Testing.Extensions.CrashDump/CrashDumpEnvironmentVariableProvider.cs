@@ -13,6 +13,8 @@ namespace Microsoft.Testing.Extensions.Diagnostics;
 
 internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmentVariableProvider
 {
+    public const string SequenceFileEnvironmentVariableName = "TESTINGPLATFORM_CRASHDUMP_SEQUENCE_FILE";
+
     private const string EnableMiniDumpVariable = "DbgEnableMiniDump";
     private const string MiniDumpTypeVariable = "DbgMiniDumpType";
     private const string MiniDumpNameVariable = "DbgMiniDumpName";
@@ -27,6 +29,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     private readonly ILogger<CrashDumpEnvironmentVariableProvider> _logger;
 
     private string? _miniDumpNameValue;
+    private string? _sequenceFileValue;
 
     public CrashDumpEnvironmentVariableProvider(
         IConfiguration configuration,
@@ -135,13 +138,77 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             environmentVariables.SetVariable(new($"{prefix}{MiniDumpNameVariable}", _miniDumpNameValue, false, true));
         }
 
+        if (IsSequenceLoggingEnabled())
+        {
+            // The sequence file is written directly by the testhost (not by the .NET runtime), so it
+            // does not need any of the runtime "createdump" placeholders (%p, %e, %h, %t). We compose
+            // a deterministic path next to the (eventual) dump file so the testhost and the controller
+            // agree on the exact path to write to / read from without any per-side expansion.
+            //
+            // The path includes a per-controller-instance unique token so that parallel testhost
+            // launches targeting the same results directory cannot stomp on each other's sequence
+            // files (a write collision would otherwise be silently lost; a graceful exit of one host
+            // would also delete the sibling host's sequence file before it could be published).
+            string uniqueToken = Guid.NewGuid().ToString("N").Substring(0, 8);
+            string sequenceFileName = dumpFileName is not null
+                ? $"{StripRuntimePlaceholders(dumpFileName[0])}_{uniqueToken}.sequence.log"
+                : $"{testAppName}_{uniqueToken}_crash.sequence.log";
+            _sequenceFileValue = Path.Combine(_configuration.GetTestResultDirectory(), sequenceFileName);
+            _crashDumpGeneratorConfiguration.SequenceFileName = _sequenceFileValue;
+            environmentVariables.SetVariable(new(SequenceFileEnvironmentVariableName, _sequenceFileValue, isSecret: false, isLocked: true));
+        }
+
         if (_logger.IsEnabled(LogLevel.Trace))
         {
             _logger.LogTrace($"{MiniDumpNameVariable}: {_miniDumpNameValue}");
             _logger.LogTrace($"{MiniDumpTypeVariable}: {miniDumpTypeValue}");
+            if (_sequenceFileValue is not null)
+            {
+                _logger.LogTrace($"{SequenceFileEnvironmentVariableName}: {_sequenceFileValue}");
+            }
         }
 
         return Task.CompletedTask;
+    }
+
+    private bool IsSequenceLoggingEnabled()
+    {
+        if (!_commandLineOptions.TryGetOptionArgumentList(CrashDumpCommandLineOptions.CrashSequenceOptionName, out string[]? arguments))
+        {
+            // Default: on whenever --crashdump or --crash-report is set (IsEnabledAsync gates this method).
+            return true;
+        }
+
+        return !CommandLineOptionArgumentValidator.IsOffValue(arguments[0]);
+    }
+
+    private static string StripRuntimePlaceholders(string pattern)
+    {
+        // Drop the .NET runtime's "createdump" placeholders (%p, %e, %h, %t, ...) from a dump filename
+        // pattern so we obtain a concrete, deterministic file path that the testhost extension and the
+        // controller can agree on without any per-side expansion. "%%" remains a literal "%" per the
+        // runtime's escaping convention.
+        var sb = new StringBuilder(pattern.Length);
+        for (int i = 0; i < pattern.Length; i++)
+        {
+            if (pattern[i] == '%' && i + 1 < pattern.Length)
+            {
+                if (pattern[i + 1] == '%')
+                {
+                    sb.Append('%');
+                    i++;
+                    continue;
+                }
+
+                // Drop the single-character placeholder (e.g. %p, %e, %h, %t).
+                i++;
+                continue;
+            }
+
+            sb.Append(pattern[i]);
+        }
+
+        return sb.ToString();
     }
 
     public Task<ValidationResult> ValidateTestHostEnvironmentVariablesAsync(IReadOnlyEnvironmentVariables environmentVariables)

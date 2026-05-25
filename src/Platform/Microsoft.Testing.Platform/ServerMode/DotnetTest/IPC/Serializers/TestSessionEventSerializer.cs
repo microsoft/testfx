@@ -21,11 +21,11 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
     |---ExecutionId Value---| (n bytes)
 */
 
-internal sealed class TestSessionEventSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class TestSessionEventSerializer : NamedPipeSerializer<TestSessionEvent>, INamedPipeSerializer
 {
-    public int Id => TestSessionEventFieldsId.MessagesSerializerId;
+    public override int Id => TestSessionEventFieldsId.MessagesSerializerId;
 
-    public object Deserialize(Stream stream)
+    protected override TestSessionEvent DeserializeCore(Stream stream)
     {
         byte? type = null;
         string? sessionUid = null;
@@ -59,20 +59,18 @@ internal sealed class TestSessionEventSerializer : BaseSerializer, INamedPipeSer
             }
         }
 
-        return new TestSessionEvent(type, sessionUid, executionId);
+        return new(type, sessionUid, executionId);
     }
 
-    public void Serialize(object objectToSerialize, Stream stream)
+    protected override void SerializeCore(TestSessionEvent objectToSerialize, Stream stream)
     {
         RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
 
-        var testSessionEvent = (TestSessionEvent)objectToSerialize;
+        WriteUShort(stream, GetFieldCount(objectToSerialize));
 
-        WriteUShort(stream, GetFieldCount(testSessionEvent));
-
-        WriteField(stream, TestSessionEventFieldsId.SessionType, testSessionEvent.SessionType);
-        WriteField(stream, TestSessionEventFieldsId.SessionUid, testSessionEvent.SessionUid);
-        WriteField(stream, TestSessionEventFieldsId.ExecutionId, testSessionEvent.ExecutionId);
+        WriteField(stream, TestSessionEventFieldsId.SessionType, objectToSerialize.SessionType);
+        WriteField(stream, TestSessionEventFieldsId.SessionUid, objectToSerialize.SessionUid);
+        WriteField(stream, TestSessionEventFieldsId.ExecutionId, objectToSerialize.ExecutionId);
     }
 
     private static ushort GetFieldCount(TestSessionEvent testSessionEvent) =>

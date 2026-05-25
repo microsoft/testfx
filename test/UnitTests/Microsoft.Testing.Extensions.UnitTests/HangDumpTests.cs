@@ -124,6 +124,18 @@ public sealed class HangDumpTests
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
 
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Validates Windows-specific quoting workaround for dotnet/diagnostics#5020")]
+    public void GetDumpFileNames_WindowsPathWithSpaces_QuotesOnlyWriteDumpArgument()
+    {
+        string dumpFileName = @"C:\results directory with spaces\hangdump.dmp";
+
+        HangDumpProcessLifetimeHandler.DumpFileNames dumpFileNames = HangDumpProcessLifetimeHandler.GetDumpFileNames(dumpFileName);
+
+        Assert.AreEqual($"\"{dumpFileName}\"", dumpFileNames.WriteDumpFileName);
+        Assert.AreEqual(dumpFileName, dumpFileNames.ArtifactDumpFileName);
+    }
+
 #if NETCOREAPP
     private static string GetExpectedDescriptionOptions() => "'Mini', 'Heap', 'Full', 'Triage' or 'None'";
 

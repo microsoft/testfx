@@ -8,18 +8,17 @@ namespace Microsoft.Testing.Extensions.MSBuild.Serializers;
 
 internal sealed record ModuleInfoRequest(string FrameworkDescription, string ProcessArchitecture, string TestResultFolder) : IRequest;
 
-internal sealed class ModuleInfoRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class ModuleInfoRequestSerializer : NamedPipeSerializer<ModuleInfoRequest>, INamedPipeSerializer
 {
-    public int Id => 1;
+    public override int Id => 1;
 
-    public object Deserialize(Stream stream)
+    protected override ModuleInfoRequest DeserializeCore(Stream stream)
         => new ModuleInfoRequest(ReadString(stream), ReadString(stream), ReadString(stream));
 
-    public void Serialize(object objectToSerialize, Stream stream)
+    protected override void SerializeCore(ModuleInfoRequest objectToSerialize, Stream stream)
     {
-        var moduleInfo = (ModuleInfoRequest)objectToSerialize;
-        WriteString(stream, moduleInfo.FrameworkDescription);
-        WriteString(stream, moduleInfo.ProcessArchitecture);
-        WriteString(stream, moduleInfo.TestResultFolder);
+        WriteString(stream, objectToSerialize.FrameworkDescription);
+        WriteString(stream, objectToSerialize.ProcessArchitecture);
+        WriteString(stream, objectToSerialize.TestResultFolder);
     }
 }

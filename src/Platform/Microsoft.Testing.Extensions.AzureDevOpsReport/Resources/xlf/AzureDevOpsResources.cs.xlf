@@ -4,27 +4,27 @@
     <body>
       <trans-unit id="ArtifactUploadOptionsRequireUploadArtifacts">
         <source>'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</source>
-        <target state="new">'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</target>
+        <target state="translated">Parametry --report-azdo-upload-artifact-include, --report-azdo-upload-artifact-exclude a --report-azdo-upload-artifact-name vyžadují, aby parametr --report-azdo-upload-artifacts byl nastavený na jinou hodnotu než off.</target>
         <note>{Locked="--report-azdo-upload-artifact-include"}{Locked="--report-azdo-upload-artifact-exclude"}{Locked="--report-azdo-upload-artifact-name"}{Locked="--report-azdo-upload-artifacts"}{Locked="off"}</note>
       </trans-unit>
       <trans-unit id="ArtifactUploadRequiresTfBuildWarning">
         <source>Azure DevOps artifact upload was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps artifact upload and build tags.</source>
-        <target state="new">Azure DevOps artifact upload was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps artifact upload and build tags.</target>
+        <target state="translated">Bylo vyžádáno nahrání artefaktu Azure DevOps, ale TF_BUILD není nastavené na hodnotu true. Nahrání artefaktu Azure DevOps a značek buildu se přeskočí.</target>
         <note>{Locked="TF_BUILD"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps">
         <source>'--report-azdo-demote-known-flaky' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-demote-known-flaky' requires '--report-azdo' to be enabled</target>
+        <target state="translated">Aby bylo možné použít parametr --report-azdo-demote-known-flaky, musí být povolený parametr --report-azdo.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsDemoteKnownFlakyRequiresFlakyHistory">
         <source>'--report-azdo-demote-known-flaky' requires '--report-azdo-flaky-history' to be enabled</source>
-        <target state="new">'--report-azdo-demote-known-flaky' requires '--report-azdo-flaky-history' to be enabled</target>
+        <target state="translated">Aby bylo možné použít parametr --report-azdo-demote-known-flaky, musí být povolený parametr --report-azdo-flaky-history.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsFlakyHistoryRequiresAzureDevOps">
         <source>'--report-azdo-flaky-history' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-flaky-history' requires '--report-azdo' to be enabled</target>
+        <target state="translated">Aby bylo možné použít parametr ---report-azdo-flaky-history, musí být povolený parametr --report-azdo.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
@@ -94,7 +94,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
         <source>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</target>
+        <target state="translated">Aby bylo možné použít parametr --report-azdo-quarantine-file, musí být povolený parametr --report-azdo.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsReportSeverityRequiresAzureDevOps">
@@ -104,12 +104,12 @@
       </trans-unit>
       <trans-unit id="DemoteKnownFlakyOptionDescription">
         <source>Demote failures with an Azure DevOps flaky history of at least {0}% in the selected window to warnings.</source>
-        <target state="new">Demote failures with an Azure DevOps flaky history of at least {0}% in the selected window to warnings.</target>
+        <target state="translated">Umožňuje převádět selhání s historií nestability Azure DevOps alespoň {0} % ve vybraném časovém období na upozornění.</target>
         <note>{0} is the percentage threshold (e.g., 25).</note>
       </trans-unit>
       <trans-unit id="Description">
         <source>Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
-        <target state="new">Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</target>
+        <target state="translated">Generátor sestav Azure DevOps pro zápis chyb do výstupu způsobem, který je pro Azure DevOps srozumitelný</target>
         <note />
       </trans-unit>
       <trans-unit id="DisplayName">
@@ -119,57 +119,57 @@
       </trans-unit>
       <trans-unit id="FlakyHistoryFailureAnnotation">
         <source>[flaky: failed {0}/{1} in last {2}d]</source>
-        <target state="new">[flaky: failed {0}/{1} in last {2}d]</target>
+        <target state="translated">[flaky: failed {0}/{1} in last {2}d]</target>
         <note>{Locked="[flaky: failed {0}/{1} in last {2}d]"}</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadFailedWarning">
         <source>Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</source>
-        <target state="new">Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</target>
+        <target state="translated">Nepodařilo se načíst historii nestability Azure DevOps. Pokračuje se bez poznámek k historii. {0}</target>
         <note>{Locked='--report-azdo-flaky-history'}</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadTimedOutInfo">
         <source>Azure DevOps flaky history did not finish loading within {0} seconds. Continuing without history annotations.</source>
-        <target state="new">Azure DevOps flaky history did not finish loading within {0} seconds. Continuing without history annotations.</target>
+        <target state="translated">Historie nestability Azure DevOps se nenačetla do {0} sekund. Pokračuje se bez poznámek k historii.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryMissingEnvironmentWarning">
         <source>Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</source>
-        <target state="new">Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</target>
+        <target state="translated">Byla vyžádána historie nestability Azure DevOps, ale chybí požadované proměnné prostředí Azure DevOps. Pokračuje se bez poznámek k historii.</target>
         <note>{Locked='--report-azdo-flaky-history'}</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryOptionDescription">
         <source>Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.</source>
-        <target state="new">Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.</target>
+        <target state="translated">Dotazovat se na historii výsledků testů Azure DevOps za posledních N dnů (1–90) a opatřit hlášená selhání chyby kontextem nestability testů</target>
         <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryRegressionAnnotation">
         <source>[REGRESSION]</source>
-        <target state="new">[REGRESSION]</target>
+        <target state="translated">[REGRESSION]</target>
         <note>{Locked="[REGRESSION]"}</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryResultsPagingStoppedWarning">
         <source>Azure DevOps flaky history for run '{0}' exceeded {1} pages or returned an unchanged continuation token. Remaining results will be ignored.</source>
-        <target state="new">Azure DevOps flaky history for run '{0}' exceeded {1} pages or returned an unchanged continuation token. Remaining results will be ignored.</target>
+        <target state="translated">Historie nestability Azure DevOps pro běh {0} překročila tento počet stránek: {1} nebo vrátila nezměněný token pro pokračování. Zbývající výsledky budou ignorovány.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryRunsCappedInfo">
         <source>Azure DevOps flaky history returned {0} runs. Only the first {1} runs will be inspected.</source>
-        <target state="new">Azure DevOps flaky history returned {0} runs. Only the first {1} runs will be inspected.</target>
+        <target state="translated">Historie nestability Azure DevOps vrátila {0} spuštění. Prověří se jenom první(ch) {1} spuštění.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
         <source>Invalid glob pattern {0}.</source>
-        <target state="new">Invalid glob pattern {0}.</target>
+        <target state="translated">Neplatný vzor glob {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadMode">
         <source>Invalid artifact upload mode {0}.</source>
-        <target state="new">Invalid artifact upload mode {0}.</target>
+        <target state="translated">Neplatný režim {0} nahrávání artefaktů</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidFlakyHistoryDays">
         <source>Invalid value '{0}' for '--report-azdo-flaky-history'. Provide an integer between 1 and 90.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-flaky-history'. Provide an integer between 1 and 90.</target>
+        <target state="translated">Neplatná hodnota {0} pro --report-azdo-flaky-history Zadejte celé číslo mezi 1 a 90.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidSeverity">
@@ -179,7 +179,7 @@
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
-        <target state="new">Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</target>
+        <target state="translated">Umožňuje generátoru sestav Azure DevOps zapisovat chyby do výstupu způsobem, který je pro AzureDev Ops srozumitelný.</target>
         <note />
       </trans-unit>
       <trans-unit id="PublishAzdoRunNameOptionDescription">
@@ -199,32 +199,32 @@
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">
         <source>Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</source>
-        <target state="new">Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</target>
+        <target state="translated">Nelze načíst soubor karantény Azure DevOps {0}. Pokračuje se bez informací o karanténě. {1}</target>
         <note>{Locked='--report-azdo-quarantine-file'}</note>
       </trans-unit>
       <trans-unit id="QuarantineFileMissingWarning">
         <source>Azure DevOps quarantine file '{0}' does not exist. Continuing without quarantine awareness.</source>
-        <target state="new">Azure DevOps quarantine file '{0}' does not exist. Continuing without quarantine awareness.</target>
+        <target state="translated">Soubor karantény Azure DevOps {0} neexistuje. Pokračuje se bez informací o karanténě.</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantineFileOptionDescription">
         <source>Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.</source>
-        <target state="new">Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.</target>
+        <target state="translated">Cesta k textovému souboru, který obsahuje seznam plně kvalifikovaných názvů testů nebo vzorů glob v karanténě Odpovídající selhání se hlásí jako upozornění.</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantinePatternTooLongWarning">
         <source>Azure DevOps quarantine pattern exceeds the {0} character limit and will be ignored.</source>
-        <target state="new">Azure DevOps quarantine pattern exceeds the {0} character limit and will be ignored.</target>
+        <target state="translated">Vzor pro karanténu Azure DevOps překračuje limit {0} znaků a bude ignorován.</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantinePatternsCappedWarning">
         <source>Azure DevOps quarantine file contains more than {0} patterns. Remaining patterns will be ignored.</source>
-        <target state="new">Azure DevOps quarantine file contains more than {0} patterns. Remaining patterns will be ignored.</target>
+        <target state="translated">Soubor karantény Azure DevOps obsahuje více než tento počet vzorců: {0}. Zbývající vzory budou ignorovány.</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantinedAnnotation">
         <source>[quarantined]</source>
-        <target state="new">[quarantined]</target>
+        <target state="translated">[quarantined]</target>
         <note>{Locked="[quarantined]"}</note>
       </trans-unit>
       <trans-unit id="SeverityOptionDescription">
@@ -234,17 +234,17 @@
       </trans-unit>
       <trans-unit id="UploadArtifactExcludeOptionDescription">
         <source>Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.</source>
-        <target state="new">Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.</target>
+        <target state="translated">Vylučte soubory z nahrávání artefaktů Azure DevOps pomocí vzorů glob relativních vůči adresáři výsledků testů.</target>
         <note />
       </trans-unit>
       <trans-unit id="UploadArtifactIncludeOptionDescription">
         <source>Include files in Azure DevOps artifact upload using glob patterns relative to the test results directory. Defaults to '**/*'.</source>
-        <target state="new">Include files in Azure DevOps artifact upload using glob patterns relative to the test results directory. Defaults to '**/*'.</target>
+        <target state="translated">Zahrňte soubory do nahrávání artefaktů Azure DevOps pomocí vzorů glob relativních vůči adresáři výsledků testů. Výchozí hodnota je **/*.</target>
         <note>{Locked="**/*"}</note>
       </trans-unit>
       <trans-unit id="UploadArtifactNameOptionDescription">
         <source>Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.</source>
-        <target state="new">Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.</target>
+        <target state="translated">Přepište název kontejneru artefaktů Azure DevOps. Výchozí hodnota je TestResults_{assemblyName}_{tfm}.</target>
         <note>{Locked="TestResults_{assemblyName}_{tfm}"}</note>
       </trans-unit>
       <trans-unit id="UploadArtifactsOptionDescription">

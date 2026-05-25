@@ -709,12 +709,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyMessageFormat">
         <source>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="translated">'TestContext.CancellationTokenSource.Token' の代わりに 'TestContext.CancellationToken' を使用する</target>
+        <target state="translated">'TestContext.CancellationTokenSource.Token' の代わりに 'TestContext.Cancellation.Token' を使用する</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyTitle">
         <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
-        <target state="translated">TestContext.CancellationTokenSource.Token の代わりに TestContext.CancellationToken を使用する</target>
+        <target state="translated">TestContext.CancellationTokenSource.Token の代わりに TestContext.Cancellation.Token を使用する</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">

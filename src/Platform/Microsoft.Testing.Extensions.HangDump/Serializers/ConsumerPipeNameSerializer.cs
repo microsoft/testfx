@@ -11,19 +11,13 @@ internal sealed class ConsumerPipeNameRequest(string pipeName) : IRequest
     public string PipeName { get; } = pipeName;
 }
 
-internal sealed class ConsumerPipeNameRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class ConsumerPipeNameRequestSerializer : NamedPipeSerializer<ConsumerPipeNameRequest>, INamedPipeSerializer
 {
-    public int Id => 3;
+    public override int Id => 3;
 
-    public object Deserialize(Stream stream)
-    {
-        string pipeName = ReadString(stream);
-        return new ConsumerPipeNameRequest(pipeName);
-    }
+    protected override ConsumerPipeNameRequest DeserializeCore(Stream stream)
+        => new(ReadString(stream));
 
-    public void Serialize(object objectToSerialize, Stream stream)
-    {
-        var request = (ConsumerPipeNameRequest)objectToSerialize;
-        WriteString(stream, request.PipeName);
-    }
+    protected override void SerializeCore(ConsumerPipeNameRequest objectToSerialize, Stream stream)
+        => WriteString(stream, objectToSerialize.PipeName);
 }

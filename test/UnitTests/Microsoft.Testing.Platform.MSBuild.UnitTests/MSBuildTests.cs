@@ -59,6 +59,54 @@ namespace SomeNamespace
         Assert.IsEmpty(_errors);
     }
 
+    [TestMethod]
+    public void SelfRegisteredExtensions_Deduplicates_Exact_Duplicate_BuilderHooks()
+    {
+        InMemoryFileSystem inMemoryFileSystem = new();
+        TestingPlatformSelfRegisteredExtensions selfRegisteredExtensions = new(inMemoryFileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            SelfRegisteredExtensionsSourcePath = new CustomTaskItem("obj/selfRegisteredExtensionsFile"),
+            Language = new CustomTaskItem("C#"),
+            SelfRegisteredExtensionsBuilderHook =
+            [
+                new CustomTaskItem("hook").Add("DisplayName", "Hook").Add("TypeFullName", "Contoso.Hook"),
+                new CustomTaskItem("hook").Add("DisplayName", "Hook").Add("TypeFullName", "Contoso.Hook"),
+            ],
+        };
+
+        Assert.IsTrue(selfRegisteredExtensions.Execute());
+
+        string generatedSource = inMemoryFileSystem.Files["obj/selfRegisteredExtensionsFile"]!;
+        const string ExpectedHookCall = "global::Contoso.Hook.AddExtensions";
+        int occurrences = (generatedSource.Length - generatedSource.Replace(ExpectedHookCall, string.Empty).Length) / ExpectedHookCall.Length;
+        Assert.AreEqual(1, occurrences);
+        Assert.IsEmpty(_errors);
+    }
+
+    [TestMethod]
+    public void SelfRegisteredExtensions_Fails_For_Duplicate_BuilderHook_Ids_With_Different_Metadata()
+    {
+        InMemoryFileSystem inMemoryFileSystem = new();
+        TestingPlatformSelfRegisteredExtensions selfRegisteredExtensions = new(inMemoryFileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            SelfRegisteredExtensionsSourcePath = new CustomTaskItem("obj/selfRegisteredExtensionsFile"),
+            Language = new CustomTaskItem("C#"),
+            SelfRegisteredExtensionsBuilderHook =
+            [
+                new CustomTaskItem("hook").Add("DisplayName", "Hook").Add("TypeFullName", "Contoso.Hook"),
+                new CustomTaskItem("hook").Add("DisplayName", "OtherHook").Add("TypeFullName", "Contoso.OtherHook"),
+            ],
+        };
+
+        Assert.IsFalse(selfRegisteredExtensions.Execute());
+
+        Assert.IsFalse(inMemoryFileSystem.Files.ContainsKey("obj/selfRegisteredExtensionsFile"));
+        Assert.HasCount(1, _errors);
+        Assert.Contains("Duplicate 'TestingPlatformBuilderHook' item with Include 'hook' has conflicting metadata.", _errors[0].Message ?? string.Empty);
+    }
+
     private sealed class InMemoryFileSystem : IFileSystem
     {
         public Dictionary<string, string?> Files { get; } = [];
