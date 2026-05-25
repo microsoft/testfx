@@ -22,19 +22,26 @@
         <target state="translated">'--report-html-filename' 檔名引數的結尾必須是 '.html' (例如 --report-html-filename myreport.html)</target>
         <note />
       </trans-unit>
+      <trans-unit id="HtmlReportFileNameMustNotBeEmpty">
+        <source>'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</source>
+        <target state="new">'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HtmlReportFileNameOptionDescription">
-        <source>The name of the generated HTML report</source>
-        <target state="translated">產生的 TRX 報告名稱</target>
+        <source>The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Example: MyReport_{tfm}.html</source>
+        <target state="needs-review-translation">產生的 HTML 報告名稱</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HtmlReportFileNameRelativePathMustStayUnderResultsDirectory">
+        <source>'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</source>
+        <target state="new">'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRequiresHtmlReport">
         <source>'--report-html-filename' requires '--report-html' to be enabled</source>
         <target state="translated">'--report-html-filename' 需要啟用 '--report-html'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="HtmlReportFileNameShouldNotContainPath">
-        <source>file name argument must not contain a path or invalid characters (e.g. --report-html-filename myreport.html)</source>
-        <target state="translated">檔案名稱引數不能包含路徑或無效字元 (例如 --report-html-filename myreport.html)</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDescription">
