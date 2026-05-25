@@ -24,14 +24,14 @@ namespace Microsoft.Testing.Extensions.Telemetry;
 #elif TESTINGPLATFORMBUILDERHOOK_TRXREPORT
 namespace Microsoft.Testing.Extensions.TrxReport;
 #else
-#error "Unknown testing platform builder hook."
+#error "No valid TESTINGPLATFORMBUILDERHOOK_* compilation symbol defined. Check Directory.Build.props for supported symbols."
 #endif
 
 /// <summary>
 /// Shared builder hook implementation used by platform extension packages to register
 /// extension-specific services with the Testing Platform Builder.
 /// The effective namespace, attributes, and registration call are selected with project-specific
-/// compilation symbols.
+/// compilation symbols configured in src/Platform/Directory.Build.props.
 /// </summary>
 public static class TestingPlatformBuilderHook
 {
@@ -70,6 +70,6 @@ public static class TestingPlatformBuilderHook
 #elif TESTINGPLATFORMBUILDERHOOK_TRXREPORT
         => testApplicationBuilder.AddTrxReportProvider();
 #else
-#error "Unknown testing platform builder hook."
+#error "No valid TESTINGPLATFORMBUILDERHOOK_* compilation symbol defined. Check Directory.Build.props for supported symbols."
 #endif
 }
