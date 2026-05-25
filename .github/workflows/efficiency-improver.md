@@ -47,13 +47,13 @@ safe-outputs:
     max: 3
     draft: true
     title-prefix: "[efficiency-improver] "
-    labels: [automation, efficiency, green-software]
+    labels: [type/automation, type/tech-debt]
   push-to-pull-request-branch:
     target: "*"
     required-title-prefix: "[efficiency-improver] "
   create-issue:
     title-prefix: "[efficiency-improver] "
-    labels: [automation, efficiency, green-software]
+    labels: [type/automation, type/tech-debt]
     max: 4
   update-issue:
     target: "*"

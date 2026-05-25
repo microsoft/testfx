@@ -11,8 +11,8 @@ configuration:
       - description: >-
           Search for PR where -
           * Pull Request is Open
-          * Pull request has the label "State: No Recent Activity"
-          * Pull request has the label "Needs: Author Feedback"
+          * Pull request has the label "state/stale"
+          * Pull request has the label "needs/author-feedback"
           * Has not had activity in the last 7 days
 
           Then -
@@ -24,9 +24,9 @@ configuration:
           - isPullRequest
           - isOpen
           - hasLabel:
-              label: "State: No Recent Activity"
+              label: "state/stale"
           - hasLabel:
-              label: "Needs: Author Feedback"
+              label: "needs/author-feedback"
           - noActivitySince:
               days: 7
         actions:
@@ -34,8 +34,8 @@ configuration:
       - description: >-
           Search for Issues where -
           * Issue is Open
-          * Issue has the label "State: No Recent Activity"
-          * Issue has the label "Needs: Author Feedback"
+          * Issue has the label "state/stale"
+          * Issue has the label "needs/author-feedback"
           * Has not had activity in the last 7 days
 
           Then -
@@ -47,9 +47,9 @@ configuration:
           - isIssue
           - isOpen
           - hasLabel:
-              label: "State: No Recent Activity"
+              label: "state/stale"
           - hasLabel:
-              label: "Needs: Author Feedback"
+              label: "needs/author-feedback"
           - noActivitySince:
               days: 7
         actions:
@@ -57,7 +57,7 @@ configuration:
       - description: >-
           Search for Issues where -
           * Issue is Open
-          * Issue has the label "State: Won't Fix"
+          * Issue has the label "resolution/wont-fix"
           * Has not had activity in the last 1 day
 
           Then -
@@ -69,7 +69,7 @@ configuration:
           - isIssue
           - isOpen
           - hasLabel:
-              label: "State: Won't Fix"
+              label: "resolution/wont-fix"
           - noActivitySince:
               days: 1
         actions:
@@ -79,7 +79,7 @@ configuration:
       - description: >-
           Search for Issues where -
           * Issue is Open
-          * Issue has the label "Resolution: Duplicate"
+          * Issue has the label "resolution/duplicate"
           * Has not had activity in the last 1 day
 
           Then -
@@ -91,7 +91,7 @@ configuration:
           - isIssue
           - isOpen
           - hasLabel:
-              label: "Resolution: Duplicate"
+              label: "resolution/duplicate"
           - noActivitySince:
               days: 1
         actions:

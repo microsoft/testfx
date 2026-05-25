@@ -27,7 +27,7 @@ safe-outputs:
   push-to-pull-request-branch:
   create-issue:
     title-prefix: "[pr-fix] "
-    labels: [automation, pr-fix]
+    labels: [type/automation, type/pr-fix]
   add-comment:
 
 timeout-minutes: 20

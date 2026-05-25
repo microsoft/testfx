@@ -39,7 +39,7 @@ safe-outputs:
     max: 5
   create-pull-request:
     draft: true
-    labels: [automation, qa]
+    labels: [type/automation, type/qa]
     protected-files: fallback-to-issue
 
 tools:

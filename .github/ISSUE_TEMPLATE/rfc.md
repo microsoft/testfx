@@ -2,7 +2,7 @@
 name: MSTest RFC
 about: Request for Comments
 title: ''
-labels: ["Type: RFC", need-triage]
+labels: [type/rfc, needs/triage]
 ---
 
 # RFC NNN - (Fill me in with a feature name)

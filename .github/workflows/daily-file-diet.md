@@ -20,7 +20,7 @@ safe-outputs:
   create-issue:
     expires: 2d
     title-prefix: "[file-diet] "
-    labels: [refactoring, code-health, automated-analysis]
+    labels: [type/tech-debt, type/automation]
     assignees: copilot
     max: 1
 

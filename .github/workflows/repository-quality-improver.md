@@ -23,7 +23,7 @@ tools:
 safe-outputs:
   create-issue:
     expires: 2d
-    labels: [quality, automated-analysis]
+    labels: [type/tech-debt, type/automation]
     max: 1
 
 timeout-minutes: 20
