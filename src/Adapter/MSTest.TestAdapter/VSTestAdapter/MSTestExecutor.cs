@@ -211,7 +211,7 @@ internal sealed class MSTestExecutor : ITestExecutor
 
     private async Task RunTestsFromRightContextAsync(IFrameworkHandle frameworkHandle, Func<TestRunCancellationToken, Task> runTestsAction)
     {
-        ApartmentState? requestedApartmentState = MSTestSettings.GetEffectiveExecutionApartmentState();
+        ApartmentState? requestedApartmentState = MSTestSettings.RunConfigurationSettings.ExecutionApartmentState;
 
         // If we are on Windows and the requested apartment state is different from the current apartment state,
         // then run the tests in a new thread.

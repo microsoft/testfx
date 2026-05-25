@@ -46,46 +46,6 @@ public class MSTestSettingsTests : TestContainer
 
     #region Property validation.
 
-    public void GetEffectiveExecutionApartmentStateShouldReturnConfiguredApartmentState()
-    {
-        ApartmentState? apartmentState = MSTestSettings.GetEffectiveExecutionApartmentState(
-            ApartmentState.MTA,
-            isWindows: true,
-            GetEntryPoint(nameof(StaThreadEntryPoint)));
-
-        apartmentState.Should().Be(ApartmentState.MTA);
-    }
-
-    public void GetEffectiveExecutionApartmentStateShouldReturnSTAForSTAThreadEntryPointOnWindows()
-    {
-        ApartmentState? apartmentState = MSTestSettings.GetEffectiveExecutionApartmentState(
-            configuredApartmentState: null,
-            isWindows: true,
-            GetEntryPoint(nameof(StaThreadEntryPoint)));
-
-        apartmentState.Should().Be(ApartmentState.STA);
-    }
-
-    public void GetEffectiveExecutionApartmentStateShouldReturnNullForSTAThreadEntryPointOnNonWindows()
-    {
-        ApartmentState? apartmentState = MSTestSettings.GetEffectiveExecutionApartmentState(
-            configuredApartmentState: null,
-            isWindows: false,
-            GetEntryPoint(nameof(StaThreadEntryPoint)));
-
-        apartmentState.Should().BeNull();
-    }
-
-    public void GetEffectiveExecutionApartmentStateShouldReturnNullForNonSTAThreadEntryPointOnWindows()
-    {
-        ApartmentState? apartmentState = MSTestSettings.GetEffectiveExecutionApartmentState(
-            configuredApartmentState: null,
-            isWindows: true,
-            GetEntryPoint(nameof(NonStaThreadEntryPoint)));
-
-        apartmentState.Should().BeNull();
-    }
-
     public void MapInconclusiveToFailedIsByDefaultFalseWhenNotSpecified()
     {
         string runSettingsXml =
@@ -1197,16 +1157,4 @@ public class MSTestSettingsTests : TestContainer
     }
 
     #endregion
-
-    private static MethodInfo GetEntryPoint(string name)
-        => typeof(MSTestSettingsTests).GetMethod(name, BindingFlags.NonPublic | BindingFlags.Static)!;
-
-    [STAThread]
-    private static void StaThreadEntryPoint()
-    {
-    }
-
-    private static void NonStaThreadEntryPoint()
-    {
-    }
 }

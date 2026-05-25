@@ -73,18 +73,6 @@ internal sealed partial class MSTestSettings
         private set;
     }
 
-    internal static ApartmentState? GetEffectiveExecutionApartmentState()
-        => GetEffectiveExecutionApartmentState(
-            RunConfigurationSettings.ExecutionApartmentState,
-            RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
-            Assembly.GetEntryAssembly()?.EntryPoint);
-
-    internal static ApartmentState? GetEffectiveExecutionApartmentState(ApartmentState? configuredApartmentState, bool isWindows, MethodInfo? entryPoint)
-        => configuredApartmentState
-            ?? (isWindows && entryPoint?.GetCustomAttribute<STAThreadAttribute>() is not null
-                ? ApartmentState.STA
-                : null);
-
     /// <summary>
     /// Gets a value indicating whether capture debug traces.
     /// </summary>
