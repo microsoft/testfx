@@ -16,6 +16,10 @@ internal abstract class PipeNameEnvironmentVariableProviderBase(string pipeName,
 
     public abstract string Description { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether the provider validates that the environment variable value matches <see cref="PipeName"/>.
+    /// Override and return <see langword="false"/> when only variable presence should be validated.
+    /// </summary>
     protected virtual bool ShouldValidatePipeNameValue => true;
 
     protected string PipeName { get; } = pipeName;
@@ -31,14 +35,23 @@ internal abstract class PipeNameEnvironmentVariableProviderBase(string pipeName,
     }
 
     public Task<ValidationResult> ValidateTestHostEnvironmentVariablesAsync(IReadOnlyEnvironmentVariables environmentVariables)
-        => !environmentVariables.TryGetVariable(EnvironmentVariableName, out OwnedEnvironmentVariable? envVar)
-            ? Task.FromResult(ValidationResult.Invalid(GetMissingEnvironmentVariableErrorMessage(EnvironmentVariableName)))
-            : ShouldValidatePipeNameValue && envVar.Value != PipeName
-                ? Task.FromResult(ValidationResult.Invalid(GetInvalidEnvironmentVariableValueErrorMessage(EnvironmentVariableName, envVar.Value, PipeName)))
-                : ValidationResult.ValidTask;
+    {
+#pragma warning disable IDE0046 // Convert to conditional expression
+        if (!environmentVariables.TryGetVariable(EnvironmentVariableName, out OwnedEnvironmentVariable? envVar))
+        {
+            return Task.FromResult(ValidationResult.Invalid(GetMissingEnvironmentVariableErrorMessage(EnvironmentVariableName)));
+        }
+
+        if (ShouldValidatePipeNameValue && envVar.Value != PipeName)
+        {
+            return Task.FromResult(ValidationResult.Invalid(GetInvalidEnvironmentVariableValueErrorMessage(EnvironmentVariableName, envVar.Value, PipeName)));
+        }
+#pragma warning restore IDE0046 // Convert to conditional expression
+
+        return ValidationResult.ValidTask;
+    }
 
     protected abstract string GetMissingEnvironmentVariableErrorMessage(string environmentVariableName);
 
-    protected virtual string GetInvalidEnvironmentVariableValueErrorMessage(string environmentVariableName, string? actualValue, string expectedValue)
-        => string.Format(CultureInfo.InvariantCulture, "Environment variable '{0}' has invalid value '{1}', expected '{2}'.", environmentVariableName, actualValue, expectedValue);
+    protected abstract string GetInvalidEnvironmentVariableValueErrorMessage(string environmentVariableName, string? actualValue, string expectedValue);
 }

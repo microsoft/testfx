@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
@@ -37,4 +38,8 @@ internal sealed class TrxEnvironmentVariableProvider : global::Microsoft.Testing
 
     protected override string GetMissingEnvironmentVariableErrorMessage(string environmentVariableName)
         => string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable, environmentVariableName);
+
+    // This method is never called because ShouldValidatePipeNameValue is false, so value validation is skipped.
+    protected override string GetInvalidEnvironmentVariableValueErrorMessage(string environmentVariableName, string? actualValue, string expectedValue)
+        => throw ApplicationStateGuard.Unreachable();
 }
