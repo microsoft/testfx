@@ -460,6 +460,34 @@ public class HtmlReportEngineTests
         Assert.Contains("[truncated, original length:", result.Traits![0].Value);
     }
 
+    [TestMethod]
+    public async Task GenerateReportAsync_WithUserSuppliedFileName_ResolvesPlaceholders()
+    {
+        using var memoryStream = new MemoryFileStream();
+        string[]? providedFileName = ["report_{pname}_{tfm}_{time}.html"];
+        _ = _commandLineOptionsMock
+            .Setup(_ => _.TryGetOptionArgumentList(HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName, out providedFileName))
+            .Returns(true);
+        _ = _clockMock.SetupGet(_ => _.UtcNow).Returns(new DateTimeOffset(2025, 9, 22, 13, 49, 34, TimeSpan.Zero));
+        HtmlReportEngine engine = CreateEngine(memoryStream);
+        // CreateEngine sets up GetCurrentTestApplicationFullPath to return "TestAppPath"; override it so the
+        // resolved {pname} is something more recognizable in the assertion.
+        _ = _testApplicationModuleInfoMock
+            .Setup(_ => _.GetCurrentTestApplicationFullPath())
+            .Returns(Path.Combine(Path.GetTempPath(), "MyTestApp.dll"));
+
+        (string fileName, string? warning) = await engine.GenerateReportAsync([Captured("p1", "Passing test", "passed")]);
+
+        Assert.IsNull(warning);
+        Assert.IsNotNull(fileName);
+        Assert.DoesNotContain("{pname}", fileName);
+        Assert.DoesNotContain("{tfm}", fileName);
+        Assert.DoesNotContain("{time}", fileName);
+        Assert.Contains("MyTestApp", fileName);
+        Assert.Contains("2025-09-22_13-49-34.0000000", fileName);
+        Assert.EndsWith(".html", fileName);
+    }
+
     private static CapturedTestResult Captured(string uid, string name, string outcome,
         TimeSpan? duration = null, string? errorMessage = null)
         => new()

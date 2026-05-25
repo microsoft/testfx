@@ -89,7 +89,8 @@ Extension options:
     --hangdump
         Generate a dump file if the test process hangs
     --hangdump-filename
-        Specify the name of the dump file
+        Specify the name of the dump file.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.
     --hangdump-timeout
         Specify the timeout after which the dump will be generated.
         The timeout value is specified in one of the following formats:
@@ -133,7 +134,9 @@ Extension options:
     --report-html
         Enable generating an HTML report
     --report-html-filename
-        The name of the generated HTML report
+        The name of the generated HTML report.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+        Example: MyReport_{tfm}.html
     --report-trx
         Enable generating TRX report
     --report-trx-filename
@@ -384,7 +387,8 @@ Registered command line providers:
       --hangdump-filename
         Arity: 1
         Hidden: False
-        Description: Specify the name of the dump file
+        Description: Specify the name of the dump file.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.
       --hangdump-timeout
         Arity: 1
         Hidden: False
@@ -412,7 +416,9 @@ Registered command line providers:
       --report-html-filename
         Arity: 1
         Hidden: False
-        Description: The name of the generated HTML report
+        Description: The name of the generated HTML report.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+        Example: MyReport_{tfm}.html
   MSBuildCommandLineProvider
     Name: MSBuildCommandLineProvider
     Version: *

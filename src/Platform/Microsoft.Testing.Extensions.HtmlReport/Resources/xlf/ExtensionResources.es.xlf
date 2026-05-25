@@ -23,8 +23,10 @@
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameOptionDescription">
-        <source>The name of the generated HTML report</source>
-        <target state="translated">Nombre del informe HTML generado</target>
+        <source>The name of the generated HTML report.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Example: MyReport_{tfm}.html</source>
+        <target state="needs-review-translation">Nombre del informe HTML generado</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRequiresHtmlReport">

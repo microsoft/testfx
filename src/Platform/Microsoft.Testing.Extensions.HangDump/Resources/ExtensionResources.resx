@@ -167,7 +167,8 @@ Disk info:
 {1} - disk info detailing free space</comment>
   </data>
   <data name="HangDumpFileNameOptionDescription" xml:space="preserve">
-    <value>Specify the name of the dump file</value>
+    <value>Specify the name of the dump file.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</value>
   </data>
   <data name="HangDumpOptionDescription" xml:space="preserve">
     <value>Generate a dump file if the test process hangs</value>

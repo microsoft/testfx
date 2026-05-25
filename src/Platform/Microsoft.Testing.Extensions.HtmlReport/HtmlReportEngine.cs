@@ -64,7 +64,7 @@ internal sealed class HtmlReportEngine
             out string[]? providedFileName);
 
         string fileName = fileNameExplicitlyProvided
-            ? providedFileName![0]
+            ? ResolveUserFileName(providedFileName![0], finishTime)
             : BuildDefaultFileName(finishTime);
 
         string outputDirectory = _configuration.GetTestResultDirectory();
@@ -152,6 +152,25 @@ internal sealed class HtmlReportEngine
         string targetFrameworkMoniker = GetTargetFrameworkMoniker();
         string raw = $"{user}_{_environment.MachineName}_{moduleName}_{targetFrameworkMoniker}_{finishTime:yyyy-MM-dd_HH_mm_ss}.html";
         return ReplaceInvalidFileNameChars(raw);
+    }
+
+    // Resolves {pname}/{pid}/{asm}/{tfm}/{time} placeholders in the user-supplied filename and then
+    // sanitizes any character that a placeholder substitution may have introduced and that cannot
+    // appear in a file name on the current platform. The directory portion (if any) is preserved
+    // verbatim - it must remain empty here because the option validation rejects path-containing
+    // arguments, but we still split-and-recombine defensively so a future relaxation does not
+    // silently corrupt directory separators.
+    private string ResolveUserFileName(string template, DateTimeOffset finishTime)
+    {
+        string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+        string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
+        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(processName, processId, finishTime);
+        string resolved = ArtifactNamingHelper.ResolveTemplate(template, replacements);
+        string directoryPart = Path.GetDirectoryName(resolved) ?? string.Empty;
+        string sanitizedFileName = ReplaceInvalidFileNameChars(Path.GetFileName(resolved));
+        return directoryPart.Length == 0
+            ? sanitizedFileName
+            : Path.Combine(directoryPart, sanitizedFileName);
     }
 
     private static string GetTargetFrameworkMoniker()

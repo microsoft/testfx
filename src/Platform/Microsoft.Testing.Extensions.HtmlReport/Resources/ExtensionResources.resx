@@ -71,7 +71,9 @@
     <value>'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</value>
   </data>
   <data name="HtmlReportFileNameOptionDescription" xml:space="preserve">
-    <value>The name of the generated HTML report</value>
+    <value>The name of the generated HTML report.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Example: MyReport_{tfm}.html</value>
   </data>
   <data name="HtmlReportFileNameRequiresHtmlReport" xml:space="preserve">
     <value>'--report-html-filename' requires '--report-html' to be enabled</value>
