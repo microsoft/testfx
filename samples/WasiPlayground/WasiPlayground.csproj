@@ -5,9 +5,21 @@
     <TargetFrameworks>net10.0</TargetFrameworks>
     <RuntimeIdentifier>wasi-wasm</RuntimeIdentifier>
     <PublishTrimmed>true</PublishTrimmed>
+    <!-- Use the pre-built dotnet.wasm and load managed assemblies from disk (no wasi-sdk required) -->
+    <WasmSingleFileBundle>false</WasmSingleFileBundle>
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <!--
+      Workaround for a bug in 11.0.100-preview.5 SDK manifests where
+      $(UsingWasiRuntimeWorkload) never resolves to 'true' for net10.0 projects,
+      so the WASI Sdk targets (Microsoft.NET.Runtime.WebAssembly.Wasi.Sdk.net10)
+      are never imported and no dotnet.wasm bundle is produced.
+      See: WorkloadManifest.Wasi.targets only checks $(WasiNativeWorkload10) when
+      $(TargetsCurrent) (net11.0) is true, never when $(TargetsNet10) is true.
+    -->
+    <UsingWasiRuntimeWorkload>true</UsingWasiRuntimeWorkload>
 
     <Nullable>enable</Nullable>
-    <OutputType>Exe</OutputType>
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
   </PropertyGroup>
 
