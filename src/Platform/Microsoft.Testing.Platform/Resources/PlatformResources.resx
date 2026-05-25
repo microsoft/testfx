@@ -702,6 +702,13 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
     <value>Failed to read response file '{0}'. {1}.</value>
     <comment>{1} is the exception</comment>
   </data>
+  <data name="CommandLineParserUnclosedQuoteInResponseFile" xml:space="preserve">
+    <value>Unclosed quote in response file at line {0}</value>
+    <comment>{0} is the line number</comment>
+  </data>
+  <data name="CommandLineParserUnclosedQuoteInCommandLine" xml:space="preserve">
+    <value>Unclosed quote in command line</value>
+  </data>
   <data name="PlatformCommandLineMinimumExpectedTestsOptionDescription" xml:space="preserve">
     <value>Specifies the minimum number of tests that are expected to run.</value>
   </data>

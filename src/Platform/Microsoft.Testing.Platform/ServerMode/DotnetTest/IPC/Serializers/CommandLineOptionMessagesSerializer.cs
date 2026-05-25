@@ -36,11 +36,11 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
        |---CommandLineOptionMessageList[0].IsBuiltIn Value---| (1 byte)
    */
 
-internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class CommandLineOptionMessagesSerializer : NamedPipeSerializer<CommandLineOptionMessages>, INamedPipeSerializer
 {
-    public int Id => CommandLineOptionMessagesFieldsId.MessagesSerializerId;
+    public override int Id => CommandLineOptionMessagesFieldsId.MessagesSerializerId;
 
-    public object Deserialize(Stream stream)
+    protected override CommandLineOptionMessages DeserializeCore(Stream stream)
     {
         string? moduleName = null;
         List<CommandLineOptionMessage>? commandLineOptionMessages = null;
@@ -69,7 +69,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
             }
         }
 
-        return new CommandLineOptionMessages(moduleName, commandLineOptionMessages is null ? [] : [.. commandLineOptionMessages]);
+        return new(moduleName, commandLineOptionMessages is null ? [] : [.. commandLineOptionMessages]);
     }
 
     private static List<CommandLineOptionMessage> ReadCommandLineOptionMessagesPayload(Stream stream)
@@ -119,16 +119,14 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
         return commandLineOptionMessages;
     }
 
-    public void Serialize(object objectToSerialize, Stream stream)
+    protected override void SerializeCore(CommandLineOptionMessages objectToSerialize, Stream stream)
     {
         RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
 
-        var commandLineOptionMessages = (CommandLineOptionMessages)objectToSerialize;
+        WriteUShort(stream, GetFieldCount(objectToSerialize));
 
-        WriteUShort(stream, GetFieldCount(commandLineOptionMessages));
-
-        WriteField(stream, CommandLineOptionMessagesFieldsId.ModulePath, commandLineOptionMessages.ModulePath);
-        WriteCommandLineOptionMessagesPayload(stream, commandLineOptionMessages.CommandLineOptionMessageList);
+        WriteField(stream, CommandLineOptionMessagesFieldsId.ModulePath, objectToSerialize.ModulePath);
+        WriteCommandLineOptionMessagesPayload(stream, objectToSerialize.CommandLineOptionMessageList);
     }
 
     private static void WriteCommandLineOptionMessagesPayload(Stream stream, CommandLineOptionMessage[]? commandLineOptionMessageList)

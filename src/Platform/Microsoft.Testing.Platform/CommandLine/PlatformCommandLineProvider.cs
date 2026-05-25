@@ -182,19 +182,18 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     {
         timeout = TimeSpan.Zero;
 
-        // We need at least one digit plus a unit suffix (e.g. "1s").
         if (arg is null || arg.Length < 2)
         {
             return false;
         }
 
-        char unit = char.ToLowerInvariant(arg[arg.Length - 1]);
-        if (unit is not 'h' and not 'm' and not 's')
+        char unit = char.ToLowerInvariant(arg[^1]);
+        if (unit is not ('h' or 'm' or 's'))
         {
             return false;
         }
 
-        if (!float.TryParse(arg[..(arg.Length - 1)], NumberStyles.Float, CultureInfo.InvariantCulture, out float value)
+        if (!float.TryParse(arg[..^1], NumberStyles.Float, CultureInfo.InvariantCulture, out float value)
             || float.IsNaN(value)
             || float.IsInfinity(value)
             || value < 0)

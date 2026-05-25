@@ -141,6 +141,26 @@
   <data name="CrashDumpInvalidEnvironmentVariableValueErrorMessage" xml:space="preserve">
     <value>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</value>
   </data>
+  <data name="CrashDumpSequenceArtifactDescription" xml:space="preserve">
+    <value>The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</value>
+  </data>
+  <data name="CrashDumpSequenceArtifactDisplayName" xml:space="preserve">
+    <value>Crash sequence file</value>
+  </data>
+  <data name="CrashDumpSequenceFileReadError" xml:space="preserve">
+    <value>Failed to read the crash sequence file '{0}': {1}</value>
+  </data>
+  <data name="CrashDumpTestsRunningAtCrash" xml:space="preserve">
+    <value>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</value>
+  </data>
+  <data name="CrashSequenceOptionDescription" xml:space="preserve">
+    <value>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</value>
+  </data>
+  <data name="CrashSequenceOptionInvalidArgument" xml:space="preserve">
+    <value>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
+  </data>
   <data name="MissingCrashDumpMainOption" xml:space="preserve">
     <value>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</value>
   </data>

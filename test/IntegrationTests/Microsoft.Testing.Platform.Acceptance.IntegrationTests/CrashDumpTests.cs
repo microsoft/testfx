@@ -153,6 +153,101 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
         testHostResult.AssertOutputContains("Option '--crashdump-type' has invalid arguments: 'invalid' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'");
     }
 
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task CrashDump_DefaultSetting_GeneratesSequenceFileListingRunningTests(string tfm)
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--crashdump --results-directory {resultDirectory}",
+            new Dictionary<string, string?>
+            {
+                { "CRASHDUMP_PUBLISH_INPROGRESS_TESTS", "MyTest1;MyTest2" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+
+        string sequenceFile = Assert.ContainsSingle(
+            Directory.GetFiles(resultDirectory, "*.sequence.log", SearchOption.AllDirectories),
+            $"Crash sequence file not found '{tfm}'\n{testHostResult}");
+        string content = await File.ReadAllTextAsync(sequenceFile, TestContext.CancellationToken);
+        Assert.Contains("STARTED", content);
+        Assert.Contains("MyTest1", content);
+        Assert.Contains("MyTest2", content);
+
+        // The friendly summary printed by the controller lists each running test by display name.
+        testHostResult.AssertOutputContains("The following tests were still running when the test host crashed");
+        testHostResult.AssertOutputContains("MyTest1");
+        testHostResult.AssertOutputContains("MyTest2");
+    }
+
+    [TestMethod]
+    public async Task CrashDump_SequenceOff_DoesNotGenerateSequenceFile()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--crashdump --crash-sequence off --results-directory {resultDirectory}",
+            new Dictionary<string, string?>
+            {
+                { "CRASHDUMP_PUBLISH_INPROGRESS_TESTS", "MyTest1" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+
+        Assert.IsEmpty(
+            Directory.GetFiles(resultDirectory, "*.sequence.log", SearchOption.AllDirectories),
+            $"No sequence file expected when --crash-sequence off is set\n{testHostResult}");
+        testHostResult.AssertOutputDoesNotContain("The following tests were still running when the test host crashed");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task CrashDump_GracefulExit_DeletesSequenceFile(string tfm)
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--crashdump --results-directory {resultDirectory}",
+            new Dictionary<string, string?>
+            {
+                { "CRASHDUMP_PUBLISH_INPROGRESS_TESTS", "MyTest1" },
+                { "CRASHDUMP_EXIT_GRACEFULLY", "1" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        // Even though tests were "started", the testhost exited cleanly so the sequence file has no
+        // diagnostic value and must be cleaned up to avoid polluting the results directory.
+        Assert.IsEmpty(
+            Directory.GetFiles(resultDirectory, "*.sequence.log", SearchOption.AllDirectories),
+            $"No sequence file expected on graceful exit '{tfm}'\n{testHostResult}");
+    }
+
+    [TestMethod]
+    public async Task CrashSequence_InvalidArgument_ShouldFail()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--crashdump --crash-sequence maybe --results-directory {resultDirectory}",
+            cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        testHostResult.AssertOutputContains("--crash-sequence expects a single parameter");
+    }
+
+    [TestMethod]
+    public async Task CrashSequence_WithoutCrashDumpOrCrashReport_ShouldFail()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--crash-sequence on --results-directory {resultDirectory}",
+            cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        testHostResult.AssertOutputContains("Add --crashdump or --crash-report");
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string AssetName = "CrashDumpFixture";
@@ -187,6 +282,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
 using Microsoft.Testing.Platform;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -220,7 +316,7 @@ public class Startup
     }
 }
 
-public class DummyTestFramework : ITestFramework
+public class DummyTestFramework : ITestFramework, IDataProducer
 {
     public string Uid => nameof(DummyTestFramework);
 
@@ -230,6 +326,8 @@ public class DummyTestFramework : ITestFramework
 
     public string Description => nameof(DummyTestFramework);
 
+    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
+
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
@@ -238,8 +336,70 @@ public class DummyTestFramework : ITestFramework
     public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
         => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
 
-    public Task ExecuteRequestAsync(ExecuteRequestContext context)
+    public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        // Optionally publish a fake "in-progress" test node before crashing so the crash-sequence
+        // extension has something to record. We do not publish a terminal state (passed/failed/...)
+        // for these so the controller-side handler can verify them as "tests running at the time
+        // of the crash".
+        string? tests = Environment.GetEnvironmentVariable("CRASHDUMP_PUBLISH_INPROGRESS_TESTS");
+        if (!string.IsNullOrEmpty(tests) && context.Request is Microsoft.Testing.Platform.Requests.RunTestExecutionRequest runRequest)
+        {
+            foreach (string testName in tests.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var node = new TestNode
+                {
+                    Uid = new TestNodeUid(testName),
+                    DisplayName = testName,
+                };
+                node.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
+                await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runRequest.Session.SessionUid, node));
+            }
+
+            // MessageBus.PublishAsync only enqueues; the async consumer pipeline may not have run
+            // yet. Poll the sequence file (set up by the controller via TESTINGPLATFORM_CRASHDUMP_SEQUENCE_FILE)
+            // until it contains a STARTED line for every published test, or a short timeout elapses.
+            // This is a test-asset workaround for what is, in production, a best-effort feature
+            // (the message bus is intentionally asynchronous for throughput reasons).
+            string? sequenceFilePath = Environment.GetEnvironmentVariable("TESTINGPLATFORM_CRASHDUMP_SEQUENCE_FILE");
+            if (!string.IsNullOrEmpty(sequenceFilePath))
+            {
+                string[] expectedTests = tests.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                var deadline = DateTime.UtcNow.AddSeconds(30);
+                while (DateTime.UtcNow < deadline)
+                {
+                    if (File.Exists(sequenceFilePath))
+                    {
+                        try
+                        {
+                            string content = File.ReadAllText(sequenceFilePath);
+                            bool allFound = true;
+                            foreach (string t in expectedTests)
+                            {
+                                if (content.IndexOf("STARTED\t", StringComparison.Ordinal) < 0
+                                    || content.IndexOf("\t" + t, StringComparison.Ordinal) < 0)
+                                {
+                                    allFound = false;
+                                    break;
+                                }
+                            }
+
+                            if (allFound)
+                            {
+                                break;
+                            }
+                        }
+                        catch (IOException)
+                        {
+                            // File is being written to; retry.
+                        }
+                    }
+
+                    await Task.Delay(50);
+                }
+            }
+        }
+
         // Optionally spawn a child process that also crashes (and produces its own dump) so we can
         // exercise the crashdump extension's ability to collect dumps from child processes.
         if (Environment.GetEnvironmentVariable("CRASHDUMP_SPAWN_CHILD_THAT_CRASHES") == "1")
@@ -311,9 +471,16 @@ public class DummyTestFramework : ITestFramework
             }
         }
 
+        // Optionally exit gracefully instead of crashing so we can assert that the sequence file is
+        // cleaned up when no crash occurs.
+        if (Environment.GetEnvironmentVariable("CRASHDUMP_EXIT_GRACEFULLY") == "1")
+        {
+            context.Complete();
+            return;
+        }
+
         Environment.FailFast("CrashDump");
         context.Complete();
-        return Task.CompletedTask;
     }
 }
 """;
