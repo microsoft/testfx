@@ -82,15 +82,29 @@ public class HtmlReportTests : AcceptanceTestBase<HtmlReportTests.TestAssetFixtu
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
-    public async Task Html_WhenReportHtmlFilenameContainsPath_ErrorIsDisplayed(string tfm)
+    public async Task Html_WhenReportHtmlFilenameContainsPath_HtmlReportIsGeneratedInThatPath(string tfm)
     {
+        string customFileName = Path.Combine("subdir", "report.html");
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, "TestResults");
+        string customFilePath = Path.Combine(testResultsPath, customFileName);
+        string expectedFilePath = Regex.Escape(customFilePath);
+
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--report-html --report-html-filename {Path.Combine("subdir", "report.html")}",
+            $"--report-html --report-html-filename {customFileName}",
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("file name argument must not contain a path or invalid characters");
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+
+        string outputPattern = $"""
+  In process file artifacts produced:
+    - {expectedFilePath}
+""";
+        testHostResult.AssertOutputMatchesRegex(outputPattern);
+
+        Assert.IsTrue(
+            File.Exists(customFilePath),
+            $"Expected custom HTML report file '{customFileName}' was not found in '{testResultsPath}'.");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]

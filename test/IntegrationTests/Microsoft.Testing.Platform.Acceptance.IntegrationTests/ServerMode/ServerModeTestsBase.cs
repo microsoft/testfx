@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 
 namespace MSTest.Acceptance.IntegrationTests.Messages.V100;
@@ -21,7 +22,10 @@ public partial /* for codegen regx */ class ServerModeTestsBase<TFixture> : Acce
         { "DOTNET_MULTILEVEL_LOOKUP", "0" },
     };
 
-    protected async Task<TestingPlatformClient> StartAsServerAndConnectToTheClientAsync(TestHost testHost)
+    protected Task<TestingPlatformClient> StartAsServerAndConnectToTheClientAsync(TestHost testHost)
+        => StartAsServerAndConnectToTheClientAsync(testHost, additionalEnvironmentVariables: null);
+
+    protected async Task<TestingPlatformClient> StartAsServerAndConnectToTheClientAsync(TestHost testHost, IReadOnlyDictionary<string, string?>? additionalEnvironmentVariables)
     {
         var environmentVariables = new Dictionary<string, string?>(DefaultEnvironmentVariables);
         foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
@@ -37,7 +41,16 @@ public partial /* for codegen regx */ class ServerModeTestsBase<TFixture> : Acce
         }
 
         // We expect to not fail for unhandled exception in server mode for IDE needs.
-        environmentVariables.Add("TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION", "0");
+        // Use indexer assignment so that an inherited value (if any) is safely overridden.
+        environmentVariables[EnvironmentVariableConstants.TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION] = "0";
+
+        if (additionalEnvironmentVariables is not null)
+        {
+            foreach (KeyValuePair<string, string?> kvp in additionalEnvironmentVariables)
+            {
+                environmentVariables[kvp.Key] = kvp.Value;
+            }
+        }
 
         // To attach to the server on startup
         // environmentVariables.Add(EnvironmentVariableConstants.TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER, "1");

@@ -1079,6 +1079,11 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
         <target state="translated">디버거 연결 대기(TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1)는 브라우저 환경에서 지원되지 않습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
+        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">테스트가 0개 실행됨</target>

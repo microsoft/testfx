@@ -25,6 +25,7 @@ public static class HangDumpExtensions
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     public static void AddHangDumpProvider(this ITestApplicationBuilder builder)
     {
         if (OperatingSystem.IsBrowser())
@@ -35,6 +36,11 @@ public static class HangDumpExtensions
         if (OperatingSystem.IsIOS() || OperatingSystem.IsTvOS())
         {
             throw new PlatformNotSupportedException("Hang dump extension is not available on ios nor tvos");
+        }
+
+        if (OperatingSystem.IsWasi())
+        {
+            throw new PlatformNotSupportedException("Hang dump extension is not available on wasi");
         }
 
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
