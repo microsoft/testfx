@@ -86,6 +86,11 @@ public sealed class TestApplication : ITestApplication
                 throw new PlatformNotSupportedException(PlatformResources.WaitDebuggerAttachNotSupportedInBrowserErrorMessage);
             }
 
+            if (OperatingSystem.IsWasi())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.WaitDebuggerAttachNotSupportedInWasiErrorMessage);
+            }
+
             WaitForDebuggerToAttach(systemEnvironment, systemConsole, systemProcess);
         }
 
@@ -238,11 +243,17 @@ public sealed class TestApplication : ITestApplication
                 throw new PlatformNotSupportedException(PlatformResources.WaitDebuggerAttachNotSupportedInBrowserErrorMessage);
             }
 
+            if (OperatingSystem.IsWasi())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.WaitDebuggerAttachNotSupportedInWasiErrorMessage);
+            }
+
             WaitForDebuggerToAttach(environment, console, systemProcess);
         }
     }
 
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     private static void WaitForDebuggerToAttach(SystemEnvironment environment, SystemConsole console, SystemProcessHandler systemProcess)
     {
         using IProcess currentProcess = systemProcess.GetCurrentProcess();
