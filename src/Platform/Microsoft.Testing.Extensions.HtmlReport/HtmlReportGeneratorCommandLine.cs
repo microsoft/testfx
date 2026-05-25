@@ -44,7 +44,7 @@ internal sealed class HtmlReportGeneratorCommandLine : ICommandLineOptionsProvid
         {
             if (arguments.Length is 0)
             {
-                return ValidationResult.InvalidTask(ExtensionResources.HtmlReportFileNameShouldNotContainPath);
+                return ValidationResult.InvalidTask(ExtensionResources.HtmlReportFileNameMustNotBeEmpty);
             }
 
             string argument = arguments[0];
@@ -52,7 +52,7 @@ internal sealed class HtmlReportGeneratorCommandLine : ICommandLineOptionsProvid
             string fileNamePart = Path.GetFileName(argument);
             if (RoslynString.IsNullOrWhiteSpace(fileNamePart))
             {
-                return ValidationResult.InvalidTask(ExtensionResources.HtmlReportFileNameShouldNotContainPath);
+                return ValidationResult.InvalidTask(ExtensionResources.HtmlReportFileNameMustNotBeEmpty);
             }
 
             if (!fileNamePart.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
@@ -62,7 +62,7 @@ internal sealed class HtmlReportGeneratorCommandLine : ICommandLineOptionsProvid
 
             if (EscapesResultsDirectory(argument))
             {
-                return ValidationResult.InvalidTask(ExtensionResources.HtmlReportFileNameShouldNotContainPath);
+                return ValidationResult.InvalidTask(ExtensionResources.HtmlReportFileNameRelativePathMustStayUnderResultsDirectory);
             }
         }
 

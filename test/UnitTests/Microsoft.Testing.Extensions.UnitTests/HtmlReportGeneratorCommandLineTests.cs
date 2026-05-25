@@ -83,7 +83,7 @@ public sealed class HtmlReportGeneratorCommandLineTests
         ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [fileName]).ConfigureAwait(false);
 
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual(HtmlReport.Resources.ExtensionResources.HtmlReportFileNameShouldNotContainPath, result.ErrorMessage);
+        Assert.AreEqual(HtmlReport.Resources.ExtensionResources.HtmlReportFileNameRelativePathMustStayUnderResultsDirectory, result.ErrorMessage);
     }
 
     [TestMethod]
@@ -101,7 +101,36 @@ public sealed class HtmlReportGeneratorCommandLineTests
         ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, ["C:report.html"]).ConfigureAwait(false);
 
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual(HtmlReport.Resources.ExtensionResources.HtmlReportFileNameShouldNotContainPath, result.ErrorMessage);
+        Assert.AreEqual(HtmlReport.Resources.ExtensionResources.HtmlReportFileNameRelativePathMustStayUnderResultsDirectory, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(" ")]
+    [DataRow("sub/")]
+    [DataRow("sub/ ")]
+    public async Task IsInvalid_If_FileNamePart_Is_Empty_Or_Whitespace(string fileName)
+    {
+        var provider = new HtmlReportGeneratorCommandLine();
+        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions()
+            .First(x => x.Name == HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [fileName]).ConfigureAwait(false);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(HtmlReport.Resources.ExtensionResources.HtmlReportFileNameMustNotBeEmpty, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_If_No_Argument_Provided()
+    {
+        var provider = new HtmlReportGeneratorCommandLine();
+        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions()
+            .First(x => x.Name == HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, []).ConfigureAwait(false);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(HtmlReport.Resources.ExtensionResources.HtmlReportFileNameMustNotBeEmpty, result.ErrorMessage);
     }
 
     [TestMethod]

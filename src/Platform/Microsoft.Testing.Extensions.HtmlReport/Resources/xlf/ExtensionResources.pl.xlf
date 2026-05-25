@@ -22,6 +22,11 @@
         <target state="translated">Argument nazwy pliku „--report-html-filename” musi kończyć się ciągiem „.html” (np. --report-html-filename myreport.html)</target>
         <note />
       </trans-unit>
+      <trans-unit id="HtmlReportFileNameMustNotBeEmpty">
+        <source>'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</source>
+        <target state="new">'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HtmlReportFileNameOptionDescription">
         <source>The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
@@ -29,14 +34,14 @@ Example: MyReport_{tfm}.html</source>
         <target state="needs-review-translation">Nazwa wygenerowanego raportu HTML</target>
         <note />
       </trans-unit>
+      <trans-unit id="HtmlReportFileNameRelativePathMustStayUnderResultsDirectory">
+        <source>'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</source>
+        <target state="new">'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HtmlReportFileNameRequiresHtmlReport">
         <source>'--report-html-filename' requires '--report-html' to be enabled</source>
         <target state="translated">Element „--report-html-filename” wymaga włączenia parametru „--report-html”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="HtmlReportFileNameShouldNotContainPath">
-        <source>'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename myreport.html)</source>
-        <target state="needs-review-translation">argument nazwy pliku nie może zawierać ścieżki ani nieprawidłowych znaków (np. --report-html-filename myreport.html)</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDescription">
