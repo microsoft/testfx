@@ -174,15 +174,33 @@ internal partial class TestMethodInfo : ITestMethod
     }
 
     /// <summary>
-    /// Gets the number of retries this test method should make in case of failure.
+    /// Resolves the retry attribute that applies to this test method, considering both
+    /// method-level and class-level <see cref="RetryBaseAttribute"/> attributes.
     /// </summary>
+    /// <remarks>
+    /// A method-level retry attribute fully overrides any class-level retry attribute.
+    /// Class-level retry attributes are always validated (even when the method has its own
+    /// retry) so that misuse on the test class is reported regardless of method overrides.
+    /// </remarks>
     /// <returns>
-    /// The number of retries, which is always greater than or equal to 1.
-    /// If RetryAttribute is not present, returns 1.
+    /// The resolved <see cref="RetryBaseAttribute"/>, or <see langword="null"/> if neither
+    /// the method nor the declaring class is decorated.
     /// </returns>
     private RetryBaseAttribute? GetRetryAttribute()
     {
-        Attribute[] attributes = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached(MethodInfo);
+        RetryBaseAttribute? methodRetry = GetSingleRetryAttribute(
+            PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached(MethodInfo),
+            isClassLevel: false);
+
+        RetryBaseAttribute? classRetry = GetSingleRetryAttribute(
+            PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached(Parent.ClassType),
+            isClassLevel: true);
+
+        return methodRetry ?? classRetry;
+    }
+
+    private RetryBaseAttribute? GetSingleRetryAttribute(Attribute[] attributes, bool isClassLevel)
+    {
         RetryBaseAttribute? result = null;
         foreach (Attribute attribute in attributes)
         {
@@ -190,7 +208,14 @@ internal partial class TestMethodInfo : ITestMethod
             {
                 if (result is not null)
                 {
-                    ThrowMultipleAttributesException(nameof(RetryBaseAttribute));
+                    if (isClassLevel)
+                    {
+                        ThrowMultipleClassAttributesException(nameof(RetryBaseAttribute));
+                    }
+                    else
+                    {
+                        ThrowMultipleAttributesException(nameof(RetryBaseAttribute));
+                    }
                 }
 
                 result = retryAttribute;
