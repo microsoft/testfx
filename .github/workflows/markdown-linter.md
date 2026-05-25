@@ -17,7 +17,8 @@ safe-outputs:
     - automation
     - code-quality
     title-prefix: "[linter] "
-  noop: null
+  noop:
+    report-as-issue: false
 steps:
 - name: Download super-linter log
   uses: actions/download-artifact@v8.0.1
