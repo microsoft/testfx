@@ -77,10 +77,86 @@ public sealed class CurrentTestApplicationModuleInfoTests
         CollectionAssert.AreEqual(new[] { "exec", "myapp.dll", "--retry-failed-tests", "1" }, executable.Arguments.ToArray());
     }
 
+    [TestMethod]
+    public void GetCurrentExecutableInfo_DotnetMuxer_WithPassedArgsAndEmptyEnvironmentArgs_FallsBackToExecPlusPassedArgs()
+    {
+        Mock<IEnvironment> environment = CreateDotnetMuxerEnvironment([]);
+
+        CurrentTestApplicationModuleInfo info = new(environment.Object, new SystemProcessHandler(), ["--retry-failed-tests", "1"]);
+
+        ExecutableInfo executable = info.GetCurrentExecutableInfo();
+
+        CollectionAssert.AreEqual(new[] { "exec", "--retry-failed-tests", "1" }, executable.Arguments.ToArray());
+    }
+
+    [TestMethod]
+    public void GetCurrentExecutableInfo_MonoMuxer_NoPassedArgs_UsesEnvironmentArgsAsIs()
+    {
+        Mock<IEnvironment> environment = CreateMonoMuxerEnvironment(["myapp.dll", "--filter", "MyTest"]);
+
+        CurrentTestApplicationModuleInfo info = new(environment.Object, new SystemProcessHandler());
+
+        ExecutableInfo executable = info.GetCurrentExecutableInfo();
+
+        CollectionAssert.AreEqual(new[] { "myapp.dll", "--filter", "MyTest" }, executable.Arguments.ToArray());
+    }
+
+    [TestMethod]
+    public void GetCurrentExecutableInfo_MonoMuxer_WithPassedArgs_KeepsDllPathAndUsesPassedArgs()
+    {
+        // Same as the dotnet muxer case: we need to keep the dll path (envArgs[0]) so mono knows
+        // which assembly to run, but the rest of the arguments must come from the user-supplied args.
+        Mock<IEnvironment> environment = CreateMonoMuxerEnvironment(["myapp.dll", "--filter", "MyTest"]);
+
+        CurrentTestApplicationModuleInfo info = new(environment.Object, new SystemProcessHandler(), ["--retry-failed-tests", "1"]);
+
+        ExecutableInfo executable = info.GetCurrentExecutableInfo();
+
+        CollectionAssert.AreEqual(new[] { "myapp.dll", "--retry-failed-tests", "1" }, executable.Arguments.ToArray());
+    }
+
+    [TestMethod]
+    public void GetCurrentExecutableInfo_MonoMuxer_WithPassedArgsAndEmptyEnvironmentArgs_FallsBackToPassedArgs()
+    {
+        Mock<IEnvironment> environment = CreateMonoMuxerEnvironment([]);
+
+        CurrentTestApplicationModuleInfo info = new(environment.Object, new SystemProcessHandler(), ["--retry-failed-tests", "1"]);
+
+        ExecutableInfo executable = info.GetCurrentExecutableInfo();
+
+        CollectionAssert.AreEqual(new[] { "--retry-failed-tests", "1" }, executable.Arguments.ToArray());
+    }
+
+    [TestMethod]
+    public void GetCurrentExecutableInfo_PassedArgsAreSnapshotted_CallerMutationDoesNotAffectResult()
+    {
+        // The constructor should take a defensive copy of the passed args so that later
+        // mutations of the caller's array don't change what GetCurrentExecutableInfo returns.
+        Mock<IEnvironment> environment = CreateAppHostEnvironment(["myapp.exe"]);
+        string[] passedArgs = ["--retry-failed-tests", "1"];
+
+        CurrentTestApplicationModuleInfo info = new(environment.Object, new SystemProcessHandler(), passedArgs);
+
+        passedArgs[0] = "--mutated";
+        passedArgs[1] = "999";
+
+        ExecutableInfo executable = info.GetCurrentExecutableInfo();
+
+        CollectionAssert.AreEqual(new[] { "--retry-failed-tests", "1" }, executable.Arguments.ToArray());
+    }
+
     private static Mock<IEnvironment> CreateDotnetMuxerEnvironment(string[] commandLineArgs)
     {
         Mock<IEnvironment> environment = new();
         environment.SetupGet(e => e.ProcessPath).Returns(Path.Combine("some", "directory", "dotnet.exe"));
+        environment.Setup(e => e.GetCommandLineArgs()).Returns(commandLineArgs);
+        return environment;
+    }
+
+    private static Mock<IEnvironment> CreateMonoMuxerEnvironment(string[] commandLineArgs)
+    {
+        Mock<IEnvironment> environment = new();
+        environment.SetupGet(e => e.ProcessPath).Returns(Path.Combine("some", "directory", "mono.exe"));
         environment.Setup(e => e.GetCommandLineArgs()).Returns(commandLineArgs);
         return environment;
     }

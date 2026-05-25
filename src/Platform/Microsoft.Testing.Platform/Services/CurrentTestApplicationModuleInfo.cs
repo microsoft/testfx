@@ -21,7 +21,10 @@ internal sealed class CurrentTestApplicationModuleInfo : ITestApplicationModuleI
     {
         _environment = environment;
         _process = process;
-        _commandLineArguments = commandLineArguments;
+
+        // Take a snapshot so later mutations of the caller's array don't affect
+        // GetCurrentExecutableInfo (and ExecutableInfo.Arguments exposes IEnumerable<string>).
+        _commandLineArguments = commandLineArguments is null ? null : (string[])commandLineArguments.Clone();
     }
 
     public bool IsCurrentTestApplicationHostDotnetMuxer
