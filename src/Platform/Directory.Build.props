@@ -15,4 +15,65 @@
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 
+  <Choose>
+    <When Condition="'$(MSBuildProjectName)' == 'Microsoft.Testing.Extensions.AzureDevOpsReport'">
+      <PropertyGroup>
+        <TestingPlatformBuilderHookSymbol>TESTINGPLATFORMBUILDERHOOK_AZUREDEVOPSREPORT</TestingPlatformBuilderHookSymbol>
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(MSBuildProjectName)' == 'Microsoft.Testing.Extensions.AzureFoundry'">
+      <PropertyGroup>
+        <TestingPlatformBuilderHookSymbol>TESTINGPLATFORMBUILDERHOOK_AZUREFOUNDRY</TestingPlatformBuilderHookSymbol>
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(MSBuildProjectName)' == 'Microsoft.Testing.Extensions.CrashDump'">
+      <PropertyGroup>
+        <TestingPlatformBuilderHookSymbol>TESTINGPLATFORMBUILDERHOOK_CRASHDUMP</TestingPlatformBuilderHookSymbol>
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(MSBuildProjectName)' == 'Microsoft.Testing.Extensions.HangDump'">
+      <PropertyGroup>
+        <TestingPlatformBuilderHookSymbol>TESTINGPLATFORMBUILDERHOOK_HANGDUMP</TestingPlatformBuilderHookSymbol>
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(MSBuildProjectName)' == 'Microsoft.Testing.Extensions.HotReload'">
+      <PropertyGroup>
+        <TestingPlatformBuilderHookSymbol>TESTINGPLATFORMBUILDERHOOK_HOTRELOAD</TestingPlatformBuilderHookSymbol>
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(MSBuildProjectName)' == 'Microsoft.Testing.Extensions.HtmlReport'">
+      <PropertyGroup>
+        <TestingPlatformBuilderHookSymbol>TESTINGPLATFORMBUILDERHOOK_HTMLREPORT</TestingPlatformBuilderHookSymbol>
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(MSBuildProjectName)' == 'Microsoft.Testing.Extensions.MSBuild'">
+      <PropertyGroup>
+        <TestingPlatformBuilderHookSymbol>TESTINGPLATFORMBUILDERHOOK_MSBUILD</TestingPlatformBuilderHookSymbol>
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(MSBuildProjectName)' == 'Microsoft.Testing.Extensions.Retry'">
+      <PropertyGroup>
+        <TestingPlatformBuilderHookSymbol>TESTINGPLATFORMBUILDERHOOK_RETRY</TestingPlatformBuilderHookSymbol>
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(MSBuildProjectName)' == 'Microsoft.Testing.Extensions.Telemetry'">
+      <PropertyGroup>
+        <TestingPlatformBuilderHookSymbol>TESTINGPLATFORMBUILDERHOOK_TELEMETRY</TestingPlatformBuilderHookSymbol>
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(MSBuildProjectName)' == 'Microsoft.Testing.Extensions.TrxReport'">
+      <PropertyGroup>
+        <TestingPlatformBuilderHookSymbol>TESTINGPLATFORMBUILDERHOOK_TRXREPORT</TestingPlatformBuilderHookSymbol>
+      </PropertyGroup>
+    </When>
+  </Choose>
+
+  <PropertyGroup Condition="'$(TestingPlatformBuilderHookSymbol)' != ''">
+    <DefineConstants>$(DefineConstants);$(TestingPlatformBuilderHookSymbol)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TestingPlatformBuilderHookSymbol)' != ''">
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestingPlatformBuilderHook.cs" Link="TestingPlatformBuilderHook.cs" />
+  </ItemGroup>
+
 </Project>
