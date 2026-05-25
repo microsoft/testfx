@@ -991,12 +991,12 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">
         <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</source>
-        <target state="needs-review-translation">Un atributo que deriva de 'RetryBaseAttribute' solo se puede especificar en un método de prueba</target>
+        <target state="new">An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</target>
         <note />
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method or test class</source>
-        <target state="needs-review-translation">Usar el atributo de reintento en el método de prueba</target>
+        <target state="new">Use retry attribute on test method or test class</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">
