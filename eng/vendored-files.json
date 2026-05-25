@@ -1,0 +1,148 @@
+{
+  "$comment": "Manifest of source files copied (verbatim or adapted) from other repositories. See eng/vendored-files.md.",
+  "entries": [
+    {
+      "id": "polyfill-nullable-attributes",
+      "local_path": "src/Polyfills/NullableAttribtues.cs",
+      "notes": "Polyfill for downlevel TFMs; scope changed to internal.",
+      "sources": [
+        {
+          "repo": "dotnet/runtime",
+          "ref": "main",
+          "path": "src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/NullableAttributes.cs",
+          "baseline_ref_sha": "39b9607807f29e48cae4652cd74735182b31182e",
+          "baseline_blob_sha": "ff64dbf87889bd5fe2f19e13dff9b762c9be2dc7",
+          "scope": "entire file; attribute scope changed to internal"
+        }
+      ]
+    },
+    {
+      "id": "source-gen-system-polyfills",
+      "local_path": "src/Analyzers/MSTest.SourceGeneration/Helpers/SystemPolyfills.cs",
+      "notes": "Nullable attribute polyfills for source generator. Originally referenced retired dotnet/coreclr@60f1e626 -- successor file lives in dotnet/runtime with the same content.",
+      "sources": [
+        {
+          "repo": "dotnet/runtime",
+          "ref": "main",
+          "path": "src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/NullableAttributes.cs",
+          "baseline_ref_sha": "39b9607807f29e48cae4652cd74735182b31182e",
+          "baseline_blob_sha": "ff64dbf87889bd5fe2f19e13dff9b762c9be2dc7",
+          "scope": "Nullable attribute types only; combined with locally-defined IsExternalInit"
+        }
+      ]
+    },
+    {
+      "id": "source-gen-symbol-visibility",
+      "local_path": "src/Analyzers/MSTest.SourceGeneration/Helpers/SymbolVisibility.cs",
+      "notes": "Verbatim copy with namespace adjustment.",
+      "sources": [
+        {
+          "repo": "dotnet/roslyn-analyzers",
+          "ref": "main",
+          "path": "src/Utilities/Compiler/Extensions/SymbolVisibility.cs",
+          "baseline_ref_sha": "b47230ca1e40c844d733a2f32d2bf6010f9eeb73",
+          "baseline_blob_sha": "aa8a66f56e8b92672d5cd1f940fb9b0841b5dab1",
+          "scope": "entire file"
+        }
+      ]
+    },
+    {
+      "id": "platform-roslyn-debug",
+      "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/RoslynDebug.cs",
+      "notes": "Adapted to internal class with [ExcludeFromCodeCoverage].",
+      "sources": [
+        {
+          "repo": "dotnet/roslyn-analyzers",
+          "ref": "main",
+          "path": "src/Utilities/Compiler/Debug.cs",
+          "baseline_ref_sha": "b47230ca1e40c844d733a2f32d2bf6010f9eeb73",
+          "baseline_blob_sha": "8488921e8a603d8e4eb1f5f90da0dc6c415eb9ae",
+          "scope": "entire file"
+        }
+      ]
+    },
+    {
+      "id": "platform-file-utilities-case-sensitivity",
+      "local_path": "src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal/FileUtilities.cs",
+      "notes": "Only GetIsFileSystemCaseSensitive is copied. Drift signal fires on the whole upstream file; reviewer should check whether changes touch the copied region (lines 41-59 at baseline).",
+      "sources": [
+        {
+          "repo": "dotnet/runtime",
+          "ref": "main",
+          "path": "src/libraries/Common/src/System/IO/PathInternal.CaseSensitivity.cs",
+          "baseline_ref_sha": "73ba11f3015216b39cb866d9fb7d3d25e93489f2",
+          "baseline_blob_sha": "e5e97847ddd8e678112b31fa123932463170ccb5",
+          "scope": "lines 41-59 only (GetIsFileSystemCaseSensitive)"
+        }
+      ]
+    },
+    {
+      "id": "msbuild-dotnet-muxer-locator",
+      "local_path": "src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/DotnetMuxerLocator.cs",
+      "notes": "Adapted from vstest's DotnetHostHelper.",
+      "sources": [
+        {
+          "repo": "microsoft/vstest",
+          "ref": "main",
+          "path": "src/Microsoft.TestPlatform.CoreUtilities/Helpers/DotnetHostHelper.cs",
+          "baseline_ref_sha": "d5a7e3b67a2ccb6dc5b3b81255f3e6571c318b78",
+          "baseline_blob_sha": "d9bc7043f4612d95b7415f3512cbb2b188e825ec",
+          "scope": "muxer location logic"
+        }
+      ]
+    },
+    {
+      "id": "platform-env-config-provider",
+      "local_path": "src/Platform/Microsoft.Testing.Platform/Configurations/EnvironmentVariablesConfigurationProvider.cs",
+      "notes": "Adapted from runtime's Microsoft.Extensions.Configuration.EnvironmentVariables.",
+      "sources": [
+        {
+          "repo": "dotnet/runtime",
+          "ref": "main",
+          "path": "src/libraries/Microsoft.Extensions.Configuration.EnvironmentVariables/src/EnvironmentVariablesConfigurationProvider.cs",
+          "baseline_ref_sha": "c1793efdf8af240a8006b0fc6f05f580c81fccdb",
+          "baseline_blob_sha": "0d321e49332c8f04a039b394c69d2b7389f07fad",
+          "scope": "entire file with internal adaptations"
+        }
+      ]
+    },
+    {
+      "id": "platform-json-config-parser",
+      "local_path": "src/Platform/Microsoft.Testing.Platform/Configurations/JsonConfigurationFileParser.cs",
+      "notes": "Adapted from runtime's Microsoft.Extensions.Configuration.Json; additional _propertyToAllChildren dictionary for round-trip serialization.",
+      "sources": [
+        {
+          "repo": "dotnet/runtime",
+          "ref": "main",
+          "path": "src/libraries/Microsoft.Extensions.Configuration.Json/src/JsonConfigurationFileParser.cs",
+          "baseline_ref_sha": "c1793efdf8af240a8006b0fc6f05f580c81fccdb",
+          "baseline_blob_sha": "28e68f1607b148d1169670bf0f7107460dc03b6c",
+          "scope": "entire file with local additions"
+        }
+      ]
+    },
+    {
+      "id": "platform-response-file-helper",
+      "local_path": "src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs",
+      "notes": "Core logic taken from command-line-api's CliParser and StringExtensions response-file parsing.",
+      "sources": [
+        {
+          "repo": "dotnet/command-line-api",
+          "ref": "main",
+          "path": "src/System.CommandLine/Parsing/CliParser.cs",
+          "baseline_ref_sha": "feb61c7f328a2401d74f4317b39d02126cfdfe24",
+          "baseline_blob_sha": "d05b9f05521af2ed05f7f33cf319255820b338de",
+          "scope": "response-file expansion logic (around line 40)"
+        },
+        {
+          "repo": "dotnet/command-line-api",
+          "ref": "main",
+          "path": "src/System.CommandLine/Parsing/StringExtensions.cs",
+          "baseline_ref_sha": "feb61c7f328a2401d74f4317b39d02126cfdfe24",
+          "baseline_blob_sha": "169070c5f707aee86c376bad6456e00183718763",
+          "scope": "ExpandResponseFile and string-splitting helpers (around line 349)"
+        }
+      ]
+    }
+  ]
+}
