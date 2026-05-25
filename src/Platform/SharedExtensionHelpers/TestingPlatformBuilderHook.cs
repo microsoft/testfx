@@ -28,12 +28,13 @@ namespace Microsoft.Testing.Extensions.TrxReport;
 #endif
 
 /// <summary>
-/// This class is used by Microsoft.Testing.Platform.MSBuild to hook into the Testing Platform Builder.
+/// This class is used by Microsoft.Testing.Platform.MSBuild to hook into the Testing Platform Builder
+/// and register extension-specific services.
 /// </summary>
 public static class TestingPlatformBuilderHook
 {
     /// <summary>
-    /// Adds extension support to the Testing Platform Builder.
+    /// Adds the extension support selected by build constants to the Testing Platform Builder.
     /// </summary>
     /// <param name="testApplicationBuilder">The test application builder.</param>
     /// <param name="_">The command line arguments.</param>
