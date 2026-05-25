@@ -11,11 +11,11 @@ internal sealed class GetListOfFailedTestsResponse(string[] failedTestIds) : IRe
     public string[] FailedTestIds { get; } = failedTestIds;
 }
 
-internal sealed class GetListOfFailedTestsResponseSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class GetListOfFailedTestsResponseSerializer : NamedPipeSerializer<GetListOfFailedTestsResponse>, INamedPipeSerializer
 {
-    public int Id => 3;
+    public override int Id => 3;
 
-    public object Deserialize(Stream stream)
+    protected override GetListOfFailedTestsResponse DeserializeCore(Stream stream)
     {
         int totalFailedTests = ReadInt(stream);
 
@@ -28,11 +28,10 @@ internal sealed class GetListOfFailedTestsResponseSerializer : BaseSerializer, I
         return new GetListOfFailedTestsResponse(testsId);
     }
 
-    public void Serialize(object obj, Stream stream)
+    protected override void SerializeCore(GetListOfFailedTestsResponse objectToSerialize, Stream stream)
     {
-        var getListOfFailedTestsResponse = (GetListOfFailedTestsResponse)obj;
-        WriteInt(stream, getListOfFailedTestsResponse.FailedTestIds.Length);
-        foreach (string testId in getListOfFailedTestsResponse.FailedTestIds)
+        WriteInt(stream, objectToSerialize.FailedTestIds.Length);
+        foreach (string testId in objectToSerialize.FailedTestIds)
         {
             WriteString(stream, testId);
         }

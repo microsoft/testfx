@@ -77,11 +77,11 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
             |---DiscoveredTestMessageList[0].ParameterTypeFullNames[0].Key Value---| (n bytes)
 */
 
-internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<DiscoveredTestMessages>, INamedPipeSerializer
 {
-    public int Id => DiscoveredTestMessagesFieldsId.MessagesSerializerId;
+    public override int Id => DiscoveredTestMessagesFieldsId.MessagesSerializerId;
 
-    public object Deserialize(Stream stream)
+    protected override DiscoveredTestMessages DeserializeCore(Stream stream)
     {
         string? executionId = null;
         string? instanceId = null;
@@ -115,7 +115,7 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
             }
         }
 
-        return new DiscoveredTestMessages(executionId, instanceId, discoveredTestMessages);
+        return new(executionId, instanceId, discoveredTestMessages);
     }
 
     private static DiscoveredTestMessage[] ReadDiscoveredTestMessagesPayload(Stream stream)
@@ -243,17 +243,15 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
         return traits;
     }
 
-    public void Serialize(object objectToSerialize, Stream stream)
+    protected override void SerializeCore(DiscoveredTestMessages objectToSerialize, Stream stream)
     {
         RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
 
-        var discoveredTestMessages = (DiscoveredTestMessages)objectToSerialize;
+        WriteUShort(stream, GetFieldCount(objectToSerialize));
 
-        WriteUShort(stream, GetFieldCount(discoveredTestMessages));
-
-        WriteField(stream, DiscoveredTestMessagesFieldsId.ExecutionId, discoveredTestMessages.ExecutionId);
-        WriteField(stream, DiscoveredTestMessagesFieldsId.InstanceId, discoveredTestMessages.InstanceId);
-        WriteDiscoveredTestMessagesPayload(stream, discoveredTestMessages.DiscoveredMessages);
+        WriteField(stream, DiscoveredTestMessagesFieldsId.ExecutionId, objectToSerialize.ExecutionId);
+        WriteField(stream, DiscoveredTestMessagesFieldsId.InstanceId, objectToSerialize.InstanceId);
+        WriteDiscoveredTestMessagesPayload(stream, objectToSerialize.DiscoveredMessages);
     }
 
     private static void WriteDiscoveredTestMessagesPayload(Stream stream, DiscoveredTestMessage[]? discoveredTestMessageList)
