@@ -10,8 +10,8 @@ namespace MSTest.Acceptance.IntegrationTests;
 public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
 {
     // Source code for a project that validates MSTest supporting Native AOT.
-    // Because MSTest is built on top of Microsoft.Testing.Platform, this also exercises
-    // additional MTP code paths beyond what the MTP-only NativeAOT test covers.
+    // Uses MSTest.SourceGeneration to emit reflection-free metadata so the runtime
+    // does not need to fall back to reflection for test discovery or invocation.
     private const string SourceCode = """
 #file MSTestNativeAotTests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -22,36 +22,18 @@ public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
         <OutputType>Exe</OutputType>
         <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
+        <EnableMSTestRunner>true</EnableMSTestRunner>
         <PublishAot>true</PublishAot>
         <!-- Show individual trim/AOT warnings instead of a single IL2104 per assembly -->
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="MSTest.Engine" Version="$MSTestEngineVersion$" />
-        <PackageReference Include="MSTest.SourceGeneration" Version="$MSTestEngineVersion$" />
+        <PackageReference Include="MSTest.SourceGeneration" Version="$MSTestSourceGenerationVersion$" />
+        <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
         <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
     </ItemGroup>
 </Project>
-
-#file Program.cs
-using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using Microsoft.Testing.Framework;
-using Microsoft.Testing.Internal.Framework;
-using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Capabilities;
-using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
-
-using MSTestNativeAotTests;
-
-ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-builder.AddTestFramework(new SourceGeneratedTestNodesBuilder());
-using ITestApplication app = await builder.BuildAsync();
-return await app.RunAsync();
 
 #file TestClass1.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -98,7 +80,7 @@ public class UnitTest1
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$TargetFramework$", tfm)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$MSTestEngineVersion$", MSTestEngineVersion),
+            .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
             addPublicFeeds: true);
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
@@ -109,7 +91,7 @@ public class UnitTest1
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
 
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        result.AssertOutputContains($"MSTest.Engine v{MSTestEngineVersion}");
+        result.AssertOutputContains("Passed! - Failed: 0, Passed: 3, Skipped: 0, Total: 3");
         result.AssertExitCodeIs(0);
     }
 

@@ -18,26 +18,36 @@ public class TrimTests : AcceptanceTestBase<NopAssetFixture>
     <PropertyGroup>
         <TargetFramework>$TargetFramework$</TargetFramework>
         <OutputType>Exe</OutputType>
+        <EnableMSTestRunner>true</EnableMSTestRunner>
         <PublishTrimmed>true</PublishTrimmed>
         <!-- Show individual trim warnings instead of a single IL2104 per assembly -->
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="MSTest.Engine" Version="$MSTestEngineVersion$" />
-        <PackageReference Include="MSTest.SourceGeneration" Version="$MSTestEngineVersion$" />
+        <PackageReference Include="MSTest.SourceGeneration" Version="$MSTestSourceGenerationVersion$" />
+        <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
         <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
     </ItemGroup>
     <!-- Force the trimmer to analyze the full assembly surface, not just reachable code paths.
          MSTest.SourceGeneration is a source generator with no runtime assembly so it cannot be a trimmer root.
          MSTest.TestFramework has known reflection-heavy code paths (DynamicData, etc.) that are not yet trim-safe. -->
     <ItemGroup>
-        <TrimmerRootAssembly Include="MSTest.Engine" />
+        <TrimmerRootAssembly Include="MSTest.TestAdapter" />
     </ItemGroup>
 </Project>
 
-#file Program.cs
-System.Console.WriteLine("This project validates trim/AOT compatibility via dotnet publish.");
+#file UnitTest1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class UnitTest1
+{
+    [TestMethod]
+    public void TestMethod1()
+    {
+    }
+}
 """;
 
     [TestMethod]
@@ -52,7 +62,7 @@ System.Console.WriteLine("This project validates trim/AOT compatibility via dotn
             TrimAnalysisSourceCode
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$MSTestEngineVersion$", MSTestEngineVersion)
+            .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion)
             .PatchCodeWithReplace("$TargetFramework$", tfm),
             addPublicFeeds: true);
 

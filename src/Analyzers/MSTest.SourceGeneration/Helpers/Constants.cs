@@ -1,9 +1,22 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Testing.Framework.SourceGeneration;
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
 
 internal static class Constants
 {
-    public const string NewLine = "\r\n";
+    /// <summary>
+    /// Use a constant newline to make the generator output stable across operating systems.
+    /// </summary>
+    public const string NewLine = "\n";
+
+    public const string TestClassAttributeFullName = "Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute";
+
+    public const string ReflectionMetadataHookFullName =
+        "global::Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.ReflectionMetadataHook";
+
+    public const string SourceGeneratedReflectionDataProviderFullName =
+        "global::Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider";
+
+    public const string GeneratedFileSuffix = ".MSTestReflectionMetadata.g.cs";
 }

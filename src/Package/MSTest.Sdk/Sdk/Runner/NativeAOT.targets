@@ -27,16 +27,10 @@
     <PackageVersion Include="MSTest.TestFramework" Version="$(MSTestVersion)"
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
 
-    <PackageReference Include="MSTest.Engine" Sdk="MSTest">
-      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestEngineVersion)</Version>
-    </PackageReference>
-    <PackageVersion Include="MSTest.Engine" Version="$(MSTestEngineVersion)"
-                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
-
     <PackageReference Include="MSTest.SourceGeneration" Sdk="MSTest">
-      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestEngineVersion)</Version>
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestSourceGenerationVersion)</Version>
     </PackageReference>
-    <PackageVersion Include="MSTest.SourceGeneration" Version="$(MSTestEngineVersion)"
+    <PackageVersion Include="MSTest.SourceGeneration" Version="$(MSTestSourceGenerationVersion)"
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
 
     <!--

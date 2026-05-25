@@ -5,32 +5,41 @@
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <!-- Do not include the generator as a lib dependency -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
-    <NoWarn>NU5128</NoWarn>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-    <RootNamespace>Microsoft.Testing.Framework.SourceGeneration</RootNamespace>
+    <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration</RootNamespace>
+    <UseAssemblyVersion14>true</UseAssemblyVersion14>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- Index/Range polyfills are not used by the generator and would conflict with System.Range/System.Index in test projects via InternalsVisibleTo. -->
+    <DefineConstants>$(DefineConstants);EXCLUDE_RANGE_INDEX_POLYFILL</DefineConstants>
+
     <!-- Cancel default license (closed-source) and set license as packaged license file -->
     <PackageLicenseExpressionInternal></PackageLicenseExpressionInternal>
     <PackageLicenseExpression></PackageLicenseExpression>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
 
-    <VersionPrefix>$(MSTestEngineVersionPrefix)</VersionPrefix>
-    <PreReleaseVersionLabel>$(MSTestEnginePreReleaseVersionLabel)</PreReleaseVersionLabel>
+    <VersionPrefix>$(MSTestSourceGenerationVersionPrefix)</VersionPrefix>
+    <PreReleaseVersionLabel>$(MSTestSourceGenerationPreReleaseVersionLabel)</PreReleaseVersionLabel>
     <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
     <IsPackable>true</IsPackable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <!-- NuGet properties -->
   <PropertyGroup>
     <PackageDescription>
-      <![CDATA[Microsoft.Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+      <![CDATA[MSTest is Microsoft supported Test Framework.
 
-This package provides the C# source generators for MSTest test framework.]]>
+This package provides the C# source generators that emit reflection metadata so that MSTest test assemblies can run trim-safe and NativeAOT-compatible.]]>
     </PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>
     <AdditionalFiles Include="BannedSymbols.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

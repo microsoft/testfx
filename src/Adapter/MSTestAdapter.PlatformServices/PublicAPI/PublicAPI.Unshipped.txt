@@ -1,1 +1,43 @@
 #nullable enable
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.ReflectionMetadataHook
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.ReflectionMetadataHook.SetMetadata(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider! metadata) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.SourceGeneratedReflectionDataProvider() -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.Assembly.get -> System.Reflection.Assembly!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.Assembly.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.AssemblyAttributes.get -> object![]!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.AssemblyAttributes.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.AssemblyName.get -> string!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.AssemblyName.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.Types.get -> System.Type![]!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.Types.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypesByName.get -> System.Collections.Generic.Dictionary<string!, System.Type!>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypesByName.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeAttributes.get -> System.Collections.Generic.Dictionary<System.Type!, System.Attribute![]!>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeAttributes.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeProperties.get -> System.Collections.Generic.Dictionary<System.Type!, System.Reflection.PropertyInfo![]!>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeProperties.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeMethods.get -> System.Collections.Generic.Dictionary<System.Type!, System.Reflection.MethodInfo![]!>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeMethods.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeMethodLocations.get -> System.Collections.Generic.Dictionary<string!, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeLocation!>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeMethodLocations.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeMethodAttributes.get -> System.Collections.Generic.Dictionary<System.Type!, System.Collections.Generic.Dictionary<string!, System.Attribute![]!>!>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeMethodAttributes.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeConstructors.get -> System.Collections.Generic.Dictionary<System.Type!, System.Reflection.ConstructorInfo![]!>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeConstructors.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypePropertiesByName.get -> System.Collections.Generic.Dictionary<System.Type!, System.Collections.Generic.Dictionary<string!, System.Reflection.PropertyInfo!>!>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypePropertiesByName.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeConstructorsInvoker.get -> System.Collections.Generic.Dictionary<System.Type!, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.ConstructorInvoker![]!>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeConstructorsInvoker.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeLocation
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeLocation.TypeLocation() -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeLocation.FileName.get -> string!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeLocation.FileName.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeLocation.MethodLocations.get -> System.Collections.Generic.Dictionary<string!, int>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.TypeLocation.MethodLocations.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.ConstructorInvoker
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.ConstructorInvoker.ConstructorInvoker() -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.ConstructorInvoker.Parameters.get -> System.Type![]!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.ConstructorInvoker.Parameters.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.ConstructorInvoker.Invoker.get -> System.Func<object?[]!, object!>!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.ConstructorInvoker.Invoker.set -> void

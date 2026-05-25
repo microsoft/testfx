@@ -22,7 +22,7 @@
     <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >${MicrosoftTestingExtensionsCodeCoverageVersion}</MicrosoftTestingExtensionsCodeCoverageVersion>
     <MicrosoftTestingExtensionsFakesVersion Condition=" '$(MicrosoftTestingExtensionsFakesVersion)' == '' " >${MicrosoftTestingExtensionsFakesVersion}</MicrosoftTestingExtensionsFakesVersion>
     <MicrosoftTestingPlatformVersion Condition=" '$(MicrosoftTestingPlatformVersion)' == '' " >${MicrosoftTestingPlatformVersion}</MicrosoftTestingPlatformVersion>
-    <MSTestEngineVersion Condition=" '$(MSTestEngineVersion)' == '' ">${MSTestEngineVersion}</MSTestEngineVersion>
+    <MSTestSourceGenerationVersion Condition=" '$(MSTestSourceGenerationVersion)' == '' ">${MSTestSourceGenerationVersion}</MSTestSourceGenerationVersion>
     <MSTestVersion Condition=" '$(MSTestVersion)' == '' ">${MSTestVersion}</MSTestVersion>
   </PropertyGroup>
 

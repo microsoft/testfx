@@ -11,11 +11,9 @@
 
   <ItemGroup>
     <!--
-      Experimental MSTest Engine & source generator,
-      close sourced, licensed the same as our extensions
-      with Microsoft Testing Platform Tools license.
+      MSTest source generator for Native AOT support. Emits reflection-free metadata
+      that MSTest consumes at runtime through the source-generation hook.
     -->
-    <PackageReference Include="MSTest.Engine" Version="$(MSTestAOTVersion)" />
     <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestAOTVersion)" />
 
     <PackageReference Include="Microsoft.CodeCoverage.MSBuild" Version="$(CodeCoverageVersion)" />
@@ -23,6 +21,7 @@
 
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(TestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(TestingPlatformVersion)" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)">
       <PrivateAssets>all</PrivateAssets>
