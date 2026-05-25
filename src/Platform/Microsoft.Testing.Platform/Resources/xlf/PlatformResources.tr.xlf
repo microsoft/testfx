@@ -685,6 +685,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
 Bir bağımsız değişkeni, 'value' değerinin kayan olduğu &lt;value&gt;[h|m|s] biçiminde dize olarak alır.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformOutputDeviceAlreadyRegisteredErrorMessage">
+        <source>A custom output device has already been registered.</source>
+        <target state="new">A custom output device has already been registered.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">Bu değeri belirleyebilmemiz için süreçten çıkılmış olması gerekir</target>

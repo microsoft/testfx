@@ -686,6 +686,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
 1 つの引数を文字列として &lt;value&gt;[h|m|s] の形式で使用します。この場合、'value' は float です。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformOutputDeviceAlreadyRegisteredErrorMessage">
+        <source>A custom output device has already been registered.</source>
+        <target state="new">A custom output device has already been registered.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">この値を決定する前にプロセスを終了する必要があります</target>

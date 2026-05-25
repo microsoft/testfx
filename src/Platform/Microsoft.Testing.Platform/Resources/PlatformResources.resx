@@ -794,4 +794,7 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   <data name="WaitDebuggerAttachNotSupportedInWasiErrorMessage" xml:space="preserve">
     <value>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</value>
   </data>
+  <data name="PlatformOutputDeviceAlreadyRegisteredErrorMessage" xml:space="preserve">
+    <value>A custom output device has already been registered.</value>
+  </data>
 </root>
