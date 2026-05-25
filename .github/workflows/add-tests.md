@@ -27,7 +27,7 @@ safe-outputs:
     report-as-issue: false
   create-pull-request:
     title-prefix: "[tests] "
-    labels: [test, automated]
+    labels: [type/test-gap, type/automation]
     draft: true
     max: 1
     protected-files: fallback-to-issue

@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
-using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
@@ -153,7 +152,6 @@ internal sealed partial class TestHostBuilder
         LoggerFactoryProxy loggerFactoryProxy = new();
         serviceProvider.TryAddService(loggerFactoryProxy);
 
-        CommandLine.AddProvider(() => new TerminalTestReporterCommandLineOptionsProvider());
         context.CommandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(loggingState.CommandLineParseResult, serviceProvider).ConfigureAwait(false);
         commandLineOptionsProxy.SetCommandLineOptions(context.CommandLineHandler);
 
@@ -214,20 +212,10 @@ internal sealed partial class TestHostBuilder
         if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey)
             && commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args))
         {
-            string arg = args[0];
-            int size = arg.Length;
-            if (!float.TryParse(arg[..(size - 1)], NumberStyles.Float, CultureInfo.InvariantCulture, out float value))
+            if (!PlatformCommandLineProvider.TryParseTimeoutArgument(args[0], out TimeSpan timeout))
             {
                 throw ApplicationStateGuard.Unreachable();
             }
-
-            TimeSpan timeout = char.ToLowerInvariant(arg[size - 1]) switch
-            {
-                'h' => TimeSpan.FromHours(value),
-                'm' => TimeSpan.FromMinutes(value),
-                's' => TimeSpan.FromSeconds(value),
-                _ => throw ApplicationStateGuard.Unreachable(),
-            };
 
             context.TestApplicationCancellationTokenSource.CancelAfter(timeout);
         }

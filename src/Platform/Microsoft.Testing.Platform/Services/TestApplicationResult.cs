@@ -119,6 +119,18 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         {
             _totalRanTests++;
         }
+
+        // DESIGN: Skipped tests are intentionally excluded from `_totalRanTests`.
+        // `WellKnownTestNodeTestRunOutcomeProperties` does not contain `SkippedTestNodeStateProperty`, so an
+        // all-skipped (or zero-test) run leaves `_totalRanTests == 0` and yields exit code `ExitCode.ZeroTests` (8)
+        // in `GetProcessExitCode`. This is the strict default chosen in #3216 / #3243 ("Skipped tests count as not
+        // run") to surface the common "invalid filter ran nothing" mistake. The documented opt-out for users who
+        // legitimately expect all-skipped runs is `--ignore-exit-code 8`.
+        //
+        // Two other layers mirror this decision and must stay in lockstep:
+        //   - TerminalTestReporter.Summary.cs (`allTestsWereSkipped`)
+        //   - Microsoft.Testing.Platform.MSBuild InvokeTestingPlatformTask (run-summary verdict)
+        // Do not relax this without revisiting those sites and the design discussion above.
         else if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeProperties, outcomeType) != -1)
         {
             _totalRanTests++;

@@ -46,6 +46,7 @@ public sealed partial class Assert
     /// </exception>
     public static void AreAllOfType([NotNull] Type? expectedType, [NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(expectedType))] string expectedTypeExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllOfType");
         CheckParameterNotNull(expectedType, "Assert.AreAllOfType", "expectedType");
         CheckParameterNotNull(collection, "Assert.AreAllOfType", "collection");
         AreAllOfTypeImpl(collection, expectedType, genericTypeArgumentName: null, message, collectionExpression, expectedTypeExpression);
@@ -77,6 +78,7 @@ public sealed partial class Assert
     /// </exception>
     public static void AreAllOfType<TExpected>([NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllOfType");
         CheckParameterNotNull(collection, "Assert.AreAllOfType", "collection");
         AreAllOfTypeImpl(collection, typeof(TExpected), genericTypeArgumentName: "TExpected", message, collectionExpression, expectedTypeExpression: null);
     }

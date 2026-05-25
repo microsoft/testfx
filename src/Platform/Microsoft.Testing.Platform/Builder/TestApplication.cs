@@ -86,11 +86,16 @@ public sealed class TestApplication : ITestApplication
                 throw new PlatformNotSupportedException(PlatformResources.WaitDebuggerAttachNotSupportedInBrowserErrorMessage);
             }
 
+            if (OperatingSystem.IsWasi())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.WaitDebuggerAttachNotSupportedInWasiErrorMessage);
+            }
+
             WaitForDebuggerToAttach(systemEnvironment, systemConsole, systemProcess);
         }
 
         TestHostControllerInfo testHostControllerInfo = new(parseResult);
-        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(systemEnvironment, systemProcess);
+        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(systemEnvironment, systemProcess, args);
 
         // Create the UnhandledExceptionHandler that will be set inside the TestHostBuilder.
         LazyInitializer.EnsureInitialized(ref s_unhandledExceptionHandler, () => new UnhandledExceptionHandler(systemEnvironment, systemConsole, parseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey)));
@@ -107,7 +112,7 @@ public sealed class TestApplication : ITestApplication
         }
 
         // All checks are fine, create the TestApplication.
-        return new TestApplicationBuilder(loggingState, createBuilderStart, testApplicationOptions, s_unhandledExceptionHandler);
+        return new TestApplicationBuilder(loggingState, createBuilderStart, testApplicationOptions, s_unhandledExceptionHandler, args);
     }
 
     private static async Task LogInformationAsync(
@@ -238,11 +243,17 @@ public sealed class TestApplication : ITestApplication
                 throw new PlatformNotSupportedException(PlatformResources.WaitDebuggerAttachNotSupportedInBrowserErrorMessage);
             }
 
+            if (OperatingSystem.IsWasi())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.WaitDebuggerAttachNotSupportedInWasiErrorMessage);
+            }
+
             WaitForDebuggerToAttach(environment, console, systemProcess);
         }
     }
 
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     private static void WaitForDebuggerToAttach(SystemEnvironment environment, SystemConsole console, SystemProcessHandler systemProcess)
     {
         using IProcess currentProcess = systemProcess.GetCurrentProcess();

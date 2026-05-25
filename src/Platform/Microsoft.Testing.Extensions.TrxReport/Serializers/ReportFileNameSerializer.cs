@@ -11,19 +11,13 @@ internal sealed class ReportFileNameRequest(string fileName) : IRequest
     public string FileName { get; } = fileName;
 }
 
-internal sealed class ReportFileNameRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class ReportFileNameRequestSerializer : NamedPipeSerializer<ReportFileNameRequest>, INamedPipeSerializer
 {
-    public int Id => 1;
+    public override int Id => 1;
 
-    public object Deserialize(Stream stream)
-    {
-        string reportFileName = ReadString(stream);
-        return new ReportFileNameRequest(reportFileName);
-    }
+    protected override ReportFileNameRequest DeserializeCore(Stream stream)
+        => new(ReadString(stream));
 
-    public void Serialize(object objectToSerialize, Stream stream)
-    {
-        var reportFileName = (ReportFileNameRequest)objectToSerialize;
-        WriteString(stream, reportFileName.FileName);
-    }
+    protected override void SerializeCore(ReportFileNameRequest objectToSerialize, Stream stream)
+        => WriteString(stream, objectToSerialize.FileName);
 }

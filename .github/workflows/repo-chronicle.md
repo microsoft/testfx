@@ -1,56 +1,49 @@
 ---
-source: "githubnext/agentics/workflows/repo-chronicle.md@main"
-description: Creates a narrative chronicle of daily repository activity including commits, PRs, issues, and discussions
 on:
   schedule:
-    - cron: "0 16 * * 1-5"  # 4 PM UTC, weekdays only
-  workflow_dispatch:
+  - cron: 0 16 * * 1-5
+  workflow_dispatch: null
 permissions:
   contents: read
+  discussions: read
   issues: read
   pull-requests: read
-  discussions: read
-
-tracker-id: repo-chronicle
-
-timeout-minutes: 45
-
 network:
   allowed:
-    - defaults
-    - python
-    - node
-
-tools:
-  edit:
-  bash:
-    - "*"
-  github:
-    toolsets:
-      - default
-      - discussions
-    min-integrity: none # This workflow is allowed to examine and comment on any issues
-
-safe-outputs:
-  upload-asset:
-  create-discussion:
-    expires: 3d
-    category: "announcements"
-    title-prefix: "📰 "
-    close-older-discussions: true
+  - defaults
+  - python
+  - node
 imports:
-  - shared/reporting.md
-
+- shared/reporting.md
+safe-outputs:
+  create-discussion:
+    category: announcements
+    close-older-discussions: true
+    expires: 3d
+    title-prefix: "📰 "
+  upload-asset: null
 steps:
-  - name: Setup Python environment
-    run: |
-      mkdir -p /tmp/gh-aw/python
-      mkdir -p /tmp/gh-aw/python/data
-      mkdir -p /tmp/gh-aw/python/charts
-      pip install --user --quiet numpy pandas matplotlib seaborn
-      echo "Python environment ready"
+- name: Setup Python environment
+  run: |
+    mkdir -p /tmp/gh-aw/python
+    mkdir -p /tmp/gh-aw/python/data
+    mkdir -p /tmp/gh-aw/python/charts
+    pip install --user --quiet numpy pandas matplotlib seaborn
+    echo "Python environment ready"
+description: Creates a narrative chronicle of daily repository activity including commits, PRs, issues, and discussions
+source: githubnext/agentics/workflows/repo-chronicle.md@main
+timeout-minutes: 45
+tools:
+  bash:
+  - "*"
+  edit: null
+  github:
+    min-integrity: none
+    toolsets:
+    - default
+    - discussions
+tracker-id: repo-chronicle
 ---
-
 # The Repository Chronicle
 
 You are a dramatic newspaper editor crafting today's edition of **The Repository Chronicle** for ${{ github.repository }}.

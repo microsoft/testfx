@@ -7,7 +7,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// An abstract attribute that controls retrying a test method if it failed. It's up to the derived classes to
 /// define how the retry is done.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
+/// <remarks>
+/// When applied to a test class, the attribute is used as a default for every test method declared on the class.
+/// A retry attribute placed directly on a test method takes precedence over a class-level one.
+/// The attribute is not inherited: applying it to a base test class does not apply it to derived test classes.
+/// </remarks>
+[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 public abstract class RetryBaseAttribute : Attribute
 {
     /// <summary>

@@ -16,6 +16,7 @@ on:
   workflow_dispatch:
   slash_command:
     name: perf-assist
+    strategy: centralized
   reaction: "eyes"
   permissions:
     pull-requests: read
@@ -51,16 +52,16 @@ safe-outputs:
   create-pull-request:
     draft: true
     title-prefix: "[perf-improver] "
-    labels: [automation, performance]
+    labels: [type/automation, area/performance]
     max: 4
     protected-files: fallback-to-issue
   push-to-pull-request-branch:
     target: "*"
-    title-prefix: "[perf-improver] "
+    required-title-prefix: "[perf-improver] "
     max: 4
   create-issue:
     title-prefix: "[perf-improver] "
-    labels: [automation, performance]
+    labels: [type/automation, area/performance]
     max: 4
   update-issue:
     target: "*"

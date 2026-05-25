@@ -208,6 +208,67 @@ public class TestMethodInfoTests : TestContainer
             nameof(RetryBaseAttribute)));
     }
 
+    public void TestMethodInfoCtorShouldUseClassLevelRetryAttributeWhenMethodHasNone()
+    {
+        TestMethodInfo testMethodInfo = CreateTestMethodInfoForRetryAttributeTests<DummyTestClassWithClassLevelRetry>(
+            nameof(DummyTestClassWithClassLevelRetry.MethodWithoutRetryAttribute));
+
+        testMethodInfo.RetryAttribute.Should().BeOfType<RetryAttribute>();
+        ((RetryAttribute)testMethodInfo.RetryAttribute!).MaxRetryAttempts.Should().Be(4);
+    }
+
+    public void TestMethodInfoCtorShouldPreferMethodLevelRetryAttributeOverClassLevel()
+    {
+        TestMethodInfo testMethodInfo = CreateTestMethodInfoForRetryAttributeTests<DummyTestClassWithClassLevelRetry>(
+            nameof(DummyTestClassWithClassLevelRetry.MethodWithRetryAttribute));
+
+        testMethodInfo.RetryAttribute.Should().BeOfType<RetryAttribute>();
+        ((RetryAttribute)testMethodInfo.RetryAttribute!).MaxRetryAttempts.Should().Be(7);
+    }
+
+    public void TestMethodInfoCtorShouldPreferMethodLevelRetryEvenWhenSmallerThanClassLevel()
+    {
+        TestMethodInfo testMethodInfo = CreateTestMethodInfoForRetryAttributeTests<DummyTestClassWithClassLevelRetry>(
+            nameof(DummyTestClassWithClassLevelRetry.MethodWithSmallerRetryAttribute));
+
+        testMethodInfo.RetryAttribute.Should().BeOfType<RetryAttribute>();
+        ((RetryAttribute)testMethodInfo.RetryAttribute!).MaxRetryAttempts.Should().Be(1);
+    }
+
+    public void TestMethodInfoCtorShouldNotInheritRetryAttributeFromBaseClass()
+    {
+        TestMethodInfo testMethodInfo = CreateTestMethodInfoForRetryAttributeTests<DerivedFromClassWithClassLevelRetry>(
+            nameof(DerivedFromClassWithClassLevelRetry.MethodInDerivedClass));
+
+        testMethodInfo.RetryAttribute.Should().BeNull();
+    }
+
+    public void TestMethodInfoCtorShouldThrowWhenMultipleClassLevelRetryBaseAttributesExist()
+    {
+        Action action = () => _ = CreateTestMethodInfoForRetryAttributeTests<DummyTestClassWithMultipleClassLevelRetryAttributes>(
+            nameof(DummyTestClassWithMultipleClassLevelRetryAttributes.TestMethod));
+
+        TypeInspectionException exception = action.Should().Throw<TypeInspectionException>().Which;
+        exception.Message.Should().Be(string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_MultipleAttributesOnTestClass,
+            typeof(DummyTestClassWithMultipleClassLevelRetryAttributes).FullName,
+            nameof(RetryBaseAttribute)));
+    }
+
+    public void TestMethodInfoCtorShouldThrowOnMultipleClassLevelRetryEvenWhenMethodHasItsOwnRetry()
+    {
+        Action action = () => _ = CreateTestMethodInfoForRetryAttributeTests<DummyTestClassWithMultipleClassLevelRetryAttributes>(
+            nameof(DummyTestClassWithMultipleClassLevelRetryAttributes.TestMethodWithOwnRetry));
+
+        TypeInspectionException exception = action.Should().Throw<TypeInspectionException>().Which;
+        exception.Message.Should().Be(string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_MultipleAttributesOnTestClass,
+            typeof(DummyTestClassWithMultipleClassLevelRetryAttributes).FullName,
+            nameof(RetryBaseAttribute)));
+    }
+
     #region TestMethod invoke scenarios
 
     public async Task TestMethodInfoInvokeShouldWaitForAsyncTestMethodsToComplete()
@@ -1791,8 +1852,11 @@ public class TestMethodInfoTests : TestContainer
     }
 
     private TestMethodInfo CreateTestMethodInfoForRetryAttributeTests(string methodName)
+        => CreateTestMethodInfoForRetryAttributeTests<DummyTestClassWithRetryAttributeMethods>(methodName);
+
+    private TestMethodInfo CreateTestMethodInfoForRetryAttributeTests<TClass>(string methodName)
     {
-        Type classType = typeof(DummyTestClassWithRetryAttributeMethods);
+        Type classType = typeof(TClass);
         MethodInfo methodInfo = classType.GetMethod(methodName)!;
         ConstructorInfo constructorInfo = classType.GetConstructor([])!;
         var testClassInfo = new TestClassInfo(classType, constructorInfo, isParameterlessConstructor: true, _classAttribute, _testAssemblyInfo);
@@ -1994,6 +2058,63 @@ public class TestMethodInfoTests : TestContainer
     {
         protected internal override Task<RetryResult> ExecuteAsync(RetryContext retryContext)
             => throw new NotSupportedException();
+    }
+
+    [Retry(4)]
+    public class DummyTestClassWithClassLevelRetry
+    {
+        [TestMethod]
+        public void MethodWithoutRetryAttribute()
+        {
+        }
+
+        [TestMethod]
+        [Retry(7)]
+        public void MethodWithRetryAttribute()
+        {
+        }
+
+        [TestMethod]
+        [Retry(1)]
+        public void MethodWithSmallerRetryAttribute()
+        {
+        }
+    }
+
+    public class DerivedFromClassWithClassLevelRetry : DummyTestClassWithClassLevelRetry
+    {
+        [TestMethod]
+        public void MethodInDerivedClass()
+        {
+        }
+    }
+
+    [DummyClassLevelRetry1]
+    [DummyClassLevelRetry2]
+    public class DummyTestClassWithMultipleClassLevelRetryAttributes
+    {
+        [TestMethod]
+        public void TestMethod()
+        {
+        }
+
+        [TestMethod]
+        [Retry(2)]
+        public void TestMethodWithOwnRetry()
+        {
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+    private sealed class DummyClassLevelRetry1Attribute : RetryBaseAttribute
+    {
+        protected internal override Task<RetryResult> ExecuteAsync(RetryContext retryContext) => throw new NotSupportedException();
+    }
+
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+    private sealed class DummyClassLevelRetry2Attribute : RetryBaseAttribute
+    {
+        protected internal override Task<RetryResult> ExecuteAsync(RetryContext retryContext) => throw new NotSupportedException();
     }
 
     public class DummyTestClassWithParameterizedCtor

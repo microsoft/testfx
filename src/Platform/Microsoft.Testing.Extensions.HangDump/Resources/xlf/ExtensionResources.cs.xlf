@@ -77,8 +77,9 @@ Informace o disku:
 {1} - disk info detailing free space</note>
       </trans-unit>
       <trans-unit id="HangDumpFileNameOptionDescription">
-        <source>Specify the name of the dump file</source>
-        <target state="translated">Zadejte název souboru výpisu paměti.</target>
+        <source>Specify the name of the dump file.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
+        <target state="needs-review-translation">Zadejte název souboru výpisu paměti.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -113,18 +114,18 @@ Hodnota časového limitu se zadává v jednom z následujících formátů:
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
+Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="translated">Určete typ výpisu paměti.
-Platné hodnoty jsou Mini, Heap, Triage, None (dostupné jenom v .NET 6+) nebo Full.
-Výchozí typ je Full.</target>
+        <target state="new">Specify the type of the dump.
+Valid values are {0}.
+Default type is 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
-Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</source>
-        <target state="translated">{0} není platný typ výpisu paměti.
-Platné možnosti jsou Mini, Heap, Triage, None (dostupné jenom v .NET 6+) a Full.</target>
+Valid options are {1}</source>
+        <target state="new">'{0}' is not a valid dump type.
+Valid options are {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

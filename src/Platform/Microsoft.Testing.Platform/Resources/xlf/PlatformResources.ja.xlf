@@ -142,6 +142,16 @@
         <target state="translated">応答ファイル '{0}' が見つかりませんでした</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineParserUnclosedQuoteInCommandLine">
+        <source>Unclosed quote in command line</source>
+        <target state="new">Unclosed quote in command line</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineParserUnclosedQuoteInResponseFile">
+        <source>Unclosed quote in response file at line {0}</source>
+        <target state="new">Unclosed quote in response file at line {0}</target>
+        <note>{0} is the line number</note>
+      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
         <target state="translated">予期しない引数 {0}</target>
@@ -383,12 +393,12 @@
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionEntryMustBeScalarErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</source>
-        <target state="new">The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</target>
+        <target state="translated">testconfig.json ファイル ('{0}') の '{1}' セクション内のエントリ '{2}' は、スカラー文字列値である必要があります。入れ子になったオブジェクトと配列はサポートされていません。</target>
         <note>{0} is the full dotted/colon-separated key. {1} is the section name. {2} is the path to the testconfig.json file.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionMustBeAnObjectErrorMessage">
         <source>The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</source>
-        <target state="new">The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</target>
+        <target state="translated">testconfig.json ファイル ('{0}') の '{1}' セクションは JSON オブジェクトである必要があります。</target>
         <note>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file.</note>
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerDescription">
@@ -665,8 +675,8 @@ The default is TestResults in the directory that contains the test application.<
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</source>
-        <target state="translated">'timeout' オプションには、1 つの引数を文字列として &lt;value&gt;[h|m|s] の形式で指定する必要があります。この場合、'value' は float です</target>
+        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
+        <target state="translated">'timeout' オプションには、1 つの引数を &lt;value&gt;[h|m|s] 形式の文字列として指定する必要があります。ここで 'value' は、サポートされる最大継続時間を超えない、負でない有限の数値です</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
@@ -826,15 +836,15 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</source>
-        <target state="new">Control whether ANSI escape characters are emitted.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
-When both --ansi and --no-ansi are provided, --ansi wins.</target>
+        <target state="translated">ANSI エスケープ文字を出力するかどうかを制御します。
+有効な値は、'auto' (既定値)、'on' ('true'、'enable'、'1' も指定可能)、または 'off' ('false'、'disable'、'0' も指定可能) です。
+'on' を指定すると、stdout がリダイレクトされている場合でも、ANSI エスケープ コード (カーソルの移動を含む) が強制的に使用されます。色だけを使用する場合は、--no-progress と組み合わせてください。
+--ansi と --no-ansi の両方が指定されている場合は、--ansi が優先されます。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--ansi には、値 'auto'、'on' (または 'true'、'enable'、'1')、あるいは 'off' (または 'false'、'disable'、'0') の単一のパラメーターが必要です。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalNoAnsiOptionDescription">
@@ -930,22 +940,22 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableInvalidNameErrorMessage">
         <source>Environment variable name '{0}' declared in the 'environmentVariables' section of the testconfig.json file is invalid. Names must not contain '=' or null characters.</source>
-        <target state="new">Environment variable name '{0}' declared in the 'environmentVariables' section of the testconfig.json file is invalid. Names must not contain '=' or null characters.</target>
+        <target state="translated">testconfig.json ファイルの 'environmentVariables' セクションで宣言された環境変数名 '{0}' は無効です。名前に '=' または null 文字を含めることはできません。</target>
         <note>{0} is the invalid environment variable name.</note>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableNameCannotBeEmptyErrorMessage">
         <source>Environment variable names declared in the 'environmentVariables' section of the testconfig.json file must not be empty.</source>
-        <target state="new">Environment variable names declared in the 'environmentVariables' section of the testconfig.json file must not be empty.</target>
+        <target state="translated">testconfig.json ファイルの 'environmentVariables' セクションで宣言された環境変数名を空にすることはできません。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableProviderDescription">
         <source>Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</source>
-        <target state="new">Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</target>
+        <target state="translated">testconfig.json ファイルの 'environmentVariables' セクションで宣言された環境変数をテスト ホストの子プロセスに適用します。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableProviderDisplayName">
         <source>testconfig.json environment variables provider</source>
-        <target state="new">testconfig.json environment variables provider</target>
+        <target state="translated">testconfig.json の環境変数プロバイダー</target>
         <note />
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">
@@ -1073,6 +1083,11 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
       <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
         <target state="translated">デバッガーのアタッチの待機 (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) は、ブラウザー環境ではサポートされていません。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
+        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

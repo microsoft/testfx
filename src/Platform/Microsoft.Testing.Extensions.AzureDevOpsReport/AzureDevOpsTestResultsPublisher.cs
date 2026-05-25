@@ -29,6 +29,8 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
     private readonly IClock _clock;
     private readonly ILogger _logger;
     private readonly AzureDevOpsTestResultsPublisherOptions _options;
+    // Mutate only while holding _flushSemaphore.
+    private readonly Stack<AzureDevOpsTestCaseResult> _retryResults = new();
     private readonly ConcurrentQueue<AzureDevOpsTestCaseResult> _pendingResults = new();
     private readonly SemaphoreSlim _flushSemaphore = new(1, 1);
 
@@ -318,11 +320,6 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
             return;
         }
 
-        if (!force && _pendingResults.IsEmpty)
-        {
-            return;
-        }
-
         await _flushSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -334,6 +331,11 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                 }
 
                 List<AzureDevOpsTestCaseResult> batch = [];
+                while (batch.Count < _options.BatchSize && _retryResults.Count > 0)
+                {
+                    batch.Add(_retryResults.Pop());
+                }
+
                 while (batch.Count < _options.BatchSize && _pendingResults.TryDequeue(out AzureDevOpsTestCaseResult? result))
                 {
                     batch.Add(result);
@@ -356,7 +358,16 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
+                    // Push results in reverse so Pop retries them in the original batch order.
+                    for (int i = batch.Count - 1; i >= 0; i--)
+                    {
+                        _retryResults.Push(batch[i]);
+                    }
+
+                    // Reset the interval countdown so a transient failure does not cause a tight retry loop.
+                    _lastFlushTime = _clock.UtcNow;
                     _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+                    return;
                 }
             }
         }
@@ -427,9 +438,30 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
     }
 
     private bool ShouldFlushUnsafe(bool force)
-        => force
-            ? !_pendingResults.IsEmpty
-            : _pendingResults.Count >= _options.BatchSize || (!_pendingResults.IsEmpty && _clock.UtcNow - _lastFlushTime >= _options.FlushInterval);
+    {
+        int pendingResultsCount = _retryResults.Count + _pendingResults.Count;
+
+        if (pendingResultsCount == 0)
+        {
+            return false;
+        }
+
+        if (force)
+        {
+            return true;
+        }
+
+        if (_clock.UtcNow - _lastFlushTime >= _options.FlushInterval)
+        {
+            return true;
+        }
+
+        // Only trigger a batch-size based flush from fresh pending results. When a previous publish
+        // failed and pushed a full batch back into _retryResults, the next ConsumeAsync would
+        // otherwise immediately satisfy this condition and tight-retry on every incoming result —
+        // wait for the flush interval (background loop) before retrying instead.
+        return _retryResults.Count == 0 && _pendingResults.Count >= _options.BatchSize;
+    }
 
     private static AzureDevOpsTestCaseResult CreateResult(
         string displayName,

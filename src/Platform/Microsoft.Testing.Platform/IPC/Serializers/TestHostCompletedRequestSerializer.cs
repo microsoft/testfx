@@ -7,19 +7,13 @@ using Microsoft.Testing.Platform.IPC.Models;
 namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 [Embedded]
-internal sealed class TestHostCompletedRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class TestHostCompletedRequestSerializer : NamedPipeSerializer<TestHostCompletedRequest>, INamedPipeSerializer
 {
-    public int Id => TestHostCompletedRequestFieldsId.MessagesSerializerId;
+    public override int Id => TestHostCompletedRequestFieldsId.MessagesSerializerId;
 
-    public object Deserialize(Stream stream)
-    {
-        int exitCode = ReadInt(stream);
-        return new TestHostCompletedRequest(exitCode);
-    }
+    protected override TestHostCompletedRequest DeserializeCore(Stream stream)
+        => new(ReadInt(stream));
 
-    public void Serialize(object obj, Stream stream)
-    {
-        var testHostCompletedRequest = (TestHostCompletedRequest)obj;
-        WriteInt(stream, testHostCompletedRequest.ExitCode);
-    }
+    protected override void SerializeCore(TestHostCompletedRequest objectToSerialize, Stream stream)
+        => WriteInt(stream, objectToSerialize.ExitCode);
 }

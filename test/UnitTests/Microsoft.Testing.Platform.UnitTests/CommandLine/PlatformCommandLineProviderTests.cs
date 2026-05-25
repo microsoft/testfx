@@ -40,20 +40,25 @@ public sealed class PlatformCommandLineProviderTests
     }
 
     [TestMethod]
-    public async Task IsValid_If_ClientPort_Is_Integer()
+    [DataRow("0")]
+    [DataRow("32")]
+    [DataRow("65535")]
+    public async Task IsValid_If_ClientPort_Is_ValidPort(string clientPort)
     {
         var provider = new PlatformCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ClientPortOptionKey);
 
-        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, ["32"]).ConfigureAwait(false);
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [clientPort]).ConfigureAwait(false);
         Assert.IsTrue(validateOptionsResult.IsValid);
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
 
     [TestMethod]
+    [DataRow("-1")]
     [DataRow("32.32")]
+    [DataRow("65536")]
     [DataRow("invalid")]
-    public async Task IsInvalid_If_ClientPort_Is_Not_Integer(string clientPort)
+    public async Task IsInvalid_If_ClientPort_Is_Not_ValidPort(string clientPort)
     {
         var provider = new PlatformCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ClientPortOptionKey);
@@ -166,6 +171,19 @@ public sealed class PlatformCommandLineProviderTests
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
         Assert.AreEqual(PlatformResources.PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("0")]
+    [DataRow("-1")]
+    public async Task IsInvalid_When_MinimumExpectedTests_Is_Not_Positive(string minimumExpectedTests)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.MinimumExpectedTestsOptionKey);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [minimumExpectedTests]).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionSingleArgument, validateOptionsResult.ErrorMessage);
     }
 
     [TestMethod]
@@ -283,7 +301,26 @@ public sealed class PlatformCommandLineProviderTests
     [DataRow("invalid")]
     [DataRow("1.5")] // Missing unit
     [DataRow("abc.5s")]
+    [DataRow("")] // Empty value
+    [DataRow("s")] // Missing numeric value
     public async Task IsInvalid_If_Timeout_Has_IncorrectFormat(string timeout)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.TimeoutOptionKey);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [timeout]);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("-1s")] // Negative
+    [DataRow("-0.5m")] // Negative fractional
+    [DataRow("NaNs")] // Not a number
+    [DataRow("Infinitys")] // Positive infinity
+    [DataRow("-Infinitys")] // Negative infinity
+    [DataRow("1e30h")] // Overflows TimeSpan
+    public async Task IsInvalid_If_Timeout_Has_NonFiniteOrOutOfRangeValue(string timeout)
     {
         var provider = new PlatformCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.TimeoutOptionKey);

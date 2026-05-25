@@ -142,6 +142,16 @@
         <target state="translated">O arquivo de resposta '{0}' não foi encontrado</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineParserUnclosedQuoteInCommandLine">
+        <source>Unclosed quote in command line</source>
+        <target state="new">Unclosed quote in command line</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineParserUnclosedQuoteInResponseFile">
+        <source>Unclosed quote in response file at line {0}</source>
+        <target state="new">Unclosed quote in response file at line {0}</target>
+        <note>{0} is the line number</note>
+      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
         <target state="translated">Argumento inesperado {0}</target>
@@ -209,7 +219,7 @@
       </trans-unit>
       <trans-unit id="DeprecatedEnvironmentVariableWarning">
         <source>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</source>
-        <target state="new">Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</target>
+        <target state="translated">Aviso: a variável de ambiente "{0}" foi preterida e será removida em uma versão principal futura. Em vez disso, use "{1}".</target>
         <note>{0} is the deprecated environment variable name, {1} is the replacement environment variable name.</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
@@ -383,12 +393,12 @@
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionEntryMustBeScalarErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</source>
-        <target state="new">The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</target>
+        <target state="translated">A entrada '{0}' na seção '{1}' no arquivo testconfig.json ('{2}') deve ser um valor de cadeia de caracteres escalar. Não há suporte para objetos e matrizes aninhados.</target>
         <note>{0} is the full dotted/colon-separated key. {1} is the section name. {2} is the path to the testconfig.json file.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionMustBeAnObjectErrorMessage">
         <source>The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</source>
-        <target state="new">The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</target>
+        <target state="translated">A seção '{0}' no arquivo testconfig.json ('{1}') deve ser um objeto JSON.</target>
         <note>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file.</note>
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerDescription">
@@ -664,8 +674,8 @@ O padrão é TestResults no diretório que contém o aplicativo de teste.</targe
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</source>
-        <target state="translated">A opção 'timeout' deve ter um argumento como cadeia de caracteres no formato &lt;value&gt;[h|m|s] onde 'value' é float</target>
+        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
+        <target state="new">'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
@@ -825,15 +835,15 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</source>
-        <target state="new">Control whether ANSI escape characters are emitted.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
-When both --ansi and --no-ansi are provided, --ansi wins.</target>
+        <target state="translated">Controle se os caracteres de escape ANSI são emitidos.
+Os valores válidos são 'auto' (padrão), 'on' (também aceita 'true', 'enable', '1') ou 'off' (também aceita 'false', 'disable', '0').
+'on' força códigos de escape ANSI (incluindo movimento de cursor) mesmo quando stdout é redirecionado; emparelhe-o com --no-progress se você quiser apenas cores.
+Quando --ansi e --no-ansi são fornecidos, --ansi ganha.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--ansi espera um único parâmetro com o valor 'auto', 'on' (ou 'true', 'enable', '1') ou 'off' (ou 'false', 'disable', '0').</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalNoAnsiOptionDescription">
@@ -929,22 +939,22 @@ Os valores válidos são 'All', 'Failed', 'None'. O padrão é 'All'.</target>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableInvalidNameErrorMessage">
         <source>Environment variable name '{0}' declared in the 'environmentVariables' section of the testconfig.json file is invalid. Names must not contain '=' or null characters.</source>
-        <target state="new">Environment variable name '{0}' declared in the 'environmentVariables' section of the testconfig.json file is invalid. Names must not contain '=' or null characters.</target>
+        <target state="translated">O nome da variável de ambiente '{0}' declarado na seção 'environmentVariables' do arquivo testconfig.json é inválido. Os nomes não devem conter caracteres '=' ou nulos.</target>
         <note>{0} is the invalid environment variable name.</note>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableNameCannotBeEmptyErrorMessage">
         <source>Environment variable names declared in the 'environmentVariables' section of the testconfig.json file must not be empty.</source>
-        <target state="new">Environment variable names declared in the 'environmentVariables' section of the testconfig.json file must not be empty.</target>
+        <target state="translated">Nomes de variáveis de ambiente declarados na seção 'environmentVariables' do arquivo testconfig.json não devem estar vazios.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableProviderDescription">
         <source>Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</source>
-        <target state="new">Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</target>
+        <target state="translated">Aplica variáveis de ambiente declaradas na seção 'environmentVariables' do arquivo testconfig.json ao processo filho do host de teste.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableProviderDisplayName">
         <source>testconfig.json environment variables provider</source>
-        <target state="new">testconfig.json environment variables provider</target>
+        <target state="translated">Provedor de variáveis de ambiente do testconfig.json</target>
         <note />
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">
@@ -1072,6 +1082,11 @@ Os valores válidos são 'All', 'Failed', 'None'. O padrão é 'All'.</target>
       <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
         <target state="translated">Não há suporte para aguardar a anexação do depurador (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) em ambientes de navegador.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
+        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

@@ -34,10 +34,11 @@ safe-outputs:
   create-pull-request:
     expires: 2d
     title-prefix: "[docs] "
-    labels: [documentation, glossary]
+    labels: [area/documentation, type/automation]
     draft: false
     protected-files: fallback-to-issue
   noop:
+    report-as-issue: false
 
 tools:
   cache-memory: true

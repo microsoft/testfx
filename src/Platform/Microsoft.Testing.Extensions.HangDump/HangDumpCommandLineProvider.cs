@@ -9,7 +9,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
 
-internal sealed class HangDumpCommandLineProvider : ICommandLineOptionsProvider
+internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBase
 {
     public const string HangDumpOptionName = "hangdump";
     public const string HangDumpFileNameOptionName = "hangdump-filename";
@@ -22,27 +22,31 @@ internal sealed class HangDumpCommandLineProvider : ICommandLineOptionsProvider
     private static readonly string[] HangDumpTypeOptions = ["Mini", "Heap", "Full", "None"];
 #endif
 
+    private static readonly string HangDumpTypeOptionsFormatted = string.Join(", ", Array.ConvertAll(HangDumpTypeOptions, option => $"'{option}'"));
+
     private static readonly IReadOnlyCollection<CommandLineOption> CachedCommandLineOptions =
     [
         new(HangDumpOptionName, ExtensionResources.HangDumpOptionDescription, ArgumentArity.Zero, false),
         new(HangDumpTimeoutOptionName, ExtensionResources.HangDumpTimeoutOptionDescription, ArgumentArity.ExactlyOne, false),
         new(HangDumpFileNameOptionName, ExtensionResources.HangDumpFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
-        new(HangDumpTypeOptionName, ExtensionResources.HangDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false)
+        new(
+            HangDumpTypeOptionName,
+            string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionDescription, HangDumpTypeOptionsFormatted),
+            ArgumentArity.ExactlyOne,
+            false)
     ];
 
-    public string Uid => nameof(HangDumpCommandLineProvider);
+    public HangDumpCommandLineProvider()
+        : base(
+            nameof(HangDumpCommandLineProvider),
+            ExtensionVersion.DefaultSemVer,
+            ExtensionResources.HangDumpExtensionDisplayName,
+            ExtensionResources.HangDumpExtensionDescription,
+            CachedCommandLineOptions)
+    {
+    }
 
-    public string Version => ExtensionVersion.DefaultSemVer;
-
-    public string DisplayName => ExtensionResources.HangDumpExtensionDisplayName;
-
-    public string Description => ExtensionResources.HangDumpExtensionDescription;
-
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() => CachedCommandLineOptions;
-
-    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
         if (commandOption.Name == HangDumpTimeoutOptionName && !TimeSpanParser.TryParse(arguments[0], out TimeSpan _))
         {
@@ -53,14 +57,18 @@ internal sealed class HangDumpCommandLineProvider : ICommandLineOptionsProvider
         {
             if (!HangDumpTypeOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase))
             {
-                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionInvalidType, arguments[0]));
+                return ValidationResult.InvalidTask(string.Format(
+                    CultureInfo.InvariantCulture,
+                    ExtensionResources.HangDumpTypeOptionInvalidType,
+                    arguments[0],
+                    HangDumpTypeOptionsFormatted));
             }
         }
 
         return ValidationResult.ValidTask;
     }
 
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+    public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
         => (commandLineOptions.IsOptionSet(HangDumpTimeoutOptionName) ||
             commandLineOptions.IsOptionSet(HangDumpFileNameOptionName) ||
             commandLineOptions.IsOptionSet(HangDumpTypeOptionName)) &&
