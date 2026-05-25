@@ -38,9 +38,10 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
         ApplicationLoggingState loggingState,
         DateTimeOffset createBuilderStart,
         TestApplicationOptions testApplicationOptions,
-        IUnhandledExceptionsHandler unhandledExceptionsHandler)
+        IUnhandledExceptionsHandler unhandledExceptionsHandler,
+        string[] args)
     {
-        _testHostBuilder = new TestHostBuilder(new SystemFileSystem(), new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler(), new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()));
+        _testHostBuilder = new TestHostBuilder(new SystemFileSystem(), new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler(), new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler(), args));
         _createBuilderStart = createBuilderStart;
         _loggingState = loggingState;
         _testApplicationOptions = testApplicationOptions;
