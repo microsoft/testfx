@@ -383,12 +383,12 @@
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionEntryMustBeScalarErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</source>
-        <target state="new">The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</target>
+        <target state="translated">testconfig.json 파일('{2}')의 '{1}' 섹션 아래에 있는 '{0}' 항목은 스칼라 문자열 값이어야 합니다. 중첩된 개체와 배열은 지원되지 않습니다.</target>
         <note>{0} is the full dotted/colon-separated key. {1} is the section name. {2} is the path to the testconfig.json file.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionMustBeAnObjectErrorMessage">
         <source>The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</source>
-        <target state="new">The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</target>
+        <target state="translated">testconfig.json 파일('{1}')의 '{0}' 섹션은 JSON 개체여야 합니다.</target>
         <note>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file.</note>
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerDescription">
@@ -825,15 +825,15 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</source>
-        <target state="new">Control whether ANSI escape characters are emitted.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
-When both --ansi and --no-ansi are provided, --ansi wins.</target>
+        <target state="translated">ANSI 이스케이프 문자를 출력할지 여부를 제어합니다.
+유효한 값은 'auto'(기본값), 'on'('true', 'enable', '1'도 허용) 또는 'off'('false', 'disable', '0'도 허용)입니다.
+'on'은 stdout이 리디렉션되어도 ANSI 이스케이프 코드(커서 이동 포함)를 강제로 적용합니다. 색상만 적용하려면 --no-progress와 함께 사용하세요.
+--ansi와 --no-ansi가 모두 지정되면 --ansi가 우선합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--ansi에는 값이 'auto', 'on'(또는 'true', 'enable', '1') 또는 'off'(또는 'false', 'disable', '0')인 단일 매개 변수가 필요합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalNoAnsiOptionDescription">
@@ -929,22 +929,22 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableInvalidNameErrorMessage">
         <source>Environment variable name '{0}' declared in the 'environmentVariables' section of the testconfig.json file is invalid. Names must not contain '=' or null characters.</source>
-        <target state="new">Environment variable name '{0}' declared in the 'environmentVariables' section of the testconfig.json file is invalid. Names must not contain '=' or null characters.</target>
+        <target state="translated">testconfig.json 파일의 'environmentVariables' 섹션에 선언된 환경 변수 이름 '{0}'이(가) 잘못되었습니다. 이름에는 '=' 또는 null 문자를 포함할 수 없습니다.</target>
         <note>{0} is the invalid environment variable name.</note>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableNameCannotBeEmptyErrorMessage">
         <source>Environment variable names declared in the 'environmentVariables' section of the testconfig.json file must not be empty.</source>
-        <target state="new">Environment variable names declared in the 'environmentVariables' section of the testconfig.json file must not be empty.</target>
+        <target state="translated">testconfig.json 파일의 'environmentVariables' 섹션에 선언된 환경 변수 이름은 비워둘 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableProviderDescription">
         <source>Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</source>
-        <target state="new">Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</target>
+        <target state="translated">testconfig.json 파일의 'environmentVariables' 섹션에 선언된 환경 변수를 테스트 호스트 자식 프로세스에 적용합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableProviderDisplayName">
         <source>testconfig.json environment variables provider</source>
-        <target state="new">testconfig.json environment variables provider</target>
+        <target state="translated">testconfig.json 환경 변수 공급자</target>
         <note />
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">

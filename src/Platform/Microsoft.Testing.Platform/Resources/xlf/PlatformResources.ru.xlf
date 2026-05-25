@@ -665,7 +665,7 @@ The default is TestResults in the directory that contains the test application.<
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
-        <target state="new">'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</target>
+        <target state="translated">Параметр "timeout" должен принимать один аргумент в виде строки в формате &lt;value&gt;[h|m|s], где "value" — конечное неотрицательное число, не превышающее максимальную поддерживаемую длительность</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
