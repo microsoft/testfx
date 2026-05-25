@@ -83,6 +83,10 @@ Options:
 Extension options:
     --crash-report
         [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).
+    --crash-sequence
+        Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+        The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+        Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
     --crashdump
         [net6.0+ only] Generate a dump file if the test process crashes
     --crashdump-filename
@@ -393,6 +397,12 @@ Registered command line providers:
         Arity: 0
         Hidden: False
         Description: [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).
+      --crash-sequence
+        Arity: 1
+        Hidden: False
+        Description: Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+        The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+        Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
       --crashdump
         Arity: 0
         Hidden: False
