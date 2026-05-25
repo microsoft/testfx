@@ -37,7 +37,11 @@ steps:
 
       echo "⬇ Downloading the last 100 open issues (excluding sub-issues)..."
 
-      # Use REST API directly to avoid gh CLI /meta check blocked by DIFC proxy.
+      # Use REST API directly to avoid gh CLI failures under the DIFC proxy
+      # (see https://github.com/githubnext/agentics/issues/339 and microsoft/testfx#8571).
+      # The /meta block referenced in #339 was fixed in gh-aw-mcpg v0.3.12, but
+      # `gh issue list` still fails under the proxy with `malformed version:`
+      # (observed with mcpg v0.3.17), so we keep the curl-based fallback.
       # Fetches the most recently created 100 issues (intentional limit matching previous behavior).
       # State is normalized to uppercase (OPEN/CLOSED) to match gh CLI GraphQL output format.
       curl -s \
@@ -76,7 +80,8 @@ safe-outputs:
     group: true
   link-sub-issue:
     max: 50
-  noop: {}
+  noop:
+    report-as-issue: false
 timeout-minutes: 15
 ---
 

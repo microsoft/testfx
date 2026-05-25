@@ -50,6 +50,7 @@ public sealed class HangDumpTests
     [DataRow("Mini")]
     [DataRow("Heap")]
     [DataRow("Full")]
+    [DataRow("None")]
     public async Task IsValid_If_HangDumpType_Has_CorrectValue(string dumpType)
     {
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
@@ -68,7 +69,24 @@ public sealed class HangDumpTests
 
         ValidationResult validateOptionsResult = await hangDumpCommandLineProvider.ValidateOptionArgumentsAsync(option, ["invalid"]).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionInvalidType, "invalid"), validateOptionsResult.ErrorMessage);
+        Assert.AreEqual(
+            string.Format(
+                CultureInfo.InvariantCulture,
+                ExtensionResources.HangDumpTypeOptionInvalidType,
+                "invalid",
+                GetExpectedFormattedOptions()),
+            validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public void HangDumpTypeOptionDescription_ListsValidValues()
+    {
+        HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
+        CommandLineOption option = hangDumpCommandLineProvider.GetCommandLineOptions().First(x => x.Name == HangDumpCommandLineProvider.HangDumpTypeOptionName);
+
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionDescription, GetExpectedFormattedOptions()),
+            option.Description);
     }
 
     [TestMethod]
@@ -105,4 +123,22 @@ public sealed class HangDumpTests
         Assert.IsTrue(validateOptionsResult.IsValid);
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Validates Windows-specific quoting workaround for dotnet/diagnostics#5020")]
+    public void GetDumpFileNames_WindowsPathWithSpaces_QuotesOnlyWriteDumpArgument()
+    {
+        string dumpFileName = @"C:\results directory with spaces\hangdump.dmp";
+
+        HangDumpProcessLifetimeHandler.DumpFileNames dumpFileNames = HangDumpProcessLifetimeHandler.GetDumpFileNames(dumpFileName);
+
+        Assert.AreEqual($"\"{dumpFileName}\"", dumpFileNames.WriteDumpFileName);
+        Assert.AreEqual(dumpFileName, dumpFileNames.ArtifactDumpFileName);
+    }
+
+#if NETCOREAPP
+    private static string GetExpectedFormattedOptions() => "'Mini', 'Heap', 'Full', 'Triage', 'None'";
+#else
+    private static string GetExpectedFormattedOptions() => "'Mini', 'Heap', 'Full', 'None'";
+#endif
 }

@@ -70,16 +70,19 @@
   <data name="HtmlReportFileNameExtensionIsNotHtml" xml:space="preserve">
     <value>'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</value>
   </data>
+  <data name="HtmlReportFileNameMustNotBeEmpty" xml:space="preserve">
+    <value>'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</value>
+  </data>
   <data name="HtmlReportFileNameOptionDescription" xml:space="preserve">
-    <value>The name of the generated HTML report.
+    <value>The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
 Example: MyReport_{tfm}.html</value>
   </data>
+  <data name="HtmlReportFileNameRelativePathMustStayUnderResultsDirectory" xml:space="preserve">
+    <value>'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</value>
+  </data>
   <data name="HtmlReportFileNameRequiresHtmlReport" xml:space="preserve">
     <value>'--report-html-filename' requires '--report-html' to be enabled</value>
-  </data>
-  <data name="HtmlReportFileNameShouldNotContainPath" xml:space="preserve">
-    <value>file name argument must not contain a path or invalid characters (e.g. --report-html-filename myreport.html)</value>
   </data>
   <data name="HtmlReportGeneratorDescription" xml:space="preserve">
     <value>Produce a self-contained HTML report for the current test session</value>

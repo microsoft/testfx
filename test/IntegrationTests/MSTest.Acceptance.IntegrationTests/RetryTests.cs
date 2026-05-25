@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -132,6 +132,115 @@ public class UnitTest1
         Console.WriteLine($"TestMethod3 executed {_count3} times.");
         Console.WriteLine($"TestMethod4 executed {_count4} times.");
         Console.WriteLine($"TestMethod5 executed {_count5} times.");
+    }
+}
+
+#file my.runsettings
+<RunSettings>
+  <MSTest>
+    <CaptureTraceOutput>false</CaptureTraceOutput>
+  </MSTest>
+</RunSettings>
+""";
+    }
+
+    public TestContext TestContext { get; set; }
+}
+
+[TestClass]
+public sealed class ClassLevelRetryTests : AcceptanceTestBase<ClassLevelRetryTests.TestAssetFixture>
+{
+    [TestMethod]
+    public async Task ClassLevelRetry_AppliesToAllTestMethods_AndMethodLevelOverrides()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+
+        // ClassLevelOnly is decorated only by class-level [Retry(3)] => 4 total runs.
+        // MethodLevelOverride overrides the class-level [Retry(3)] with method-level [Retry(1)] => 2 total runs.
+        // PassingMethod also has class-level retry but passes on first attempt => 1 total run.
+        testHostResult.AssertOutputContains("""
+            ClassLevelOnly executed 4 times.
+            MethodLevelOverride executed 2 times.
+            PassingMethod executed 1 time.
+            """);
+        testHostResult.AssertOutputContainsSummary(failed: 2, passed: 1, skipped: 0);
+    }
+
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
+    {
+        public const string ProjectName = "ClassLevelRetryTests";
+
+        public string ProjectPath => GetAssetPath(ProjectName);
+
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
+                SourceCode
+                .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+        private const string SourceCode = """
+#file ClassLevelRetryTests.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="*.runsettings">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>
+
+#file UnitTest1.cs
+using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+[Retry(3)]
+public class UnitTest1
+{
+    private static int _classLevelOnly;
+    private static int _methodOverride;
+    private static int _passing;
+
+    [TestMethod]
+    public void ClassLevelOnly()
+    {
+        _classLevelOnly++;
+        Assert.Fail("Always failing ClassLevelOnly");
+    }
+
+    [TestMethod]
+    [Retry(1)]
+    public void MethodLevelOverride()
+    {
+        _methodOverride++;
+        Assert.Fail("Always failing MethodLevelOverride");
+    }
+
+    [TestMethod]
+    public void PassingMethod()
+    {
+        _passing++;
+    }
+
+    [ClassCleanup]
+    public static void ClassCleanup()
+    {
+        Console.WriteLine($"ClassLevelOnly executed {_classLevelOnly} times.");
+        Console.WriteLine($"MethodLevelOverride executed {_methodOverride} times.");
+        Console.WriteLine($"PassingMethod executed {_passing} time{(_passing == 1 ? string.Empty : "s")}.");
     }
 }
 

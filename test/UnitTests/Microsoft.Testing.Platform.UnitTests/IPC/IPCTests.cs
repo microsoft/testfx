@@ -242,34 +242,34 @@ public sealed class IPCTests
 
     private sealed record TextMessage(string Text) : BaseMessage;
 
-    private sealed class TextMessageSerializer : BaseSerializer, INamedPipeSerializer
+    private sealed class TextMessageSerializer : NamedPipeSerializer<TextMessage>, INamedPipeSerializer
     {
-        public int Id => 2;
+        public override int Id => 2;
 
-        public object Deserialize(Stream stream) => new TextMessage(ReadString(stream));
+        protected override TextMessage DeserializeCore(Stream stream) => new(ReadString(stream));
 
-        public void Serialize(object objectToSerialize, Stream stream) => WriteString(stream, ((TextMessage)objectToSerialize).Text);
+        protected override void SerializeCore(TextMessage objectToSerialize, Stream stream) => WriteString(stream, objectToSerialize.Text);
     }
 
     private sealed record IntMessage(int Integer) : BaseMessage;
 
-    private sealed class IntMessageSerializer : BaseSerializer, INamedPipeSerializer
+    private sealed class IntMessageSerializer : NamedPipeSerializer<IntMessage>, INamedPipeSerializer
     {
-        public int Id => 3;
+        public override int Id => 3;
 
-        public object Deserialize(Stream stream) => new IntMessage(ReadInt(stream));
+        protected override IntMessage DeserializeCore(Stream stream) => new(ReadInt(stream));
 
-        public void Serialize(object objectToSerialize, Stream stream) => WriteInt(stream, ((IntMessage)objectToSerialize).Integer);
+        protected override void SerializeCore(IntMessage objectToSerialize, Stream stream) => WriteInt(stream, objectToSerialize.Integer);
     }
 
     private sealed record LongMessage(long Long) : BaseMessage;
 
-    private sealed class LongMessageSerializer : BaseSerializer, INamedPipeSerializer
+    private sealed class LongMessageSerializer : NamedPipeSerializer<LongMessage>, INamedPipeSerializer
     {
-        public int Id => 4;
+        public override int Id => 4;
 
-        public object Deserialize(Stream stream) => new LongMessage(ReadInt(stream));
+        protected override LongMessage DeserializeCore(Stream stream) => new(ReadLong(stream));
 
-        public void Serialize(object objectToSerialize, Stream stream) => WriteLong(stream, ((LongMessage)objectToSerialize).Long);
+        protected override void SerializeCore(LongMessage objectToSerialize, Stream stream) => WriteLong(stream, objectToSerialize.Long);
     }
 }

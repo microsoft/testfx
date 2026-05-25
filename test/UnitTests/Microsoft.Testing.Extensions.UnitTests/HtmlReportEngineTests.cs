@@ -333,6 +333,117 @@ public class HtmlReportEngineTests
     }
 
     [TestMethod]
+    public async Task GenerateReportAsync_ExplicitRelativePath_IsResolvedUnderResultsDirectory()
+    {
+        string[]? htmlFileName = [Path.Combine("nested", "custom.html")];
+        _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName, out htmlFileName)).Returns(true);
+
+        string? pathSeen = null;
+        var directories = new List<string>();
+        _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        _ = _fileSystem.Setup(x => x.CreateDirectory(It.IsAny<string>()))
+            .Callback<string>(directories.Add)
+            .Returns<string>(path => path);
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
+            .Returns<string, FileMode>((path, _) =>
+            {
+                pathSeen = path;
+                return new MemoryFileStream();
+            });
+
+        HtmlReportEngine engine = CreateEngine();
+        _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns("out");
+
+        (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
+
+        string expectedPath = Path.Combine("out", "nested", "custom.html");
+        Assert.AreEqual(expectedPath, finalPath);
+        Assert.AreEqual(expectedPath, pathSeen);
+        Assert.Contains(Path.Combine("out", "nested"), directories);
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_ExplicitAbsolutePath_OverridesResultsDirectory()
+    {
+        string absolutePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".html");
+        string[]? htmlFileName = [absolutePath];
+        _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName, out htmlFileName)).Returns(true);
+
+        string? pathSeen = null;
+        _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        _ = _fileSystem.Setup(x => x.CreateDirectory(It.IsAny<string>())).Returns<string>(path => path);
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
+            .Returns<string, FileMode>((path, _) =>
+            {
+                pathSeen = path;
+                return new MemoryFileStream();
+            });
+
+        HtmlReportEngine engine = CreateEngine();
+        _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns("out");
+
+        (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
+
+        Assert.AreEqual(absolutePath, finalPath);
+        Assert.AreEqual(absolutePath, pathSeen);
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_ExplicitFileName_ResolvesPlaceholdersAndSanitizesLeafName()
+    {
+        string[]? htmlFileName = [Path.Combine("nested", "report*_{pid}_{tfm}.html")];
+        _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName, out htmlFileName)).Returns(true);
+
+        string? pathSeen = null;
+        _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        _ = _fileSystem.Setup(x => x.CreateDirectory(It.IsAny<string>())).Returns<string>(path => path);
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
+            .Returns<string, FileMode>((path, _) =>
+            {
+                pathSeen = path;
+                return new MemoryFileStream();
+            });
+
+        HtmlReportEngine engine = CreateEngine();
+        _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns("out");
+        _ = _environmentMock.SetupGet(_ => _.ProcessId).Returns(1234);
+
+        (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
+
+        Assert.AreEqual(pathSeen, finalPath);
+        string finalFileName = Path.GetFileName(finalPath);
+        Assert.StartsWith("report__", finalFileName);
+        Assert.Contains("1234", finalFileName);
+        Assert.Contains("_net", finalFileName);
+        Assert.EndsWith(".html", finalPath);
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_ExplicitReservedFileName_SanitizesLeafName()
+    {
+        string[]? htmlFileName = [Path.Combine("nested", "CON.html")];
+        _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName, out htmlFileName)).Returns(true);
+
+        string? pathSeen = null;
+        _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        _ = _fileSystem.Setup(x => x.CreateDirectory(It.IsAny<string>())).Returns<string>(path => path);
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
+            .Returns<string, FileMode>((path, _) =>
+            {
+                pathSeen = path;
+                return new MemoryFileStream();
+            });
+
+        HtmlReportEngine engine = CreateEngine();
+        _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns("out");
+
+        (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
+
+        Assert.AreEqual(pathSeen, finalPath);
+        Assert.AreEqual("_CON.html", Path.GetFileName(finalPath));
+    }
+
+    [TestMethod]
     public async Task GenerateReportAsync_AppendsDisambiguatingSuffix_When_DefaultFileExists()
     {
         // Set up file system: pretend the default file already exists, then succeed on
@@ -460,34 +571,6 @@ public class HtmlReportEngineTests
         Assert.Contains("[truncated, original length:", result.Traits![0].Value);
     }
 
-    [TestMethod]
-    public async Task GenerateReportAsync_WithUserSuppliedFileName_ResolvesPlaceholders()
-    {
-        using var memoryStream = new MemoryFileStream();
-        string[]? providedFileName = ["report_{pname}_{tfm}_{time}.html"];
-        _ = _commandLineOptionsMock
-            .Setup(_ => _.TryGetOptionArgumentList(HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName, out providedFileName))
-            .Returns(true);
-        _ = _clockMock.SetupGet(_ => _.UtcNow).Returns(new DateTimeOffset(2025, 9, 22, 13, 49, 34, TimeSpan.Zero));
-        HtmlReportEngine engine = CreateEngine(memoryStream);
-        // CreateEngine sets up GetCurrentTestApplicationFullPath to return "TestAppPath"; override it so the
-        // resolved {pname} is something more recognizable in the assertion.
-        _ = _testApplicationModuleInfoMock
-            .Setup(_ => _.GetCurrentTestApplicationFullPath())
-            .Returns(Path.Combine(Path.GetTempPath(), "MyTestApp.dll"));
-
-        (string fileName, string? warning) = await engine.GenerateReportAsync([Captured("p1", "Passing test", "passed")]);
-
-        Assert.IsNull(warning);
-        Assert.IsNotNull(fileName);
-        Assert.DoesNotContain("{pname}", fileName);
-        Assert.DoesNotContain("{tfm}", fileName);
-        Assert.DoesNotContain("{time}", fileName);
-        Assert.Contains("MyTestApp", fileName);
-        Assert.Contains("2025-09-22_13-49-34.0000000", fileName);
-        Assert.EndsWith(".html", fileName);
-    }
-
     private static CapturedTestResult Captured(string uid, string name, string outcome,
         TimeSpan? duration = null, string? errorMessage = null)
         => new()
@@ -504,6 +587,11 @@ public class HtmlReportEngineTests
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
         _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>())).Returns(stream);
 
+        return CreateEngine();
+    }
+
+    private HtmlReportEngine CreateEngine()
+    {
         _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
         _ = _environmentMock.SetupGet(_ => _.MachineName).Returns("MachineName");
         _ = _environmentMock.Setup(_ => _.GetEnvironmentVariable(It.IsAny<string>())).Returns("user");

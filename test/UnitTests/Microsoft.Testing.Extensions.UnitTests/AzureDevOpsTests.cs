@@ -328,6 +328,158 @@ public sealed class AzureDevOpsTests
         Assert.AreEqual("HangDump_TemplateFileName_CreateDump (\"net10.0\") [net11.0]\nboom", formatted);
     }
 
+    [TestMethod]
+    public void EmitsMessageOnlyAnnotation_WhenExceptionIsNullButExplanationIsProvided()
+    {
+        // Regression test for https://github.com/microsoft/testfx/issues/5979.
+        //
+        // The framework can surface a failure with an Explanation but no Exception (e.g. an
+        // assertion-style failure recorded directly on the TestNode). The reporter must still
+        // emit at least the message/title for Azure DevOps so the failure is visible in the
+        // pipeline; sourcepath/linenumber are optional enhancements.
+        var logger = new TextLogger();
+        string? text = AzureDevOpsReporter.GetErrorText(
+            "MyTestDisplayName",
+            "Test failed because reasons.",
+            exception: null,
+            "severity",
+            new SystemFileSystem(),
+            logger,
+            "net9.0")?.TrimStart('#');
+
+        Assert.AreEqual(
+            "vso[task.logissue type=severity]MyTestDisplayName [net9.0]%0ATest failed because reasons.",
+            text,
+            $"\nLogs:\n{string.Join("\n", logger.Logs)}");
+    }
+
+    [TestMethod]
+    public void EmitsMessageOnlyAnnotation_WhenExceptionHasNoStackTrace()
+    {
+        // An exception with a non-null Message but a null StackTrace (e.g. an exception that
+        // was constructed but never thrown) still carries useful failure information. Emit at
+        // least the message rather than silently suppressing the failure.
+        var error = new SyntheticStackTraceException("boom\nwith\rnewline", stackTrace: null);
+
+        var logger = new TextLogger();
+        string? text = AzureDevOpsReporter.GetErrorText(
+            "MyTestDisplayName",
+            explanation: null,
+            error,
+            "severity",
+            new SystemFileSystem(),
+            logger,
+            "net9.0")?.TrimStart('#');
+
+        Assert.AreEqual(
+            "vso[task.logissue type=severity]MyTestDisplayName [net9.0]%0Aboom%0Awith%0Dnewline",
+            text,
+            $"\nLogs:\n{string.Join("\n", logger.Logs)}");
+    }
+
+    [TestMethod]
+    public void EmitsMessageOnlyAnnotation_WhenAllStackFramesAreOutsideRepoRoot()
+    {
+        // Stack frames whose source path is outside the repo root and is not a deterministic
+        // build root cannot be turned into a sourcepath annotation. The reporter must still
+        // emit a message-only annotation so the failure is reported.
+        string stackTrace = string.Join(
+            Environment.NewLine,
+            "   at SomeExternal.Library.Method(String value) in /opt/external/SomeExternal.cs:line 42",
+            "   at AnotherExternal.Lib.OtherMethod() in /opt/external/Other.cs:line 7");
+
+        var error = new SyntheticStackTraceException("boom", stackTrace);
+
+        var logger = new TextLogger();
+        string? text = AzureDevOpsReporter.GetErrorText(
+            "MyTestDisplayName",
+            explanation: null,
+            error,
+            "severity",
+            new SystemFileSystem(),
+            logger,
+            "net9.0")?.TrimStart('#');
+
+        Assert.AreEqual(
+            "vso[task.logissue type=severity]MyTestDisplayName [net9.0]%0Aboom",
+            text,
+            $"\nLogs:\n{string.Join("\n", logger.Logs)}");
+    }
+
+    [TestMethod]
+    public void EmitsMessageOnlyAnnotation_WhenStackFrameFilesDoNotExistOnDisk()
+    {
+        // Deterministic / source-generated paths may resolve to files that do not exist on the
+        // current machine (e.g. generator-emitted virtual paths). When every candidate frame is
+        // rejected because the file is missing on disk, emit a message-only annotation rather
+        // than dropping the failure entirely.
+        string stackTrace =
+            "   at MyCompany.Generated.Suite.Test() in /_/src/Generated/SomeMissingFile.g.cs:line 17";
+
+        var error = new SyntheticStackTraceException("boom", stackTrace);
+
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(fs => fs.ExistFile(It.IsAny<string>())).Returns(false);
+
+        var logger = new TextLogger();
+        string? text = AzureDevOpsReporter.GetErrorText(
+            "MyTestDisplayName",
+            explanation: null,
+            error,
+            "severity",
+            fileSystem.Object,
+            logger,
+            "net9.0")?.TrimStart('#');
+
+        Assert.AreEqual(
+            "vso[task.logissue type=severity]MyTestDisplayName [net9.0]%0Aboom",
+            text,
+            $"\nLogs:\n{string.Join("\n", logger.Logs)}");
+    }
+
+    [TestMethod]
+    public void EmitsMessageOnlyAnnotation_UsesGenericFallbackWhenExplanationAndExceptionAreNull()
+    {
+        // Defensive case: neither explanation nor an exception is available. The reporter
+        // must still emit an annotation that at least surfaces the test display name so the
+        // failure is visible in the pipeline.
+        var logger = new TextLogger();
+        string? text = AzureDevOpsReporter.GetErrorText(
+            "MyTestDisplayName",
+            explanation: null,
+            exception: null,
+            "severity",
+            new SystemFileSystem(),
+            logger,
+            "net9.0")?.TrimStart('#');
+
+        Assert.IsNotNull(text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
+        Assert.StartsWith("vso[task.logissue type=severity]MyTestDisplayName [net9.0]%0A", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
+        Assert.DoesNotContain("sourcepath=", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
+    }
+
+    [TestMethod]
+    public void EmitsMessageOnlyAnnotation_AppendsAnnotationSuffix()
+    {
+        // History/quarantine annotation suffixes are part of the message body; make sure they
+        // are preserved on the fallback path too.
+        var logger = new TextLogger();
+        string? text = AzureDevOpsReporter.GetErrorText(
+            "MyTestDisplayName",
+            "Test failed.",
+            exception: null,
+            "warning",
+            new SystemFileSystem(),
+            logger,
+            "net9.0",
+            additionalMessageSuffix: " [quarantined]")?.TrimStart('#');
+
+        Assert.AreEqual(
+            "vso[task.logissue type=warning]MyTestDisplayName [net9.0]%0ATest failed. [quarantined]",
+            text,
+            $"\nLogs:\n{string.Join("\n", logger.Logs)}");
+    }
+
     private static (string FilePath, int LineNumber) GetCurrentLocation(
         [CallerFilePath] string? filePath = null,
         [CallerLineNumber] int lineNumber = 0)
@@ -335,7 +487,7 @@ public sealed class AzureDevOpsTests
 
     private sealed class SyntheticStackTraceException : Exception
     {
-        public SyntheticStackTraceException(string message, string stackTrace)
+        public SyntheticStackTraceException(string message, string? stackTrace)
             : base(message)
             => StackTrace = stackTrace;
 

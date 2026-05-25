@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- C# Source generators have to target netstandard -->
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <!-- Do not include the generator as a lib dependency -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <RootNamespace>MSTest.AotReflection.SourceGeneration</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <!-- PoC project — not shipped, not signed. -->
+    <IsShipping>false</IsShipping>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Description>
+      PoC source generator that emits the metadata MSTest's IReflectionOperations would normally
+      produce via runtime reflection (attributes, declared members, instance factories, method
+      invokers). The eventual goal is to wire this output into the MSTest adapter so it can run
+      tests under NativeAOT without performing any runtime reflection. Tracked by
+      https://github.com/microsoft/testfx/issues/1837.
+    </Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" VersionOverride="$(MicrosoftCodeAnalysisVersionForSourceGen)" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

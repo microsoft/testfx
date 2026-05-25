@@ -399,6 +399,9 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="UTA_MultipleAttributesOnTestMethod" xml:space="preserve">
     <value>The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</value>
   </data>
+  <data name="UTA_MultipleAttributesOnTestClass" xml:space="preserve">
+    <value>The test class '{0}' has multiple attributes derived from '{1}' defined on it. Only one such attribute is allowed.</value>
+  </data>
   <data name="UTA_NoTestResult" xml:space="preserve">
     <value>Error in executing test. No result returned by extension. If using extension of TestMethodAttribute then please contact vendor.</value>
   </data>

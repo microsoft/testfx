@@ -7,5 +7,7 @@ internal sealed class CrashDumpConfiguration
 {
     public string? DumpFileNamePattern { get; set; }
 
+    public string? SequenceFileName { get; set; }
+
     public bool Enable { get; set; } = true;
 }

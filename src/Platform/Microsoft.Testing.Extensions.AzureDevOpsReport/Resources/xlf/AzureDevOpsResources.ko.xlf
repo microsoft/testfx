@@ -177,6 +177,11 @@
         <target state="translated">{0} 옵션이 잘못되었습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="NoFailureMessageFallback">
+        <source>Test failed without an additional message.</source>
+        <target state="new">Test failed without an additional message.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
         <target state="translated">Azure DevOps 보고서 생성기를 활성화하여 Azure DevOps가 이해할 수 있는 방식으로 출력에 오류를 기록합니다.</target>

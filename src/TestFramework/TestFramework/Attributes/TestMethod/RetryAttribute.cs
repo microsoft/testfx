@@ -6,7 +6,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// This attribute is used to set a retry count on a test method in case of failure.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
+/// <remarks>
+/// When applied to a test class, the attribute is used as a default for every test method declared on the class.
+/// A <see cref="RetryAttribute"/> placed directly on a test method takes precedence over a class-level one
+/// (the method-level value fully replaces the class-level value, regardless of whether it is larger or smaller).
+/// The attribute is not inherited: applying it to a base test class does not apply it to derived test classes.
+/// </remarks>
+[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 public sealed class RetryAttribute : RetryBaseAttribute
 {
     /// <summary>

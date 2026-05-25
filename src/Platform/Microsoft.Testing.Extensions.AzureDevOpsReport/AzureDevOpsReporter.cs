@@ -190,130 +190,130 @@ internal sealed class AzureDevOpsReporter :
 
     internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker, string? additionalMessageSuffix)
     {
-        if (exception is null || exception.StackTrace is null)
+        string message = explanation ?? exception?.Message ?? AzureDevOpsResources.NoFailureMessageFallback;
+        string formattedMessage = $"{FormatErrorMessage(testDisplayName, targetFrameworkMoniker, message)}{additionalMessageSuffix}";
+
+        if (exception?.StackTrace is { } stackTrace)
         {
+            string repoRoot = RootFinder.Find();
             if (logger.IsEnabled(LogLevel.Trace))
             {
-                logger.LogTrace("Exception or stack trace were null, returning.");
+                logger.LogTrace($"Found repo root '{repoRoot}'");
             }
 
-            return null;
-        }
+            foreach (string? stackFrame in stackTrace.Split(NewlineCharacters, StringSplitOptions.RemoveEmptyEntries))
+            {
+                (string Code, string File, int LineNumber)? location = GetStackFrameLocation(stackFrame);
+                if (location is null)
+                {
+                    if (logger.IsEnabled(LogLevel.Trace))
+                    {
+                        logger.LogTrace("StackFrame location was null, continuing to next.");
+                    }
 
-        string message = explanation ?? exception.Message;
-        if (message is null)
-        {
+                    continue;
+                }
+
+                string file = location.Value.File;
+                string code = location.Value.Code;
+
+                if (IsAssertionImplementationFrame(code))
+                {
+                    if (logger.IsEnabled(LogLevel.Trace))
+                    {
+                        logger.LogTrace($"StackFrame code '{code}' is an MSTest assertion implementation, continuing to next.");
+                    }
+
+                    continue;
+                }
+
+                string relativePath;
+                if (file.StartsWith(DeterministicBuildRoot, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (logger.IsEnabled(LogLevel.Trace))
+                    {
+                        logger.LogTrace($"Path '{file}' is coming from deterministic build.");
+                    }
+
+                    relativePath = file.Substring(DeterministicBuildRoot.Length);
+                    if (logger.IsEnabled(LogLevel.Trace))
+                    {
+                        logger.LogTrace($"Using relative path '{relativePath}'.");
+                    }
+                }
+                else if (file.StartsWith(repoRoot, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (logger.IsEnabled(LogLevel.Trace))
+                    {
+                        logger.LogTrace($"Path '{file}' is in current repo '{repoRoot}'.");
+                    }
+
+                    relativePath = file.Substring(repoRoot.Length);
+                    if (logger.IsEnabled(LogLevel.Trace))
+                    {
+                        logger.LogTrace($"Using relative path '{relativePath}'.");
+                    }
+                }
+                else
+                {
+                    if (logger.IsEnabled(LogLevel.Trace))
+                    {
+                        logger.LogTrace($"Path '{file}' does not belong to current repo '{repoRoot}'. Continue to next.");
+                    }
+
+                    continue;
+                }
+
+                string fullPath = Path.Combine(repoRoot, relativePath);
+                if (!fileSystem.ExistFile(fullPath))
+                {
+                    if (logger.IsEnabled(LogLevel.Trace))
+                    {
+                        logger.LogTrace($"Path '{fullPath}' does not exist on disk. Continue to next.");
+                    }
+
+                    continue;
+                }
+
+                string relativeNormalizedPath = relativePath.Replace('\\', '/');
+                if (logger.IsEnabled(LogLevel.Trace))
+                {
+                    logger.LogTrace($"Normalized path for GitHub '{relativeNormalizedPath}'.");
+                }
+
+                string line = $"##vso[task.logissue type={severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{AzDoEscaper.Escape(formattedMessage)}";
+                if (logger.IsEnabled(LogLevel.Trace))
+                {
+                    logger.LogTrace($"Reported full message '{line}'.");
+                }
+
+                return line;
+            }
+
             if (logger.IsEnabled(LogLevel.Trace))
             {
-                logger.LogTrace("Explanation and exception message were null, returning.");
+                logger.LogTrace("No stack trace line matched criteria, falling back to a message-only annotation.");
             }
-
-            return null;
+        }
+        else if (logger.IsEnabled(LogLevel.Trace))
+        {
+            logger.LogTrace(exception is null
+                ? "Exception was null, emitting a message-only annotation."
+                : "Exception stack trace was null, emitting a message-only annotation.");
         }
 
-        string repoRoot = RootFinder.Find();
+        // Fallback: source location could not be resolved. The Azure DevOps logissue command only
+        // requires 'type' and the message; sourcepath/linenumber/columnnumber are optional. Without
+        // this fallback, failures whose stack frame cannot be resolved to a local repo file (no
+        // exception, no stack trace, frames outside the repo root, or paths that do not exist on
+        // disk) would be silently suppressed. See https://github.com/microsoft/testfx/issues/5979.
+        string fallbackLine = $"##vso[task.logissue type={severity}]{AzDoEscaper.Escape(formattedMessage)}";
         if (logger.IsEnabled(LogLevel.Trace))
         {
-            logger.LogTrace($"Found repo root '{repoRoot}'");
+            logger.LogTrace($"Reported message-only annotation '{fallbackLine}'.");
         }
 
-        string stackTrace = exception.StackTrace;
-        foreach (string? stackFrame in stackTrace.Split(NewlineCharacters, StringSplitOptions.RemoveEmptyEntries))
-        {
-            (string Code, string File, int LineNumber)? location = GetStackFrameLocation(stackFrame);
-            if (location is null)
-            {
-                if (logger.IsEnabled(LogLevel.Trace))
-                {
-                    logger.LogTrace("StackFrame location was null, continuing to next.");
-                }
-
-                continue;
-            }
-
-            string file = location.Value.File;
-            string code = location.Value.Code;
-
-            if (IsAssertionImplementationFrame(code))
-            {
-                if (logger.IsEnabled(LogLevel.Trace))
-                {
-                    logger.LogTrace($"StackFrame code '{code}' is an MSTest assertion implementation, continuing to next.");
-                }
-
-                continue;
-            }
-
-            string relativePath;
-            if (file.StartsWith(DeterministicBuildRoot, StringComparison.OrdinalIgnoreCase))
-            {
-                if (logger.IsEnabled(LogLevel.Trace))
-                {
-                    logger.LogTrace($"Path '{file}' is coming from deterministic build.");
-                }
-
-                relativePath = file.Substring(DeterministicBuildRoot.Length);
-                if (logger.IsEnabled(LogLevel.Trace))
-                {
-                    logger.LogTrace($"Using relative path '{relativePath}'.");
-                }
-            }
-            else if (file.StartsWith(repoRoot, StringComparison.OrdinalIgnoreCase))
-            {
-                if (logger.IsEnabled(LogLevel.Trace))
-                {
-                    logger.LogTrace($"Path '{file}' is in current repo '{repoRoot}'.");
-                }
-
-                relativePath = file.Substring(repoRoot.Length);
-                if (logger.IsEnabled(LogLevel.Trace))
-                {
-                    logger.LogTrace($"Using relative path '{relativePath}'.");
-                }
-            }
-            else
-            {
-                if (logger.IsEnabled(LogLevel.Trace))
-                {
-                    logger.LogTrace($"Path '{file}' does not belong to current repo '{repoRoot}'. Continue to next.");
-                }
-
-                continue;
-            }
-
-            string fullPath = Path.Combine(repoRoot, relativePath);
-            if (!fileSystem.ExistFile(fullPath))
-            {
-                if (logger.IsEnabled(LogLevel.Trace))
-                {
-                    logger.LogTrace($"Path '{fullPath}' does not exist on disk. Continue to next.");
-                }
-
-                continue;
-            }
-
-            string relativeNormalizedPath = relativePath.Replace('\\', '/');
-            if (logger.IsEnabled(LogLevel.Trace))
-            {
-                logger.LogTrace($"Normalized path for GitHub '{relativeNormalizedPath}'.");
-            }
-
-            string formattedMessage = $"{FormatErrorMessage(testDisplayName, targetFrameworkMoniker, message)}{additionalMessageSuffix}";
-            string line = $"##vso[task.logissue type={severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{AzDoEscaper.Escape(formattedMessage)}";
-            if (logger.IsEnabled(LogLevel.Trace))
-            {
-                logger.LogTrace($"Reported full message '{line}'.");
-            }
-
-            return line;
-        }
-
-        if (logger.IsEnabled(LogLevel.Trace))
-        {
-            logger.LogTrace("No stack trace line matched criteria, no failure line was reported.");
-        }
-
-        return null;
+        return fallbackLine;
     }
 
     private string GetConfiguredSeverity()

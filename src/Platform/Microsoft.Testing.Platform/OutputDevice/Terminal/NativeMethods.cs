@@ -34,7 +34,7 @@ internal static class NativeMethods
             return (AcceptAnsiColorCodes: false, OutputIsScreen: false, OriginalConsoleMode: null);
         }
 
-        if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsBrowser() && !OperatingSystem.IsIOS() && !OperatingSystem.IsTvOS())
+        if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsBrowser() && !OperatingSystem.IsIOS() && !OperatingSystem.IsTvOS() && !OperatingSystem.IsWasi())
         {
             if (Console.BufferHeight == 0 || Console.BufferWidth == 0)
             {

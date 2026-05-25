@@ -26,6 +26,11 @@ MSTest v{MSTestVersion} (UTC *) [* - *]
 Usage {AssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
+    --ansi
+        Control whether ANSI escape characters are emitted.
+        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+        When both --ansi and --no-ansi are provided, --ansi wins.
     --config-file
         Specifies a testconfig.json file.
     --debug
@@ -61,23 +66,6 @@ Options:
         Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
-    --results-directory
-        The directory where the test results are going to be placed.
-        If the specified directory doesn't exist, it's created.
-        The default is TestResults in the directory that contains the test application.
-    --timeout
-        A global test execution timeout.
-        Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
-Extension options:
-    --ansi
-        Control whether ANSI escape characters are emitted.
-        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
-        When both --ansi and --no-ansi are provided, --ansi wins.
-    --filter
-        Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
-    --maximum-failed-tests
-        Specifies a maximum number of test failures that, when exceeded, will abort the test run.
     --no-ansi
         Disable outputting ANSI escape characters to screen.
     --no-progress
@@ -85,14 +73,26 @@ Extension options:
     --output
         Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
-    --settings
-        The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file
+    --results-directory
+        The directory where the test results are going to be placed.
+        If the specified directory doesn't exist, it's created.
+        The default is TestResults in the directory that contains the test application.
     --show-stderr
         Determines when to show captured error output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All'.
     --show-stdout
         Determines when to show captured standard output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+    --timeout
+        A global test execution timeout.
+        Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
+Extension options:
+    --filter
+        Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
+    --maximum-failed-tests
+        Specifies a maximum number of test failures that, when exceeded, will abort the test run.
+    --settings
+        The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file
     --test-parameter
         Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters
 """;
