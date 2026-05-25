@@ -21,10 +21,10 @@ internal static partial class TimeSpanParser
     private static readonly Regex Pattern = GetRegex();
 
 #if NET7_0_OR_GREATER
-    [GeneratedRegex(@"^(?<value>\d+(?:\.\d+)?)(?:\s*(?<suffix>ms|mils?|milliseconds?|s|secs?|seconds?|m|mins?|minutes?|h|hours?|d|days?))?$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^(?<value>\d+(?:\.\d+)?)(?:\s*(?<suffix>ms|mils?|milliseconds?|s|secs?|seconds?|m|mins?|minutes?|h|hours?|d|days?))?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex GetRegex();
 #else
-    private static Regex GetRegex() => new(@"^(?<value>\d+(?:\.\d+)?)(?:\s*(?<suffix>ms|mils?|milliseconds?|s|secs?|seconds?|m|mins?|minutes?|h|hours?|d|days?))?$", RegexOptions.IgnoreCase);
+    private static Regex GetRegex() => new(@"^(?<value>\d+(?:\.\d+)?)(?:\s*(?<suffix>ms|mils?|milliseconds?|s|secs?|seconds?|m|mins?|minutes?|h|hours?|d|days?))?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 #endif
 
     public static TimeSpan Parse(string? time) => Parse(time, TimeSpanDefaultUnit.Milliseconds);
