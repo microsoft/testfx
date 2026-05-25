@@ -17,11 +17,11 @@ internal abstract class CommandLineOptionsProviderBase : ICommandLineOptionsProv
         string description,
         IReadOnlyCollection<CommandLineOption> commandLineOptions)
     {
-        Uid = uid;
-        Version = version;
-        DisplayName = displayName;
-        Description = description;
-        _commandLineOptions = commandLineOptions;
+        Uid = Ensure.NotNullOrWhiteSpace(uid);
+        Version = Ensure.NotNullOrWhiteSpace(version);
+        DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
+        Description = description ?? throw new ArgumentNullException(nameof(description));
+        _commandLineOptions = commandLineOptions ?? throw new ArgumentNullException(nameof(commandLineOptions));
     }
 
     public string Uid { get; }

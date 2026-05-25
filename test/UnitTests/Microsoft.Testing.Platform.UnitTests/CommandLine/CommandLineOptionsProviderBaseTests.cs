@@ -39,6 +39,66 @@ public sealed class CommandLineOptionsProviderBaseTests
         Assert.AreEqual("description", option.Description);
     }
 
+    [TestMethod]
+    [DataRow("")]
+    [DataRow("   ")]
+    public void Constructor_WhiteSpaceUid_ThrowsArgumentException(string uid)
+    {
+        ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(
+            () => _ = new ConfigurableProvider(uid: uid, version: "1.0.0", displayName: "display", description: "description", options: []));
+        Assert.AreEqual("uid", exception.ParamName);
+    }
+
+    [TestMethod]
+    public void Constructor_NullUid_ThrowsArgumentNullException()
+    {
+        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(
+            () => _ = new ConfigurableProvider(uid: null!, version: "1.0.0", displayName: "display", description: "description", options: []));
+        Assert.AreEqual("uid", exception.ParamName);
+    }
+
+    [TestMethod]
+    [DataRow("")]
+    [DataRow("   ")]
+    public void Constructor_WhiteSpaceVersion_ThrowsArgumentException(string version)
+    {
+        ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(
+            () => _ = new ConfigurableProvider(uid: "uid", version: version, displayName: "display", description: "description", options: []));
+        Assert.AreEqual("version", exception.ParamName);
+    }
+
+    [TestMethod]
+    public void Constructor_NullVersion_ThrowsArgumentNullException()
+    {
+        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(
+            () => _ = new ConfigurableProvider(uid: "uid", version: null!, displayName: "display", description: "description", options: []));
+        Assert.AreEqual("version", exception.ParamName);
+    }
+
+    [TestMethod]
+    public void Constructor_NullDisplayName_ThrowsArgumentNullException()
+    {
+        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(
+            () => _ = new ConfigurableProvider(uid: "uid", version: "1.0.0", displayName: null!, description: "description", options: []));
+        Assert.AreEqual("displayName", exception.ParamName);
+    }
+
+    [TestMethod]
+    public void Constructor_NullDescription_ThrowsArgumentNullException()
+    {
+        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(
+            () => _ = new ConfigurableProvider(uid: "uid", version: "1.0.0", displayName: "display", description: null!, options: []));
+        Assert.AreEqual("description", exception.ParamName);
+    }
+
+    [TestMethod]
+    public void Constructor_NullCommandLineOptions_ThrowsArgumentNullException()
+    {
+        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(
+            () => _ = new ConfigurableProvider(uid: "uid", version: "1.0.0", displayName: "display", description: "description", options: null!));
+        Assert.AreEqual("commandLineOptions", exception.ParamName);
+    }
+
     private sealed class TestCommandLineOptionsProvider : CommandLineOptionsProviderBase
     {
         public TestCommandLineOptionsProvider()
@@ -48,6 +108,14 @@ public sealed class CommandLineOptionsProviderBaseTests
                 "display",
                 "description",
                 [new("option", "description", ArgumentArity.Zero, false)])
+        {
+        }
+    }
+
+    private sealed class ConfigurableProvider : CommandLineOptionsProviderBase
+    {
+        public ConfigurableProvider(string uid, string version, string displayName, string description, IReadOnlyCollection<CommandLineOption> options)
+            : base(uid, version, displayName, description, options)
         {
         }
     }
