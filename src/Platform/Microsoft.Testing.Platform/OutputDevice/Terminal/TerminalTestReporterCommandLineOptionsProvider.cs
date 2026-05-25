@@ -41,12 +41,12 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
     public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
         =>
         [
-            new(NoProgressOption, PlatformResources.TerminalNoProgressOptionDescription, ArgumentArity.Zero, isHidden: false),
-            new(NoAnsiOption, PlatformResources.TerminalNoAnsiOptionDescription, ArgumentArity.Zero, isHidden: false),
-            new(AnsiOption, PlatformResources.TerminalAnsiOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
-            new(OutputOption, PlatformResources.TerminalOutputOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
-            new(ShowStdoutOption, PlatformResources.TerminalShowStdoutOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
-            new(ShowStderrOption, PlatformResources.TerminalShowStderrOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
+            new(NoProgressOption, PlatformResources.TerminalNoProgressOptionDescription, ArgumentArity.Zero, isHidden: false, isBuiltIn: true),
+            new(NoAnsiOption, PlatformResources.TerminalNoAnsiOptionDescription, ArgumentArity.Zero, isHidden: false, isBuiltIn: true),
+            new(AnsiOption, PlatformResources.TerminalAnsiOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+            new(OutputOption, PlatformResources.TerminalOutputOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+            new(ShowStdoutOption, PlatformResources.TerminalShowStdoutOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+            new(ShowStderrOption, PlatformResources.TerminalShowStderrOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
         ];
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)

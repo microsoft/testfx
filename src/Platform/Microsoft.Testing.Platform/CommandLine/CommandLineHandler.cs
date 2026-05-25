@@ -284,9 +284,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
             await outputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpOptions), cancellationToken).ConfigureAwait(false);
             ICommandLineOptionsProvider[] nonToolsExtensionProviders =
                 [.. ExtensionsCommandLineOptionsProviders.Where(provider => provider is not IToolCommandLineOptionsProvider)];
-            // By default, only system options are built-in but some extensions (e.g. retry) are considered as built-in too,
-            // so we need to union the 2 collections before printing the options.
-            await PrintOptionsAsync(SystemCommandLineOptionsProviders.Union(nonToolsExtensionProviders), builtInOnly: true).ConfigureAwait(false);
+            await PrintOptionsAsync(SystemCommandLineOptionsProviders, builtInOnly: true).ConfigureAwait(false);
             await outputDevice.DisplayAsync(this, EmptyText, cancellationToken).ConfigureAwait(false);
 
             await outputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpExtensionOptions), cancellationToken).ConfigureAwait(false);
