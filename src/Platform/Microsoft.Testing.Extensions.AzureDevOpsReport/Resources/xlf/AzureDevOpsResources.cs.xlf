@@ -177,11 +177,6 @@
         <target state="translated">Neplatná možnost {0}.</target>
         <note />
       </trans-unit>
-      <trans-unit id="NoFailureMessageFallback">
-        <source>Test failed without an additional message.</source>
-        <target state="new">Test failed without an additional message.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
         <target state="translated">Umožňuje generátoru sestav Azure DevOps zapisovat chyby do výstupu způsobem, který je pro AzureDev Ops srozumitelný.</target>

@@ -177,11 +177,6 @@
         <target state="translated">Opción no válida {0}.</target>
         <note />
       </trans-unit>
-      <trans-unit id="NoFailureMessageFallback">
-        <source>Test failed without an additional message.</source>
-        <target state="new">Test failed without an additional message.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
         <target state="translated">Habilite el generador de informes de Azure DevOps para que escriba errores en la salida de una forma que Azure DevOps entienda.</target>
