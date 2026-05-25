@@ -1079,11 +1079,6 @@ Les valeurs valides sont « All », « Failed » et « None ». La valeur 
         <target state="translated">L’attente de la connexion du débogueur (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) n’est pas prise en charge dans les environnements navigateur.</target>
         <note />
       </trans-unit>
-      <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
-        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
-        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">Zéro tests exécutés</target>

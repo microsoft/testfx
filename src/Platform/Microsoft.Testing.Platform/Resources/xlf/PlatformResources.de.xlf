@@ -1079,11 +1079,6 @@ Gültige Werte sind „Alle“, „Fehlgeschlagen“ und „Keine“. Der Standa
         <target state="translated">Das Warten auf das Anfügen des Debuggers (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) wird in Browserumgebungen nicht unterstützt.</target>
         <note />
       </trans-unit>
-      <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
-        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
-        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">Es wurden keine Tests ausgeführt.</target>

@@ -1079,11 +1079,6 @@ Os valores válidos são 'All', 'Failed', 'None'. O padrão é 'All'.</target>
         <target state="translated">Não há suporte para aguardar a anexação do depurador (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) em ambientes de navegador.</target>
         <note />
       </trans-unit>
-      <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
-        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
-        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">Zero testes executados</target>

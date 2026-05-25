@@ -1079,11 +1079,6 @@ I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All
         <target state="translated">L'attesa per il collegamento di (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) non è supportata negli ambienti browser.</target>
         <note />
       </trans-unit>
-      <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
-        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
-        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">Nessun test eseguito</target>
