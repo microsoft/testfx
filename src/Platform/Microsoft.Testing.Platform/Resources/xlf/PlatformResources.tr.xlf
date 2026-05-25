@@ -765,6 +765,11 @@ Açık bir birim soneki bulunan bir zaman değeri olarak bir bağımsız değiş
         <target state="translated">'ITestFramework' türündeki örnekler hizmet sağlayıcısı aracılığıyla değil, 'ITestApplicationBuilder.RegisterTestFramework' aracılığıyla kaydedilmelidir</target>
         <note />
       </trans-unit>
+      <trans-unit id="ShutdownProgressStillWaitingPrefix">
+        <source>Still waiting for: </source>
+        <target state="new">Still waiting for: </target>
+        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</note>
+      </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
         <target state="translated">Atlandı</target>
