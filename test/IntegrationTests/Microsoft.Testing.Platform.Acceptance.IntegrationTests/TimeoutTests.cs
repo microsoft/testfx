@@ -112,6 +112,19 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task TimeoutWithValidArg_WithAliasSuffix_WithTestTimeOut_OutputContainsCancelingMessage(string tfm)
+    {
+        // 'mil' is one of the alias suffixes documented in the --timeout help text. This test makes
+        // sure such aliases work through the full --timeout option path (not just the shared parser).
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 500mil", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIsNot(ExitCode.Success);
+        testHostResult.AssertOutputContains("Canceling the test session");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task TimeoutWithValidArg_WithSecondAsSuffix_WithTestNotTimeOut_OutputDoesNotContainCancelingMessage(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);

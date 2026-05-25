@@ -158,7 +158,7 @@ internal static partial class TimeSpanParser
 
     private static string GetGrammarHint(TimeSpanDefaultUnit? defaultUnit, bool requireSuffix)
     {
-        const string SuffixGrammar = "Use <number>[ms|s|m|h|d] (long forms 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted), e.g. '500ms', '5400s', '90m', '1.5h', '1d'.";
+        const string SuffixGrammar = "Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.";
         return requireSuffix || defaultUnit is null
             ? SuffixGrammar + " A unit suffix is required."
             : SuffixGrammar + $" A bare number defaults to {defaultUnit.Value.ToString().ToLowerInvariant()}.";
