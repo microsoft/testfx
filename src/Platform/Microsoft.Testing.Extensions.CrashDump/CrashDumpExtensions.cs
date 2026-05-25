@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Extensions.Diagnostics;
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions;
@@ -43,5 +44,18 @@ public static class CrashDumpExtensions
                 crashDumpGeneratorConfiguration));
 
         builder.CommandLine.AddProvider(() => new CrashDumpCommandLineProvider());
+
+        // Testhost-side extension that journals test state transitions to a sequence file so the
+        // controller can list "tests still running at the time of the crash" without needing a dump.
+        // The same instance plays both an IDataConsumer and an ITestSessionLifetimeHandler role, so
+        // we register a composite factory like HangDumpExtensions does for HangDumpActivityIndicator.
+        var sequenceLoggerComposite = new CompositeExtensionFactory<CrashDumpSequenceLogger>(serviceProvider
+            => new CrashDumpSequenceLogger(
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetClock(),
+                serviceProvider.GetLoggerFactory()));
+
+        builder.TestHost.AddDataConsumer(sequenceLoggerComposite);
+        builder.TestHost.AddTestSessionLifetimeHandler(sequenceLoggerComposite);
     }
 }

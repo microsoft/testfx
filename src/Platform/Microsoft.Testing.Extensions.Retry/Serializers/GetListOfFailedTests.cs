@@ -8,13 +8,13 @@ namespace Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
 
 internal sealed class GetListOfFailedTestsRequest : IRequest;
 
-internal sealed class GetListOfFailedTestsRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class GetListOfFailedTestsRequestSerializer : NamedPipeSerializer<GetListOfFailedTestsRequest>, INamedPipeSerializer
 {
-    public int Id => 2;
+    public override int Id => 2;
 
-    public object Deserialize(Stream stream) => new GetListOfFailedTestsRequest();
+    protected override GetListOfFailedTestsRequest DeserializeCore(Stream stream) => new();
 
-    public void Serialize(object obj, Stream stream)
+    protected override void SerializeCore(GetListOfFailedTestsRequest objectToSerialize, Stream stream)
     {
     }
 }

@@ -30,6 +30,7 @@ steps:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
     run: |
       # Create output directory
       mkdir -p /tmp/gh-aw/issues-data
@@ -37,7 +38,7 @@ steps:
       echo "⬇ Downloading the last 100 open issues (excluding sub-issues)..."
 
       # Fetch the last 100 open issues that don't have a parent issue
-      gh issue list --repo ${{ github.repository }} \
+      gh issue list --repo "$GH_AW_GITHUB_REPOSITORY" \
         --search "-parent-issue:*" \
         --state open \
         --json number,title,author,createdAt,state,url,body,labels,updatedAt,closedAt,milestone,assignees \

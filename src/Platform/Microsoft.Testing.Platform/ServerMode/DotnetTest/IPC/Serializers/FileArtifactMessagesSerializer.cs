@@ -48,11 +48,11 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
         |---FileArtifactMessageList[0].SessionUid Value---| (n bytes)
     */
 
-internal sealed class FileArtifactMessagesSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileArtifactMessages>, INamedPipeSerializer
 {
-    public int Id => FileArtifactMessagesFieldsId.MessagesSerializerId;
+    public override int Id => FileArtifactMessagesFieldsId.MessagesSerializerId;
 
-    public object Deserialize(Stream stream)
+    protected override FileArtifactMessages DeserializeCore(Stream stream)
     {
         string? executionId = null;
         string? instanceId = null;
@@ -86,7 +86,7 @@ internal sealed class FileArtifactMessagesSerializer : BaseSerializer, INamedPip
             }
         }
 
-        return new FileArtifactMessages(executionId, instanceId, fileArtifactMessages is null ? [] : [.. fileArtifactMessages]);
+        return new(executionId, instanceId, fileArtifactMessages is null ? [] : [.. fileArtifactMessages]);
     }
 
     private static List<FileArtifactMessage> ReadFileArtifactMessagesPayload(Stream stream)
@@ -143,17 +143,15 @@ internal sealed class FileArtifactMessagesSerializer : BaseSerializer, INamedPip
         return fileArtifactMessages;
     }
 
-    public void Serialize(object objectToSerialize, Stream stream)
+    protected override void SerializeCore(FileArtifactMessages objectToSerialize, Stream stream)
     {
         RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
 
-        var fileArtifactMessages = (FileArtifactMessages)objectToSerialize;
+        WriteUShort(stream, GetFieldCount(objectToSerialize));
 
-        WriteUShort(stream, GetFieldCount(fileArtifactMessages));
-
-        WriteField(stream, FileArtifactMessagesFieldsId.ExecutionId, fileArtifactMessages.ExecutionId);
-        WriteField(stream, FileArtifactMessagesFieldsId.InstanceId, fileArtifactMessages.InstanceId);
-        WriteFileArtifactMessagesPayload(stream, fileArtifactMessages.FileArtifacts);
+        WriteField(stream, FileArtifactMessagesFieldsId.ExecutionId, objectToSerialize.ExecutionId);
+        WriteField(stream, FileArtifactMessagesFieldsId.InstanceId, objectToSerialize.InstanceId);
+        WriteFileArtifactMessagesPayload(stream, objectToSerialize.FileArtifacts);
     }
 
     private static void WriteFileArtifactMessagesPayload(Stream stream, FileArtifactMessage[]? fileArtifactMessageList)

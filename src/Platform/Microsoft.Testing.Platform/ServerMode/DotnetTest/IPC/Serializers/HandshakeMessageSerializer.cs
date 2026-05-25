@@ -5,11 +5,11 @@ using Microsoft.Testing.Platform.IPC.Models;
 
 namespace Microsoft.Testing.Platform.IPC.Serializers;
 
-internal sealed class HandshakeMessageSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class HandshakeMessageSerializer : NamedPipeSerializer<HandshakeMessage>, INamedPipeSerializer
 {
-    public int Id => HandshakeMessageFieldsId.MessagesSerializerId;
+    public override int Id => HandshakeMessageFieldsId.MessagesSerializerId;
 
-    public object Deserialize(Stream stream)
+    protected override HandshakeMessage DeserializeCore(Stream stream)
     {
         Dictionary<byte, string> properties = [];
 
@@ -20,25 +20,23 @@ internal sealed class HandshakeMessageSerializer : BaseSerializer, INamedPipeSer
             properties.Add(ReadByte(stream), ReadString(stream));
         }
 
-        return new HandshakeMessage(properties);
+        return new(properties);
     }
 
-    public void Serialize(object objectToSerialize, Stream stream)
+    protected override void SerializeCore(HandshakeMessage objectToSerialize, Stream stream)
     {
         RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
 
-        var handshakeMessage = (HandshakeMessage)objectToSerialize;
-
         // Deserializer always expected fieldCount to be present.
         // We must write the count even if Properties is null or empty.
-        WriteUShort(stream, (ushort)(handshakeMessage.Properties?.Count ?? 0));
+        WriteUShort(stream, (ushort)(objectToSerialize.Properties?.Count ?? 0));
 
-        if (handshakeMessage.Properties is null)
+        if (objectToSerialize.Properties is null)
         {
             return;
         }
 
-        foreach (KeyValuePair<byte, string> kvp in handshakeMessage.Properties)
+        foreach (KeyValuePair<byte, string> kvp in objectToSerialize.Properties)
         {
             WriteField(stream, kvp.Key);
             WriteField(stream, kvp.Value);

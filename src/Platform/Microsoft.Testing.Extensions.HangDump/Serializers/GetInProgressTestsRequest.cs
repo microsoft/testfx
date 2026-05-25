@@ -8,13 +8,13 @@ namespace Microsoft.Testing.Extensions.HangDump.Serializers;
 
 internal sealed class GetInProgressTestsRequest : IRequest;
 
-internal sealed class GetInProgressTestsRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class GetInProgressTestsRequestSerializer : NamedPipeSerializer<GetInProgressTestsRequest>, INamedPipeSerializer
 {
-    public int Id => 4;
+    public override int Id => 4;
 
-    public object Deserialize(Stream stream) => new GetInProgressTestsRequest();
+    protected override GetInProgressTestsRequest DeserializeCore(Stream stream) => new();
 
-    public void Serialize(object objectToSerialize, Stream stream)
+    protected override void SerializeCore(GetInProgressTestsRequest objectToSerialize, Stream stream)
     {
     }
 }

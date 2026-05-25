@@ -440,14 +440,15 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
     private bool ShouldFlushUnsafe(bool force)
     {
         int pendingResultsCount = _retryResults.Count + _pendingResults.Count;
-        if (force)
-        {
-            return pendingResultsCount > 0;
-        }
 
         if (pendingResultsCount == 0)
         {
             return false;
+        }
+
+        if (force)
+        {
+            return true;
         }
 
         if (_clock.UtcNow - _lastFlushTime >= _options.FlushInterval)

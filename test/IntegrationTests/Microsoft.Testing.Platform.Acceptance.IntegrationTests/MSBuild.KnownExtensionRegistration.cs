@@ -47,6 +47,32 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         Assert.Contains("Microsoft.Testing.Extensions.TrxReport.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
     }
 
+    [TestMethod]
+    public async Task TestingPlatformBuilderHook_With_Conflicting_Metadata_Fails_Build()
+    {
+        string tfm = TargetFrameworks.NetCurrent;
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            nameof(TestingPlatformBuilderHook_With_Conflicting_Metadata_Fails_Build),
+            ConflictingHookSourceCode
+            .PatchCodeWithReplace("$TargetFrameworks$", tfm)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Release} -r {RID} {testAsset.TargetAssetPath} -v:n",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIsNot(0);
+        result.AssertOutputContains("Duplicate 'TestingPlatformBuilderHook' item with Include 'CONFLICT-HOOK-ID' has conflicting metadata.");
+
+        // Ensure no self-registered extensions source file was generated when validation failed.
+        SL.Build binLog = SL.Serialization.Read(result.BinlogPath!);
+        SL.Target? generateSelfRegisteredExtensions = binLog.FindChildrenRecursive<SL.Target>().SingleOrDefault(t => t.Name == "_GenerateSelfRegisteredExtensions");
+        Assert.IsNotNull(generateSelfRegisteredExtensions);
+        SL.Task testingPlatformSelfRegisteredExtensions = generateSelfRegisteredExtensions.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformSelfRegisteredExtensions");
+        Assert.IsEmpty(testingPlatformSelfRegisteredExtensions.FindChildrenRecursive<SL.Message>().Where(m => m.Text.Contains("SelfRegisteredExtensions source:")));
+    }
+
     private const string SourceCode = """
 #file MSBuildTests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -141,6 +167,41 @@ namespace MSBuildTests.Microsoft;
 // If the self registered generation used Microsoft.Testing.Extensions.ExtensionName.TestingPlatformBuilderHook.AddExtension,
 // Then, without global::, Microsoft will be referring to MSBuildTests.Microsoft namespace and will fail to compile
 public static class DummyClass { }
+""";
+
+    private const string ConflictingHookSourceCode = """
+#file MSBuildTests.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+      <TestingPlatformBuilderHook Include="CONFLICT-HOOK-ID" >
+        <DisplayName>FirstHook</DisplayName>
+        <TypeFullName>Contoso.FirstHook</TypeFullName>
+      </TestingPlatformBuilderHook>
+      <TestingPlatformBuilderHook Include="CONFLICT-HOOK-ID" >
+        <DisplayName>SecondHook</DisplayName>
+        <TypeFullName>Contoso.SecondHook</TypeFullName>
+      </TestingPlatformBuilderHook>
+    </ItemGroup>
+
+    <PropertyGroup>
+        <TargetFramework>$TargetFrameworks$</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>preview</LangVersion>
+        <OutputType>Exe</OutputType>
+        <!-- Do not warn about package downgrade. NuGet uses alphabetical sort as ordering so -dev or -ci are considered downgrades of -preview. -->
+        <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
+    </ItemGroup>
+</Project>
+
+#file Program.cs
+// Empty program. Build should fail before reaching compilation because of the
+// duplicate TestingPlatformBuilderHook items with conflicting metadata.
 """;
 
     public TestContext TestContext { get; set; }

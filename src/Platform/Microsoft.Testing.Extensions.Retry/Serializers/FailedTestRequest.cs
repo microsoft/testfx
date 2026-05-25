@@ -11,19 +11,13 @@ internal sealed class FailedTestRequest(string uid) : IRequest
     public string Uid { get; } = uid;
 }
 
-internal sealed class FailedTestRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class FailedTestRequestSerializer : NamedPipeSerializer<FailedTestRequest>, INamedPipeSerializer
 {
-    public int Id => 1;
+    public override int Id => 1;
 
-    public object Deserialize(Stream stream)
-    {
-        string uid = ReadString(stream);
-        return new FailedTestRequest(uid);
-    }
+    protected override FailedTestRequest DeserializeCore(Stream stream)
+        => new(ReadString(stream));
 
-    public void Serialize(object obj, Stream stream)
-    {
-        var failedTestRequest = (FailedTestRequest)obj;
-        WriteString(stream, failedTestRequest.Uid);
-    }
+    protected override void SerializeCore(FailedTestRequest objectToSerialize, Stream stream)
+        => WriteString(stream, objectToSerialize.Uid);
 }

@@ -72,6 +72,26 @@
         <target state="translated">PID 为“{0}”的测试主机进程故障，已生成故障报表</target>
         <note />
       </trans-unit>
+      <trans-unit id="CrashDumpSequenceArtifactDescription">
+        <source>The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</source>
+        <target state="new">The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpSequenceArtifactDisplayName">
+        <source>Crash sequence file</source>
+        <target state="new">Crash sequence file</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpSequenceFileReadError">
+        <source>Failed to read the crash sequence file '{0}': {1}</source>
+        <target state="new">Failed to read the crash sequence file '{0}': {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashDumpTestsRunningAtCrash">
+        <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
+        <target state="new">The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
@@ -111,9 +131,23 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
         <target state="translated">[仅 Linux/macOS] 测试进程故障时生成 JSON 故障报表。与 "--crashdump" 结合使用时，还会生成转储文件。单独使用时需要 .NET 7+；与 "--crashdump" 结合使用时需要 .NET 6+。此工具不强制执行此运行时要求: 在不受支持的运行时上，不会生成故障报表。由于 .NET 运行时限制(dotnet/runtime#80191)，在 Windows 上不受支持。</target>
         <note />
       </trans-unit>
+      <trans-unit id="CrashSequenceOptionDescription">
+        <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
+        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashSequenceOptionInvalidArgument">
+        <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
+        <target state="new">--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <note />
+      </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">
         <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
-        <target state="new">You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</target>
+        <target state="translated">你指定了一个或多个故障转储参数，但未启用故障转储。将 --crashdump 或 --crash-report 添加到命令行。</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">

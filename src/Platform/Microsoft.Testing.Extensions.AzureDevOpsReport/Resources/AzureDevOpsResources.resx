@@ -233,6 +233,9 @@
   <data name="InvalidSeverity" xml:space="preserve">
     <value>Invalid option {0}.</value>
   </data>
+  <data name="NoFailureMessageFallback" xml:space="preserve">
+    <value>Test failed without an additional message.</value>
+  </data>
   <data name="OptionDescription" xml:space="preserve">
     <value>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</value>
   </data>

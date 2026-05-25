@@ -10,11 +10,6 @@
       "version": "v5.0.5",
       "sha": "27d5ce7f107fe9357f9df03efb73ab90386fccae"
     },
-    "actions/checkout@v4": {
-      "repo": "actions/checkout",
-      "version": "v4",
-      "sha": "34e114876b0b11c390a56381ad16ebd13914f8d5"
-    },
     "actions/checkout@v6.0.2": {
       "repo": "actions/checkout",
       "version": "v6.0.2",
@@ -40,10 +35,10 @@
       "version": "v7.0.1",
       "sha": "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
     },
-    "github/codeql-action/upload-sarif@v4.35.5": {
+    "github/codeql-action/upload-sarif@v4.36.0": {
       "repo": "github/codeql-action/upload-sarif",
-      "version": "v4.35.5",
-      "sha": "9e0d7b8d25671d64c341c19c0152d693099fb5ba"
+      "version": "v4.36.0",
+      "sha": "7211b7c8077ea37d8641b6271f6a365a22a5fbfa"
     },
     "github/gh-aw-actions/setup-cli@v0.75.0": {
       "repo": "github/gh-aw-actions/setup-cli",
@@ -55,15 +50,11 @@
       "version": "v0.75.0",
       "sha": "f889c9c3c06adeaabccefc06e29c42733ee05dff"
     },
-    "super-linter/super-linter@v8.5.0": {
-      "repo": "super-linter/super-linter",
-      "version": "v8.5.0",
-      "sha": "61abc07d755095a68f4987d1c2c3d1d64408f1f9"
-    },
     "super-linter/super-linter@v8.6.0": {
       "repo": "super-linter/super-linter",
       "version": "v8.6.0",
-      "sha": "9e863354e3ff62e0727d37183162c4a88873df41"
+      "sha": "9e863354e3ff62e0727d37183162c4a88873df41",
+      "released_at": "2026-03-31T21:02:52Z"
     }
   },
   "containers": {

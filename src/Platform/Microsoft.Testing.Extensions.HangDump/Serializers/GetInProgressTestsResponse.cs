@@ -11,11 +11,11 @@ internal sealed class GetInProgressTestsResponse((string, int)[] tests) : IRespo
     public (string, int)[] Tests { get; } = tests;
 }
 
-internal sealed class GetInProgressTestsResponseSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class GetInProgressTestsResponseSerializer : NamedPipeSerializer<GetInProgressTestsResponse>, INamedPipeSerializer
 {
-    public int Id => 5;
+    public override int Id => 5;
 
-    public object Deserialize(Stream stream)
+    protected override GetInProgressTestsResponse DeserializeCore(Stream stream)
     {
         int readCount = ReadInt(stream);
         List<(string, int)> tests = [with(readCount)];
@@ -29,11 +29,10 @@ internal sealed class GetInProgressTestsResponseSerializer : BaseSerializer, INa
         return new GetInProgressTestsResponse([.. tests]);
     }
 
-    public void Serialize(object objectToSerialize, Stream stream)
+    protected override void SerializeCore(GetInProgressTestsResponse objectToSerialize, Stream stream)
     {
-        var getInProgressTestsResponse = (GetInProgressTestsResponse)objectToSerialize;
-        WriteInt(stream, getInProgressTestsResponse.Tests.Length);
-        foreach ((string testName, int seconds) in getInProgressTestsResponse.Tests)
+        WriteInt(stream, objectToSerialize.Tests.Length);
+        foreach ((string testName, int seconds) in objectToSerialize.Tests)
         {
             WriteString(stream, testName);
             WriteInt(stream, seconds);

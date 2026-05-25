@@ -17,19 +17,13 @@ internal sealed class TrxStreamLocationRequest(string filePath) : IRequest
     public string FilePath { get; } = filePath;
 }
 
-internal sealed class TrxStreamLocationRequestSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class TrxStreamLocationRequestSerializer : NamedPipeSerializer<TrxStreamLocationRequest>, INamedPipeSerializer
 {
-    public int Id => 3;
+    public override int Id => 3;
 
-    public object Deserialize(Stream stream)
-    {
-        string filePath = ReadString(stream);
-        return new TrxStreamLocationRequest(filePath);
-    }
+    protected override TrxStreamLocationRequest DeserializeCore(Stream stream)
+        => new(ReadString(stream));
 
-    public void Serialize(object objectToSerialize, Stream stream)
-    {
-        var request = (TrxStreamLocationRequest)objectToSerialize;
-        WriteString(stream, request.FilePath);
-    }
+    protected override void SerializeCore(TrxStreamLocationRequest objectToSerialize, Stream stream)
+        => WriteString(stream, objectToSerialize.FilePath);
 }

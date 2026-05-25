@@ -12,6 +12,27 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public class RetryTests
 {
+    [TestMethod]
+    public void GetCommandLineOptions_PublicRetryOptions_AreExtensionOptions()
+    {
+        var provider = new RetryCommandLineOptionsProvider();
+
+        foreach (CommandLineOption option in provider.GetCommandLineOptions().Where(option => !option.IsHidden))
+        {
+            Assert.IsFalse(option.IsBuiltIn, option.Name);
+        }
+    }
+
+    [TestMethod]
+    public void GetCommandLineOptions_InternalRetryOption_RemainsBuiltIn()
+    {
+        var provider = new RetryCommandLineOptionsProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(x => x.Name == RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName);
+
+        Assert.IsTrue(option.IsHidden);
+        Assert.IsTrue(option.IsBuiltIn);
+    }
+
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, "32")]
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, "0")]
     [DataRow(RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName, "32")]
