@@ -11,6 +11,35 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggingTests.TestAssetFixture>
 {
     [TestMethod]
+    public async Task RunningInServerJsonRpcModeWithTelemetryEnabled_DoesNotCrashDuringBuildAsync()
+    {
+        // Regression test: PR #8211 registered ServerTelemetry in the service provider BEFORE
+        // calling LogTestHostCreatedAsync. Because ServerTestHost's JSON-RPC message handler is
+        // only initialized inside InternalRunAsync, the build-time TestHostBuilt telemetry event
+        // attempted to flow through the not-yet-initialized server, causing
+        // ServerTestHost.AssertInitialized to throw InvalidOperationException during
+        // TestApplicationBuilder.BuildAsync().
+        //
+        // This test forces telemetry to be opted in (overriding any DOTNET_CLI_TELEMETRY_OPTOUT
+        // inherited from Arcade in CI) so the LogTestHostCreatedAsync path is actually
+        // executed and would crash without the fix.
+        string tfm = TargetFrameworks.NetCurrent;
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "ServerLoggingTests", tfm);
+        Dictionary<string, string?> telemetryEnabledEnv = new()
+        {
+            ["DOTNET_CLI_TELEMETRY_OPTOUT"] = "0",
+            ["TESTINGPLATFORM_TELEMETRY_OPTOUT"] = "0",
+        };
+        using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(testHost, telemetryEnabledEnv);
+
+        // If the host crashed during BuildAsync, Initialize would never get a response and time out.
+        InitializeResponse initializeResponseArgs = await jsonClient.Initialize();
+        Assert.IsNotNull(initializeResponseArgs);
+
+        await jsonClient.Exit();
+    }
+
+    [TestMethod]
     public async Task RunningInServerJsonRpcModeShouldHaveOutputDeviceLogsPushedToTestExplorer()
     {
         string tfm = TargetFrameworks.NetCurrent;
