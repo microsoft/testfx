@@ -1079,6 +1079,11 @@ Prawidłowe wartości to „All”, „Failed”, „None”. Wartość domyśln
         <target state="translated">Oczekiwanie na dołączenie debugera (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) nie jest obsługiwane w środowiskach przeglądarki.</target>
         <note />
       </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
+        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">Uruchomiono zero testów</target>

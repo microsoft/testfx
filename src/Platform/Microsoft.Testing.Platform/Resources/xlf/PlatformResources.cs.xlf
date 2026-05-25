@@ -1079,6 +1079,11 @@ Platné hodnoty jsou All, Failed, None. Výchozí hodnota je All.</target>
         <target state="translated">Čekání na připojení ladicího programu (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) se v prostředích prohlížeče nepodporuje.</target>
         <note />
       </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
+        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">Spustila se nula testů</target>

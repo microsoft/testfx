@@ -1079,6 +1079,11 @@ Geçerli değerler: 'Tümü', 'Başarısız', 'Yok'. Varsayılan değer: 'Tümü
         <target state="translated">Hata ayıklayıcısının eklenmesini bekleme (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) tarayıcı ortamlarında desteklenmez.</target>
         <note />
       </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
+        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">Sıfır test çalıştırıldı</target>
