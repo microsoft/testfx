@@ -56,6 +56,7 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
 
         Assert.AreEqual(ArgumentArity.ExactlyOne, option.Arity);
         Assert.IsFalse(option.IsHidden);
+        Assert.IsTrue(option.IsBuiltIn);
     }
 
     [TestMethod]
@@ -66,6 +67,7 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
 
         Assert.AreEqual(ArgumentArity.Zero, option.Arity);
         Assert.IsFalse(option.IsHidden);
+        Assert.IsTrue(option.IsBuiltIn);
     }
 
     private CommandLineOption GetOption(string name)

@@ -20,6 +20,11 @@ Microsoft.Testing.Platform v*
 Usage {{TestAssetFixture.AllExtensionsAssetName}}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
+    --ansi
+        Control whether ANSI escape characters are emitted.
+        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+        When both --ansi and --no-ansi are provided, --ansi wins.
     --config-file
         Specifies a testconfig.json file.
     --debug
@@ -55,29 +60,33 @@ Options:
         Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
+    --no-ansi
+        Disable outputting ANSI escape characters to screen.
+    --no-progress
+        Disable reporting progress to screen.
+    --output
+        Output verbosity when reporting tests.
+        Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
     --results-directory
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
         The default is TestResults in the directory that contains the test application.
-    --retry-failed-tests
-        Retry failed tests the given number of times
-    --retry-failed-tests-delay
-        Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.
-    --retry-failed-tests-max-percentage
-        Disable retry mechanism if the percentage of failed tests is greater than the specified value
-    --retry-failed-tests-max-tests
-        Disable retry mechanism if the number of failed tests is greater than the specified value
+    --show-stderr
+        Determines when to show captured error output of a test.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+    --show-stdout
+        Determines when to show captured standard output of a test.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
     --timeout
         A global test execution timeout.
         Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
 Extension options:
-    --ansi
-        Control whether ANSI escape characters are emitted.
-        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
-        When both --ansi and --no-ansi are provided, --ansi wins.
     --crash-report
         [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).
+    --crash-sequence
+        Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+        The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+        Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
     --crashdump
         [net6.0+ only] Generate a dump file if the test process crashes
     --crashdump-filename
@@ -101,13 +110,6 @@ Extension options:
         Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
         Default type is 'Full'
-    --no-ansi
-        Disable outputting ANSI escape characters to screen.
-    --no-progress
-        Disable reporting progress to screen.
-    --output
-        Output verbosity when reporting tests.
-        Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
     --publish-azdo-run-name
         Custom Azure DevOps test run name for live test-result publishing.
     --publish-azdo-test-results
@@ -142,12 +144,14 @@ Extension options:
         The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
         Example: MyReport_{tfm}.trx
-    --show-stderr
-        Determines when to show captured error output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
-    --show-stdout
-        Determines when to show captured standard output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+    --retry-failed-tests
+        Retry failed tests the given number of times
+    --retry-failed-tests-delay
+        Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.
+    --retry-failed-tests-max-percentage
+        Disable retry mechanism if the percentage of failed tests is greater than the specified value
+    --retry-failed-tests-max-tests
+        Disable retry mechanism if the number of failed tests is greater than the specified value
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
@@ -301,6 +305,41 @@ Built-in command line providers:
         Hidden: False
         Description: A global test execution timeout.
         Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
+  TerminalTestReporterCommandLineOptionsProvider
+    Name: Terminal test reporter
+    Version: *
+    Description: Writes test results to terminal.
+    Options:
+      --ansi
+        Arity: 1
+        Hidden: False
+        Description: Control whether ANSI escape characters are emitted.
+        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+        When both --ansi and --no-ansi are provided, --ansi wins.
+      --no-ansi
+        Arity: 0
+        Hidden: False
+        Description: Disable outputting ANSI escape characters to screen.
+      --no-progress
+        Arity: 0
+        Hidden: False
+        Description: Disable reporting progress to screen.
+      --output
+        Arity: 1
+        Hidden: False
+        Description: Output verbosity when reporting tests.
+        Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+      --show-stderr
+        Arity: 1
+        Hidden: False
+        Description: Determines when to show captured error output of a test.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+      --show-stdout
+        Arity: 1
+        Hidden: False
+        Description: Determines when to show captured standard output of a test.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
 Registered command line providers:
   AzureDevOpsCommandLineProvider
     Name: Azure DevOps report generator
@@ -360,6 +399,12 @@ Registered command line providers:
         Arity: 0
         Hidden: False
         Description: [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).
+      --crash-sequence
+        Arity: 1
+        Hidden: False
+        Description: Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+        The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+        Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
       --crashdump
         Arity: 0
         Hidden: False
@@ -451,41 +496,6 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Disable retry mechanism if the number of failed tests is greater than the specified value
-  TerminalTestReporterCommandLineOptionsProvider
-    Name: Terminal test reporter
-    Version: *
-    Description: Writes test results to terminal.
-    Options:
-      --ansi
-        Arity: 1
-        Hidden: False
-        Description: Control whether ANSI escape characters are emitted.
-        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
-        When both --ansi and --no-ansi are provided, --ansi wins.
-      --no-ansi
-        Arity: 0
-        Hidden: False
-        Description: Disable outputting ANSI escape characters to screen.
-      --no-progress
-        Arity: 0
-        Hidden: False
-        Description: Disable reporting progress to screen.
-      --output
-        Arity: 1
-        Hidden: False
-        Description: Output verbosity when reporting tests.
-        Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
-      --show-stderr
-        Arity: 1
-        Hidden: False
-        Description: Determines when to show captured error output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
-      --show-stdout
-        Arity: 1
-        Hidden: False
-        Description: Determines when to show captured standard output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
   TrxReportGeneratorCommandLine
     Name: TRX report generator
     Version: *

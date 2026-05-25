@@ -152,6 +152,31 @@ public sealed class ResponseFileHelperTests
     }
 
     [TestMethod]
+    public void TryReadResponseFile_FileWithUnclosedQuote_ReturnsFalseAndAddsError()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllLines(path, ["--verbose", "--filter \"FullyQualifiedName~My.Namespace"]);
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(path, errors, out string[]? args);
+
+            Assert.IsFalse(result);
+            Assert.IsNull(args);
+            Assert.HasCount(1, errors);
+            Assert.Contains(path, errors[0]);
+            // The unclosed-quote diagnostic is interpolated with the offending line number,
+            // so the message — whatever its localized wording — must contain "2".
+            Assert.Contains("2", errors[0]);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
     public void TryReadResponseFile_EmptyFile_ReturnsTrueWithEmptyArray()
     {
         string path = Path.GetTempFileName();
@@ -294,12 +319,8 @@ public sealed class ResponseFileHelperTests
     }
 
     [TestMethod]
-    public void SplitCommandLine_UnclosedQuote_ReturnsEmpty()
-    {
-        string[] result = [.. ResponseFileHelper.SplitCommandLine("\"hello world")];
-
-        Assert.IsEmpty(result);
-    }
+    public void SplitCommandLine_UnclosedQuote_ThrowsFormatException()
+        => Assert.Throws<FormatException>(() => ResponseFileHelper.SplitCommandLine("\"hello world").ToArray());
 
     [TestMethod]
     public void SplitCommandLine_TabSeparatedTokens_SplitsOnTab()

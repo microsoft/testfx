@@ -12,14 +12,15 @@ public sealed class ProtocolTests
     [TestMethod]
     public void TestResultMessagesSerializeDeserialize()
     {
+        object serializer = new TestResultMessagesSerializer();
         var success = new SuccessfulTestResultMessage("uid", "displayName", 1, 100, "reason", "standardOutput", "errorOutput", "sessionUid");
         var fail = new FailedTestResultMessage("uid", "displayName", 2, 200, "reason", [new ExceptionMessage("errorMessage", "errorType", "stackTrace")], "standardOutput", "errorOutput", "sessionUid");
         var message = new TestResultMessages("executionId", "instanceId", [success], [fail]);
 
         var stream = new MemoryStream();
-        new TestResultMessagesSerializer().Serialize(message, stream);
+        Serialize(serializer, message, stream);
         stream.Seek(0, SeekOrigin.Begin);
-        var actual = (TestResultMessages)new TestResultMessagesSerializer().Deserialize(stream);
+        var actual = (TestResultMessages)Deserialize(serializer, stream);
         Assert.AreEqual(message.ExecutionId, actual.ExecutionId);
 #if NET8_0_OR_GREATER
         Assert.AreEqual(System.Text.Json.JsonSerializer.Serialize(message), System.Text.Json.JsonSerializer.Serialize(actual));
@@ -30,7 +31,7 @@ public sealed class ProtocolTests
     [TestMethod]
     public void DiscoveredTestMessagesSerializeDeserialize()
     {
-        var serializer = new DiscoveredTestMessagesSerializer();
+        object serializer = new DiscoveredTestMessagesSerializer();
         var stream = new MemoryStream();
 
         var message = new DiscoveredTestMessages(
@@ -45,10 +46,10 @@ public sealed class ProtocolTests
                 new DiscoveredTestMessage("My5thUid", "3rdDisplay", null, null, "MyNamespace3", "TestClass3", "TM3", ["paramtype1", "paramtype2", "paramtype3"], [new("Key1", "Value"), new("Key2", string.Empty)]),
             ]);
 
-        serializer.Serialize(message, stream);
+        Serialize(serializer, message, stream);
         stream.Seek(0, SeekOrigin.Begin);
 
-        var deserialized = (DiscoveredTestMessages)serializer.Deserialize(stream);
+        var deserialized = (DiscoveredTestMessages)Deserialize(serializer, stream);
         Assert.IsNotNull(deserialized);
         Assert.AreEqual(message.ExecutionId, deserialized.ExecutionId);
         Assert.AreEqual(message.InstanceId, deserialized.InstanceId);
@@ -85,6 +86,7 @@ public sealed class ProtocolTests
     [TestMethod]
     public void HandshakeMessageWithProperties()
     {
+        object serializer = new HandshakeMessageSerializer();
         var message = new HandshakeMessage(new Dictionary<byte, string>
         {
             { 10, "Ten" },
@@ -93,9 +95,9 @@ public sealed class ProtocolTests
         });
 
         var stream = new MemoryStream();
-        new HandshakeMessageSerializer().Serialize(message, stream);
+        Serialize(serializer, message, stream);
         stream.Seek(0, SeekOrigin.Begin);
-        var actual = (HandshakeMessage)new HandshakeMessageSerializer().Deserialize(stream);
+        var actual = (HandshakeMessage)Deserialize(serializer, stream);
 
         Assert.IsNotNull(actual.Properties);
         Assert.IsNotNull(message.Properties);
@@ -116,12 +118,13 @@ public sealed class ProtocolTests
     [TestMethod]
     public void HandshakeMessageWithEmptyProperties()
     {
+        object serializer = new HandshakeMessageSerializer();
         var message = new HandshakeMessage([]);
 
         var stream = new MemoryStream();
-        new HandshakeMessageSerializer().Serialize(message, stream);
+        Serialize(serializer, message, stream);
         stream.Seek(0, SeekOrigin.Begin);
-        var actual = (HandshakeMessage)new HandshakeMessageSerializer().Deserialize(stream);
+        var actual = (HandshakeMessage)Deserialize(serializer, stream);
 
         Assert.IsNotNull(actual.Properties);
         Assert.IsNotNull(message.Properties);
@@ -133,16 +136,29 @@ public sealed class ProtocolTests
     [TestMethod]
     public void HandshakeMessageWithNullProperties()
     {
+        object serializer = new HandshakeMessageSerializer();
         var message = new HandshakeMessage(null);
 
         var stream = new MemoryStream();
-        new HandshakeMessageSerializer().Serialize(message, stream);
+        Serialize(serializer, message, stream);
         stream.Seek(0, SeekOrigin.Begin);
-        var actual = (HandshakeMessage)new HandshakeMessageSerializer().Deserialize(stream);
+        var actual = (HandshakeMessage)Deserialize(serializer, stream);
 
         Assert.IsNotNull(actual.Properties);
         Assert.IsNull(message.Properties);
 
         Assert.IsEmpty(actual.Properties);
     }
+
+    private static void Serialize<TMessage>(object serializer, TMessage message, Stream stream)
+        => serializer.GetType()
+            .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .Single(method => method.Name == nameof(Serialize) && method.GetParameters() is [{ ParameterType: var messageType }, { ParameterType: var streamType }] && messageType == typeof(TMessage) && streamType == typeof(Stream))
+            .Invoke(serializer, [message!, stream]);
+
+    private static object Deserialize(object serializer, Stream stream)
+        => serializer.GetType()
+            .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .Single(method => method.Name == nameof(Deserialize) && method.GetParameters() is [{ ParameterType: var parameterType }] && parameterType == typeof(Stream))
+            .Invoke(serializer, [stream])!;
 }

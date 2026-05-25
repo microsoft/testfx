@@ -62,7 +62,7 @@ try {
         "--output", $OutputDir
         "--format", "csharp"
         "--threshold", "100"
-        "--ignore", "**/bin/**,**/obj/**,**/artifacts/**,**/*.Designer.cs,**/*.g.cs,**/*.xlf,**/*.resx,**/PublicAPI.*.txt,**/test/**,**/samples/**,**/formal-verification/**"
+        "--ignore", "**/bin/**,**/obj/**,**/artifacts/**,**/*.Designer.cs,**/*.g.cs,**/*.xlf,**/*.resx,**/PublicAPI.*.txt,**/test/**,**/samples/**,**/formal-verification/**,**/src/Polyfills/**"
     )
 
     npx @jscpdArgs

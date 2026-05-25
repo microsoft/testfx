@@ -7,14 +7,14 @@ using Microsoft.Testing.Platform.IPC.Models;
 namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 [Embedded]
-internal sealed class VoidResponseSerializer : INamedPipeSerializer
+internal sealed class VoidResponseSerializer : NamedPipeSerializer<VoidResponse>, INamedPipeSerializer
 {
-    public int Id => VoidResponseFieldsId.MessagesSerializerId;
+    public override int Id => VoidResponseFieldsId.MessagesSerializerId;
 
-    public object Deserialize(Stream _)
-        => new VoidResponse();
+    protected override VoidResponse DeserializeCore(Stream _)
+        => VoidResponse.CachedInstance;
 
-    public void Serialize(object _, Stream __)
+    protected override void SerializeCore(VoidResponse _, Stream __)
     {
     }
 }

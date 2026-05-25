@@ -55,6 +55,7 @@ public sealed class CrashDumpTests
     [TestMethod]
     [DataRow(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName)]
     [DataRow(CrashDumpCommandLineOptions.CrashDumpTypeOptionName)]
+    [DataRow(CrashDumpCommandLineOptions.CrashSequenceOptionName)]
     public async Task Missing_CrashDumpMainOption_ShouldReturn_IsInvalid(string crashDumpArgument)
     {
         var provider = new CrashDumpCommandLineProvider();
@@ -71,6 +72,7 @@ public sealed class CrashDumpTests
     [TestMethod]
     [DataRow(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName)]
     [DataRow(CrashDumpCommandLineOptions.CrashDumpTypeOptionName)]
+    [DataRow(CrashDumpCommandLineOptions.CrashSequenceOptionName)]
     public async Task If_CrashDumpMainOption_IsSpecified_ShouldReturn_IsValid(string crashDumpArgument)
     {
         var provider = new CrashDumpCommandLineProvider();
@@ -83,6 +85,36 @@ public sealed class CrashDumpTests
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
         Assert.IsTrue(validateOptionsResult.IsValid);
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    [DataRow("on")]
+    [DataRow("off")]
+    [DataRow("true")]
+    [DataRow("false")]
+    [DataRow("enable")]
+    [DataRow("disable")]
+    [DataRow("1")]
+    [DataRow("0")]
+    public async Task IsValid_If_CrashSequence_Has_CorrectValue(string value)
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == CrashDumpCommandLineOptions.CrashSequenceOptionName);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [value]).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_If_CrashSequence_Has_IncorrectValue()
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == CrashDumpCommandLineOptions.CrashSequenceOptionName);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, ["maybe"]).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(CrashDumpResources.CrashSequenceOptionInvalidArgument, validateOptionsResult.ErrorMessage);
     }
 
     [TestMethod]
