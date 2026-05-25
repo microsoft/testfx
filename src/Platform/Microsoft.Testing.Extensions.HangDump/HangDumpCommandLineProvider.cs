@@ -22,12 +22,18 @@ internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBa
     private static readonly string[] HangDumpTypeOptions = ["Mini", "Heap", "Full", "None"];
 #endif
 
+    private static readonly string HangDumpTypeOptionsFormatted = string.Join(", ", Array.ConvertAll(HangDumpTypeOptions, option => $"'{option}'"));
+
     private static readonly IReadOnlyCollection<CommandLineOption> CachedCommandLineOptions =
     [
         new(HangDumpOptionName, ExtensionResources.HangDumpOptionDescription, ArgumentArity.Zero, false),
         new(HangDumpTimeoutOptionName, ExtensionResources.HangDumpTimeoutOptionDescription, ArgumentArity.ExactlyOne, false),
         new(HangDumpFileNameOptionName, ExtensionResources.HangDumpFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
-        new(HangDumpTypeOptionName, ExtensionResources.HangDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false)
+        new(
+            HangDumpTypeOptionName,
+            string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionDescription, HangDumpTypeOptionsFormatted),
+            ArgumentArity.ExactlyOne,
+            false)
     ];
 
     public HangDumpCommandLineProvider()
@@ -51,7 +57,11 @@ internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBa
         {
             if (!HangDumpTypeOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase))
             {
-                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeOptionInvalidType, arguments[0]));
+                return ValidationResult.InvalidTask(string.Format(
+                    CultureInfo.InvariantCulture,
+                    ExtensionResources.HangDumpTypeOptionInvalidType,
+                    arguments[0],
+                    HangDumpTypeOptionsFormatted));
             }
         }
 

@@ -108,7 +108,7 @@ Extension options:
             Default is 30m.
     --hangdump-type
         Specify the type of the dump.
-        Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
+        Valid values are {{GetExpectedHangDumpDescriptionOptions(tfm)}}.
         Default type is 'Full'
     --publish-azdo-run-name
         Custom Azure DevOps test run name for live test-result publishing.
@@ -445,7 +445,7 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Specify the type of the dump.
-        Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
+        Valid values are {{GetExpectedHangDumpDescriptionOptions(tfm)}}.
         Default type is 'Full'
   HtmlReportGeneratorCommandLine
     Name: HTML report generator
@@ -535,6 +535,11 @@ Registered tools:
 
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
     }
+
+    private static string GetExpectedHangDumpDescriptionOptions(string tfm)
+        => TargetFrameworks.NetFramework.Contains(tfm)
+            ? "'Mini', 'Heap', 'Full', 'None'"
+            : "'Mini', 'Heap', 'Full', 'Triage', 'None'";
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
