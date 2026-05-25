@@ -235,13 +235,19 @@ $Migration = [ordered]@{
     'automation'                    = 'type/automation'
     'ai-inspected'                  = 'type/ai-inspected'
     'Breaking :bangbang:'           = 'type/breaking-change'
+    'bug'                           = 'type/bug'
     'Discussion'                    = 'type/discussion'
     'enhancement'                   = 'type/feature'
+    'feature-request'               = 'type/feature'
     'Flaky-Test'                    = 'type/flaky-test'
     'Partner request'               = 'type/partner-request'
+    'pr-fix'                        = 'type/pr-fix'
+    'qa'                            = 'type/qa'
     'Question'                      = 'type/question'
     'Regression'                    = 'type/regression'
     'RFC'                           = 'type/rfc'
+    'Type: RFC'                     = 'type/rfc'
+    'test'                          = 'type/test-gap'
     'Test Gap'                      = 'type/test-gap'
     'testing'                       = 'type/test-gap'
     'code-health'                   = 'type/tech-debt'
@@ -282,10 +288,12 @@ $Migration = [ordered]@{
     "State: Won't Fix"              = 'resolution/wont-fix'
 
     # Needs
+    'need-triage'                   = 'needs/triage'
     'Needs: Additional Info'        = 'needs/info'
     'Needs: Attention :wave:'       = 'needs/attention'
     'Needs: Author Feedback'        = 'needs/author-feedback'
     'Needs: Design'                 = 'needs/design'
+    'Needs: Triage'                 = 'needs/triage'
     'Needs: Triage :mag:'           = 'needs/triage'
 
     # Priority
