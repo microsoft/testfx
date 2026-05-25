@@ -78,7 +78,9 @@ namespace SomeNamespace
         Assert.IsTrue(selfRegisteredExtensions.Execute());
 
         string generatedSource = inMemoryFileSystem.Files["obj/selfRegisteredExtensionsFile"]!;
-        Assert.HasCount(1, Regex.Matches(generatedSource, "global::Contoso.Hook.AddExtensions"));
+        const string ExpectedHookCall = "global::Contoso.Hook.AddExtensions";
+        int occurrences = (generatedSource.Length - generatedSource.Replace(ExpectedHookCall, string.Empty).Length) / ExpectedHookCall.Length;
+        Assert.AreEqual(1, occurrences);
         Assert.IsEmpty(_errors);
     }
 
