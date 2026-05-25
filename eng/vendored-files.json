@@ -34,14 +34,14 @@
     {
       "id": "source-gen-symbol-visibility",
       "local_path": "src/Analyzers/MSTest.SourceGeneration/Helpers/SymbolVisibility.cs",
-      "notes": "Verbatim copy with namespace adjustment.",
+      "notes": "Verbatim copy with namespace adjustment. Previously sourced from dotnet/roslyn-analyzers, which was archived and moved into dotnet/sdk.",
       "sources": [
         {
-          "repo": "dotnet/roslyn-analyzers",
+          "repo": "dotnet/sdk",
           "ref": "main",
-          "path": "src/Utilities/Compiler/Extensions/SymbolVisibility.cs",
-          "baseline_ref_sha": "b47230ca1e40c844d733a2f32d2bf6010f9eeb73",
-          "baseline_blob_sha": "aa8a66f56e8b92672d5cd1f940fb9b0841b5dab1",
+          "path": "src/Microsoft.CodeAnalysis.NetAnalyzers/src/Utilities/Compiler/Extensions/SymbolVisibility.cs",
+          "baseline_ref_sha": "d5c887dad9f06cbc451869ed8ad63f8916528b73",
+          "baseline_blob_sha": "f7dce8f0f785208e3b1f55555b997fdafac18ec4",
           "scope": "entire file"
         }
       ]
@@ -49,14 +49,14 @@
     {
       "id": "platform-roslyn-debug",
       "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/RoslynDebug.cs",
-      "notes": "Adapted to internal class with [ExcludeFromCodeCoverage].",
+      "notes": "Adapted to internal class with [ExcludeFromCodeCoverage]. Previously sourced from dotnet/roslyn-analyzers, which was archived and moved into dotnet/sdk.",
       "sources": [
         {
-          "repo": "dotnet/roslyn-analyzers",
+          "repo": "dotnet/sdk",
           "ref": "main",
-          "path": "src/Utilities/Compiler/Debug.cs",
-          "baseline_ref_sha": "b47230ca1e40c844d733a2f32d2bf6010f9eeb73",
-          "baseline_blob_sha": "8488921e8a603d8e4eb1f5f90da0dc6c415eb9ae",
+          "path": "src/Microsoft.CodeAnalysis.NetAnalyzers/src/Utilities/Compiler/Debug.cs",
+          "baseline_ref_sha": "d5c887dad9f06cbc451869ed8ad63f8916528b73",
+          "baseline_blob_sha": "01b829261af9497a7557538a271b9e1c5b5e09ec",
           "scope": "entire file"
         }
       ]

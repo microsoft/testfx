@@ -260,7 +260,7 @@ def check_source(entry: Entry, source_index: int, source: Source) -> DriftResult
             current_content.splitlines(keepends=True),
             fromfile=f"{source.path}@{source.baseline_blob_sha[:7]}",
             tofile=f"{source.path}@{(current_blob_sha or 'HEAD')[:7]}",
-            lineterm="",
+            lineterm="\n",
         )
         diff_text = _truncate_diff(list(diff_iter), MAX_DIFF_LINES)
 
@@ -415,10 +415,18 @@ def ensure_label() -> None:
     ])
 
 
+_STATUS_TITLES = {
+    "drift": "drift detected",
+    "missing": "upstream path missing",
+    "error": "drift check error",
+}
+
+
 def upsert_issue(result: DriftResult, dry_run: bool) -> None:
     marker = _marker(result.entry.id, result.source_index)
     body = _render_issue_body(result)
-    title = f"[vendored-sync] {result.entry.id}: drift detected (#{result.source_index})"
+    status_text = _STATUS_TITLES.get(result.status, result.status)
+    title = f"[vendored-sync] {result.entry.id}: {status_text} (#{result.source_index})"
 
     if dry_run:
         print(f"\n--- would create/update issue ({result.entry.id}#{result.source_index}) ---")
