@@ -522,6 +522,9 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="CancellingTestSession" xml:space="preserve">
     <value>Canceling the test session...</value>
   </data>
+  <data name="PressCtrlCAgainToForceExit" xml:space="preserve">
+    <value>Press Ctrl+C again to force exit.</value>
+  </data>
   <data name="DiagnosticFileLevelWithAsyncFlush" xml:space="preserve">
     <value>Diagnostic file (level '{0}' with async flush): {1}</value>
     <comment>0 level such as verbose,

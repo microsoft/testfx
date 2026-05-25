@@ -685,6 +685,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
 將一個引數作為字串，格式為 &lt;value&gt;[h|m|s]，其中 'value' 為 float。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PressCtrlCAgainToForceExit">
+        <source>Press Ctrl+C again to force exit.</source>
+        <target state="new">Press Ctrl+C again to force exit.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">在我們確定此值之前，流程應已結束</target>
