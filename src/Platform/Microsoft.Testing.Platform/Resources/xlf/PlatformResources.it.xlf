@@ -676,8 +676,6 @@ L’impostazione predefinita è TestResults nella directory che contiene l'appli
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Examples: '500ms', '5400s', '90m', '1.5h', '1d' (long forms like 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted)</source>
         <target state="needs-review-translation">L'opzione 'timeout' deve contenere un argomento come stringa nel formato &lt;value&gt;[h|m|s] dove 'value' è float</target>
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
-        <target state="translated">L'opzione 'timeout' deve avere un argomento di tipo stringa nel formato &lt;value&gt;[h|m|s], in cui 'value' è un numero finito non negativo che non supera la durata massima supportata</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">

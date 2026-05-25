@@ -677,8 +677,6 @@ The default is TestResults in the directory that contains the test application.<
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Examples: '500ms', '5400s', '90m', '1.5h', '1d' (long forms like 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted)</source>
         <target state="needs-review-translation">'timeout' オプションには、1 つの引数を文字列として &lt;value&gt;[h|m|s] の形式で指定する必要があります。この場合、'value' は float です</target>
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
-        <target state="translated">'timeout' オプションには、1 つの引数を &lt;value&gt;[h|m|s] 形式の文字列として指定する必要があります。ここで 'value' は、サポートされる最大継続時間を超えない、負でない有限の数値です</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
