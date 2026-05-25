@@ -357,11 +357,47 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             }
 
             // MessageBus.PublishAsync only enqueues; the async consumer pipeline may not have run
-            // yet. Give the CrashDumpSequenceLogger a brief opportunity to drain and flush before
-            // we crash so the sequence file actually contains the STARTED entries this test asserts
-            // on. This is a test-asset workaround for what is, in production, a best-effort feature
+            // yet. Poll the sequence file (set up by the controller via TESTINGPLATFORM_CRASHDUMP_SEQUENCE_FILE)
+            // until it contains a STARTED line for every published test, or a short timeout elapses.
+            // This is a test-asset workaround for what is, in production, a best-effort feature
             // (the message bus is intentionally asynchronous for throughput reasons).
-            await Task.Delay(2000);
+            string? sequenceFilePath = Environment.GetEnvironmentVariable("TESTINGPLATFORM_CRASHDUMP_SEQUENCE_FILE");
+            if (!string.IsNullOrEmpty(sequenceFilePath))
+            {
+                string[] expectedTests = tests.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                var deadline = DateTime.UtcNow.AddSeconds(30);
+                while (DateTime.UtcNow < deadline)
+                {
+                    if (File.Exists(sequenceFilePath))
+                    {
+                        try
+                        {
+                            string content = File.ReadAllText(sequenceFilePath);
+                            bool allFound = true;
+                            foreach (string t in expectedTests)
+                            {
+                                if (content.IndexOf("STARTED\t", StringComparison.Ordinal) < 0
+                                    || content.IndexOf("\t" + t, StringComparison.Ordinal) < 0)
+                                {
+                                    allFound = false;
+                                    break;
+                                }
+                            }
+
+                            if (allFound)
+                            {
+                                break;
+                            }
+                        }
+                        catch (IOException)
+                        {
+                            // File is being written to; retry.
+                        }
+                    }
+
+                    await Task.Delay(50);
+                }
+            }
         }
 
         // Optionally spawn a child process that also crashes (and produces its own dump) so we can

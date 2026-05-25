@@ -330,10 +330,12 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
                 }
             }
         }
-        catch (IOException ex)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException or ArgumentException or NotSupportedException)
         {
-            // Best-effort diagnostic. If we cannot read the sequence file we still publish it so the
-            // user can inspect it manually, but skip the friendly summary.
+            // Best-effort diagnostic. If we cannot read the sequence file for any expected reason
+            // (ACLs, sharing violations, malformed path, etc.) we still publish it so the user
+            // can inspect it manually, but skip the friendly summary. Failing the crash-handling
+            // path because of a diagnostic file would be strictly worse than missing the summary.
             await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpSequenceFileReadError, sequenceFilePath, ex.Message)), cancellationToken).ConfigureAwait(false);
             await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(sequenceFilePath), CrashDumpResources.CrashDumpSequenceArtifactDisplayName, CrashDumpResources.CrashDumpSequenceArtifactDescription)).ConfigureAwait(false);
             return;

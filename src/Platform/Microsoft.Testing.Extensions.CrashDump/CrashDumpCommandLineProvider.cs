@@ -34,22 +34,20 @@ internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
-        if (commandOption.Name == CrashDumpCommandLineOptions.CrashDumpTypeOptionName)
+        if (commandOption.Name == CrashDumpCommandLineOptions.CrashDumpTypeOptionName
+            && !DumpTypeOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase))
         {
-            if (!DumpTypeOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase))
-            {
-                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpTypeOptionInvalidType, arguments[0]));
-            }
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpTypeOptionInvalidType, arguments[0]));
         }
-        else if (commandOption.Name == CrashDumpCommandLineOptions.CrashSequenceOptionName)
+        else if (commandOption.Name == CrashDumpCommandLineOptions.CrashSequenceOptionName
+            && !CommandLineOptionArgumentValidator.IsValidBooleanArgument(arguments[0]))
         {
-            if (!CommandLineOptionArgumentValidator.IsValidBooleanArgument(arguments[0]))
-            {
-                return ValidationResult.InvalidTask(CrashDumpResources.CrashSequenceOptionInvalidArgument);
-            }
+            return ValidationResult.InvalidTask(CrashDumpResources.CrashSequenceOptionInvalidArgument);
         }
 
-        // TODO: Validate that the file name ends with '.dmp'?
+        // We intentionally do not enforce a '.dmp' extension on --crashdump-filename: dotnet-dump
+        // and the Windows MiniDumpWriteDump APIs both accept arbitrary file names, and users
+        // sometimes script around custom suffixes (e.g. timestamps appended by an outer wrapper).
         return ValidationResult.ValidTask;
     }
 
