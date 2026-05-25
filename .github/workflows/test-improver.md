@@ -16,6 +16,7 @@ on:
   workflow_dispatch:
   slash_command:
     name: test-assist
+    strategy: centralized
   reaction: "eyes"
   permissions:
     pull-requests: read
@@ -56,7 +57,7 @@ safe-outputs:
     protected-files: fallback-to-issue
   push-to-pull-request-branch:
     target: "*"
-    title-prefix: "[test-improver] "
+    required-title-prefix: "[test-improver] "
     max: 4
   create-issue:
     title-prefix: "[test-improver] "
