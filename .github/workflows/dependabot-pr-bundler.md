@@ -25,7 +25,7 @@ network: defaults
 safe-outputs:
   create-pull-request:
     draft: true
-    labels: [automation, dependencies]
+    labels: [type/automation, dependencies]
     protected-files: fallback-to-issue
   create-issue:
     title-prefix: "[dependabot-pr-bundler] "

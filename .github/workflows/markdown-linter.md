@@ -14,8 +14,8 @@ safe-outputs:
   create-issue:
     expires: 2d
     labels:
-    - automation
-    - code-quality
+    - type/automation
+    - type/tech-debt
     title-prefix: "[linter] "
   noop:
     report-as-issue: false

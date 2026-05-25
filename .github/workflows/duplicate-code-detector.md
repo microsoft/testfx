@@ -16,7 +16,7 @@ safe-outputs:
   create-issue:
     expires: 2d
     title-prefix: "[duplicate-code] "
-    labels: [code-quality, automated-analysis]
+    labels: [type/tech-debt, type/automation]
     assignees: copilot
     group: true
     max: 3
