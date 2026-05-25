@@ -223,9 +223,10 @@ internal sealed partial class TestHostBuilder
             : serverTestHost;
 #pragma warning restore CA1416 // Preserve existing browser behavior while splitting the method.
 
-        // The TestHostBuilt telemetry event must be sent through the originally-registered telemetry
-        // collector (typically NopTelemetryService) because the ServerTestHost JSON-RPC message handler
-        // is not yet initialized at this point (it is created later inside ServerTestHost.InternalRunAsync).
+        // The TestHostBuilt telemetry event must be sent through the collector previously registered
+        // by TelemetryManager in SetupCommonServicesAsync (a real collector when telemetry is opted in,
+        // or NopTelemetryService when opted out) because the ServerTestHost JSON-RPC message handler is
+        // not yet initialized at this point (it is created later inside ServerTestHost.InternalRunAsync).
         // Sending it through ServerTelemetry here would throw InvalidOperationException via
         // ServerTestHost.AssertInitialized.
         await LogTestHostCreatedAsync(
@@ -236,10 +237,10 @@ internal sealed partial class TestHostBuilder
             context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
         // Register ServerTelemetry in the service provider so that all telemetry events raised at runtime
-        // in server mode are forwarded to the client via JSON-RPC. This replaces the NopTelemetryService
-        // registered earlier in SetupCommonServicesAsync. This is always registered regardless of whether
-        // platform telemetry is enabled or disabled, because server-mode telemetry is a protocol concern
-        // (JSON-RPC forwarding to the client), not a data-collection concern.
+        // in server mode are forwarded to the client via JSON-RPC. This replaces the collector registered
+        // earlier by TelemetryManager in SetupCommonServicesAsync. This is always registered regardless of
+        // whether platform telemetry is enabled or disabled, because server-mode telemetry is a protocol
+        // concern (JSON-RPC forwarding to the client), not a data-collection concern.
         context.ServiceProvider.ReplaceService<ITelemetryCollector>(new ServerTelemetry(serverTestHost));
 
         CompleteBuilderActivity(context.BuilderActivity, testControllerConnection is not null ? nameof(TestHostControlledHost) : nameof(ServerTestHost));
