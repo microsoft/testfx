@@ -393,12 +393,12 @@
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionEntryMustBeScalarErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</source>
-        <target state="new">The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</target>
+        <target state="translated">testconfig.json 檔案 ('{2}') 中區段 '{1}' 下的項目 '{0}' 必須是純量字串值。不支援巢狀物件和陣列。</target>
         <note>{0} is the full dotted/colon-separated key. {1} is the section name. {2} is the path to the testconfig.json file.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionMustBeAnObjectErrorMessage">
         <source>The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</source>
-        <target state="new">The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</target>
+        <target state="translated">testconfig.json 檔案 ('{1}') 中的 '{0}' 區段必須為 JSON 物件。</target>
         <note>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file.</note>
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerDescription">
@@ -675,7 +675,7 @@ The default is TestResults in the directory that contains the test application.<
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
-        <target state="needs-review-translation">'timeout' 選項應該有一個引數作為字串，格式為 &lt;value&gt;[h|m|s]，其中 'value' 為 float</target>
+        <target state="new">'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
@@ -835,15 +835,15 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</source>
-        <target state="new">Control whether ANSI escape characters are emitted.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
-When both --ansi and --no-ansi are provided, --ansi wins.</target>
+        <target state="translated">控制是否發出 ANSI 逸出字元。
+有效值為 'auto' (預設值)、'on' (也接受 'true'、'enable'、'1') 或 'off' (也接受 'false'、'disable'、'0')。
+即使 stdout 已重新導向，'on' 會強制 ANSI 逸出程式碼 (包括游標移動); 如果您只想要色彩，將它與 --no-progress 配對。
+同時提供 --ansi 和 --no-ansi 時,--ansi 優先。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--ansi 應有值為 'auto'、'on' (或 'true'、'enable'、'1') 或 'off' (或 'false'、'disable'、'0') 的單一參數。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalNoAnsiOptionDescription">
@@ -939,22 +939,22 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableInvalidNameErrorMessage">
         <source>Environment variable name '{0}' declared in the 'environmentVariables' section of the testconfig.json file is invalid. Names must not contain '=' or null characters.</source>
-        <target state="new">Environment variable name '{0}' declared in the 'environmentVariables' section of the testconfig.json file is invalid. Names must not contain '=' or null characters.</target>
+        <target state="translated">在 testconfig.json 檔案的 'environmentVariables' 區段中宣告的環境變數名稱 '{0}' 無效。名稱不能包含 '=' 或 null 字元。</target>
         <note>{0} is the invalid environment variable name.</note>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableNameCannotBeEmptyErrorMessage">
         <source>Environment variable names declared in the 'environmentVariables' section of the testconfig.json file must not be empty.</source>
-        <target state="new">Environment variable names declared in the 'environmentVariables' section of the testconfig.json file must not be empty.</target>
+        <target state="translated">在 testconfig.json 檔案的 'environmentVariables' 區段中宣告的環境變數名稱不得空白。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableProviderDescription">
         <source>Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</source>
-        <target state="new">Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</target>
+        <target state="translated">將 testconfig.json 檔案的 'environmentVariables' 區段中宣告的環境變數套用至測試主機子處理序。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableProviderDisplayName">
         <source>testconfig.json environment variables provider</source>
-        <target state="new">testconfig.json environment variables provider</target>
+        <target state="translated">testconfig.json 環境變數提供者</target>
         <note />
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">

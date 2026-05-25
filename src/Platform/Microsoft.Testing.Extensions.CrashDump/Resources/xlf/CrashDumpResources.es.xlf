@@ -113,7 +113,7 @@ Para obtener más información, visite https://learn.microsoft.com/dotnet/core/d
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">
         <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
-        <target state="new">You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</target>
+        <target state="translated">Especificó uno o varios parámetros de volcado de memoria, pero no habilitó volcados de memoria. Agregue --crashdump o --crash-report a la línea de comandos.</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">

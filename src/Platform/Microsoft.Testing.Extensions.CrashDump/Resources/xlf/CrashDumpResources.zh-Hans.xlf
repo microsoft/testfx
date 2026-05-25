@@ -113,7 +113,7 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">
         <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
-        <target state="new">You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</target>
+        <target state="translated">你指定了一个或多个故障转储参数，但未启用故障转储。将 --crashdump 或 --crash-report 添加到命令行。</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">

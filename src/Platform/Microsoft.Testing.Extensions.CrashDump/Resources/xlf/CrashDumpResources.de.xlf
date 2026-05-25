@@ -113,7 +113,7 @@ Weitere Informationen finden Sie unter https://learn.microsoft.com/dotnet/core/d
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">
         <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
-        <target state="new">You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</target>
+        <target state="translated">Sie haben mindestens einen Parameter für ein Absturzabbild angegeben, aber keine Absturzabbilder aktiviert. Fügen Sie der Befehlszeile --crashdump oder --crash-report hinzu.</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">

@@ -113,7 +113,7 @@ Daha fazla bilgi için https://learn.microsoft.com/dotnet/core/diagnostics/colle
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">
         <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
-        <target state="new">You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</target>
+        <target state="translated">Bir veya birden fazla kilitlenme bilgi dökümü parametresi belirttiniz ancak kilitlenme bilgi dökümlerini etkinleştirmediniz. Komut satırına --crashdump veya --crash-report ekleyin.</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
