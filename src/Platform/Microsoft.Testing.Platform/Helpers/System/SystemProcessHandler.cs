@@ -9,14 +9,17 @@ namespace Microsoft.Testing.Platform.Helpers;
 internal sealed class SystemProcessHandler : IProcessHandler
 {
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     public IProcess GetCurrentProcess() => new SystemProcess(Process.GetCurrentProcess());
 
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     public IProcess GetProcessById(int pid) => new SystemProcess(Process.GetProcessById(pid));
 
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     public IProcess Start(ProcessStartInfo startInfo)
     {
         Process process = Process.Start(startInfo)

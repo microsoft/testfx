@@ -15,6 +15,7 @@ internal sealed class SystemConsole : IConsole
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     public int BufferHeight => Console.BufferHeight;
 
     /// <summary>
@@ -24,6 +25,7 @@ internal sealed class SystemConsole : IConsole
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     public int BufferWidth => Console.BufferWidth;
 
     /// <summary>
@@ -33,6 +35,7 @@ internal sealed class SystemConsole : IConsole
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     public int WindowHeight => Console.WindowHeight;
 
     /// <summary>
@@ -42,6 +45,7 @@ internal sealed class SystemConsole : IConsole
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     public int WindowWidth => Console.WindowWidth;
 
     /// <summary>
@@ -66,6 +70,7 @@ internal sealed class SystemConsole : IConsole
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     public event ConsoleCancelEventHandler? CancelKeyPress
     {
         add => Console.CancelKeyPress += value;
@@ -110,6 +115,7 @@ internal sealed class SystemConsole : IConsole
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     public void SetForegroundColor(ConsoleColor color)
         => Console.ForegroundColor = color;
 
@@ -117,6 +123,7 @@ internal sealed class SystemConsole : IConsole
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     public ConsoleColor GetForegroundColor()
         => Console.ForegroundColor;
 

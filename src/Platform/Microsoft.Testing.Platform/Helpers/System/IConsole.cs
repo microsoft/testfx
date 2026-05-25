@@ -12,30 +12,35 @@ internal interface IConsole
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     event ConsoleCancelEventHandler? CancelKeyPress;
 
     [UnsupportedOSPlatform("android")]
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     int BufferHeight { get; }
 
     [UnsupportedOSPlatform("android")]
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     int BufferWidth { get; }
 
     [UnsupportedOSPlatform("android")]
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     int WindowHeight { get; }
 
     [UnsupportedOSPlatform("android")]
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     int WindowWidth { get; }
 
     bool IsOutputRedirected { get; }
@@ -44,12 +49,14 @@ internal interface IConsole
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     void SetForegroundColor(ConsoleColor color);
 
     [UnsupportedOSPlatform("android")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     ConsoleColor GetForegroundColor();
 
     void WriteLine();

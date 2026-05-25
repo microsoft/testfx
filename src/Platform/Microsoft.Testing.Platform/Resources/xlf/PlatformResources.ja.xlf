@@ -1080,6 +1080,11 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
         <target state="translated">デバッガーのアタッチの待機 (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) は、ブラウザー環境ではサポートされていません。</target>
         <note />
       </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
+        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">0 件のテストが実行されました</target>
