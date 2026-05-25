@@ -48,7 +48,7 @@
     </When>
     <When Condition="'$(MSBuildProjectName)' == 'Microsoft.Testing.Extensions.MSBuild'">
       <PropertyGroup>
-        <!-- Project name is Microsoft.Testing.Extensions.MSBuild, but the public namespace is Microsoft.Testing.Platform.MSBuild. -->
+        <!-- Project name is Microsoft.Testing.Extensions.MSBuild, but the symbol selects Microsoft.Testing.Platform.MSBuild in the shared hook source. -->
         <TestingPlatformBuilderHookSymbol>TESTINGPLATFORMBUILDERHOOK_MSBUILD</TestingPlatformBuilderHookSymbol>
       </PropertyGroup>
     </When>

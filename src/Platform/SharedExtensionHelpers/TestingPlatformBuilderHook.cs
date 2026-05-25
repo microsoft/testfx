@@ -30,6 +30,8 @@ namespace Microsoft.Testing.Extensions.TrxReport;
 /// <summary>
 /// Shared builder hook implementation used by platform extension packages to register
 /// extension-specific services with the Testing Platform Builder.
+/// The effective namespace, attributes, and registration call are selected with project-specific
+/// compilation symbols.
 /// </summary>
 public static class TestingPlatformBuilderHook
 {
