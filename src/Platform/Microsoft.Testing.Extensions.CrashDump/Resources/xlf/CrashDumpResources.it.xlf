@@ -113,7 +113,7 @@ Per altre informazioni, visitare https://learn.microsoft.com/dotnet/core/diagnos
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">
         <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
-        <target state="new">You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</target>
+        <target state="translated">Sono stati specificati uno o più parametri di dump di arresto anomalo del sistema, ma non sono stati abilitati i dump di arresto anomalo del sistema. Aggiungere --crashdump o --crash-report alla riga di comando.</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">

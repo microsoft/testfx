@@ -113,7 +113,7 @@ Další informace najdete na https://learn.microsoft.com/dotnet/core/diagnostics
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">
         <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
-        <target state="new">You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</target>
+        <target state="translated">Zadali jste jeden nebo více parametrů výpisu paměti, ale výpisy paměti jste nepovolili. Přidejte do příkazového řádku přepínač --crashdump nebo --crash-report.</target>
         <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
