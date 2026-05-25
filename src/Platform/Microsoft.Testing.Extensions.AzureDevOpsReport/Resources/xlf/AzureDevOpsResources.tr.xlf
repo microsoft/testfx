@@ -29,67 +29,67 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
-        <target state="new">Azure DevOps live publishing failed to complete the test run.</target>
+        <target state="translated">Azure DevOps canlı yayımlama test çalıştırmasını tamamlayamadı.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCreateRunFailed">
         <source>Azure DevOps live publishing failed to create the test run.</source>
-        <target state="new">Azure DevOps live publishing failed to create the test run.</target>
+        <target state="translated">Azure DevOps canlı yayımlama test çalıştırmasını oluşturamadı.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFailedToDeleteCoordinationFile">
         <source>Azure DevOps live publishing failed to delete coordination file</source>
-        <target state="new">Azure DevOps live publishing failed to delete coordination file</target>
+        <target state="translated">Azure DevOps canlı yayımlama koordinasyon dosyasını silemedi</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFinalizeWaitTimedOut">
         <source>Azure DevOps live publishing timed out after {0} waiting for {1} participant file(s); finalizing the run anyway.</source>
-        <target state="new">Azure DevOps live publishing timed out after {0} waiting for {1} participant file(s); finalizing the run anyway.</target>
+        <target state="translated">Azure DevOps canlı yayımlama, {0} boyunca {1} katılımcı dosyasını bekledikten sonra zaman aşımına uğradı; çalıştırma yine de sonlandırılıyor.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingHttpError">
         <source>Azure DevOps REST API request failed with status code {0}. Response: {1}</source>
-        <target state="new">Azure DevOps REST API request failed with status code {0}. Response: {1}</target>
+        <target state="translated">Azure DevOps REST API isteği durum kodu {0} ile başarısız oldu. Yanıt: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingInvalidResponse">
         <source>Azure DevOps REST API returned an unexpected response payload.</source>
-        <target state="new">Azure DevOps REST API returned an unexpected response payload.</target>
+        <target state="translated">Azure DevOps REST API beklenmeyen bir yanıt yükü döndürdü.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingConfiguration">
         <source>'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</source>
-        <target state="new">'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</target>
+        <target state="translated">'--publish-azdo-test-results' ayarlandı ancak şu ortam değişkenleri eksik veya geçersiz olduğundan Azure DevOps canlı yayımlama devre dışı bırakıldı: {0}.</target>
         <note>{Locked='--publish-azdo-test-results'}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingRunIdFile">
         <source>Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</source>
-        <target state="new">Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</target>
+        <target state="translated">Azure DevOps canlı yayımlama, paylaşılan çalıştırma için azdo-runid.&lt;buildId&gt;.json dosyasını bulamadı.</target>
         <note>{Locked="azdo-runid.&lt;buildId&gt;.json"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingPublishResultsFailed">
         <source>Azure DevOps live publishing failed to publish test results.</source>
-        <target state="new">Azure DevOps live publishing failed to publish test results.</target>
+        <target state="translated">Azure DevOps canlı yayımlama test sonuçlarını yayımlayamadı.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRequestFailed">
         <source>Azure DevOps REST API request failed after all retries.</source>
-        <target state="new">Azure DevOps REST API request failed after all retries.</target>
+        <target state="translated">Azure DevOps REST API isteği tüm yeniden denemelerden sonra başarısız oldu.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunIdFileMismatch">
         <source>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</source>
-        <target state="new">Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</target>
+        <target state="translated">Azure DevOps canlı yayımlama, farklı bir Azure DevOps projesi için azdo-runid.&lt;buildId&gt;.json dosyası buldu.</target>
         <note>{Locked="azdo-runid.&lt;buildId&gt;.json"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingTimeoutErrorMessage">
         <source>Timeout</source>
-        <target state="new">Timeout</target>
+        <target state="translated">Zaman Aşımı</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingTimeoutErrorMessageWithReason">
         <source>Timeout: {0}</source>
-        <target state="new">Timeout: {0}</target>
+        <target state="translated">Zaman aşımı: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
@@ -177,6 +177,11 @@
         <target state="translated">Geçersiz seçenek{0}.</target>
         <note />
       </trans-unit>
+      <trans-unit id="NoFailureMessageFallback">
+        <source>Test failed without an additional message.</source>
+        <target state="new">Test failed without an additional message.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
         <target state="translated">Azure DevOps rapor oluşturucusunu, hataları Azure DevOps'un anlayacağı şekilde çıktıya yazacak biçimde etkinleştirin.</target>
@@ -184,17 +189,17 @@
       </trans-unit>
       <trans-unit id="PublishAzdoRunNameOptionDescription">
         <source>Custom Azure DevOps test run name for live test-result publishing.</source>
-        <target state="new">Custom Azure DevOps test run name for live test-result publishing.</target>
+        <target state="translated">Canlı test sonucu yayımlama için özel Azure DevOps test çalıştırması adı.</target>
         <note />
       </trans-unit>
       <trans-unit id="PublishAzdoRunNameRequiresPublishAzdoTestResults">
         <source>'--publish-azdo-run-name' requires '--publish-azdo-test-results' to be enabled</source>
-        <target state="new">'--publish-azdo-run-name' requires '--publish-azdo-test-results' to be enabled</target>
+        <target state="translated">'--publish-azdo-run-name' seçeneği için '--publish-azdo-test-results' seçeneğinin etkinleştirilmesi gerekir</target>
         <note>{Locked='--publish-azdo-run-name'}{Locked='--publish-azdo-test-results'}</note>
       </trans-unit>
       <trans-unit id="PublishAzdoTestResultsOptionDescription">
         <source>Publish test results live to the Azure DevOps Tests tab.</source>
-        <target state="new">Publish test results live to the Azure DevOps Tests tab.</target>
+        <target state="translated">Test sonuçlarını Azure DevOps Tests sekmesinde canlı olarak yayımlayın.</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">

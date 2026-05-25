@@ -47,6 +47,7 @@ public sealed partial class Assert
     /// </exception>
     public static void ContainsAll<T>([NotNull] IEnumerable<T>? expected, [NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.ContainsAll");
         CheckParameterNotNull(expected, "Assert.ContainsAll", "expected");
         CheckParameterNotNull(collection, "Assert.ContainsAll", "collection");
         ContainsAllImpl(expected, collection, EqualityComparer<T>.Default, comparerName: null, message, expectedExpression, collectionExpression);
@@ -88,6 +89,7 @@ public sealed partial class Assert
     /// </exception>
     public static void ContainsAll<T>([NotNull] IEnumerable<T>? expected, [NotNull] IEnumerable<T>? collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.ContainsAll");
         CheckParameterNotNull(expected, "Assert.ContainsAll", "expected");
         CheckParameterNotNull(collection, "Assert.ContainsAll", "collection");
         CheckParameterNotNull(comparer, "Assert.ContainsAll", "comparer");
@@ -126,6 +128,7 @@ public sealed partial class Assert
     /// </exception>
     public static void ContainsAll([NotNull] IEnumerable? expected, [NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.ContainsAll");
         CheckParameterNotNull(expected, "Assert.ContainsAll", "expected");
         CheckParameterNotNull(collection, "Assert.ContainsAll", "collection");
 
@@ -167,6 +170,7 @@ public sealed partial class Assert
     /// </exception>
     public static void ContainsAll([NotNull] IEnumerable? expected, [NotNull] IEnumerable? collection, [NotNull] IEqualityComparer? comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.ContainsAll");
         CheckParameterNotNull(expected, "Assert.ContainsAll", "expected");
         CheckParameterNotNull(collection, "Assert.ContainsAll", "collection");
         CheckParameterNotNull(comparer, "Assert.ContainsAll", "comparer");
@@ -211,6 +215,7 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotContainAll<T>([NotNull] IEnumerable<T>? notExpected, [NotNull] IEnumerable<T>? collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContainAll");
         CheckParameterNotNull(notExpected, "Assert.DoesNotContainAll", "notExpected");
         CheckParameterNotNull(collection, "Assert.DoesNotContainAll", "collection");
         DoesNotContainAllImpl(notExpected, collection, EqualityComparer<T>.Default, comparerName: null, message, notExpectedExpression, collectionExpression);
@@ -252,6 +257,7 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotContainAll<T>([NotNull] IEnumerable<T>? notExpected, [NotNull] IEnumerable<T>? collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContainAll");
         CheckParameterNotNull(notExpected, "Assert.DoesNotContainAll", "notExpected");
         CheckParameterNotNull(collection, "Assert.DoesNotContainAll", "collection");
         CheckParameterNotNull(comparer, "Assert.DoesNotContainAll", "comparer");
@@ -290,6 +296,7 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotContainAll([NotNull] IEnumerable? notExpected, [NotNull] IEnumerable? collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContainAll");
         CheckParameterNotNull(notExpected, "Assert.DoesNotContainAll", "notExpected");
         CheckParameterNotNull(collection, "Assert.DoesNotContainAll", "collection");
 
@@ -331,6 +338,7 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotContainAll([NotNull] IEnumerable? notExpected, [NotNull] IEnumerable? collection, [NotNull] IEqualityComparer? comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContainAll");
         CheckParameterNotNull(notExpected, "Assert.DoesNotContainAll", "notExpected");
         CheckParameterNotNull(collection, "Assert.DoesNotContainAll", "collection");
         CheckParameterNotNull(comparer, "Assert.DoesNotContainAll", "comparer");

@@ -20,6 +20,11 @@ Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
+    --ansi
+        Control whether ANSI escape characters are emitted.
+        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+        When both --ansi and --no-ansi are provided, --ansi wins.
     --config-file
         Specifies a testconfig.json file.
     --debug
@@ -55,14 +60,6 @@ Options:
         Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.
     --minimum-expected-tests
         Specifies the minimum number of tests that are expected to run.
-    --results-directory
-        The directory where the test results are going to be placed.
-        If the specified directory doesn't exist, it's created.
-        The default is TestResults in the directory that contains the test application.
-    --timeout
-        A global test execution timeout.
-        Takes one argument as a time value with an explicit unit suffix. Accepted units are 'ms', 's', 'm', 'h', 'd' (long forms 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted), e.g. '500ms', '5400s', '90m', '1.5h', '1d'.
-Extension options:
     --no-ansi
         Disable outputting ANSI escape characters to screen.
     --no-progress
@@ -70,12 +67,21 @@ Extension options:
     --output
         Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+    --results-directory
+        The directory where the test results are going to be placed.
+        If the specified directory doesn't exist, it's created.
+        The default is TestResults in the directory that contains the test application.
     --show-stderr
         Determines when to show captured error output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All'.
     --show-stdout
         Determines when to show captured standard output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+    --timeout
+        A global test execution timeout.
+        Takes one argument as a time value with an explicit unit suffix. Accepted units are 'ms', 's', 'm', 'h', 'd' (long forms 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted), e.g. '500ms', '5400s', '90m', '1.5h', '1d'.
+Extension options:
+    No extension registered.
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardMatchPattern);
@@ -252,12 +258,18 @@ Built-in command line providers:
         Hidden: False
         Description: A global test execution timeout.
         Takes one argument as a time value with an explicit unit suffix\. Accepted units are 'ms', 's', 'm', 'h', 'd' \(long forms 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted\), e\.g\. '500ms', '5400s', '90m', '1\.5h', '1d'\.
-Registered command line providers:
   TerminalTestReporterCommandLineOptionsProvider
     Name: Terminal test reporter
     Version: .+
     Description: Writes test results to terminal.
     Options:
+      --ansi
+        Arity: 1
+        Hidden: False
+        Description: Control whether ANSI escape characters are emitted\.
+        Valid values are 'auto' \(default\), 'on' \(also accepts 'true', 'enable', '1'\) or 'off' \(also accepts 'false', 'disable', '0'\)\.
+        'on' forces ANSI escape codes \(including cursor movement\) even when stdout is redirected; pair it with --no-progress if you only want colors\.
+        When both --ansi and --no-ansi are provided, --ansi wins\.
       --no-ansi
         Arity: 0
         Hidden: False
@@ -281,6 +293,8 @@ Registered command line providers:
         Hidden: False
         Description: Determines when to show captured standard output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+Registered command line providers:
+  There are no registered command line providers.
 Registered tools:
   There are no registered tools\.
 """;

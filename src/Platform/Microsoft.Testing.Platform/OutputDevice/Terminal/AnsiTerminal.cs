@@ -54,12 +54,12 @@ internal sealed class AnsiTerminal : ITerminal
     }
 
     public int Width
-        => _console.IsOutputRedirected || OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS()
+        => _console.IsOutputRedirected || OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS() || OperatingSystem.IsWasi()
             ? int.MaxValue
             : _console.WindowWidth;
 
     public int Height
-        => _console.IsOutputRedirected || OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS()
+        => _console.IsOutputRedirected || OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS() || OperatingSystem.IsWasi()
             ? int.MaxValue
             : _console.WindowHeight;
 

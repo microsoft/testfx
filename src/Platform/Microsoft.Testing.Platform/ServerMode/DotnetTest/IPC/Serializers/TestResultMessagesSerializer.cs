@@ -103,11 +103,11 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
       |---FailedTestMessageList[0].SessionUid Value---| (n bytes)
   */
 
-internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeSerializer
+internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestResultMessages>, INamedPipeSerializer
 {
-    public int Id => TestResultMessagesFieldsId.MessagesSerializerId;
+    public override int Id => TestResultMessagesFieldsId.MessagesSerializerId;
 
-    public object Deserialize(Stream stream)
+    protected override TestResultMessages DeserializeCore(Stream stream)
     {
         string? executionId = null;
         string? instanceId = null;
@@ -146,7 +146,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
             }
         }
 
-        return new TestResultMessages(
+        return new(
             executionId,
             instanceId,
             successfulTestResultMessages is null ? [] : [.. successfulTestResultMessages],
@@ -326,18 +326,16 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
         return [.. exceptionMessages];
     }
 
-    public void Serialize(object objectToSerialize, Stream stream)
+    protected override void SerializeCore(TestResultMessages objectToSerialize, Stream stream)
     {
         RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
 
-        var testResultMessages = (TestResultMessages)objectToSerialize;
+        WriteUShort(stream, GetFieldCount(objectToSerialize));
 
-        WriteUShort(stream, GetFieldCount(testResultMessages));
-
-        WriteField(stream, TestResultMessagesFieldsId.ExecutionId, testResultMessages.ExecutionId);
-        WriteField(stream, TestResultMessagesFieldsId.InstanceId, testResultMessages.InstanceId);
-        WriteSuccessfulTestMessagesPayload(stream, testResultMessages.SuccessfulTestMessages);
-        WriteFailedTestMessagesPayload(stream, testResultMessages.FailedTestMessages);
+        WriteField(stream, TestResultMessagesFieldsId.ExecutionId, objectToSerialize.ExecutionId);
+        WriteField(stream, TestResultMessagesFieldsId.InstanceId, objectToSerialize.InstanceId);
+        WriteSuccessfulTestMessagesPayload(stream, objectToSerialize.SuccessfulTestMessages);
+        WriteFailedTestMessagesPayload(stream, objectToSerialize.FailedTestMessages);
     }
 
     private static void WriteSuccessfulTestMessagesPayload(Stream stream, SuccessfulTestResultMessage[]? successfulTestResultMessages)

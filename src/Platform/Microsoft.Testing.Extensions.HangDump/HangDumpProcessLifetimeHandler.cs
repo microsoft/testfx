@@ -27,6 +27,7 @@ namespace Microsoft.Testing.Extensions.Diagnostics;
 [UnsupportedOSPlatform("browser")]
 [UnsupportedOSPlatform("ios")]
 [UnsupportedOSPlatform("tvos")]
+[UnsupportedOSPlatform("wasi")]
 internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeHandler, IOutputDeviceDataProducer, IDataProducer,
 #if NETCOREAPP
     IAsyncDisposable,
@@ -222,6 +223,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     private async Task TakeDumpOfTreeAsync(CancellationToken cancellationToken)
     {
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
@@ -372,20 +374,15 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 
-        // Wrap the dump path into "" when it has space in it, this is a workaround for this runtime issue: https://github.com/dotnet/diagnostics/issues/5020
-        // It only affects windows. Otherwise the dump creation fails with: [createdump] The pid argument is no longer supported
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && finalDumpFileName.Contains(' '))
-        {
-            finalDumpFileName = $"\"{finalDumpFileName}\"";
-        }
+        DumpFileNames dumpFileNames = GetDumpFileNames(finalDumpFileName);
 
         try
         {
             // Skip creating the dump if the option is set to none, and just kill the process.
             if (dumpType.HasValue)
             {
-                diagnosticsClient.WriteDump(dumpType.Value, finalDumpFileName, logDumpGeneration: false);
-                _dumpFiles.Add(finalDumpFileName);
+                diagnosticsClient.WriteDump(dumpType.Value, dumpFileNames.WriteDumpFileName, logDumpGeneration: false);
+                _dumpFiles.Add(dumpFileNames.ArtifactDumpFileName);
             }
         }
         catch (Exception e)
@@ -420,6 +417,17 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
 #endif
     }
+
+    // Wrap the dump path into "" when it has space in it, this is a workaround for this runtime issue: https://github.com/dotnet/diagnostics/issues/5020
+    // It only affects windows. Otherwise the dump creation fails with: [createdump] The pid argument is no longer supported
+    internal static DumpFileNames GetDumpFileNames(string dumpFileName)
+        => new(
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && dumpFileName.Contains(' ')
+                ? $"\"{dumpFileName}\""
+                : dumpFileName,
+            dumpFileName);
+
+    internal readonly record struct DumpFileNames(string WriteDumpFileName, string ArtifactDumpFileName);
 
     private static void NotifyCrashDumpServiceIfEnabled()
         => AppDomain.CurrentDomain.SetData("ProcessKilledByHangDump", "true");

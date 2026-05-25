@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -58,6 +58,18 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         // 60 days is well past CancellationTokenSource.CancelAfter's ~49.7-day cap.
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 60d", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as a time value with an explicit unit suffix");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task TimeoutWithInvalidArg_WithNegativeValue_OutputInvalidMessage(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
+        // Use the '=' delimiter so the negative value is not parsed as a short option.
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout=-1s", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
         testHostResult.AssertOutputContains("'timeout' option should have one argument as a time value with an explicit unit suffix");

@@ -158,6 +158,7 @@ public sealed partial class Assert
     /// </exception>
     public static void AreEquivalent<T>(T? expected, T? actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreEquivalent");
         EquivalenceComparer comparer = new(strict);
         EquivalenceMismatch? mismatch = comparer.Compare(expected, actual);
         if (mismatch is null)
@@ -242,6 +243,7 @@ public sealed partial class Assert
     /// </exception>
     public static void AreNotEquivalent<T>(T? notExpected, T? actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreNotEquivalent");
         EquivalenceComparer comparer = new(strict);
         EquivalenceMismatch? mismatch = comparer.Compare(notExpected, actual);
         if (mismatch is null)

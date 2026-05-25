@@ -251,6 +251,13 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             Assert.IsTrue(Regex.IsMatch(compilationResult.StandardOutput, $".*error : Tests failed:.* \\[{tfm}|x64\\]"), compilationResult.StandardOutput);
         }
 
+        // Regression test for https://github.com/microsoft/testfx/issues/8437: the MSBuild
+        // extension must keep reporting a non-empty Duration in its run summary even after
+        // dropping its dependency on the internal TestRequestExecutionTimeInfo message.
+        Assert.IsTrue(
+            Regex.IsMatch(compilationResult.StandardOutput, @"Failed: \d+, Passed: \d+, Skipped: \d+, Total: \d+, Duration: \S+"),
+            compilationResult.StandardOutput);
+
         string outputFileLog = Path.Combine(testResultFolder, $"MSBuild Tests_{tfm}_x64.log");
         Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
         Assert.IsFalse(string.IsNullOrEmpty(File.ReadAllText(outputFileLog)), $"Content of file '{File.ReadAllText(outputFileLog)}'");

@@ -77,7 +77,7 @@ Moving last attempt asset files to the default result directory
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
         <source>Option '{0}' expects an integer argument between 0 and 100</source>
-        <target state="new">Option '{0}' expects an integer argument between 0 and 100</target>
+        <target state="translated">選項 '{0}' 應有 0 到 100 之間的整數引數</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
@@ -107,7 +107,7 @@ Moving last attempt asset files to the default result directory
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
         <source>Option '{0}' expects a non-negative integer argument</source>
-        <target state="new">Option '{0}' expects a non-negative integer argument</target>
+        <target state="translated">選項 '{0}' 應有非負整數引數</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">

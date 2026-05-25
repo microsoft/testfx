@@ -1,89 +1,83 @@
 ---
-source: "githubnext/agentics/workflows/markdown-linter.md@main"
-description: Runs Markdown quality checks using Super Linter and creates issues for violations
 on:
-  workflow_dispatch:
   schedule:
-    - cron: "0 14 * * 1-5" # 2 PM UTC, weekdays only
-
+  - cron: 0 14 * * 1-5
+  workflow_dispatch: null
 permissions:
-  contents: read
   actions: read
+  contents: read
   issues: read
   pull-requests: read
-
+imports:
+- shared/reporting.md
 safe-outputs:
   create-issue:
     expires: 2d
+    labels:
+    - automation
+    - code-quality
     title-prefix: "[linter] "
-    labels: [automation, code-quality]
   noop:
-
-name: Markdown Linter
-timeout-minutes: 15
-
-imports:
-  - shared/reporting.md
-
+    report-as-issue: false
+steps:
+- name: Download super-linter log
+  uses: actions/download-artifact@v8.0.1
+  with:
+    name: super-linter-log
+    path: /tmp/gh-aw/
+description: Runs Markdown quality checks using Super Linter and creates issues for violations
 jobs:
   super_linter:
-    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
       statuses: write
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6.0.2
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Super-linter
-        uses: super-linter/super-linter@v8.5.0
-        id: super-linter
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CREATE_LOG_FILE: "true"
-          LOG_FILE: super-linter.log
-          DEFAULT_BRANCH: main
-          ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: "true"
-          VALIDATE_MARKDOWN: "true"
-          VALIDATE_ALL_CODEBASE: "false"
-
-      - name: Check for linting issues
-        id: check-results
-        run: |
-          if [ -f "super-linter.log" ] && [ -s "super-linter.log" ]; then
-            if grep -qE "ERROR|WARN|FAIL" super-linter.log; then
-              echo "needs-linting=true" >> "$GITHUB_OUTPUT"
-            else
-              echo "needs-linting=false" >> "$GITHUB_OUTPUT"
-            fi
+    - name: Checkout repository
+      uses: actions/checkout@v6.0.2
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+    - env:
+        CREATE_LOG_FILE: "true"
+        DEFAULT_BRANCH: main
+        ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: "true"
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        LOG_FILE: super-linter.log
+        VALIDATE_ALL_CODEBASE: "false"
+        VALIDATE_MARKDOWN: "true"
+      id: super-linter
+      name: Super-linter
+      uses: super-linter/super-linter@v8.6.0
+    - id: check-results
+      name: Check for linting issues
+      run: |
+        if [ -f "super-linter.log" ] && [ -s "super-linter.log" ]; then
+          if grep -qE "ERROR|WARN|FAIL" super-linter.log; then
+            echo "needs-linting=true" >> "$GITHUB_OUTPUT"
           else
             echo "needs-linting=false" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Upload super-linter log
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: super-linter-log
-          path: super-linter.log
-          retention-days: 7
-steps:
-  - name: Download super-linter log
-    uses: actions/download-artifact@v8
-    with:
-      name: super-linter-log
-      path: /tmp/gh-aw/
+        else
+          echo "needs-linting=false" >> "$GITHUB_OUTPUT"
+        fi
+    - if: always()
+      name: Upload super-linter log
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: super-linter-log
+        path: super-linter.log
+        retention-days: 7
+name: Markdown Linter
+source: githubnext/agentics/workflows/markdown-linter.md@main
+timeout-minutes: 15
 tools:
-  cache-memory: true
-  edit:
   bash:
-    - "*"
+  - "*"
+  cache-memory: true
+  edit: null
 ---
-
 # Markdown Quality Report
 
 You are an expert documentation quality analyst. Your task is to analyze the Super Linter Markdown output and create a comprehensive issue report for the repository maintainers.

@@ -113,7 +113,10 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDiscoverTestsInvalidArgument, arguments[0], SupportedDiscoverTestsValues));
         }
 
-        if (commandOption.Name == ClientPortOptionKey && (!int.TryParse(arguments[0], out int _)))
+        if (commandOption.Name == ClientPortOptionKey
+            && (!int.TryParse(arguments[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int port)
+                || port < System.Net.IPEndPoint.MinPort
+                || port > System.Net.IPEndPoint.MaxPort))
         {
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, ClientPortOptionKey));
         }
@@ -177,9 +180,50 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
 
     private static Task<ValidationResult> IsMinimumExpectedTestsOptionValidAsync(CommandLineOption option, string[] arguments)
         => option.Name == MinimumExpectedTestsOptionKey
-            && (arguments.Length != 1 || !int.TryParse(arguments[0], out int value) || value == 0)
+            && (arguments.Length != 1 || !int.TryParse(arguments[0], out int value) || value <= 0)
             ? ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionSingleArgument)
             : ValidationResult.ValidTask;
+
+    internal static bool TryParseTimeoutArgument(string arg, out TimeSpan timeout)
+    {
+        timeout = TimeSpan.Zero;
+
+        if (arg is null || arg.Length < 2)
+        {
+            return false;
+        }
+
+        char unit = char.ToLowerInvariant(arg[^1]);
+        if (unit is not ('h' or 'm' or 's'))
+        {
+            return false;
+        }
+
+        if (!float.TryParse(arg[..^1], NumberStyles.Float, CultureInfo.InvariantCulture, out float value)
+            || float.IsNaN(value)
+            || float.IsInfinity(value)
+            || value < 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            timeout = unit switch
+            {
+                'h' => TimeSpan.FromHours(value),
+                'm' => TimeSpan.FromMinutes(value),
+                's' => TimeSpan.FromSeconds(value),
+                _ => throw ApplicationStateGuard.Unreachable(),
+            };
+        }
+        catch (OverflowException)
+        {
+            return false;
+        }
+
+        return true;
+    }
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
     {

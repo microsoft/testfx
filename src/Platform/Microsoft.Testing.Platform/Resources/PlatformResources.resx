@@ -150,6 +150,27 @@
   <data name="JsonConfigurationFileParserUnsupportedTokenErrorMessage" xml:space="preserve">
     <value>Unsupported JSON token '{0}' was found</value>
   </data>
+  <data name="JsonConfigurationSectionMustBeAnObjectErrorMessage" xml:space="preserve">
+    <value>The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</value>
+    <comment>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file.</comment>
+  </data>
+  <data name="JsonConfigurationSectionEntryMustBeScalarErrorMessage" xml:space="preserve">
+    <value>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</value>
+    <comment>{0} is the full dotted/colon-separated key. {1} is the section name. {2} is the path to the testconfig.json file.</comment>
+  </data>
+  <data name="TestConfigurationEnvironmentVariableProviderDisplayName" xml:space="preserve">
+    <value>testconfig.json environment variables provider</value>
+  </data>
+  <data name="TestConfigurationEnvironmentVariableProviderDescription" xml:space="preserve">
+    <value>Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</value>
+  </data>
+  <data name="TestConfigurationEnvironmentVariableNameCannotBeEmptyErrorMessage" xml:space="preserve">
+    <value>Environment variable names declared in the 'environmentVariables' section of the testconfig.json file must not be empty.</value>
+  </data>
+  <data name="TestConfigurationEnvironmentVariableInvalidNameErrorMessage" xml:space="preserve">
+    <value>Environment variable name '{0}' declared in the 'environmentVariables' section of the testconfig.json file is invalid. Names must not contain '=' or null characters.</value>
+    <comment>{0} is the invalid environment variable name.</comment>
+  </data>
   <data name="ServerTestExecutionFilterFactoryDescription" xml:space="preserve">
     <value>Creates the right test execution filter for server mode</value>
   </data>
@@ -595,6 +616,15 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="TerminalNoAnsiOptionDescription" xml:space="preserve">
     <value>Disable outputting ANSI escape characters to screen.</value>
   </data>
+  <data name="TerminalAnsiOptionDescription" xml:space="preserve">
+    <value>Control whether ANSI escape characters are emitted.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+When both --ansi and --no-ansi are provided, --ansi wins.</value>
+  </data>
+  <data name="TerminalAnsiOptionInvalidArgument" xml:space="preserve">
+    <value>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
+  </data>
   <data name="TerminalNoProgressOptionDescription" xml:space="preserve">
     <value>Disable reporting progress to screen.</value>
   </data>
@@ -624,6 +654,7 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</value>
   </data>
   <data name="PlatformCommandLineTimeoutArgumentErrorMessage" xml:space="preserve">
     <value>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Examples: '500ms', '5400s', '90m', '1.5h', '1d' (long forms like 'milliseconds', 'seconds', 'minutes', 'hours', 'days' are also accepted)</value>
+    <value>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</value>
   </data>
   <data name="PlatformCommandLineTimeoutOptionDescription" xml:space="preserve">
     <value>A global test execution timeout.
@@ -671,6 +702,13 @@ Takes one argument as a time value with an explicit unit suffix. Accepted units 
   <data name="CommandLineParserFailedToReadResponseFile" xml:space="preserve">
     <value>Failed to read response file '{0}'. {1}.</value>
     <comment>{1} is the exception</comment>
+  </data>
+  <data name="CommandLineParserUnclosedQuoteInResponseFile" xml:space="preserve">
+    <value>Unclosed quote in response file at line {0}</value>
+    <comment>{0} is the line number</comment>
+  </data>
+  <data name="CommandLineParserUnclosedQuoteInCommandLine" xml:space="preserve">
+    <value>Unclosed quote in command line</value>
   </data>
   <data name="PlatformCommandLineMinimumExpectedTestsOptionDescription" xml:space="preserve">
     <value>Specifies the minimum number of tests that are expected to run.</value>
@@ -753,5 +791,8 @@ Takes one argument as a time value with an explicit unit suffix. Accepted units 
   </data>
   <data name="WaitDebuggerAttachNotSupportedInBrowserErrorMessage" xml:space="preserve">
     <value>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</value>
+  </data>
+  <data name="WaitDebuggerAttachNotSupportedInWasiErrorMessage" xml:space="preserve">
+    <value>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</value>
   </data>
 </root>

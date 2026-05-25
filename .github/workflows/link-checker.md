@@ -12,7 +12,7 @@ network:
     - github
 steps:
   - name: Checkout repository
-    uses: actions/checkout@v4
+    uses: actions/checkout@v6.0.2
     with:
       fetch-depth: 0
       persist-credentials: false
@@ -108,6 +108,7 @@ safe-outputs:
     protected-files: fallback-to-issue
     if-no-changes: "warn"
   noop:
+    report-as-issue: false
 ---
 
 # Daily Link Checker & Fixer

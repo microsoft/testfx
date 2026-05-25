@@ -23,6 +23,7 @@ internal static class IProcessExtensions
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     public static async Task<List<ProcessTreeNode>> GetProcessTreeAsync(this IProcess process, ILogger logger, OutputDeviceWriter outputDisplay, CancellationToken cancellationToken)
     {
         var childProcesses = Process.GetProcesses()
@@ -72,6 +73,7 @@ internal static class IProcessExtensions
                     : throw new PlatformNotSupportedException();
 
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     internal static int GetParentPidWindows(Process process)
     {
         IntPtr handle = process.Handle;
@@ -86,6 +88,7 @@ internal static class IProcessExtensions
     /// <param name="process">The process to get the parent process from.</param>
     /// <returns>The process id.</returns>
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     internal static int GetParentPidLinux(Process process)
         => ParseParentPidFromProcStat(File.ReadAllText($"/proc/{process.Id}/stat"));
 
@@ -120,6 +123,7 @@ internal static class IProcessExtensions
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     internal static async Task<int> GetParentPidMacOsAsync(Process process, ILogger logger, OutputDeviceWriter outputDisplay, CancellationToken cancellationToken)
     {
         var output = new StringBuilder();
@@ -176,6 +180,7 @@ internal static class IProcessExtensions
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     private static bool IsChildCandidate(Process child, IProcess parent)
     {
         // this is extremely slow under debugger, but fast without it

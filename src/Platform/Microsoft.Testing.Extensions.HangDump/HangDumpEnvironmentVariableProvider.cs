@@ -3,58 +3,32 @@
 
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
 
-internal sealed class HangDumpEnvironmentVariableProvider : ITestHostEnvironmentVariableProvider
+internal sealed class HangDumpEnvironmentVariableProvider : global::Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase
 {
     public const string PipeNameEnvironmentVariableName = "TESTINGPLATFORM_HANGDUMP_PIPENAME";
 
     private readonly ICommandLineOptions _commandLineOptions;
-    private readonly string _pipeName;
 
     public HangDumpEnvironmentVariableProvider(ICommandLineOptions commandLineOptions, string pipeName)
+        : base(pipeName, PipeNameEnvironmentVariableName)
     {
         _commandLineOptions = commandLineOptions;
-        _pipeName = pipeName;
     }
 
-    public string Uid => nameof(HangDumpEnvironmentVariableProvider);
+    public override string Uid => nameof(HangDumpEnvironmentVariableProvider);
 
-    public string Version => ExtensionVersion.DefaultSemVer;
+    public override string DisplayName => ExtensionResources.HangDumpExtensionDisplayName;
 
-    public string DisplayName => ExtensionResources.HangDumpExtensionDisplayName;
+    public override string Description => ExtensionResources.HangDumpExtensionDescription;
 
-    public string Description => ExtensionResources.HangDumpExtensionDescription;
+    public override Task<bool> IsEnabledAsync() => Task.FromResult(_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName));
 
-    public Task<bool> IsEnabledAsync() => Task.FromResult(_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName));
+    protected override string GetMissingEnvironmentVariableErrorMessage(string environmentVariableName)
+        => string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpEnvironmentVariableIsMissingErrorMessage, environmentVariableName);
 
-    public Task UpdateAsync(IEnvironmentVariables environmentVariables)
-    {
-        environmentVariables.SetVariable(
-            new EnvironmentVariable(PipeNameEnvironmentVariableName, _pipeName, isSecret: false, isLocked: true));
-        return Task.CompletedTask;
-    }
-
-    public Task<ValidationResult> ValidateTestHostEnvironmentVariablesAsync(IReadOnlyEnvironmentVariables environmentVariables)
-    {
-        if (!environmentVariables.TryGetVariable(PipeNameEnvironmentVariableName, out OwnedEnvironmentVariable? envVar))
-        {
-            return Task.FromResult(
-                ValidationResult.Invalid(
-                    string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpEnvironmentVariableIsMissingErrorMessage, PipeNameEnvironmentVariableName)));
-        }
-
-        if (envVar.Value != _pipeName)
-        {
-            return Task.FromResult(
-                ValidationResult.Invalid(
-                    string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpEnvironmentVariableInvalidValueErrorMessage, PipeNameEnvironmentVariableName, envVar.Value, _pipeName)));
-        }
-
-        // No problem found
-        return ValidationResult.ValidTask;
-    }
+    protected override string GetInvalidEnvironmentVariableValueErrorMessage(string environmentVariableName, string? actualValue, string expectedValue)
+        => string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpEnvironmentVariableInvalidValueErrorMessage, environmentVariableName, actualValue, expectedValue);
 }

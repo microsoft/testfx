@@ -77,7 +77,7 @@ Medienobjektdateien des letzten Versuchs werden in das Standardergebnisverzeichn
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
         <source>Option '{0}' expects an integer argument between 0 and 100</source>
-        <target state="new">Option '{0}' expects an integer argument between 0 and 100</target>
+        <target state="translated">Option „{0}“ erwartet ein ganzzahliges Argument zwischen 0 und 100.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
@@ -107,7 +107,7 @@ Medienobjektdateien des letzten Versuchs werden in das Standardergebnisverzeichn
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
         <source>Option '{0}' expects a non-negative integer argument</source>
-        <target state="new">Option '{0}' expects a non-negative integer argument</target>
+        <target state="translated">Option „{0}“ erwartet ein nicht negatives ganzzahliges Argument</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">

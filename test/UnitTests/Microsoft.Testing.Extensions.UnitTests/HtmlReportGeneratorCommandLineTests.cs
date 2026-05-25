@@ -11,13 +11,45 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class HtmlReportGeneratorCommandLineTests
 {
     [TestMethod]
-    public async Task IsValid_If_PureHtmlFileName_Is_Provided()
+    [DataRow("report.html")]
+    [DataRow("sub/report.html")]
+    public async Task IsValid_If_HtmlFileNameOrNestedRelativePath_Is_Provided(string fileName)
     {
         var provider = new HtmlReportGeneratorCommandLine();
         Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions()
             .First(x => x.Name == HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName);
 
-        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, ["report.html"]).ConfigureAwait(false);
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [fileName]).ConfigureAwait(false);
+
+        Assert.IsTrue(result.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(result.ErrorMessage));
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task IsValid_If_HtmlFileNameUsesBackslashSeparator_OnWindows()
+    {
+        // The '\' character is only a directory separator on Windows; on Unix it would be treated
+        // as part of the leaf file name (and later sanitized at write time).
+        var provider = new HtmlReportGeneratorCommandLine();
+        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions()
+            .First(x => x.Name == HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, ["sub\\report.html"]).ConfigureAwait(false);
+
+        Assert.IsTrue(result.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(result.ErrorMessage));
+    }
+
+    [TestMethod]
+    public async Task IsValid_If_HtmlFile_Has_Absolute_Path()
+    {
+        var provider = new HtmlReportGeneratorCommandLine();
+        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions()
+            .First(x => x.Name == HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName);
+        string fileName = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".html");
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [fileName]).ConfigureAwait(false);
 
         Assert.IsTrue(result.IsValid);
         Assert.IsTrue(string.IsNullOrEmpty(result.ErrorMessage));
@@ -40,15 +72,9 @@ public sealed class HtmlReportGeneratorCommandLineTests
     }
 
     [TestMethod]
-    [DataRow("sub/report.html")]
-    [DataRow("sub\\report.html")]
-    [DataRow("..\\report.html")]
     [DataRow("../report.html")]
-    [DataRow("..report.html")] // contains ".."
-    [DataRow("C:report.html")] // drive letter
-    [DataRow(" report.html")] // leading whitespace
-    [DataRow("report.html ")] // trailing whitespace
-    public async Task IsInvalid_If_FileName_Contains_Path_Or_Invalid_Chars(string fileName)
+    [DataRow("nested/../report.html")]
+    public async Task IsInvalid_If_RelativePath_Contains_ParentDirectorySegment(string fileName)
     {
         var provider = new HtmlReportGeneratorCommandLine();
         Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions()
@@ -57,7 +83,54 @@ public sealed class HtmlReportGeneratorCommandLineTests
         ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [fileName]).ConfigureAwait(false);
 
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual(HtmlReport.Resources.ExtensionResources.HtmlReportFileNameShouldNotContainPath, result.ErrorMessage);
+        Assert.AreEqual(HtmlReport.Resources.ExtensionResources.HtmlReportFileNameRelativePathMustStayUnderResultsDirectory, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task IsInvalid_If_HtmlFile_Uses_DriveRelativePath_OnWindows()
+    {
+        // Drive-relative paths such as "C:report.html" are "rooted" but not fully qualified, so they
+        // would silently escape the test results directory. Validate that they are rejected on Windows.
+        // On non-Windows OSes ':' is a valid file-name character, so this check is Windows-only and
+        // matches the TRX option behavior.
+        var provider = new HtmlReportGeneratorCommandLine();
+        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions()
+            .First(x => x.Name == HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, ["C:report.html"]).ConfigureAwait(false);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(HtmlReport.Resources.ExtensionResources.HtmlReportFileNameRelativePathMustStayUnderResultsDirectory, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(" ")]
+    [DataRow("sub/")]
+    [DataRow("sub/ ")]
+    public async Task IsInvalid_If_FileNamePart_Is_Empty_Or_Whitespace(string fileName)
+    {
+        var provider = new HtmlReportGeneratorCommandLine();
+        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions()
+            .First(x => x.Name == HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [fileName]).ConfigureAwait(false);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(HtmlReport.Resources.ExtensionResources.HtmlReportFileNameMustNotBeEmpty, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_If_No_Argument_Provided()
+    {
+        var provider = new HtmlReportGeneratorCommandLine();
+        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions()
+            .First(x => x.Name == HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, []).ConfigureAwait(false);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(HtmlReport.Resources.ExtensionResources.HtmlReportFileNameMustNotBeEmpty, result.ErrorMessage);
     }
 
     [TestMethod]
@@ -106,53 +179,15 @@ public sealed class HtmlReportGeneratorCommandLineTests
     }
 
     [TestMethod]
-    [DataRow("report*.html")] // * is Windows-invalid even though Linux allows it
-    [DataRow("report?.html")] // ? same
-    [DataRow("report\".html")]
-    [DataRow("report<.html")]
-    [DataRow("report>.html")]
-    [DataRow("report|.html")]
-    public async Task IsInvalid_When_FileName_Contains_WindowsInvalidChars_OnAnyOS(string fileName)
-    {
-        var provider = new HtmlReportGeneratorCommandLine();
-        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions()
-            .First(x => x.Name == HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName);
-
-        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [fileName]).ConfigureAwait(false);
-
-        Assert.IsFalse(result.IsValid);
-        Assert.AreEqual(HtmlReport.Resources.ExtensionResources.HtmlReportFileNameShouldNotContainPath, result.ErrorMessage);
-    }
-
-    [TestMethod]
+    [DataRow("report*.html")]
     [DataRow("CON.html")]
-    [DataRow("con.html")] // case insensitive
-    [DataRow("NUL.html")]
-    [DataRow("PRN.html")]
-    [DataRow("AUX.html")]
-    [DataRow("COM1.html")]
-    [DataRow("LPT9.html")]
-    public async Task IsInvalid_When_FileName_Is_Reserved_Windows_Device_Name(string fileName)
+    public async Task IsValid_When_FileName_WillBeSanitized_AtWriteTime(string fileName)
     {
         var provider = new HtmlReportGeneratorCommandLine();
         Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions()
             .First(x => x.Name == HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName);
 
         ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [fileName]).ConfigureAwait(false);
-
-        Assert.IsFalse(result.IsValid);
-        Assert.AreEqual(HtmlReport.Resources.ExtensionResources.HtmlReportFileNameShouldNotContainPath, result.ErrorMessage);
-    }
-
-    [TestMethod]
-    public async Task IsValid_When_FileName_Starts_With_Reserved_Name_But_Has_Extra_Chars()
-    {
-        // "CONfig.html" is not a reserved device name (only the bare "CON" base name is).
-        var provider = new HtmlReportGeneratorCommandLine();
-        Platform.Extensions.CommandLine.CommandLineOption option = provider.GetCommandLineOptions()
-            .First(x => x.Name == HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName);
-
-        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, ["CONfig.html"]).ConfigureAwait(false);
 
         Assert.IsTrue(result.IsValid);
     }

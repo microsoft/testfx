@@ -77,7 +77,7 @@ Movendo arquivos de ativo da última tentativa para o diretório de resultados p
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
         <source>Option '{0}' expects an integer argument between 0 and 100</source>
-        <target state="new">Option '{0}' expects an integer argument between 0 and 100</target>
+        <target state="translated">A opção '{0}' espera um argumento inteiro entre 0 e 100</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
@@ -107,7 +107,7 @@ Movendo arquivos de ativo da última tentativa para o diretório de resultados p
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
         <source>Option '{0}' expects a non-negative integer argument</source>
-        <target state="new">Option '{0}' expects a non-negative integer argument</target>
+        <target state="translated">A opção '{0}' espera um argumento inteiro não negativo</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">

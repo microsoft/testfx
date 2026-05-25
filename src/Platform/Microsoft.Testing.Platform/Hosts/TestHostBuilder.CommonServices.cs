@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
-using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
@@ -96,6 +95,23 @@ internal sealed partial class TestHostBuilder
         context.Configuration = (AggregatedConfiguration)await ((ConfigurationManager)Configuration).BuildAsync(loggingState.FileLoggerProvider, loggingState.CommandLineParseResult).ConfigureAwait(false);
         serviceProvider.TryAddService(context.Configuration);
 
+#pragma warning disable CA1416 // Browser does not support the test host controller process model. The provider itself is marked [UnsupportedOSPlatform("browser")].
+        if (!OperatingSystem.IsBrowser())
+        {
+            // Insert the built-in provider at the front so later user-supplied providers -
+            // including the VSTest bridge runsettings provider - can still override these
+            // unlocked values when both sources are present.
+            if (TestHostControllers is TestHostControllersManager testHostControllersManager)
+            {
+                testHostControllersManager.AddEnvironmentVariableProviderFirst(sp => new TestConfigurationEnvironmentVariableProvider(sp.GetConfiguration()));
+            }
+            else
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
+        }
+#pragma warning restore CA1416
+
         if (((TelemetryManager)Telemetry).BuildOTelProvider(serviceProvider) is { } otelService)
         {
             serviceProvider.AddService(otelService);
@@ -136,7 +152,6 @@ internal sealed partial class TestHostBuilder
         LoggerFactoryProxy loggerFactoryProxy = new();
         serviceProvider.TryAddService(loggerFactoryProxy);
 
-        CommandLine.AddProvider(() => new TerminalTestReporterCommandLineOptionsProvider());
         context.CommandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(loggingState.CommandLineParseResult, serviceProvider).ConfigureAwait(false);
         commandLineOptionsProxy.SetCommandLineOptions(context.CommandLineHandler);
 

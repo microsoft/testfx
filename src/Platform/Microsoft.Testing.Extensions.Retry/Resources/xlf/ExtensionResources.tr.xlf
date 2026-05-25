@@ -77,7 +77,7 @@ Son deneme varlık dosyaları, varsayılan sonuç dizinine taşınıyor
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
         <source>Option '{0}' expects an integer argument between 0 and 100</source>
-        <target state="new">Option '{0}' expects an integer argument between 0 and 100</target>
+        <target state="translated">'{0}' seçeneği 0 ile 100 arasında bir tamsayı bağımsız değişken bekliyor</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
@@ -107,7 +107,7 @@ Son deneme varlık dosyaları, varsayılan sonuç dizinine taşınıyor
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
         <source>Option '{0}' expects a non-negative integer argument</source>
-        <target state="new">Option '{0}' expects a non-negative integer argument</target>
+        <target state="translated">'{0}' seçeneği negatif olmayan bir tamsayı bağımsız değişken bekliyor</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">

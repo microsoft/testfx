@@ -13,12 +13,16 @@ public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.Tes
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    [Ignore("Tracked by https://github.com/microsoft/testfx/issues/8313. MSTest does not inspect [STAThread] on the entry-point Main; this scenario only ever passed when the async chain between MTP and the test runner happened to complete synchronously, which no longer holds on the Windows Debug leg after recent MTP refactors. Re-enable when implicit STA detection from Main is implemented.")]
-    public async Task TestMethodThreading_MainIsSTAThread_OnWindows_NoRunsettingsProvided_ThreadIsSTA(string tfm)
+    public async Task TestMethodThreading_OnWindows_TestConfigJsonAsksForSTA_ThreadIsSTA(string tfm)
     {
-        // Test cannot work on non-Windows OSes as the main method is marked with [STAThread].
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        string testConfigFilePath = Path.Combine(testHost.DirectoryName, "sta.testconfig.json");
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--config-file \"{testConfigFilePath}\"",
+            environmentVariables: new()
+            {
+                ["MSTEST_THREAD_STATE_IS_STA"] = "1",
+            }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -27,15 +31,16 @@ public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.Tes
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task TestMethodThreading_MainIsSTAThread_OnWindows_RunsettingsAsksForSTA_ThreadIsSTA(string tfm)
+    public async Task TestMethodThreading_OnWindows_RunsettingsAsksForSTA_ThreadIsSTA(string tfm)
     {
-        // Test cannot work on non-Windows OSes as the main method is marked with [STAThread]
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
-        {
-            ["MSTEST_THREAD_STATE_IS_STA"] = "1",
-        }, cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--settings {runSettingsFilePath}",
+            environmentVariables: new()
+            {
+                ["MSTEST_THREAD_STATE_IS_STA"] = "1",
+            }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -44,15 +49,16 @@ public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.Tes
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task TestMethodThreading_MainIsSTAThread_OnWindows_RunsettingsAsksForMTA_ThreadIsMTA(string tfm)
+    public async Task TestMethodThreading_OnWindows_RunsettingsAsksForMTA_ThreadIsMTA(string tfm)
     {
-        // Test cannot work on non-Windows OSes as the main method is marked with [STAThread]
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
-        {
-            ["MSTEST_THREAD_STATE_IS_STA"] = "0",
-        }, cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--settings {runSettingsFilePath}",
+            environmentVariables: new()
+            {
+                ["MSTEST_THREAD_STATE_IS_STA"] = "0",
+            }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -65,10 +71,9 @@ public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.Tes
         public string TargetAssetPath => GetAssetPath(ProjectName);
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
-                (SourceCode + ProgramFileSourceCode)
+                SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", ProjectName)
-                .PatchCodeWithReplace("$GenerateEntryPoint$", "false")
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
         private const string SourceCode = """
@@ -88,6 +93,15 @@ public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.Tes
     </RunConfiguration>
 </RunSettings>
 
+#file sta.testconfig.json
+{
+  "mstest": {
+    "execution": {
+      "executionApartmentState": "STA"
+    }
+  }
+}
+
 #file $ProjectName$.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
@@ -96,7 +110,6 @@ public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.Tes
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <LangVersion>latest</LangVersion>
-    <GenerateTestingPlatformEntryPoint>$GenerateEntryPoint$</GenerateTestingPlatformEntryPoint>
   </PropertyGroup>
 
   <ItemGroup>
@@ -110,6 +123,9 @@ public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.Tes
     </None>
     <None Update="mta.runsettings">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="sta.testconfig.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
@@ -182,26 +198,6 @@ public class UnitTest1
         {
             Assert.AreNotEqual(ApartmentState.STA, apartmentState);
         }
-    }
-}
-""";
-
-        private const string ProgramFileSourceCode = """
-#file Program.cs
-using System;
-using Microsoft.Testing.Platform.Builder;
-
-public static class Program
-{
-    // Async main doesn't respect [STAThread] attribute so do a version with `GetAwaiter().GetResult()`
-    // See https://github.com/dotnet/roslyn/issues/22112
-    [STAThread]
-    public static int Main(string[] args)
-    {
-        ITestApplicationBuilder builder = TestApplication.CreateBuilderAsync(args).GetAwaiter().GetResult();
-        Microsoft.VisualStudio.TestTools.UnitTesting.TestingPlatformBuilderHook.AddExtensions(builder, args);
-        using ITestApplication app = builder.BuildAsync().GetAwaiter().GetResult();
-        return app.RunAsync().GetAwaiter().GetResult();
     }
 }
 """;

@@ -455,7 +455,7 @@
       </trans-unit>
       <trans-unit id="DoesNotMatchRegexFailedSummary">
         <source>Expected string to not match the specified pattern.</source>
-        <target state="new">Expected string to not match the specified pattern.</target>
+        <target state="translated">Dizenin belirtilen kalıpla eşleşmemesi bekleniyordu.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
@@ -634,7 +634,7 @@ Gerçekte olan: {2}</target>
       </trans-unit>
       <trans-unit id="AreNotEqualFailedSummary">
         <source>Expected values to differ.</source>
-        <target state="new">Expected values to differ.</target>
+        <target state="translated">Değerlerin farklı olması bekleniyordu.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualStringsFailedSummary">
@@ -669,7 +669,7 @@ Gerçekte olan: {2}</target>
       </trans-unit>
       <trans-unit id="MatchesRegexFailedSummary">
         <source>Expected string to match the specified pattern.</source>
-        <target state="new">Expected string to match the specified pattern.</target>
+        <target state="translated">Dizenin belirtilen kalıpla eşleşmesi bekleniyordu.</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">

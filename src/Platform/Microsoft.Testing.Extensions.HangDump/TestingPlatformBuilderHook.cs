@@ -18,6 +18,7 @@ public static class TestingPlatformBuilderHook
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] _)
         => testApplicationBuilder.AddHangDumpProvider();
 }

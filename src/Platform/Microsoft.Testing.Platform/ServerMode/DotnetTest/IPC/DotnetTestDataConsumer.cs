@@ -27,7 +27,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         typeof(TestNodeUpdateMessage),
         typeof(SessionFileArtifact),
         typeof(FileArtifact),
-        typeof(TestRequestExecutionTimeInfo)
     ];
 
     public string Uid => nameof(DotnetTestDataConsumer);
