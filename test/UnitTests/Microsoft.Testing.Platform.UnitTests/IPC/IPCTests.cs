@@ -268,7 +268,7 @@ public sealed class IPCTests
     {
         public override int Id => 4;
 
-        protected override LongMessage DeserializeCore(Stream stream) => new(ReadInt(stream));
+        protected override LongMessage DeserializeCore(Stream stream) => new(ReadLong(stream));
 
         protected override void SerializeCore(LongMessage objectToSerialize, Stream stream) => WriteLong(stream, objectToSerialize.Long);
     }

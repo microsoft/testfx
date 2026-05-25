@@ -12,7 +12,7 @@ internal sealed class VoidResponseSerializer : NamedPipeSerializer<VoidResponse>
     public override int Id => VoidResponseFieldsId.MessagesSerializerId;
 
     protected override VoidResponse DeserializeCore(Stream _)
-        => new VoidResponse();
+        => VoidResponse.CachedInstance;
 
     protected override void SerializeCore(VoidResponse _, Stream __)
     {
