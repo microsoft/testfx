@@ -251,10 +251,11 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             {
                 testHostProcessId = testHostProcess.Id;
             }
-            catch (InvalidOperationException) when (testHostProcess.HasExited)
+            catch (InvalidOperationException ex) when (testHostProcess.HasExited)
             {
                 // Access PID can throw InvalidOperationException if the process has already exited:
                 // System.InvalidOperationException: No process is associated with this object.
+                await _logger.LogDebugAsync($"Unable to obtain test host PID; process had already exited (ExitCode: {testHostProcess.ExitCode}). {ex.GetType().FullName}: {ex.Message}").ConfigureAwait(false);
             }
 
             testHostProcess.Exited += (_, _) =>
@@ -355,6 +356,14 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             else if (!testHostProcessInformation.HasExitedGracefully ||
                 _testHostExitCodeReceived != testHostProcess.ExitCode)
             {
+                await _logger.LogWarningAsync(
+                    $"Test host did not exit gracefully. " +
+                    $"OS exit code: '{testHostProcess.ExitCode}', " +
+                    $"IPC-reported exit code: '{(_testHostExitCodeReceived.HasValue ? _testHostExitCodeReceived.Value.ToString(CultureInfo.InvariantCulture) : "<not received>")}', " +
+                    $"TestHostCompletedRequest received: '{_testHostCompletedReceived}', " +
+                    $"PID: '{(_testHostPID.HasValue ? _testHostPID.Value.ToString(CultureInfo.InvariantCulture) : "<unknown>")}', " +
+                    $"CancellationRequested: '{cancellationToken.IsCancellationRequested}'.")
+                    .ConfigureAwait(false);
                 await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
                 exitCode = (int)ExitCode.TestHostProcessExitedNonGracefully;
             }

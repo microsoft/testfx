@@ -23,23 +23,54 @@ internal sealed class UnhandledExceptionHandler(IEnvironment environment, IConso
 
     private void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
-        string error = $"[UnhandledExceptionHandler.OnCurrentDomainUnhandledException{(_isTestController ? "(testhost controller workflow)" : "(testhost workflow)")}] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}";
-        LogErrorAndExit(error, !e.IsTerminating);
+        string prefix = $"[UnhandledExceptionHandler.OnCurrentDomainUnhandledException{(_isTestController ? "(testhost controller workflow)" : "(testhost workflow)")}]";
+        var exception = e.ExceptionObject as Exception;
+        string consoleMessage = $"{prefix} {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}";
+
+        // The structured log keeps the prefix + IsTerminating in the message and routes the typed
+        // exception through the exception parameter so the existing formatter (and structured sinks)
+        // can capture stack/inner exceptions independently of the message text.
+        string logMessage = exception is not null
+            ? $"{prefix} IsTerminating: {e.IsTerminating}"
+            : consoleMessage;
+
+        LogErrorAndExit(consoleMessage, logMessage, exception, !e.IsTerminating);
     }
 
     private void OnTaskSchedulerUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
-        string error = $"[UnhandledExceptionHandler.OnTaskSchedulerUnobservedTaskException{(_isTestController ? "(testhost controller workflow)" : "(testhost workflow)")}] Unhandled exception: {e.Exception}";
-        LogErrorAndExit(error, true);
+        string prefix = $"[UnhandledExceptionHandler.OnTaskSchedulerUnobservedTaskException{(_isTestController ? "(testhost controller workflow)" : "(testhost workflow)")}]";
+        string consoleMessage = $"{prefix} Unhandled exception: {e.Exception}";
+        string logMessage = $"{prefix} Unhandled task exception";
+        LogErrorAndExit(consoleMessage, logMessage, e.Exception, true);
     }
 
-    private void LogErrorAndExit(string error, bool forceClose)
+    private void LogErrorAndExit(string consoleMessage, string logMessage, Exception? exception, bool forceClose)
     {
-        _console.WriteLine(error);
-        _logger?.LogCritical(error);
+        _console.WriteLine(consoleMessage);
+
+        if (_logger is not null)
+        {
+            if (exception is not null)
+            {
+                _logger.Log(LogLevel.Critical, logMessage, exception, LoggingExtensions.Formatter);
+            }
+            else
+            {
+                _logger.LogCritical(logMessage);
+            }
+        }
+
         if (forceClose)
         {
-            _environment.FailFast(error);
+            if (exception is not null)
+            {
+                _environment.FailFast(consoleMessage, exception);
+            }
+            else
+            {
+                _environment.FailFast(consoleMessage);
+            }
         }
     }
 }

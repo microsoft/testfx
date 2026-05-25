@@ -63,9 +63,18 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
             ILogger logger = syncFileLoggerProvider.CreateLogger(nameof(ConfigurationManager));
             if (logger.IsEnabled(LogLevel.Trace))
             {
-                using IFileStream configFileStream = _fileSystem.NewFileStream(defaultJsonConfiguration.ConfigurationFile, FileMode.Open, FileAccess.Read);
-                StreamReader streamReader = new(configFileStream.Stream);
-                await logger.LogTraceAsync($"Configuration file ('{defaultJsonConfiguration.ConfigurationFile}') content:\n{await streamReader.ReadToEndAsync().ConfigureAwait(false)}").ConfigureAwait(false);
+                try
+                {
+                    using IFileStream configFileStream = _fileSystem.NewFileStream(defaultJsonConfiguration.ConfigurationFile, FileMode.Open, FileAccess.Read);
+                    StreamReader streamReader = new(configFileStream.Stream);
+                    await logger.LogTraceAsync($"Configuration file ('{defaultJsonConfiguration.ConfigurationFile}') content:\n{await streamReader.ReadToEndAsync().ConfigureAwait(false)}").ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    // The trace-level dump is a diagnostic aid only; never let an I/O failure here
+                    // break the configuration pipeline.
+                    await logger.LogTraceAsync($"Failed to dump configuration file ('{defaultJsonConfiguration.ConfigurationFile}') content: {ex.GetType().FullName}: {ex.Message}").ConfigureAwait(false);
+                }
             }
         }
 
