@@ -23,10 +23,15 @@ Then:
    dotnet publish samples\WasiPlayground\WasiPlayground.csproj -c Debug -f net10.0
    ```
 
-2. The pre-built `dotnet.wasm` does not embed the ICU data file, so copy it next to the bundle:
+2. The pre-built `dotnet.wasm` does not embed the ICU data file, so copy it
+   next to the bundle. First list the installed runtime-pack version (a
+   single folder name such as `10.0.8`), then substitute it into the copy
+   command:
 
    ```cmd
-   copy .dotnet\packs\Microsoft.NETCore.App.Runtime.Mono.wasi-wasm\10.0.7\runtimes\wasi-wasm\native\icudt.dat ^
+   dir /b .dotnet\packs\Microsoft.NETCore.App.Runtime.Mono.wasi-wasm
+
+   copy .dotnet\packs\Microsoft.NETCore.App.Runtime.Mono.wasi-wasm\<runtime-version>\runtimes\wasi-wasm\native\icudt.dat ^
         artifacts\bin\WasiPlayground\Debug\net10.0\wasi-wasm\AppBundle\
    ```
 
@@ -56,8 +61,8 @@ System.PlatformNotSupportedException: Arg_PlatformNotSupported
 The exception comes from the C# compiler's synthetic `Main` wrapper for
 `async Task Main`, which calls `Task.GetAwaiter().GetResult()` &rarr;
 `Task.Wait()`. On single-threaded `wasi-wasm` (no thread pool) this throws
-`PlatformNotSupportedException`. Tracked separately so this sample can act as
-the canonical repro.
+`PlatformNotSupportedException`. Tracked in [#5366](https://github.com/microsoft/testfx/issues/5366)
+so this sample can act as the canonical repro.
 
 ## Build configuration notes
 
@@ -67,5 +72,5 @@ the canonical repro.
 | --- | --- |
 | `UsingWasiRuntimeWorkload=true` | Workaround for an SDK manifest bug in `11.0.100-preview.5` where `$(UsingWasiRuntimeWorkload)` never resolves to `true` for net10.0 projects, so the WASI Sdk targets are never imported and no `dotnet.wasm` is produced. |
 | `WasmSingleFileBundle=false` | Single-file bundling requires the [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) (clang) toolchain to relink the native runtime. Keeping the managed assemblies on disk avoids that requirement. |
-| `InvariantGlobalization=true` | Trimmed builds otherwise crash on startup trying to load `icudt.dat`. |
+| `InvariantGlobalization=true` | Prevents the trimmer from crashing during publish, but the pre-built `dotnet.wasm` still loads ICU at runtime, so `icudt.dat` must still be staged next to the bundle (see step 2). |
 
