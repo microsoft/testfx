@@ -675,7 +675,7 @@ Varsayılan değer, test uygulamasını içeren dizindeki TestResults'dır.</tar
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
-        <target state="new">'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</target>
+        <target state="translated">'timeout' seçeneğinin &lt;value&gt;[h|m|s] biçiminde dize olarak bir bağımsız değişkeni olmalıdır; 'value' burada desteklenen maksimum süreyi aşmayan sonlu, negatif olmayan bir sayıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
