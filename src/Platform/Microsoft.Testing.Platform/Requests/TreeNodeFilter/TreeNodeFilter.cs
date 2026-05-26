@@ -68,6 +68,12 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
     /// OP = '&amp;' | '|'
     /// NODE_VALUE = TOKEN | TOKEN '[' FILTER_EXPR ']'
     /// TOKEN = string
+    ///
+    /// OR expressions are supported for a single path segment, for example:
+    /// <c>/A/B/C/(Test1|Test2)</c>.
+    ///
+    /// OR expressions over full paths are not supported, for example:
+    /// <c>(/A/B/C/Test1)|(/A/B/C/Test2)</c>.
     /// </code>
     /// </remarks>
     /// <exception cref="InvalidOperationException">
@@ -115,14 +121,14 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                         _ => throw ApplicationStateGuard.Unreachable(),
                     };
 
-                    ProcessHigherPrecedenceOperators(expressionStack, operatorStack, currentOp);
+                    ProcessHigherPrecedenceOperators(expressionStack, operatorStack, currentOp, filter);
 
                     isOperatorAllowed = false;
                     isPropAllowed = false;
                     break;
 
                 case "/":
-                    ProcessHigherPrecedenceOperators(expressionStack, operatorStack, OperatorKind.Separator);
+                    ProcessHigherPrecedenceOperators(expressionStack, operatorStack, OperatorKind.Separator, filter);
 
                     isOperatorAllowed = false;
                     isPropAllowed = false;
@@ -165,7 +171,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                             break;
                         }
 
-                        ProcessStackOperator(topStackOperator, expressionStack, operatorStack);
+                        ProcessStackOperator(topStackOperator, expressionStack, operatorStack, filter);
                     }
 
                     isOperatorAllowed = true;
@@ -197,7 +203,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                             break;
                         }
 
-                        ProcessStackOperator(topStackOperator, expressionStack, operatorStack);
+                        ProcessStackOperator(topStackOperator, expressionStack, operatorStack, filter);
                     }
 
                     // We should end up with an expression and a property.
@@ -262,7 +268,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         while (operatorStack.Count > 0 && operatorStack.Peek() != OperatorKind.Separator)
         {
             topStackOperator = operatorStack.Pop();
-            ProcessStackOperator(topStackOperator, expressionStack, operatorStack);
+            ProcessStackOperator(topStackOperator, expressionStack, operatorStack, filter);
         }
 
         var parsedFilter = expressionStack.Reverse().ToList();
@@ -283,12 +289,13 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         static void ProcessHigherPrecedenceOperators(
             Stack<FilterExpression> expressionStack,
             Stack<OperatorKind> operatorStack,
-            OperatorKind currentOp)
+            OperatorKind currentOp,
+            string currentFilter)
         {
             while (operatorStack.Count != 0 && operatorStack.Peek() > currentOp)
             {
                 OperatorKind topStackOperator = operatorStack.Pop();
-                ProcessStackOperator(topStackOperator, expressionStack, operatorStack);
+                ProcessStackOperator(topStackOperator, expressionStack, operatorStack, currentFilter);
                 break;
             }
 
@@ -321,7 +328,7 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         }
     }
 
-    private static void ProcessStackOperator(OperatorKind op, Stack<FilterExpression> expr, Stack<OperatorKind> ops)
+    private static void ProcessStackOperator(OperatorKind op, Stack<FilterExpression> expr, Stack<OperatorKind> ops, string filter)
     {
         switch (op)
         {
@@ -343,14 +350,14 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                     subexprs.Add(expr.Pop());
                 }
 
-                FilterOperator filter = op switch
+                FilterOperator filterOperator = op switch
                 {
                     OperatorKind.And => FilterOperator.And,
                     OperatorKind.Or => FilterOperator.Or,
                     _ => throw ApplicationStateGuard.Unreachable(),
                 };
 
-                expr.Push(new OperatorExpression(filter, subexprs.ToArray()));
+                expr.Push(new OperatorExpression(filterOperator, subexprs.ToArray()));
                 break;
 
             case OperatorKind.FilterEquals:
@@ -382,7 +389,8 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
                 // Note: Handling of other operations in valid scenarios should be handled by the caller.
                 //       Reaching this code for instance means that we're trying to process / operator
                 //       in the middle of a ( expression ).
-                throw new InvalidOperationException(PlatformResources.TreeNodeFilterUnexpectedSlashOperatorErrorMessage);
+                throw new InvalidOperationException(
+                    string.Format(CultureInfo.InvariantCulture, PlatformResources.TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage, filter));
         }
     }
 

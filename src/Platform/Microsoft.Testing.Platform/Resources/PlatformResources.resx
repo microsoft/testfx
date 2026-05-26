@@ -235,6 +235,10 @@
   <data name="TreeNodeFilterUnexpectedSlashOperatorErrorMessage" xml:space="preserve">
     <value>Filter contains an unexpected '/' operator inside a parenthesized expression</value>
   </data>
+  <data name="TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage" xml:space="preserve">
+    <value>Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</value>
+    <comment>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'.</comment>
+  </data>
   <data name="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage" xml:space="preserve">
     <value>An 'ITestExecutionFilterFactory' factory is already set</value>
   </data>
