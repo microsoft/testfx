@@ -22,7 +22,7 @@ dotnet test --logger trx --logger "console;verbosity=detailed" --collect "XPlat 
 In MTP, each of these capabilities is exposed by a distinct extension that registers its own option(s):
 
 | VSTest | MTP equivalent |
-|---|---|
+| --- | --- |
 | `--logger trx` | `--report-trx` (`Microsoft.Testing.Extensions.TrxReport`) |
 | `--logger "console;verbosity=detailed"` | `--output detailed` (`Microsoft.Testing.Platform`) |
 | `--collect "XPlat Code Coverage"` | `--coverage` (`Microsoft.Testing.Extensions.CodeCoverage`) |
@@ -285,7 +285,7 @@ Other rules are inherently **runtime** because the `Map` delegate is opaque at r
 ### Interaction with existing surfaces
 
 | Surface | Behaviour |
-|---|---|
+| --- | --- |
 | `ICommandLineOptions.IsOptionSet("report-trx")` | Returns `true` if the user passed `--report-trx` *or* `--logger trx`. Providers don't need to know which path was taken. |
 | `ICommandLineOptions.TryGetOptionArgumentList` | Same — the canonical option is what providers query. |
 | `--help` | Help renderer adds a new section, **VSTest-style options (compatibility)**, listing every mapping with its description. Canonical options remain the primary listing. |
@@ -337,7 +337,7 @@ Reject the proposal entirely and rely on documentation. This is the current stat
 ### Alternative 5 — Naming variants considered
 
 | Considered name | Why rejected |
-|---|---|
+| --- | --- |
 | `CommandLineAlias` | Misleading; "alias" implies a pure rename. (See **Naming** above.) |
 | `CommandLineOptionTransformation` | Accurate but evokes compiler passes / heavy machinery. |
 | `CommandLineOptionExpander` | Accurate for 1→N case but awkward for the 1→1 case. |
@@ -361,7 +361,7 @@ Reject the proposal entirely and rely on documentation. This is the current stat
 ## Phasing
 
 | Phase | Deliverable | Owner |
-|---|---|---|
+| --- | --- | --- |
 | 1 | Mapping infrastructure (`ICommandLineOptionMappingProvider`, parser integration, validation, help/info plumbing). | `Microsoft.Testing.Platform` |
 | 2 | First mapping shipped: `--logger trx` in `Microsoft.Testing.Extensions.TrxReport`. | TRX extension |
 | 3 | `--collect "XPlat Code Coverage"` / `--collect "Code Coverage"` in `Microsoft.Testing.Extensions.CodeCoverage`. | Code coverage extension |

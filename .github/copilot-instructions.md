@@ -24,7 +24,7 @@ Solution files: `TestFx.slnx` is the full solution; `MSTest.slnf`, `Microsoft.Te
 Always use the repo-local toolchain via the build scripts — they restore the pinned .NET SDK from `global.json` into `.dotnet/` (or reuse a matching `DOTNET_INSTALL_DIR`) and prepend that `dotnet` location to `PATH`.
 
 | Task | Windows | Linux/macOS |
-|---|---|---|
+| --- | --- | --- |
 | Restore + build (Debug) | `.\build.cmd` | `./build.sh` |
 | Release build | `.\build.cmd -c Release` | `./build.sh -c Release` |
 | Produce NuGet packages | `.\build.cmd -pack` | `./build.sh -pack` |
