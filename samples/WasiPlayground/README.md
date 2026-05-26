@@ -73,4 +73,3 @@ so this sample can act as the canonical repro.
 | `UsingWasiRuntimeWorkload=true` | Workaround for an SDK manifest bug in `11.0.100-preview.5` where `$(UsingWasiRuntimeWorkload)` never resolves to `true` for net10.0 projects, so the WASI Sdk targets are never imported and no `dotnet.wasm` is produced. |
 | `WasmSingleFileBundle=false` | Single-file bundling requires the [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) (clang) toolchain to relink the native runtime. Keeping the managed assemblies on disk avoids that requirement. |
 | `InvariantGlobalization=true` | Prevents the trimmer from crashing during publish, but the pre-built `dotnet.wasm` still loads ICU at runtime, so `icudt.dat` must still be staged next to the bundle (see step 2). |
-

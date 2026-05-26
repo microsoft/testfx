@@ -20,7 +20,14 @@
     <UsingWasiRuntimeWorkload>true</UsingWasiRuntimeWorkload>
 
     <Nullable>enable</Nullable>
-    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <!--
+      IsTestingPlatformApplication is intentionally NOT set when running under
+      'dotnet test' (CI's Debug Test step on TestFx.slnx passes -p:UsingDotNetTest=true).
+      The wasi-wasm executable can only run via WasmAppHost + wasmtime, which is not
+      available on Windows CI agents. Keeping the property true during a normal build
+      ensures the MTP entry point is still generated and baked into the wasm bundle.
+    -->
+    <IsTestingPlatformApplication Condition=" '$(UsingDotNetTest)' != 'true' ">true</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <ItemGroup>

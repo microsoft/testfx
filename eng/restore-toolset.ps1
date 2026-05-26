@@ -10,6 +10,10 @@
 
 $RequiredWorkloads = @('wasi-experimental-net10')
 
+# Note: `wasm-tools-net10` is documented in samples/WasiPlayground/README.md
+# as a prerequisite for `dotnet publish`, but it is not needed by the repo's
+# `dotnet build` so we keep the CI install minimal.
+
 $dotnetRoot = if (-not [string]::IsNullOrEmpty($env:DOTNET_INSTALL_DIR)) {
   $env:DOTNET_INSTALL_DIR
 } else {
@@ -35,7 +39,7 @@ if ($missing.Count -eq 0) {
 }
 
 Write-Host "Installing .NET SDK workloads: $($missing -join ', ')"
-& $dotnet workload install @missing --skip-sign-check
+& $dotnet workload install @missing
 if ($LASTEXITCODE -ne 0) {
   Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Failed to install workloads '$($missing -join ', ')' (dotnet workload install exit code $LASTEXITCODE)."
   ExitWithExitCode $LASTEXITCODE
