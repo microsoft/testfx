@@ -6,8 +6,6 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class PolyfillsEmbeddedAttributeConventionTests
 {
-    private static readonly string RepositoryRoot = FindRepositoryRoot();
-
     private static readonly Regex TypeDeclarationRegex = new(
         @"(?ms)(?<attributes>(?:\s*\[[^\]]+\]\s*)*)(?:internal|public|private|protected)\s+(?:sealed\s+|partial\s+|abstract\s+|static\s+|readonly\s+)*(?:class|struct|interface|enum)\s+(?<typeName>\w+Attribute)\b",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
@@ -19,9 +17,12 @@ public sealed class PolyfillsEmbeddedAttributeConventionTests
     [TestMethod]
     public void PolyfillAttributeTypes_AreDecoratedWithEmbeddedAttribute()
     {
-        string polyfillsDirectory = Path.Combine(RepositoryRoot, "src", "Polyfills");
+        string? repositoryRoot = FindRepositoryRoot();
+        Assert.IsNotNull(repositoryRoot, "Unable to locate repository root from test execution directory.");
 
-        foreach (string filePath in Directory.EnumerateFiles(polyfillsDirectory, "*Attribute.cs"))
+        string polyfillsDirectory = Path.Combine(repositoryRoot, "src", "Polyfills");
+
+        foreach (string filePath in Directory.EnumerateFiles(polyfillsDirectory, "*.cs"))
         {
             if (Path.GetFileName(filePath).Equals("EmbeddedAttribute.cs", StringComparison.Ordinal))
             {
@@ -30,7 +31,11 @@ public sealed class PolyfillsEmbeddedAttributeConventionTests
 
             string source = File.ReadAllText(filePath);
             MatchCollection typeDeclarations = TypeDeclarationRegex.Matches(source);
-            Assert.IsNotEmpty(typeDeclarations.Cast<Match>(), $"No *Attribute type declaration found in '{filePath}'.");
+
+            if (typeDeclarations.Count == 0)
+            {
+                continue;
+            }
 
             foreach (Match declaration in typeDeclarations)
             {
@@ -44,7 +49,7 @@ public sealed class PolyfillsEmbeddedAttributeConventionTests
         }
     }
 
-    private static string FindRepositoryRoot()
+    private static string? FindRepositoryRoot()
     {
         DirectoryInfo? currentDirectory = new(AppContext.BaseDirectory);
         while (currentDirectory is not null &&
@@ -53,7 +58,6 @@ public sealed class PolyfillsEmbeddedAttributeConventionTests
             currentDirectory = currentDirectory.Parent;
         }
 
-        Assert.IsNotNull(currentDirectory, "Unable to locate repository root from test execution directory.");
-        return currentDirectory.FullName;
+        return currentDirectory?.FullName;
     }
 }
