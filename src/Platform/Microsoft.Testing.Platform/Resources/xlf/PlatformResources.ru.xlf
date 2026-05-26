@@ -685,6 +685,11 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
 Принимает один аргумент в виде строки в формате &lt;value&gt;[h|m|s], где "value" — число с плавающей точкой.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PressCtrlCAgainToForceExit">
+        <source>Press Ctrl+C again to force exit.</source>
+        <target state="new">Press Ctrl+C again to force exit.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">Процесс должен быть завершен, прежде чем мы сможем определить это значение</target>

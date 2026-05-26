@@ -685,6 +685,11 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
 Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s], kde value je hodnota datového typu float.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PressCtrlCAgainToForceExit">
+        <source>Press Ctrl+C again to force exit.</source>
+        <target state="new">Press Ctrl+C again to force exit.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">Proces měl být ukončen před tím, než jsme mohli určit tuto hodnotu.</target>

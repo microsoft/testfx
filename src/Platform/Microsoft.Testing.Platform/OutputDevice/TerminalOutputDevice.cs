@@ -127,7 +127,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             // stdout, corrupting the JSON document. Route a single-line cancellation notice
             // to stderr instead so the user still gets feedback on Ctrl+C.
             await _policiesService.RegisterOnAbortCallbackAsync(
-                () => WriteToStandardErrorAsync(PlatformResources.CancellingTestSession)).ConfigureAwait(false);
+                async () =>
+                {
+                    await WriteToStandardErrorAsync(PlatformResources.CancellingTestSession).ConfigureAwait(false);
+                    await WriteToStandardErrorAsync(PlatformResources.PressCtrlCAgainToForceExit).ConfigureAwait(false);
+                }).ConfigureAwait(false);
         }
         else
         {

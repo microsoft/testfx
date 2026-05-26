@@ -685,6 +685,11 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
 Toma un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' es float.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PressCtrlCAgainToForceExit">
+        <source>Press Ctrl+C again to force exit.</source>
+        <target state="new">Press Ctrl+C again to force exit.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">El proceso debería haberse terminado para poder determinar este valor</target>
