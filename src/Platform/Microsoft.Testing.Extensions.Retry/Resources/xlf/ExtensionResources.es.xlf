@@ -51,13 +51,13 @@ Moviendo los archivos de recursos del último intento al directorio de resultado
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
-        <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</source>
-        <target state="translated">Agregue un retraso entre reintentos. El retraso se expresa como un valor de tiempo, por ejemplo, 200, 1s, 2,5 m, 1h. La unidad predeterminada es milisegundos.</target>
+        <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</source>
+        <target state="new">Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
-        <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 1s, 2.5m, 1h)</source>
-        <target state="translated">La opción "--retry-failed-tests-delay" requiere un valor de intervalo de tiempo válido, que no sea negativo y no sea mayor que 2147483647 ms (~24.20:31:23.647) (por ejemplo, 200, 1 s, 2,5 m, 1 h)</target>
+        <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</source>
+        <target state="new">Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">

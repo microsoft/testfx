@@ -24,6 +24,6 @@ configuration:
                 user: github-actions[bot]
         then:
           - addLabel:
-              label: 'Needs: Triage :mag:'
+              label: 'needs/triage'
 onFailure:
 onSuccess:

@@ -34,6 +34,22 @@ internal sealed partial class JsonConfigurationSource
             }
         }
 
+        private async Task LogDebugAsync(string message)
+        {
+            if (_logger is not null)
+            {
+                await _logger.LogDebugAsync(message).ConfigureAwait(false);
+            }
+        }
+
+        private async Task LogErrorAsync(string message, Exception exception)
+        {
+            if (_logger is not null)
+            {
+                await _logger.LogErrorAsync(message, exception).ConfigureAwait(false);
+            }
+        }
+
         public async Task LoadAsync()
         {
             string configFileName;
@@ -48,8 +64,11 @@ internal sealed partial class JsonConfigurationSource
                         // As this is only for the purpose of throwing an exception, ignore any exceptions during the GetFullPath call.
                         configFileName = Path.GetFullPath(configFileName);
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        // Best-effort path resolution; surface the failure at Debug so logs explain why the
+                        // error message may show a relative path instead of an absolute one.
+                        await LogDebugAsync($"Path.GetFullPath('{configFileName}') failed while preparing FileNotFoundException: {ex.GetType().FullName}: {ex.Message}").ConfigureAwait(false);
                     }
 
                     throw new FileNotFoundException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConfigurationFileNotFound, configFileName), configFileName);
@@ -65,6 +84,7 @@ internal sealed partial class JsonConfigurationSource
 
                 if (!_fileSystem.ExistFile(configFileName))
                 {
+                    await LogDebugAsync($"Default JSON config file '{configFileName}' not found; skipping load.").ConfigureAwait(false);
                     return;
                 }
             }
@@ -74,7 +94,15 @@ internal sealed partial class JsonConfigurationSource
             ConfigurationFile = configFileName;
 
             using IFileStream fileStream = _fileSystem.NewFileStream(configFileName, FileMode.Open, FileAccess.Read);
-            (_singleValueData, _propertyToAllChildren) = JsonConfigurationFileParser.Parse(fileStream.Stream);
+            try
+            {
+                (_singleValueData, _propertyToAllChildren) = JsonConfigurationFileParser.Parse(fileStream.Stream);
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync($"Failed to parse configuration file '{configFileName}'", ex).ConfigureAwait(false);
+                throw;
+            }
         }
 
         public bool TryGet(string key, out string? value)

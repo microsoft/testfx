@@ -141,6 +141,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             if (currentReadBytes == 0)
             {
                 // The client has disconnected
+                await _logger.LogDebugAsync($"Client disconnected from pipe '{PipeName.Name}', exiting read loop").ConfigureAwait(false);
                 return;
             }
 
@@ -304,6 +305,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
             if (!_loopTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
+                _logger.LogError($"NamedPipeServer.Dispose: '{nameof(InternalLoopAsync)}' for pipe '{PipeName.Name}' did not complete within {TimeoutHelper.DefaultHangTimeSpanTimeout}. WasConnected={WasConnected}, LoopTaskStatus={_loopTask.Status}.");
                 throw new InvalidOperationException(string.Format(
                     CultureInfo.InvariantCulture,
                     PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
@@ -337,6 +339,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             }
             catch (TimeoutException)
             {
+                await _logger.LogErrorAsync($"NamedPipeServer.DisposeAsync: '{nameof(InternalLoopAsync)}' for pipe '{PipeName.Name}' did not complete within {TimeoutHelper.DefaultHangTimeSpanTimeout}. WasConnected={WasConnected}, LoopTaskStatus={_loopTask.Status}.").ConfigureAwait(false);
                 throw new InvalidOperationException(string.Format(
                     CultureInfo.InvariantCulture,
                     PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,

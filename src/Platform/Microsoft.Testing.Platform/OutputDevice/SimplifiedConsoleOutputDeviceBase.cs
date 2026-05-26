@@ -85,6 +85,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
             () =>
             {
                 ConsoleLog(PlatformResources.CancellingTestSession);
+                ConsoleLog(PlatformResources.PressCtrlCAgainToForceExit);
                 return Task.CompletedTask;
             }).ConfigureAwait(false);
 

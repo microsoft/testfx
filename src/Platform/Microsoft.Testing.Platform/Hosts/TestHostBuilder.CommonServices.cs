@@ -212,7 +212,7 @@ internal sealed partial class TestHostBuilder
         if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey)
             && commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args))
         {
-            if (!PlatformCommandLineProvider.TryParseTimeoutArgument(args[0], out TimeSpan timeout))
+            if (!TimeSpanParser.TryParseRequireSuffix(args[0], out TimeSpan timeout))
             {
                 throw ApplicationStateGuard.Unreachable();
             }

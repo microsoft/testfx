@@ -103,7 +103,7 @@ tools:
 safe-outputs:
   create-pull-request:
     title-prefix: "[link-checker] "
-    labels: [documentation, automated]
+    labels: [area/documentation, type/automation]
     draft: false
     protected-files: fallback-to-issue
     if-no-changes: "warn"

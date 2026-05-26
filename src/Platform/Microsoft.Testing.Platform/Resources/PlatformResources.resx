@@ -235,6 +235,10 @@
   <data name="TreeNodeFilterUnexpectedSlashOperatorErrorMessage" xml:space="preserve">
     <value>Filter contains an unexpected '/' operator inside a parenthesized expression</value>
   </data>
+  <data name="TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage" xml:space="preserve">
+    <value>Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</value>
+    <comment>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'.</comment>
+  </data>
   <data name="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage" xml:space="preserve">
     <value>An 'ITestExecutionFilterFactory' factory is already set</value>
   </data>
@@ -522,6 +526,9 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="CancellingTestSession" xml:space="preserve">
     <value>Canceling the test session...</value>
   </data>
+  <data name="PressCtrlCAgainToForceExit" xml:space="preserve">
+    <value>Press Ctrl+C again to force exit.</value>
+  </data>
   <data name="DiagnosticFileLevelWithAsyncFlush" xml:space="preserve">
     <value>Diagnostic file (level '{0}' with async flush): {1}</value>
     <comment>0 level such as verbose,
@@ -653,11 +660,11 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</value>
     <value>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</value>
   </data>
   <data name="PlatformCommandLineTimeoutArgumentErrorMessage" xml:space="preserve">
-    <value>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</value>
+    <value>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</value>
   </data>
   <data name="PlatformCommandLineTimeoutOptionDescription" xml:space="preserve">
     <value>A global test execution timeout.
-Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</value>
+Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</value>
   </data>
   <data name="LoggerFactoryNotReady" xml:space="preserve">
     <value>The ILoggerFactory has not been built yet.</value>

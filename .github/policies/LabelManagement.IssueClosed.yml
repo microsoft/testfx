@@ -15,13 +15,13 @@ configuration:
               action: Closed
         then:
           - removeLabel:
-              label: 'Needs: Triage :mag:'
+              label: 'needs/triage'
           - removeLabel:
-              label: 'Needs: Attention :wave:'
+              label: 'needs/attention'
           - removeLabel:
-              label: 'Needs: Author Feedback'
+              label: 'needs/author-feedback'
           - removeLabel:
-              label: Help-Wanted
+              label: 'help wanted'
       - description: Remove labels when a pull request is closed
         if:
           - payloadType: Pull_Request
@@ -29,8 +29,8 @@ configuration:
               action: Closed
         then:
           - removeLabel:
-              label: 'Needs: Attention :wave:'
+              label: 'needs/attention'
           - removeLabel:
-              label: 'Needs: Author Feedback'
+              label: 'needs/author-feedback'
 onFailure:
 onSuccess:

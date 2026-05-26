@@ -52,7 +52,7 @@ safe-outputs:
   create-pull-request:
     draft: true
     title-prefix: "[test-improver] "
-    labels: [automation, testing]
+    labels: [type/automation, type/test-gap]
     max: 4
     protected-files: fallback-to-issue
   push-to-pull-request-branch:
@@ -61,7 +61,7 @@ safe-outputs:
     max: 4
   create-issue:
     title-prefix: "[test-improver] "
-    labels: [automation, testing]
+    labels: [type/automation, type/test-gap]
     max: 4
   update-issue:
     target: "*"

@@ -14,7 +14,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration");
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as a time value with an explicit unit suffix");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -25,7 +25,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5y", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration");
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as a time value with an explicit unit suffix");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -36,7 +36,31 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5h6m", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration");
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as a time value with an explicit unit suffix");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task TimeoutWithInvalidArg_WithBogusUnitTail_OutputInvalidMessage(string tfm)
+    {
+        // The previous parser silently accepted unrecognized alphabetic tails like '90monkey' as 90 minutes.
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 90monkey", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as a time value with an explicit unit suffix");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task TimeoutWithInvalidArg_ExceedingCancelAfterRange_OutputInvalidMessage(string tfm)
+    {
+        // 60 days is well past CancellationTokenSource.CancelAfter's ~49.7-day cap.
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 60d", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as a time value with an explicit unit suffix");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -48,7 +72,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout=-1s", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration");
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as a time value with an explicit unit suffix");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -57,6 +81,43 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 1s", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIsNot(ExitCode.Success);
+        testHostResult.AssertOutputContains("Canceling the test session");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task TimeoutWithValidArg_WithMillisecondsSuffix_WithTestTimeOut_OutputContainsCancelingMessage(string tfm)
+    {
+        // 'ms' is a newly supported suffix for --timeout (previously rejected).
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 500ms", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIsNot(ExitCode.Success);
+        testHostResult.AssertOutputContains("Canceling the test session");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task TimeoutWithValidArg_WithLongFormSuffix_WithTestTimeOut_OutputContainsCancelingMessage(string tfm)
+    {
+        // Long-form suffixes like 'seconds' are newly supported for --timeout.
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 1seconds", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIsNot(ExitCode.Success);
+        testHostResult.AssertOutputContains("Canceling the test session");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task TimeoutWithValidArg_WithAliasSuffix_WithTestTimeOut_OutputContainsCancelingMessage(string tfm)
+    {
+        // 'mil' is one of the alias suffixes documented in the --timeout help text. This test makes
+        // sure such aliases work through the full --timeout option path (not just the shared parser).
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 500mil", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIsNot(ExitCode.Success);
         testHostResult.AssertOutputContains("Canceling the test session");

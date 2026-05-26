@@ -181,6 +181,19 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
                     // This is especially important for 'dotnet test', where the user can simply kill the dotnet.exe process themselves.
                     // In that case, we want the MTP process to also die.
                     // Exit code 1 indicates abnormal termination due to IPC connection loss.
+
+                    // Surface a diagnostic on stderr so the user has a chance to understand why this process is exiting.
+                    // We deliberately use Console.Error (and not stdout) to avoid corrupting any machine-readable output
+                    // that may be flowing through stdout.
+                    try
+                    {
+                        await Console.Error.WriteLineAsync($"[NamedPipeClient] Pipe '{PipeName}' was closed by the server before a response was received. The peer process likely exited or was killed. Terminating with exit code {(int)ExitCode.GenericFailure}.").ConfigureAwait(false);
+                    }
+                    catch (Exception ex) when (ex is IOException or ObjectDisposedException or InvalidOperationException or NotSupportedException or ArgumentException or OperationCanceledException)
+                    {
+                        // Best-effort diagnostic only; never let logging failures shadow the original problem.
+                    }
+
                     _environment.Exit((int)ExitCode.GenericFailure);
                 }
 

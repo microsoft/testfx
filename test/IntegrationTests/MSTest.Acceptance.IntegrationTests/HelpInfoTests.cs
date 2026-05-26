@@ -85,7 +85,7 @@ Options:
         Valid values are 'All', 'Failed', 'None'. Default is 'All'.
     --timeout
         A global test execution timeout.
-        Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
+        Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.
 Extension options:
     --filter
         Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
