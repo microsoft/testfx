@@ -15,13 +15,16 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly IEnvironment _environment;
     private readonly ILogger? _logger;
+    private readonly IConsole? _subscribedConsole;
     private int _state = StateIdle;
+    private int _disposed;
 
     public CTRLPlusCCancellationTokenSource(IConsole? console = null, ILogger? logger = null, IEnvironment? environment = null)
     {
         if (console is not null && !IsCancelKeyPressNotSupported())
         {
             console.CancelKeyPress += OnConsoleCancelKeyPressed;
+            _subscribedConsole = console;
         }
 
         _environment = environment ?? new SystemEnvironment();
@@ -51,44 +54,56 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
         // both the first (cooperative) and the second (force-exit) press.
         e.Cancel = true;
 
-        // If cancellation is already in progress (from a previous Ctrl+C or from another source
-        // like a timeout), treat this Ctrl+C as a request to force-exit the process. This honors
-        // the contract advertised next to the "Cancelling..." message: "Press Ctrl+C again to
-        // force exit.".
-        if (_cancellationTokenSource.IsCancellationRequested)
+        // The state machine counts user Ctrl+C presses *independently* of external cancellation
+        // sources (timeout, max-failed-tests, explicit Cancel()). This honors the contract
+        // advertised next to the "Cancelling..." message ("Press Ctrl+C again to force exit.")
+        // regardless of who initiated the cancellation: the user must always press Ctrl+C twice
+        // to force-exit.
+        if (Interlocked.CompareExchange(ref _state, StateCancelling, StateIdle) == StateIdle)
         {
-            if (Interlocked.Exchange(ref _state, StateForcing) == StateForcing)
+            // First user Ctrl+C: cooperative cancellation. If the token was already cancelled
+            // by an external source this is effectively a no-op, but we still transitioned the
+            // state so the next press goes to force-exit.
+            try
             {
-                // Another Ctrl+C already triggered the force-exit; suppress the duplicate.
-                return;
+                _cancellationTokenSource.Cancel();
+            }
+            catch (AggregateException ex)
+            {
+                _logger?.LogWarning($"Exception during CTRLPlusCCancellationTokenSource cancel:\n{ex}");
             }
 
-            // We intentionally do not print an extra "Forcing exit..." message here because the
-            // IConsole abstraction has no stderr channel and writing to stdout would corrupt the
-            // JSON document produced by --list-tests json. The user already saw the
-            // "Press Ctrl+C again to force exit." hint, so the exit itself is the confirmation.
+            return;
+        }
+
+        // Second user Ctrl+C: force-exit. We intentionally do not print an extra
+        // "Forcing exit..." message here because the IConsole abstraction has no stderr channel
+        // and writing to stdout would corrupt the JSON document produced by --list-tests json.
+        // The user already saw the "Press Ctrl+C again to force exit." hint, so the exit itself
+        // is the confirmation. Any subsequent presses are suppressed by the StateForcing guard.
+        if (Interlocked.CompareExchange(ref _state, StateForcing, StateCancelling) == StateCancelling)
+        {
             _environment.Exit((int)ExitCode.TestSessionAborted);
-            return;
-        }
-
-        if (Interlocked.CompareExchange(ref _state, StateCancelling, StateIdle) != StateIdle)
-        {
-            // Another thread already transitioned the state; nothing to do.
-            return;
-        }
-
-        try
-        {
-            _cancellationTokenSource.Cancel();
-        }
-        catch (AggregateException ex)
-        {
-            _logger?.LogWarning($"Exception during CTRLPlusCCancellationTokenSource cancel:\n{ex}");
         }
     }
 
     public void Dispose()
-        => _cancellationTokenSource.Dispose();
+    {
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        {
+            return;
+        }
+
+        // We stored the console reference only when subscription was actually performed
+        // (i.e. when CancelKeyPress is supported on this platform), so we can safely call -=
+        // on the same supported-platform paths.
+        if (_subscribedConsole is not null && !IsCancelKeyPressNotSupported())
+        {
+            _subscribedConsole.CancelKeyPress -= OnConsoleCancelKeyPressed;
+        }
+
+        _cancellationTokenSource.Dispose();
+    }
 
     public void Cancel()
         => _cancellationTokenSource.Cancel();
