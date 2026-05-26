@@ -148,6 +148,4 @@ internal readonly struct Index : IEquatable<Index>
         return '^' + Value.ToString();
     }
 }
-#elif NETCOREAPP
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Index))]
 #endif

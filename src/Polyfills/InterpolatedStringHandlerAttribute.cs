@@ -15,6 +15,4 @@ internal sealed class InterpolatedStringHandlerAttribute : Attribute
     /// <summary>Initializes the <see cref="InterpolatedStringHandlerAttribute"/>.</summary>
     public InterpolatedStringHandlerAttribute() { }
 }
-#else
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.InterpolatedStringHandlerAttribute))]
 #endif

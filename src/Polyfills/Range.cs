@@ -94,6 +94,4 @@ internal readonly struct Range : IEquatable<Range>
         throw new ArgumentOutOfRangeException("length");
     }
 }
-#elif NETCOREAPP
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Range))]
 #endif

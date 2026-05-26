@@ -19,6 +19,4 @@ namespace System.Runtime.CompilerServices;
 [AttributeUsage(AttributeTargets.Method, Inherited = false)]
 [Embedded]
 internal sealed class ModuleInitializerAttribute : Attribute;
-#else
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.ModuleInitializerAttribute))]
 #endif

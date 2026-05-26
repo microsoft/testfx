@@ -50,6 +50,4 @@ internal sealed class ExperimentalAttribute : Attribute
     public string? UrlFormat { get; set; }
 }
 
-#else
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.ExperimentalAttribute))]
 #endif

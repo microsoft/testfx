@@ -21,6 +21,4 @@ namespace System.Runtime.CompilerServices;
 [EditorBrowsable(EditorBrowsableState.Never)]
 [Embedded]
 internal sealed class RequiredMemberAttribute : Attribute;
-#else
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.RequiredMemberAttribute))]
 #endif

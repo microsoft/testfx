@@ -26,6 +26,4 @@ internal sealed class InterpolatedStringHandlerArgumentAttribute : Attribute
     /// <remarks>The empty string may be used as the name of the receiver in an instance method.</remarks>
     public string[] Arguments { get; }
 }
-#else
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.InterpolatedStringHandlerArgumentAttribute))]
 #endif

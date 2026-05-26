@@ -89,6 +89,4 @@ internal sealed class UnconditionalSuppressMessageAttribute : Attribute
     /// </summary>
     public string? Justification { get; set; }
 }
-#else
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute))]
 #endif

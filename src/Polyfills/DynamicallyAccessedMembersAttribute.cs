@@ -57,6 +57,4 @@ internal sealed class DynamicallyAccessedMembersAttribute : Attribute
     /// </summary>
     public DynamicallyAccessedMemberTypes MemberTypes { get; }
 }
-#else
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute))]
 #endif

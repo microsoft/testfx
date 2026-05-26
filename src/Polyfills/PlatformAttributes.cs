@@ -191,12 +191,4 @@ internal sealed class UnsupportedOSPlatformGuardAttribute : OSPlatformAttribute
     {
     }
 }
-#else
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.Versioning.OSPlatformAttribute))]
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.Versioning.TargetPlatformAttribute))]
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.Versioning.SupportedOSPlatformAttribute))]
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.Versioning.UnsupportedOSPlatformAttribute))]
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.Versioning.ObsoletedOSPlatformAttribute))]
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.Versioning.SupportedOSPlatformGuardAttribute))]
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.Versioning.UnsupportedOSPlatformGuardAttribute))]
 #endif

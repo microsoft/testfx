@@ -30,6 +30,4 @@ internal sealed class CallerArgumentExpressionAttribute :
     public string ParameterName { get; }
 }
 
-#else
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.CallerArgumentExpressionAttribute))]
 #endif

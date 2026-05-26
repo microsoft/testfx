@@ -50,6 +50,4 @@ internal sealed class UnreachableException : Exception
     {
     }
 }
-#else
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.UnreachableException))]
 #endif

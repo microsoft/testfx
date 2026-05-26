@@ -15,6 +15,4 @@ namespace System.Runtime.CompilerServices;
 [DebuggerNonUserCode]
 [Embedded]
 internal static class IsExternalInit;
-#else
-[assembly: TypeForwardedTo(typeof(IsExternalInit))]
 #endif

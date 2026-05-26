@@ -45,6 +45,4 @@ internal sealed class CompilerFeatureRequiredAttribute : Attribute
     public const string RequiredMembers = nameof(RequiredMembers);
 }
 
-#else
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.CompilerFeatureRequiredAttribute))]
 #endif

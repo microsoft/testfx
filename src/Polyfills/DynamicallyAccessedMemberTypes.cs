@@ -170,6 +170,4 @@ internal enum DynamicallyAccessedMemberTypes
     [EditorBrowsable(EditorBrowsableState.Never)]
     All = ~None
 }
-#else
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes))]
 #endif

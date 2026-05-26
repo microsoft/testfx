@@ -10,6 +10,4 @@ namespace System.Diagnostics;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Interface | AttributeTargets.Method | AttributeTargets.Struct, Inherited = false)]
 [Embedded]
 internal sealed class StackTraceHiddenAttribute : Attribute;
-#else
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Diagnostics.StackTraceHiddenAttribute))]
 #endif
