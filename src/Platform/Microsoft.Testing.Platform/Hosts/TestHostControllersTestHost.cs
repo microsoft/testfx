@@ -361,7 +361,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                     $"OS exit code: '{testHostProcess.ExitCode}', " +
                     $"IPC-reported exit code: '{(_testHostExitCodeReceived.HasValue ? _testHostExitCodeReceived.Value.ToString(CultureInfo.InvariantCulture) : "<not received>")}', " +
                     $"TestHostCompletedRequest received: '{_testHostCompletedReceived}', " +
-                    $"PID: '{(_testHostPID.HasValue ? _testHostPID.Value.ToString(CultureInfo.InvariantCulture) : "<unknown>")}', " +
+                    $"PID: '{_testHostPID.Value.ToString(CultureInfo.InvariantCulture)}', " +
                     $"CancellationRequested: '{cancellationToken.IsCancellationRequested}'.")
                     .ConfigureAwait(false);
                 await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);

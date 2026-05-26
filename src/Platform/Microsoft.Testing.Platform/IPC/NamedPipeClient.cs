@@ -189,7 +189,7 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
                     {
                         await Console.Error.WriteLineAsync($"[NamedPipeClient] Pipe '{PipeName}' was closed by the server before a response was received. The peer process likely exited or was killed. Terminating with exit code {(int)ExitCode.GenericFailure}.").ConfigureAwait(false);
                     }
-                    catch
+                    catch (Exception ex) when (ex is IOException or ObjectDisposedException or InvalidOperationException or NotSupportedException or ArgumentException or OperationCanceledException)
                     {
                         // Best-effort diagnostic only; never let logging failures shadow the original problem.
                     }
