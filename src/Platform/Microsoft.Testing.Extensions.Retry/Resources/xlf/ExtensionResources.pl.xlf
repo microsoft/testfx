@@ -52,12 +52,12 @@ Przeniesienie plików zasobów ostatniej próby do domyślnego katalogu wyników
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
         <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</source>
-        <target state="needs-review-translation">Opóźnienie między ponownymi próbami. Opóźnienie jest wyrażane jako wartość czasu, np. 200, 1 s, 2,5 min, 1 godz. Jednostka domyślna to milisekundy.</target>
+        <target state="new">Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
         <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</source>
-        <target state="needs-review-translation">Opcja „--retry-failed-tests-delay” wymaga prawidłowej wartości przedziału czasu nieujemnej i nie większej niż 2147483647 ms (~24.20:31:23.647) (np. 200, 1 s, 2,5 min, 1 godz.)</target>
+        <target state="new">Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">
