@@ -6,6 +6,8 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class PolyfillsEmbeddedAttributeConventionTests
 {
+    private static readonly string RepositoryRoot = FindRepositoryRoot();
+
     private static readonly Regex TypeDeclarationRegex = new(
         @"(?ms)(?<attributes>(?:\s*\[[^\]]+\]\s*)*)(?:internal|public|private|protected)\s+(?:sealed\s+|partial\s+|abstract\s+|static\s+|readonly\s+)*(?:class|struct|interface|enum)\s+(?<typeName>\w+Attribute)\b",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
@@ -17,7 +19,7 @@ public sealed class PolyfillsEmbeddedAttributeConventionTests
     [TestMethod]
     public void PolyfillAttributeTypes_AreDecoratedWithEmbeddedAttribute()
     {
-        string polyfillsDirectory = Path.Combine(GetRepositoryRoot(), "src", "Polyfills");
+        string polyfillsDirectory = Path.Combine(RepositoryRoot, "src", "Polyfills");
 
         foreach (string filePath in Directory.EnumerateFiles(polyfillsDirectory, "*Attribute.cs"))
         {
@@ -42,7 +44,7 @@ public sealed class PolyfillsEmbeddedAttributeConventionTests
         }
     }
 
-    private static string GetRepositoryRoot()
+    private static string FindRepositoryRoot()
     {
         DirectoryInfo? currentDirectory = new(AppContext.BaseDirectory);
         while (currentDirectory is not null &&
