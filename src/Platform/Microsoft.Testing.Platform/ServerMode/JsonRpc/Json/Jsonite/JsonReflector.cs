@@ -259,7 +259,7 @@ namespace Jsonite
     enum JsonObjectType
     {
         /// <summary>
-        /// The object type being serialized is unkwown.
+        /// The object type being serialized is unknown.
         /// </summary>
         Unknown,
 

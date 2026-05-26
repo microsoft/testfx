@@ -43,6 +43,8 @@ namespace Jsonite
 {
     /// <summary>
     /// A JSON parser and reflector to Dictionary/List.
+    /// This partial declaration contains the public entry points and shared utility methods.
+    /// Parsing, writing, and reflector-specific implementation details live in other partial declarations.
     /// </summary>
 #if JSONITE_PUBLIC
     public
