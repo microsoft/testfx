@@ -103,12 +103,15 @@ The timeout value is specified in one of the following formats:
     1d, 1day, 1days.
     A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
-        <target state="needs-review-translation">Especifique o tempo limite após o qual o despejo será gerado.
-O valor de tempo limite é especificado em um dos seguintes formatos:
-    1,5h, 1,5hora, 1,5horas,
-    90m, 90min, 90minutos, 90 minutos,
-    5400s, 5400seg, 5400segundos, 5400segundos.
-    O padrão é 30m.</target>
+        <target state="new">Specify the timeout after which the dump will be generated.
+The timeout value is specified in one of the following formats:
+    500ms, 500mil, 500millisecond, 500milliseconds,
+    5400s, 5400sec, 5400second, 5400seconds,
+    90m, 90min, 90minute, 90minutes,
+    1.5h, 1.5hour, 1.5hours,
+    1d, 1day, 1days.
+    A bare number (with no suffix) is interpreted as milliseconds.
+    Default is 30m.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
