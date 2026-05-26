@@ -103,12 +103,15 @@ The timeout value is specified in one of the following formats:
     1d, 1day, 1days.
     A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
-        <target state="needs-review-translation">Zadejte časový limit, po kterém bude vygenerován výpis paměti.
-Hodnota časového limitu se zadává v jednom z následujících formátů:
-    1.5h, 1.5hour, 1.5hours,
+        <target state="new">Specify the timeout after which the dump will be generated.
+The timeout value is specified in one of the following formats:
+    500ms, 500mil, 500millisecond, 500milliseconds,
+    5400s, 5400sec, 5400second, 5400seconds,
     90m, 90min, 90minute, 90minutes,
-    5400s, 5400sec, 5400second, 5400seconds.
-    Výchozí hodnota je 30m.</target>
+    1.5h, 1.5hour, 1.5hours,
+    1d, 1day, 1days.
+    A bare number (with no suffix) is interpreted as milliseconds.
+    Default is 30m.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
