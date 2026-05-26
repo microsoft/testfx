@@ -23,6 +23,8 @@ permissions: read-all
 network: defaults
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   create-pull-request:
     draft: true
     labels: [type/automation, dependencies]

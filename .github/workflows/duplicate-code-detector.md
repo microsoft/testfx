@@ -13,6 +13,8 @@ permissions:
   pull-requests: read
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   create-issue:
     expires: 2d
     title-prefix: "[duplicate-code] "

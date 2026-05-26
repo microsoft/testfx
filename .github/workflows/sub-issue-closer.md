@@ -19,6 +19,8 @@ tools:
       - issues
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   update-issue:
     status:
     target: "*"

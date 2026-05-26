@@ -16,6 +16,8 @@ network:
 imports:
 - shared/reporting.md
 safe-outputs:
+  noop:
+    report-as-issue: false
   create-discussion:
     category: announcements
     close-older-discussions: true

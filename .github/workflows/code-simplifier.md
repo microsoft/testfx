@@ -15,6 +15,8 @@ imports:
 - shared/formatting.md
 - shared/reporting.md
 safe-outputs:
+  noop:
+    report-as-issue: false
   create-pull-request:
     expires: 1d
     labels:

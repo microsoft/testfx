@@ -45,6 +45,8 @@ network:
   - java
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   add-comment:
     max: 10
     target: "*"
@@ -57,7 +59,7 @@ safe-outputs:
     protected-files: fallback-to-issue
   push-to-pull-request-branch:
     target: "*"
-    required-title-prefix: "[test-improver] "
+    title-prefix: "[test-improver] "
     max: 4
   create-issue:
     title-prefix: "[test-improver] "
