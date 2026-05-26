@@ -357,12 +357,14 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 _testHostExitCodeReceived != testHostProcess.ExitCode)
             {
                 await _logger.LogWarningAsync(
-                    $"Test host did not exit gracefully. " +
-                    $"OS exit code: '{testHostProcess.ExitCode}', " +
-                    $"IPC-reported exit code: '{(_testHostExitCodeReceived.HasValue ? _testHostExitCodeReceived.Value.ToString(CultureInfo.InvariantCulture) : "<not received>")}', " +
-                    $"TestHostCompletedRequest received: '{_testHostCompletedReceived}', " +
-                    $"PID: '{_testHostPID.Value.ToString(CultureInfo.InvariantCulture)}', " +
-                    $"CancellationRequested: '{cancellationToken.IsCancellationRequested}'.")
+                    $"""
+                     Test host did not exit gracefully.
+                       OS exit code: '{testHostProcess.ExitCode}'
+                       IPC-reported exit code: '{(_testHostExitCodeReceived.HasValue ? _testHostExitCodeReceived.Value.ToString(CultureInfo.InvariantCulture) : "<not received>")}'
+                       TestHostCompletedRequest received: '{_testHostCompletedReceived}'
+                       PID: '{_testHostPID.Value.ToString(CultureInfo.InvariantCulture)}'
+                       CancellationRequested: '{cancellationToken.IsCancellationRequested}'
+                     """)
                     .ConfigureAwait(false);
                 await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
                 exitCode = (int)ExitCode.TestHostProcessExitedNonGracefully;
