@@ -674,14 +674,14 @@ El valor predeterminado es TestResults en el directorio que contiene la aplicaci
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
-        <target state="translated">La opción "timeout" debe tener un único argumento como cadena con el formato &lt;value&gt;[h|m|s], donde "value" es un número finito y no negativo que no supera la duración máxima admitida</target>
+        <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
+        <target state="needs-review-translation">La opción 'timeout' debe tener un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' es float</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
-Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
-        <target state="translated">Tiempo de espera de ejecución de prueba global.
+Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
+        <target state="needs-review-translation">Tiempo de espera de ejecución de prueba global.
 Toma un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' es float.</target>
         <note />
       </trans-unit>
