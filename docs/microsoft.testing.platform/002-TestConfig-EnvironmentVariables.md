@@ -115,21 +115,21 @@ internal sealed class TestConfigurationEnvironmentVariableProvider : ITestHostEn
 
 The `environmentVariables` section must be a **flat JSON object whose values are scalars**. Any deviation throws `FormatException` during the build phase with a message identifying the offending key and the configuration file path. Specifically:
 
-| JSON shape                                              | Behavior                                       |
-| ------------------------------------------------------- | ---------------------------------------------- |
-| `"environmentVariables": { "FOO": "bar" }`              | ✅ Sets `FOO=bar`                              |
-| `"environmentVariables": { "FOO": "" }`                 | ✅ Sets `FOO=""`                               |
-| `"environmentVariables": { "FOO": 42, "BAR": true }`    | ✅ Coerced to text: `FOO=42`, `BAR=True`       |
-| `"environmentVariables": { "FOO": null }`               | ⚠️ Runtime-dependent (see [Edge cases](#edge-cases-and-limitations)) |
-| `"environmentVariables": {}`                            | ✅ No-op; controller process model **not** triggered |
-| (section absent)                                        | ✅ No-op; controller process model **not** triggered |
-| `"environmentVariables": "oops"`                        | ❌ Throws – section must be a JSON object       |
-| `"environmentVariables": [1, 2]`                        | ❌ Throws – section must be a JSON object       |
-| `"environmentVariables": { "FOO": { "NESTED": "x" } }`  | ❌ Throws – nested objects not supported        |
-| `"environmentVariables": { "FOO": [1, 2] }`             | ❌ Throws – nested arrays not supported         |
-| `"environmentVariables": { "FOO": {} }`                 | ❌ Throws – nested empty objects not supported  |
-| `"environmentVariables": { "": "x" }`                   | ❌ Throws – empty variable names are invalid    |
-| `"environmentVariables": { "FOO=BAR": "x" }`            | ❌ Throws – `=` is not allowed in names         |
+| JSON shape | Behavior |
+| --- | --- |
+| `"environmentVariables": { "FOO": "bar" }` | ✅ Sets `FOO=bar` |
+| `"environmentVariables": { "FOO": "" }` | ✅ Sets `FOO=""` |
+| `"environmentVariables": { "FOO": 42, "BAR": true }` | ✅ Coerced to text: `FOO=42`, `BAR=True` |
+| `"environmentVariables": { "FOO": null }` | ⚠️ Runtime-dependent (see [Edge cases](#edge-cases-and-limitations)) |
+| `"environmentVariables": {}` | ✅ No-op; controller process model **not** triggered |
+| (section absent) | ✅ No-op; controller process model **not** triggered |
+| `"environmentVariables": "oops"` | ❌ Throws – section must be a JSON object |
+| `"environmentVariables": [1, 2]` | ❌ Throws – section must be a JSON object |
+| `"environmentVariables": { "FOO": { "NESTED": "x" } }` | ❌ Throws – nested objects not supported |
+| `"environmentVariables": { "FOO": [1, 2] }` | ❌ Throws – nested arrays not supported |
+| `"environmentVariables": { "FOO": {} }` | ❌ Throws – nested empty objects not supported |
+| `"environmentVariables": { "": "x" }` | ❌ Throws – empty variable names are invalid |
+| `"environmentVariables": { "FOO=BAR": "x" }` | ❌ Throws – `=` is not allowed in names |
 
 ### Precedence and ordering
 

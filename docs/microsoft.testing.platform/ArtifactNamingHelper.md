@@ -15,7 +15,7 @@ Resolves to: `MyTests_12345_2025-09-22_13-49-34.0000000_hang.dmp`
 ## Available Placeholders
 
 | Placeholder | Description | Example |
-|-------------|-------------|---------|
+| --- | --- | --- |
 | `{pname}` | Name of the process | `MyTests` |
 | `{pid}` | Process ID | `12345` |
 | `{asm}` | Assembly name (entry assembly, or `unknown` if unavailable) | `MyTests` |

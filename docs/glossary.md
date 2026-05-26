@@ -87,7 +87,7 @@ An automated agentic workflow (`.github/workflows/lean-squad.md`) that manages t
 An optional argument value for the MTP `--list-tests` command-line option that switches test discovery output from the default human-readable text to a machine-readable JSON document emitted on stdout. Introduced in [PR #8280](https://github.com/microsoft/testfx/pull/8280).
 
 | Invocation | Behavior |
-|---|---|
+| --- | --- |
 | `--list-tests` | Default human-readable text output (unchanged) |
 | `--list-tests text` | Explicit alias for the default text mode |
 | `--list-tests json` | JSON document on stdout; banner, progress, and per-test text are suppressed; errors go to stderr |
