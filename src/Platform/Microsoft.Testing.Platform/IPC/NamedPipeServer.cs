@@ -150,13 +150,35 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             // If currentRequestSize is 0, we need to read the message size
             if (currentMessageSize == 0)
             {
-                // We need to read the message size, first 4 bytes
-                if (currentReadBytes < sizeof(int))
+                // We need at least sizeof(int) bytes to parse the message-size header. A pipe read can
+                // legitimately return fewer bytes on partial frames; keep reading until we have a full
+                // header or the peer disconnects.
+                while (currentReadBytes < sizeof(int))
                 {
-                    throw ApplicationStateGuard.Unreachable();
+#if NET
+                    int additionalBytes = await _namedPipeServerStream.ReadAsync(_readBuffer.AsMemory(currentReadBytes, _readBuffer.Length - currentReadBytes), cancellationToken).ConfigureAwait(false);
+#else
+                    int additionalBytes = await _namedPipeServerStream.ReadAsync(_readBuffer, currentReadBytes, _readBuffer.Length - currentReadBytes, cancellationToken).ConfigureAwait(false);
+#endif
+                    if (additionalBytes == 0)
+                    {
+                        // The client disconnected mid-header.
+                        await _logger.LogDebugAsync($"Pipe {PipeName.Name} closed while reading message header; treating as client disconnect.").ConfigureAwait(false);
+                        return;
+                    }
+
+                    currentReadBytes += additionalBytes;
+                    missingBytesToReadOfCurrentChunk = currentReadBytes;
                 }
 
                 currentMessageSize = BitConverter.ToInt32(_readBuffer, 0);
+                if (currentMessageSize <= 0)
+                {
+                    // Protocol corruption: message size must be positive. Drop the connection.
+                    await _logger.LogWarningAsync($"Pipe {PipeName.Name} received invalid message size {currentMessageSize}; closing connection.").ConfigureAwait(false);
+                    return;
+                }
+
                 missingBytesToReadOfCurrentChunk = currentReadBytes - sizeof(int);
                 missingBytesToReadOfWholeMessage = currentMessageSize;
                 currentReadIndex = sizeof(int);
@@ -175,7 +197,10 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
             if (missingBytesToReadOfWholeMessage < 0)
             {
-                throw ApplicationStateGuard.Unreachable();
+                // Protocol corruption: we read more body bytes than the declared message size. Drop
+                // the connection rather than fail fast — the peer is misbehaving but the host shouldn't crash.
+                await _logger.LogWarningAsync($"Pipe {PipeName.Name} read more bytes than the declared message size; closing connection.").ConfigureAwait(false);
+                return;
             }
 
             // If we have read all the message, we can deserialize it
@@ -250,6 +275,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 #endif
 
                 // Send the message
+                bool clientDisconnected = false;
                 try
                 {
 #if NET
@@ -263,11 +289,24 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                         _namedPipeServerStream.WaitForPipeDrain();
                     }
                 }
+                catch (Exception ex) when (ex is IOException or ObjectDisposedException)
+                {
+                    // The client disconnected while we were writing the reply. Treat it as a graceful disconnect
+                    // (symmetric with the read-side EOF handling above) so the server loop exits without crashing
+                    // the host.
+                    await _logger.LogDebugAsync($"Pipe {PipeName.Name} broken while writing reply; treating as client disconnect: {ex.Message}").ConfigureAwait(false);
+                    clientDisconnected = true;
+                }
                 finally
                 {
                     // Reset the buffers
                     _messageBuffer.Position = 0;
                     _serializationBuffer.Position = 0;
+                }
+
+                if (clientDisconnected)
+                {
+                    return;
                 }
 
                 // Reset the control variables

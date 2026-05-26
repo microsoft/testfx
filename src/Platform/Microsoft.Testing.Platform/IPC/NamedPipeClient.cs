@@ -154,6 +154,14 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
                     _namedPipeClientStream.WaitForPipeDrain();
                 }
             }
+            catch (Exception ex) when (ex is IOException or ObjectDisposedException)
+            {
+                // The server disconnected while we were writing the request. Mirror the read-EOF handling
+                // below: if we cannot deliver the request there's no way to recover, so exit abnormally
+                // instead of surfacing a raw IPC error to the caller.
+                _environment.Exit((int)ExitCode.GenericFailure);
+                throw;
+            }
             finally
             {
                 // Reset the buffers
@@ -190,8 +198,35 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
                 // If currentRequestSize is 0, we need to read the message size
                 if (currentMessageSize == 0)
                 {
+                    // We need at least sizeof(int) bytes to parse the message-size header. A pipe read can
+                    // legitimately return fewer bytes on partial frames; keep reading until we have a full
+                    // header or the peer disconnects.
+                    while (currentReadBytes < sizeof(int))
+                    {
+#if NETCOREAPP
+                        int additionalBytes = await _namedPipeClientStream.ReadAsync(_readBuffer.AsMemory(currentReadBytes, _readBuffer.Length - currentReadBytes), cancellationToken).ConfigureAwait(false);
+#else
+                        int additionalBytes = await _namedPipeClientStream.ReadAsync(_readBuffer, currentReadBytes, _readBuffer.Length - currentReadBytes, cancellationToken).ConfigureAwait(false);
+#endif
+                        if (additionalBytes == 0)
+                        {
+                            // Server disconnected mid-header. Treat as the read-EOF case above.
+                            _environment.Exit((int)ExitCode.GenericFailure);
+                            throw new IOException("Pipe closed while reading message header.");
+                        }
+
+                        currentReadBytes += additionalBytes;
+                    }
+
                     // We need to read the message size, first 4 bytes
                     currentMessageSize = BitConverter.ToInt32(_readBuffer, 0);
+                    if (currentMessageSize <= 0)
+                    {
+                        // Protocol corruption: message size must be positive.
+                        _environment.Exit((int)ExitCode.GenericFailure);
+                        throw new InvalidOperationException($"Received invalid IPC message size {currentMessageSize}.");
+                    }
+
                     missingBytesToReadOfCurrentChunk = currentReadBytes - sizeof(int);
                     missingBytesToReadOfWholeMessage = currentMessageSize;
                     currentReadIndex = sizeof(int);
@@ -225,6 +260,14 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
                     try
                     {
                         return (TResponse)responseNamedPipeSerializer.Deserialize(_messageBuffer);
+                    }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        // The response payload is unparseable. Mirror the read-EOF handling: there's no way to
+                        // recover the IPC session, so exit abnormally rather than bubbling a serializer
+                        // exception to the caller.
+                        _environment.Exit((int)ExitCode.GenericFailure);
+                        throw;
                     }
                     finally
                     {
