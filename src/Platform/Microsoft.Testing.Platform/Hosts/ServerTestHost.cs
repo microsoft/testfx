@@ -99,21 +99,33 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
     private void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
-        _logger.LogWarning($"[ServerTestHost.OnCurrentDomainUnhandledException] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}");
+        const string Prefix = "[ServerTestHost.OnCurrentDomainUnhandledException]";
+        var exception = e.ExceptionObject as Exception;
+
+        // Log the exception via the structured exception parameter so sinks can capture it
+        // independently of the message text. Output device still gets the human-readable form.
+        if (exception is not null)
+        {
+            _logger.Log(LogLevel.Warning, $"{Prefix} IsTerminating: {e.IsTerminating}", exception, LoggingExtensions.Formatter);
+        }
+        else
+        {
+            _logger.LogWarning($"{Prefix} {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}");
+        }
 
         // Looks like nothing in this message to really be localized?
         // All are class names, method names, property names, and placeholders. So none is localizable?
         ServiceProvider.GetOutputDevice().DisplayAsync(
             this,
             new WarningMessageOutputDeviceData(
-                $"[ServerTestHost.OnCurrentDomainUnhandledException] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}"), CancellationToken.None)
+                $"{Prefix} {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}"), CancellationToken.None)
             .GetAwaiter().GetResult();
     }
 
     private void OnTaskSchedulerUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
         e.SetObserved();
-        _logger.LogWarning($"[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {e.Exception}");
+        _logger.Log(LogLevel.Warning, "[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled task exception", e.Exception, LoggingExtensions.Formatter);
 
         ServiceProvider.GetOutputDevice().DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnobservedTaskExceptionWarningMessage, e.Exception.ToString())), CancellationToken.None)
             .GetAwaiter().GetResult();
