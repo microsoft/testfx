@@ -1,0 +1,46 @@
+{
+  "mcpServers": {
+    "microsoft/markitdown": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "markitdown-mcp==0.0.1a4"
+      ],
+      "gallery": "https://api.mcp.github.com",
+      "version": "1.0.0"
+    },
+    "microsoft/azure-devops-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@azure-devops/mcp@latest",
+        "${input:ado_org}",
+        "-d",
+        "${input:ado_domain}"
+      ],
+      "gallery": "https://api.mcp.github.com",
+      "version": "1.0.0"
+    },
+    "github/github-mcp-server": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "gallery": "https://api.mcp.github.com",
+      "version": "0.13.0"
+    },
+    "microsoftdocs/mcp": {
+      "type": "http",
+      "url": "https://learn.microsoft.com/api/mcp",
+      "gallery": "https://api.mcp.github.com",
+      "version": "1.0.0"
+    },
+    "baronfel_binlog_mcp": {
+      "type": "stdio",
+      "command": "C:\\Users\\amauryleve\\.dotnet\\tools\\binlog.mcp.exe",
+      "args": [
+        "--binlog",
+        "q:\\dev\\AITestAgent2\\msbuild.binlog"
+      ]
+    }
+  }
+}
