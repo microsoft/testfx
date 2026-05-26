@@ -33,14 +33,6 @@
       "url": "https://learn.microsoft.com/api/mcp",
       "gallery": "https://api.mcp.github.com",
       "version": "1.0.0"
-    },
-    "baronfel_binlog_mcp": {
-      "type": "stdio",
-      "command": "C:\\Users\\amauryleve\\.dotnet\\tools\\binlog.mcp.exe",
-      "args": [
-        "--binlog",
-        "q:\\dev\\AITestAgent2\\msbuild.binlog"
-      ]
     }
   }
 }
