@@ -26,29 +26,14 @@ internal sealed partial class JsonConfigurationSource
 
         public string? ConfigurationFile { get; private set; }
 
-        private async Task LogInformationAsync(string message)
-        {
-            if (_logger is not null)
-            {
-                await _logger.LogInformationAsync(message).ConfigureAwait(false);
-            }
-        }
+        private Task LogInformationAsync(string message)
+            => _logger?.LogInformationAsync(message) ?? Task.CompletedTask;
 
-        private async Task LogDebugAsync(string message)
-        {
-            if (_logger is not null)
-            {
-                await _logger.LogDebugAsync(message).ConfigureAwait(false);
-            }
-        }
+        private Task LogDebugAsync(string message)
+            => _logger?.LogDebugAsync(message) ?? Task.CompletedTask;
 
-        private async Task LogErrorAsync(string message, Exception exception)
-        {
-            if (_logger is not null)
-            {
-                await _logger.LogErrorAsync(message, exception).ConfigureAwait(false);
-            }
-        }
+        private Task LogErrorAsync(string message, Exception exception)
+            => _logger?.LogErrorAsync(message, exception) ?? Task.CompletedTask;
 
         public async Task LoadAsync()
         {
