@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
-using Microsoft.Testing.Framework.Helpers;
-
 namespace Microsoft.Testing.Framework;
 
 /// <summary>
@@ -19,23 +17,15 @@ public sealed class InternalUnsafeActionTaskParameterizedTestNode<TData>
     Func<Task<IEnumerable>> ITaskParameterizedTestNode.GetArguments => async () => await GetArguments().ConfigureAwait(false);
 
     async Task IParameterizedAsyncActionTestNode.InvokeAsync(ITestExecutionContext testExecutionContext, Func<Func<Task>, Task> safeInvoke)
-    {
-        foreach (TData item in await GetArguments().ConfigureAwait(false))
-        {
-            await safeInvoke(() =>
+        => await InternalUnsafeParameterizedTestNodeHelper.InvokeAsync(
+            GetArguments,
+            item =>
             {
                 Body(testExecutionContext, item);
                 return Task.CompletedTask;
-            }).ConfigureAwait(false);
-        }
-    }
+            },
+            safeInvoke).ConfigureAwait(false);
 
     TestNode IExpandableTestNode.GetExpandedTestNode(object arguments, string argumentFragmentUid, string argumentFragmentDisplayName)
-        => new InternalUnsafeActionTestNode
-        {
-            StableUid = TestNodeExpansionHelper.GenerateStableUid(StableUid, argumentFragmentUid),
-            DisplayName = TestNodeExpansionHelper.GenerateDisplayName(DisplayName, argumentFragmentDisplayName),
-            Body = testExecutionContext => Body(testExecutionContext, (TData)arguments),
-            Properties = Properties,
-        };
+        => InternalUnsafeParameterizedTestNodeHelper.ExpandActionNode(this, arguments, argumentFragmentUid, argumentFragmentDisplayName, Body);
 }
