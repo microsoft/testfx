@@ -258,7 +258,7 @@ public sealed class IPCTests
         {
             Task waitConnection = server.WaitConnectionAsync(_testContext.CancellationToken);
 
-            using (var raw = new System.IO.Pipes.NamedPipeClientStream(".", pipeNameDescription.Name, System.IO.Pipes.PipeDirection.InOut, System.IO.Pipes.PipeOptions.Asynchronous))
+            using var raw = new System.IO.Pipes.NamedPipeClientStream(".", pipeNameDescription.Name, System.IO.Pipes.PipeDirection.InOut, System.IO.Pipes.PipeOptions.Asynchronous);
             {
                 await raw.ConnectAsync(_testContext.CancellationToken);
                 await waitConnection;
