@@ -792,14 +792,14 @@ Le type doit être une classe
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidDescription">
-        <source>'TestContext' should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
+        <source>'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
-        <target state="translated">« TestContext » doit être un champ ou une propriété non statique affecté dans le constructeur ou pour une propriété définie par MSTest, il doit suivre la disposition :
-- il doit être « public », que l’attribut « [assembly: DiscoverInternals] » soit défini ou non.
-- il ne devrait pas être « statique »
-- il doit avoir un setter.</target>
+        <target state="new">'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
+- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
+- it should not be 'static'
+- it should have a setter.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">
