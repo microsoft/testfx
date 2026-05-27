@@ -74,22 +74,22 @@
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDescription">
         <source>The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</source>
-        <target state="new">The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</target>
+        <target state="translated">Lista testów, które zostały uruchomione i zakończone podczas sesji testowej, służąca do identyfikowania testów uruchomionych w momencie awarii</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDisplayName">
         <source>Crash sequence file</source>
-        <target state="new">Crash sequence file</target>
+        <target state="translated">Plik sekwencji awarii</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>
-        <target state="new">Failed to read the crash sequence file '{0}': {1}</target>
+        <target state="translated">Nie można odczytać pliku sekwencji awarii „{0}”: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
         <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
-        <target state="new">The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
+        <target state="translated">Następujące testy były w toku, gdy host testowy uległ awarii (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
@@ -135,14 +135,14 @@ Aby uzyskać więcej informacji, odwiedź stronę https://learn.microsoft.com/do
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
-The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
-Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <target state="translated">Określ, czy plik sekwencji zawierający listę testów rozpoczętych i zakończonych podczas sesji testowej jest generowany wraz ze zrzutem awaryjnym lub raportem o awarii.
+Plik umożliwia zidentyfikowanie testów, które były uruchamiane w momencie awarii bez konieczności przeprowadzania inspekcji zrzutu.
+Dopuszczalne wartości to „on” (domyślnie, akceptowane są również wartości „true”, „enable” i „1”) lub „off” (akceptowane są również wartości „false”, „disable” i „0”).</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--crash-sequence oczekuje jednego parametru o wartości „on”, (lub „true”, „enable”, „1”) albo „off” (lub „false”, „disable”, „0”).</target>
         <note />
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">

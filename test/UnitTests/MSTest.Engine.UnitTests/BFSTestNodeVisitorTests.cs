@@ -120,6 +120,12 @@ public sealed class BFSTestNodeVisitorTests : TestBase
 
     [DataRow(nameof(InternalUnsafeActionParameterizedTestNode<>), true)]
     [DataRow(nameof(InternalUnsafeActionParameterizedTestNode<>), false)]
+    [DataRow(nameof(InternalUnsafeAsyncActionParameterizedTestNode<>), true)]
+    [DataRow(nameof(InternalUnsafeAsyncActionParameterizedTestNode<>), false)]
+    [DataRow(nameof(InternalUnsafeActionTaskParameterizedTestNode<>), true)]
+    [DataRow(nameof(InternalUnsafeActionTaskParameterizedTestNode<>), false)]
+    [DataRow(nameof(InternalUnsafeAsyncActionTaskParameterizedTestNode<>), true)]
+    [DataRow(nameof(InternalUnsafeAsyncActionTaskParameterizedTestNode<>), false)]
     [TestMethod]
     public async Task Visit_WhenNodeIsParameterizedNodeAndPropertyIsAbsentOrTrue_ExpandNode(string parameterizedTestNode, bool hasExpansionProperty)
     {
@@ -149,6 +155,9 @@ public sealed class BFSTestNodeVisitorTests : TestBase
     }
 
     [DataRow(nameof(InternalUnsafeActionParameterizedTestNode<>))]
+    [DataRow(nameof(InternalUnsafeAsyncActionParameterizedTestNode<>))]
+    [DataRow(nameof(InternalUnsafeActionTaskParameterizedTestNode<>))]
+    [DataRow(nameof(InternalUnsafeAsyncActionTaskParameterizedTestNode<>))]
     [TestMethod]
     public async Task Visit_WhenNodeIsParameterizedNodeAndDoesNotAllowExpansion_DoesNotExpand(string parameterizedTestNode)
     {
@@ -290,6 +299,30 @@ public sealed class BFSTestNodeVisitorTests : TestBase
                 GetArguments = GetArguments,
                 Properties = GetProperties(expansionPropertyValue),
             },
+            nameof(InternalUnsafeAsyncActionParameterizedTestNode<>) => new InternalUnsafeAsyncActionParameterizedTestNode<byte>
+            {
+                StableUid = "ID1",
+                DisplayName = "A",
+                Body = static (_, _) => Task.CompletedTask,
+                GetArguments = GetArguments,
+                Properties = GetProperties(expansionPropertyValue),
+            },
+            nameof(InternalUnsafeActionTaskParameterizedTestNode<>) => new InternalUnsafeActionTaskParameterizedTestNode<byte>
+            {
+                StableUid = "ID1",
+                DisplayName = "A",
+                Body = (_, _) => { },
+                GetArguments = GetArgumentsAsync,
+                Properties = GetProperties(expansionPropertyValue),
+            },
+            nameof(InternalUnsafeAsyncActionTaskParameterizedTestNode<>) => new InternalUnsafeAsyncActionTaskParameterizedTestNode<byte>
+            {
+                StableUid = "ID1",
+                DisplayName = "A",
+                Body = static (_, _) => Task.CompletedTask,
+                GetArguments = GetArgumentsAsync,
+                Properties = GetProperties(expansionPropertyValue),
+            },
             _ => throw new ArgumentException($"Unknown test node type: {parameterizedTestNode}", nameof(parameterizedTestNode)),
         };
 
@@ -297,6 +330,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
 
         // Local functions
         static IEnumerable<byte> GetArguments() => new byte[] { 0, 1 };
+        static Task<IEnumerable<byte>> GetArgumentsAsync() => Task.FromResult<IEnumerable<byte>>(new byte[] { 0, 1 });
         static IProperty[] GetProperties(bool? hasExpansionProperty)
             => hasExpansionProperty.HasValue
                 ?

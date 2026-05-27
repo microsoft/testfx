@@ -79,8 +79,8 @@ Disk info:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">Укажите имя файла дампа.
+Поддерживаются следующие заполнители: {pname} (имя тестового приложения), {pid} (идентификатор процесса), {asm} (имя входной сборки), {tfm} (идентификатор целевой платформы), {time} (метка времени). Для обеспечения обратной совместимости также поддерживается устаревший токен (идентификатор процесса) %p.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -123,16 +123,16 @@ The timeout value is specified in one of the following formats:
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are {0}.
-Default type is 'Full'</target>
+        <target state="translated">Укажите тип дампа.
+Допустимые значения: {0}.
+Тип по умолчанию — "Full"</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are {1}</target>
+        <target state="translated">"{0}" не является допустимым типом дампа.
+Допустимые варианты: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

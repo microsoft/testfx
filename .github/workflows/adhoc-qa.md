@@ -29,6 +29,8 @@ permissions: read-all
 network: defaults
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   mentions: false
   allowed-github-references: []
   create-discussion:

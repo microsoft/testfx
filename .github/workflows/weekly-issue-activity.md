@@ -27,6 +27,8 @@ tools:
     min-integrity: none # This workflow is allowed to examine and comment on any issues or PRs
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   upload-asset:
   create-discussion:
     title-prefix: "[weekly-issue-activity] "
