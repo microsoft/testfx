@@ -144,12 +144,12 @@
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInCommandLine">
         <source>Unclosed quote in command line</source>
-        <target state="new">Unclosed quote in command line</target>
+        <target state="translated">命令行中存在未闭合的引号</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInResponseFile">
         <source>Unclosed quote in response file at line {0}</source>
-        <target state="new">Unclosed quote in response file at line {0}</target>
+        <target state="translated">响应文件的第 {0} 行存在未闭合的引号</target>
         <note>{0} is the line number</note>
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
@@ -1091,7 +1091,7 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
-        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
+        <target state="translated">wasi 不支持等待调试程序附加(TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1)。</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

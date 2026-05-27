@@ -144,12 +144,12 @@
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInCommandLine">
         <source>Unclosed quote in command line</source>
-        <target state="new">Unclosed quote in command line</target>
+        <target state="translated">Nicht geschlossenes Anführungszeichen in der Befehlszeile</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInResponseFile">
         <source>Unclosed quote in response file at line {0}</source>
-        <target state="new">Unclosed quote in response file at line {0}</target>
+        <target state="translated">Nicht egeschlossenes Anführungszeichen in Antwortdatei in Zeile {0}</target>
         <note>{0} is the line number</note>
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
@@ -1091,7 +1091,7 @@ Gültige Werte sind „Alle“, „Fehlgeschlagen“ und „Keine“. Der Standa
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
-        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
+        <target state="translated">Das Warten auf das Anfügen des Debuggers (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) wird in wasi nicht unterstützt.</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

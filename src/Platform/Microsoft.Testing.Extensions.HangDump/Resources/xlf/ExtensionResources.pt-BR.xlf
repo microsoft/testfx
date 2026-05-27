@@ -79,8 +79,8 @@ Informações do disco:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">Especifique o nome do arquivo de despejar.
+A compatibilidade com os seguintes placeholders: {pname} (nome do aplicativo de teste), {pid} (ID do processo), {asm} (nome da assembly de entrada), {tfm} (moniker da estrutura de destino), {time} (carimbo de data/hora). O token %p herdado (ID do processo) também é aceito para compatibilidade com versões anteriores.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -123,16 +123,16 @@ The timeout value is specified in one of the following formats:
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are {0}.
-Default type is 'Full'</target>
+        <target state="translated">Especifique o tipo do despejar.
+Os valores válidos são {0}.
+O tipo padrão é "Full"</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are {1}</target>
+        <target state="translated">"{0}" não é um tipo de despejar válido.
+As opções válidas são {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
