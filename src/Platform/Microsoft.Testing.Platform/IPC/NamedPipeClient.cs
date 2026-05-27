@@ -220,9 +220,9 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
 
                     // We need to read the message size, first 4 bytes
                     currentMessageSize = BitConverter.ToInt32(_readBuffer, 0);
-                    if (currentMessageSize <= 0)
+                    if (currentMessageSize < sizeof(int))
                     {
-                        // Protocol corruption: message size must be positive.
+                        // Protocol corruption: payload must contain at least a 4-byte serializer id.
                         _environment.Exit((int)ExitCode.GenericFailure);
                         throw new InvalidOperationException($"Received invalid IPC message size {currentMessageSize}.");
                     }
@@ -241,6 +241,13 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
                     await _messageBuffer.WriteAsync(_readBuffer, currentReadIndex, missingBytesToReadOfCurrentChunk, cancellationToken).ConfigureAwait(false);
 #endif
                     missingBytesToReadOfWholeMessage -= missingBytesToReadOfCurrentChunk;
+                }
+
+                if (missingBytesToReadOfWholeMessage < 0)
+                {
+                    // Protocol corruption: we read more body bytes than the declared message size.
+                    _environment.Exit((int)ExitCode.GenericFailure);
+                    throw new InvalidOperationException("Read more bytes than the declared IPC message size.");
                 }
 
                 // If we have read all the message, we can deserialize it

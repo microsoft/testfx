@@ -168,13 +168,12 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                     }
 
                     currentReadBytes += additionalBytes;
-                    missingBytesToReadOfCurrentChunk = currentReadBytes;
                 }
 
                 currentMessageSize = BitConverter.ToInt32(_readBuffer, 0);
-                if (currentMessageSize <= 0)
+                if (currentMessageSize < sizeof(int))
                 {
-                    // Protocol corruption: message size must be positive. Drop the connection.
+                    // Protocol corruption: payload must contain at least a 4-byte serializer id. Drop the connection.
                     await _logger.LogWarningAsync($"Pipe {PipeName.Name} received invalid message size {currentMessageSize}; closing connection.").ConfigureAwait(false);
                     return;
                 }

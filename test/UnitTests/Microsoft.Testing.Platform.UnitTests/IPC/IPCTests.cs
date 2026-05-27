@@ -240,13 +240,13 @@ public sealed class IPCTests
         // The server must now close the connection gracefully instead.
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
         var serverEnvironment = new SystemEnvironment();
-        bool callbackInvoked = false;
+        var callbackInvoked = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         NamedPipeServer server = new(
             pipeNameDescription,
             _ =>
             {
-                callbackInvoked = true;
+                callbackInvoked.TrySetResult(true);
                 return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
             },
             serverEnvironment,
@@ -268,10 +268,6 @@ public sealed class IPCTests
                 await raw.WriteAsync(invalidHeader, 0, invalidHeader.Length, _testContext.CancellationToken);
                 await raw.FlushAsync(_testContext.CancellationToken);
             }
-
-            // The server's internal loop should exit cleanly within the disposal timeout. If the loop
-            // crashed via FailFast the test process would be terminated instead of running to completion.
-            Assert.IsFalse(callbackInvoked, "Server callback must not run for an invalid message header.");
         }
         finally
         {
@@ -281,6 +277,11 @@ public sealed class IPCTests
             server.Dispose();
 #endif
         }
+
+        // After the server has been disposed (so the loop task has definitely completed), the callback
+        // must not have been invoked because the invalid header should be rejected before deserialization.
+        // If the loop instead crashed via FailFast, the test process would have been terminated.
+        Assert.IsFalse(callbackInvoked.Task.IsCompleted, "Server callback must not run for an invalid message header.");
     }
 
     private static string RandomString(int length, Random random)
