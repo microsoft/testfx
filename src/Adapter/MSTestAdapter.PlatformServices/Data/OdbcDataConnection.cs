@@ -60,18 +60,6 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
         return [data1, data2];
     }
 
-    protected override string QuoteIdentifier(string identifier)
-    {
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier");
-        return CommandBuilder.QuoteIdentifier(identifier, Connection);  // Must pass connection.
-    }
-
-    protected override string UnquoteIdentifier(string identifier)
-    {
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier");
-        return CommandBuilder.UnquoteIdentifier(identifier, Connection);  // Must pass connection.
-    }
-
     // Need to fix up excel connections
     private static string FixConnectionString(string connectionString, List<string> dataFolders)
     {

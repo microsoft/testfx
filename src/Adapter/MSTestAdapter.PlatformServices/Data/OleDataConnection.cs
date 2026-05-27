@@ -54,18 +54,6 @@ internal sealed class OleDataConnection : TestDataConnectionSql
         return [data];
     }
 
-    protected override string QuoteIdentifier(string identifier)
-    {
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier");
-        return CommandBuilder.QuoteIdentifier(identifier, Connection);
-    }
-
-    protected override string UnquoteIdentifier(string identifier)
-    {
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier");
-        return CommandBuilder.UnquoteIdentifier(identifier, Connection);
-    }
-
     private static string FixConnectionString(string connectionString, List<string> dataFolders)
     {
         OleDbConnectionStringBuilder oleDbBuilder = [with(connectionString)];

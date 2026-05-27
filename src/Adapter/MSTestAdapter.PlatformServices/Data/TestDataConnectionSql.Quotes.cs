@@ -94,13 +94,13 @@ internal partial class TestDataConnectionSql
     protected virtual string QuoteIdentifier(string identifier)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier should not be null.");
-        return CommandBuilder.QuoteIdentifier(identifier);
+        return CommandBuilder.QuoteIdentifier(identifier, Connection);
     }
 
     protected virtual string UnquoteIdentifier(string identifier)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier should not be null.");
-        return CommandBuilder.UnquoteIdentifier(identifier);
+        return CommandBuilder.UnquoteIdentifier(identifier, Connection);
     }
 
     [MemberNotNull(nameof(_quotePrefix), nameof(_quoteSuffix), nameof(QuotePrefix), nameof(QuoteSuffix))]
