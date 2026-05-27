@@ -205,10 +205,9 @@ namespace Jsonite
                 case '\v':
                     return @"\v";
                 default:
-                    if (char.IsControl(chr) || IsHighSurrogate(chr) || IsLowSurrogate(chr))
-                        return @"\u" + ((int)chr).ToString("X4");
-                    else
-                        return new string(chr, 1);
+                    return (char.IsControl(chr) || IsHighSurrogate(chr) || IsLowSurrogate(chr))
+                        ? @"\u" + ((int)chr).ToString("X4")
+                        : new string(chr, 1);
             }
         }
     }
