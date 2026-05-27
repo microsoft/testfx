@@ -64,7 +64,7 @@ jobs:
             --output artifacts/jscpd \
             --format csharp \
             --threshold 100 \
-            --ignore "**/bin/**,**/obj/**,**/artifacts/**,**/*.Designer.cs,**/*.g.cs,**/*.xlf,**/*.resx,**/PublicAPI.*.txt,**/test/**,**/samples/**,**/formal-verification/**,**/src/Polyfills/**"
+            --ignore "**/bin/**,**/obj/**,**/artifacts/**,**/*.Designer.cs,**/*.g.cs,**/*.xlf,**/*.resx,**/PublicAPI.*.txt,**/test/**,**/samples/**,**/formal-verification/**,**/src/Polyfills/**,**/src/Adapter/MSTest.Engine/TestNodes/InternalUnsafeActionTestNode.cs,**/src/Adapter/MSTest.Engine/TestNodes/InternalUnsafeAsyncActionTestNode.cs"
 
       - name: Analyze duplicates with GitHub Models
         env:
