@@ -232,58 +232,6 @@ public sealed class IPCTests
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
     }
 
-    [TestMethod]
-    public async Task NamedPipeServer_InvalidMessageSizeHeader_DoesNotCrashHost()
-    {
-        // Regression: a misbehaving peer that sends a non-positive message-size header used to throw
-        // ApplicationStateGuard.Unreachable() on the server, which the loop translated into FailFast.
-        // The server must now close the connection gracefully instead.
-        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
-        var serverEnvironment = new SystemEnvironment();
-        var callbackInvoked = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        NamedPipeServer server = new(
-            pipeNameDescription,
-            _ =>
-            {
-                callbackInvoked.TrySetResult(true);
-                return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
-            },
-            serverEnvironment,
-            new Mock<ILogger>().Object,
-            new SystemTask(),
-            _testContext.CancellationToken);
-
-        try
-        {
-            Task waitConnection = server.WaitConnectionAsync(_testContext.CancellationToken);
-
-            using var raw = new System.IO.Pipes.NamedPipeClientStream(".", pipeNameDescription.Name, System.IO.Pipes.PipeDirection.InOut, System.IO.Pipes.PipeOptions.Asynchronous);
-            {
-                await raw.ConnectAsync(_testContext.CancellationToken);
-                await waitConnection;
-
-                // Write a zero-length message size header (invalid per protocol).
-                byte[] invalidHeader = BitConverter.GetBytes(0);
-                await raw.WriteAsync(invalidHeader, 0, invalidHeader.Length, _testContext.CancellationToken);
-                await raw.FlushAsync(_testContext.CancellationToken);
-            }
-        }
-        finally
-        {
-#if NETCOREAPP
-            await server.DisposeAsync();
-#else
-            server.Dispose();
-#endif
-        }
-
-        // After the server has been disposed (so the loop task has definitely completed), the callback
-        // must not have been invoked because the invalid header should be rejected before deserialization.
-        // If the loop instead crashed via FailFast, the test process would have been terminated.
-        Assert.IsFalse(callbackInvoked.Task.IsCompleted, "Server callback must not run for an invalid message header.");
-    }
-
     private static string RandomString(int length, Random random)
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

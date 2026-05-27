@@ -198,35 +198,8 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
                 // If currentRequestSize is 0, we need to read the message size
                 if (currentMessageSize == 0)
                 {
-                    // We need at least sizeof(int) bytes to parse the message-size header. A pipe read can
-                    // legitimately return fewer bytes on partial frames; keep reading until we have a full
-                    // header or the peer disconnects.
-                    while (currentReadBytes < sizeof(int))
-                    {
-#if NETCOREAPP
-                        int additionalBytes = await _namedPipeClientStream.ReadAsync(_readBuffer.AsMemory(currentReadBytes, _readBuffer.Length - currentReadBytes), cancellationToken).ConfigureAwait(false);
-#else
-                        int additionalBytes = await _namedPipeClientStream.ReadAsync(_readBuffer, currentReadBytes, _readBuffer.Length - currentReadBytes, cancellationToken).ConfigureAwait(false);
-#endif
-                        if (additionalBytes == 0)
-                        {
-                            // Server disconnected mid-header. Treat as the read-EOF case above.
-                            _environment.Exit((int)ExitCode.GenericFailure);
-                            throw new IOException("Pipe closed while reading message header.");
-                        }
-
-                        currentReadBytes += additionalBytes;
-                    }
-
                     // We need to read the message size, first 4 bytes
                     currentMessageSize = BitConverter.ToInt32(_readBuffer, 0);
-                    if (currentMessageSize < sizeof(int))
-                    {
-                        // Protocol corruption: payload must contain at least a 4-byte serializer id.
-                        _environment.Exit((int)ExitCode.GenericFailure);
-                        throw new InvalidOperationException($"Received invalid IPC message size {currentMessageSize}.");
-                    }
-
                     missingBytesToReadOfCurrentChunk = currentReadBytes - sizeof(int);
                     missingBytesToReadOfWholeMessage = currentMessageSize;
                     currentReadIndex = sizeof(int);
@@ -241,13 +214,6 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
                     await _messageBuffer.WriteAsync(_readBuffer, currentReadIndex, missingBytesToReadOfCurrentChunk, cancellationToken).ConfigureAwait(false);
 #endif
                     missingBytesToReadOfWholeMessage -= missingBytesToReadOfCurrentChunk;
-                }
-
-                if (missingBytesToReadOfWholeMessage < 0)
-                {
-                    // Protocol corruption: we read more body bytes than the declared message size.
-                    _environment.Exit((int)ExitCode.GenericFailure);
-                    throw new InvalidOperationException("Read more bytes than the declared IPC message size.");
                 }
 
                 // If we have read all the message, we can deserialize it
@@ -267,14 +233,6 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
                     try
                     {
                         return (TResponse)responseNamedPipeSerializer.Deserialize(_messageBuffer);
-                    }
-                    catch (Exception ex) when (ex is not OperationCanceledException)
-                    {
-                        // The response payload is unparseable. Mirror the read-EOF handling: there's no way to
-                        // recover the IPC session, so exit abnormally rather than bubbling a serializer
-                        // exception to the caller.
-                        _environment.Exit((int)ExitCode.GenericFailure);
-                        throw;
                     }
                     finally
                     {

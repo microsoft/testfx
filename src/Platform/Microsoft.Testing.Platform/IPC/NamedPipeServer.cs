@@ -141,6 +141,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             if (currentReadBytes == 0)
             {
                 // The client has disconnected
+                await _logger.LogDebugAsync($"Client disconnected from pipe '{PipeName.Name}', exiting read loop").ConfigureAwait(false);
                 return;
             }
 
@@ -150,34 +151,13 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             // If currentRequestSize is 0, we need to read the message size
             if (currentMessageSize == 0)
             {
-                // We need at least sizeof(int) bytes to parse the message-size header. A pipe read can
-                // legitimately return fewer bytes on partial frames; keep reading until we have a full
-                // header or the peer disconnects.
-                while (currentReadBytes < sizeof(int))
+                // We need to read the message size, first 4 bytes
+                if (currentReadBytes < sizeof(int))
                 {
-#if NET
-                    int additionalBytes = await _namedPipeServerStream.ReadAsync(_readBuffer.AsMemory(currentReadBytes, _readBuffer.Length - currentReadBytes), cancellationToken).ConfigureAwait(false);
-#else
-                    int additionalBytes = await _namedPipeServerStream.ReadAsync(_readBuffer, currentReadBytes, _readBuffer.Length - currentReadBytes, cancellationToken).ConfigureAwait(false);
-#endif
-                    if (additionalBytes == 0)
-                    {
-                        // The client disconnected mid-header.
-                        await _logger.LogDebugAsync($"Pipe {PipeName.Name} closed while reading message header; treating as client disconnect.").ConfigureAwait(false);
-                        return;
-                    }
-
-                    currentReadBytes += additionalBytes;
+                    throw ApplicationStateGuard.Unreachable();
                 }
 
                 currentMessageSize = BitConverter.ToInt32(_readBuffer, 0);
-                if (currentMessageSize < sizeof(int))
-                {
-                    // Protocol corruption: payload must contain at least a 4-byte serializer id. Drop the connection.
-                    await _logger.LogWarningAsync($"Pipe {PipeName.Name} received invalid message size {currentMessageSize}; closing connection.").ConfigureAwait(false);
-                    return;
-                }
-
                 missingBytesToReadOfCurrentChunk = currentReadBytes - sizeof(int);
                 missingBytesToReadOfWholeMessage = currentMessageSize;
                 currentReadIndex = sizeof(int);
@@ -196,10 +176,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
             if (missingBytesToReadOfWholeMessage < 0)
             {
-                // Protocol corruption: we read more body bytes than the declared message size. Drop
-                // the connection rather than fail fast — the peer is misbehaving but the host shouldn't crash.
-                await _logger.LogWarningAsync($"Pipe {PipeName.Name} read more bytes than the declared message size; closing connection.").ConfigureAwait(false);
-                return;
+                throw ApplicationStateGuard.Unreachable();
             }
 
             // If we have read all the message, we can deserialize it
@@ -342,6 +319,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
             if (!_loopTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
+                _logger.LogError($"NamedPipeServer.Dispose: '{nameof(InternalLoopAsync)}' for pipe '{PipeName.Name}' did not complete within {TimeoutHelper.DefaultHangTimeSpanTimeout}. WasConnected={WasConnected}, LoopTaskStatus={_loopTask.Status}.");
                 throw new InvalidOperationException(string.Format(
                     CultureInfo.InvariantCulture,
                     PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
@@ -375,6 +353,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             }
             catch (TimeoutException)
             {
+                await _logger.LogErrorAsync($"NamedPipeServer.DisposeAsync: '{nameof(InternalLoopAsync)}' for pipe '{PipeName.Name}' did not complete within {TimeoutHelper.DefaultHangTimeSpanTimeout}. WasConnected={WasConnected}, LoopTaskStatus={_loopTask.Status}.").ConfigureAwait(false);
                 throw new InvalidOperationException(string.Format(
                     CultureInfo.InvariantCulture,
                     PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
