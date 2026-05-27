@@ -79,8 +79,8 @@ Informazioni sul disco:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">Specificare il nome del file di dump.
+Supporta i segnaposto seguenti: {pname} (nome applicazione di test), {pid} (ID processo), {asm} (nome assembly voce), {tfm} (moniker framework di destinazione), {time} (timestamp). Il token legacy %p (ID processo) è supportato anche per la compatibilità con le versioni precedenti.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -123,16 +123,16 @@ The timeout value is specified in one of the following formats:
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are {0}.
-Default type is 'Full'</target>
+        <target state="translated">Specificare il tipo di dump.
+I valori validi sono {0}.
+Il tipo predefinito è 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are {1}</target>
+        <target state="translated">''{0}'' non è un tipo di dump valido.
+Le opzioni valide sono {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

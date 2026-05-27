@@ -797,6 +797,10 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
+        <target state="new">'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
+- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
+- it should not be 'static'
+- it should have a setter.</target>
         <target state="needs-review-translation">'TestContext' statik olmayan bir alan veya oluşturucuda atanan bir özellik olmalıdır veya MSTest tarafından ayarlanan bir özellik kümesi için şu düzeni izlemelidir:
 - '[assembly: DiscoverInternals]' özniteliğinin ayarlanıp ayarlanmadığına bakılmaksızın 'public' olmalıdır.
 - 'static' olmamalıdır
@@ -993,12 +997,12 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">
         <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</source>
-        <target state="new">An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</target>
+        <target state="translated">'RetryBaseAttribute' özniteliğinden türetilen bir öznitelik yalnızca bir test yönteminde veya test sınıfında belirtilebilir</target>
         <note />
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method or test class</source>
-        <target state="new">Use retry attribute on test method or test class</target>
+        <target state="translated">Test yönteminde veya test sınıfında yeniden deneme özniteliğini kullan</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">

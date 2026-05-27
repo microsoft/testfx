@@ -79,8 +79,8 @@ Disk info:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">덤프 파일의 이름을 지정합니다.
+자리 표시자 {pname}(테스트 애플리케이션 이름), {pid}(프로세스 ID), {asm}(항목 어셈블리 이름), {tfm}(대상 프레임워크 모니커), {time}(타임스탬프)을 지원합니다. 레거시 %p 토큰(프로세스 ID)도 이전 버전과의 호환성을 위해 지원됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -123,16 +123,16 @@ The timeout value is specified in one of the following formats:
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are {0}.
-Default type is 'Full'</target>
+        <target state="translated">덤프의 유형을 지정합니다.
+유효한 값은 {0}입니다.
+기본 유형은 'Full'입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are {1}</target>
+        <target state="translated">'{0}'은(는) 올바른 덤프 유형이 아닙니다.
+유효한 옵션은 {1}입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

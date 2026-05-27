@@ -74,22 +74,22 @@
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDescription">
         <source>The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</source>
-        <target state="new">The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</target>
+        <target state="translated">La liste des tests ayant débuté et pris fin au cours de la session de test, utilisée pour identifier les tests qui étaient en cours d'exécution au moment du plantage</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDisplayName">
         <source>Crash sequence file</source>
-        <target state="new">Crash sequence file</target>
+        <target state="translated">Fichier de séquence de crash</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>
-        <target state="new">Failed to read the crash sequence file '{0}': {1}</target>
+        <target state="translated">Échec de la lecture du fichier de séquence de crash « {0} » : {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
         <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
-        <target state="new">The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
+        <target state="translated">Les tests suivants étaient encore en cours d'exécution lorsque l'hôte de test a planté (format : [&lt;temps écoulé depuis le début&gt;] &lt;nom&gt;) :</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
@@ -135,14 +135,14 @@ Pour plus d’informations, visitez https://learn.microsoft.com/dotnet/core/diag
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
-The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
-Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <target state="translated">Contrôlez si un fichier de séquence, listant les tests démarrés et terminés au cours de la session de test, est généré parallèlement au vidage mémoire ou au rapport d'incident.
+Le fichier permet d'identifier les tests qui étaient en cours d'exécution au moment du plantage, sans avoir à inspecter le dump.
+Les valeurs valides sont « on » (par défaut ; accepte également « true », « enable », « 1 ») ou « off » (accepte également « false », « disable », « 0 »).</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--crash-sequence attend un paramètre unique ayant pour valeur 'on' (ou 'true', 'enable', '1') ou 'off' (ou 'false', 'disable', '0').</target>
         <note />
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">

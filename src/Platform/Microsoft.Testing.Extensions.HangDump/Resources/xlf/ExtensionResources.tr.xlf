@@ -79,8 +79,8 @@ Disk bilgileri:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">Döküm dosyasının adını belirtin.
+Şu yer tutucuları destekler: {pname} (test uygulaması adı), {pid} (işlem kimliği), {asm} (girdi derleme adı), {tfm} (hedef çerçeve bilinen adı), {time} (zaman damgası). Geriye dönük uyumluluk için eski %p belirteci (işlem kimliği) de desteklenir.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -123,16 +123,16 @@ The timeout value is specified in one of the following formats:
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are {0}.
-Default type is 'Full'</target>
+        <target state="translated">Dökümün türünü belirtin.
+Geçerli değerler: {0}.
+Varsayılan tür: 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are {1}</target>
+        <target state="translated">'{0}' geçerli bir döküm türü değil.
+Geçerli seçenekler: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

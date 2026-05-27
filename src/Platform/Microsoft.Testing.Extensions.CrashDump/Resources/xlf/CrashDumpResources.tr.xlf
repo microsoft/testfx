@@ -74,22 +74,22 @@
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDescription">
         <source>The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</source>
-        <target state="new">The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</target>
+        <target state="translated">Kilitlenme sırasında çalışan testleri belirlemek için kullanılan, test oturumu sırasında başlatılan ve sonlandırılan testlerin listesi</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDisplayName">
         <source>Crash sequence file</source>
-        <target state="new">Crash sequence file</target>
+        <target state="translated">Kilitlenme sırası dosyası</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>
-        <target state="new">Failed to read the crash sequence file '{0}': {1}</target>
+        <target state="translated">'{0}' kilitlenme sırası dosyası okunamadı: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
         <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
-        <target state="new">The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
+        <target state="translated">Test konağı kilitlendiğinde aşağıdaki testler hala çalışıyordu (biçim: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
@@ -135,14 +135,14 @@ Daha fazla bilgi için https://learn.microsoft.com/dotnet/core/diagnostics/colle
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
-The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
-Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <target state="translated">Test oturumu sırasında başlatılan ve sonlandırılan testleri listeleyen bir sıra dosyasının kilitlenme bilgi dökümü veya kilitlenme raporuyla birlikte oluşturulup oluşturulmadığını denetleyin.
+Dosya, dökümü incelemeye gerek kalmadan kilitlenme sırasında çalışan testlerin belirlenmesini mümkün kılar.
+Geçerli değerler: 'on' (varsayılan: 'true', 'enable', '1' değerlerini de kabul eder) ve 'off' ('false', 'disable', '0' değerlerini de kabul eder).</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--crash-sequence, değeri 'on' (veya 'true', 'enable', '1') ya da 'off' (veya 'false', 'disable', '0') olan tek bir parametre bekliyor.</target>
         <note />
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">

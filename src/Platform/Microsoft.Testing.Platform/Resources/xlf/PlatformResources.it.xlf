@@ -144,12 +144,12 @@
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInCommandLine">
         <source>Unclosed quote in command line</source>
-        <target state="new">Unclosed quote in command line</target>
+        <target state="translated">Virgolette non chiuse nella riga di comando</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInResponseFile">
         <source>Unclosed quote in response file at line {0}</source>
-        <target state="new">Unclosed quote in response file at line {0}</target>
+        <target state="translated">Virgolette non chiuse nel file di risposta alla riga {0}</target>
         <note>{0} is the line number</note>
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
@@ -1091,7 +1091,7 @@ I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
-        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
+        <target state="translated">L'attesa per il collegamento di (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) non è supportata in wasi.</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
