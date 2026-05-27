@@ -355,7 +355,7 @@ The type declaring these methods should also respect the following rules:
     <value>TestCleanup method should have valid layout</value>
   </data>
   <data name="TestContextShouldBeValidDescription" xml:space="preserve">
-    <value>'TestContext' should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
+    <value>'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</value>

@@ -186,108 +186,77 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
                         var namedType = (INamedTypeSymbol)context.Symbol;
                         foreach (ISymbol member in namedType.GetMembers())
                         {
-                            IFieldSymbol? fieldReturnedByProperty = null;
-                            ConcurrentBag<IFieldSymbol>? fieldsAssignedInConstructor = null;
-                            switch (member.Kind)
+                            if (member is not IPropertySymbol propertySymbol)
                             {
-                                case SymbolKind.Property:
-                                case SymbolKind.Field:
-                                    if (member is IPropertySymbol propertySymbol)
-                                    {
-                                        if (!SymbolEqualityComparer.Default.Equals(propertySymbol.Type, testContextSymbol) ||
-                                            !member.Name.Equals(TestContextPropertyName, StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            continue;
-                                        }
-
-                                        if (propertySymbol.IsStatic)
-                                        {
-                                            context.RegisterSymbolEndAction(
-                                                context => context.ReportDiagnostic(member.CreateDiagnostic(TestContextShouldBeValidRule)));
-                                            continue;
-                                        }
-
-                                        if (IsTestContextPropertyAutomaticallyAssigned(propertySymbol, testContextSymbol))
-                                        {
-                                            return;
-                                        }
-
-                                        fieldsAssignedInConstructor = [];
-
-                                        context.RegisterOperationBlockAction(context =>
-                                        {
-                                            if (context.OwningSymbol.Equals(propertySymbol.GetMethod, SymbolEqualityComparer.Default))
-                                            {
-                                                fieldReturnedByProperty = TryGetReturnedField(context.OperationBlocks);
-                                            }
-                                            else if (TryGetTestContextParameterIfValidConstructor(context.OwningSymbol, testContextSymbol) is { } parameter)
-                                            {
-                                                CollectTestContextFieldsAssignedInConstructor(parameter, context.OperationBlocks, fieldsAssignedInConstructor);
-                                            }
-                                        });
-                                    }
-                                    else if (member is IFieldSymbol fieldSymbol)
-                                    {
-                                        // AssociatedSymbol check is to not analyze compiler-generated backing field.
-                                        if (fieldSymbol.AssociatedSymbol is not null ||
-                                            // Workaround https://github.com/dotnet/roslyn/issues/70208
-                                            // https://github.com/dotnet/roslyn/blob/05e49aa98995349ffa26a19020333293ffe99670/src/Compilers/CSharp/Portable/Symbols/Synthesized/GeneratedNameKind.cs#L47
-                                            (fieldSymbol.Name.StartsWith("<", StringComparison.Ordinal) && fieldSymbol.Name.EndsWith(">P", StringComparison.Ordinal)) ||
-                                            !SymbolEqualityComparer.Default.Equals(fieldSymbol.Type, testContextSymbol))
-                                        {
-                                            continue;
-                                        }
-
-                                        // For fields, we check the type but not the name to allow analyzing different conventions.
-                                        // The field could be named _testContext, testContext, or s_testContext. So we want to analyze all these.
-                                        if (fieldSymbol.IsStatic)
-                                        {
-                                            context.RegisterSymbolEndAction(
-                                                context => context.ReportDiagnostic(member.CreateDiagnostic(TestContextShouldBeValidRule)));
-                                            continue;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        throw ApplicationStateGuard.Unreachable();
-                                    }
-
-                                    // Initially, we consider the field/property as not assigned in the constructor.
-                                    // Then, we look for a constructor with a single TestContext parameter and look for assignment
-                                    // in the constructor. We simply iterate over the operation blocks (no DFA involved for now).
-                                    bool isAssigned = false;
-
-                                    context.RegisterOperationBlockAction(
-                                        context =>
-                                        {
-                                            if (TryGetTestContextParameterIfValidConstructor(context.OwningSymbol, testContextSymbol) is not { } parameter)
-                                            {
-                                                return;
-                                            }
-
-                                            if (AssignsParameterToMember(parameter, member, context.OperationBlocks))
-                                            {
-                                                isAssigned = true;
-                                            }
-                                        });
-
-                                    context.RegisterSymbolEndAction(
-                                        context =>
-                                        {
-                                            if (!isAssigned)
-                                            {
-                                                isAssigned = fieldReturnedByProperty is not null &&
-                                                    fieldsAssignedInConstructor?.Contains(fieldReturnedByProperty, SymbolEqualityComparer.Default) == true;
-                                            }
-
-                                            if (!isAssigned)
-                                            {
-                                                context.ReportDiagnostic(member.CreateDiagnostic(TestContextShouldBeValidRule));
-                                            }
-                                        });
-
-                                    break;
+                                continue;
                             }
+
+                            if (!SymbolEqualityComparer.Default.Equals(propertySymbol.Type, testContextSymbol) ||
+                                !propertySymbol.Name.Equals(TestContextPropertyName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                continue;
+                            }
+
+                            if (propertySymbol.IsStatic)
+                            {
+                                context.RegisterSymbolEndAction(
+                                    context => context.ReportDiagnostic(propertySymbol.CreateDiagnostic(TestContextShouldBeValidRule)));
+                                continue;
+                            }
+
+                            if (IsTestContextPropertyAutomaticallyAssigned(propertySymbol, testContextSymbol))
+                            {
+                                return;
+                            }
+
+                            IFieldSymbol? fieldReturnedByProperty = null;
+                            ConcurrentBag<IFieldSymbol> fieldsAssignedInConstructor = [];
+
+                            context.RegisterOperationBlockAction(context =>
+                            {
+                                if (context.OwningSymbol.Equals(propertySymbol.GetMethod, SymbolEqualityComparer.Default))
+                                {
+                                    fieldReturnedByProperty = TryGetReturnedField(context.OperationBlocks);
+                                }
+                                else if (TryGetTestContextParameterIfValidConstructor(context.OwningSymbol, testContextSymbol) is { } parameter)
+                                {
+                                    CollectTestContextFieldsAssignedInConstructor(parameter, context.OperationBlocks, fieldsAssignedInConstructor);
+                                }
+                            });
+
+                            // Initially, we consider the property as not assigned in the constructor.
+                            // Then, we look for a constructor with a single TestContext parameter and look for assignment
+                            // in the constructor. We simply iterate over the operation blocks (no DFA involved for now).
+                            bool isAssigned = false;
+
+                            context.RegisterOperationBlockAction(
+                                context =>
+                                {
+                                    if (TryGetTestContextParameterIfValidConstructor(context.OwningSymbol, testContextSymbol) is not { } parameter)
+                                    {
+                                        return;
+                                    }
+
+                                    if (AssignsParameterToMember(parameter, propertySymbol, context.OperationBlocks))
+                                    {
+                                        isAssigned = true;
+                                    }
+                                });
+
+                            context.RegisterSymbolEndAction(
+                                context =>
+                                {
+                                    if (!isAssigned)
+                                    {
+                                        isAssigned = fieldReturnedByProperty is not null &&
+                                            fieldsAssignedInConstructor.Contains(fieldReturnedByProperty, SymbolEqualityComparer.Default);
+                                    }
+
+                                    if (!isAssigned)
+                                    {
+                                        context.ReportDiagnostic(propertySymbol.CreateDiagnostic(TestContextShouldBeValidRule));
+                                    }
+                                });
                         }
                     }, SymbolKind.NamedType);
             }

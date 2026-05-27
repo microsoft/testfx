@@ -792,11 +792,11 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidDescription">
-        <source>'TestContext' should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
+        <source>'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
-        <target state="translated">TestContext musí být nestatické pole nebo vlastnost přiřazené v konstruktoru nebo pro vlastnost nastavenou přes MSTest. Musí se řídit následujícím rozložením:
+        <target state="needs-review-translation">TestContext musí být nestatické pole nebo vlastnost přiřazené v konstruktoru nebo pro vlastnost nastavenou přes MSTest. Musí se řídit následujícím rozložením:
 – Musí být public bez ohledu na to, jestli je nastavený atribut [assembly: DiscoverInternals].
 – Nesmí být static.
 – Musí mít metodu setter.</target>

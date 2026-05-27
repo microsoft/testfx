@@ -793,11 +793,11 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidDescription">
-        <source>'TestContext' should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
+        <source>'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
-        <target state="translated">'TestContext' statik olmayan bir alan veya oluşturucuda atanan bir özellik olmalıdır veya MSTest tarafından ayarlanan bir özellik kümesi için şu düzeni izlemelidir:
+        <target state="needs-review-translation">'TestContext' statik olmayan bir alan veya oluşturucuda atanan bir özellik olmalıdır veya MSTest tarafından ayarlanan bir özellik kümesi için şu düzeni izlemelidir:
 - '[assembly: DiscoverInternals]' özniteliğinin ayarlanıp ayarlanmadığına bakılmaksızın 'public' olmalıdır.
 - 'static' olmamalıdır
 - bir ayarlayıcı içermelidir.</target>
