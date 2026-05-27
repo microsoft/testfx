@@ -74,22 +74,22 @@
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDescription">
         <source>The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</source>
-        <target state="new">The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</target>
+        <target state="translated">Elenco di test avviati e terminati durante la sessione di test, usati per identificare i test in esecuzione al momento dell'arresto anomalo del sistema</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDisplayName">
         <source>Crash sequence file</source>
-        <target state="new">Crash sequence file</target>
+        <target state="translated">File di sequenza di arresto anomalo del sistema</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>
-        <target state="new">Failed to read the crash sequence file '{0}': {1}</target>
+        <target state="translated">Non è possibile leggere il file della sequenza di arresto anomalo ''{0}'': {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
         <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
-        <target state="new">The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
+        <target state="translated">I test seguenti erano ancora in esecuzione quando l'host di test si è arrestato in modo anomalo (formato: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
@@ -135,14 +135,14 @@ Per altre informazioni, visitare https://learn.microsoft.com/dotnet/core/diagnos
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
-The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
-Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <target state="translated">Controllare se un file di sequenza che elenca i test avviati e terminati durante la sessione di test viene generato insieme al dump di arresto anomalo del sistema o al report di arresto anomalo del sistema.
+Il file consente di identificare i test in esecuzione al momento dell'arresto anomalo senza dover esaminare il dump.
+I valori validi sono ''on'' (impostazione predefinita; accetta anche ''true'', 'enable'', ''1'') o ''off'' (accetta anche ''false'', ''disable'', ''0'').</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--crash-sequence prevede un singolo parametro con valore ''on'' (o ''true'', ''enable'', ''1'') o ''off'' (o ''false'', ''disable'', ''0'').</target>
         <note />
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">

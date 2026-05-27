@@ -74,22 +74,22 @@
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDescription">
         <source>The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</source>
-        <target state="new">The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</target>
+        <target state="translated">Seznam testů spuštěných a ukončených během testovací relace, který slouží k identifikaci testů spuštěných v době chybového ukončení.</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDisplayName">
         <source>Crash sequence file</source>
-        <target state="new">Crash sequence file</target>
+        <target state="translated">Soubor sekvence chybových ukončení</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>
-        <target state="new">Failed to read the crash sequence file '{0}': {1}</target>
+        <target state="translated">Nepodařilo se přečíst soubor sekvence chybových ukončení {0}: {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
         <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
-        <target state="new">The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
+        <target state="translated">Při chybovém ukončení hostitele testování stále běžely následující testy (formát: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
@@ -135,14 +135,14 @@ Další informace najdete na https://learn.microsoft.com/dotnet/core/diagnostics
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
-The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
-Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <target state="translated">Určuje, zda se spolu s výpisem stavu systému při chybovém ukončení nebo sestavou o chybovém ukončení vygeneruje soubor sekvence uvádějící testy spuštěné a ukončené během testovací relace.
+Soubor umožňuje identifikovat testy, které byly spuštěny v době chybového ukončení, aniž by bylo nutné kontrolovat výpis paměti.
+Platné hodnoty jsou on (výchozí; přijímá také hodnoty true, enable, 1) nebo off (přijímá také hodnoty false, disable, 0).</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">Přepínač --crash-sequence očekává jeden parametr s hodnotou on (nebo true, enable, 1) nebo off (nebo false, disable, 0).</target>
         <note />
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">

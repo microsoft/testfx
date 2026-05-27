@@ -89,7 +89,7 @@
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
         <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
-        <target state="new">The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
+        <target state="translated">测试主机故障时，以下测试仍在运行(格式: [&lt;自启动以来经过的时间&gt;] &lt; 名称 &gt;):</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
