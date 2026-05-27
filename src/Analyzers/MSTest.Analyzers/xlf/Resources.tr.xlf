@@ -801,10 +801,10 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</target>
-        <target state="needs-review-translation">'TestContext' statik olmayan bir alan veya oluşturucuda atanan bir özellik olmalıdır veya MSTest tarafından ayarlanan bir özellik kümesi için şu düzeni izlemelidir:
-- '[assembly: DiscoverInternals]' özniteliğinin ayarlanıp ayarlanmadığına bakılmaksızın 'public' olmalıdır.
-- 'static' olmamalıdır
-- bir ayarlayıcı içermelidir.</target>
+        <target state="needs-review-translation">TestContext musí být nestatické pole nebo vlastnost přiřazené v konstruktoru nebo pro vlastnost nastavenou přes MSTest. Musí se řídit následujícím rozložením:
+– Musí být public bez ohledu na to, jestli je nastavený atribut [assembly: DiscoverInternals].
+– Nesmí být static.
+– Musí mít metodu setter.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">
