@@ -6,7 +6,7 @@ parameters:
   default: true
 
 variables:
-- template: /eng/common/templates-official/variables/pool-providers.yml@self
+- template: /eng/common/templates-official/variables/pool-providers.yml
   # CG is handled in the primary CI pipeline
 - name: skipComponentGovernanceDetection
   value: true
@@ -43,7 +43,7 @@ jobs:
   displayName: CodeQL
   pool:
     name: $(DncEngInternalBuildPool)
-    demands: ImageOverride -equals windows.vs2026preview.scout.amd64
+    demands: ImageOverride -equals windows.vs2026.amd64
   timeoutInMinutes: 90
 
   steps:
