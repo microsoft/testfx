@@ -303,7 +303,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
             {
                 StableUid = "ID1",
                 DisplayName = "A",
-                Body = static async (_, _) => await Task.CompletedTask,
+                Body = static (_, _) => Task.CompletedTask,
                 GetArguments = GetArguments,
                 Properties = GetProperties(expansionPropertyValue),
             },
@@ -319,7 +319,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
             {
                 StableUid = "ID1",
                 DisplayName = "A",
-                Body = static async (_, _) => await Task.CompletedTask,
+                Body = static (_, _) => Task.CompletedTask,
                 GetArguments = GetArgumentsAsync,
                 Properties = GetProperties(expansionPropertyValue),
             },
