@@ -991,12 +991,12 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">
         <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</source>
-        <target state="new">An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</target>
+        <target state="translated">Vous ne pouvez spécifier un attribut dérivant de « RetryBaseAttribute » que sur une méthode de test ou une classe de test</target>
         <note />
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method or test class</source>
-        <target state="new">Use retry attribute on test method or test class</target>
+        <target state="translated">Utiliser un attribut de nouvelle tentative sur une méthode de test ou une classe de test</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">

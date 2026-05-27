@@ -179,7 +179,7 @@
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>Test failed without an additional message.</source>
-        <target state="new">Test failed without an additional message.</target>
+        <target state="translated">추가 메시지 없이 테스트가 실패했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="OptionDescription">
