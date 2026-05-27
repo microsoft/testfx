@@ -24,6 +24,8 @@ tools:
     min-integrity: none # This workflow is allowed to examine any PR because it's invoked by a repo maintainer
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   push-to-pull-request-branch:
   create-issue:
     title-prefix: "[pr-fix] "

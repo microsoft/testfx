@@ -19,6 +19,8 @@ tools:
   bash: true
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   create-code-scanning-alert:
     driver: "Malicious Code Scanner"
   threat-detection: false

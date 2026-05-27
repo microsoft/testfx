@@ -39,6 +39,8 @@ network:
   - java
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   add-comment:
     max: 10
     target: "*"
@@ -50,7 +52,7 @@ safe-outputs:
     labels: [area/performance, type/automation]
   push-to-pull-request-branch:
     target: "*"
-    required-title-prefix: "[efficiency-improver] "
+    title-prefix: "[efficiency-improver] "
   create-issue:
     title-prefix: "[efficiency-improver] "
     labels: [area/performance, type/automation]
