@@ -11,6 +11,11 @@ permissions:
   contents: read
   pull-requests: read
 
+network:
+  allowed:
+    - defaults
+    - dotnet
+
 imports:
   - shared/repo-build-setup.md
 
