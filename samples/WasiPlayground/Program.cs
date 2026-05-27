@@ -14,7 +14,8 @@ testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(
 testApplicationBuilder.AddTrxReportProvider();
 testApplicationBuilder.AddAppInsightsTelemetryProvider();
 testApplicationBuilder.AddCrashDumpProvider();
-testApplicationBuilder.AddHangDumpProvider();
+// AddHangDumpProvider is intentionally not registered: hang dumps rely on
+// System.Diagnostics.Process which is unsupported on wasi (see #8557).
 testApplicationBuilder.AddAzureDevOpsProvider();
 using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
 return await testApplication.RunAsync();
