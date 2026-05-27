@@ -13,8 +13,14 @@ on:
     types: [opened]
   roles: [admin, maintainer, write]
 
-# Skip draft PRs — only run for PRs opened as ready
-if: github.event.pull_request.draft == false
+# Skip draft PRs and OneLocBuild localization check-in PRs (authored by dotnet-bot)
+# — only run for human-authored PRs opened as ready.
+if: >
+  github.event.pull_request.draft == false
+  && !(
+    github.event.pull_request.user.login == 'dotnet-bot'
+    && startsWith(github.event.pull_request.title, 'Localized file check-in')
+  )
 
 permissions:
   contents: read
