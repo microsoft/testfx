@@ -6,21 +6,31 @@ Demonstrates hosting [Microsoft.Testing.Platform](https://aka.ms/testingplatform
 
 Prerequisites:
 
-- .NET 10 (or newer) SDK matching `global.json` at the repo root.
-- The `wasi-experimental-net10` and `wasm-tools-net10` SDK workloads:
+- The repo-local .NET SDK at `.dotnet\dotnet.exe`. Bootstrap it once by running
+  `.\build.cmd` (Windows) or `./build.sh` (Linux/macOS) from the repo root;
+  this also installs the `wasi-experimental-net10` workload required to build
+  the sample (see [`eng/restore-toolset.ps1`](../../eng/restore-toolset.ps1)
+  / [`eng/restore-toolset.sh`](../../eng/restore-toolset.sh)).
+- The `wasm-tools-net10` workload, which is only needed for `dotnet publish`
+  (not by the repo's `dotnet build`), so install it manually:
 
   ```cmd
-  dotnet workload install wasi-experimental-net10 wasm-tools-net10
+  .\.dotnet\dotnet.exe workload install wasm-tools-net10
   ```
 
 - [wasmtime](https://docs.wasmtime.dev/cli-install.html) on `PATH`.
+
+> All commands below use `.\.dotnet\dotnet.exe` so that the `.dotnet\packs`
+> lookup in step 2 resolves. If you prefer a machine-installed SDK, swap
+> `dotnet` in and replace `.dotnet\packs` with the corresponding `packs`
+> folder reported by `dotnet --info` (look for *.NET SDKs installed*).
 
 Then:
 
 1. From the repo root, publish the sample:
 
    ```cmd
-   dotnet publish samples\WasiPlayground\WasiPlayground.csproj -c Debug -f net10.0
+   .\.dotnet\dotnet.exe publish samples\WasiPlayground\WasiPlayground.csproj -c Debug -f net10.0
    ```
 
 2. The pre-built `dotnet.wasm` does not embed the ICU data file, so copy it
