@@ -251,6 +251,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 #endif
 
                 // Send the message
+                bool clientDisconnected = false;
                 try
                 {
 #if NET
@@ -264,11 +265,24 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                         _namedPipeServerStream.WaitForPipeDrain();
                     }
                 }
+                catch (Exception ex) when (ex is IOException or ObjectDisposedException)
+                {
+                    // The client disconnected while we were writing the reply. Treat it as a graceful disconnect
+                    // (symmetric with the read-side EOF handling above) so the server loop exits without crashing
+                    // the host.
+                    await _logger.LogDebugAsync($"Pipe {PipeName.Name} broken while writing reply; treating as client disconnect: {ex.Message}").ConfigureAwait(false);
+                    clientDisconnected = true;
+                }
                 finally
                 {
                     // Reset the buffers
                     _messageBuffer.Position = 0;
                     _serializationBuffer.Position = 0;
+                }
+
+                if (clientDisconnected)
+                {
+                    return;
                 }
 
                 // Reset the control variables

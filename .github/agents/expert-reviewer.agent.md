@@ -52,6 +52,7 @@ Assess all 21 dimensions on every review. For each dimension, either provide rev
 3. Verify new code paths are reachable and tested.
 4. Look for off-by-one errors, wrong boundary conditions, logic inversions, missing cases in switches/pattern matches.
 5. For bug fixes, verify the fix addresses the root cause, not just a symptom.
+6. **Do NOT weaken `ApplicationStateGuard.Unreachable()`, `Debug.Assert`, or explicit invariant throws into "graceful" handling, fallbacks, or warnings without evidence.** These guards exist because the author proved the condition cannot occur given the surrounding protocol/invariant. Replacing them with `LogWarning` + `return` (or any silent recovery path) is a regression: it hides a real bug if the invariant ever breaks, and adds untested, unmaintainable error paths. If the guard is wrong, prove it with a concrete repro or failing test before relaxing it. If a corruption *is* possible from an untrusted boundary, the right severity is `LogError` and abort — never `LogWarning`, which signals a user-actionable condition.
 
 **CHECK — Flag if:**
 - [ ] Off-by-one or wrong boundary condition
@@ -59,6 +60,8 @@ Assess all 21 dimensions on every review. For each dimension, either provide rev
 - [ ] Logic inversion (`&&` vs `||`, `<` vs `<=`)
 - [ ] Fix patches a symptom when the root cause could be addressed
 - [ ] New code path unreachable or untested
+- [ ] `ApplicationStateGuard.Unreachable()` / `Debug.Assert` / invariant throw replaced by a "graceful" path, fallback, or warning without a documented repro
+- [ ] Internal-bug condition logged as `LogWarning` (user-actionable severity) instead of `LogError` + abort
 
 ---
 
@@ -210,12 +213,15 @@ The test platform loads arbitrary user code — it must not crash regardless of 
 3. Enforce timeouts on user code execution.
 4. Guard against unbounded collection growth from user-controlled input.
 5. Consider `StackOverflowException` risk from deeply recursive user data sources.
+6. **Defensive coding belongs at trust boundaries — not on internal invariants.** Wrapping every internal call in `try/catch`, replacing `throw Unreachable()` with logging, or adding "tolerant" loops on protocols that are strictly synchronous between trusted in-process components is *not* hardening — it's bloat that hides bugs. Before adding "graceful" handling for an internal condition, identify the concrete external trigger (peer process crash, OS-level I/O failure, untrusted input). If there is no concrete trigger, the existing invariant guard is correct and must be preserved.
 
 **CHECK — Flag if:**
 - [ ] Missing `try/catch` around user-provided callback
 - [ ] Reflection `Invoke()` without exception handling
 - [ ] Missing timeout enforcement on user code
 - [ ] Unbounded growth from user-controlled input
+- [ ] "Defensive" handling added for an internal invariant with no documented external trigger
+- [ ] Try/catch wrapping a call between trusted in-process components for an exception that cannot occur given the protocol
 
 ---
 

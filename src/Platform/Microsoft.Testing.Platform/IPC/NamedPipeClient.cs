@@ -154,6 +154,14 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
                     _namedPipeClientStream.WaitForPipeDrain();
                 }
             }
+            catch (Exception ex) when (ex is IOException or ObjectDisposedException)
+            {
+                // The server disconnected while we were writing the request. Mirror the read-EOF handling
+                // below: if we cannot deliver the request there's no way to recover, so exit abnormally
+                // instead of surfacing a raw IPC error to the caller.
+                _environment.Exit((int)ExitCode.GenericFailure);
+                throw;
+            }
             finally
             {
                 // Reset the buffers
