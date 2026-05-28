@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
 using MSTest.Analyzers.Helpers;
+using MSTest.Analyzers.RoslynAnalyzerHelpers;
 
 namespace MSTest.Analyzers;
 
@@ -74,6 +75,20 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
             return;
         }
 
+        // When either argument is the null literal, the user is performing a null check rather than
+        // a collection equality check, so suggesting CollectionAssert.AreEqual / Assert.AreSequenceEqual
+        // would be misleading.
+        // When null is in the expected/notExpected position, MSTEST0037 (UseProperAssertMethods) already
+        // triggers and proposes the correct Assert.IsNull / Assert.IsNotNull replacement.
+        // When null is in the actual position, MSTEST0037 does not currently fire, but suppressing
+        // MSTEST0065 is still correct because CollectionAssert guidance is not what the user wants.
+        // The first parameter is "expected" on Assert.AreEqual and "notExpected" on Assert.AreNotEqual.
+        string firstParameterName = targetMethod.Name == "AreEqual" ? "expected" : "notExpected";
+        if (HasNullLiteralArgument(invocation, firstParameterName) || HasNullLiteralArgument(invocation, "actual"))
+        {
+            return;
+        }
+
         string methodName = $"Assert.{targetMethod.Name}";
         string comparedTypeDisplay = comparedType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
         context.ReportDiagnostic(invocation.CreateDiagnostic(Rule, methodName, comparedTypeDisplay));
@@ -82,6 +97,12 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
     private static bool ShouldReport(ITypeSymbol comparedType, INamedTypeSymbol genericEnumerableSymbol)
         => comparedType.SpecialType != SpecialType.System_String
             && ImplementsGenericEnumerable(comparedType, genericEnumerableSymbol);
+
+    private static bool HasNullLiteralArgument(IInvocationOperation invocation, string parameterName)
+    {
+        IArgumentOperation? argument = invocation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == parameterName);
+        return argument?.Value.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } };
+    }
 
     private static bool ImplementsGenericEnumerable(ITypeSymbol type, INamedTypeSymbol genericEnumerableSymbol)
     {
