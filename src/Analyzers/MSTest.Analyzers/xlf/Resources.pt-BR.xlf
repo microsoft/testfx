@@ -158,8 +158,8 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <note />
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsDescription">
-        <source>Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</source>
-        <target state="new">Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</target>
+        <source>Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</source>
+        <target state="new">Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsMessageFormat">
@@ -168,8 +168,8 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <note />
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsTitle">
-        <source>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait' or 'Task&lt;TResult&gt;.Result' in test code</source>
-        <target state="new">Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait' or 'Task&lt;TResult&gt;.Result' in test code</target>
+        <source>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</source>
+        <target state="new">Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">

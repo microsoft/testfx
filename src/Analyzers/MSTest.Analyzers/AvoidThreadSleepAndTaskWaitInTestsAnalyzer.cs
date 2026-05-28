@@ -99,6 +99,12 @@ public sealed class AvoidThreadSleepAndTaskWaitInTestsAnalyzer : DiagnosticAnaly
         {
             offendingApi = "Task.Wait";
         }
+        else if (taskSymbol is not null
+            && targetMethod is { Name: "WaitAll" or "WaitAny", IsStatic: true }
+            && SymbolEqualityComparer.Default.Equals(targetMethod.ContainingType, taskSymbol))
+        {
+            offendingApi = $"Task.{targetMethod.Name}";
+        }
 
         if (offendingApi is null)
         {

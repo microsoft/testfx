@@ -4,6 +4,9 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.AvoidThreadSleepAndTaskWaitInTestsAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
+    MSTest.Analyzers.AvoidThreadSleepAndTaskWaitInTestsAnalyzer,
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.UnitTests;
 
@@ -438,5 +441,244 @@ public sealed class AvoidThreadSleepAndTaskWaitInTestsAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task ThreadSleepInClassCleanup_Diagnostic()
+    {
+        string code = """
+            using System.Threading;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [ClassCleanup]
+                public static void ClassCleanup()
+                {
+                    [|Thread.Sleep(100)|];
+                }
+
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task ThreadSleepInAssemblyCleanup_Diagnostic()
+    {
+        string code = """
+            using System.Threading;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyCleanup]
+                public static void AssemblyCleanup()
+                {
+                    [|Thread.Sleep(100)|];
+                }
+
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task ThreadSleepInGlobalTestInitialize_Diagnostic()
+    {
+        string code = """
+            using System.Threading;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public static class MyGlobalHooks
+            {
+                [GlobalTestInitialize]
+                public static void GlobalInit()
+                {
+                    [|Thread.Sleep(100)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task ThreadSleepInGlobalTestCleanup_Diagnostic()
+    {
+        string code = """
+            using System.Threading;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public static class MyGlobalHooks
+            {
+                [GlobalTestCleanup]
+                public static void GlobalCleanup()
+                {
+                    [|Thread.Sleep(100)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task ThreadSleepInDerivedTestMethodAttribute_Diagnostic()
+    {
+        string code = """
+            using System;
+            using System.Threading;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public sealed class MyCustomTestMethodAttribute : TestMethodAttribute { }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyCustomTestMethod]
+                public void TestMethod()
+                {
+                    [|Thread.Sleep(100)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task TaskWaitAllInTestMethod_Diagnostic()
+    {
+        string code = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Task t1 = Task.CompletedTask;
+                    Task t2 = Task.CompletedTask;
+                    [|Task.WaitAll(t1, t2)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task TaskWaitAnyInTestMethod_Diagnostic()
+    {
+        string code = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Task t1 = Task.CompletedTask;
+                    Task t2 = Task.CompletedTask;
+                    [|Task.WaitAny(t1, t2)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task TaskWaitAllInHelperMethodInTestClass_NoDiagnostic()
+    {
+        string code = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private void Helper()
+                {
+                    Task t1 = Task.CompletedTask;
+                    Task.WaitAll(t1);
+                }
+
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task ThreadSleepInExpressionBodiedTestMethod_Diagnostic()
+    {
+        string code = """
+            using System.Threading;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod() => [|Thread.Sleep(100)|];
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task ThreadSleepInVisualBasicTestMethod_Diagnostic()
+    {
+        string code = """
+            Imports System.Threading
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub TestMethod()
+                    [|Thread.Sleep(100)|]
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task TaskOfTResultInVisualBasicTestMethod_Diagnostic()
+    {
+        string code = """
+            Imports System.Threading.Tasks
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub TestMethod()
+                    Dim t As Task(Of Integer) = Task.FromResult(42)
+                    Dim value As Integer = [|t.Result|]
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
     }
 }
