@@ -198,4 +198,65 @@ public sealed class CommandLineConfigurationProviderTests
         // Assert: JSON value is exposed via the merged view.
         Assert.AreEqual("10m", configuration["commandLineOptions:hangdump-timeout"]);
     }
+
+    [TestMethod]
+    public void ProviderAwareResolution_FirstProviderWithDataShadowsLaterProvidersForSameOption()
+    {
+        // Lock the "first provider wins outright" invariant using two in-memory providers
+        // whose shapes intentionally don't overlap on any single key. A naive per-key
+        // precedence would merge them; the provider-aware resolver must not.
+        InMemoryConfigurationProvider cliShape = new(new()
+        {
+            ["commandLineOptions:list-tests"] = bool.TrueString,
+        });
+        InMemoryConfigurationProvider jsonShape = new(new()
+        {
+            ["commandLineOptions:list-tests:0"] = "from-json-a",
+            ["commandLineOptions:list-tests:1"] = "from-json-b",
+        });
+
+        AggregatedConfiguration configuration = new(
+            [cliShape, jsonShape],
+            new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()),
+            new Mock<IFileSystem>().Object,
+            new SystemEnvironment(),
+            CommandLineParseResult.Empty);
+
+        Assert.IsTrue(configuration.IsCommandLineOptionSet("list-tests"));
+        Assert.IsTrue(configuration.TryGetCommandLineOptionArguments("list-tests", out string[]? args));
+        Assert.IsNotNull(args);
+        Assert.IsEmpty(args);
+    }
+
+    [TestMethod]
+    public void ProviderAwareResolution_ExplicitDisableAtFirstProviderShortCircuits()
+    {
+        // First provider says "false" → entire chain is short-circuited as "not set" even
+        // though a later provider would otherwise enable the option.
+        InMemoryConfigurationProvider disableShape = new(new()
+        {
+            ["commandLineOptions:hangdump"] = bool.FalseString,
+        });
+        InMemoryConfigurationProvider enableShape = new(new()
+        {
+            ["commandLineOptions:hangdump"] = bool.TrueString,
+        });
+
+        AggregatedConfiguration configuration = new(
+            [disableShape, enableShape],
+            new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()),
+            new Mock<IFileSystem>().Object,
+            new SystemEnvironment(),
+            CommandLineParseResult.Empty);
+
+        Assert.IsFalse(configuration.IsCommandLineOptionSet("hangdump"));
+        Assert.IsFalse(configuration.TryGetCommandLineOptionArguments("hangdump", out _));
+    }
+
+    private sealed class InMemoryConfigurationProvider(Dictionary<string, string?> entries) : IConfigurationProvider
+    {
+        public Task LoadAsync() => Task.CompletedTask;
+
+        public bool TryGet(string key, out string? value) => entries.TryGetValue(key, out value);
+    }
 }

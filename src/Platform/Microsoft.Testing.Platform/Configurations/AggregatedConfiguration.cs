@@ -68,10 +68,25 @@ internal sealed class AggregatedConfiguration(
     /// CLI <c>--list-tests</c> with no args vs. JSON <c>"list-tests": ["json"]</c>).
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Providers are walked in registration order; the first one that has any data for
     /// <paramref name="optionName"/> wins and its values are returned exclusively. A bare
     /// boolean <c>"false"</c> at a winning provider is treated as an explicit disable and
     /// short-circuits the search.
+    /// </para>
+    /// <para>
+    /// Provider contract assumptions for the <c>commandLineOptions:*</c> section (Option C,
+    /// issue #6349):
+    /// <list type="bullet">
+    ///   <item><description><c>TryGet</c> returning <c>true</c> with a <c>null</c> value is
+    ///   treated as if the key were absent at this provider — a custom provider that wants
+    ///   to explicitly shadow lower providers must return either the boolean string
+    ///   <c>"False"</c> (disable) or a non-null argument value.</description></item>
+    ///   <item><description>Indexed argument entries are required to be contiguous starting
+    ///   at <c>:0</c>. A gap stops collection — sparse arrays will silently truncate. The
+    ///   JSON provider always emits contiguous indices for arrays.</description></item>
+    /// </list>
+    /// </para>
     /// </remarks>
     /// <param name="optionName">Option name with or without leading <c>--</c>.</param>
     /// <param name="isSet">Set to <c>true</c> if any provider reports the option as set.</param>
@@ -168,18 +183,34 @@ internal sealed class AggregatedConfiguration(
         // results should be stored. But we will also still pass configuration file (e.g, runsettings via --settings) that the user originally specified.
         // In that case, we will want to respect --results-directory.
         //
-        // Option C (issue #6349): consult the unified command-line view first so a value supplied
-        // either via CLI or via testconfig.json's "commandLineOptions:results-directory" is honored
-        // with the same priority. CLI still wins over JSON because the CLI provider is Order=0.
-        if (TryGetCommandLineOptionFromProviders(PlatformCommandLineProvider.ResultDirectoryOptionKey, out bool resultDirIsSet, out string[] resultDirArgs)
+        // Option C (issue #6349): when the CLI configuration source is registered (the default
+        // host path), consult the unified command-line view first so a value supplied either via
+        // CLI or via testconfig.json's "commandLineOptions:results-directory" is honored with the
+        // same priority. CLI still wins over JSON because the CLI provider is Order=0.
+        //
+        // When the CLI source is NOT registered (test-only callers that build AggregatedConfiguration
+        // by hand), fall back to the legacy parseResult-first behavior so we don't silently demote
+        // CLI precedence behind any other provider that happens to expose the same key.
+        bool cliSourceRegistered = false;
+        foreach (IConfigurationProvider provider in _configurationProviders)
+        {
+            if (provider is CommandLineConfigurationProvider)
+            {
+                cliSourceRegistered = true;
+                break;
+            }
+        }
+
+        if (cliSourceRegistered
+            && TryGetCommandLineOptionFromProviders(PlatformCommandLineProvider.ResultDirectoryOptionKey, out bool resultDirIsSet, out string[] resultDirArgs)
             && resultDirIsSet
             && resultDirArgs.Length > 0)
         {
             return resultDirArgs[0];
         }
 
-        // Fallback for legacy callers that build AggregatedConfiguration without the CLI source
-        // registered (test-only): read directly from the original parse result.
+        // Fallback for legacy callers without the CLI source registered: read directly from the
+        // original parse result so explicit CLI wins over any custom provider for this option.
         if (commandLineParseResult.TryGetOptionArgumentList(PlatformCommandLineProvider.ResultDirectoryOptionKey, out string[]? resultDirectoryArg))
         {
             return resultDirectoryArg[0];
