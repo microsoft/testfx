@@ -157,6 +157,21 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
         <target state="translated">Evite pasar un 'DynamicDataSourceType' explícito y utilice el comportamiento de detección automática predeterminado</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsDescription">
+        <source>Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</source>
+        <target state="new">Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsMessageFormat">
+        <source>Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</source>
+        <target state="new">Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsTitle">
+        <source>Avoid 'Thread.Sleep' and 'Task.Wait' in test code</source>
+        <target state="new">Avoid 'Thread.Sleep' and 'Task.Wait' in test code</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
         <target state="translated">No realice ninguna aserción dentro de métodos 'async void', funciones locales o expresiones lambda. Las excepciones que se inicien en este contexto serán excepciones no controladas. Al usar VSTest en .NET Framework, se ingerirán silenciosamente. Cuando se usa Microsoft.Testing.Platform o VSTest en .NET moderno, es posible que se bloquee el proceso.</target>
