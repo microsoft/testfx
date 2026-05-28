@@ -118,7 +118,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             if (!string.Equals(mapped, requested, StringComparison.OrdinalIgnoreCase))
             {
                 await _outputDisplay.DisplayAsync(
-                    new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeIfSupportedFallbackInfoMessage, requested, mapped)),
+                    new FormattedTextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeIfSupportedFallbackInfoMessage, requested, mapped)),
                     cancellationToken).ConfigureAwait(false);
             }
         }

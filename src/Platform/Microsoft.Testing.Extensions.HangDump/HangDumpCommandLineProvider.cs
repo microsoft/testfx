@@ -79,22 +79,17 @@ internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBa
             }
         }
 
-        if (commandOption.Name == HangDumpTypeIfSupportedOptionName)
-        {
+        return commandOption.Name == HangDumpTypeIfSupportedOptionName
             // The "-if-supported" variant accepts the full set of dump types regardless of TFM:
             // the runtime fallback is what makes the option safe to leave in a shared command
             // line. Anything outside the full set is still a user typo and must be rejected.
-            if (!AllHangDumpTypeOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase))
-            {
-                return ValidationResult.InvalidTask(string.Format(
-                    CultureInfo.InvariantCulture,
-                    ExtensionResources.HangDumpTypeOptionInvalidType,
-                    arguments[0],
-                    AllHangDumpTypeOptionsFormatted));
-            }
-        }
-
-        return ValidationResult.ValidTask;
+            && !AllHangDumpTypeOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
+            ? ValidationResult.InvalidTask(string.Format(
+                CultureInfo.InvariantCulture,
+                ExtensionResources.HangDumpTypeOptionInvalidType,
+                arguments[0],
+                AllHangDumpTypeOptionsFormatted))
+            : ValidationResult.ValidTask;
     }
 
     public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)

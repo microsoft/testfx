@@ -41,7 +41,7 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
 
     private readonly HashSet<string> _preExistingDumpFiles;
 
-    private bool _ifSupportedIgnoredMessageEmitted;
+    private int _ifSupportedIgnoredMessageEmitted;
 
     public CrashDumpProcessLifetimeHandler(
         ICommandLineOptions commandLineOptions,
@@ -86,31 +86,39 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         // so the user knows the option was accepted but silently no-opped. Two scenarios apply:
         //  - On .NET Framework the env-var-based createdump/crashreport mechanism is unavailable.
         //  - On Windows the .NET runtime ignores DOTNET_EnableCrashReport(Only) (dotnet/runtime#80191).
-        // We guard with a one-shot flag because the controller can restart the test host,
-        // and we want exactly one notification per process invocation.
-        if (_ifSupportedIgnoredMessageEmitted
-            || !_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName)
+        // The "emit once" guard uses Interlocked.Exchange so that, if the test-host controller
+        // ever invokes the hook more than once (e.g. on retry), only the first caller actually
+        // emits the message.
+        if (!_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName)
             || _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName))
         {
             return;
         }
 
-#if !NETCOREAPP
-        _ifSupportedIgnoredMessageEmitted = true;
+#if NETCOREAPP
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        string message = CrashDumpResources.CrashReportIfSupportedIgnoredOnWindowsInfoMessage;
+#else
+        string message = CrashDumpResources.CrashReportIfSupportedIgnoredOnNetFrameworkInfoMessage;
+#endif
+
+        if (Interlocked.Exchange(ref _ifSupportedIgnoredMessageEmitted, 1) != 0)
+        {
+            return;
+        }
+
+        // Use FormattedTextOutputDeviceData (neutral, info-style) rather than
+        // WarningMessageOutputDeviceData: this is the expected, graceful no-op path for a
+        // best-effort option and we do not want CI logs to surface a yellow warning that the
+        // user would interpret as a problem.
         await _outputDisplay.DisplayAsync(
             this,
-            new WarningMessageOutputDeviceData(CrashDumpResources.CrashReportIfSupportedIgnoredOnNetFrameworkInfoMessage),
+            new FormattedTextOutputDeviceData(message),
             cancellationToken).ConfigureAwait(false);
-#else
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            _ifSupportedIgnoredMessageEmitted = true;
-            await _outputDisplay.DisplayAsync(
-                this,
-                new WarningMessageOutputDeviceData(CrashDumpResources.CrashReportIfSupportedIgnoredOnWindowsInfoMessage),
-                cancellationToken).ConfigureAwait(false);
-        }
-#endif
     }
 
     public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
