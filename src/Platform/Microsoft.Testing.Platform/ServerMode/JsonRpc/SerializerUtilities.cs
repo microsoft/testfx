@@ -482,22 +482,30 @@ internal static class SerializerUtilities
                             ? null
                             : GetIdFromJson(idObj) ?? throw new MessageFormatException("id field should be a string or an int");
 
-                // TODO: Should we be forgiving in the deserialization (if it throws)?
-                // This way we'd be able to send an ErrorMessage back to the client,
-                // rather than send a log notification.
-
-                // Parse the specific methods
-                object? @params = method switch
+                object? @params;
+                try
                 {
-                    JsonRpcMethods.Initialize => Deserialize<InitializeRequestArgs>(paramsObj),
-                    JsonRpcMethods.TestingDiscoverTests => Deserialize<DiscoverRequestArgs>(paramsObj),
-                    JsonRpcMethods.TestingRunTests => Deserialize<RunRequestArgs>(paramsObj),
-                    JsonRpcMethods.CancelRequest => Deserialize<CancelRequestArgs>(paramsObj),
-                    JsonRpcMethods.Exit => Deserialize<ExitRequestArgs>(paramsObj),
+                    // Parse the specific methods
+                    @params = method switch
+                    {
+                        JsonRpcMethods.Initialize => Deserialize<InitializeRequestArgs>(paramsObj),
+                        JsonRpcMethods.TestingDiscoverTests => Deserialize<DiscoverRequestArgs>(paramsObj),
+                        JsonRpcMethods.TestingRunTests => Deserialize<RunRequestArgs>(paramsObj),
+                        JsonRpcMethods.CancelRequest => Deserialize<CancelRequestArgs>(paramsObj),
+                        JsonRpcMethods.Exit => Deserialize<ExitRequestArgs>(paramsObj),
 
-                    // Note: Let the server report unknown RPC request back to the client.
-                    _ => null,
-                };
+                        // Note: Let the server report unknown RPC request back to the client.
+                        _ => null,
+                    };
+                }
+                catch (MessageFormatException ex)
+                {
+                    // If params can't be deserialized for a request, capture the failure so
+                    // we can later send back a properly coded JSON-RPC error using the request id.
+                    // For notifications there's no one to respond to, but we still avoid
+                    // crashing the message-handling loop by swallowing into the sentinel.
+                    @params = new InvalidRequestParamsArgs(ErrorCodes.InvalidParams, ex.Message);
+                }
 
                 return id.HasValue
                     ? new RequestMessage(id.Value, method, @params)
@@ -587,7 +595,11 @@ internal static class SerializerUtilities
 
         Deserializers[typeof(DiscoverRequestArgs)] = new ObjectDeserializer<DiscoverRequestArgs>(properties =>
         {
-            _ = Guid.TryParse(GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.RunId), out Guid runId);
+            string runIdString = GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.RunId);
+            if (!Guid.TryParse(runIdString, out Guid runId))
+            {
+                throw new MessageFormatException($"'{JsonRpcStrings.RunId}' field is not a valid Guid");
+            }
 
             var testsJson = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Tests) as ICollection<object>;
 
@@ -600,7 +612,11 @@ internal static class SerializerUtilities
 
         Deserializers[typeof(RunRequestArgs)] = new ObjectDeserializer<RunRequestArgs>(properties =>
         {
-            _ = Guid.TryParse(GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.RunId), out Guid runId);
+            string runIdString = GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.RunId);
+            if (!Guid.TryParse(runIdString, out Guid runId))
+            {
+                throw new MessageFormatException($"'{JsonRpcStrings.RunId}' field is not a valid Guid");
+            }
 
             var testsJson = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Tests) as ICollection<object>;
 

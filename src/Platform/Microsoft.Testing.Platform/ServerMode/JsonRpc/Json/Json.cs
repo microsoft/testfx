@@ -405,24 +405,37 @@ internal sealed class Json
 
             if (json.TryBind(jsonElement, out string? method, JsonRpcStrings.Method))
             {
+                bool hasId = json.TryBind(jsonElement, out int id, JsonRpcStrings.Id);
+
                 object? @params = null;
                 if (jsonElement.TryGetProperty(JsonRpcStrings.Params, out JsonElement value))
                 {
-                    // Parse the specific methods
-                    @params = method switch
+                    try
                     {
-                        JsonRpcMethods.Initialize => json.Bind<InitializeRequestArgs>(value),
-                        JsonRpcMethods.TestingDiscoverTests => json.Bind<DiscoverRequestArgs>(value),
-                        JsonRpcMethods.TestingRunTests => json.Bind<RunRequestArgs>(value),
-                        JsonRpcMethods.CancelRequest => json.Bind<CancelRequestArgs>(value),
-                        JsonRpcMethods.Exit => json.Bind<ExitRequestArgs>(value),
+                        // Parse the specific methods
+                        @params = method switch
+                        {
+                            JsonRpcMethods.Initialize => json.Bind<InitializeRequestArgs>(value),
+                            JsonRpcMethods.TestingDiscoverTests => json.Bind<DiscoverRequestArgs>(value),
+                            JsonRpcMethods.TestingRunTests => json.Bind<RunRequestArgs>(value),
+                            JsonRpcMethods.CancelRequest => json.Bind<CancelRequestArgs>(value),
+                            JsonRpcMethods.Exit => json.Bind<ExitRequestArgs>(value),
 
-                        // Note: Let the server report unknown RPC request back to the client.
-                        _ => null,
-                    };
+                            // Note: Let the server report unknown RPC request back to the client.
+                            _ => null,
+                        };
+                    }
+                    catch (MessageFormatException ex)
+                    {
+                        // If params can't be deserialized for a request, capture the failure so
+                        // we can later send back a properly coded JSON-RPC error using the request id.
+                        // For notifications there's no one to respond to, but we still avoid
+                        // crashing the message-handling loop by swallowing into the sentinel.
+                        @params = new InvalidRequestParamsArgs(ErrorCodes.InvalidParams, ex.Message);
+                    }
                 }
 
-                return json.TryBind(jsonElement, out int id, JsonRpcStrings.Id)
+                return hasId
                     ? new RequestMessage(id, method!, @params)
                     : new NotificationMessage(method!, @params);
             }
@@ -486,7 +499,10 @@ internal sealed class Json
         _deserializers[typeof(DiscoverRequestArgs)] = new JsonElementDeserializer<DiscoverRequestArgs>((json, jsonElement) =>
         {
             string runId = json.Bind<string>(jsonElement, JsonRpcStrings.RunId);
-            _ = Guid.TryParse(runId, out Guid result);
+            if (!Guid.TryParse(runId, out Guid result))
+            {
+                throw new MessageFormatException($"'{JsonRpcStrings.RunId}' field is not a valid Guid");
+            }
 
             json.TryArrayBind(jsonElement, out TestNode[]? testNodes, JsonRpcStrings.Tests);
             json.TryBind(jsonElement, out string? graphFilter, JsonRpcStrings.Filter);
@@ -500,7 +516,10 @@ internal sealed class Json
         _deserializers[typeof(RunRequestArgs)] = new JsonElementDeserializer<RunRequestArgs>((json, jsonElement) =>
         {
             string runId = json.Bind<string>(jsonElement, JsonRpcStrings.RunId);
-            _ = Guid.TryParse(runId, out Guid result);
+            if (!Guid.TryParse(runId, out Guid result))
+            {
+                throw new MessageFormatException($"'{JsonRpcStrings.RunId}' field is not a valid Guid");
+            }
 
             json.TryArrayBind(jsonElement, out TestNode[]? testNodes, JsonRpcStrings.Tests);
             json.TryBind(jsonElement, out string? graphFilter, JsonRpcStrings.Filter);

@@ -368,6 +368,11 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
                 await SendErrorAsync(reqId: request.Id, errorCode: errorCode, message: errorMessage, data: null, cancellationToken).ConfigureAwait(false);
                 CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetCanceled());
             }
+            catch (JsonRpcException e)
+            {
+                await SendErrorAsync(reqId: request.Id, errorCode: e.ErrorCode, message: e.Message, data: null, cancellationToken).ConfigureAwait(false);
+                CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.SetException(e));
+            }
             catch (Exception e)
             {
                 await SendErrorAsync(reqId: request.Id, errorCode: 0, message: e.ToString(), data: null, cancellationToken).ConfigureAwait(false);
@@ -420,6 +425,11 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
         switch (message.Method, message.Params)
         {
+            case (_, InvalidRequestParamsArgs invalidParams):
+                {
+                    throw new JsonRpcException(invalidParams.ErrorCode, invalidParams.ErrorMessage);
+                }
+
             case (JsonRpcMethods.Initialize, InitializeRequestArgs args):
                 {
                     _client = new(args.ClientInfo.Name, args.ClientInfo.Version);
