@@ -107,6 +107,21 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                         await _dotnetTestConnection.SendMessageAsync(testResultMessages).ConfigureAwait(false);
                         break;
 
+                    case TestStates.InProgress:
+                        // Non-IDE consumers (e.g. `dotnet test` with MTP) render in-progress events as a
+                        // separate "currently running tests" panel; they don't expect them as TestResultMessages.
+                        TestInProgressMessages inProgressMessages = new(
+                            ExecutionId,
+                            DotnetTestConnection.InstanceId,
+                            [
+                                new TestInProgressMessage(
+                                    testNodeUpdateMessage.TestNode.Uid.Value,
+                                    testNodeUpdateMessage.TestNode.DisplayName),
+                            ]);
+
+                        await _dotnetTestConnection.SendMessageAsync(inProgressMessages).ConfigureAwait(false);
+                        break;
+
                     case TestStates.Failed:
                     case TestStates.Error:
                     case TestStates.Timeout:
