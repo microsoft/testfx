@@ -64,24 +64,29 @@ public sealed class IgnoreShouldHaveJustificationFixer : CodeFixProvider
     {
         SyntaxNode root = await document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 
-        AttributeArgumentSyntax justificationArgument = SyntaxFactory.AttributeArgument(
-            SyntaxFactory.LiteralExpression(
-                SyntaxKind.StringLiteralExpression,
-                SyntaxFactory.Literal(PlaceholderJustification)));
+        LiteralExpressionSyntax justificationLiteral = SyntaxFactory.LiteralExpression(
+            SyntaxKind.StringLiteralExpression,
+            SyntaxFactory.Literal(PlaceholderJustification));
 
         AttributeArgumentListSyntax existingArgumentList = attributeSyntax.ArgumentList ?? SyntaxFactory.AttributeArgumentList();
 
         AttributeArgumentListSyntax newArgumentList;
         if (existingArgumentList.Arguments.Count == 0)
         {
-            newArgumentList = existingArgumentList.WithArguments(SyntaxFactory.SingletonSeparatedList(justificationArgument));
+            // [Ignore] or [Ignore()] - add a positional message argument.
+            newArgumentList = existingArgumentList.WithArguments(
+                SyntaxFactory.SingletonSeparatedList(SyntaxFactory.AttributeArgument(justificationLiteral)));
         }
         else
         {
-            // Replace the first positional argument (the message) with the placeholder.
-            // Empty / null literals on the first positional argument are the only cases we get here.
+            // Replace the first argument's value with the placeholder, preserving any
+            // named-argument syntax. This handles both [Ignore("")] (positional) and
+            // [Ignore(IgnoreMessage = "")] (named) - in either case we keep the existing
+            // form and only swap the empty/null literal for the placeholder string.
             AttributeArgumentSyntax firstArgument = existingArgumentList.Arguments[0];
-            newArgumentList = existingArgumentList.WithArguments(existingArgumentList.Arguments.Replace(firstArgument, justificationArgument));
+            AttributeArgumentSyntax updatedFirstArgument = firstArgument.WithExpression(justificationLiteral);
+            newArgumentList = existingArgumentList.WithArguments(
+                existingArgumentList.Arguments.Replace(firstArgument, updatedFirstArgument));
         }
 
         AttributeSyntax newAttribute = attributeSyntax.WithArgumentList(newArgumentList);
