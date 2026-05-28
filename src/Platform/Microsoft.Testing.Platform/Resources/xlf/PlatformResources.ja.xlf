@@ -553,6 +553,11 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
 必要に応じて、'text' (既定の人間が判読できる出力) または 'json' を指定すると、検出されたテストを標準出力に JSON ドキュメントとして印刷します。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
+        <source>'--server {0}' requires '--{1}' to be specified.</source>
+        <target state="new">'--server {0}' requires '--{1}' to be specified.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
         <target state="translated">dotnet テスト パイプ。</target>
@@ -657,6 +662,11 @@ The default is TestResults in the directory that contains the test application.<
         <target state="translated">テスト結果を配置するディレクトリ。
 指定したディレクトリが存在しない場合は、作成されます。
 既定値は、テスト アプリケーションを含むディレクトリ内の TestResults です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineServerInvalidArgument">
+        <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="new">'--server' received unexpected value '{0}'. Supported values are: {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
