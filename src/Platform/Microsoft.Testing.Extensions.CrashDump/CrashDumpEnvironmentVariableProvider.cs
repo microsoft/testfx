@@ -59,13 +59,18 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(
             (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) ||
-             _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName)) &&
+             IsCrashReportEffective(_commandLineOptions)) &&
             _crashDumpGeneratorConfiguration.Enable);
 
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
-        // IsEnabledAsync gates this method, so at least one of --crashdump / --crash-report is set here.
-        bool crashReportEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
+        // IsEnabledAsync gates this method, so at least one of --crashdump / --crash-report /
+        // --crash-report-if-supported is set here.
+        // '--crash-report-if-supported' contributes to the effective crash-report configuration
+        // only when the current OS actually honors the underlying runtime env vars. On Windows
+        // the .NET runtime ignores DOTNET_EnableCrashReport(Only) (see dotnet/runtime#80191),
+        // so we silently drop the request and let the test run continue without a crash report.
+        bool crashReportEnabled = IsCrashReportEffective(_commandLineOptions);
 
         foreach (string prefix in Prefixes)
         {
@@ -218,8 +223,10 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 #else
         StringBuilder errors = new();
 
-        // IsEnabledAsync gates this method, so at least one of --crashdump / --crash-report is set here.
-        bool crashReportEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
+        // IsEnabledAsync gates this method, so at least one of --crashdump / --crash-report /
+        // --crash-report-if-supported is set here. Match the env-var-setting logic in
+        // UpdateAsync: --crash-report-if-supported on Windows is silently ignored.
+        bool crashReportEnabled = IsCrashReportEffective(_commandLineOptions);
 
         ValidateBothPrefixes(EnableMiniDumpVariable, EnabledValue);
 
@@ -281,6 +288,34 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
                 }
             }
         }
+#endif
+    }
+
+    // The "if-supported" companion of --crash-report only contributes to the effective
+    // crash-report configuration on platforms where the underlying runtime env vars are
+    // honored. Two scenarios disqualify the runtime entirely:
+    //  - .NET Framework, where the env-var-based createdump/crashreport mechanism is not
+    //    available at all (see ValidateTestHostEnvironmentVariablesAsync below);
+    //  - Windows on .NET (Core), where the runtime ignores DOTNET_EnableCrashReport(Only)
+    //    (see dotnet/runtime#80191).
+    // In both cases we treat the option as a silent no-op so that a single command line
+    // can be reused across CI matrices without per-OS / per-TFM branching.
+    internal static bool IsCrashReportEffective(ICommandLineOptions commandLineOptions)
+    {
+        if (commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName))
+        {
+            return true;
+        }
+
+        if (!commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName))
+        {
+            return false;
+        }
+
+#if !NETCOREAPP
+        return false;
+#else
+        return !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 #endif
     }
 }
