@@ -157,6 +157,21 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <target state="translated">Açık bir ‘DynamicDataSourceType’ geçirmeyin ve varsayılan otomatik algılama davranışını kullanın</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsDescription">
+        <source>Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</source>
+        <target state="new">Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsMessageFormat">
+        <source>Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</source>
+        <target state="new">Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsTitle">
+        <source>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</source>
+        <target state="new">Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
         <target state="translated">'async void' metotları, yerel işlevler veya lambdalar içinde onaylamayın. Bu bağlamda oluşturulan özel durumlar işlenmeyen özel durumlar olacak. VsTest'i .NET Framework, sessizce kırılır. Modern .NET altında Microsoft.Testing.Platform veya VSTest kullanırken işlemi kilitler.</target>

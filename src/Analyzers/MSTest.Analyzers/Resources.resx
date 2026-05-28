@@ -756,6 +756,15 @@ The type declaring these methods should also respect the following rules:
   <data name="TestClassConstructorShouldBeValidDescription" xml:space="preserve">
     <value>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</value>
   </data>
+  <data name="AvoidThreadSleepAndTaskWaitInTestsTitle" xml:space="preserve">
+    <value>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</value>
+  </data>
+  <data name="AvoidThreadSleepAndTaskWaitInTestsMessageFormat" xml:space="preserve">
+    <value>Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</value>
+  </data>
+  <data name="AvoidThreadSleepAndTaskWaitInTestsDescription" xml:space="preserve">
+    <value>Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</value>
+  </data>
   <data name="PreferAsyncAssertionTitle" xml:space="preserve">
     <value>Prefer async assertion methods</value>
   </data>
