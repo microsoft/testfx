@@ -535,7 +535,6 @@ public sealed class AvoidThreadSleepAndTaskWaitInTestsAnalyzerTests
     public async Task ThreadSleepInDerivedTestMethodAttribute_Diagnostic()
     {
         string code = """
-            using System;
             using System.Threading;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
