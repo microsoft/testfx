@@ -393,6 +393,8 @@ internal sealed class MSTestTelemetryDataCollector
         metrics["mstest.setting.treat_discovery_warnings_as_errors"] = AsTelemetryBool(settings.TreatDiscoveryWarningsAsErrors);
         metrics["mstest.setting.consider_empty_data_source_as_inconclusive"] = AsTelemetryBool(settings.ConsiderEmptyDataSourceAsInconclusive);
         metrics["mstest.setting.order_tests_by_name"] = AsTelemetryBool(settings.OrderTestsByNameInClass);
+        metrics["mstest.setting.randomize_test_order"] = AsTelemetryBool(settings.RandomizeTestOrder);
+        metrics["mstest.setting.random_test_order_seed_provided"] = AsTelemetryBool(settings.RandomTestOrderSeed.HasValue);
         metrics["mstest.setting.capture_debug_traces"] = AsTelemetryBool(settings.CaptureDebugTraces);
     }
 

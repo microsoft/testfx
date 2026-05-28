@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -24,6 +24,8 @@ internal sealed partial class MSTestSettings
         CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
         CurrentSettings.MapNotRunnableToFailed = settings.MapNotRunnableToFailed;
         CurrentSettings.OrderTestsByNameInClass = settings.OrderTestsByNameInClass;
+        CurrentSettings.RandomizeTestOrder = settings.RandomizeTestOrder;
+        CurrentSettings.RandomTestOrderSeed = settings.RandomTestOrderSeed;
         CurrentSettings.ParallelizationScope = settings.ParallelizationScope;
         CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
         CurrentSettings.TestCleanupTimeout = settings.TestCleanupTimeout;
@@ -267,6 +269,30 @@ internal sealed partial class MSTestSettings
                         else
                         {
                             logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, orderTestsByNameInClass, "OrderTestsByNameInClass"));
+                        }
+
+                        break;
+                    case "RANDOMIZETESTORDER":
+                        string randomizeTestOrder = reader.ReadInnerXml();
+                        if (bool.TryParse(randomizeTestOrder, out result))
+                        {
+                            settings.RandomizeTestOrder = result;
+                        }
+                        else
+                        {
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, randomizeTestOrder, "RandomizeTestOrder"));
+                        }
+
+                        break;
+                    case "RANDOMTESTORDERSEED":
+                        string randomTestOrderSeed = reader.ReadInnerXml();
+                        if (int.TryParse(randomTestOrderSeed, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsedRandomTestOrderSeed))
+                        {
+                            settings.RandomTestOrderSeed = parsedRandomTestOrderSeed;
+                        }
+                        else
+                        {
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, randomTestOrderSeed, "RandomTestOrderSeed"));
                         }
 
                         break;

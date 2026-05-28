@@ -270,6 +270,16 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
         <target state="translated">Montaja MSTestV2 paketinin daha eski bir sürümü yüklenir, test keşfi, `.runsettings` dosyasına bağlılarsa tüm veri testlerini keşfetmede başarısız olabilir.</target>
         <note />
       </trans-unit>
+      <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
+        <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>
+        <target state="new">Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</target>
+        <note>{Locked="RandomizeTestOrder"}{Locked="OrderTestsByNameInClass"}</note>
+      </trans-unit>
+      <trans-unit id="RandomTestOrderBanner">
+        <source>Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</source>
+        <target state="new">Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</target>
+        <note>{Locked="Seed"}{Locked="RandomTestOrderSeed"}</note>
+      </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
         <target state="translated">'&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' çalışma ayarları girişi Windows dışı işletim sistemlerinde desteklenmiyor.</target>

@@ -803,6 +803,84 @@ public class TestExecutionManagerTests : TestContainer
         }
     }
 
+    public async Task RunTestsWithRandomizeTestOrderAndFixedSeedShouldProduceDeterministicOrder()
+    {
+        static TestCase[] BuildTests() =>
+        [
+            GetTestCase(typeof(DummyTestClassForOrder), "TestA"),
+            GetTestCase(typeof(DummyTestClassForOrder), "TestB"),
+            GetTestCase(typeof(DummyTestClassForOrder), "TestC"),
+            GetTestCase(typeof(DummyTestClassForOrder), "TestD"),
+            GetTestCase(typeof(DummyTestClassForOrder), "TestE"),
+            GetTestCase(typeof(DummyTestClassForOrder), "TestF"),
+        ];
+
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <MSTest>
+                <RandomizeTestOrder>True</RandomizeTestOrder>
+                <RandomTestOrderSeed>12345</RandomTestOrderSeed>
+                <Parallelize>
+                  <Workers>1</Workers>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """);
+
+        MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
+
+        var firstHandle = new TestableFrameworkHandle();
+        var firstManager = new TestExecutionManager(EnvironmentWrapper.Instance, task => task());
+        await firstManager.RunTestsAsync(BuildTests(), _runContext, firstHandle, new TestRunCancellationToken());
+
+        var secondHandle = new TestableFrameworkHandle();
+        var secondManager = new TestExecutionManager(EnvironmentWrapper.Instance, task => task());
+        await secondManager.RunTestsAsync(BuildTests(), _runContext, secondHandle, new TestRunCancellationToken());
+
+        // Same seed must produce the same order across separate runs.
+        firstHandle.TestCaseStartList.Should().Equal(secondHandle.TestCaseStartList);
+        firstHandle.TestCaseStartList.Should().HaveCount(6);
+
+        // Order must differ from the original input (extremely unlikely with seed 12345 across 6 items;
+        // this guards against accidentally turning randomization off).
+        string[] originalOrder = ["TestA", "TestB", "TestC", "TestD", "TestE", "TestF"];
+        firstHandle.TestCaseStartList.Should().NotEqual(originalOrder);
+    }
+
+    public async Task RunTestsWithoutRandomizeTestOrderShouldPreserveInputOrder()
+    {
+        TestCase[] tests =
+        [
+            GetTestCase(typeof(DummyTestClassForOrder), "TestA"),
+            GetTestCase(typeof(DummyTestClassForOrder), "TestB"),
+            GetTestCase(typeof(DummyTestClassForOrder), "TestC"),
+        ];
+
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <MSTest>
+                <Parallelize>
+                  <Workers>1</Workers>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """);
+
+        MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
+
+        await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+
+        _frameworkHandle.TestCaseStartList.Should().Equal("TestA", "TestB", "TestC");
+    }
+
     #endregion
 
     #region private methods
@@ -960,6 +1038,40 @@ public class TestExecutionManagerTests : TestContainer
 
         [TestMethod]
         public void TestMethod1() => ThreadIds.Add(Environment.CurrentManagedThreadId);
+    }
+
+    [DummyTestClass]
+    private sealed class DummyTestClassForOrder
+    {
+        [TestMethod]
+        public void TestA()
+        {
+        }
+
+        [TestMethod]
+        public void TestB()
+        {
+        }
+
+        [TestMethod]
+        public void TestC()
+        {
+        }
+
+        [TestMethod]
+        public void TestD()
+        {
+        }
+
+        [TestMethod]
+        public void TestE()
+        {
+        }
+
+        [TestMethod]
+        public void TestF()
+        {
+        }
     }
 
     [DummyTestClass]

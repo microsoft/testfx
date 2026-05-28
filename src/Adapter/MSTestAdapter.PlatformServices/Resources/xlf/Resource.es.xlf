@@ -270,6 +270,16 @@ pero recibió {4} argumentos, con los tipos '{5}'.</target>
         <target state="translated">Hay una versión anterior del paquete MSTestV2 cargada en el ensamblado. Es posible que la detección de pruebas no detecte todas las pruebas de datos si dependen del archivo ".runsettings".</target>
         <note />
       </trans-unit>
+      <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
+        <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>
+        <target state="new">Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</target>
+        <note>{Locked="RandomizeTestOrder"}{Locked="OrderTestsByNameInClass"}</note>
+      </trans-unit>
+      <trans-unit id="RandomTestOrderBanner">
+        <source>Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</source>
+        <target state="new">Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</target>
+        <note>{Locked="Seed"}{Locked="RandomTestOrderSeed"}</note>
+      </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
         <target state="translated">La entrada runsettings "&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;" no se admite en sistemas operativos que no son de Windows.</target>
