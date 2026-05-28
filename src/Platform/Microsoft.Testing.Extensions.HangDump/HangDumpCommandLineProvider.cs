@@ -29,8 +29,9 @@ internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBa
 
     // The "any value the user can request" set used to validate --hangdump-type-if-supported
     // regardless of TFM. When a value is in this set but not in HangDumpTypeOptions on the
-    // current runtime, the lifetime handler silently falls back to the default 'Full' and
-    // emits an informational message.
+    // current runtime, the lifetime handler maps it (via MapToSupportedDumpType) to the
+    // closest supported dump type — e.g. 'Triage' -> 'Mini' on .NET Framework — and emits an
+    // informational message describing the substitution.
     private static readonly string[] AllHangDumpTypeOptions = ["Mini", "Heap", "Full", "Triage", "None"];
 
     private static readonly string HangDumpTypeOptionsFormatted = string.Join(", ", Array.ConvertAll(HangDumpTypeOptions, option => $"'{option}'"));

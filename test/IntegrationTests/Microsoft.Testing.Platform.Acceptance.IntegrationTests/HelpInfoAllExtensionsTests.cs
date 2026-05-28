@@ -117,7 +117,7 @@ Extension options:
         Valid values are {{GetExpectedHangDumpDescriptionOptions(tfm)}}.
         Default type is 'Full'
     --hangdump-type-if-supported
-        Same as '--hangdump-type' but silently falls back (with an informational message) to the default dump type ('Full') when the requested dump type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.
+        Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.
     --publish-azdo-run-name
         Custom Azure DevOps test run name for live test-result publishing.
     --publish-azdo-test-results
@@ -466,7 +466,7 @@ Registered command line providers:
       --hangdump-type-if-supported
         Arity: 1
         Hidden: False
-        Description: Same as '--hangdump-type' but silently falls back (with an informational message) to the default dump type ('Full') when the requested dump type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.
+        Description: Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.
   HtmlReportGeneratorCommandLine
     Name: HTML report generator
     Version: *
