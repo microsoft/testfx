@@ -232,6 +232,13 @@ internal static class CommandLineOptionsValidator
         // "commandLineOptions" section are NOT seen by this validator. Reach parity by either
         // (a) synthesizing CommandLineParseOption entries from the JSON layer before this call
         // (closer to Option B), or (b) iterating the merged IConfiguration view here.
+        //
+        // Concrete consequences of skipping JSON validation (seen at runtime as exceptions
+        // rather than friendly CLI errors):
+        //   - TestHostBuilder.CommonServices.cs (~L217) does args[0] on TIMEOUT — JSON
+        //     "timeout": true (arity=0) yields an empty array and throws IndexOutOfRange.
+        //   - PlatformCommandLineProvider.cs (~L237) does int.Parse on the exit-on-process-exit
+        //     argument — JSON "exit-on-process-exit": "abc" throws FormatException.
         StringBuilder? stringBuilder = null;
         foreach (IGrouping<string, CommandLineParseOption> groupedOptions in parseResult.Options.GroupBy(x => x.Name))
         {

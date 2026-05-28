@@ -62,6 +62,71 @@ internal sealed class AggregatedConfiguration(
         _currentWorkingDirectory = workingDirectory;
 
     /// <summary>
+    /// Resolves the value of a command-line option across all registered providers at the
+    /// <em>option</em> granularity (not per-key), so that CLI provider entries fully shadow
+    /// JSON entries for the same option even when the storage shapes don't overlap (e.g.,
+    /// CLI <c>--list-tests</c> with no args vs. JSON <c>"list-tests": ["json"]</c>).
+    /// </summary>
+    /// <remarks>
+    /// Providers are walked in registration order; the first one that has any data for
+    /// <paramref name="optionName"/> wins and its values are returned exclusively. A bare
+    /// boolean <c>"false"</c> at a winning provider is treated as an explicit disable and
+    /// short-circuits the search.
+    /// </remarks>
+    /// <param name="optionName">Option name with or without leading <c>--</c>.</param>
+    /// <param name="isSet">Set to <c>true</c> if any provider reports the option as set.</param>
+    /// <param name="arguments">Empty for zero-arity / disabled, otherwise the argument list
+    /// from the winning provider.</param>
+    /// <returns><c>true</c> if any provider had any data for the option (even an explicit
+    /// disable); <c>false</c> if no provider mentioned the option.</returns>
+    internal bool TryGetCommandLineOptionFromProviders(string optionName, out bool isSet, out string[] arguments)
+    {
+        string baseKey = PlatformConfigurationConstants.CommandLineOptionsSectionName
+            + PlatformConfigurationConstants.KeyDelimiter
+            + optionName.Trim(CommandLineParseResult.OptionPrefix);
+
+        foreach (IConfigurationProvider provider in _configurationProviders)
+        {
+            // Try indexed entries first (multi/single value options).
+            List<string>? collected = null;
+            int index = 0;
+            while (provider.TryGet(baseKey + PlatformConfigurationConstants.KeyDelimiter + index.ToString(CultureInfo.InvariantCulture), out string? indexed)
+                && indexed is not null)
+            {
+                collected ??= [];
+                collected.Add(indexed);
+                index++;
+            }
+
+            if (collected is { Count: > 0 })
+            {
+                isSet = true;
+                arguments = [.. collected];
+                return true;
+            }
+
+            // Bare key (zero-arity presence marker, or a scalar JSON value).
+            if (provider.TryGet(baseKey, out string? bare) && bare is not null)
+            {
+                if (bool.TryParse(bare, out bool boolValue))
+                {
+                    isSet = boolValue;
+                    arguments = [];
+                    return true;
+                }
+
+                isSet = true;
+                arguments = [bare];
+                return true;
+            }
+        }
+
+        isSet = false;
+        arguments = [];
+        return false;
+    }
+
+    /// <summary>
     /// Returns the immediate (one-level) string entries declared under <paramref name="sectionName"/>
     /// in the loaded testconfig.json file. Returns an empty list if no JSON configuration source is
     /// active or the section is absent.
@@ -102,6 +167,19 @@ internal sealed class AggregatedConfiguration(
         // When tests are retried, we re-run the executable again, but we pass --results-directory containing the folder where the current retry attempt
         // results should be stored. But we will also still pass configuration file (e.g, runsettings via --settings) that the user originally specified.
         // In that case, we will want to respect --results-directory.
+        //
+        // Option C (issue #6349): consult the unified command-line view first so a value supplied
+        // either via CLI or via testconfig.json's "commandLineOptions:results-directory" is honored
+        // with the same priority. CLI still wins over JSON because the CLI provider is Order=0.
+        if (TryGetCommandLineOptionFromProviders(PlatformCommandLineProvider.ResultDirectoryOptionKey, out bool resultDirIsSet, out string[] resultDirArgs)
+            && resultDirIsSet
+            && resultDirArgs.Length > 0)
+        {
+            return resultDirArgs[0];
+        }
+
+        // Fallback for legacy callers that build AggregatedConfiguration without the CLI source
+        // registered (test-only): read directly from the original parse result.
         if (commandLineParseResult.TryGetOptionArgumentList(PlatformCommandLineProvider.ResultDirectoryOptionKey, out string[]? resultDirectoryArg))
         {
             return resultDirectoryArg[0];

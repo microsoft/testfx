@@ -46,20 +46,33 @@ public static class ConfigurationExtensions
     /// values without any code change.
     /// </para>
     /// <para>
-    /// Semantics:
-    /// <list type="bullet">
-    ///   <item><description>If any indexed entry (<c>commandLineOptions:&lt;name&gt;:0</c>) is
-    ///   present, the option is considered set (multi-value option).</description></item>
-    ///   <item><description>Otherwise, the bare key (<c>commandLineOptions:&lt;name&gt;</c>) is
-    ///   consulted. A null value means not set. A boolean value (<c>"true"</c>/<c>"false"</c>,
-    ///   case-insensitive) is interpreted as the presence indicator for a zero-arity flag — a
-    ///   <c>"false"</c> in JSON explicitly disables the option. Any other value is treated as a
-    ///   single-argument value and therefore "set".</description></item>
-    /// </list>
+    /// Resolution is performed at the option granularity by walking the configuration providers
+    /// in registration order via <see cref="AggregatedConfiguration.TryGetCommandLineOptionFromProviders"/>:
+    /// the first provider that has any data for the option wins outright and its sibling entries
+    /// are not merged with later providers. This guarantees that, e.g., an explicit zero-arity
+    /// <c>--list-tests</c> on the CLI is not silently overridden by an indexed JSON array under
+    /// the same option.
+    /// </para>
+    /// <para>
+    /// When the <see cref="IConfiguration"/> instance is not an <see cref="AggregatedConfiguration"/>
+    /// (test mocks etc.), falls back to a merged-view lookup via the <c>IConfiguration[key]</c>
+    /// indexer. In that path the providers cannot be walked, so precedence is per-key rather than
+    /// per-option.
+    /// </para>
+    /// <para>
+    /// LIMITATION (issue #6349): a JSON bare scalar that happens to be the string <c>"true"</c> or
+    /// <c>"false"</c> for an option that takes arguments is ambiguous — it is interpreted here as
+    /// a presence/absence marker rather than as the argument value. Authors should use the array
+    /// form (<c>["true"]</c>, <c>["false"]</c>) when the literal string is intended.
     /// </para>
     /// </remarks>
     internal static bool IsCommandLineOptionSet(this IConfiguration configuration, string optionName)
     {
+        if (configuration is AggregatedConfiguration aggregated)
+        {
+            return aggregated.TryGetCommandLineOptionFromProviders(optionName, out bool isSet, out _) && isSet;
+        }
+
         string baseKey = GetBaseKey(optionName);
 
         if (configuration[baseKey + PlatformConfigurationConstants.KeyDelimiter + "0"] is not null)
@@ -81,15 +94,21 @@ public static class ConfigurationExtensions
     /// to implement Option C of issue #6349.
     /// </para>
     /// <para>
-    /// Behavior is intentionally a superset of
+    /// Resolution mirrors <see cref="IsCommandLineOptionSet"/>: providers are walked in
+    /// registration order and the first one with data for the option wins entirely, so
+    /// CLI/JSON values for the same option never interleave.
+    /// </para>
+    /// <para>
+    /// Behavior at the winning provider is intentionally a superset of
     /// <see cref="CommandLineParseResult.TryGetOptionArgumentList(string, out string[])"/> so
     /// existing consumers continue to work:
     /// <list type="bullet">
     ///   <item><description>Walks <c>commandLineOptions:&lt;name&gt;:0</c>, <c>:1</c>, ... until a
     ///   gap is encountered, returning the collected list when non-empty.</description></item>
     ///   <item><description>Otherwise consults the bare key <c>commandLineOptions:&lt;name&gt;</c>:
-    ///   null => option absent; a boolean (<c>"true"</c>/<c>"false"</c>, case-insensitive) =>
-    ///   empty argument list (zero-arity flag); any other string => single-element array.</description></item>
+    ///   null =&gt; option absent at this provider; a boolean (<c>"true"</c>/<c>"false"</c>,
+    ///   case-insensitive) =&gt; presence marker (true =&gt; set with zero args; false =&gt; explicitly
+    ///   not set); any other string =&gt; single-element array.</description></item>
     /// </list>
     /// </para>
     /// <para>
@@ -103,6 +122,18 @@ public static class ConfigurationExtensions
     /// </remarks>
     internal static bool TryGetCommandLineOptionArguments(this IConfiguration configuration, string optionName, [NotNullWhen(true)] out string[]? arguments)
     {
+        if (configuration is AggregatedConfiguration aggregated)
+        {
+            if (aggregated.TryGetCommandLineOptionFromProviders(optionName, out bool isSet, out string[] args) && isSet)
+            {
+                arguments = args;
+                return true;
+            }
+
+            arguments = null;
+            return false;
+        }
+
         string baseKey = GetBaseKey(optionName);
 
         List<string>? collected = null;

@@ -109,13 +109,16 @@ public sealed class CommandLineConfigurationProviderTests
     [TestMethod]
     public async Task RegisteredAsConfigurationSource_TopsAllOtherProvidersForCommandLineOptionsKeys()
     {
-        // Arrange: a JSON config with the same option set to a different value. The CLI
-        // source (Order=0) must win over the JSON source (Order=3).
+        // Arrange: JSON has an array that lands at "commandLineOptions:hangdump-timeout:0".
+        // CLI also writes the same key with a different value via the same shape. The CLI
+        // source (Order=0) must win over the JSON source (Order=3). Using a JSON array (not
+        // a scalar) is important: it forces both providers to compete for the SAME storage
+        // key, so a precedence inversion would actually flip the observed value.
         Mock<IFileSystem> fileSystem = new();
         fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read))
             .Returns(() => new ConfigurationManagerTests.MemoryFileStream(
-                Encoding.UTF8.GetBytes("{\"commandLineOptions\": {\"hangdump-timeout\": \"10m\"}}")));
+                Encoding.UTF8.GetBytes("{\"commandLineOptions\": {\"hangdump-timeout\": [\"10m\"]}}")));
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
         ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo, new SystemEnvironment());
         configurationManager.AddConfigurationSource(() => new CommandLineConfigurationSource());
@@ -129,8 +132,50 @@ public sealed class CommandLineConfigurationProviderTests
         // Act
         IConfiguration configuration = await configurationManager.BuildAsync(null, parseResult);
 
-        // Assert: CLI wins.
+        // Assert: CLI wins for the shared key (would return "10m" if precedence were inverted).
         Assert.AreEqual("5m", configuration["commandLineOptions:hangdump-timeout:0"]);
+    }
+
+    [TestMethod]
+    public async Task ProviderAwareResolution_CliZeroArityShadowsJsonIndexedArgs()
+    {
+        // Regression test for issue #6349 review: CLI explicitly passes a zero-arity flag.
+        // JSON has the same option as an array of arguments. The CLI shape (bare key with
+        // boolean) and the JSON shape (indexed entries) DO NOT overlap on any single key,
+        // so a naive per-key precedence would merge them and surface JSON's arguments.
+        // The provider-aware resolver must instead pick the CLI provider entirely and
+        // report the option as set with zero arguments.
+        Mock<IFileSystem> fileSystem = new();
+        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read))
+            .Returns(() => new ConfigurationManagerTests.MemoryFileStream(
+                Encoding.UTF8.GetBytes("{\"commandLineOptions\": {\"list-tests\": [\"from-json\"]}}")));
+        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
+        ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo, new SystemEnvironment());
+        configurationManager.AddConfigurationSource(() => new CommandLineConfigurationSource());
+        configurationManager.AddConfigurationSource(() => new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
+
+        CommandLineParseResult parseResult = new(
+            toolName: null,
+            options: [new CommandLineParseOption("list-tests", [])],
+            errors: []);
+
+        IConfiguration configuration = await configurationManager.BuildAsync(null, parseResult);
+
+        CommandLineHandler handler = new(
+            parseResult,
+            extensionsCommandLineOptionsProviders: [],
+            systemCommandLineOptionsProviders: [],
+            testApplicationModuleInfo,
+            new Mock<IRuntimeFeature>().Object,
+            configuration);
+
+        ICommandLineOptions options = handler;
+
+        Assert.IsTrue(options.IsOptionSet("list-tests"));
+        Assert.IsTrue(options.TryGetOptionArgumentList("list-tests", out string[]? args));
+        Assert.IsNotNull(args);
+        Assert.IsEmpty(args);
     }
 
     [TestMethod]
