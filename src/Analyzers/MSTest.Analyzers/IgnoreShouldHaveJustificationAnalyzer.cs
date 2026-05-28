@@ -132,14 +132,26 @@ public sealed class IgnoreShouldHaveJustificationAnalyzer : DiagnosticAnalyzer
 
     private static bool HasJustification(AttributeData ignoreAttribute)
     {
-        // Parameterless [Ignore] - no justification.
-        if (ignoreAttribute.ConstructorArguments.Length == 0)
+        // First positional argument of IgnoreAttribute(string? message) is the justification when provided.
+        if (ignoreAttribute.ConstructorArguments.Length > 0
+            && ignoreAttribute.ConstructorArguments[0].Value is string positionalMessage
+            && !string.IsNullOrWhiteSpace(positionalMessage))
         {
-            return false;
+            return true;
         }
 
-        // First positional argument of IgnoreAttribute(string? message) is the justification.
-        TypedConstant messageArgument = ignoreAttribute.ConstructorArguments[0];
-        return messageArgument.Value is string message && !string.IsNullOrWhiteSpace(message);
+        // The IgnoreMessage property (inherited from ConditionBaseAttribute) can also carry the
+        // justification when applied via named-argument syntax: [Ignore(IgnoreMessage = "...")].
+        foreach (KeyValuePair<string, TypedConstant> namedArgument in ignoreAttribute.NamedArguments)
+        {
+            if (namedArgument.Key == "IgnoreMessage"
+                && namedArgument.Value.Value is string namedMessage
+                && !string.IsNullOrWhiteSpace(namedMessage))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
