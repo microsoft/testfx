@@ -230,7 +230,10 @@ internal class TestExecutionManager
             return;
         }
 
-        int seed = MSTestSettings.CurrentSettings.RandomTestOrderSeed ?? new Random().Next();
+        // Use Guid.NewGuid().GetHashCode() rather than new Random() so that consecutive runs do not
+        // collide on the same seed on .NET Framework targets (where Random() is time-seeded with low
+        // resolution). The user can still pin the seed via RandomTestOrderSeed for reproducibility.
+        int seed = MSTestSettings.CurrentSettings.RandomTestOrderSeed ?? Guid.NewGuid().GetHashCode();
         _testOrderRandom = new Random(seed);
 
         frameworkHandle.SendMessage(

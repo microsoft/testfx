@@ -342,6 +342,51 @@ public class MSTestSettingsTests : TestContainer
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'notanint' for runsettings entry 'RandomTestOrderSeed', setting will be ignored."), Times.Once);
     }
 
+    public void PopulateSettingsShouldWarnWhenRandomizeTestOrderAndOrderTestsByNameInClassAreBothEnabled()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                <RandomizeTestOrder>True</RandomizeTestOrder>
+                <OrderTestsByNameInClass>True</OrderTestsByNameInClass>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+
+        MSTestSettings.CurrentSettings.RandomizeTestOrder.Should().BeTrue();
+        MSTestSettings.CurrentSettings.OrderTestsByNameInClass.Should().BeTrue();
+        _mockMessageLogger.Verify(
+            lm => lm.SendMessage(
+                TestMessageLevel.Warning,
+                "Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored."),
+            Times.Once);
+    }
+
+    public void PopulateSettingsShouldNotWarnWhenOnlyRandomizeTestOrderIsEnabled()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                <RandomizeTestOrder>True</RandomizeTestOrder>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+
+        MSTestSettings.CurrentSettings.RandomizeTestOrder.Should().BeTrue();
+        MSTestSettings.CurrentSettings.OrderTestsByNameInClass.Should().BeFalse();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Never);
+    }
+
     public void GetSettingsShouldThrowIfParallelizationWorkersIsNotInt()
     {
         string runSettingsXml =
