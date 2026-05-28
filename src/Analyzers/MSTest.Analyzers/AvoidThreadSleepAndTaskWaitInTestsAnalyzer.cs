@@ -14,7 +14,7 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0066: <inheritdoc cref="Resources.AvoidThreadSleepAndTaskWaitInTestsTitle"/>.
+/// MSTEST0067: <inheritdoc cref="Resources.AvoidThreadSleepAndTaskWaitInTestsTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class AvoidThreadSleepAndTaskWaitInTestsAnalyzer : DiagnosticAnalyzer

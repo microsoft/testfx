@@ -553,6 +553,11 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
 必要に応じて、'text' (既定の人間が判読できる出力) または 'json' を指定すると、検出されたテストを標準出力に JSON ドキュメントとして印刷します。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
+        <source>'--server {0}' requires '--{1}' to be specified.</source>
+        <target state="new">'--server {0}' requires '--{1}' to be specified.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
         <target state="translated">dotnet テスト パイプ。</target>
@@ -659,6 +664,11 @@ The default is TestResults in the directory that contains the test application.<
 既定値は、テスト アプリケーションを含むディレクトリ内の TestResults です。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineServerInvalidArgument">
+        <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="new">'--server' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
         <source>Enable the server mode.</source>
         <target state="translated">サーバー モードを有効にします。</target>
@@ -676,19 +686,19 @@ The default is TestResults in the directory that contains the test application.<
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
-        <target state="new">'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
+        <target state="translated">'timeout' オプションには、引数として明示的な単位サフィックスと、サポートされている範囲内 (最大約 49.7 日) の正の数値を持つ時間値を 1 つ指定する必要があります。使用可能なサフィックスは、'ms'/'mil(s)'/'millisecond(s)'、's'/'sec(s)'/'second(s)'、'm'/'min(s)'/'minute(s)'、'h'/'hour(s)'、'd'/'day(s)' です (例: '500ms'、'5400s'、'90m'、'1.5h'、'1d')。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
-        <target state="new">A global test execution timeout.
-Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
+        <target state="translated">グローバル テスト実行のタイムアウト。
+明示的な単位サフィックスを持つ時間値を 1 つ、引数として指定します。使用可能なサフィックスは、'ms'/'mil(s)'/'millisecond(s)'、's'/'sec(s)'/'second(s)'、'm'/'min(s)'/'minute(s)'、'h'/'hour(s)'、'd'/'day(s)' です (例: '500ms'、'5400s'、'90m'、'1.5h'、'1d')。</target>
         <note />
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
         <source>Press Ctrl+C again to force exit.</source>
-        <target state="new">Press Ctrl+C again to force exit.</target>
+        <target state="translated">強制終了するには、Ctrl + C キーをもう一度押してください。</target>
         <note />
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
@@ -1055,7 +1065,7 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</source>
-        <target state="new">Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</target>
+        <target state="translated">フィルターのかっこで囲まれた式内に、予期しない '/' 演算子が含まれています。フィルター: '{0}'。1 つのパス セグメントの代替候補を組み合わせるには、'/A/B/C/(X|Y)' のような構文を使用します。</target>
         <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'.</note>
       </trans-unit>
       <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">

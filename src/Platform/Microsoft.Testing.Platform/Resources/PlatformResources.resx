@@ -456,6 +456,12 @@ The default is TestResults in the directory that contains the test application.<
   <data name="PlatformCommandLineServerOptionDescription" xml:space="preserve">
     <value>Enable the server mode.</value>
   </data>
+  <data name="PlatformCommandLineServerInvalidArgument" xml:space="preserve">
+    <value>'--server' received unexpected value '{0}'. Supported values are: {1}.</value>
+  </data>
+  <data name="PlatformCommandLineDotnetTestCliRequiresPipe" xml:space="preserve">
+    <value>'--server {0}' requires '--{1}' to be specified.</value>
+  </data>
   <data name="PlatformCommandLineSkipBuildersNumberCheckOptionDescription" xml:space="preserve">
     <value>For testing purposes</value>
   </data>

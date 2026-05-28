@@ -553,6 +553,11 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
 Opcjonalnie akceptuje „text” (domyślne dane wyjściowe czytelne dla człowieka) lub "json", aby wydrukować odnalezione testy jako dokument JSON w przypadku standardowych danych wyjściowych.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
+        <source>'--server {0}' requires '--{1}' to be specified.</source>
+        <target state="new">'--server {0}' requires '--{1}' to be specified.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
         <target state="translated">potok testu dotnet.</target>
@@ -658,6 +663,11 @@ Jeśli określony katalog nie istnieje, zostanie on utworzony.
 Wartość domyślna to TestResults w katalogu zawierającym aplikację testową.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineServerInvalidArgument">
+        <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="new">'--server' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
         <source>Enable the server mode.</source>
         <target state="translated">Włącz tryb serwera.</target>
@@ -675,19 +685,19 @@ Wartość domyślna to TestResults w katalogu zawierającym aplikację testową.
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
-        <target state="new">'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
+        <target state="translated">Opcja „timeout” powinna mieć jeden argument jako wartość czasu z jawnym sufiksem jednostki i dodatnią wartością liczbową w obsługiwanym zakresie (do ok. 49,7 dnia). Akceptowane sufiksy to „ms”/„mil(s)”/„milisekunda(y)”, „s”/„sec(s)”/„sekunda(y)”, „m”/„min(s)”/„minuta(y)”, „h”/„godzina(y)” i „d”/„dzień/dni”, np. „500ms”, „5400s”, „90m”, „1.5h”, „1d”.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
-        <target state="new">A global test execution timeout.
-Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
+        <target state="translated">Limit czasu wykonywania testu globalnego.
+Przyjmuje jeden argument jako wartość czasu z jawnym sufiksem jednostki. Akceptowane sufiksy to „ms”/„mil(s)”/„milisekunda(y)”, „s”/„sec(s)”/„sekunda(y)”, „m”/„min(s)”/„minuta(y)”, „h”/„godzina(y)” i „d”/„dzień/dni”, np. „500ms”, „5400s”, „90m”, „1.5h”, „1d”.</target>
         <note />
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
         <source>Press Ctrl+C again to force exit.</source>
-        <target state="new">Press Ctrl+C again to force exit.</target>
+        <target state="translated">Naciśnij ponownie klawisze Ctrl+C, aby wymusić wyjście.</target>
         <note />
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
@@ -1054,7 +1064,7 @@ Prawidłowe wartości to „All”, „Failed”, „None”. Wartość domyśln
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</source>
-        <target state="new">Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</target>
+        <target state="translated">Filtr zawiera nieoczekiwany operator „/” wewnątrz wyrażenia w nawiasach. Filtr: „{0}”. Aby połączyć alternatywy dla jednego segmentu ścieżki, użyj składni, takiej jak „/A/B/C/(X|Y)”.</target>
         <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'.</note>
       </trans-unit>
       <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">

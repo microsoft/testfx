@@ -774,4 +774,13 @@ The type declaring these methods should also respect the following rules:
   <data name="PreferAsyncAssertionDescription" xml:space="preserve">
     <value>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</value>
   </data>
+  <data name="IgnoreShouldHaveJustificationTitle" xml:space="preserve">
+    <value>'[Ignore]' should specify a justification</value>
+  </data>
+  <data name="IgnoreShouldHaveJustificationMessageFormat" xml:space="preserve">
+    <value>'[Ignore]' should specify a message explaining why '{0}' is ignored</value>
+  </data>
+  <data name="IgnoreShouldHaveJustificationDescription" xml:space="preserve">
+    <value>An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</value>
+  </data>
 </root>
