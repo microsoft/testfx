@@ -7,6 +7,11 @@
         <target state="translated">Ajoutez les paramètres « [CallerFilePath] » et « [CallerLineNumber] »</target>
         <note />
       </trans-unit>
+      <trans-unit id="AddIgnoreJustificationFix">
+        <source>Add a placeholder justification to '[Ignore]'</source>
+        <target state="new">Add a placeholder justification to '[Ignore]'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AddTestClassFix">
         <source>Add '[TestClass]'</source>
         <target state="translated">Ajouter '[TestClass]'</target>
