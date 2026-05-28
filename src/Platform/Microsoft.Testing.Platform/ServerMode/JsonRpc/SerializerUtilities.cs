@@ -498,12 +498,15 @@ internal static class SerializerUtilities
                         _ => null,
                     };
                 }
-                catch (MessageFormatException ex)
+                catch (Exception ex) when (ex is MessageFormatException or InvalidCastException)
                 {
                     // If params can't be deserialized for a request, capture the failure so
                     // we can later send back a properly coded JSON-RPC error using the request id.
                     // For notifications there's no one to respond to, but we still avoid
                     // crashing the message-handling loop by swallowing into the sentinel.
+                    // We catch the broader set of deserialization-related exceptions because the
+                    // request payload is untrusted client input and the lower-level helpers can
+                    // throw types other than MessageFormatException.
                     @params = new InvalidRequestParamsArgs(ErrorCodes.InvalidParams, ex.Message);
                 }
 
@@ -598,7 +601,7 @@ internal static class SerializerUtilities
             string runIdString = GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.RunId);
             if (!Guid.TryParse(runIdString, out Guid runId))
             {
-                throw new MessageFormatException($"'{JsonRpcStrings.RunId}' field is not a valid Guid");
+                throw new MessageFormatException(JsonRpcStrings.InvalidRunIdErrorMessage);
             }
 
             var testsJson = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Tests) as ICollection<object>;
@@ -615,7 +618,7 @@ internal static class SerializerUtilities
             string runIdString = GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.RunId);
             if (!Guid.TryParse(runIdString, out Guid runId))
             {
-                throw new MessageFormatException($"'{JsonRpcStrings.RunId}' field is not a valid Guid");
+                throw new MessageFormatException(JsonRpcStrings.InvalidRunIdErrorMessage);
             }
 
             var testsJson = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Tests) as ICollection<object>;
@@ -762,7 +765,14 @@ internal static class SerializerUtilities
         => properties.TryGetValue(propertyName, out object? propObj) ? propObj : null;
 
     private static T GetRequiredPropertyFromJson<T>(IDictionary<string, object?> properties, string propertyName)
-        => (T)(GetOptionalPropertyFromJson(properties, propertyName) ?? throw new MessageFormatException($"'{propertyName}' field is missing"));
+    {
+        object? value = GetOptionalPropertyFromJson(properties, propertyName)
+            ?? throw new MessageFormatException($"'{propertyName}' field is missing");
+
+        return value is T typed
+            ? typed
+            : throw new MessageFormatException($"'{propertyName}' field has wrong type (expected {typeof(T).Name})");
+    }
 
     private static int? GetIdFromJson(object? idObj)
         => idObj switch

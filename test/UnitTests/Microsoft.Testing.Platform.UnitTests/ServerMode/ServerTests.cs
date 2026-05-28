@@ -222,8 +222,10 @@ public sealed class ServerTests
         Assert.AreEqual(0, result);
     }
 
+    [DataRow(JsonRpcMethods.TestingDiscoverTests)]
+    [DataRow(JsonRpcMethods.TestingRunTests)]
     [TestMethod]
-    public async Task DiscoveryRequestWithInvalidRunId_ReturnsInvalidParamsError()
+    public async Task RequestWithInvalidRunId_ReturnsInvalidParamsError(string method)
     {
         using var server = TcpServer.Create();
 
@@ -265,18 +267,18 @@ public sealed class ServerTests
         using CancellationTokenSource cancellationTokenSource = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
         await WaitForMessage(messageHandler, rpcMessage => rpcMessage is ResponseMessage, "Wait initialize", cancellationTokenSource.Token);
 
-        // Send a malformed discoverTests request with an invalid runId.
-        const string malformedDiscoverMessage = """
+        // Send a malformed request with an invalid runId.
+        string malformedMessage = $$"""
             {
                 "jsonrpc": "2.0",
                 "id": 2,
-                "method": "testing/discoverTests",
+                "method": "{{method}}",
                 "params": {
                     "runId": "not-a-guid"
                 }
             }
             """;
-        await WriteMessageAsync(writer, malformedDiscoverMessage);
+        await WriteMessageAsync(writer, malformedMessage);
 
         RpcMessage? msg = await WaitForMessage(messageHandler, rpcMessage => rpcMessage is ErrorMessage, "Wait invalid-runId error", cancellationTokenSource.Token);
         var error = (ErrorMessage)msg!;

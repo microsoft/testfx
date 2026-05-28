@@ -425,12 +425,16 @@ internal sealed class Json
                             _ => null,
                         };
                     }
-                    catch (MessageFormatException ex)
+                    catch (Exception ex) when (ex is MessageFormatException or InvalidOperationException or JsonException)
                     {
                         // If params can't be deserialized for a request, capture the failure so
                         // we can later send back a properly coded JSON-RPC error using the request id.
                         // For notifications there's no one to respond to, but we still avoid
                         // crashing the message-handling loop by swallowing into the sentinel.
+                        // We catch the broader set of deserialization-related exceptions because the
+                        // request payload is untrusted client input and the lower-level helpers
+                        // (e.g. JsonElement.GetString() on a non-string element) can throw types
+                        // other than MessageFormatException.
                         @params = new InvalidRequestParamsArgs(ErrorCodes.InvalidParams, ex.Message);
                     }
                 }
@@ -501,7 +505,7 @@ internal sealed class Json
             string runId = json.Bind<string>(jsonElement, JsonRpcStrings.RunId);
             if (!Guid.TryParse(runId, out Guid result))
             {
-                throw new MessageFormatException($"'{JsonRpcStrings.RunId}' field is not a valid Guid");
+                throw new MessageFormatException(JsonRpcStrings.InvalidRunIdErrorMessage);
             }
 
             json.TryArrayBind(jsonElement, out TestNode[]? testNodes, JsonRpcStrings.Tests);
@@ -518,7 +522,7 @@ internal sealed class Json
             string runId = json.Bind<string>(jsonElement, JsonRpcStrings.RunId);
             if (!Guid.TryParse(runId, out Guid result))
             {
-                throw new MessageFormatException($"'{JsonRpcStrings.RunId}' field is not a valid Guid");
+                throw new MessageFormatException(JsonRpcStrings.InvalidRunIdErrorMessage);
             }
 
             json.TryArrayBind(jsonElement, out TestNode[]? testNodes, JsonRpcStrings.Tests);
@@ -643,21 +647,9 @@ internal sealed class Json
     }
 
     internal T Bind<T>(JsonElement element, string? property = null)
-    {
-        if (property is not null)
-        {
-            try
-            {
-                element = element.GetProperty(property);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                throw new KeyNotFoundException($"Key '{property}' was not found in the dictionary.", ex);
-            }
-        }
-
-        return Deserialize<T>(element);
-    }
+        => property is not null && !element.TryGetProperty(property, out element)
+            ? throw new MessageFormatException($"'{property}' field is missing")
+            : Deserialize<T>(element);
 
     internal bool TryBind<T>(JsonElement element, out T? value, string? property = null)
     {

@@ -371,7 +371,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
             catch (JsonRpcException e)
             {
                 await SendErrorAsync(reqId: request.Id, errorCode: e.ErrorCode, message: e.Message, data: null, cancellationToken).ConfigureAwait(false);
-                CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.SetException(e));
+                CompleteRequest(ref _clientToServerRequests, request.Id, completion => completion.TrySetException(e));
             }
             catch (Exception e)
             {

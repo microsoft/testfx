@@ -115,6 +115,41 @@ public sealed class FormatterUtilitiesTests
         Assert.Throws<MessageFormatException>(() => Deserialize(type, json));
     }
 
+    [DataRow("testing/discoverTests", "\"runId\": 42")]
+    [DataRow("testing/runTests", "\"runId\": 42")]
+    [DataRow("testing/discoverTests", "")]
+    [DataRow("testing/runTests", "")]
+    [TestMethod]
+    public void DeserializeRpcMessage_InvalidRunIdShape_CapturesInvalidParamsSentinel(string method, string runIdProperty)
+    {
+        string json = $$"""
+            {
+                "jsonrpc": "2.0",
+                "id": 42,
+                "method": "{{method}}",
+                "params": {
+                    {{runIdProperty}}
+                }
+            }
+            """;
+
+#pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
+#pragma warning disable SA1111 // Closing parenthesis should be on line of last parameter
+        RpcMessage msg = _formatter.Deserialize<RpcMessage>(json
+#if NETCOREAPP
+            .AsMemory()
+#endif
+            );
+#pragma warning restore SA1111 // Closing parenthesis should be on line of last parameter
+#pragma warning restore SA1009 // Closing parenthesis should be spaced correctly
+
+        var request = (RequestMessage)msg;
+        Assert.AreEqual(42, request.Id);
+        Assert.AreEqual(method, request.Method);
+        var invalid = (InvalidRequestParamsArgs)request.Params!;
+        Assert.AreEqual(ErrorCodes.InvalidParams, invalid.ErrorCode);
+    }
+
     [DataRow("testing/discoverTests")]
     [DataRow("testing/runTests")]
     [TestMethod]
