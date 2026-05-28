@@ -250,7 +250,7 @@ See full log [of v3.10.5...v3.11.0](https://github.com/microsoft/testfx/compare/
 * MSTEST0037: Recognize IsTrue(collection.\[Count|Length] \[==|>|!=] 0) patterns and cleanup by @Youssef1313 in [#6416](https://github.com/microsoft/testfx/pull/6416)
 * Improve collection.Count/Length detection in MSTEST0037 by @Youssef1313 in [#6428](https://github.com/microsoft/testfx/pull/6428)
 * Add analyzer for Assert APIs with format parameters (MSTEST0053) by @Copilot in [#6294](https://github.com/microsoft/testfx/pull/6294)
-* Add analyzer and codefix to move from `TestContext.CancellationTokenSource.Token` to `TestContext.CancellationToken` by @Copilot in [#6429](https://github.com/microsoft/testfx/pull/6429
+* Add analyzer and codefix to move from `TestContext.CancellationTokenSource.Token` to `TestContext.CancellationToken` by @Copilot in [#6429](https://github.com/microsoft/testfx/pull/6429)
 * Add analyzer for ignoring string method return values (MSTEST0055) by @Copilot in [#6482](https://github.com/microsoft/testfx/pull/6482)
 * Is subsetof return non subset values of the superset (relates to #662) by @AtolagbeMuiz in [#6292](https://github.com/microsoft/testfx/pull/6292)
 * Implement assert contains overload to accept non-generic collection by @AtolagbeMuiz in [#6417](https://github.com/microsoft/testfx/pull/6417)
