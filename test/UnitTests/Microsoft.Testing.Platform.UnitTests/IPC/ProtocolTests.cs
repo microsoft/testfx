@@ -150,6 +150,53 @@ public sealed class ProtocolTests
         Assert.IsEmpty(actual.Properties);
     }
 
+    [TestMethod]
+    public void TestInProgressMessagesSerializeDeserialize()
+    {
+        object serializer = new TestInProgressMessagesSerializer();
+
+        var message = new TestInProgressMessages(
+            "MyExecId",
+            "MyInstId",
+            [
+                new TestInProgressMessage("uid-1", "Display 1"),
+                new TestInProgressMessage("uid-2", null),
+                new TestInProgressMessage(null, "Display 3"),
+            ]);
+
+        var stream = new MemoryStream();
+        Serialize(serializer, message, stream);
+        stream.Seek(0, SeekOrigin.Begin);
+        var actual = (TestInProgressMessages)Deserialize(serializer, stream);
+
+        Assert.AreEqual(message.ExecutionId, actual.ExecutionId);
+        Assert.AreEqual(message.InstanceId, actual.InstanceId);
+        Assert.HasCount(message.InProgressMessages.Length, actual.InProgressMessages);
+        for (int i = 0; i < message.InProgressMessages.Length; i++)
+        {
+            Assert.AreEqual(message.InProgressMessages[i].Uid, actual.InProgressMessages[i].Uid);
+            Assert.AreEqual(message.InProgressMessages[i].DisplayName, actual.InProgressMessages[i].DisplayName);
+        }
+    }
+
+    [TestMethod]
+    public void TestInProgressMessagesSerializeDeserialize_EmptyList()
+    {
+        object serializer = new TestInProgressMessagesSerializer();
+
+        var message = new TestInProgressMessages("execId", "instId", []);
+
+        var stream = new MemoryStream();
+        Serialize(serializer, message, stream);
+        stream.Seek(0, SeekOrigin.Begin);
+        var actual = (TestInProgressMessages)Deserialize(serializer, stream);
+
+        Assert.AreEqual(message.ExecutionId, actual.ExecutionId);
+        Assert.AreEqual(message.InstanceId, actual.InstanceId);
+        Assert.IsNotNull(actual.InProgressMessages);
+        Assert.HasCount(0, actual.InProgressMessages);
+    }
+
     private static void Serialize<TMessage>(object serializer, TMessage message, Stream stream)
         => serializer.GetType()
             .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)

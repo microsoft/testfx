@@ -19,6 +19,7 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
  * FileArtifactMessageSerializer: 7
  * TestSessionEventSerializer: 8
  * HandshakeMessageSerializer: 9
+ * TestInProgressMessagesSerializer: 10
 */
 
 [Embedded]
@@ -35,5 +36,6 @@ internal static class RegisterSerializers
         namedPipeBase.RegisterSerializer(new FileArtifactMessagesSerializer(), typeof(FileArtifactMessages));
         namedPipeBase.RegisterSerializer(new TestSessionEventSerializer(), typeof(TestSessionEvent));
         namedPipeBase.RegisterSerializer(new HandshakeMessageSerializer(), typeof(HandshakeMessage));
+        namedPipeBase.RegisterSerializer(new TestInProgressMessagesSerializer(), typeof(TestInProgressMessages));
     }
 }
