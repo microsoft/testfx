@@ -424,7 +424,182 @@ internal sealed class TypeCache
             }
         }
 
+        // After looking at the current assembly, honor any [AssemblyFixtureProvider] markers contributed
+        // by referenced libraries. The local declarations above always win — the provider pass only fills
+        // empty slots so users keep full control. See https://github.com/microsoft/testfx/issues/757.
+        DiscoverFixturesFromProviders(assembly, assemblyInfo, @this);
+
         return assemblyInfo;
+    }
+
+    private static void DiscoverFixturesFromProviders(Assembly currentAssembly, TestAssemblyInfo assemblyInfo, TypeCache @this)
+    {
+        foreach (Assembly candidate in EnumerateCandidateAssemblies(currentAssembly))
+        {
+            if (assemblyInfo.AssemblyInitializeMethod is not null && assemblyInfo.AssemblyCleanupMethod is not null)
+            {
+                return;
+            }
+
+            object[] markers;
+            try
+            {
+                markers = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(candidate, typeof(AssemblyFixtureProviderAttribute));
+            }
+            catch (Exception ex)
+            {
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                        "TypeCache: Exception occurred while reading AssemblyFixtureProviderAttribute from assembly {0}. {1}",
+                        SafeGetAssemblyName(candidate),
+                        ex);
+                }
+
+                continue;
+            }
+
+            if (markers is null || markers.Length == 0)
+            {
+                continue;
+            }
+
+            foreach (object marker in markers)
+            {
+                if (marker is not AssemblyFixtureProviderAttribute providerAttribute)
+                {
+                    continue;
+                }
+
+                Type? fixtureType = providerAttribute.FixtureType;
+                if (fixtureType is null)
+                {
+                    continue;
+                }
+
+                CollectFixtureMethodsFromProviderType(fixtureType, assemblyInfo, @this);
+
+                if (assemblyInfo.AssemblyInitializeMethod is not null && assemblyInfo.AssemblyCleanupMethod is not null)
+                {
+                    return;
+                }
+            }
+        }
+    }
+
+    private static void CollectFixtureMethodsFromProviderType(Type fixtureType, TestAssemblyInfo assemblyInfo, TypeCache @this)
+    {
+        MethodInfo[] methods;
+        try
+        {
+            methods = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(fixtureType);
+        }
+        catch (Exception ex)
+        {
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                    "TypeCache: Exception occurred while enumerating methods on AssemblyFixtureProvider type {0}. {1}",
+                    fixtureType.FullName,
+                    ex);
+            }
+
+            return;
+        }
+
+        foreach (MethodInfo methodInfo in methods)
+        {
+            // Only fill empty slots so local declarations on the test assembly always win silently.
+            // If two providers contribute a method for the same slot, the existing setter throws
+            // UTA_ErrorMultiAssemblyInit / UTA_ErrorMultiAssemblyClean — which is the intended behavior.
+            if (assemblyInfo.AssemblyInitializeMethod is null
+                && @this.IsAssemblyOrClassInitializeMethod<AssemblyInitializeAttribute>(methodInfo))
+            {
+                assemblyInfo.AssemblyInitializeMethod = methodInfo;
+                assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyInitialize);
+            }
+            else if (assemblyInfo.AssemblyCleanupMethod is null
+                && @this.IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
+            {
+                assemblyInfo.AssemblyCleanupMethod = methodInfo;
+                assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyCleanup);
+            }
+        }
+    }
+
+    private static IEnumerable<Assembly> EnumerateCandidateAssemblies(Assembly currentAssembly)
+    {
+        // Start with the test assembly itself so users may also place the marker on the consumer
+        // (handy escape hatch when the library author cannot ship the attribute themselves).
+        yield return currentAssembly;
+
+        Assembly[] loaded;
+        try
+        {
+            loaded = AppDomain.CurrentDomain.GetAssemblies();
+        }
+        catch (Exception ex)
+        {
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                    "TypeCache: Exception occurred while enumerating loaded assemblies for AssemblyFixtureProvider discovery. {0}",
+                    ex);
+            }
+
+            yield break;
+        }
+
+        foreach (Assembly candidate in loaded)
+        {
+            if (ReferenceEquals(candidate, currentAssembly))
+            {
+                continue;
+            }
+
+            if (IsFrameworkAssembly(candidate))
+            {
+                continue;
+            }
+
+            yield return candidate;
+        }
+    }
+
+    private static bool IsFrameworkAssembly(Assembly assembly)
+    {
+        string? name = SafeGetAssemblyName(assembly);
+        return !string.IsNullOrEmpty(name)
+            && (name!.StartsWith("System.", StringComparison.Ordinal)
+                || name.StartsWith("System,", StringComparison.Ordinal)
+                || name.Equals("System", StringComparison.Ordinal)
+                || name.Equals("mscorlib", StringComparison.Ordinal)
+                || name.Equals("netstandard", StringComparison.Ordinal)
+                || name.StartsWith("Microsoft.VisualStudio.TestPlatform", StringComparison.Ordinal)
+                || name.StartsWith("Microsoft.VisualStudio.TestTools", StringComparison.Ordinal)
+                || name.StartsWith("Microsoft.TestPlatform", StringComparison.Ordinal)
+                || name.StartsWith("Microsoft.Testing.", StringComparison.Ordinal)
+                || name.Equals("Microsoft.Testing.Platform", StringComparison.Ordinal)
+                || name.StartsWith("Microsoft.CodeAnalysis", StringComparison.Ordinal)
+                || name.StartsWith("Microsoft.Win32.", StringComparison.Ordinal)
+                || name.StartsWith("Microsoft.Extensions.", StringComparison.Ordinal)
+                || name.StartsWith("Microsoft.NET.", StringComparison.Ordinal)
+                || name.StartsWith("MSTest.", StringComparison.Ordinal)
+                || name.StartsWith("MSTestAdapter.", StringComparison.Ordinal)
+                || name.StartsWith("Newtonsoft.", StringComparison.Ordinal)
+                || name.StartsWith("Microsoft.CSharp", StringComparison.Ordinal));
+    }
+
+    private static string? SafeGetAssemblyName(Assembly assembly)
+    {
+        try
+        {
+            return assembly.GetName().Name;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>
