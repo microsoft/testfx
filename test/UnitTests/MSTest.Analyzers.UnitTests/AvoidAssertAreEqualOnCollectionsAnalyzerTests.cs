@@ -222,8 +222,12 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenUsingAssertAreEqualOnNullableListNulls_ReportDiagnostic()
+    public async Task WhenUsingAssertAreEqualOnNullableListNulls_DoNotReportDiagnostic()
     {
+        // When an argument is the null literal, MSTEST0037 (UseProperAssertMethods) already
+        // triggers and suggests Assert.IsNull / Assert.IsNotNull, which is the correct fix.
+        // MSTEST0065 must stay quiet to avoid a redundant (and misleading) suggestion to switch
+        // to CollectionAssert.AreEqual / Assert.AreSequenceEqual.
         string code = """
             #nullable enable
             using System.Collections.Generic;
@@ -235,12 +239,86 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    {|#0:Assert.AreEqual<List<int>?>(null, null)|};
+                    Assert.AreEqual<List<int>?>(null, null);
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code, ExpectedDiagnostic("Assert.AreEqual", "List<int>?"));
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualWithNullExpectedAndCollectionActual_DoNotReportDiagnostic()
+    {
+        // Regression test for https://github.com/microsoft/testfx/issues/8655.
+        // Assert.AreEqual(null, dictionary) is a null check that MSTEST0037 already catches and
+        // converts to Assert.IsNull(dictionary). MSTEST0065 must not report it.
+        string code = """
+            #nullable enable
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Dictionary<string, int>? dictionary = null;
+                    Assert.AreEqual(null, dictionary);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualWithCollectionExpectedAndNullActual_DoNotReportDiagnostic()
+    {
+        // Symmetric variant of the issue above: null is in the actual position.
+        string code = """
+            #nullable enable
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Dictionary<string, int>? dictionary = null;
+                    Assert.AreEqual(dictionary, null);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreNotEqualWithNullExpectedAndCollectionActual_DoNotReportDiagnostic()
+    {
+        // Same rationale for Assert.AreNotEqual(null, x): MSTEST0037 converts it to Assert.IsNotNull(x).
+        string code = """
+            #nullable enable
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Dictionary<string, int>? dictionary = new();
+                    Assert.AreNotEqual(null, dictionary);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]
