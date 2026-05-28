@@ -13,10 +13,10 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
  * TestHostCompletedRequestSerializer: 1
  * TestHostProcessPIDRequestSerializer: 2
  * CommandLineOptionMessagesSerializer: 3
- * ModuleSerializer: 4
- * DiscoveredTestMessageSerializer: 5
- * TestResultMessageSerializer: 6
- * FileArtifactMessageSerializer: 7
+ * (4 is reserved - previously used by a removed serializer)
+ * DiscoveredTestMessagesSerializer: 5
+ * TestResultMessagesSerializer: 6
+ * FileArtifactMessagesSerializer: 7
  * TestSessionEventSerializer: 8
  * HandshakeMessageSerializer: 9
  * TestInProgressMessagesSerializer: 10
