@@ -464,7 +464,7 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
       </trans-unit>
       <trans-unit id="UTA_MultipleAttributesOnTestClass">
         <source>The test class '{0}' has multiple attributes derived from '{1}' defined on it. Only one such attribute is allowed.</source>
-        <target state="new">The test class '{0}' has multiple attributes derived from '{1}' defined on it. Only one such attribute is allowed.</target>
+        <target state="translated">La classe de test « {0} » possède plusieurs attributs dérivés de « {1} » définis sur elle. Un seul attribut de ce type est autorisé.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_MultipleAttributesOnTestMethod">
