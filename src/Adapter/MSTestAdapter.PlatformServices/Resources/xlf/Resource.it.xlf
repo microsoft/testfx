@@ -270,6 +270,16 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
         <target state="translated">Nell'assembly è caricata una versione precedente del pacchetto MSTestV2. L'individuazione dei test potrebbe non riuscire a individuare tutti i test dei dati se dipendono dal file '.runsettings'.</target>
         <note />
       </trans-unit>
+      <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
+        <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>
+        <target state="new">Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</target>
+        <note>{Locked="RandomizeTestOrder"}{Locked="OrderTestsByNameInClass"}</note>
+      </trans-unit>
+      <trans-unit id="RandomTestOrderBanner">
+        <source>Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</source>
+        <target state="new">Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</target>
+        <note>{Locked="Seed"}{Locked="RandomTestOrderSeed"}</note>
+      </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
         <target state="translated">La voce Runsettings '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' non è supportata nei sistemi operativi non Windows.</target>

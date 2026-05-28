@@ -271,6 +271,16 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">古いバージョンの MSTestV2 パッケージがアセンブリに読み込まれています。`.runsettings` ファイルに依存している場合、テスト検出ですべてのデータ テストを検出できない可能性があります。</target>
         <note />
       </trans-unit>
+      <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
+        <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>
+        <target state="new">Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</target>
+        <note>{Locked="RandomizeTestOrder"}{Locked="OrderTestsByNameInClass"}</note>
+      </trans-unit>
+      <trans-unit id="RandomTestOrderBanner">
+        <source>Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</source>
+        <target state="new">Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</target>
+        <note>{Locked="Seed"}{Locked="RandomTestOrderSeed"}</note>
+      </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
         <target state="translated">Runsettings エントリ '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' は、Windows OS 以外ではサポートされていません。</target>
