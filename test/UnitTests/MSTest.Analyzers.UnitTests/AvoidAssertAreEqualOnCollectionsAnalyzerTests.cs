@@ -322,6 +322,31 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenUsingAssertAreNotEqualWithCollectionExpectedAndNullActual_DoNotReportDiagnostic()
+    {
+        // Same rationale for Assert.AreNotEqual(x, null): the user is performing a null check, not a
+        // collection comparison, so suggesting CollectionAssert.AreNotEqual would be misleading.
+        string code = """
+            #nullable enable
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Dictionary<string, int>? dictionary = new();
+                    Assert.AreNotEqual(dictionary, null);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task CodeFix_Ordered_ForAreEqual()
     {
         string code = """

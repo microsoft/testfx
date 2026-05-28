@@ -75,10 +75,13 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
             return;
         }
 
-        // When either argument is the null literal, MSTEST0037 (UseProperAssertMethods) already triggers
-        // and suggests the more meaningful Assert.IsNull / Assert.IsNotNull replacement. Reporting
-        // MSTEST0065 in that case is a false positive because CollectionAssert.AreEqual / Assert.AreSequenceEqual
-        // are not the user's intent — they are performing a null check.
+        // When either argument is the null literal, the user is performing a null check rather than
+        // a collection equality check, so suggesting CollectionAssert.AreEqual / Assert.AreSequenceEqual
+        // would be misleading.
+        // When null is in the expected/notExpected position, MSTEST0037 (UseProperAssertMethods) already
+        // triggers and proposes the correct Assert.IsNull / Assert.IsNotNull replacement.
+        // When null is in the actual position, MSTEST0037 does not currently fire, but suppressing
+        // MSTEST0065 is still correct because CollectionAssert guidance is not what the user wants.
         // The first parameter is "expected" on Assert.AreEqual and "notExpected" on Assert.AreNotEqual.
         string firstParameterName = targetMethod.Name == "AreEqual" ? "expected" : "notExpected";
         if (HasNullLiteralArgument(invocation, firstParameterName) || HasNullLiteralArgument(invocation, "actual"))
