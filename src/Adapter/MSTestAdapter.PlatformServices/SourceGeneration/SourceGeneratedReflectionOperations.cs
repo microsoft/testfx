@@ -124,10 +124,14 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
         return _fallback.GetRuntimeProperty(classType, propertyName, includeNonPublic);
     }
 
+    // `Type.GetType(string)` only resolves assembly-qualified names (or types in the calling
+    // assembly / mscorlib). The source-generated `TypesByName` dictionary is keyed by full type
+    // name without assembly qualification and aggregates entries across every registered test
+    // assembly, so consulting it here could silently bind to a same-named type from the wrong
+    // assembly. Match the runtime contract by always delegating; callers that have an assembly
+    // in hand use the `GetType(Assembly, string)` overload below for source-generated lookups.
     public Type? GetType(string typeName)
-        => DataProvider.TypesByName.TryGetValue(typeName, out Type? type)
-            ? type
-            : _fallback.GetType(typeName);
+        => _fallback.GetType(typeName);
 
     public Type? GetType(Assembly assembly, string typeName)
         => DataProvider.TypesByName.TryGetValue(typeName, out Type? type) && type.Assembly.Equals(assembly)

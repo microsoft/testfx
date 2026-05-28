@@ -487,7 +487,7 @@ public sealed class ReflectionMetadataGeneratorTests
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
         GeneratorDriver driver = CSharpGeneratorDriver.Create(new ReflectionMetadataGenerator());
-        driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out _);
+        driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out _);
 
         return outputCompilation;
     }

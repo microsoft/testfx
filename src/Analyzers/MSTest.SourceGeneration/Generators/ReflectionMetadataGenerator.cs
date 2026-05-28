@@ -145,17 +145,7 @@ public sealed class ReflectionMetadataGenerator : IIncrementalGenerator
     }
 
     private static bool HasByRefParameter(IMethodSymbol method)
-    {
-        foreach (IParameterSymbol parameter in method.Parameters)
-        {
-            if (parameter.RefKind != RefKind.None)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+        => method.Parameters.Any(parameter => parameter.RefKind != RefKind.None);
 
     private static bool IsAccessibleFromGeneratedCode(INamedTypeSymbol type)
     {
