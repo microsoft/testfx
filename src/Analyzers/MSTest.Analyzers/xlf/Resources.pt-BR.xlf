@@ -168,8 +168,8 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <note />
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsTitle">
-        <source>Avoid 'Thread.Sleep' and 'Task.Wait' in test code</source>
-        <target state="new">Avoid 'Thread.Sleep' and 'Task.Wait' in test code</target>
+        <source>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait' or 'Task&lt;TResult&gt;.Result' in test code</source>
+        <target state="new">Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait' or 'Task&lt;TResult&gt;.Result' in test code</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">

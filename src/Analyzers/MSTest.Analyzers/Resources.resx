@@ -757,7 +757,7 @@ The type declaring these methods should also respect the following rules:
     <value>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</value>
   </data>
   <data name="AvoidThreadSleepAndTaskWaitInTestsTitle" xml:space="preserve">
-    <value>Avoid 'Thread.Sleep' and 'Task.Wait' in test code</value>
+    <value>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait' or 'Task&lt;TResult&gt;.Result' in test code</value>
   </data>
   <data name="AvoidThreadSleepAndTaskWaitInTestsMessageFormat" xml:space="preserve">
     <value>Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</value>
