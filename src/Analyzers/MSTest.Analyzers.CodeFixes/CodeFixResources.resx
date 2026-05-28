@@ -237,4 +237,7 @@
   <data name="AvoidAssertAreEqualOnCollectionsEquivalentFix" xml:space="preserve">
     <value>Replace with `Assert.{0}`</value>
   </data>
+  <data name="AddIgnoreJustificationFix" xml:space="preserve">
+    <value>Add a placeholder justification to '[Ignore]'</value>
+  </data>
 </root>
