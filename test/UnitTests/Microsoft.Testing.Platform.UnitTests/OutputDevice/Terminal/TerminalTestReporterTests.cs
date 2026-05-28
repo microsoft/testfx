@@ -1037,6 +1037,87 @@ public sealed class TerminalTestReporterTests
     }
 
     /// <summary>
+    /// Locks in the PR #8348 fix for issue #6753: when the progress state has not changed between
+    /// two refresh ticks (same <c>ProgressId</c> + <c>ProgressVersion</c>), the renderer must only
+    /// rewrite the duration cell instead of erasing and re-emitting the whole progress line.
+    ///
+    /// Before the fix the optimization was guarded by a <c>&amp;&amp; false</c> leftover, which made every
+    /// 500 ms tick fall through to the full re-render branch (<c>CSI K</c> + counters + assembly name).
+    /// This test fails if that branch is ever disabled again.
+    /// </summary>
+    [TestMethod]
+    public void AnsiTerminal_ProgressFrame_OnlyUpdatesDuration_WhenProgressVersionUnchanged()
+    {
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var stopwatchFactory = new StopwatchFactory();
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = AnsiMode.ForceAnsi,
+
+            // Intentionally do NOT enable ShowActiveTests: the optimization is per-line and we keep
+            // the rendered frame to a single line (the assembly progress) to make assertions simple.
+            ShowActiveTests = false,
+            ShowProgress = () => true,
+        })
+        {
+            CreateStopwatch = stopwatchFactory.CreateStopwatch,
+        };
+
+        // Gate the refresher thread so renders happen one at a time, on our cue, with deterministic
+        // duration values. Without this, the 500 ms timer would race with our assertions.
+        var renderGate = new AutoResetEvent(initialState: false);
+        var renderDone = new AutoResetEvent(initialState: false);
+        terminalReporter.OnProgressStartUpdate += (sender, args) => renderGate.WaitOne();
+        terminalReporter.OnProgressStopUpdate += (sender, args) => renderDone.Set();
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false);
+        terminalReporter.AssemblyRunStarted();
+
+        // Pick a starting elapsed value whose rendered form ("1s") has the same length as the value
+        // we will use for the second tick ("2s"). The duration-only path only fires when the rendered
+        // duration string has the same length as the one rendered in the previous frame.
+        stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+
+        // First tick: nothing was rendered yet, so this is the full frame.
+        int beforeFirstRender = stringBuilderConsole.Output.Length;
+        renderGate.Set();
+        renderDone.WaitOne();
+        string firstRender = stringBuilderConsole.Output[beforeFirstRender..];
+
+        // Sanity: the first render is the full frame (counters + assembly name + duration).
+        Assert.Contains("assembly.dll", firstRender);
+        Assert.Contains("(1s)", firstRender);
+
+        // Advance the clock by 1 second without touching any progress state. The worker version is
+        // unchanged, so the next render should take the "same Id + Version → duration-only" path.
+        stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+
+        int beforeSecondRender = stringBuilderConsole.Output.Length;
+        renderGate.Set();
+        renderDone.WaitOne();
+        string secondRender = stringBuilderConsole.Output[beforeSecondRender..];
+
+        // The duration-only path writes only the new duration with cursor positioning; it must not
+        // re-emit the counters, the assembly name, or a CSI K erase-in-line.
+        Assert.Contains("(2s)", secondRender);
+        Assert.DoesNotContain("assembly.dll", secondRender);
+        Assert.DoesNotContain("(1s)", secondRender);
+        Assert.DoesNotContain($"{AnsiCodes.CSI}{AnsiCodes.EraseInLine}", secondRender);
+        Assert.DoesNotContain("✓", secondRender);
+        Assert.Contains(AnsiCodes.SetCursorHorizontal(250), secondRender);
+
+        // Note: we deliberately do not stop the reporter here. The refresher thread is a background
+        // thread that is currently blocked in OnProgressStartUpdate; calling StopShowingProgress
+        // (which Joins the thread) would deadlock. The existing tests in this file follow the same
+        // pattern - the thread dies with the test process.
+    }
+
+    /// <summary>
     /// Reproduces the bug from issue #7240: when Console.BufferWidth > Console.WindowWidth,
     /// the ANSI cursor positioning places timings off-screen because it was using BufferWidth
     /// (capped to 250) instead of WindowWidth.
