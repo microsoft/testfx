@@ -81,11 +81,9 @@ For deeper guidance — creating, updating, debugging, upgrading, or wrapping MC
 
 | Workflow | Trigger | Description |
 | --- | --- | --- |
-| [`issue-arborist.md`](./issue-arborist.md) | Daily + manual + issues | Links related issues as sub-issues to improve organization. |
 | [`sub-issue-closer.md`](./sub-issue-closer.md) | Schedule + manual + issues | Recursively closes parent issues when all sub-issues are 100% complete. |
 | [`dependabot-issue-bundler.md`](./dependabot-issue-bundler.md) | Issues | Finds all open Dependabot PRs and creates bundle issues for each runtime + manifest file. |
 | [`dependabot-pr-bundler.md`](./dependabot-pr-bundler.md) | Daily + manual | Bundles compatible Dependabot updates into single PRs, runs tests, and opens draft PRs. |
-| [`repo-chronicle.md`](./repo-chronicle.md) | Schedule + manual + issues | Creates a narrative chronicle of daily repository activity. |
 | [`weekly-issue-activity.md`](./weekly-issue-activity.md) | Weekly + manual + issues | Weekly summary of issue activity including trends, charts, and insights. |
 
 ### Regular workflows
