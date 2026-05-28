@@ -553,6 +553,11 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
 Дополнительно принимает "text" (вывод по умолчанию в понятном для человека формате) или "json", чтобы вывести найденные тесты в виде документа JSON в стандартном выводе.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
+        <source>'--server {0}' requires '--{1}' to be specified.</source>
+        <target state="new">'--server {0}' requires '--{1}' to be specified.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
         <target state="translated">тестовый канал dotnet.</target>
@@ -656,6 +661,11 @@ The default is TestResults in the directory that contains the test application.<
         <target state="translated">Каталог, в котором будут размещены результаты теста.
 Если указанный каталог не существует, он будет создан.
 Значение по умолчанию — TestResults в каталоге, содержащем тестируемое приложение.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineServerInvalidArgument">
+        <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="new">'--server' received unexpected value '{0}'. Supported values are: {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">

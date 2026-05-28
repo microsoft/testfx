@@ -229,6 +229,115 @@ public sealed class PlatformCommandLineProviderTests
     }
 
     [TestMethod]
+    public async Task IsValid_When_Server_HasNoArgument()
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ServerOptionKey);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, []).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow("jsonrpc")]
+    [DataRow("JSONRPC")]
+    [DataRow("JsonRpc")]
+    [DataRow("dotnettestcli")]
+    [DataRow("DOTNETTESTCLI")]
+    [DataRow("DotnetTestCli")]
+    public async Task IsValid_When_Server_HasAcceptedArgument_AnyCasing(string argument)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ServerOptionKey);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [argument]).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow("random")]
+    [DataRow("invalid")]
+    [DataRow("json")]
+    [DataRow("rpc")]
+    public async Task IsInvalid_When_Server_HasUnknownArgument(string argument)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ServerOptionKey);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [argument]).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(
+            string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.PlatformCommandLineServerInvalidArgument,
+                argument,
+                $"'{PlatformCommandLineProvider.JsonRpcProtocolName}', '{PlatformCommandLineProvider.DotnetTestCliProtocolName}'"),
+            validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsValid_When_Server_DotnetTestCli_With_DotnetTestPipe()
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.ServerOptionKey, ["dotnettestcli"] },
+            { PlatformCommandLineProvider.DotNetTestPipeOptionKey, ["pipe-name"] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow("dotnettestcli")]
+    [DataRow("DotnetTestCli")]
+    public async Task IsInvalid_When_Server_DotnetTestCli_Without_DotnetTestPipe(string protocol)
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.ServerOptionKey, [protocol] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(
+            string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe,
+                PlatformCommandLineProvider.DotnetTestCliProtocolName,
+                PlatformCommandLineProvider.DotNetTestPipeOptionKey),
+            validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsValid_When_Server_JsonRpc_Without_DotnetTestPipe()
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.ServerOptionKey, ["jsonrpc"] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+    }
+
+    [TestMethod]
+    public async Task IsValid_When_Server_NoArgument_Without_DotnetTestPipe()
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.ServerOptionKey, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+    }
+
+    [TestMethod]
     public void IsListTestsJsonOutput_ReturnsTrueOnlyWhenJsonArgumentSet()
     {
         Assert.IsFalse(PlatformCommandLineProvider.IsListTestsJsonOutput(new TestCommandLineOptions([])));

@@ -26,6 +26,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string DiscoverTestsTextArgument = "text";
 
     private static readonly string SupportedDiscoverTestsValues = $"'{DiscoverTestsTextArgument}', '{DiscoverTestsJsonArgument}'";
+    private static readonly string SupportedServerProtocolValues = $"'{JsonRpcProtocolName}', '{DotnetTestCliProtocolName}'";
     public const string ResultDirectoryOptionKey = "results-directory";
     public const string IgnoreExitCodeOptionKey = "ignore-exit-code";
     public const string MinimumExpectedTestsOptionKey = "minimum-expected-tests";
@@ -111,6 +112,14 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             && !DiscoverTestsTextArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
         {
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDiscoverTestsInvalidArgument, arguments[0], SupportedDiscoverTestsValues));
+        }
+
+        if (commandOption.Name == ServerOptionKey
+            && arguments.Length == 1
+            && !JsonRpcProtocolName.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
+            && !DotnetTestCliProtocolName.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
+        {
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineServerInvalidArgument, arguments[0], SupportedServerProtocolValues));
         }
 
         if (commandOption.Name == ClientPortOptionKey
@@ -203,6 +212,18 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             && commandLineOptions.IsOptionSet(MinimumExpectedTestsOptionKey))
         {
             return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests);
+        }
+
+        // The '--server dotnettestcli' protocol path requires '--dotnet-test-pipe' to connect to the
+        // dotnet test pipe. Without it, the dotnet test connection silently never activates and the
+        // application falls back to console mode, leading to confusing behavior. Both options are
+        // internal and are expected to be passed together by 'dotnet test'.
+        if (commandLineOptions.TryGetOptionArgumentList(ServerOptionKey, out string[]? serverProtocolArgs)
+            && serverProtocolArgs is { Length: 1 }
+            && DotnetTestCliProtocolName.Equals(serverProtocolArgs[0], StringComparison.OrdinalIgnoreCase)
+            && !commandLineOptions.IsOptionSet(DotNetTestPipeOptionKey))
+        {
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe, DotnetTestCliProtocolName, DotNetTestPipeOptionKey));
         }
 
         if (commandLineOptions.IsOptionSet(DiagnosticFileLoggerSynchronousWriteOptionKey))
