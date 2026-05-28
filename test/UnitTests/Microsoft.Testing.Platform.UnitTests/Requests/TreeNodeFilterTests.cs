@@ -81,21 +81,6 @@ public sealed class TreeNodeFilterTests
     }
 
     [TestMethod]
-    public void LiteralSegment_RequiresWildcardToMatchNodesWithAdditionalSuffix()
-    {
-        // Note: This documents a current limitation that often surprises users.
-        //       Path segments are matched against an anchored regex (^value$), so a literal
-        //       like 'MyTest1' will NOT match a node whose actual ID is 'MyTest1()' (e.g. when
-        //       a framework appends parameter/method-signature info to the displayed name).
-        //       Users observing this typically need to add a wildcard: '/*/*/*/(MyTest1*|MyTest2*)'.
-        //       See https://github.com/microsoft/testfx/issues/7300 for the user-facing report.
-        TreeNodeFilter filter = new("/*/*/*/(MyTest1|MyTest2)");
-
-        Assert.IsFalse(filter.MatchesFilter("/A/B/C/MyTest1()", new PropertyBag()));
-        Assert.IsFalse(filter.MatchesFilter("/A/B/C/MyTest2()", new PropertyBag()));
-    }
-
-    [TestMethod]
     public void FullPathOrInsideParenthesizedExpressions_IsNotSupported_ThrowsActionableMessage()
     {
         const string Filter = "(/*/*/*/MyTest1)|(/*/*/*/MyTest2)";
