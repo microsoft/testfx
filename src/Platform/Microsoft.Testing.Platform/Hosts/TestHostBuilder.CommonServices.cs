@@ -90,6 +90,11 @@ internal sealed partial class TestHostBuilder
             Configuration.AddConfigurationSource(() => new EnvironmentVariablesConfigurationSource(systemEnvironment));
         }
 
+        // Option C (issue #6349): expose the parsed CLI options through IConfiguration under
+        // the "commandLineOptions" section so that the same lookup helpers consult both the CLI
+        // and testconfig.json. Highest priority (Order=0) so the CLI always wins.
+        Configuration.AddConfigurationSource(() => new CommandLineConfigurationSource());
+
         Configuration.AddConfigurationSource(() => new JsonConfigurationSource(_testApplicationModuleInfo, _fileSystem, loggingState.FileLoggerProvider));
 
         context.Configuration = (AggregatedConfiguration)await ((ConfigurationManager)Configuration).BuildAsync(loggingState.FileLoggerProvider, loggingState.CommandLineParseResult).ConfigureAwait(false);
@@ -152,7 +157,7 @@ internal sealed partial class TestHostBuilder
         LoggerFactoryProxy loggerFactoryProxy = new();
         serviceProvider.TryAddService(loggerFactoryProxy);
 
-        context.CommandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(loggingState.CommandLineParseResult, serviceProvider).ConfigureAwait(false);
+        context.CommandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(loggingState.CommandLineParseResult, serviceProvider, context.Configuration).ConfigureAwait(false);
         commandLineOptionsProxy.SetCommandLineOptions(context.CommandLineHandler);
 
         context.PoliciesService = new StopPoliciesService(context.TestApplicationCancellationTokenSource);

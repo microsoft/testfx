@@ -205,6 +205,10 @@ internal static class CommandLineOptionsValidator
         }
 
         StringBuilder? stringBuilder = null;
+        // OPTION C LIMITATION (issue #6349): unknown-option detection walks parseResult.Options
+        // only. Unknown keys under the "commandLineOptions" section of testconfig.json are
+        // silently ignored. Should be augmented by enumerating that JSON section (see
+        // AggregatedConfiguration.GetTestConfigJsonSection) once a strict schema is decided.
         foreach (CommandLineParseOption optionRecord in parseResult.Options)
         {
             if (!validOptionNames.Contains(optionRecord.Name))
@@ -223,6 +227,11 @@ internal static class CommandLineOptionsValidator
         CommandLineParseResult parseResult,
         Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)> providerAndOptionByOptionName)
     {
+        // OPTION C LIMITATION (issue #6349): arity is validated only against options that
+        // appear on the CLI (parseResult.Options). Options sourced from testconfig.json's
+        // "commandLineOptions" section are NOT seen by this validator. Reach parity by either
+        // (a) synthesizing CommandLineParseOption entries from the JSON layer before this call
+        // (closer to Option B), or (b) iterating the merged IConfiguration view here.
         StringBuilder? stringBuilder = null;
         foreach (IGrouping<string, CommandLineParseOption> groupedOptions in parseResult.Options.GroupBy(x => x.Name))
         {
@@ -264,6 +273,9 @@ internal static class CommandLineOptionsValidator
     {
         ApplicationStateGuard.Ensure(parseResult is not null);
 
+        // OPTION C LIMITATION (issue #6349): per-option ValidateOptionArgumentsAsync runs only
+        // for CLI-supplied values. A value coming from testconfig.json bypasses the provider's
+        // own argument validator. Same fix shape as the arity limitation above.
         StringBuilder? stringBuilder = null;
         foreach (CommandLineParseOption optionRecord in parseResult.Options)
         {

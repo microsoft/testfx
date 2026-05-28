@@ -14,4 +14,14 @@ internal static class PlatformConfigurationConstants
     public const string PlatformExitProcessOnUnhandledException = "platformOptions:exitProcessOnUnhandledException";
     public const string PlatformTelemetryIsDevelopmentRepository = "platformOptions:telemetry:isDevelopmentRepository";
     public const string PlatformConfigSuffixFileName = ".testconfig.json";
+
+    /// <summary>
+    /// Root section name used by Option C (unified configuration model) to expose command-line
+    /// options through <see cref="IConfiguration"/>. Both the in-memory CLI-backed provider
+    /// (<see cref="CommandLineConfigurationProvider"/>) and the JSON-backed provider flatten
+    /// individual options under <c>commandLineOptions:&lt;name&gt;</c> (single value or boolean
+    /// presence marker) and <c>commandLineOptions:&lt;name&gt;:&lt;index&gt;</c> (one entry per
+    /// argument for multi-value options).
+    /// </summary>
+    public const string CommandLineOptionsSectionName = "commandLineOptions";
 }
