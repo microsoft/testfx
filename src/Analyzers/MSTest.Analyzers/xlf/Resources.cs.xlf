@@ -826,10 +826,10 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
-        <target state="new">'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
-- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
-- it should not be 'static'
-- it should have a setter.</target>
+        <target state="translated">TestContext musí být nestatická vlastnost přiřazená v konstruktoru nebo nastavená přes MSTest. Pokud se má nastavit přes MSTest, musí splňovat následující rozložení:
+– Musí být public bez ohledu na to, jestli je nastavený atribut [assembly: DiscoverInternals].
+– Nesmí být static.
+– Musí mít metodu setter.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">
