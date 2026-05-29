@@ -340,6 +340,16 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <target state="translated">Fehler bei der Methode "{0}.{1}" für die Assemblybereinigung. Fehlermeldung: {2}. "StackTrace": {3}</target>
         <note />
       </trans-unit>
+      <trans-unit id="UTA_AssemblyFixtureProviderTypeIsGeneric">
+        <source>UTA070: Type '{0}' referenced by [AssemblyFixtureProvider] must not be generic.</source>
+        <target state="new">UTA070: Type '{0}' referenced by [AssemblyFixtureProvider] must not be generic.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_AssemblyFixtureProviderTypeReflectionFailed">
+        <source>UTA071: Failed to enumerate methods on type '{0}' referenced by [AssemblyFixtureProvider]. {1}</source>
+        <target state="new">UTA071: Failed to enumerate methods on type '{0}' referenced by [AssemblyFixtureProvider]. {1}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_AssemblyInitMethodThrows">
         <source>Assembly Initialization method {0}.{1} threw exception. {2}: {3}. Aborting test execution.</source>
         <target state="translated">Die Methode "{0}.{1}" für die Assemblyinitialisierung hat eine Ausnahme ausgelöst. {2}: {3}. Die Ausführung des Tests wird abgebrochen.</target>

@@ -340,6 +340,16 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
         <target state="translated">Il metodo di pulizia assembly {0}.{1} non è riuscito. Messaggio di errore: {2}. Analisi dello stack: {3}</target>
         <note />
       </trans-unit>
+      <trans-unit id="UTA_AssemblyFixtureProviderTypeIsGeneric">
+        <source>UTA070: Type '{0}' referenced by [AssemblyFixtureProvider] must not be generic.</source>
+        <target state="new">UTA070: Type '{0}' referenced by [AssemblyFixtureProvider] must not be generic.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_AssemblyFixtureProviderTypeReflectionFailed">
+        <source>UTA071: Failed to enumerate methods on type '{0}' referenced by [AssemblyFixtureProvider]. {1}</source>
+        <target state="new">UTA071: Failed to enumerate methods on type '{0}' referenced by [AssemblyFixtureProvider]. {1}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_AssemblyInitMethodThrows">
         <source>Assembly Initialization method {0}.{1} threw exception. {2}: {3}. Aborting test execution.</source>
         <target state="translated">Il metodo di inizializzazione assembly {0}.{1} ha generato un'eccezione. {2}: {3}. L'esecuzione del test verrà interrotta.</target>

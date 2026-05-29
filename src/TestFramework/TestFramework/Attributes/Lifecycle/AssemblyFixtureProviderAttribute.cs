@@ -54,7 +54,7 @@ public sealed class AssemblyFixtureProviderAttribute : Attribute
     /// the assembly carrying this attribute.
     /// </param>
     public AssemblyFixtureProviderAttribute(Type fixtureType)
-        => FixtureType = fixtureType;
+        => FixtureType = fixtureType ?? throw new ArgumentNullException(nameof(fixtureType));
 
     /// <summary>
     /// Gets the type whose <see cref="AssemblyInitializeAttribute"/> and

@@ -13,3 +13,8 @@ using MSTestAdapter.PlatformServices.UnitTests.Services;
 // reads AssemblyFixtureProvider markers from the test assembly itself; pointing at a type defined
 // in the same assembly is the "consumer-side" escape hatch supported by the feature.
 [assembly: AssemblyFixtureProvider(typeof(TypeCacheAssemblyFixtureProviderTests.DummyFixtureProvider))]
+
+// Second marker. Used exclusively by the cross-provider-duplicate tests. Its fixture methods are
+// only treated as [AssemblyInitialize]/[AssemblyCleanup] by tests that explicitly mock that, so the
+// presence of this marker is a no-op for every other test in the file.
+[assembly: AssemblyFixtureProvider(typeof(TypeCacheAssemblyFixtureProviderTests.SecondDummyFixtureProvider))]

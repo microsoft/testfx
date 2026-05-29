@@ -188,6 +188,72 @@ public class TypeCacheAssemblyFixtureProviderTests : TestContainer
         act.Should().Throw<TypeInspectionException>();
     }
 
+    public void GetTestMethodInfoShouldThrowWhenTwoProvidersContributeAssemblyInitialize()
+    {
+        Type hostType = typeof(DummyHostTestClass);
+        MethodInfo firstInit = typeof(DummyFixtureProvider).GetMethod(nameof(DummyFixtureProvider.ProviderAssemblyInit))!;
+        MethodInfo secondInit = typeof(SecondDummyFixtureProvider).GetMethod(nameof(SecondDummyFixtureProvider.SecondProviderAssemblyInit))!;
+
+        _mockReflectHelper
+            .Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(hostType))
+            .Returns(true);
+        _mockReflectHelper
+            .Setup(rh => rh.IsAttributeDefined<AssemblyInitializeAttribute>(firstInit))
+            .Returns(true);
+        _mockReflectHelper
+            .Setup(rh => rh.IsAttributeDefined<AssemblyInitializeAttribute>(secondInit))
+            .Returns(true);
+
+        TestMethod testMethod = CreateTestMethod(nameof(DummyHostTestClass.TestMethod), hostType.FullName!, "A");
+
+        Action act = () => _typeCache.GetTestMethodInfo(testMethod);
+        // Both providers contribute an [AssemblyInitialize] method — the TestAssemblyInfo setter
+        // throws UTA013 (UTA_ErrorMultiAssemblyInit) on the second assignment.
+        act.Should().Throw<TypeInspectionException>().WithMessage("*UTA013*");
+    }
+
+    public void GetTestMethodInfoShouldThrowWhenTwoProvidersContributeAssemblyCleanup()
+    {
+        Type hostType = typeof(DummyHostTestClass);
+        MethodInfo firstCleanup = typeof(DummyFixtureProvider).GetMethod(nameof(DummyFixtureProvider.ProviderAssemblyCleanup))!;
+        MethodInfo secondCleanup = typeof(SecondDummyFixtureProvider).GetMethod(nameof(SecondDummyFixtureProvider.SecondProviderAssemblyCleanup))!;
+
+        _mockReflectHelper
+            .Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(hostType))
+            .Returns(true);
+        _mockReflectHelper
+            .Setup(rh => rh.IsAttributeDefined<AssemblyCleanupAttribute>(firstCleanup))
+            .Returns(true);
+        _mockReflectHelper
+            .Setup(rh => rh.IsAttributeDefined<AssemblyCleanupAttribute>(secondCleanup))
+            .Returns(true);
+
+        TestMethod testMethod = CreateTestMethod(nameof(DummyHostTestClass.TestMethod), hostType.FullName!, "A");
+
+        Action act = () => _typeCache.GetTestMethodInfo(testMethod);
+        // Both providers contribute an [AssemblyCleanup] method — the TestAssemblyInfo setter
+        // throws UTA014 (UTA_ErrorMultiAssemblyClean) on the second assignment.
+        act.Should().Throw<TypeInspectionException>().WithMessage("*UTA014*");
+    }
+
+    public void GetTestMethodInfoShouldNotThrowWhenProviderHasNoFixtureMethods()
+    {
+        // The second provider is also registered at the assembly level, but no test sets up its
+        // methods as fixture methods. Plain discovery should treat this marker as a no-op.
+        Type hostType = typeof(DummyHostTestClass);
+
+        _mockReflectHelper
+            .Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(hostType))
+            .Returns(true);
+
+        TestMethod testMethod = CreateTestMethod(nameof(DummyHostTestClass.TestMethod), hostType.FullName!, "A");
+        _typeCache.GetTestMethodInfo(testMethod);
+
+        TestAssemblyInfo info = _typeCache.AssemblyInfoCache.Single();
+        info.AssemblyInitializeMethod.Should().BeNull();
+        info.AssemblyCleanupMethod.Should().BeNull();
+    }
+
     private static TestMethod CreateTestMethod(string methodName, string className, string assemblyName)
         => new(methodName, null, methodName, className, assemblyName, displayName: null, null);
 
@@ -207,6 +273,20 @@ public class TypeCacheAssemblyFixtureProviderTests : TestContainer
         // Wrong signature: instance method. Used to validate the existing diagnostic still fires
         // when discovery is driven through the provider path.
         public void ProviderAssemblyInitWithBadSignature(TestContext context)
+        {
+        }
+    }
+
+    // Second fixture provider, also registered via assembly-level marker. Used exclusively by the
+    // cross-provider-duplicate tests so that the assembly is observed with two providers, each
+    // contributing fixture methods.
+    public class SecondDummyFixtureProvider
+    {
+        public static void SecondProviderAssemblyInit(TestContext context)
+        {
+        }
+
+        public static void SecondProviderAssemblyCleanup()
         {
         }
     }
