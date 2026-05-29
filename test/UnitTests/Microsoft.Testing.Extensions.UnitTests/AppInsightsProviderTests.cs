@@ -242,6 +242,7 @@ public sealed class AppInsightsProviderTests
         List<string> trackedEvents = [];
         int flushCallCount = 0;
         using ManualResetEventSlim secondEventTracked = new(initialState: false);
+        using ManualResetEventSlim flushInvoked = new(initialState: false);
         Mock<ITelemetryClient> testTelemetryClient = new();
         testTelemetryClient.Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
             .Callback((string eventName, Dictionary<string, string> _, Dictionary<string, double> _) =>
@@ -256,7 +257,11 @@ public sealed class AppInsightsProviderTests
                 }
             });
         testTelemetryClient.Setup(x => x.Flush())
-            .Callback(() => Interlocked.Increment(ref flushCallCount));
+            .Callback(() =>
+            {
+                Interlocked.Increment(ref flushCallCount);
+                flushInvoked.Set();
+            });
 
         Mock<ITelemetryClientFactory> telemetryClientFactory = new();
         telemetryClientFactory.Setup(x => x.Create(It.IsAny<string?>(), It.IsAny<string>())).Returns(testTelemetryClient.Object);
@@ -289,6 +294,12 @@ public sealed class AppInsightsProviderTests
 #else
         appInsightsProvider.Dispose();
 #endif
+
+        // Dispose only waits up to 3 seconds for the ingest task to drain, and may proceed even
+        // before the task reaches its finally block (especially under thread-pool pressure on CI).
+        // Wait explicitly for the Flush callback so the assertions below are not racing the
+        // background continuation.
+        Assert.IsTrue(flushInvoked.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Flush was not invoked within the timeout after dispose.");
 
         Assert.HasCount(2, trackedEvents);
         Assert.AreEqual("FirstEvent", trackedEvents[0]);
