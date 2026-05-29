@@ -63,22 +63,14 @@ public sealed class IgnoreShouldHaveJustificationAnalyzer : DiagnosticAnalyzer
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
-        AttributeData? ignoreAttribute = null;
-        bool isTestMethod = false;
-        foreach (AttributeData methodAttribute in methodSymbol.GetAttributes())
+        if (!methodSymbol.IsTestMethod(testMethodAttributeSymbol))
         {
-            if (methodAttribute.AttributeClass.Inherits(testMethodAttributeSymbol))
-            {
-                isTestMethod = true;
-            }
-
-            if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, ignoreAttributeSymbol))
-            {
-                ignoreAttribute = methodAttribute;
-            }
+            return;
         }
 
-        if (!isTestMethod || ignoreAttribute is null)
+        AttributeData? ignoreAttribute = methodSymbol.GetAttributes().FirstOrDefault(attribute =>
+            SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, ignoreAttributeSymbol));
+        if (ignoreAttribute is null)
         {
             return;
         }
