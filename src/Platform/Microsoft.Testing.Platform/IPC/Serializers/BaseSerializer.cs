@@ -221,8 +221,7 @@ internal abstract class BaseSerializer
 
     protected static void WriteStringSize(Stream stream, string str)
     {
-        byte[] bytes = Encoding.UTF8.GetBytes(str);
-        byte[] len = BitConverter.GetBytes(bytes.Length);
+        byte[] len = BitConverter.GetBytes(Encoding.UTF8.GetByteCount(str));
         stream.Write(len, 0, len.Length);
     }
 
@@ -299,8 +298,7 @@ internal abstract class BaseSerializer
         }
 
         WriteUShort(stream, id);
-        WriteStringSize(stream, value);
-        WriteStringValue(stream, value);
+        WriteString(stream, value);
     }
 
     protected static void WriteField(Stream stream, ushort id, long? value)
