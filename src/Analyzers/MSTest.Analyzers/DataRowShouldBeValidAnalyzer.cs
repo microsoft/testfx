@@ -94,10 +94,11 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol dataRowAttributeSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
+        ImmutableArray<AttributeData> methodAttributes = methodSymbol.GetAttributes();
 
-        bool isTestMethod = methodSymbol.IsTestMethod(testMethodAttributeSymbol);
+        bool isTestMethod = methodAttributes.IsTestMethod(testMethodAttributeSymbol);
         List<AttributeData> dataRowAttributes = [];
-        foreach (AttributeData methodAttribute in methodSymbol.GetAttributes())
+        foreach (AttributeData methodAttribute in methodAttributes)
         {
             if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, dataRowAttributeSymbol))
             {

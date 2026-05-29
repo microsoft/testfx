@@ -114,10 +114,11 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol dynamicDataAttributeSymbol, INamedTypeSymbol dynamicDataSourceTypeSymbol, INamedTypeSymbol methodInfoTypeSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
+        ImmutableArray<AttributeData> methodAttributes = methodSymbol.GetAttributes();
 
-        bool isTestMethod = methodSymbol.IsTestMethod(testMethodAttributeSymbol);
+        bool isTestMethod = methodAttributes.IsTestMethod(testMethodAttributeSymbol);
         bool hasDynamicDataAttribute = false;
-        foreach (AttributeData methodAttribute in methodSymbol.GetAttributes())
+        foreach (AttributeData methodAttribute in methodAttributes)
         {
             if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, dynamicDataAttributeSymbol))
             {

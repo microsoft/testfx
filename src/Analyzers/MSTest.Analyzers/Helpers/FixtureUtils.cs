@@ -79,6 +79,9 @@ internal static class FixtureUtils
     public static bool IsTestMethod(this IMethodSymbol methodSymbol, INamedTypeSymbol testMethodAttributeSymbol)
         => methodSymbol.GetAttributes().Any(methodAttribute => methodAttribute.AttributeClass.Inherits(testMethodAttributeSymbol));
 
+    public static bool IsTestMethod(this ImmutableArray<AttributeData> methodAttributes, INamedTypeSymbol testMethodAttributeSymbol)
+        => methodAttributes.Any(methodAttribute => methodAttribute.AttributeClass.Inherits(testMethodAttributeSymbol));
+
     public static bool IsInheritanceModeSet(this IMethodSymbol methodSymbol, INamedTypeSymbol? inheritanceBehaviorSymbol,
         INamedTypeSymbol? classInitializeOrCleanupAttributeSymbol)
     {

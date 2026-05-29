@@ -57,12 +57,12 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol ignoreAttributeSymbol, INamedTypeSymbol testMethodAttributeSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-        if (!methodSymbol.IsTestMethod(testMethodAttributeSymbol))
+        ImmutableArray<AttributeData> methodAttributes = methodSymbol.GetAttributes();
+        if (!methodAttributes.IsTestMethod(testMethodAttributeSymbol))
         {
             return;
         }
 
-        ImmutableArray<AttributeData> methodAttributes = methodSymbol.GetAttributes();
         if (!methodAttributes.Any(methodAttribute => SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, ignoreAttributeSymbol)))
         {
             return;
