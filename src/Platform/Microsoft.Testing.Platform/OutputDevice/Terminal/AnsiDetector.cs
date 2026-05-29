@@ -23,21 +23,21 @@ internal static class AnsiDetector
         // eliminating the 17 Regex allocations and their compilation cost.
         return termType.StartsWith("xterm", StringComparison.Ordinal) // ^xterm — xterm, PuTTY, Mintty
             || termType.StartsWith("rxvt", StringComparison.Ordinal) // ^rxvt — RXVT
-            || (termType.Contains("eterm", StringComparison.Ordinal) // ^(?!eterm-color).*eterm.* — eterm but not eterm-color (#9950)
+            || (termType.IndexOf("eterm", StringComparison.Ordinal) >= 0 // ^(?!eterm-color).*eterm.* — eterm but not eterm-color (#9950)
                 && !termType.StartsWith("eterm-color", StringComparison.Ordinal))
             || termType.StartsWith("screen", StringComparison.Ordinal) // ^screen — GNU screen, tmux
-            || termType.Contains("tmux", StringComparison.Ordinal) // tmux — tmux
+            || termType.IndexOf("tmux", StringComparison.Ordinal) >= 0 // tmux — tmux
             || termType.StartsWith("vt100", StringComparison.Ordinal) // ^vt100 — DEC VT series
             || termType.StartsWith("vt102", StringComparison.Ordinal) // ^vt102 — DEC VT series
             || termType.StartsWith("vt220", StringComparison.Ordinal) // ^vt220 — DEC VT series
             || termType.StartsWith("vt320", StringComparison.Ordinal) // ^vt320 — DEC VT series
-            || termType.Contains("ansi", StringComparison.Ordinal) // ansi — ANSI
-            || termType.Contains("scoansi", StringComparison.Ordinal) // scoansi — SCO ANSI
-            || termType.Contains("cygwin", StringComparison.Ordinal) // cygwin — Cygwin, MinGW
-            || termType.Contains("linux", StringComparison.Ordinal) // linux — Linux console
-            || termType.Contains("konsole", StringComparison.Ordinal) // konsole — Konsole
-            || termType.Contains("bvterm", StringComparison.Ordinal) // bvterm — Bitvise SSH Client
+            || termType.IndexOf("ansi", StringComparison.Ordinal) >= 0 // ansi — ANSI
+            || termType.IndexOf("scoansi", StringComparison.Ordinal) >= 0 // scoansi — SCO ANSI
+            || termType.IndexOf("cygwin", StringComparison.Ordinal) >= 0 // cygwin — Cygwin, MinGW
+            || termType.IndexOf("linux", StringComparison.Ordinal) >= 0 // linux — Linux console
+            || termType.IndexOf("konsole", StringComparison.Ordinal) >= 0 // konsole — Konsole
+            || termType.IndexOf("bvterm", StringComparison.Ordinal) >= 0 // bvterm — Bitvise SSH Client
             || termType.StartsWith("st-256color", StringComparison.Ordinal) // ^st-256color — Suckless Simple Terminal, st
-            || termType.Contains("alacritty", StringComparison.Ordinal); // alacritty — Alacritty
+            || termType.IndexOf("alacritty", StringComparison.Ordinal) >= 0; // alacritty — Alacritty
     }
 }
