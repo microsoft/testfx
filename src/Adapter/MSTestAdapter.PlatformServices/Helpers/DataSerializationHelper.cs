@@ -32,7 +32,7 @@ internal static class DataSerializationHelper
     /// <returns>Serialized array.</returns>
     /// <exception cref="NotSupportedException">
     /// Thrown when the runtime does not support dynamic code generation
-    /// (<see cref="RuntimeFeature.IsDynamicCodeSupported"/> is <see langword="false"/>),
+    /// (<c>RuntimeFeature.IsDynamicCodeSupported</c> is <see langword="false"/>),
     /// for example under Native AOT, Mono AOT on iOS, or Blazor WebAssembly AOT.
     /// DataContract-based serialization relies on dynamic code generation, and in such
     /// AOT/MTP scenarios the in-process <c>ActualData</c> reference is used instead,
@@ -108,7 +108,7 @@ internal static class DataSerializationHelper
     /// <returns>Deserialized array.</returns>
     /// <exception cref="NotSupportedException">
     /// Thrown when the runtime does not support dynamic code generation
-    /// (<see cref="RuntimeFeature.IsDynamicCodeSupported"/> is <see langword="false"/>),
+    /// (<c>RuntimeFeature.IsDynamicCodeSupported</c> is <see langword="false"/>),
     /// for example under Native AOT, Mono AOT on iOS, or Blazor WebAssembly AOT.
     /// DataContract-based deserialization relies on dynamic code generation, and in such
     /// AOT/MTP scenarios the in-process <c>ActualData</c> reference is used instead,
