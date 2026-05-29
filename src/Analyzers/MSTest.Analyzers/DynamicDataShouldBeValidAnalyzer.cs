@@ -114,18 +114,12 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol dynamicDataAttributeSymbol, INamedTypeSymbol dynamicDataSourceTypeSymbol, INamedTypeSymbol methodInfoTypeSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
+        ImmutableArray<AttributeData> methodAttributes = methodSymbol.GetAttributes();
 
-        bool isTestMethod = false;
+        bool isTestMethod = methodAttributes.IsTestMethod(testMethodAttributeSymbol);
         bool hasDynamicDataAttribute = false;
-        foreach (AttributeData methodAttribute in methodSymbol.GetAttributes())
+        foreach (AttributeData methodAttribute in methodAttributes)
         {
-            // Current method should be a test method or should inherit from the TestMethod attribute.
-            // If it is, the current analyzer will trigger no diagnostic so it exits.
-            if (methodAttribute.AttributeClass.Inherits(testMethodAttributeSymbol))
-            {
-                isTestMethod = true;
-            }
-
             if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, dynamicDataAttributeSymbol))
             {
                 hasDynamicDataAttribute = true;

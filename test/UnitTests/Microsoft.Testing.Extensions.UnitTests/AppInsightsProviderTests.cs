@@ -115,8 +115,12 @@ public sealed class AppInsightsProviderTests
 
             if (calls == 1)
             {
-                // Timeout for more than 3 seconds
+                // Deliberately block the synchronous Moq callback to simulate a slow telemetry
+                // client and validate that the provider's dispose path times out gracefully.
+                // The signature of Moq's Callback is Action<...>, so an async alternative is not viable here.
+#pragma warning disable MSTEST0067 // Avoid 'Thread.Sleep' in test code as it can cause test flakiness
                 Thread.Sleep(10_000);
+#pragma warning restore MSTEST0067
             }
         });
 

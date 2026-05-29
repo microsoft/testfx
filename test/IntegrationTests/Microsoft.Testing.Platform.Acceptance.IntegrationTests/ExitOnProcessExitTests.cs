@@ -10,7 +10,7 @@ public class ExitOnProcessExitTests : AcceptanceTestBase<ExitOnProcessExitTests.
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
-    public void ExitOnProcessExit_Succeed(string tfm)
+    public async Task ExitOnProcessExit_Succeed(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
@@ -22,7 +22,7 @@ public class ExitOnProcessExitTests : AcceptanceTestBase<ExitOnProcessExitTests.
         var startTime = Stopwatch.StartNew();
         while (true)
         {
-            Thread.Sleep(500);
+            await Task.Delay(500, TestContext.CancellationToken);
 
             // Look for the pid file created by the test host.
             string[] pidFile = [.. Directory.GetFiles(Path.GetDirectoryName(testHost.FullName)!, "PID")];
@@ -48,7 +48,7 @@ public class ExitOnProcessExitTests : AcceptanceTestBase<ExitOnProcessExitTests.
         startTime = Stopwatch.StartNew();
         while (!process.HasExited)
         {
-            Thread.Sleep(1000);
+            await Task.Delay(1000, TestContext.CancellationToken);
             if (startTime.Elapsed.TotalSeconds > 60)
             {
                 throw new Exception("Process did not exit in 60 seconds");
