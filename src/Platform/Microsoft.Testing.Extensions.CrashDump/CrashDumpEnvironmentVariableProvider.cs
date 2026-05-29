@@ -64,12 +64,15 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
-        // IsEnabledAsync gates this method, so at least one of --crashdump / --crash-report /
-        // --crash-report-if-supported is set here.
-        // '--crash-report-if-supported' contributes to the effective crash-report configuration
-        // only when the current OS actually honors the underlying runtime env vars. On Windows
-        // the .NET runtime ignores DOTNET_EnableCrashReport(Only) (see dotnet/runtime#80191),
-        // so we silently drop the request and let the test run continue without a crash report.
+        // IsEnabledAsync gates this method, so we know either '--crashdump' is set or an
+        // *effective* crash-report request is in play (i.e. '--crash-report' was passed, or
+        // '--crash-report-if-supported' was passed on a runtime where it is honored). On
+        // Windows/.NET Framework, '--crash-report-if-supported' alone is treated as a no-op
+        // and would never reach this method.
+        // 'crashReportEnabled' re-checks IsCrashReportEffective so the env-var-setting logic
+        // below is skipped in the '--crashdump' only case (no crash-report variables to set)
+        // and so a future caller cannot accidentally rely on this method being invoked solely
+        // because '--crash-report-if-supported' was set on an unsupported runtime.
         bool crashReportEnabled = IsCrashReportEffective(_commandLineOptions);
 
         foreach (string prefix in Prefixes)
@@ -223,9 +226,10 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 #else
         StringBuilder errors = new();
 
-        // IsEnabledAsync gates this method, so at least one of --crashdump / --crash-report /
-        // --crash-report-if-supported is set here. Match the env-var-setting logic in
-        // UpdateAsync: --crash-report-if-supported on Windows is silently ignored.
+        // IsEnabledAsync gates this method, so we know either '--crashdump' is set or an
+        // *effective* crash-report request is in play. Match the env-var-setting logic in
+        // UpdateAsync: '--crash-report-if-supported' on Windows is silently ignored and the
+        // crash-report environment variables are therefore never validated in that case.
         bool crashReportEnabled = IsCrashReportEffective(_commandLineOptions);
 
         ValidateBothPrefixes(EnableMiniDumpVariable, EnabledValue);
