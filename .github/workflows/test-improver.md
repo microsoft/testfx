@@ -25,8 +25,17 @@ on:
       run: |
         MAX_OPEN_PRS=8
         if [[ "$GITHUB_EVENT_NAME" != "schedule" ]]; then exit 0; fi
-        # gh pr list exits with code 4 when --search returns no matches; fall back to 0 so set -e doesn't kill the script.
-        COUNT=$(gh pr list --repo ${{ github.repository }} --state open --search 'in:title "[test-improver]"' --json number --jq 'length' 2>/dev/null || echo 0)
+        # gh pr list exits with code 4 when --search returns no matches; treat that as 0 but
+        # let other failures (auth, API, rate limit) propagate so we don't silently proceed.
+        set +e
+        COUNT=$(gh pr list --repo ${{ github.repository }} --state open --search 'in:title "[test-improver]"' --json number --jq 'length' 2>/dev/null)
+        rc=$?
+        set -e
+        case $rc in
+          0) ;;
+          4) COUNT=0 ;;
+          *) echo "gh pr list failed with exit code $rc" >&2; exit $rc ;;
+        esac
         [[ "$COUNT" -lt "$MAX_OPEN_PRS" ]]
       # exits 0 if not scheduled or <MAX_OPEN_PRS open PRs, 1 if ≥MAX_OPEN_PRS
 
