@@ -60,27 +60,25 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             out SyntaxNode? predicateExpr,
             out _);
 
-        if (linqStatus != LinqPredicateCheckStatus.Unknown && linqCollectionExpr != null && predicateExpr != null)
+        // For Any() and Where().Any() patterns
+        if (linqStatus is LinqPredicateCheckStatus.Any or LinqPredicateCheckStatus.WhereAny &&
+            linqCollectionExpr != null && predicateExpr != null)
         {
-            // For Any() and Where().Any() patterns
-            if (linqStatus is LinqPredicateCheckStatus.Any or LinqPredicateCheckStatus.WhereAny)
-            {
-                string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
+            string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
 
-                ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
-                properties.Add(ProperAssertMethodNameKey, properAssertMethod);
-                properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
-                context.ReportDiagnostic(context.Operation.CreateDiagnostic(
-                    Rule,
-                    additionalLocations: ImmutableArray.Create(
-                        conditionArgument.Syntax.GetLocation(),
-                        predicateExpr.GetLocation(),
-                        linqCollectionExpr.GetLocation()),
-                    properties: properties.ToImmutable(),
-                    properAssertMethod,
-                    isTrueInvocation ? "IsTrue" : "IsFalse"));
-                return;
-            }
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+            context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                Rule,
+                additionalLocations: ImmutableArray.Create(
+                    conditionArgument.Syntax.GetLocation(),
+                    predicateExpr.GetLocation(),
+                    linqCollectionExpr.GetLocation()),
+                properties: properties.ToImmutable(),
+                properAssertMethod,
+                isTrueInvocation ? "IsTrue" : "IsFalse"));
+            return;
         }
 
         // Check for string method patterns: myString.StartsWith/EndsWith/Contains(...)

@@ -18,100 +18,97 @@ public sealed partial class UseProperAssertMethodsAnalyzer
     private static void AnalyzeAreEqualOrAreNotEqualInvocation(OperationAnalysisContext context, IOperation expectedArgument, bool isAreEqualInvocation, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol)
     {
         // Check for collection count patterns: collection.Count/Length == 0 or collection.Count/Length == X
-        if (isAreEqualInvocation)
+        if (isAreEqualInvocation &&
+            TryGetSecondArgumentValue((IInvocationOperation)context.Operation, out IOperation? actualArgumentValue) &&
+            TryGetArgumentForParameterOrdinal((IInvocationOperation)context.Operation, 1, out IArgumentOperation? actualArgument))
         {
-            if (TryGetSecondArgumentValue((IInvocationOperation)context.Operation, out IOperation? actualArgumentValue) &&
-                TryGetArgumentForParameterOrdinal((IInvocationOperation)context.Operation, 1, out IArgumentOperation? actualArgument))
+            // Check for LINQ predicate patterns that suggest ContainsSingle
+            LinqPredicateCheckStatus linqStatus2 = RecognizeLinqPredicateCheck(
+                actualArgumentValue,
+                enumerableTypeSymbol,
+                out SyntaxNode? linqCollectionExpr2,
+                out SyntaxNode? predicateExpr2,
+                out _);
+
+            if (linqStatus2 is LinqPredicateCheckStatus.Count or LinqPredicateCheckStatus.WhereCount &&
+                linqCollectionExpr2 != null &&
+                predicateExpr2 != null &&
+                expectedArgument.ConstantValue.HasValue &&
+                expectedArgument.ConstantValue.Value is int expectedCountValue &&
+                expectedCountValue == 1)
             {
-                // Check for LINQ predicate patterns that suggest ContainsSingle
-                LinqPredicateCheckStatus linqStatus2 = RecognizeLinqPredicateCheck(
-                    actualArgumentValue,
-                    enumerableTypeSymbol,
-                    out SyntaxNode? linqCollectionExpr2,
-                    out SyntaxNode? predicateExpr2,
-                    out _);
+                // We have Assert.AreEqual(1, enumerable.Count(predicate))
+                // We want Assert.ContainsSingle(predicate, enumerable)
+                string properAssertMethod = "ContainsSingle";
 
-                if (isAreEqualInvocation &&
-                    linqStatus2 is LinqPredicateCheckStatus.Count or LinqPredicateCheckStatus.WhereCount &&
-                    linqCollectionExpr2 != null &&
-                    predicateExpr2 != null &&
-                    expectedArgument.ConstantValue.HasValue &&
-                    expectedArgument.ConstantValue.Value is int expectedCountValue &&
-                    expectedCountValue == 1)
+                ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                properties.Add(CodeFixModeKey, CodeFixModeRemoveArgumentReplaceArgumentAndAddArgument);
+                context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                    Rule,
+                    additionalLocations: ImmutableArray.Create(
+                        expectedArgument.Syntax.GetLocation(),
+                        actualArgument.Syntax.GetLocation(),
+                        predicateExpr2.GetLocation(),
+                        linqCollectionExpr2.GetLocation()),
+                    properties: properties.ToImmutable(),
+                    properAssertMethod,
+                    "AreEqual"));
+                return;
+            }
+
+            // Check if we're comparing a count/length property
+            CountCheckStatus countStatus = RecognizeCountCheck(
+                expectedArgument,
+                actualArgumentValue,
+                objectTypeSymbol,
+                enumerableTypeSymbol,
+                out SyntaxNode? nodeToBeReplaced1,
+                out SyntaxNode? replacement1,
+                out SyntaxNode? nodeToBeReplaced2,
+                out SyntaxNode? replacement2);
+
+            if (countStatus != CountCheckStatus.Unknown)
+            {
+                if (nodeToBeReplaced1 is null || replacement1 is null)
                 {
-                    // We have Assert.AreEqual(1, enumerable.Count(predicate))
-                    // We want Assert.ContainsSingle(predicate, enumerable)
-                    string properAssertMethod = "ContainsSingle";
+                    throw ApplicationStateGuard.Unreachable();
+                }
 
-                    ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
-                    properties.Add(ProperAssertMethodNameKey, properAssertMethod);
-                    properties.Add(CodeFixModeKey, CodeFixModeRemoveArgumentReplaceArgumentAndAddArgument);
+                string properAssertMethod = countStatus == CountCheckStatus.IsEmpty ? "IsEmpty" : "HasCount";
+
+                ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+
+                if (nodeToBeReplaced2 is not null && replacement2 is null)
+                {
+                    // Here we suggest Assert.IsEmpty(collection)
+                    properties.Add(CodeFixModeKey, CodeFixModeRemoveArgumentAndReplaceArgument);
                     context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                         Rule,
                         additionalLocations: ImmutableArray.Create(
-                            expectedArgument.Syntax.GetLocation(),
-                            actualArgument.Syntax.GetLocation(),
-                            predicateExpr2.GetLocation(),
-                            linqCollectionExpr2.GetLocation()),
+                            nodeToBeReplaced2.GetLocation(),
+                            nodeToBeReplaced1.GetLocation(),
+                            replacement1.GetLocation()),
                         properties: properties.ToImmutable(),
                         properAssertMethod,
                         "AreEqual"));
-                    return;
                 }
-
-                // Check if we're comparing a count/length property
-                CountCheckStatus countStatus = RecognizeCountCheck(
-                    expectedArgument,
-                    actualArgumentValue,
-                    objectTypeSymbol,
-                    enumerableTypeSymbol,
-                    out SyntaxNode? nodeToBeReplaced1,
-                    out SyntaxNode? replacement1,
-                    out SyntaxNode? nodeToBeReplaced2,
-                    out SyntaxNode? replacement2);
-
-                if (countStatus != CountCheckStatus.Unknown)
+                else
                 {
-                    if (nodeToBeReplaced1 is null || replacement1 is null)
-                    {
-                        throw ApplicationStateGuard.Unreachable();
-                    }
-
-                    string properAssertMethod = countStatus == CountCheckStatus.IsEmpty ? "IsEmpty" : "HasCount";
-
-                    ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
-                    properties.Add(ProperAssertMethodNameKey, properAssertMethod);
-
-                    if (nodeToBeReplaced2 is not null && replacement2 is null)
-                    {
-                        // Here we suggest Assert.IsEmpty(collection)
-                        properties.Add(CodeFixModeKey, CodeFixModeRemoveArgumentAndReplaceArgument);
-                        context.ReportDiagnostic(context.Operation.CreateDiagnostic(
-                            Rule,
-                            additionalLocations: ImmutableArray.Create(
-                                nodeToBeReplaced2.GetLocation(),
-                                nodeToBeReplaced1.GetLocation(),
-                                replacement1.GetLocation()),
-                            properties: properties.ToImmutable(),
-                            properAssertMethod,
-                            "AreEqual"));
-                    }
-                    else
-                    {
-                        // Here we suggest Assert.HasCount(expectedCount, collection)
-                        properties.Add(CodeFixModeKey, CodeFixModeSimple);
-                        context.ReportDiagnostic(context.Operation.CreateDiagnostic(
-                            Rule,
-                            additionalLocations: nodeToBeReplaced2 is not null && replacement2 is not null
-                                ? ImmutableArray.Create(nodeToBeReplaced1.GetLocation(), replacement1.GetLocation(), nodeToBeReplaced2.GetLocation(), replacement2.GetLocation())
-                                : ImmutableArray.Create(nodeToBeReplaced1.GetLocation(), replacement1.GetLocation()),
-                            properties: properties.ToImmutable(),
-                            properAssertMethod,
-                            "AreEqual"));
-                    }
-
-                    return;
+                    // Here we suggest Assert.HasCount(expectedCount, collection)
+                    properties.Add(CodeFixModeKey, CodeFixModeSimple);
+                    context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                        Rule,
+                        additionalLocations: nodeToBeReplaced2 is not null && replacement2 is not null
+                            ? ImmutableArray.Create(nodeToBeReplaced1.GetLocation(), replacement1.GetLocation(), nodeToBeReplaced2.GetLocation(), replacement2.GetLocation())
+                            : ImmutableArray.Create(nodeToBeReplaced1.GetLocation(), replacement1.GetLocation()),
+                        properties: properties.ToImmutable(),
+                        properAssertMethod,
+                        "AreEqual"));
                 }
+
+                return;
             }
         }
 
@@ -168,8 +165,8 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             // The message is: Use 'Assert.{0}' instead of 'Assert.{1}'.
             string properAssertMethod = shouldUseIsTrue ? "IsTrue" : "IsFalse";
 
-            bool codeFixShouldAddCast = TryGetSecondArgumentValue((IInvocationOperation)context.Operation, out IOperation? actualArgumentValue) &&
-                actualArgumentValue.Type is { } actualType &&
+            bool codeFixShouldAddCast = TryGetSecondArgumentValue((IInvocationOperation)context.Operation, out IOperation? boolActualArgValue) &&
+                boolActualArgValue.Type is { } actualType &&
                 actualType.SpecialType != SpecialType.System_Boolean &&
                 !actualType.IsNullableOfBoolean();
 
@@ -184,10 +181,10 @@ public sealed partial class UseProperAssertMethodsAnalyzer
 
             context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                 Rule,
-                additionalLocations: ImmutableArray.Create(expectedArgument.Syntax.GetLocation(), actualArgumentValue?.Syntax.GetLocation() ?? Location.None),
+                additionalLocations: ImmutableArray.Create(expectedArgument.Syntax.GetLocation(), boolActualArgValue?.Syntax.GetLocation() ?? Location.None),
                 properties: properties.ToImmutable(),
                 properAssertMethod,
-                isAreEqualInvocation ? "AreEqual" : "AreNotEqual"));
+                "AreEqual"));
         }
         else if (expectedArgument is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
         {
