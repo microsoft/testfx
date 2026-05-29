@@ -134,8 +134,13 @@ public class UnitTest1
             .PatchCodeWithReplace("$TargetFramework$", tfm),
             addPublicFeeds: true);
 
+        // Do NOT pass warnAsError: true here. The reflection-mode adapter still depends on the
+        // vstest Microsoft.TestPlatform.ObjectModel submodule and on System.Private.DataContractSerialization
+        // internals, both of which emit trim warnings that are outside this repo's control. Promoting them
+        // to errors would fail the publish with NETSDK1144 before we get a chance to inspect the warning list.
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
+            warnAsError: false,
             cancellationToken: TestContext.CancellationToken);
 
         // Files in MSTest's own source whose trim warnings are suppressed by this PR.
