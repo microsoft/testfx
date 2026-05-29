@@ -12,6 +12,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 internal static class DataSerializationHelper
 {
+    private const string DataContractSerializationJustification =
+        "Data contract serialization is used for cross-process VSTest payloads. " +
+        "This should be safe as long as our generator mentions getting fields / properties of the target type. " +
+        "https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551";
+
     private static readonly ConcurrentDictionary<string, DataContractJsonSerializer> SerializerCache = new();
     private static readonly DataContractJsonSerializerSettings SerializerSettings = new()
     {
@@ -30,6 +35,8 @@ internal static class DataSerializationHelper
     /// </summary>
     /// <param name="data">Data array to serialize.</param>
     /// <returns>Serialized array.</returns>
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:Members attributed with RequiresUnreferencedCode may break when trimming", Justification = DataContractSerializationJustification)]
+    [UnconditionalSuppressMessage("Aot", "IL3050:Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT", Justification = DataContractSerializationJustification)]
     public static string?[]? Serialize(object?[]? data)
     {
         if (data == null)
@@ -61,14 +68,7 @@ internal static class DataSerializationHelper
 #endif
 
             using var memoryStream = new MemoryStream();
-            // This should be safe as long as our generator mentions
-            // getting fields / properties of the target type. https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551
-            // Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.
-#pragma warning disable IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
-#pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
             serializer.WriteObject(memoryStream, data[i]);
-#pragma warning restore IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
-#pragma warning restore IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
             byte[] serializerData = memoryStream.ToArray();
 
             serializedData[dataIndex] = Encoding.UTF8.GetString(serializerData, 0, serializerData.Length);
@@ -82,6 +82,8 @@ internal static class DataSerializationHelper
     /// </summary>
     /// <param name="serializedData">Serialized data array to deserialize.</param>
     /// <returns>Deserialized array.</returns>
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:Members attributed with RequiresUnreferencedCode may break when trimming", Justification = DataContractSerializationJustification)]
+    [UnconditionalSuppressMessage("Aot", "IL3050:Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT", Justification = DataContractSerializationJustification)]
     public static object?[]? Deserialize(string?[]? serializedData)
     {
         if (serializedData == null || serializedData.Length % 2 != 0)
@@ -111,14 +113,7 @@ internal static class DataSerializationHelper
 
             byte[] serializedDataBytes = Encoding.UTF8.GetBytes(serializedValue);
             using var memoryStream = new MemoryStream(serializedDataBytes);
-            // This should be safe as long as our generator mentions
-            // getting fields / properties of the target type. https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551
-            // Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.
-#pragma warning disable IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
-#pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
             data[i] = serializer.ReadObject(memoryStream);
-#pragma warning restore IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
-#pragma warning restore IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
             // For some reason, we don't get SerializationSurrogateProvider.GetDeserializedObject to be called by .NET runtime.
             // So we manually call it.
             data[i] = SerializationSurrogateProvider.GetDeserializedObject(data[i]!);
@@ -128,26 +123,20 @@ internal static class DataSerializationHelper
     }
 
     private static DataContractJsonSerializer GetSerializer(string assemblyQualifiedName)
-        => SerializerCache.GetOrAdd(
-            assemblyQualifiedName,
-            // This should be safe as long as our generator mentions
-            // getting fields / properties of the target type. https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551
-            // Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.
-#pragma warning disable IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
-#pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
-            _ => new DataContractJsonSerializer(PlatformServiceProvider.Instance.ReflectionOperations.GetType(assemblyQualifiedName) ?? typeof(object), SerializerSettings));
-#pragma warning restore IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
-#pragma warning restore IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
+        => SerializerCache.GetOrAdd(assemblyQualifiedName, CreateSerializerForAssemblyQualifiedName);
 
     private static DataContractJsonSerializer GetSerializer(Type type)
-        => SerializerCache.GetOrAdd(
-            type.AssemblyQualifiedName!,
-            // This should be safe as long as our generator mentions
-            // getting fields / properties of the target type. https://github.com/dotnet/runtime/issues/71350#issuecomment-1168140551
-            // Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.
-#pragma warning disable IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
-#pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
-            _ => new DataContractJsonSerializer(type, SerializerSettings));
+        => SerializerCache.GetOrAdd(type.AssemblyQualifiedName!, _ => CreateSerializerForType(type));
+
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:Members attributed with RequiresUnreferencedCode may break when trimming", Justification = DataContractSerializationJustification)]
+    [UnconditionalSuppressMessage("Aot", "IL3050:Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT", Justification = DataContractSerializationJustification)]
+    private static DataContractJsonSerializer CreateSerializerForAssemblyQualifiedName(string assemblyQualifiedName)
+        => new(PlatformServiceProvider.Instance.ReflectionOperations.GetType(assemblyQualifiedName) ?? typeof(object), SerializerSettings);
+
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:Members attributed with RequiresUnreferencedCode may break when trimming", Justification = DataContractSerializationJustification)]
+    [UnconditionalSuppressMessage("Aot", "IL3050:Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT", Justification = DataContractSerializationJustification)]
+    private static DataContractJsonSerializer CreateSerializerForType(Type type)
+        => new(type, SerializerSettings);
 
     [DataContract]
     private sealed class SurrogatedDateOnly
@@ -235,6 +224,4 @@ internal static class DataSerializationHelper
             return type;
         }
     }
-#pragma warning restore IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
-#pragma warning restore IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
 }

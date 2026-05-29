@@ -240,6 +240,8 @@ internal static class MethodInfoExtensions
     //
     // [DataRow(0, "Hello")]
     // public void TestMethod<T1, T2>(T2 p0, T1, p1) { }
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2060:Call to 'System.Reflection.MethodInfo.MakeGenericMethod' can not be statically analyzed.", Justification = "Generic test methods with substituted type arguments are part of MSTest's reflection-mode adapter. Native AOT support relies on MSTest source-generated metadata, not on this code path.")]
+    [UnconditionalSuppressMessage("Aot", "IL3050:Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT", Justification = "Generic test methods with substituted type arguments are part of MSTest's reflection-mode adapter. Native AOT support relies on MSTest source-generated metadata, not on this code path.")]
     private static MethodInfo ConstructGenericMethod(MethodInfo methodInfo, object?[]? arguments)
     {
         DebugEx.Assert(methodInfo.IsGenericMethod, "ConstructGenericMethod should only be called for a generic method.");
