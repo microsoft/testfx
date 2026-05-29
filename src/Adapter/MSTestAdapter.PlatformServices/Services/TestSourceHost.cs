@@ -113,10 +113,14 @@ internal class TestSourceHost : ITestSourceHost
     public void SetupHost()
     {
 #if NET && !WINDOWS_UWP
-        // In Native AOT, dynamic assembly loading is not supported, so the AssemblyResolver
-        // (which hooks AssemblyLoadContext.Resolving) can never fire. Skip its creation
-        // entirely; this also lets the trimmer drop GetResolutionPaths and the resolver
-        // itself from the published binary.
+        // When the runtime does not support dynamic code generation
+        // (RuntimeFeature.IsDynamicCodeSupported is false — Native AOT, Mono iOS AOT,
+        // Blazor WebAssembly AOT, ...), the host cannot load assemblies through
+        // reflection-style fallbacks, so the AssemblyResolver (which hooks
+        // AssemblyLoadContext.Resolving to load assemblies on demand) can never
+        // contribute anything useful. Skip its creation entirely; this also lets the
+        // trimmer drop GetResolutionPaths and the resolver itself from the published
+        // binary.
         if (RuntimeFeature.IsDynamicCodeSupported)
         {
             List<string> resolutionPaths = GetResolutionPaths(_sourceFileName, false);

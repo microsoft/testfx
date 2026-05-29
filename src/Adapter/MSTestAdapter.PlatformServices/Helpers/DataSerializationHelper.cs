@@ -31,10 +31,12 @@ internal static class DataSerializationHelper
     /// <param name="data">Data array to serialize.</param>
     /// <returns>Serialized array.</returns>
     /// <exception cref="NotSupportedException">
-    /// Thrown when running under Native AOT. DataContract-based serialization requires
-    /// dynamic code generation, which is unavailable in AOT. In AOT/MTP scenarios the
-    /// in-process <c>ActualData</c> reference is used instead, so this method should
-    /// never be reached at runtime.
+    /// Thrown when the runtime does not support dynamic code generation
+    /// (<see cref="RuntimeFeature.IsDynamicCodeSupported"/> is <see langword="false"/>),
+    /// for example under Native AOT, Mono AOT on iOS, or Blazor WebAssembly AOT.
+    /// DataContract-based serialization relies on dynamic code generation, and in such
+    /// AOT/MTP scenarios the in-process <c>ActualData</c> reference is used instead,
+    /// so this method should never be reached at runtime.
     /// </exception>
     public static string?[]? Serialize(object?[]? data)
     {
@@ -46,13 +48,16 @@ internal static class DataSerializationHelper
 #if NET
         if (!RuntimeFeature.IsDynamicCodeSupported)
         {
-            // Cross-process data serialization is not used in MTP / Native AOT scenarios;
-            // discovery sets ActualData (in-process reference) instead. If we reach here
-            // it means a vstest-style code path is being exercised in an AOT build, which
-            // is unsupported.
+            // Cross-process data serialization is not used when dynamic code generation is
+            // unavailable (Native AOT, Mono iOS AOT, Blazor WASM AOT, ...). In MTP mode,
+            // discovery sets ActualData (in-process reference) instead. Reaching this code
+            // means a vstest-style code path is being exercised in an AOT build, which is
+            // unsupported because DataContractJsonSerializer requires runtime code generation.
             throw new NotSupportedException(
-                "MSTest data-source argument serialization is not supported when running as Native AOT. " +
-                "Use Microsoft.Testing.Platform (MTP) mode, where parameterized test arguments are passed in-process.");
+                "MSTest data-source argument serialization is not supported when the runtime " +
+                "does not support dynamic code generation (Native AOT, Mono iOS AOT, Blazor " +
+                "WebAssembly AOT, ...). Use Microsoft.Testing.Platform (MTP) mode, where " +
+                "parameterized test arguments are passed in-process.");
         }
 #endif
 
@@ -102,10 +107,12 @@ internal static class DataSerializationHelper
     /// <param name="serializedData">Serialized data array to deserialize.</param>
     /// <returns>Deserialized array.</returns>
     /// <exception cref="NotSupportedException">
-    /// Thrown when running under Native AOT. DataContract-based deserialization requires
-    /// dynamic code generation, which is unavailable in AOT. In AOT/MTP scenarios the
-    /// in-process <c>ActualData</c> reference is used instead, so this method should
-    /// never be reached at runtime.
+    /// Thrown when the runtime does not support dynamic code generation
+    /// (<see cref="RuntimeFeature.IsDynamicCodeSupported"/> is <see langword="false"/>),
+    /// for example under Native AOT, Mono AOT on iOS, or Blazor WebAssembly AOT.
+    /// DataContract-based deserialization relies on dynamic code generation, and in such
+    /// AOT/MTP scenarios the in-process <c>ActualData</c> reference is used instead,
+    /// so this method should never be reached at runtime.
     /// </exception>
     public static object?[]? Deserialize(string?[]? serializedData)
     {
@@ -117,11 +124,14 @@ internal static class DataSerializationHelper
 #if NET
         if (!RuntimeFeature.IsDynamicCodeSupported)
         {
-            // See note on Serialize: the AOT/MTP execution path uses TestMethod.ActualData,
-            // so this branch should be unreachable at runtime.
+            // See note on Serialize: when dynamic code generation is unavailable
+            // (Native AOT, Mono iOS AOT, Blazor WASM AOT, ...), the execution path uses
+            // TestMethod.ActualData in MTP mode, so this branch should be unreachable.
             throw new NotSupportedException(
-                "MSTest data-source argument deserialization is not supported when running as Native AOT. " +
-                "Use Microsoft.Testing.Platform (MTP) mode, where parameterized test arguments are passed in-process.");
+                "MSTest data-source argument deserialization is not supported when the runtime " +
+                "does not support dynamic code generation (Native AOT, Mono iOS AOT, Blazor " +
+                "WebAssembly AOT, ...). Use Microsoft.Testing.Platform (MTP) mode, where " +
+                "parameterized test arguments are passed in-process.");
         }
 #endif
 
