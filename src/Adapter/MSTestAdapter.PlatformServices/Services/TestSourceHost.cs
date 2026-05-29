@@ -392,8 +392,10 @@ internal class TestSourceHost : ITestSourceHost
 #endif
         }
 
-        // We check for the empty path, and in single file mode, or on source gen mode we don't allow
-        // loading dependencies than from the current folder, which is what the default loader handles by itself.
+        // AssemblyFileLocator.TryGetLocation returns null when Assembly.Location is empty
+        // (single-file / Native AOT). In those scenarios we don't add the adapter or test platform
+        // directories to the resolution paths and rely on the default loader resolving dependencies
+        // from the current folder, which is what it handles by itself in single-file mode.
         string? adapterDirectory = Path.GetDirectoryName(AssemblyFileLocator.TryGetLocation(typeof(TestSourceHost).Assembly));
         if (!string.IsNullOrEmpty(adapterDirectory) && !resolutionPaths.Contains(adapterDirectory))
         {

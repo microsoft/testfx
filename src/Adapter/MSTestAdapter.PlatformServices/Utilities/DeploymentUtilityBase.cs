@@ -194,7 +194,8 @@ internal abstract class DeploymentUtilityBase
 
                     // Ignore the test platform files.
                     string tempFile = Path.GetFileName(fileToDeploy);
-                    // We throw when we run in source gen mode.
+                    // Use AssemblyFileLocator to safely obtain the file name even when Assembly.Location
+                    // is empty (single-file / Native AOT scenarios) by falling back to the simple name.
                     string assemblyName = AssemblyFileLocator.GetFileNameOrSimpleName(GetType().Assembly);
                     if (tempFile.Equals(assemblyName, StringComparison.OrdinalIgnoreCase))
                     {
