@@ -74,17 +74,7 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzer : DiagnosticAnalyzer
         }
 
         INamedTypeSymbol containingTypeSymbol = context.Symbol.ContainingType;
-        bool isTestClass = false;
-        foreach (AttributeData classAttribute in containingTypeSymbol.GetAttributes())
-        {
-            if (classAttribute.AttributeClass.Inherits(testClassAttributeSymbol))
-            {
-                isTestClass = true;
-                break;
-            }
-        }
-
-        if (!isTestClass)
+        if (!containingTypeSymbol.IsTestClass(testClassAttributeSymbol))
         {
             return;
         }
