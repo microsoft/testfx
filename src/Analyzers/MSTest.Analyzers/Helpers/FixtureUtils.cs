@@ -76,6 +76,12 @@ internal static class FixtureUtils
                 || SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, valueTaskSymbol);
     }
 
+    public static bool IsTestMethod(this IMethodSymbol methodSymbol, INamedTypeSymbol testMethodAttributeSymbol)
+        => methodSymbol.GetAttributes().IsTestMethod(testMethodAttributeSymbol);
+
+    public static bool IsTestMethod(this ImmutableArray<AttributeData> methodAttributes, INamedTypeSymbol testMethodAttributeSymbol)
+        => methodAttributes.Any(methodAttribute => methodAttribute.AttributeClass.Inherits(testMethodAttributeSymbol));
+
     public static bool IsInheritanceModeSet(this IMethodSymbol methodSymbol, INamedTypeSymbol? inheritanceBehaviorSymbol,
         INamedTypeSymbol? classInitializeOrCleanupAttributeSymbol)
     {
