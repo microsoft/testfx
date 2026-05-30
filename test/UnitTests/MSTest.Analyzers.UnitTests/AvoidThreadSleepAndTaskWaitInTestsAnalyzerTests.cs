@@ -643,6 +643,198 @@ public sealed class AvoidThreadSleepAndTaskWaitInTestsAnalyzerTests
     }
 
     [TestMethod]
+    public async Task TaskWaitInLocalFunctionInsideTestMethod_Diagnostic()
+    {
+        string code = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    void Local()
+                    {
+                        Task task = Task.CompletedTask;
+                        [|task.Wait()|];
+                    }
+
+                    Local();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task TaskWaitInLambdaInsideTestMethod_Diagnostic()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Action action = () =>
+                    {
+                        Task task = Task.CompletedTask;
+                        [|task.Wait()|];
+                    };
+                    action();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task TaskResultInLambdaInsideTestMethod_Diagnostic()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Func<int> func = () => [|Task.FromResult(42).Result|];
+                    _ = func();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task TaskWaitInLambdaInsideTestInitialize_Diagnostic()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public void Setup()
+                {
+                    Action action = () =>
+                    {
+                        Task task = Task.CompletedTask;
+                        [|task.Wait()|];
+                    };
+                    action();
+                }
+
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task TaskWaitAllInLambdaInsideTestMethod_Diagnostic()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Action action = () => [|Task.WaitAll(Task.CompletedTask)|];
+                    action();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task TaskWaitInVisualBasicTestMethod_Diagnostic()
+    {
+        string code = """
+            Imports System.Threading.Tasks
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub TestMethod()
+                    Dim t As Task = Task.CompletedTask
+                    [|t.Wait()|]
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task TaskWaitAllInVisualBasicTestMethod_Diagnostic()
+    {
+        string code = """
+            Imports System.Threading.Tasks
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub TestMethod()
+                    Dim t1 As Task = Task.CompletedTask
+                    Dim t2 As Task = Task.CompletedTask
+                    [|Task.WaitAll(t1, t2)|]
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task TaskWaitAnyInVisualBasicTestMethod_Diagnostic()
+    {
+        string code = """
+            Imports System.Threading.Tasks
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub TestMethod()
+                    Dim t1 As Task = Task.CompletedTask
+                    Dim t2 As Task = Task.CompletedTask
+                    [|Task.WaitAny(t1, t2)|]
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task ThreadSleepInVisualBasicTestMethod_Diagnostic()
     {
         string code = """
