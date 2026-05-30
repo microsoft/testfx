@@ -20,7 +20,7 @@
 
 ## Testing Opportunities Backlog
 
-1. **MSTEST0067 tests** — New analyzer (Thread.Sleep/Task.Wait/Task<T>.Result) added 2026-05-28. Check coverage of edge cases.
+1. ~~**MSTEST0067 tests**~~ — PR created (test-assist/mstest0067-additional-tests): 8 new edge case tests for lambda/local function + VB.NET.
 2. **MSTEST0066 tests** — False positive fix for `[Ignore(IgnoreMessage = "...")]` added 2026-05-28. Regression test may be worth reviewing.
 3. **MSTest.Engine unit test gaps** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner`, `TestFrameworkEngine` have no direct unit tests (all internal). ~1133 LOC source, only ~671 LOC tests.
 4. **MSTest.Engine BFSTestNodeVisitor** — Already has tests (345 LOC). Good baseline.
@@ -29,8 +29,9 @@
 
 | Date | Tasks |
 |------|-------|
+| 2026-05-30 | Task 3 (Implement MSTEST0067 edge cases), Task 7 (Monthly Issue) |
 | 2026-05-29 | Task 1 (Discovery), Task 2 (Opportunities), Task 7 (Monthly Issue) |
 
 ## Last Run
 
-2026-05-29 23:23 UTC
+2026-05-30 23:16 UTC
