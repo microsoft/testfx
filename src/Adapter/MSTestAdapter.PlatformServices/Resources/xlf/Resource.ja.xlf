@@ -273,12 +273,12 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
         <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>
-        <target state="new">Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</target>
+        <target state="translated">'RandomizeTestOrder' と 'OrderTestsByNameInClass' の両方が設定されています。'OrderTestsByNameInClass' は無視されます。</target>
         <note>{Locked="RandomizeTestOrder"}{Locked="OrderTestsByNameInClass"}</note>
       </trans-unit>
       <trans-unit id="RandomTestOrderBanner">
         <source>Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</source>
-        <target state="new">Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</target>
+        <target state="translated">ランダム テスト順序が有効になっています (Seed: {0})。この順序を再現するには、'RandomTestOrderSeed' を設定します。</target>
         <note>{Locked="Seed"}{Locked="RandomTestOrderSeed"}</note>
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">

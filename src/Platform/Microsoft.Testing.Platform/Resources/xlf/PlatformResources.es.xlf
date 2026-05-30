@@ -555,7 +555,7 @@ Opcionalmente, acepta "text" (la salida legible por el usuario predeterminada) o
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
         <source>'--server {0}' requires '--{1}' to be specified.</source>
-        <target state="new">'--server {0}' requires '--{1}' to be specified.</target>
+        <target state="translated">La opción "--server {0}" requiere que se especifique "--{1}".</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
@@ -665,7 +665,7 @@ El valor predeterminado es TestResults en el directorio que contiene la aplicaci
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerInvalidArgument">
         <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
-        <target state="new">'--server' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <target state="translated">"--server" recibió un valor inesperado "{0}". Los valores admitidos son: {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">

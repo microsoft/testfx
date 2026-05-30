@@ -159,17 +159,17 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsDescription">
         <source>Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</source>
-        <target state="new">Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</target>
+        <target state="translated">Bloquear de forma sincrónica el subproceso actual con "Thread.Sleep", "Task.Wait", "Task.WaitAll", "Task.WaitAny" o "Task&lt;TResult&gt;.Result" dentro de métodos o componentes de prueba es una fuente común de inestabilidad y también puede provocar interbloqueos cuando el marco de pruebas ejecuta pruebas en un SynchronizationContext que requiere planificación cooperativa. Se prefiere "await Task.Delay" para las esperas basadas en tiempo y "await" a la tarea para observar su resultado.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsMessageFormat">
         <source>Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</source>
-        <target state="new">Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</target>
+        <target state="translated">Evite "{0}" en el código de prueba, ya que puede provocar una flakiness de prueba; considere una alternativa asincrónica como "await Task.Delay" o "await" para la tarea</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsTitle">
         <source>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</source>
-        <target state="new">Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</target>
+        <target state="translated">Evite bloquear sincrónicamente llamadas como "Thread.Sleep", "Task.Wait", "Task.WaitAll", "Task.WaitAny" o "Task&lt;TResult&gt;. Result" en el código de prueba</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
@@ -539,17 +539,17 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationDescription">
         <source>An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</source>
-        <target state="new">An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</target>
+        <target state="translated">Un atributo "[Ignore]" aplicado a un método de prueba o clase de prueba debe incluir un mensaje no vacío que explique por qué se omite la prueba o clase. Un mensaje de justificación facilita la clasificación de las pruebas omitidas, ayuda a quienes revisan a entender la intención y evita que las pruebas se deshabiliten en silencio para siempre.</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationMessageFormat">
         <source>'[Ignore]' should specify a message explaining why '{0}' is ignored</source>
-        <target state="new">'[Ignore]' should specify a message explaining why '{0}' is ignored</target>
+        <target state="translated">"[Ignore]" debe especificar un mensaje que explique por qué se omite "{0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationTitle">
         <source>'[Ignore]' should specify a justification</source>
-        <target state="new">'[Ignore]' should specify a justification</target>
+        <target state="translated">"[Ignore]" debe especificar una justificación</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueDescription">
