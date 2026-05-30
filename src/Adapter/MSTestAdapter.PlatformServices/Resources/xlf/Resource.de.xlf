@@ -272,7 +272,7 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
       </trans-unit>
       <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
         <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>
-        <target state="new">Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</target>
+        <target state="translated">Sowohl „RandomizeTestOrder“ als auch „OrderTestsByNameInClass“ sind festgelegt. „OrderTestsByNameInClass“ wird ignoriert.</target>
         <note>{Locked="RandomizeTestOrder"}{Locked="OrderTestsByNameInClass"}</note>
       </trans-unit>
       <trans-unit id="RandomTestOrderBanner">
