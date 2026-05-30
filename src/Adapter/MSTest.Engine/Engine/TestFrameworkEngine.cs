@@ -135,11 +135,11 @@ internal sealed class TestFrameworkEngine : IDataProducer
         return Result.Ok();
     }
 
-    private async Task<BFSTestNodeVisitor> BuildTestNodesVisitorAsync(TestExecutionRequest request, IMessageBus messageBus, CancellationToken cancellationToken)
+    private async Task<BFSTestNodeVisitor> BuildTestNodesVisitorAsync(TestExecutionRequest executionRequest, IMessageBus messageBus, CancellationToken cancellationToken)
     {
         List<TestNode> allRootTestNodes = [];
         var argumentsManager = new TestArgumentsManager();
-        var testSessionContext = new TestSessionContext(_configuration, request.Session.SessionUid, data => PublishDataAsync(messageBus, data), cancellationToken);
+        var testSessionContext = new TestSessionContext(_configuration, executionRequest.Session.SessionUid, data => PublishDataAsync(messageBus, data), cancellationToken);
 
         foreach (ITestNodesBuilder testNodeBuilder in _testNodesBuilders)
         {
@@ -151,7 +151,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         // to ensure that no new registrations are allowed.
         argumentsManager.FreezeRegistration();
 
-        return new BFSTestNodeVisitor(allRootTestNodes, request.Filter, argumentsManager);
+        return new BFSTestNodeVisitor(allRootTestNodes, executionRequest.Filter, argumentsManager);
     }
 
     private static Result? CreateDuplicateNodeErrorResult(BFSTestNodeVisitor testNodesVisitor)
