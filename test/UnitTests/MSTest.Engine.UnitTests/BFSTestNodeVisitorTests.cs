@@ -182,7 +182,7 @@ public sealed class BFSTestNodeVisitorTests : TestBase
     [DataRow(nameof(InternalUnsafeActionTaskParameterizedTestNode<>))]
     [DataRow(nameof(InternalUnsafeAsyncActionTaskParameterizedTestNode<>))]
     [TestMethod]
-    public async Task ParameterizedNode_InvokeAsync_InvokesBodyForEachArgument(string parameterizedTestNode)
+    public async Task ParameterizedNodes_InvokeAsync_InvokesBodyForEachArgument(string parameterizedTestNode)
     {
         // Arrange
         List<byte> invokedArguments = [];
