@@ -185,14 +185,14 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
                 return (potentialProperty, false);
             }
 
-            IEnumerable<ISymbol> candidateMethods = potentialMembers.Where(m => m.Kind == SymbolKind.Method);
-            if (candidateMethods.Count() > 1)
+            var candidateMethods = potentialMembers.Where(m => m.Kind == SymbolKind.Method).ToImmutableArray();
+            if (candidateMethods.Length > 1)
             {
                 // If there are multiple methods with the same name, report a diagnostic. This is not a supported scenario.
                 return (null, true);
             }
 
-            return (candidateMethods.FirstOrDefault() ?? potentialMembers[0], false);
+            return (candidateMethods.IsEmpty ? potentialMembers[0] : candidateMethods[0], false);
         }
     }
 
