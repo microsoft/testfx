@@ -136,6 +136,7 @@ internal abstract class DeploymentUtilityBase
     /// <param name="deploymentDirectory">The deployment directory.</param>
     /// <param name="resultsDirectory">Root results directory.</param>
     /// <returns>Returns a list of deployment warnings.</returns>
+    [UnconditionalSuppressMessage("SingleFile", "IL3000:Avoid accessing Assembly file path when publishing as a single file", Justification = "Deployment is a reflection-mode/legacy adapter feature; in single-file/Native AOT scenarios Assembly.Location returns an empty string and the comparison falls through without error.")]
     protected IEnumerable<string> Deploy(IList<DeploymentItem> deploymentItems, string testSourceHandler, string deploymentDirectory, string resultsDirectory)
     {
         Ensure.NotNullOrWhiteSpace(deploymentDirectory);
@@ -194,9 +195,7 @@ internal abstract class DeploymentUtilityBase
                     // Ignore the test platform files.
                     string tempFile = Path.GetFileName(fileToDeploy);
                     // We throw when we run in source gen mode.
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
                     string assemblyName = Path.GetFileName(GetType().Assembly.Location);
-#pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
                     if (tempFile.Equals(assemblyName, StringComparison.OrdinalIgnoreCase))
                     {
                         continue;

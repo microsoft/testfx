@@ -350,6 +350,7 @@ internal class TestSourceHost : ITestSourceHost
     /// <returns>
     /// A list of path.
     /// </returns>
+    [UnconditionalSuppressMessage("SingleFile", "IL3000:Avoid accessing Assembly file path when publishing as a single file", Justification = "Assembly.Location is explicitly checked for empty before use; in single-file/Native AOT scenarios it returns empty and the affected blocks are skipped.")]
     internal virtual List<string> GetResolutionPaths(string sourceFileName, bool isPortableMode)
     {
         List<string> resolutionPaths =
@@ -380,7 +381,6 @@ internal class TestSourceHost : ITestSourceHost
 
         // We check for the empty path, and in single file mode, or on source gen mode we don't allow
         // loading dependencies than from the current folder, which is what the default loader handles by itself.
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
         if (!string.IsNullOrEmpty(typeof(TestSourceHost).Assembly.Location))
         {
             // Adding adapter folder to resolution paths
@@ -398,7 +398,6 @@ internal class TestSourceHost : ITestSourceHost
                 resolutionPaths.Add(Path.GetDirectoryName(typeof(AssemblyHelper).Assembly.Location)!);
             }
         }
-#pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
 
         return resolutionPaths;
     }

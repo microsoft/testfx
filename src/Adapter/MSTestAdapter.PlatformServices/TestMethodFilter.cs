@@ -117,6 +117,7 @@ internal sealed class TestMethodFilter
     /// <param name="context">Discovery context.</param>
     /// <param name="logger">The logger to log exception messages too.</param>
     /// <returns>Filter expression.</returns>
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2072:'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method.", Justification = "GetTestCaseFilter is part of the VSTest discovery contract on the concrete DiscoveryContext type; the runtime guarantees the method exists on supported hosts.")]
     private ITestCaseFilterExpression? GetTestCaseFilterFromDiscoveryContext(IDiscoveryContext context, IMessageLogger logger)
     {
         try
