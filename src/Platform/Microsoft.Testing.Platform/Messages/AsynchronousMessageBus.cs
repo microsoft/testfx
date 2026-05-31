@@ -214,6 +214,8 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
             processor.Dispose();
         }
 
+        _distinctProcessors = [];
+        _drainLastReceived = [];
         _consumerProcessor.Clear();
         _dataTypeConsumers.Clear();
     }
