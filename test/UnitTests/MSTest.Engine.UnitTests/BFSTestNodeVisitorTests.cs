@@ -190,14 +190,15 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         {
             nameof(InternalUnsafeActionParameterizedTestNode<>) => new InternalUnsafeActionParameterizedTestNode<byte>
             {
-                Body = (_, argument) =>
-                {
-                    invokedArguments.Add(argument);
-                },
+                StableUid = "ID1",
+                DisplayName = "A",
+                Body = (_, argument) => invokedArguments.Add(argument),
                 GetArguments = () => new byte[] { 0, 1 },
             },
             nameof(InternalUnsafeAsyncActionParameterizedTestNode<>) => new InternalUnsafeAsyncActionParameterizedTestNode<byte>
             {
+                StableUid = "ID1",
+                DisplayName = "A",
                 Body = (_, argument) =>
                 {
                     invokedArguments.Add(argument);
@@ -207,14 +208,15 @@ public sealed class BFSTestNodeVisitorTests : TestBase
             },
             nameof(InternalUnsafeActionTaskParameterizedTestNode<>) => new InternalUnsafeActionTaskParameterizedTestNode<byte>
             {
-                Body = (_, argument) =>
-                {
-                    invokedArguments.Add(argument);
-                },
+                StableUid = "ID1",
+                DisplayName = "A",
+                Body = (_, argument) => invokedArguments.Add(argument),
                 GetArguments = static () => Task.FromResult<IEnumerable<byte>>(new byte[] { 0, 1 }),
             },
             nameof(InternalUnsafeAsyncActionTaskParameterizedTestNode<>) => new InternalUnsafeAsyncActionTaskParameterizedTestNode<byte>
             {
+                StableUid = "ID1",
+                DisplayName = "A",
                 Body = (_, argument) =>
                 {
                     invokedArguments.Add(argument);
