@@ -82,7 +82,9 @@ Options:
         Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.
 Extension options:
     --crash-report
-        [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).
+        [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.
+    --crash-report-if-supported
+        Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.
     --crash-sequence
         Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
         The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
@@ -114,6 +116,8 @@ Extension options:
         Specify the type of the dump.
         Valid values are {{GetExpectedHangDumpDescriptionOptions(tfm)}}.
         Default type is 'Full'
+    --hangdump-type-if-supported
+        Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.
     --publish-azdo-run-name
         Custom Azure DevOps test run name for live test-result publishing.
     --publish-azdo-test-results
@@ -402,7 +406,11 @@ Registered command line providers:
       --crash-report
         Arity: 0
         Hidden: False
-        Description: [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).
+        Description: [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.
+      --crash-report-if-supported
+        Arity: 0
+        Hidden: False
+        Description: Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.
       --crash-sequence
         Arity: 1
         Hidden: False
@@ -455,6 +463,10 @@ Registered command line providers:
         Description: Specify the type of the dump.
         Valid values are {{GetExpectedHangDumpDescriptionOptions(tfm)}}.
         Default type is 'Full'
+      --hangdump-type-if-supported
+        Arity: 1
+        Hidden: False
+        Description: Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.
   HtmlReportGeneratorCommandLine
     Name: HTML report generator
     Version: *
