@@ -277,7 +277,7 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
       </trans-unit>
       <trans-unit id="RandomTestOrderBanner">
         <source>Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</source>
-        <target state="new">Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</target>
+        <target state="translated">Ordine di test casuale abilitato (Seed: {0}). Imposta 'RandomTestOrderSeed' per riprodurre questo ordine.</target>
         <note>{Locked="Seed"}{Locked="RandomTestOrderSeed"}</note>
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
