@@ -19,7 +19,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
     public bool AllowTestAdapterFrameworkRegistration { get; set; }
 
 #pragma warning disable CS0618 // Type or member is obsolete
-    private static Type[] InternalOnlyExtensions =>
+    private static readonly HashSet<Type> InternalOnlyExtensions =
     [
         // TestHost
         typeof(ITestHostApplicationLifetime),
