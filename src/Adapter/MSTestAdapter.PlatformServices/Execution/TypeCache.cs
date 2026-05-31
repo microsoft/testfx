@@ -1,10 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
 using System.Security;
-#endif
-#if !NETFRAMEWORK
+#if NET && !WINDOWS_UWP
 using System.Runtime.Loader;
 #endif
 
@@ -451,6 +449,33 @@ internal sealed class TypeCache
 
         foreach (Assembly candidate in EnumerateCandidateAssemblies(currentAssembly))
         {
+            // Cheap presence check via metadata: CustomAttributeData does not invoke the attribute
+            // constructor and so cannot trip on a typeof(...) argument whose target assembly fails
+            // to resolve. We only need to know whether the marker is on the assembly; if it is, an
+            // instantiation failure below becomes a real diagnostic instead of a silent drop.
+            bool hasMarker;
+            try
+            {
+                hasMarker = HasAssemblyFixtureProviderMarker(candidate);
+            }
+            catch (Exception ex)
+            {
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                        "TypeCache: Exception occurred while probing AssemblyFixtureProviderAttribute metadata from assembly {0}. {1}",
+                        SafeGetAssemblyName(candidate),
+                        ex);
+                }
+
+                continue;
+            }
+
+            if (!hasMarker)
+            {
+                continue;
+            }
+
             object[] markers;
             try
             {
@@ -458,15 +483,17 @@ internal sealed class TypeCache
             }
             catch (Exception ex)
             {
-                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
-                {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
-                        "TypeCache: Exception occurred while reading AssemblyFixtureProviderAttribute from assembly {0}. {1}",
-                        SafeGetAssemblyName(candidate),
-                        ex);
-                }
-
-                continue;
+                // The marker is present (CustomAttributeData saw it) but the attribute cannot be
+                // instantiated. This usually means the type referenced by typeof(...) cannot be
+                // loaded. [AssemblyFixtureProvider] is explicit opt-in: silently dropping the
+                // marker here would let assembly init/cleanup quietly disappear. Surface as a
+                // standard MSTest diagnostic so the failure is visible to the user.
+                string message = string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.UTA_AssemblyFixtureProviderLoadFailed,
+                    SafeGetAssemblyName(candidate) ?? "<unknown>",
+                    ex.Message);
+                throw new TypeInspectionException(message, ex);
             }
 
             if (markers is null || markers.Length == 0)
@@ -612,15 +639,16 @@ internal sealed class TypeCache
     {
         try
         {
-#if NETFRAMEWORK
-            return Assembly.Load(referenceName);
-#else
+#if NET && !WINDOWS_UWP
             // Resolve through the same AssemblyLoadContext as the referrer so plugin-style hosts
             // (which place the test assembly in a non-default ALC) don't end up loading a second
             // copy of the provider library into the default ALC, which would cause assembly
             // fixtures to mutate static state on the wrong assembly instance.
             AssemblyLoadContext loadContext = AssemblyLoadContext.GetLoadContext(referrer) ?? AssemblyLoadContext.Default;
             return loadContext.LoadFromAssemblyName(referenceName);
+#else
+            _ = referrer;
+            return Assembly.Load(referenceName);
 #endif
         }
         catch (Exception ex) when (ex is FileNotFoundException or FileLoadException or BadImageFormatException)
@@ -654,13 +682,30 @@ internal sealed class TypeCache
             || name.StartsWith("MSTest.", StringComparison.Ordinal)
             || name.StartsWith("MSTestAdapter.", StringComparison.Ordinal);
 
+    private static bool HasAssemblyFixtureProviderMarker(Assembly assembly)
+    {
+        // Compare on the attribute type's FullName so we don't trigger attribute construction
+        // (and therefore don't depend on the typeof(...) argument being resolvable). This is
+        // exactly the "is the marker present at all?" probe.
+        string markerFullName = typeof(AssemblyFixtureProviderAttribute).FullName!;
+        foreach (CustomAttributeData data in assembly.GetCustomAttributesData())
+        {
+            if (string.Equals(data.AttributeType.FullName, markerFullName, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static string? SafeGetAssemblyName(Assembly assembly)
     {
         try
         {
             return assembly.GetName().Name;
         }
-        catch
+        catch (Exception ex) when (ex is FileNotFoundException or FileLoadException or BadImageFormatException or SecurityException or NotSupportedException)
         {
             return null;
         }
