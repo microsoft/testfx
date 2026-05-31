@@ -8,7 +8,7 @@ using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
+internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBase
 {
     public const string HelpOptionKey = "help";
     public const string HelpOptionQuestionMark = "?";
@@ -78,25 +78,16 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         new(DotNetTestPipeOptionKey, PlatformResources.PlatformCommandLineDotnetTestPipe, ArgumentArity.ExactlyOne, true, isBuiltIn: true)
     ];
 
-    /// <inheritdoc />
-    public string Uid => nameof(PlatformCommandLineProvider);
+    public PlatformCommandLineProvider()
+        : base(nameof(PlatformCommandLineProvider),
+            PlatformVersion.Version,
+            PlatformResources.PlatformCommandLineProviderDisplayName,
+            PlatformResources.PlatformCommandLineProviderDescription,
+            PlatformCommandLineProviderCache)
+    {
+    }
 
-    /// <inheritdoc />
-    public string Version => PlatformVersion.Version;
-
-    /// <inheritdoc />
-    public string DisplayName { get; } = PlatformResources.PlatformCommandLineProviderDisplayName;
-
-    /// <inheritdoc />
-    public string Description { get; } = PlatformResources.PlatformCommandLineProviderDescription;
-
-    /// <inheritdoc />
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        => PlatformCommandLineProviderCache;
-
-    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
         if (commandOption.Name == DiagnosticVerbosityOptionKey)
         {

@@ -9,7 +9,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
-internal sealed class RetryCommandLineOptionsProvider : ICommandLineOptionsProvider
+internal sealed class RetryCommandLineOptionsProvider : CommandLineOptionsProviderBase
 {
     public const string RetryFailedTestsOptionName = "retry-failed-tests";
     public const string RetryFailedTestsMaxPercentageOptionName = "retry-failed-tests-max-percentage";
@@ -17,31 +17,27 @@ internal sealed class RetryCommandLineOptionsProvider : ICommandLineOptionsProvi
     public const string RetryFailedTestsDelayOptionName = "retry-failed-tests-delay";
     public const string RetryFailedTestsPipeNameOptionName = "internal-retry-pipename";
 
-    public string Uid => nameof(RetryCommandLineOptionsProvider);
+    public RetryCommandLineOptionsProvider()
+        : base(nameof(RetryCommandLineOptionsProvider),
+            ExtensionVersion.DefaultSemVer,
+            ExtensionResources.RetryFailedTestsExtensionDisplayName,
+            ExtensionResources.RetryFailedTestsExtensionDescription,
+            [
+                // The retry options are visible in --help today. We're still iterating on the feature
+                // with our dogfooders and may revisit visibility (and/or argument shapes) before
+                // declaring it stable.
+                new(RetryFailedTestsOptionName, ExtensionResources.RetryFailedTestsOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
+                new(RetryFailedTestsMaxPercentageOptionName, ExtensionResources.RetryFailedTestsMaxPercentageOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
+                new(RetryFailedTestsMaxTestsOptionName, ExtensionResources.RetryFailedTestsMaxTestsOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
+                new(RetryFailedTestsDelayOptionName, ExtensionResources.RetryFailedTestsDelayOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
 
-    public string Version => ExtensionVersion.DefaultSemVer;
+                // Hidden internal args
+                new(RetryFailedTestsPipeNameOptionName, "Communication between the test host and the retry infra.", ArgumentArity.ExactlyOne, isHidden: true, isBuiltIn: true)
+            ])
+    {
+    }
 
-    public string DisplayName => ExtensionResources.RetryFailedTestsExtensionDisplayName;
-
-    public string Description => ExtensionResources.RetryFailedTestsExtensionDescription;
-
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
-        [
-            // The retry options are visible in --help today. We're still iterating on the feature
-            // with our dogfooders and may revisit visibility (and/or argument shapes) before
-            // declaring it stable.
-            new(RetryFailedTestsOptionName, ExtensionResources.RetryFailedTestsOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
-            new(RetryFailedTestsMaxPercentageOptionName, ExtensionResources.RetryFailedTestsMaxPercentageOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
-            new(RetryFailedTestsMaxTestsOptionName, ExtensionResources.RetryFailedTestsMaxTestsOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
-            new(RetryFailedTestsDelayOptionName, ExtensionResources.RetryFailedTestsDelayOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
-
-            // Hidden internal args
-            new(RetryFailedTestsPipeNameOptionName, "Communication between the test host and the retry infra.", ArgumentArity.ExactlyOne, isHidden: true, isBuiltIn: true)
-        ];
-
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+    public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
     {
         if (commandLineOptions.IsOptionSet(RetryFailedTestsMaxPercentageOptionName) && commandLineOptions.IsOptionSet(RetryFailedTestsMaxTestsOptionName))
         {
@@ -67,7 +63,7 @@ internal sealed class RetryCommandLineOptionsProvider : ICommandLineOptionsProvi
         return ValidationResult.ValidTask;
     }
 
-    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
         if (commandOption.Name == RetryFailedTestsOptionName && !TryParseNonNegativeInt(arguments[0], out int _))
         {

@@ -10,7 +10,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class MaxFailedTestsCommandLineOptionsProvider(IExtension extension, IServiceProvider serviceProvider) : ICommandLineOptionsProvider
+internal sealed class MaxFailedTestsCommandLineOptionsProvider(IExtension extension, IServiceProvider serviceProvider) : CommandLineOptionsProviderBase(extension, OptionsCache)
 {
     internal const string MaxFailedTestsOptionKey = "maximum-failed-tests";
 
@@ -19,23 +19,7 @@ internal sealed class MaxFailedTestsCommandLineOptionsProvider(IExtension extens
         new(MaxFailedTestsOptionKey, PlatformResources.PlatformCommandLineMaxFailedTestsOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
     ];
 
-    public string Uid => extension.Uid;
-
-    public string Version => extension.Version;
-
-    public string DisplayName => extension.DisplayName;
-
-    public string Description => extension.Description;
-
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        => OptionsCache;
-
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => ValidationResult.ValidTask;
-
-    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
         if (commandOption.Name == MaxFailedTestsOptionKey)
         {

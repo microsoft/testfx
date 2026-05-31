@@ -11,7 +11,7 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 
 namespace Microsoft.Testing.Extensions.Reporting;
 
-internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvider
+internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProviderBase
 {
     private static readonly string[] ArtifactUploadModes =
     [
@@ -28,33 +28,28 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
         AzureDevOpsResources.DemoteKnownFlakyOptionDescription,
         AzureDevOpsReporter.KnownFlakyFailureRateThreshold * 100);
 
-    public string Uid => nameof(AzureDevOpsCommandLineProvider);
+    public AzureDevOpsCommandLineProvider()
+        : base(nameof(AzureDevOpsCommandLineProvider),
+            ExtensionVersion.DefaultSemVer,
+            AzureDevOpsResources.DisplayName,
+            AzureDevOpsResources.Description,
+            [
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName, AzureDevOpsResources.OptionDescription, ArgumentArity.Zero, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky, DemoteKnownFlakyOptionDescriptionFormatted, ArgumentArity.Zero, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory, AzureDevOpsResources.FlakyHistoryOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile, AzureDevOpsResources.QuarantineFileOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, AzureDevOpsResources.SeverityOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactExclude, AzureDevOpsResources.UploadArtifactExcludeOptionDescription, ArgumentArity.ZeroOrMore, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude, AzureDevOpsResources.UploadArtifactIncludeOptionDescription, ArgumentArity.ZeroOrMore, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactName, AzureDevOpsResources.UploadArtifactNameOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts, AzureDevOpsResources.UploadArtifactsOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.PublishAzureDevOpsRunNameOptionName, AzureDevOpsResources.PublishAzdoRunNameOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.PublishAzureDevOpsTestResultsOptionName, AzureDevOpsResources.PublishAzdoTestResultsOptionDescription, ArgumentArity.Zero, false),
+            ])
+    {
+    }
 
-    public string Version => ExtensionVersion.DefaultSemVer;
-
-    public string DisplayName => AzureDevOpsResources.DisplayName;
-
-    public string Description => AzureDevOpsResources.Description;
-
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        =>
-        [
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName, AzureDevOpsResources.OptionDescription, ArgumentArity.Zero, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky, DemoteKnownFlakyOptionDescriptionFormatted, ArgumentArity.Zero, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory, AzureDevOpsResources.FlakyHistoryOptionDescription, ArgumentArity.ExactlyOne, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile, AzureDevOpsResources.QuarantineFileOptionDescription, ArgumentArity.ExactlyOne, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, AzureDevOpsResources.SeverityOptionDescription, ArgumentArity.ExactlyOne, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactExclude, AzureDevOpsResources.UploadArtifactExcludeOptionDescription, ArgumentArity.ZeroOrMore, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude, AzureDevOpsResources.UploadArtifactIncludeOptionDescription, ArgumentArity.ZeroOrMore, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactName, AzureDevOpsResources.UploadArtifactNameOptionDescription, ArgumentArity.ExactlyOne, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts, AzureDevOpsResources.UploadArtifactsOptionDescription, ArgumentArity.ExactlyOne, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.PublishAzureDevOpsRunNameOptionName, AzureDevOpsResources.PublishAzdoRunNameOptionDescription, ArgumentArity.ExactlyOne, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.PublishAzureDevOpsTestResultsOptionName, AzureDevOpsResources.PublishAzdoTestResultsOptionDescription, ArgumentArity.Zero, false),
-        ];
-
-    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
         => commandOption.Name switch
         {
             AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory => ValidateFlakyHistoryArgumentsAsync(arguments),

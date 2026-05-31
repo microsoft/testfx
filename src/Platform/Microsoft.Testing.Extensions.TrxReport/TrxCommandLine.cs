@@ -9,36 +9,26 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
-internal sealed class TrxReportGeneratorCommandLine : ICommandLineOptionsProvider
+internal sealed class TrxReportGeneratorCommandLine : CommandLineOptionsProviderBase
 {
     public const string TrxReportOptionName = "report-trx";
     public const string TrxReportFileNameOptionName = "report-trx-filename";
 
     private static readonly char[] DirectorySeparators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
 
-    /// <inheritdoc />
-    public string Uid => nameof(TrxReportGeneratorCommandLine);
+    public TrxReportGeneratorCommandLine()
+        : base(nameof(TrxReportGeneratorCommandLine),
+            ExtensionVersion.DefaultSemVer,
+            ExtensionResources.TrxReportGeneratorDisplayName,
+            ExtensionResources.TrxReportGeneratorDescription,
+            [
+                new(TrxReportOptionName, ExtensionResources.TrxReportOptionDescription, ArgumentArity.Zero, false),
+                new(TrxReportFileNameOptionName, ExtensionResources.TrxReportFileNameOptionDescription, ArgumentArity.ExactlyOne, false)
+            ])
+    {
+    }
 
-    /// <inheritdoc />
-    public string Version => ExtensionVersion.DefaultSemVer;
-
-    /// <inheritdoc />
-    public string DisplayName { get; } = ExtensionResources.TrxReportGeneratorDisplayName;
-
-    /// <inheritdoc />
-    public string Description { get; } = ExtensionResources.TrxReportGeneratorDescription;
-
-    /// <inheritdoc />
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        =>
-        [
-            new(TrxReportOptionName, ExtensionResources.TrxReportOptionDescription, ArgumentArity.Zero, false),
-            new(TrxReportFileNameOptionName, ExtensionResources.TrxReportFileNameOptionDescription, ArgumentArity.ExactlyOne, false)
-        ];
-
-    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
         if (commandOption.Name == TrxReportFileNameOptionName)
         {

@@ -8,43 +8,20 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
 
-internal sealed class TestRunParametersCommandLineOptionsProvider : ICommandLineOptionsProvider
+internal sealed class TestRunParametersCommandLineOptionsProvider : CommandLineOptionsProviderBase
 {
     public const string TestRunParameterOptionName = "test-parameter";
 
     public TestRunParametersCommandLineOptionsProvider(IExtension extension)
+        : base(extension,
+        [
+            new CommandLineOption(TestRunParameterOptionName, ExtensionResources.TestRunParameterOptionDescription, ArgumentArity.OneOrMore, false)
+        ])
     {
-        Uid = extension.Uid;
-        DisplayName = extension.DisplayName;
-        Description = extension.Description;
-        Version = extension.Version;
     }
 
     /// <inheritdoc />
-    public string Uid { get; }
-
-    /// <inheritdoc />
-    public string Version { get; }
-
-    /// <inheritdoc />
-    public string DisplayName { get; }
-
-    /// <inheritdoc />
-    public string Description { get; }
-
-    /// <inheritdoc />
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    /// <inheritdoc />
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        => [new CommandLineOption(TestRunParameterOptionName, ExtensionResources.TestRunParameterOptionDescription, ArgumentArity.OneOrMore, false)];
-
-    /// <inheritdoc />
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => ValidationResult.ValidTask;
-
-    /// <inheritdoc />
-    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
         foreach (string argument in arguments)
         {
