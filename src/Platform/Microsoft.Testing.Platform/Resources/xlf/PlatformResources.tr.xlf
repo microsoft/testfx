@@ -555,7 +555,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
         <source>'--server {0}' requires '--{1}' to be specified.</source>
-        <target state="new">'--server {0}' requires '--{1}' to be specified.</target>
+        <target state="translated">'--server {0}' için '--{1}' belirtilmelidir.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
@@ -665,7 +665,7 @@ Varsayılan değer, test uygulamasını içeren dizindeki TestResults'dır.</tar
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerInvalidArgument">
         <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
-        <target state="new">'--server' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <target state="translated">'--server', beklenmeyen '{0}' değerini aldı. Desteklenen değerler: {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
