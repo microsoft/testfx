@@ -24,6 +24,8 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
     private readonly Dictionary<Type, List<IAsyncConsumerDataProcessor>> _dataTypeConsumers = [];
     private readonly IDataConsumer[] _dataConsumers;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
+    private IAsyncConsumerDataProcessor[] _distinctProcessors = [];
+    private long[] _drainLastReceived = [];
     private bool _disabled;
 
     public AsynchronousMessageBus(
@@ -75,6 +77,9 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
                 asyncMultiProducerMultiConsumerDataProcessors.Add(asyncMultiProducerMultiConsumerDataProcessor);
             }
         }
+
+        _distinctProcessors = [.. _consumerProcessor.Values];
+        _drainLastReceived = new long[_distinctProcessors.Length];
     }
 
     public override async Task PublishAsync(IDataProducer dataProducer, IData data)
@@ -142,10 +147,9 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
         }
 
         var stopwatch = Stopwatch.StartNew();
-        var lastReceived = new Dictionary<IAsyncConsumerDataProcessor, long>();
-        foreach (IAsyncConsumerDataProcessor processor in _consumerProcessor.Values)
+        for (int i = 0; i < _distinctProcessors.Length; i++)
         {
-            lastReceived[processor] = processor.ReceivedCount;
+            _drainLastReceived[i] = _distinctProcessors[i].ReceivedCount;
         }
 
         for (int attempt = 0; attempt < maxAttempts; attempt++)
@@ -155,18 +159,18 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
                 return;
             }
 
-            foreach (IAsyncConsumerDataProcessor processor in _consumerProcessor.Values)
+            for (int i = 0; i < _distinctProcessors.Length; i++)
             {
-                await processor.DrainDataAsync().ConfigureAwait(false);
+                await _distinctProcessors[i].DrainDataAsync().ConfigureAwait(false);
             }
 
             bool anyNewlyReceived = false;
-            foreach (IAsyncConsumerDataProcessor processor in _consumerProcessor.Values)
+            for (int i = 0; i < _distinctProcessors.Length; i++)
             {
-                long currentReceived = processor.ReceivedCount;
-                if (currentReceived != lastReceived[processor])
+                long currentReceived = _distinctProcessors[i].ReceivedCount;
+                if (currentReceived != _drainLastReceived[i])
                 {
-                    lastReceived[processor] = currentReceived;
+                    _drainLastReceived[i] = currentReceived;
                     anyNewlyReceived = true;
                 }
             }
@@ -179,7 +183,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
         StringBuilder builder = new();
         builder.Append(CultureInfo.InvariantCulture, $"Publisher/Consumer loop detected during the drain after {stopwatch.Elapsed}.");
-        foreach (IAsyncConsumerDataProcessor processor in _consumerProcessor.Values)
+        foreach (IAsyncConsumerDataProcessor processor in _distinctProcessors)
         {
             builder.AppendLine();
             builder.Append(CultureInfo.InvariantCulture, $"Consumer '{processor.DataConsumer}' payload received {processor.ReceivedCount}.");
@@ -197,25 +201,21 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
         _disabled = true;
 
-        foreach (List<IAsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
+        foreach (IAsyncConsumerDataProcessor processor in _distinctProcessors)
         {
-            foreach (IAsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
-            {
-                await asyncMultiProducerMultiConsumerDataProcessor.CompleteAddingAsync().ConfigureAwait(false);
-            }
+            await processor.CompleteAddingAsync().ConfigureAwait(false);
         }
     }
 
     public override void Dispose()
     {
-        foreach (List<IAsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
+        foreach (IAsyncConsumerDataProcessor processor in _distinctProcessors)
         {
-            foreach (IAsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
-            {
-                asyncMultiProducerMultiConsumerDataProcessor.Dispose();
-            }
+            processor.Dispose();
         }
 
+        _distinctProcessors = [];
+        _drainLastReceived = [];
         _consumerProcessor.Clear();
         _dataTypeConsumers.Clear();
     }
