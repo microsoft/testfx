@@ -386,9 +386,9 @@ internal abstract class BaseSerializer
         Type type when type == typeof(int) => sizeof(int),
         Type type when type == typeof(long) => sizeof(long),
         Type type when type == typeof(short) => sizeof(short),
+        Type type when type == typeof(ushort) => sizeof(ushort),
         Type type when type == typeof(bool) => sizeof(bool),
         Type type when type == typeof(byte) => sizeof(byte),
-        Type type when type == typeof(long) => sizeof(long),
         _ => 0,
     };
 
