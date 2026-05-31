@@ -2,52 +2,22 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
-internal sealed class ConsoleErrorRouter : TextWriter
+internal sealed class ConsoleErrorRouter : ConsoleRouter
 {
-    private readonly TextWriter _originalConsoleErr;
-
     public ConsoleErrorRouter(TextWriter originalConsoleErr)
-        => _originalConsoleErr = originalConsoleErr;
-
-    public override Encoding Encoding => Encoding.UTF8;
-
-    public override void Write(char value)
+        : base(originalConsoleErr)
     {
-        if (TestContext.Current is TestContextImplementation testContext)
-        {
-            testContext.WriteConsoleErr(value);
-        }
-        else
-        {
-            _originalConsoleErr.Write(value);
-        }
     }
 
-    public override void Write(string? value)
-    {
-        if (TestContext.Current is TestContextImplementation testContext)
-        {
-            testContext.WriteConsoleErr(value);
-        }
-        else
-        {
-            _originalConsoleErr.Write(value);
-        }
-    }
+    protected override void WriteToTestContext(TestContextImplementation testContext, char value)
+        => testContext.WriteConsoleErr(value);
 
-    public override void Write(char[] buffer, int index, int count)
-    {
-        if (TestContext.Current is TestContextImplementation testContext)
-        {
-            testContext.WriteConsoleErr(buffer, index, count);
-        }
-        else
-        {
-            _originalConsoleErr.Write(buffer, index, count);
-        }
-    }
+    protected override void WriteToTestContext(TestContextImplementation testContext, string? value)
+        => testContext.WriteConsoleErr(value);
+
+    protected override void WriteToTestContext(TestContextImplementation testContext, char[] buffer, int index, int count)
+        => testContext.WriteConsoleErr(buffer, index, count);
 }
