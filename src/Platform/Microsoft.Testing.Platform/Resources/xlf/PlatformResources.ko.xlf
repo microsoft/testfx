@@ -555,7 +555,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
         <source>'--server {0}' requires '--{1}' to be specified.</source>
-        <target state="new">'--server {0}' requires '--{1}' to be specified.</target>
+        <target state="translated">'--server {0}'를 사용하려면 '--{1}'를 지정해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
@@ -665,7 +665,7 @@ The default is TestResults in the directory that contains the test application.<
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerInvalidArgument">
         <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
-        <target state="new">'--server' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <target state="translated">'--server'가 예기치 않은 값 '{0}'을(를) 받았습니다. 지원되는 값은 {1}입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">

@@ -277,7 +277,7 @@ pero recibió {4} argumentos, con los tipos '{5}'.</target>
       </trans-unit>
       <trans-unit id="RandomTestOrderBanner">
         <source>Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</source>
-        <target state="new">Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</target>
+        <target state="translated">Orden de prueba aleatorio habilitado (Seed: {0}). Establezca "RandomTestOrderSeed" para reproducir este orden.</target>
         <note>{Locked="Seed"}{Locked="RandomTestOrderSeed"}</note>
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">

@@ -277,7 +277,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="RandomTestOrderBanner">
         <source>Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</source>
-        <target state="new">Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</target>
+        <target state="translated">已啟用隨機測試順序 (Seed: {0})。設定 'RandomTestOrderSeed' 以重現此順序。</target>
         <note>{Locked="Seed"}{Locked="RandomTestOrderSeed"}</note>
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">

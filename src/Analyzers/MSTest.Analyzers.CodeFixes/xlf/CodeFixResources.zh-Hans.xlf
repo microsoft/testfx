@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="AddIgnoreJustificationFix">
         <source>Add a placeholder justification to '[Ignore]'</source>
-        <target state="new">Add a placeholder justification to '[Ignore]'</target>
+        <target state="translated">向 "[Ignore]" 添加占位符理由</target>
         <note />
       </trans-unit>
       <trans-unit id="AddTestClassFix">

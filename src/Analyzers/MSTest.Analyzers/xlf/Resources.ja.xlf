@@ -159,17 +159,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsDescription">
         <source>Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</source>
-        <target state="new">Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</target>
+        <target state="translated">テスト メソッドまたはテスト フィクスチャ内で、'Thread.Sleep'、'Task.Wait'、'Task.WaitAll'、'Task.WaitAny'、または 'Task&lt;TResult&gt;.Result' を使用して現在のスレッドを同期的にブロックすると、不安定化の一般的な原因になります。また、テスト フレームワークが、協調的なスケジューリングを必要とする SynchronizationContext 上でテストを実行する場合、デッドロックを引き起こす可能性があります。時間ベースの待機には 'await Task.Delay' を、タスクの結果を観察するには 'await' を使用します。</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsMessageFormat">
         <source>Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</source>
-        <target state="new">Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</target>
+        <target state="translated">テスト コード内での '{0}' の使用はテストの不安定化を引き起こす可能性があるため避け、'await Task.Delay' やタスクの'await' などの非同期の代替手段を検討してください</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsTitle">
         <source>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</source>
-        <target state="new">Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</target>
+        <target state="translated">テスト コードでは、'Thread.Sleep'、'Task.Wait'、'Task.WaitAll'、'Task.WaitAny'、'Task&lt;TResult&gt;.Result' などの同期的にブロックする呼び出しは避けてください</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
@@ -539,17 +539,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationDescription">
         <source>An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</source>
-        <target state="new">An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</target>
+        <target state="translated">テスト メソッドまたはテスト クラスに適用される '[Ignore]' 属性には、テストまたはクラスが無視される理由を説明する、空でないメッセージを含める必要があります。正当化メッセージがあると、スキップされたテストのトリアージがしやすくなり、レビュー担当者が意図を理解しやすくなり、テストが静かに無効化されたままになるのを防げます。</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationMessageFormat">
         <source>'[Ignore]' should specify a message explaining why '{0}' is ignored</source>
-        <target state="new">'[Ignore]' should specify a message explaining why '{0}' is ignored</target>
+        <target state="translated">'[Ignore]' では、'{0}' を無視する理由を説明するメッセージを指定する必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationTitle">
         <source>'[Ignore]' should specify a justification</source>
-        <target state="new">'[Ignore]' should specify a justification</target>
+        <target state="translated">'[Ignore]' は理由を指定する必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueDescription">
