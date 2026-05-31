@@ -16,29 +16,44 @@ internal abstract class ConsoleRouter : TextWriter
     public override Encoding Encoding => Encoding.UTF8;
 
     public override void Write(char value)
-        => Write(testContext => WriteToTestContext(testContext, value), () => _originalConsole.Write(value));
+    {
+        if (TestContext.Current is TestContextImplementation testContext)
+        {
+            WriteToTestContext(testContext, value);
+        }
+        else
+        {
+            _originalConsole.Write(value);
+        }
+    }
 
     public override void Write(string? value)
-        => Write(testContext => WriteToTestContext(testContext, value), () => _originalConsole.Write(value));
+    {
+        if (TestContext.Current is TestContextImplementation testContext)
+        {
+            WriteToTestContext(testContext, value);
+        }
+        else
+        {
+            _originalConsole.Write(value);
+        }
+    }
 
     public override void Write(char[] buffer, int index, int count)
-        => Write(testContext => WriteToTestContext(testContext, buffer, index, count), () => _originalConsole.Write(buffer, index, count));
+    {
+        if (TestContext.Current is TestContextImplementation testContext)
+        {
+            WriteToTestContext(testContext, buffer, index, count);
+        }
+        else
+        {
+            _originalConsole.Write(buffer, index, count);
+        }
+    }
 
     protected abstract void WriteToTestContext(TestContextImplementation testContext, char value);
 
     protected abstract void WriteToTestContext(TestContextImplementation testContext, string? value);
 
     protected abstract void WriteToTestContext(TestContextImplementation testContext, char[] buffer, int index, int count);
-
-    private static void Write(Action<TestContextImplementation> writeToTestContext, Action writeToOriginalConsole)
-    {
-        if (TestContext.Current is TestContextImplementation testContext)
-        {
-            writeToTestContext(testContext);
-        }
-        else
-        {
-            writeToOriginalConsole();
-        }
-    }
 }
