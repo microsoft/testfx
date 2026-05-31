@@ -555,7 +555,7 @@ Akzeptiert optional „text“ (die standardmäsige lesbare Ausgabe) oder „jso
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
         <source>'--server {0}' requires '--{1}' to be specified.</source>
-        <target state="new">'--server {0}' requires '--{1}' to be specified.</target>
+        <target state="translated">„--server {0}' reqiueres'--{1}“ muss angegeben werden.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
@@ -665,7 +665,7 @@ Der Standardwert ist "TestResults" im Verzeichnis, das die Testanwendung enthäl
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerInvalidArgument">
         <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
-        <target state="new">'--server' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <target state="translated">„--server“ hat den unerwarteten Wert „{0}“ empfangen. Folgende Werte werden unterstützt: {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">

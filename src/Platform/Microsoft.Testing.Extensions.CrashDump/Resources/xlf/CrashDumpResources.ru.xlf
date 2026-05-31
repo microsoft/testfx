@@ -111,6 +111,11 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
         <target state="translated">"--hangdump-type" ожидает в качестве аргумента один тип дампа (например, "--crashdump-type Heap")</target>
         <note />
       </trans-unit>
+      <trans-unit id="CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage">
+        <source>'--crash-report' and '--crash-report-if-supported' are mutually exclusive. Use '--crash-report-if-supported' to opt into a best-effort crash report that is silently skipped on platforms where it is not supported, or '--crash-report' to fail fast when the option cannot be honored.</source>
+        <target state="new">'--crash-report' and '--crash-report-if-supported' are mutually exclusive. Use '--crash-report-if-supported' to opt into a best-effort crash report that is silently skipped on platforms where it is not supported, or '--crash-report' to fail fast when the option cannot be honored.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CrashReportArtifactDescription">
         <source>The testhost process crash report file</source>
         <target state="translated">Файл отчета об аварийном завершении тестового хост-процесса</target>
@@ -121,14 +126,29 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
         <target state="translated">Файл отчета об аварийном завершении</target>
         <note />
       </trans-unit>
+      <trans-unit id="CrashReportIfSupportedIgnoredOnNetFrameworkInfoMessage">
+        <source>'--crash-report-if-supported' was specified but is being ignored on this runtime: the .NET Framework testhost does not support the runtime-based crash dump / crash report mechanism. No crash report file will be produced.</source>
+        <target state="new">'--crash-report-if-supported' was specified but is being ignored on this runtime: the .NET Framework testhost does not support the runtime-based crash dump / crash report mechanism. No crash report file will be produced.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashReportIfSupportedIgnoredOnWindowsInfoMessage">
+        <source>'--crash-report-if-supported' was specified but is being ignored on this platform: the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on Windows (see https://github.com/dotnet/runtime/issues/80191). No crash report file will be produced.</source>
+        <target state="new">'--crash-report-if-supported' was specified but is being ignored on this platform: the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on Windows (see https://github.com/dotnet/runtime/issues/80191). No crash report file will be produced.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashReportIfSupportedOptionDescription">
+        <source>Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</source>
+        <target state="new">Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">
-        <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crashdump' to generate a crash dump file instead.</source>
-        <target state="translated">Параметр --crash-report не поддерживается в Windows, так как среда выполнения .NET на этой платформе игнорирует базовые переменные среды DOTNET_EnableCrashReport и DOTNET_EnableCrashReportOnly. См. https://github.com/dotnet/runtime/issues/80191. Чтобы создать файл аварийного дампа, используйте --crashdump.</target>
+        <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</source>
+        <target state="new">'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashReportOptionDescription">
-        <source>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).</source>
-        <target state="translated">[Только для Linux/macOS] Создать JSON-отчет об аварийном завершении, если процесс тестирования завершается аварийно. Чтобы также создать файл дампа, используйте вместе с --crashdump. При отдельном использовании требуется .NET 7+; в сочетании с --crashdump — .NET 6+. Это требование среды выполнения не применяется принудительно средством: в неподдерживаемых средах выполнения отчет об аварийном завершении не создается. Не поддерживается в Windows из-за ограничения среды выполнения .NET (dotnet/runtime#80191).</target>
+        <source>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.</source>
+        <target state="new">[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashSequenceOptionDescription">
