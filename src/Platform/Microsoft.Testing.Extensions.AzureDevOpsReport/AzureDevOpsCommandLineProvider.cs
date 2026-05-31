@@ -29,7 +29,8 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
         AzureDevOpsReporter.KnownFlakyFailureRateThreshold * 100);
 
     public AzureDevOpsCommandLineProvider()
-        : base(nameof(AzureDevOpsCommandLineProvider),
+        : base(
+            nameof(AzureDevOpsCommandLineProvider),
             ExtensionVersion.DefaultSemVer,
             AzureDevOpsResources.DisplayName,
             AzureDevOpsResources.Description,
@@ -62,7 +63,7 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
             _ => ValidationResult.ValidTask,
         };
 
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+    public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
     {
         string? errorMessage = null;
         if (!commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName))

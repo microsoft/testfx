@@ -18,7 +18,8 @@ internal sealed class RetryCommandLineOptionsProvider : CommandLineOptionsProvid
     public const string RetryFailedTestsPipeNameOptionName = "internal-retry-pipename";
 
     public RetryCommandLineOptionsProvider()
-        : base(nameof(RetryCommandLineOptionsProvider),
+        : base(
+            nameof(RetryCommandLineOptionsProvider),
             ExtensionVersion.DefaultSemVer,
             ExtensionResources.RetryFailedTestsExtensionDisplayName,
             ExtensionResources.RetryFailedTestsExtensionDescription,

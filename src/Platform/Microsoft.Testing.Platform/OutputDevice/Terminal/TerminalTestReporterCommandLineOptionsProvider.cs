@@ -24,7 +24,8 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
     public const string ShowOutputNoneArgument = "none";
 
     public TerminalTestReporterCommandLineOptionsProvider()
-        : base(nameof(TerminalTestReporterCommandLineOptionsProvider),
+        : base(
+            nameof(TerminalTestReporterCommandLineOptionsProvider),
             PlatformVersion.Version,
             PlatformResources.TerminalTestReporterDisplayName,
             PlatformResources.TerminalTestReporterDescription,
@@ -60,5 +61,4 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
         => ShowOutputAllArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)
             || ShowOutputFailedArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)
             || ShowOutputNoneArgument.Equals(argument, StringComparison.OrdinalIgnoreCase);
-
 }

@@ -79,7 +79,8 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
     ];
 
     public PlatformCommandLineProvider()
-        : base(nameof(PlatformCommandLineProvider),
+        : base(
+            nameof(PlatformCommandLineProvider),
             PlatformVersion.Version,
             PlatformResources.PlatformCommandLineProviderDisplayName,
             PlatformResources.PlatformCommandLineProviderDescription,
@@ -184,7 +185,7 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             ? ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionSingleArgument)
             : ValidationResult.ValidTask;
 
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+    public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
     {
         if (!commandLineOptions.IsOptionSet(DiagnosticOptionKey))
         {

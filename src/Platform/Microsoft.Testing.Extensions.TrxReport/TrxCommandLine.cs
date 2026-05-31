@@ -17,7 +17,8 @@ internal sealed class TrxReportGeneratorCommandLine : CommandLineOptionsProvider
     private static readonly char[] DirectorySeparators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
 
     public TrxReportGeneratorCommandLine()
-        : base(nameof(TrxReportGeneratorCommandLine),
+        : base(
+            nameof(TrxReportGeneratorCommandLine),
             ExtensionVersion.DefaultSemVer,
             ExtensionResources.TrxReportGeneratorDisplayName,
             ExtensionResources.TrxReportGeneratorDescription,
@@ -122,7 +123,7 @@ internal sealed class TrxReportGeneratorCommandLine : CommandLineOptionsProvider
 #endif
     }
 
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+    public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
     {
         if (commandLineOptions.IsOptionSet(TrxReportFileNameOptionName)
             && !commandLineOptions.IsOptionSet(TrxReportOptionName))

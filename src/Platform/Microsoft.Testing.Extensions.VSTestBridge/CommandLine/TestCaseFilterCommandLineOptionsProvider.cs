@@ -16,10 +16,11 @@ internal sealed class TestCaseFilterCommandLineOptionsProvider : CommandLineOpti
     public const string TestCaseFilterOptionName = "filter";
 
     public TestCaseFilterCommandLineOptionsProvider(IExtension extension)
-        : base(extension,
-        [
-            new(TestCaseFilterOptionName, ExtensionResources.TestCaseFilterOptionDescription, ArgumentArity.ExactlyOne, false)
-        ])
+        : base(
+            extension,
+            [
+                new(TestCaseFilterOptionName, ExtensionResources.TestCaseFilterOptionDescription, ArgumentArity.ExactlyOne, false)
+            ])
     {
     }
 }

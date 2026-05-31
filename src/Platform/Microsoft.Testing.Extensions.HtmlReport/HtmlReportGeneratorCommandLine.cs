@@ -17,7 +17,8 @@ internal sealed class HtmlReportGeneratorCommandLine : CommandLineOptionsProvide
     private static readonly char[] DirectorySeparators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
 
     public HtmlReportGeneratorCommandLine()
-        : base(nameof(HtmlReportGeneratorCommandLine),
+        : base(
+            nameof(HtmlReportGeneratorCommandLine),
             ExtensionVersion.DefaultSemVer,
             ExtensionResources.HtmlReportGeneratorDisplayName,
             ExtensionResources.HtmlReportGeneratorDescription,
@@ -59,7 +60,7 @@ internal sealed class HtmlReportGeneratorCommandLine : CommandLineOptionsProvide
         return ValidationResult.ValidTask;
     }
 
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+    public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
         => commandLineOptions.IsOptionSet(HtmlReportFileNameOptionName) && !commandLineOptions.IsOptionSet(HtmlReportOptionName)
             ? ValidationResult.InvalidTask(ExtensionResources.HtmlReportFileNameRequiresHtmlReport)
             : commandLineOptions.IsOptionSet(HtmlReportOptionName) && commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)

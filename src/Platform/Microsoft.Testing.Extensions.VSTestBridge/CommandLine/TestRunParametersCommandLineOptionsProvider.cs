@@ -13,10 +13,11 @@ internal sealed class TestRunParametersCommandLineOptionsProvider : CommandLineO
     public const string TestRunParameterOptionName = "test-parameter";
 
     public TestRunParametersCommandLineOptionsProvider(IExtension extension)
-        : base(extension,
-        [
-            new CommandLineOption(TestRunParameterOptionName, ExtensionResources.TestRunParameterOptionDescription, ArgumentArity.OneOrMore, false)
-        ])
+        : base(
+            extension,
+            [
+                new CommandLineOption(TestRunParameterOptionName, ExtensionResources.TestRunParameterOptionDescription, ArgumentArity.OneOrMore, false)
+            ])
     {
     }
 

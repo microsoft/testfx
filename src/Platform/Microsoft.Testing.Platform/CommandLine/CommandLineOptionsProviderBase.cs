@@ -27,7 +27,8 @@ internal abstract class CommandLineOptionsProviderBase : ICommandLineOptionsProv
     protected CommandLineOptionsProviderBase(
         IExtension extension,
         IReadOnlyCollection<CommandLineOption> commandLineOptions)
-        : this((extension ?? throw new ArgumentNullException(nameof(extension))).Uid,
+        : this(
+            (extension ?? throw new ArgumentNullException(nameof(extension))).Uid,
             extension.Version,
             extension.DisplayName,
             extension.Description,
