@@ -113,12 +113,11 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             // supported value (see MapToSupportedDumpType) and emit a single informational
             // message so the CI log makes the substitution visible without breaking the run.
             string requested = dumpTypeIfSupported[0];
-            string mapped = HangDumpCommandLineProvider.MapToSupportedDumpType(requested);
-            _dumpType = mapped;
-            if (!string.Equals(mapped, requested, StringComparison.OrdinalIgnoreCase))
+            _dumpType = HangDumpCommandLineProvider.MapToSupportedDumpType(requested);
+            if (!string.Equals(_dumpType, requested, StringComparison.OrdinalIgnoreCase))
             {
                 await _outputDisplay.DisplayAsync(
-                    new FormattedTextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeIfSupportedFallbackInfoMessage, requested, mapped)),
+                    new FormattedTextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeIfSupportedFallbackInfoMessage, requested, _dumpType)),
                     cancellationToken).ConfigureAwait(false);
             }
         }
