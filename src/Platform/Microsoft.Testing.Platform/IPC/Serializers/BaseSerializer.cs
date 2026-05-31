@@ -71,34 +71,6 @@ internal abstract class BaseSerializer
         }
     }
 
-    protected static void WriteStringValue(Stream stream, string str)
-    {
-        int stringutf8TotalBytes = Encoding.UTF8.GetByteCount(str);
-        byte[] bytes = ArrayPool<byte>.Shared.Rent(stringutf8TotalBytes);
-        try
-        {
-            Encoding.UTF8.GetBytes(str, bytes);
-            stream.Write(bytes, 0, stringutf8TotalBytes);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(bytes);
-        }
-    }
-
-    protected static void WriteStringSize(Stream stream, string str)
-    {
-        int stringutf8TotalBytes = Encoding.UTF8.GetByteCount(str);
-        Span<byte> len = stackalloc byte[sizeof(int)];
-
-        if (!BitConverter.TryWriteBytes(len, stringutf8TotalBytes))
-        {
-            throw ApplicationStateGuard.Unreachable();
-        }
-
-        stream.Write(len);
-    }
-
     protected static void WriteSize<T>(Stream stream)
         where T : struct
     {
@@ -213,19 +185,6 @@ internal abstract class BaseSerializer
         stream.Write(bytes, 0, bytes.Length);
     }
 
-    protected static void WriteStringValue(Stream stream, string str)
-    {
-        byte[] bytes = Encoding.UTF8.GetBytes(str);
-        stream.Write(bytes, 0, bytes.Length);
-    }
-
-    protected static void WriteStringSize(Stream stream, string str)
-    {
-        byte[] bytes = Encoding.UTF8.GetBytes(str);
-        byte[] len = BitConverter.GetBytes(bytes.Length);
-        stream.Write(len, 0, len.Length);
-    }
-
     protected static void WriteSize<T>(Stream stream)
         where T : struct
     {
@@ -299,8 +258,7 @@ internal abstract class BaseSerializer
         }
 
         WriteUShort(stream, id);
-        WriteStringSize(stream, value);
-        WriteStringValue(stream, value);
+        WriteString(stream, value);
     }
 
     protected static void WriteField(Stream stream, ushort id, long? value)
