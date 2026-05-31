@@ -52,12 +52,12 @@ internal sealed class CrashDumpCommandLineProvider : CommandLineOptionsProviderB
 
     public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
         => IsCrashDumpMainOptionMissing(commandLineOptions)
-            ? ValidationResult.InvalidTask(CrashDumpResources.MissingCrashDumpMainOption)
-            : AreCrashReportOptionsMutuallyExclusive(commandLineOptions)
-            ? ValidationResult.InvalidTask(CrashDumpResources.CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage)
-            : IsCrashReportUnsupportedOnCurrentPlatform(commandLineOptions)
-            ? ValidationResult.InvalidTask(CrashDumpResources.CrashReportNotSupportedOnWindowsErrorMessage)
-            : ValidationResult.ValidTask;
+        ? ValidationResult.InvalidTask(CrashDumpResources.MissingCrashDumpMainOption)
+        : AreCrashReportOptionsMutuallyExclusive(commandLineOptions)
+        ? ValidationResult.InvalidTask(CrashDumpResources.CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage)
+        : IsCrashReportUnsupportedOnCurrentPlatform(commandLineOptions)
+        ? ValidationResult.InvalidTask(CrashDumpResources.CrashReportNotSupportedOnWindowsErrorMessage)
+        : ValidationResult.ValidTask;
 
     private static bool AreCrashReportOptionsMutuallyExclusive(ICommandLineOptions commandLineOptions)
         => commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName) &&
