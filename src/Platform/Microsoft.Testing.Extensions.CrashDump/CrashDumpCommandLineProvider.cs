@@ -15,6 +15,7 @@ internal sealed class CrashDumpCommandLineProvider : CommandLineOptionsProviderB
     [
         new(CrashDumpCommandLineOptions.CrashDumpOptionName, CrashDumpResources.CrashDumpOptionDescription, ArgumentArity.Zero, false),
         new(CrashDumpCommandLineOptions.CrashReportOptionName, CrashDumpResources.CrashReportOptionDescription, ArgumentArity.Zero, false),
+        new(CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName, CrashDumpResources.CrashReportIfSupportedOptionDescription, ArgumentArity.Zero, false),
         new(CrashDumpCommandLineOptions.CrashSequenceOptionName, CrashDumpResources.CrashSequenceOptionDescription, ArgumentArity.ExactlyOne, false),
         new(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, CrashDumpResources.CrashDumpFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
         new(CrashDumpCommandLineOptions.CrashDumpTypeOptionName, CrashDumpResources.CrashDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false)
@@ -52,9 +53,15 @@ internal sealed class CrashDumpCommandLineProvider : CommandLineOptionsProviderB
     public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
         => IsCrashDumpMainOptionMissing(commandLineOptions)
             ? ValidationResult.InvalidTask(CrashDumpResources.MissingCrashDumpMainOption)
+            : AreCrashReportOptionsMutuallyExclusive(commandLineOptions)
+            ? ValidationResult.InvalidTask(CrashDumpResources.CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage)
             : IsCrashReportUnsupportedOnCurrentPlatform(commandLineOptions)
             ? ValidationResult.InvalidTask(CrashDumpResources.CrashReportNotSupportedOnWindowsErrorMessage)
             : ValidationResult.ValidTask;
+
+    private static bool AreCrashReportOptionsMutuallyExclusive(ICommandLineOptions commandLineOptions)
+        => commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName) &&
+            commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName);
 
     private static bool IsCrashReportUnsupportedOnCurrentPlatform(ICommandLineOptions commandLineOptions)
         => commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName) &&
@@ -66,7 +73,8 @@ internal sealed class CrashDumpCommandLineProvider : CommandLineOptionsProviderB
             commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpTypeOptionName) ||
             commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashSequenceOptionName);
         bool hasCrashDumpMainOption = commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) ||
-            commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
+            commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName) ||
+            commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName);
 
         return hasCrashDumpSubOption && !hasCrashDumpMainOption;
     }

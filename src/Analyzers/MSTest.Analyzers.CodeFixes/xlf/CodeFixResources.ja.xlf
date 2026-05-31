@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="AddIgnoreJustificationFix">
         <source>Add a placeholder justification to '[Ignore]'</source>
-        <target state="new">Add a placeholder justification to '[Ignore]'</target>
+        <target state="translated">プレースホルダーの両端揃えに '[無視]' を追加する</target>
         <note />
       </trans-unit>
       <trans-unit id="AddTestClassFix">

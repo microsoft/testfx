@@ -53,21 +53,13 @@ public sealed class UseConditionBaseWithTestClassAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol conditionBaseAttributeSymbol)
     {
-        INamedTypeSymbol? conditionBaseAttribute = null;
-        bool isTestClass = false;
-        foreach (AttributeData attribute in context.Symbol.GetAttributes())
-        {
-            if (attribute.AttributeClass.Inherits(testClassAttributeSymbol))
-            {
-                isTestClass = true;
-            }
-            else if (attribute.AttributeClass.Inherits(conditionBaseAttributeSymbol))
-            {
-                conditionBaseAttribute = attribute.AttributeClass;
-            }
-        }
+        ImmutableArray<AttributeData> typeAttributes = context.Symbol.GetAttributes();
 
-        if (conditionBaseAttribute is not null && !isTestClass)
+        INamedTypeSymbol? conditionBaseAttribute = typeAttributes
+            .FirstOrDefault(attribute => attribute.AttributeClass.Inherits(conditionBaseAttributeSymbol))
+            ?.AttributeClass;
+
+        if (conditionBaseAttribute is not null && !typeAttributes.IsTestClass(testClassAttributeSymbol))
         {
             context.ReportDiagnostic(context.Symbol.CreateDiagnostic(UseConditionBaseWithTestClassRule, conditionBaseAttribute.Name));
         }

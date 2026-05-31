@@ -30,7 +30,7 @@ public sealed class AvoidThreadSleepAndTaskWaitInTestsAnalyzer : DiagnosticAnaly
         Description,
         Category.Usage,
         DiagnosticSeverity.Info,
-        isEnabledByDefault: true);
+        isEnabledByDefault: false);
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }

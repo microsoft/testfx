@@ -190,6 +190,15 @@ The timeout value is specified in one of the following formats:
   <data name="HangDumpTimeoutOptionInvalidArgument" xml:space="preserve">
     <value>'--hangdump-timeout' expects a single timeout argument</value>
   </data>
+  <data name="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage" xml:space="preserve">
+    <value>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</value>
+  </data>
+  <data name="HangDumpTypeIfSupportedFallbackInfoMessage" xml:space="preserve">
+    <value>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</value>
+  </data>
+  <data name="HangDumpTypeIfSupportedOptionDescription" xml:space="preserve">
+    <value>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</value>
+  </data>
   <data name="HangDumpTypeOptionDescription" xml:space="preserve">
     <value>Specify the type of the dump.
 Valid values are {0}.

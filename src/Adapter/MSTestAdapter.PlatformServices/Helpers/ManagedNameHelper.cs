@@ -112,6 +112,7 @@ internal static class ManagedNameHelper
     /// More information about <paramref name="managedTypeName"/> and <paramref name="managedMethodName"/> can be found in
     /// <see href="https://github.com/microsoft/vstest/blob/main/docs/RFCs/0017-Managed-TestCase-Properties.md">the RFC</see>.
     /// </remarks>
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:Members attributed with RequiresUnreferencedCode may break when trimming", Justification = "Reflection-based name resolution is used by the legacy VSTest bridge for managed-name lookup. Native AOT support relies on MSTest source-generated reflection metadata, not on this code path.")]
     public static MethodInfo GetMethod(Assembly assembly, string managedTypeName, string managedMethodName)
     {
         Type type = assembly.GetType(managedTypeName, throwOnError: false, ignoreCase: false)
@@ -128,6 +129,7 @@ internal static class ManagedNameHelper
         return method ?? throw new InvalidManagedNameException();
     }
 
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2070:'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method.", Justification = "Reflection-based name resolution is used by the legacy VSTest bridge for managed-name lookup. Native AOT support relies on MSTest source-generated reflection metadata, not on this code path.")]
     private static MethodInfo? FindMethod(Type type, string methodName, int methodArity, string[]? parameterTypes)
     {
         bool Filter(MemberInfo mbr, object? param)

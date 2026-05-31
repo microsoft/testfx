@@ -63,17 +63,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
     {
         var classSymbol = (INamedTypeSymbol)context.Symbol;
 
-        bool isTestClass = false;
-        foreach (AttributeData classAttribute in classSymbol.GetAttributes())
-        {
-            if (classAttribute.AttributeClass.Inherits(testClassAttributeSymbol))
-            {
-                isTestClass = true;
-                break;
-            }
-        }
-
-        if (!isTestClass)
+        if (!classSymbol.IsTestClass(testClassAttributeSymbol))
         {
             return;
         }
