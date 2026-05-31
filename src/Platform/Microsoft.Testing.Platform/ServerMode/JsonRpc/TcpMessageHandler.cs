@@ -120,14 +120,34 @@ internal sealed class TcpMessageHandler(
     public async Task WriteRequestAsync(RpcMessage message, CancellationToken cancellationToken)
     {
         string messageStr = await _formatter.SerializeAsync(message).ConfigureAwait(false);
-        await _writer.WriteLineAsync($"Content-Length: {Encoding.UTF8.GetByteCount(messageStr)}").ConfigureAwait(false);
+
+        // Encode the message body once to avoid scanning the string twice:
+        // once in GetByteCount (for the Content-Length header) and once via StreamWriter encoding.
+#if NETCOREAPP
+        int byteCount = Encoding.UTF8.GetByteCount(messageStr);
+        byte[] rentedBytes = ArrayPool<byte>.Shared.Rent(byteCount);
+        try
+        {
+            Encoding.UTF8.GetBytes(messageStr, rentedBytes);
+            await _writer.WriteLineAsync($"Content-Length: {byteCount}").ConfigureAwait(false);
+            await _writer.WriteLineAsync("Content-Type: application/testingplatform").ConfigureAwait(false);
+            await _writer.WriteLineAsync().ConfigureAwait(false);
+            await _writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+            await _writer.BaseStream.WriteAsync(rentedBytes.AsMemory(0, byteCount), cancellationToken).ConfigureAwait(false);
+            await _writer.BaseStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(rentedBytes);
+        }
+#else
+        byte[] messageBytes = Encoding.UTF8.GetBytes(messageStr);
+        await _writer.WriteLineAsync($"Content-Length: {messageBytes.Length}").ConfigureAwait(false);
         await _writer.WriteLineAsync("Content-Type: application/testingplatform").ConfigureAwait(false);
         await _writer.WriteLineAsync().ConfigureAwait(false);
-        await _writer.WriteAsync(messageStr).ConfigureAwait(false);
-#if NETCOREAPP
-        await _writer.FlushAsync(cancellationToken).ConfigureAwait(false);
-#else
         await _writer.FlushAsync().ConfigureAwait(false);
+        await _writer.BaseStream.WriteAsync(messageBytes, 0, messageBytes.Length, cancellationToken).ConfigureAwait(false);
+        await _writer.BaseStream.FlushAsync(cancellationToken).ConfigureAwait(false);
 #endif
     }
 
