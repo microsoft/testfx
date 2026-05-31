@@ -157,5 +157,7 @@ public sealed class CommandLineOptionsProviderBaseTests
         public string DisplayName => "extension-display";
 
         public string Description => "extension-description";
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
     }
 }
