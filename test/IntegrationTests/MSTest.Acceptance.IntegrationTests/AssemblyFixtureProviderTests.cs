@@ -15,7 +15,9 @@ public sealed class AssemblyFixtureProviderTests : AcceptanceTestBase<AssemblyFi
     public async Task AssemblyFixtureProvider_FromReferencedLibrary_RunsAssemblyInitializeAndCleanup(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.TestProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        // Pass --settings my.runsettings so CaptureTraceOutput=false forwards Console.WriteLine
+        // output to stdout (otherwise MSTest captures it and the assertions below cannot see it).
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
