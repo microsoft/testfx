@@ -31,12 +31,6 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
     private readonly ILogger _logger;
     private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
-    private readonly MemoryStream _serializationBuffer = new();
-    private readonly MemoryStream _messageBuffer = new();
-    private readonly byte[] _readBuffer = new byte[250000];
-#if NET
-    private readonly byte[] _sizeOfIntArray = new byte[sizeof(int)];
-#endif
     private Task? _loopTask;
     private bool _disposed;
 
@@ -128,166 +122,38 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
     /// </summary>
     private async Task InternalLoopAsync(CancellationToken cancellationToken)
     {
-        int currentMessageSize = 0;
-        int missingBytesToReadOfWholeMessage = 0;
         while (true)
         {
-            int currentReadIndex = 0;
-#if NET
-            int currentReadBytes = await _namedPipeServerStream.ReadAsync(_readBuffer.AsMemory(currentReadIndex, _readBuffer.Length), cancellationToken).ConfigureAwait(false);
-#else
-            int currentReadBytes = await _namedPipeServerStream.ReadAsync(_readBuffer, currentReadIndex, _readBuffer.Length, cancellationToken).ConfigureAwait(false);
-#endif
-            if (currentReadBytes == 0)
+            // Read the next request; null means the client disconnected
+            object? requestObject = await ReadNextMessageAsync(_namedPipeServerStream, cancellationToken).ConfigureAwait(false);
+            if (requestObject is null)
             {
-                // The client has disconnected
                 await _logger.LogDebugAsync($"Client disconnected from pipe '{PipeName.Name}', exiting read loop").ConfigureAwait(false);
                 return;
             }
 
-            // Reset the current chunk size
-            int missingBytesToReadOfCurrentChunk = currentReadBytes;
+            // Dispatch the request and obtain the response
+            IResponse response = await _callback((IRequest)requestObject).ConfigureAwait(false);
 
-            // If currentRequestSize is 0, we need to read the message size
-            if (currentMessageSize == 0)
+            // Serialize and send the response
+            INamedPipeSerializer responseNamedPipeSerializer = GetSerializer(response.GetType());
+            bool clientDisconnected = false;
+            try
             {
-                // We need to read the message size, first 4 bytes
-                if (currentReadBytes < sizeof(int))
-                {
-                    throw ApplicationStateGuard.Unreachable();
-                }
-
-                currentMessageSize = BitConverter.ToInt32(_readBuffer, 0);
-                missingBytesToReadOfCurrentChunk = currentReadBytes - sizeof(int);
-                missingBytesToReadOfWholeMessage = currentMessageSize;
-                currentReadIndex = sizeof(int);
+                await WriteMessageAsync(_namedPipeServerStream, responseNamedPipeSerializer, response, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is IOException or ObjectDisposedException)
+            {
+                // The client disconnected while we were writing the reply. Treat it as a graceful disconnect
+                // (symmetric with the read-side EOF handling above) so the server loop exits without crashing
+                // the host.
+                await _logger.LogDebugAsync($"Pipe {PipeName.Name} broken while writing reply; treating as client disconnect: {ex.Message}").ConfigureAwait(false);
+                clientDisconnected = true;
             }
 
-            if (missingBytesToReadOfCurrentChunk > 0)
+            if (clientDisconnected)
             {
-                // We need to read the rest of the message
-#if NET
-                await _messageBuffer.WriteAsync(_readBuffer.AsMemory(currentReadIndex, missingBytesToReadOfCurrentChunk), cancellationToken).ConfigureAwait(false);
-#else
-                await _messageBuffer.WriteAsync(_readBuffer, currentReadIndex, missingBytesToReadOfCurrentChunk, cancellationToken).ConfigureAwait(false);
-#endif
-                missingBytesToReadOfWholeMessage -= missingBytesToReadOfCurrentChunk;
-            }
-
-            if (missingBytesToReadOfWholeMessage < 0)
-            {
-                throw ApplicationStateGuard.Unreachable();
-            }
-
-            // If we have read all the message, we can deserialize it
-            if (missingBytesToReadOfWholeMessage == 0)
-            {
-                // Deserialize the message
-                _messageBuffer.Position = 0;
-
-                // Get the serializer id
-                int serializerId = BitConverter.ToInt32(_messageBuffer.GetBuffer(), 0);
-
-                // Get the serializer
-                INamedPipeSerializer requestNamedPipeSerializer = GetSerializer(serializerId);
-
-                // Deserialize the message
-                _messageBuffer.Position += sizeof(int); // Skip the serializer id
-                var deserializedObject = (IRequest)requestNamedPipeSerializer.Deserialize(_messageBuffer);
-
-                // Call the callback
-                IResponse response = await _callback(deserializedObject).ConfigureAwait(false);
-
-                // Write the message size
-                _messageBuffer.Position = 0;
-
-                // Get the response serializer
-                INamedPipeSerializer responseNamedPipeSerializer = GetSerializer(response.GetType());
-
-                // Serialize the response
-                responseNamedPipeSerializer.Serialize(response, _serializationBuffer);
-
-                // The length of the message is the size of the message plus one byte to store the serializer id
-                // Space for the message
-                int sizeOfTheWholeMessage = (int)_serializationBuffer.Position;
-
-                // Space for the serializer id
-                sizeOfTheWholeMessage += sizeof(int);
-
-                // Write the message size
-#if NET
-                byte[] bytes = _sizeOfIntArray;
-                ApplicationStateGuard.Ensure(bytes.Length == sizeof(int));
-                if (!BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage))
-                {
-                    // TryWriteBytes only fails if the destination is too small.
-                    // Here, we are writing an int, and we already ensured that the length is correct before calling TryWriteBytes.
-                    throw ApplicationStateGuard.Unreachable();
-                }
-
-                await _messageBuffer.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
-#else
-                await _messageBuffer.WriteAsync(BitConverter.GetBytes(sizeOfTheWholeMessage), 0, sizeof(int), cancellationToken).ConfigureAwait(false);
-#endif
-
-                // Write the serializer id
-#if NET
-                bytes = _sizeOfIntArray;
-                if (!BitConverter.TryWriteBytes(bytes, responseNamedPipeSerializer.Id))
-                {
-                    throw ApplicationStateGuard.Unreachable();
-                }
-
-                await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
-#else
-                await _messageBuffer.WriteAsync(BitConverter.GetBytes(responseNamedPipeSerializer.Id), 0, sizeof(int), cancellationToken).ConfigureAwait(false);
-#endif
-
-                // Write the message
-#if NET
-                await _messageBuffer.WriteAsync(_serializationBuffer.GetBuffer().AsMemory(0, (int)_serializationBuffer.Position), cancellationToken).ConfigureAwait(false);
-#else
-                await _messageBuffer.WriteAsync(_serializationBuffer.GetBuffer(), 0, (int)_serializationBuffer.Position, cancellationToken).ConfigureAwait(false);
-#endif
-
-                // Send the message
-                bool clientDisconnected = false;
-                try
-                {
-#if NET
-                    await _namedPipeServerStream.WriteAsync(_messageBuffer.GetBuffer().AsMemory(0, (int)_messageBuffer.Position), cancellationToken).ConfigureAwait(false);
-#else
-                    await _namedPipeServerStream.WriteAsync(_messageBuffer.GetBuffer(), 0, (int)_messageBuffer.Position, cancellationToken).ConfigureAwait(false);
-#endif
-                    await _namedPipeServerStream.FlushAsync(cancellationToken).ConfigureAwait(false);
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        _namedPipeServerStream.WaitForPipeDrain();
-                    }
-                }
-                catch (Exception ex) when (ex is IOException or ObjectDisposedException)
-                {
-                    // The client disconnected while we were writing the reply. Treat it as a graceful disconnect
-                    // (symmetric with the read-side EOF handling above) so the server loop exits without crashing
-                    // the host.
-                    await _logger.LogDebugAsync($"Pipe {PipeName.Name} broken while writing reply; treating as client disconnect: {ex.Message}").ConfigureAwait(false);
-                    clientDisconnected = true;
-                }
-                finally
-                {
-                    // Reset the buffers
-                    _messageBuffer.Position = 0;
-                    _serializationBuffer.Position = 0;
-                }
-
-                if (clientDisconnected)
-                {
-                    return;
-                }
-
-                // Reset the control variables
-                currentMessageSize = 0;
-                missingBytesToReadOfWholeMessage = 0;
+                return;
             }
         }
     }
@@ -328,6 +194,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         }
 
         _namedPipeServerStream.Dispose();
+        DisposeBuffers();
 
         _disposed = true;
     }
@@ -362,6 +229,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         }
 
         _namedPipeServerStream.Dispose();
+        DisposeBuffers();
 
         _disposed = true;
     }
