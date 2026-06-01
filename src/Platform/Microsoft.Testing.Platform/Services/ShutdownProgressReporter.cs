@@ -145,7 +145,7 @@ internal sealed class ShutdownProgressReporter : IShutdownProgressReporter, IOut
             {
                 await _logger.LogWarningAsync($"Shutdown progress watchdog failed: {ex}").ConfigureAwait(false);
             }
-            catch
+            catch (Exception)
             {
                 // Swallow - we are during shutdown.
             }
@@ -175,7 +175,7 @@ internal sealed class ShutdownProgressReporter : IShutdownProgressReporter, IOut
         {
             await _logger.LogInformationAsync(message).ConfigureAwait(false);
         }
-        catch
+        catch (Exception)
         {
             // Logging during shutdown is best-effort.
         }
@@ -190,7 +190,7 @@ internal sealed class ShutdownProgressReporter : IShutdownProgressReporter, IOut
             {
                 // Expected on dispose.
             }
-            catch
+            catch (Exception)
             {
                 // Output during shutdown is best-effort.
             }
