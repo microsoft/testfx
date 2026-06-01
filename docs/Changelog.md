@@ -1812,7 +1812,7 @@ See full log [of v3.2.0-preview.23623.1...v3.2.0-preview.24069.3](https://github
 
 ## <a name="3.2.0-preview.23623.1" />[3.2.0-preview.23623.1] - 2023-12-23
 
-See full log [of v3.2.0-preview.23622.1...3.2.0-preview.23623.1](https://github.com/microsoft/testfx/compare/v3.2.0-preview.23622.1...v3.2.0-preview.23623.1)
+See full log [of v3.2.0-preview.23622.1...v3.2.0-preview.23623.1](https://github.com/microsoft/testfx/compare/v3.2.0-preview.23622.1...v3.2.0-preview.23623.1)
 
 ### Fixed
 
