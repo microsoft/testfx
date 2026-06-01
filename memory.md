@@ -1,7 +1,7 @@
 # Efficiency Improver Memory — microsoft/testfx
 
 ## Last Updated
-2026-05-31
+2026-06-01
 
 ## Build/Test Commands
 - Build: `./build.sh` (Linux/macOS), `.\build.cmd` (Windows)
@@ -12,19 +12,21 @@
 - NOTE: `--no-restore` flag is broken (MSBuild unknown switch); always run with restore
 
 ## Tasks Last Run (round-robin cursor)
-- 2026-05-29: Task 1 (discover commands), Task 2 (identify opportunities), Task 3 (implement), Task 7 (monthly summary)
-- 2026-05-30: Task 3 (implement), Task 4 (maintain PRs — PR #8692 all CI green), Task 7 (monthly summary)
-- 2026-05-31: Task 3 (implement TcpMessageHandler), Task 7 (monthly summary)
+- 2026-05-29: Task 1, Task 2, Task 3, Task 7
+- 2026-05-30: Task 3, Task 4, Task 7
+- 2026-05-31: Task 3, Task 7
+- 2026-06-01: Task 3 (TrxReportEngine single-pass), Task 7
 
 ## Completed Work
-- PR #8692: perf: reduce redundant UTF-8 string encoding in IPC BaseSerializer (MERGED by Evangelink 2026-05-31)
-- PR #8705: perf: avoid double IEnumerable enumeration in DynamicDataShouldBeValidAnalyzer (MERGED by Evangelink 2026-05-31)
-- PR efficiency/tcp-message-handler-single-utf8-encode: perf: encode JSON body once in TcpMessageHandler.WriteRequestAsync (open, submitted 2026-05-31)
+- PR #8692: perf: reduce redundant UTF-8 string encoding in IPC BaseSerializer (MERGED 2026-05-31)
+- PR #8705: perf: avoid double IEnumerable enumeration in DynamicDataShouldBeValidAnalyzer (MERGED 2026-05-31)
+- PR #8720: perf: encode JSON body once in TcpMessageHandler.WriteRequestAsync (MERGED 2026-06-01)
+- PR (efficiency/trx-single-pass-messages): perf: single-pass TRX message partitioning in TrxReportEngine (submitted 2026-06-01)
 
 ## Optimisation Backlog
 | Priority | Focus Area | Opportunity | Estimated Impact |
 |----------|------------|-------------|------------------|
-| LOW | Code-Level | ToolsTestHost.cs:55 - GroupBy().Where(x => x.Count() > 1).ToList().ForEach() - startup code, low priority |
+| LOW | Code-Level | ToolsTestHost.cs:55 - GroupBy().Where(x => x.Count() > 1).ToList().ForEach() - startup code, negligible |
 
 ## Efficiency Notes
 - Platform uses ArrayPool<byte> in NETCOREAPP path (good)
@@ -34,3 +36,4 @@
 - TreeNodeFilter uses compiled Regex (already optimized)
 - No BenchmarkDotNet benchmarks in repo; performance tests use PerfView
 - TcpMessageHandler is server mode only (--server flag, IDE-driven test runs)
+- TrxReportEngine.Results.cs: trxMessages was enumerated 6x per test result; now 1x (2026-06-01)
