@@ -1651,7 +1651,7 @@ See full log [of v3.2.1...v3.2.2](https://github.com/microsoft/testfx/compare/v3
 
 ## <a name="3.2.1" />[3.2.1] - 2024-02-13
 
-See full log [of v3.2.0...v3.2.1](https://github.com/microsoft/testfx/compare/v.3.2.0...v3.2.1)
+See full log [of v3.2.0...v3.2.1](https://github.com/microsoft/testfx/compare/v3.2.0...v3.2.1)
 
 ### Fixed
 
