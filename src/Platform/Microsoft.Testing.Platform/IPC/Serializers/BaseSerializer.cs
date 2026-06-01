@@ -5,11 +5,8 @@
 using System.Buffers;
 #endif
 
-#if NET
-using Microsoft.Testing.Platform.Helpers;
-#endif
-
 using Microsoft.CodeAnalysis;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.IPC.Serializers;
 
@@ -344,10 +341,10 @@ internal abstract class BaseSerializer
         Type type when type == typeof(int) => sizeof(int),
         Type type when type == typeof(long) => sizeof(long),
         Type type when type == typeof(short) => sizeof(short),
+        Type type when type == typeof(ushort) => sizeof(ushort),
         Type type when type == typeof(bool) => sizeof(bool),
         Type type when type == typeof(byte) => sizeof(byte),
-        Type type when type == typeof(long) => sizeof(long),
-        _ => 0,
+        _ => throw ApplicationStateGuard.Unreachable(),
     };
 
     public static bool IsNullOrEmpty<T>(T[]? list) => list is null || list.Length == 0;
