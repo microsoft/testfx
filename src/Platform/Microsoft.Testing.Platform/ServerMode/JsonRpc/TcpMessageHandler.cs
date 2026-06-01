@@ -132,9 +132,13 @@ internal sealed class TcpMessageHandler(
             await _writer.WriteLineAsync($"Content-Length: {byteCount}").ConfigureAwait(false);
             await _writer.WriteLineAsync("Content-Type: application/testingplatform").ConfigureAwait(false);
             await _writer.WriteLineAsync().ConfigureAwait(false);
+            // Flush the StreamWriter's char buffer so the headers reach the underlying NetworkStream
+            // before we write the body bytes directly to BaseStream below (otherwise the body would
+            // overtake the still-buffered headers). No BaseStream.FlushAsync is needed here or after
+            // the body write because the underlying stream is always a NetworkStream (see
+            // MessageHandlerFactory) and NetworkStream.Flush/FlushAsync is a no-op.
             await _writer.FlushAsync(cancellationToken).ConfigureAwait(false);
             await _writer.BaseStream.WriteAsync(rentedBytes.AsMemory(0, byteCount), cancellationToken).ConfigureAwait(false);
-            await _writer.BaseStream.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
         finally
         {
@@ -145,9 +149,11 @@ internal sealed class TcpMessageHandler(
         await _writer.WriteLineAsync($"Content-Length: {messageBytes.Length}").ConfigureAwait(false);
         await _writer.WriteLineAsync("Content-Type: application/testingplatform").ConfigureAwait(false);
         await _writer.WriteLineAsync().ConfigureAwait(false);
+
+        // See the NETCOREAPP branch above for why only StreamWriter.FlushAsync (not
+        // BaseStream.FlushAsync) is required here.
         await _writer.FlushAsync().ConfigureAwait(false);
         await _writer.BaseStream.WriteAsync(messageBytes, 0, messageBytes.Length, cancellationToken).ConfigureAwait(false);
-        await _writer.BaseStream.FlushAsync(cancellationToken).ConfigureAwait(false);
 #endif
     }
 
