@@ -8,7 +8,9 @@ using System.Buffers;
 using System.IO.Pipes;
 
 using Microsoft.CodeAnalysis;
+#if NET
 using Microsoft.Testing.Platform.Helpers;
+#endif
 
 namespace Microsoft.Testing.Platform.IPC;
 
@@ -133,69 +135,62 @@ internal abstract class NamedPipeBase
 #endif
     protected async Task<object?> ReadNextMessageAsync(PipeStream stream, CancellationToken cancellationToken)
     {
-        int currentMessageSize = 0;
-        int missingBytesToReadOfWholeMessage = 0;
         _messageBuffer.Position = 0;
 
         try
         {
-            while (true)
+            // Read the 4-byte size header. PipeStream.ReadAsync may return fewer bytes than requested
+            // (e.g. in byte-mode pipes), so we must loop until we've accumulated the full header or hit EOF.
+            int headerBytesRead = 0;
+            while (headerBytesRead < sizeof(int))
             {
-                int currentReadIndex = 0;
 #if NET
-                int currentReadBytes = await stream.ReadAsync(_readBuffer.AsMemory(currentReadIndex, _readBuffer.Length), cancellationToken).ConfigureAwait(false);
+                int n = await stream.ReadAsync(_readBuffer.AsMemory(headerBytesRead, sizeof(int) - headerBytesRead), cancellationToken).ConfigureAwait(false);
 #else
-                int currentReadBytes = await stream.ReadAsync(_readBuffer, currentReadIndex, _readBuffer.Length, cancellationToken).ConfigureAwait(false);
+                int n = await stream.ReadAsync(_readBuffer, headerBytesRead, sizeof(int) - headerBytesRead, cancellationToken).ConfigureAwait(false);
 #endif
-
-                if (currentReadBytes == 0)
+                if (n == 0)
                 {
-                    // EOF – peer disconnected; caller decides how to handle this.
+                    // EOF – peer disconnected (cleanly if headerBytesRead == 0, mid-header otherwise);
+                    // caller decides how to handle this.
                     return null;
                 }
 
-                // Reset per-chunk tracking
-                int missingBytesToReadOfCurrentChunk = currentReadBytes;
-
-                // If this is the start of a new message, read the 4-byte size header
-                if (currentMessageSize == 0)
-                {
-                    if (currentReadBytes < sizeof(int))
-                    {
-                        throw ApplicationStateGuard.Unreachable();
-                    }
-
-                    currentMessageSize = BitConverter.ToInt32(_readBuffer, 0);
-                    missingBytesToReadOfCurrentChunk = currentReadBytes - sizeof(int);
-                    missingBytesToReadOfWholeMessage = currentMessageSize;
-                    currentReadIndex = sizeof(int);
-                }
-
-                if (missingBytesToReadOfCurrentChunk > 0)
-                {
-#if NET
-                    await _messageBuffer.WriteAsync(_readBuffer.AsMemory(currentReadIndex, missingBytesToReadOfCurrentChunk), cancellationToken).ConfigureAwait(false);
-#else
-                    await _messageBuffer.WriteAsync(_readBuffer, currentReadIndex, missingBytesToReadOfCurrentChunk, cancellationToken).ConfigureAwait(false);
-#endif
-                    missingBytesToReadOfWholeMessage -= missingBytesToReadOfCurrentChunk;
-                }
-
-                if (missingBytesToReadOfWholeMessage < 0)
-                {
-                    throw ApplicationStateGuard.Unreachable();
-                }
-
-                if (missingBytesToReadOfWholeMessage == 0)
-                {
-                    // Full message received – deserialize and return
-                    _messageBuffer.Position = 0;
-                    int serializerId = BitConverter.ToInt32(_messageBuffer.GetBuffer(), 0);
-                    INamedPipeSerializer namedPipeSerializer = GetSerializer(serializerId);
-                    _messageBuffer.Position += sizeof(int); // skip the serializer ID
-                    return namedPipeSerializer.Deserialize(_messageBuffer);
-                }
+                headerBytesRead += n;
             }
+
+            int currentMessageSize = BitConverter.ToInt32(_readBuffer, 0);
+            int missingBytesToReadOfWholeMessage = currentMessageSize;
+
+            // Read the message body in chunks, using _readBuffer as a transfer buffer.
+            while (missingBytesToReadOfWholeMessage > 0)
+            {
+                int toRead = Math.Min(_readBuffer.Length, missingBytesToReadOfWholeMessage);
+#if NET
+                int n = await stream.ReadAsync(_readBuffer.AsMemory(0, toRead), cancellationToken).ConfigureAwait(false);
+#else
+                int n = await stream.ReadAsync(_readBuffer, 0, toRead, cancellationToken).ConfigureAwait(false);
+#endif
+                if (n == 0)
+                {
+                    // EOF mid-message – treat the same as a clean disconnect.
+                    return null;
+                }
+
+#if NET
+                await _messageBuffer.WriteAsync(_readBuffer.AsMemory(0, n), cancellationToken).ConfigureAwait(false);
+#else
+                await _messageBuffer.WriteAsync(_readBuffer, 0, n, cancellationToken).ConfigureAwait(false);
+#endif
+                missingBytesToReadOfWholeMessage -= n;
+            }
+
+            // Full message received – deserialize and return
+            _messageBuffer.Position = 0;
+            int serializerId = BitConverter.ToInt32(_messageBuffer.GetBuffer(), 0);
+            INamedPipeSerializer namedPipeSerializer = GetSerializer(serializerId);
+            _messageBuffer.Position += sizeof(int); // skip the serializer ID
+            return namedPipeSerializer.Deserialize(_messageBuffer);
         }
         finally
         {

@@ -97,6 +97,11 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
                 }
 
                 _environment.Exit((int)ExitCode.GenericFailure);
+
+                // _environment.Exit normally terminates the process and never returns. Guard against
+                // alternate IEnvironment implementations (e.g. tests) that don't terminate by throwing
+                // explicitly — otherwise we would fall through to the cast below and return null.
+                throw new InvalidOperationException($"Pipe '{PipeName}' was closed by the server before a response was received.");
             }
 
             return (TResponse)response!;
