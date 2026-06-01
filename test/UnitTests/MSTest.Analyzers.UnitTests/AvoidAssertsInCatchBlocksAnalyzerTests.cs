@@ -4,6 +4,9 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.AvoidAssertsInCatchBlocksAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
+    MSTest.Analyzers.AvoidAssertsInCatchBlocksAnalyzer,
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.UnitTests;
 
@@ -585,5 +588,117 @@ public sealed class AvoidAssertsInCatchBlocksAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task VB_AssertOutsideCatchBlock_NoDiagnostic()
+    {
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub TestMethod()
+                    Assert.IsTrue(True)
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task VB_AssertInCatchBlock_Diagnostic()
+    {
+        string code = """
+            Imports System
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub TestMethod()
+                    Try
+                        ' code that may throw
+                    Catch
+                        [|Assert.Fail("Exception was thrown")|]
+                    End Try
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task VB_AssertInCatchBlockWithExceptionVariable_Diagnostic()
+    {
+        string code = """
+            Imports System
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub TestMethod()
+                    Try
+                        Throw New InvalidOperationException("test")
+                    Catch ex As InvalidOperationException
+                        [|Assert.IsNotNull(ex)|]
+                    End Try
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task VB_AssertInconclusiveInFilteredCatch_NoDiagnostic()
+    {
+        // Exemption: Assert.Inconclusive inside a filtered catch (Catch ... When ...) is the only
+        // way to demote a caught failure to an Inconclusive outcome and must remain allowed.
+        string code = """
+            Imports System
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub TestMethod()
+                    Try
+                        Throw New AssertFailedException("no exception was thrown.")
+                    Catch ex As AssertFailedException When ex.Message.Contains("no exception was thrown.")
+                        Assert.Inconclusive("Environment is not properly set up")
+                    End Try
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task VB_StringAssertInCatchBlock_Diagnostic()
+    {
+        string code = """
+            Imports System
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub TestMethod()
+                    Try
+                        Throw New InvalidOperationException("test message")
+                    Catch ex As InvalidOperationException
+                        [|StringAssert.Contains(ex.Message, "test")|]
+                    End Try
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
     }
 }
