@@ -197,7 +197,18 @@ Extend `TestMethodInfo.ResolveArguments` (in
 `src/Adapter/MSTestAdapter.PlatformServices/Execution/TestMethodInfo.ArgumentResolution.cs`)
 with a targeted hook applied per parameter slot **only when** the supplied value is
 non-null *and* `value.GetType() != parameter.ParameterType` *and* `parameter.ParameterType`
-is decorated with `UnionAttribute`:
+is decorated with `UnionAttribute`.
+
+> **Implementation note — the existing fast-path.** Today, when every parameter is required
+> (no `params`, no optionals — the overwhelmingly common case) `ResolveArguments` short-circuits
+> and returns the supplied `arguments` array unchanged. A naive insertion of the union hook
+> further down the method would never run for that case, and the union value would flow into
+> `MethodBase.Invoke` unchanged and throw the CLR's generic `ArgumentException`. The hook must
+> therefore be applied **before** the fast-path returns — i.e. the fast-path must precompute
+> (during discovery, cached on `TestMethodInfo`) whether *any* parameter is a `[Union]` type
+> and, if so, walk the arguments array applying `ConvertToUnionIfNeeded` per slot before
+> returning. When no union parameters are present (the truly common case) the cached flag is
+> `false` and the fast-path stays a no-op, preserving today's zero-overhead behaviour.
 
 ```csharp
 private static object? ConvertToUnionIfNeeded(object? value, Type unionType)
@@ -241,11 +252,22 @@ Key properties:
 sets each subsequent argument with `Array.SetValue`. For `params StringOrInt[] values`,
 each *element* must go through `ConvertToUnionIfNeeded(element, typeof(StringOrInt))`
 before `Array.SetValue`, since `Array.SetValue` would otherwise throw on the type
-mismatch. The same applies if a method takes a single `StringOrInt[]` parameter and the
-data source supplies an `object[]` whose elements are case values.
+mismatch.
 
-This is a small but real addition to the implementation: the conversion hook is applied
-per-element for any array-typed slot whose element type is a union.
+> **The single-parameter `StringOrInt[]` case is a deliberate behaviour extension, not a
+> natural fall-out.** Today's adapter only special-cases a *single* array-typed parameter
+> when it is `object[]`: in that case (handled outside `ResolveArguments` — see
+> `AssemblyEnumerator.cs:314` and `TestMethodRunner.cs:354`) the data-row's `object[]`
+> is passed through *as the single argument*, not splatted element-by-element. For
+> `StringOrInt[] values` we are proposing the opposite shape: the data-row's `object[]`
+> elements become the array's elements, each converted to `StringOrInt`. That requires
+> (1) detecting "single non-`params` array parameter whose element type is a union",
+> (2) allocating a `StringOrInt[]` of length `arguments.Length`, and (3) applying the
+> hook per element before `Array.SetValue`. It also requires the analyzer to permit
+> `[DataRow("hello", 42)]` against `StringOrInt[]`, which it does not today. This is
+> tracked here as an additional Phase 1 behaviour change, not a free extension of the
+> existing `params` path; if it proves contentious it can be deferred to Phase 2 without
+> blocking the rest of the feature.
 
 ##### Null handling
 
