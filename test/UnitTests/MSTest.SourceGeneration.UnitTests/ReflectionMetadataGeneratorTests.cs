@@ -247,6 +247,44 @@ public sealed class ReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_SkipsGenericTestMethods()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class GenericMethodTests
+                {
+                    [TestMethod]
+                    public void GenericTest<T>(T value) {}
+
+                    [TestMethod]
+                    public void GenericTestNoParams<T>() {}
+
+                    [TestMethod]
+                    public void NormalTest(int x) {}
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string generated = result.GeneratedSources[0].SourceText.ToString();
+
+        // Generic test methods cannot be emitted by the non-generic module initializer:
+        // parameter types would include method-level type parameters (typeof(T)) which do not
+        // bind at module-initializer scope, breaking compilation. They are silently skipped so
+        // opting into the generator never introduces compile errors that reflection mode would
+        // tolerate. Plain test methods on the same class must still be emitted.
+        generated.Should().NotContain("\"GenericTest\"");
+        generated.Should().NotContain("\"GenericTestNoParams\"");
+        generated.Should().Contain("ResolveMethod(typeof(global::Sample.GenericMethodTests), \"NormalTest\", new Type[] { typeof(global::System.Int32) })");
+    }
+
+    [TestMethod]
     public void Generator_SkipsOpenGenericTestClasses()
     {
         const string userCode = """

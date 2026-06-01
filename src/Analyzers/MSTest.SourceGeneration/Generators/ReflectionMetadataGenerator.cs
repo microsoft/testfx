@@ -105,6 +105,16 @@ public sealed class ReflectionMetadataGenerator : IIncrementalGenerator
                     continue;
                 }
 
+                // Skip generic test methods (e.g. `Test<T>(T value)`). Their parameter types
+                // include method-level type parameters, and emitting `typeof(T)` inside the
+                // non-generic module initializer does not compile. Reflection mode handles these
+                // at runtime, so opting into the generator must not make a valid program fail
+                // to build.
+                if (method.IsGenericMethod)
+                {
+                    continue;
+                }
+
                 // Skip methods that take ref/out/in/ref-readonly parameters. The runtime
                 // ResolveMethod compares parameter types by `typeof(T) == ParameterType`, but
                 // for by-ref parameters `ParameterType` is `T&` (i.e. `MakeByRefType()`), so a
