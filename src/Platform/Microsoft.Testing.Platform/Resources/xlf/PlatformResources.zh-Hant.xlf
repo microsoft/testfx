@@ -388,7 +388,7 @@
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
-        <target state="translated">找到不支援的 JSON 權杖 '{0}'</target>
+        <target state="translated">找到不支援的 JSON Token '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionEntryMustBeScalarErrorMessage">
