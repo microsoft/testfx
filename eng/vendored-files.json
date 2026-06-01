@@ -10,8 +10,8 @@
           "repo": "dotnet/runtime",
           "ref": "main",
           "path": "src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/NullableAttributes.cs",
-          "baseline_ref_sha": "39b9607807f29e48cae4652cd74735182b31182e",
-          "baseline_blob_sha": "ff64dbf87889bd5fe2f19e13dff9b762c9be2dc7",
+          "baseline_ref_sha": "906c53718074c669286fd5b0cd88bc7a56a0cd10",
+          "baseline_blob_sha": "78908b119ae07e92f7e89fe507eb0fc69b21fa99",
           "scope": "entire file; attribute scope changed to internal"
         }
       ]
@@ -19,15 +19,15 @@
     {
       "id": "source-gen-system-polyfills",
       "local_path": "src/Analyzers/MSTest.SourceGeneration/Helpers/SystemPolyfills.cs",
-      "notes": "Nullable attribute polyfills for source generator. Originally referenced retired dotnet/coreclr@60f1e626 -- successor file lives in dotnet/runtime with the same content.",
+      "notes": "Nullable attribute polyfills for source generator. Only NotNullWhenAttribute is mirrored locally; combined with a locally-defined IsExternalInit shim. Originally referenced retired dotnet/coreclr@60f1e626 -- successor file lives in dotnet/runtime with the same content.",
       "sources": [
         {
           "repo": "dotnet/runtime",
           "ref": "main",
           "path": "src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/NullableAttributes.cs",
-          "baseline_ref_sha": "39b9607807f29e48cae4652cd74735182b31182e",
-          "baseline_blob_sha": "ff64dbf87889bd5fe2f19e13dff9b762c9be2dc7",
-          "scope": "Nullable attribute types only; combined with locally-defined IsExternalInit"
+          "baseline_ref_sha": "906c53718074c669286fd5b0cd88bc7a56a0cd10",
+          "baseline_blob_sha": "78908b119ae07e92f7e89fe507eb0fc69b21fa99",
+          "scope": "NotNullWhenAttribute only; combined with locally-defined IsExternalInit"
         }
       ]
     },
@@ -64,15 +64,15 @@
     {
       "id": "platform-file-utilities-case-sensitivity",
       "local_path": "src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal/FileUtilities.cs",
-      "notes": "Only GetIsFileSystemCaseSensitive is copied. Drift signal fires on the whole upstream file; reviewer should check whether changes touch the copied region (lines 41-59 at baseline).",
+      "notes": "Originally copied lines 41-59 (GetIsFileSystemCaseSensitive) from the runtime probe. Upstream has since replaced the probe with an OS-based check (OperatingSystem.IsWindows/MacOS/IOS/TvOS); we intentionally keep the file-system probe locally because (a) the platform targets netstandard2.0 where those APIs are not first-class, and (b) the probe better reflects mount-level case sensitivity. Drift signal fires on the whole upstream file; reviewer should check whether any new change affects the historical copied region.",
       "sources": [
         {
           "repo": "dotnet/runtime",
           "ref": "main",
           "path": "src/libraries/Common/src/System/IO/PathInternal.CaseSensitivity.cs",
-          "baseline_ref_sha": "73ba11f3015216b39cb866d9fb7d3d25e93489f2",
-          "baseline_blob_sha": "e5e97847ddd8e678112b31fa123932463170ccb5",
-          "scope": "lines 41-59 only (GetIsFileSystemCaseSensitive)"
+          "baseline_ref_sha": "906c53718074c669286fd5b0cd88bc7a56a0cd10",
+          "baseline_blob_sha": "0e1278fd1a2cab8dcbcf860f9297cf4eecca4600",
+          "scope": "originally lines 41-59 (GetIsFileSystemCaseSensitive); upstream has since rewritten the helper -- local copy intentionally diverges"
         }
       ]
     },
@@ -124,23 +124,23 @@
     {
       "id": "platform-response-file-helper",
       "local_path": "src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs",
-      "notes": "Core logic taken from command-line-api's CliParser and StringExtensions response-file parsing.",
+      "notes": "Core logic taken from command-line-api's CommandLineParser (formerly CliParser) and StringExtensions response-file parsing. Local copy intentionally omits recursive @file expansion.",
       "sources": [
         {
           "repo": "dotnet/command-line-api",
           "ref": "main",
-          "path": "src/System.CommandLine/Parsing/CliParser.cs",
-          "baseline_ref_sha": "feb61c7f328a2401d74f4317b39d02126cfdfe24",
-          "baseline_blob_sha": "d05b9f05521af2ed05f7f33cf319255820b338de",
-          "scope": "response-file expansion logic (around line 40)"
+          "path": "src/System.CommandLine/Parsing/CommandLineParser.cs",
+          "baseline_ref_sha": "fa1991f84bc8c384aa636a251398a40e56ee1702",
+          "baseline_blob_sha": "ee60fedddabe429d172756fe1b908309164bd805",
+          "scope": "SplitCommandLine implementation (around line 40); upstream file was renamed from CliParser.cs"
         },
         {
           "repo": "dotnet/command-line-api",
           "ref": "main",
           "path": "src/System.CommandLine/Parsing/StringExtensions.cs",
-          "baseline_ref_sha": "feb61c7f328a2401d74f4317b39d02126cfdfe24",
-          "baseline_blob_sha": "169070c5f707aee86c376bad6456e00183718763",
-          "scope": "ExpandResponseFile and string-splitting helpers (around line 349)"
+          "baseline_ref_sha": "fa1991f84bc8c384aa636a251398a40e56ee1702",
+          "baseline_blob_sha": "ab6be26ba8cd23058ee60df184a20ad607899eca",
+          "scope": "ExpandResponseFile/SplitLine helpers (around line 316)"
         }
       ]
     }
