@@ -136,4 +136,22 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenAbstractMethodHasDeploymentItemWithoutTestMethod_Diagnostic()
+    {
+        // Abstract classes are skipped (DeploymentItem is inherited), but abstract methods are not.
+        // An abstract method with [DeploymentItem] but no [TestMethod] is flagged as misuse.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public abstract class MyBaseClass
+            {
+                [DeploymentItem("")]
+                public abstract void [|SomeMethod|]();
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
