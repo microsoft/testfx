@@ -159,17 +159,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsDescription">
         <source>Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</source>
-        <target state="new">Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</target>
+        <target state="translated">在测试方法或测试夹具中使用 "Thread.Sleep"、"Task.Wait"、"Task.WaitAll"、"Task.WaitAny" 或 "Task&lt;TResult&gt;.Result" 同步阻塞当前线程，是导致测试不稳定的常见原因；当测试框架在需要协作调度的 SynchronizationContext 上运行测试时，还可能引发死锁。基于时间的等待建议使用 "await Task.Delay"，并通过 "await" 任务来观察结果。</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsMessageFormat">
         <source>Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</source>
-        <target state="new">Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</target>
+        <target state="translated">避免在测试代码中使用“{0}”，它可能导致测试不稳定；建议使用异步替代方案，例如 "await Task.Delay" 或 "await" 任务</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsTitle">
         <source>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</source>
-        <target state="new">Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</target>
+        <target state="translated">避免在测试代码中使用同步阻塞调用，例如 "Thread.Sleep"、"Task.Wait"、"Task.WaitAll"、"Task.WaitAny" 或 "Task&lt;TResult&gt;.Result"</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
@@ -539,17 +539,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationDescription">
         <source>An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</source>
-        <target state="new">An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</target>
+        <target state="translated">应用于测试方法或测试类的 "[Ignore]" 特性应包含非空消息，说明忽略该测试或类的原因。理由消息使得可更轻松会审被跳过的测试，帮助审阅者理解意图，并防止测试被永久静默禁用。</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationMessageFormat">
         <source>'[Ignore]' should specify a message explaining why '{0}' is ignored</source>
-        <target state="new">'[Ignore]' should specify a message explaining why '{0}' is ignored</target>
+        <target state="translated">"[Ignore]" 应指定消息，说明忽略“{0}”的原因</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationTitle">
         <source>'[Ignore]' should specify a justification</source>
-        <target state="new">'[Ignore]' should specify a justification</target>
+        <target state="translated">"[Ignore]" 应指定理由</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueDescription">
@@ -826,10 +826,10 @@ The type declaring these methods should also respect the following rules:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
-        <target state="new">'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
-- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
-- it should not be 'static'
-- it should have a setter.</target>
+        <target state="translated">"TestContext" 应为非静态属性，在构造函数中赋值或由 MSTest 设置。要由 MSTest 设置，它应遵循以下布局:
+- 无论是否设置 "[assembly: DiscoverInternals]" 属性，它都应为 "public"。
+- 它不应为 "static"
+- 它应具有一个资源库。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">

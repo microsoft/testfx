@@ -47,6 +47,12 @@ internal sealed class ReflectionTestMethodInfo : MethodInfo
 
     public override bool IsDefined(Type attributeType, bool inherit) => _methodInfo.IsDefined(attributeType, inherit);
 
+#if NET5_0_OR_GREATER
+    [RequiresUnreferencedCode("The native code for the generic method instantiation might not be available at runtime.")]
+#endif
+#if NET7_0_OR_GREATER
+    [RequiresDynamicCode("The native code for the generic method instantiation might not be available at runtime.")]
+#endif
     public override MethodInfo MakeGenericMethod(params Type[] typeArguments) => new ReflectionTestMethodInfo(_methodInfo.MakeGenericMethod(typeArguments), DisplayName);
 
     public override Type[] GetGenericArguments() => _methodInfo.GetGenericArguments();

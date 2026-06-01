@@ -12,27 +12,32 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// </summary>
 internal static class AnsiDetector
 {
-    private static readonly Regex[] TerminalsRegexes =
-    [
-        new("^xterm"), // xterm, PuTTY, Mintty
-        new("^rxvt"), // RXVT
-        new("^(?!eterm-color).*eterm.*"), // Accepts eterm, but not eterm-color, which does not support moving the cursor, see #9950.
-        new("^screen"), // GNU screen, tmux
-        new("tmux"), // tmux
-        new("^vt100"), // DEC VT series
-        new("^vt102"), // DEC VT series
-        new("^vt220"), // DEC VT series
-        new("^vt320"), // DEC VT series
-        new("ansi"), // ANSI
-        new("scoansi"), // SCO ANSI
-        new("cygwin"), // Cygwin, MinGW
-        new("linux"), // Linux console
-        new("konsole"), // Konsole
-        new("bvterm"), // Bitvise SSH Client
-        new("^st-256color"), // Suckless Simple Terminal, st
-        new("alacritty") // Alacritty
-    ];
-
     public static bool IsAnsiSupported(string? termType)
-        => !RoslynString.IsNullOrEmpty(termType) && TerminalsRegexes.Any(regex => regex.IsMatch(termType));
+    {
+        if (RoslynString.IsNullOrEmpty(termType))
+        {
+            return false;
+        }
+
+        // Each condition mirrors the original regex pattern but uses plain string operations,
+        // eliminating the 17 Regex allocations and their compilation cost.
+        return termType.StartsWith("xterm", StringComparison.Ordinal) // ^xterm — xterm, PuTTY, Mintty
+            || termType.StartsWith("rxvt", StringComparison.Ordinal) // ^rxvt — RXVT
+            || (termType.IndexOf("eterm", StringComparison.Ordinal) >= 0 // ^(?!eterm-color).*eterm.* — eterm but not eterm-color (#9950)
+                && !termType.StartsWith("eterm-color", StringComparison.Ordinal))
+            || termType.StartsWith("screen", StringComparison.Ordinal) // ^screen — GNU screen, tmux
+            || termType.IndexOf("tmux", StringComparison.Ordinal) >= 0 // tmux — tmux
+            || termType.StartsWith("vt100", StringComparison.Ordinal) // ^vt100 — DEC VT series
+            || termType.StartsWith("vt102", StringComparison.Ordinal) // ^vt102 — DEC VT series
+            || termType.StartsWith("vt220", StringComparison.Ordinal) // ^vt220 — DEC VT series
+            || termType.StartsWith("vt320", StringComparison.Ordinal) // ^vt320 — DEC VT series
+            || termType.IndexOf("ansi", StringComparison.Ordinal) >= 0 // ansi — ANSI
+            || termType.IndexOf("scoansi", StringComparison.Ordinal) >= 0 // scoansi — SCO ANSI
+            || termType.IndexOf("cygwin", StringComparison.Ordinal) >= 0 // cygwin — Cygwin, MinGW
+            || termType.IndexOf("linux", StringComparison.Ordinal) >= 0 // linux — Linux console
+            || termType.IndexOf("konsole", StringComparison.Ordinal) >= 0 // konsole — Konsole
+            || termType.IndexOf("bvterm", StringComparison.Ordinal) >= 0 // bvterm — Bitvise SSH Client
+            || termType.StartsWith("st-256color", StringComparison.Ordinal) // ^st-256color — Suckless Simple Terminal, st
+            || termType.IndexOf("alacritty", StringComparison.Ordinal) >= 0; // alacritty — Alacritty
+    }
 }

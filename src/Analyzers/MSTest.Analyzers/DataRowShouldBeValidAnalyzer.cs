@@ -94,18 +94,12 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol dataRowAttributeSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
+        ImmutableArray<AttributeData> methodAttributes = methodSymbol.GetAttributes();
 
-        bool isTestMethod = false;
+        bool isTestMethod = methodAttributes.IsTestMethod(testMethodAttributeSymbol);
         List<AttributeData> dataRowAttributes = [];
-        foreach (AttributeData methodAttribute in methodSymbol.GetAttributes())
+        foreach (AttributeData methodAttribute in methodAttributes)
         {
-            // Current method should be a test method or should inherit from the TestMethod attribute.
-            // If it is, the current analyzer will trigger no diagnostic so it exits.
-            if (methodAttribute.AttributeClass.Inherits(testMethodAttributeSymbol))
-            {
-                isTestMethod = true;
-            }
-
             if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, dataRowAttributeSymbol))
             {
                 dataRowAttributes.Add(methodAttribute);

@@ -51,6 +51,9 @@ internal static class JsonRpcStrings
     public const string Tests = "tests";
     public const string Filter = "filter";
 
+    // Shared error messages
+    public const string InvalidRunIdErrorMessage = "'" + RunId + "' field is not a valid Guid";
+
     // Test change message and test change properties
     internal const string Parent = "parent";
     internal const string Node = "node";

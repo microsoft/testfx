@@ -272,12 +272,12 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
       </trans-unit>
       <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
         <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>
-        <target state="new">Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</target>
+        <target state="translated">Hem 'RandomizeTestOrder' hem de 'OrderTestsByNameInClass' ayarlandı. 'OrderTestsByNameInClass' yoksayılır.</target>
         <note>{Locked="RandomizeTestOrder"}{Locked="OrderTestsByNameInClass"}</note>
       </trans-unit>
       <trans-unit id="RandomTestOrderBanner">
         <source>Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</source>
-        <target state="new">Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</target>
+        <target state="translated">Rastgele test sırası etkinleştirildi (Seed: {0}). Bu sırayı yeniden oluşturmak için 'RandomTestOrderSeed' değerini ayarlayın.</target>
         <note>{Locked="Seed"}{Locked="RandomTestOrderSeed"}</note>
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">

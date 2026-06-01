@@ -159,17 +159,17 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsDescription">
         <source>Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</source>
-        <target state="new">Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</target>
+        <target state="translated">Bloquear sincronicamente o thread atual com ''Thread.Sleep'', ''Task.Wait'', ''Task.WaitAll'', ''Task.WaitAny'' ou ''Task&lt;TResult&gt;.Result'' dentro de métodos de teste ou acessórios de teste é uma fonte comum de instabilidade e também pode causar deadlock quando a estrutura de teste executa testes em um SynchronizationContext que exige agendamento cooperativo. Prefira ''await Task.Delay'' para as esperas baseadas em tempo e use ''await'' na tarefa para observar seu resultado.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsMessageFormat">
         <source>Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</source>
-        <target state="new">Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</target>
+        <target state="translated">Evite ''{0}'' no código de teste, pois isso pode causar instabilidade nos testes; considere uma alternativa assíncrona, como ''await Task.Delay'', ou faça ''await'' da tarefa</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsTitle">
         <source>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</source>
-        <target state="new">Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</target>
+        <target state="translated">Evite chamadas de bloqueio síncrono, como ''Thread.Sleep'', ''Task.Wait'', ''Task.WaitAll'', ''Task.WaitAny'' ou ''Task&lt;TResult&gt;.Result'' no código de teste</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
@@ -539,17 +539,17 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationDescription">
         <source>An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</source>
-        <target state="new">An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</target>
+        <target state="translated">Um atributo ''[Ignore]'' aplicado a um método de teste ou classe de teste deve incluir uma mensagem não vazia explicando por que o teste ou a classe é ignorado. Uma mensagem de justificativa facilita a triagem de testes ignorados, ajuda os revisores a entender a intenção e impede que os testes sejam desabilitados silenciosamente para sempre.</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationMessageFormat">
         <source>'[Ignore]' should specify a message explaining why '{0}' is ignored</source>
-        <target state="new">'[Ignore]' should specify a message explaining why '{0}' is ignored</target>
+        <target state="translated">''[Ignore]'' deve especificar uma mensagem explicando por que ''{0}'' é ignorado</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationTitle">
         <source>'[Ignore]' should specify a justification</source>
-        <target state="new">'[Ignore]' should specify a justification</target>
+        <target state="translated">''[Ignore]'' deve especificar uma justificativa</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueDescription">
@@ -826,10 +826,10 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
-        <target state="new">'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
-- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
-- it should not be 'static'
-- it should have a setter.</target>
+        <target state="translated">"TestContext" deve ser uma propriedade não estática atribuída no construtor ou definida pelo MSTest. Para ser definido pelo MSTest, ele deve seguir o layout:
+- deve ser "public" independentemente de o atributo "[assembly: DiscoverInternals]" estar definido ou não.
+- não deve ser "static"
+- deve ter um setter.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">

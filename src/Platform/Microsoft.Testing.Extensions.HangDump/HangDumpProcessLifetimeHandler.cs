@@ -105,6 +105,22 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         {
             _dumpType = dumpType[0];
         }
+        else if (_commandLineOptions.TryGetOptionArgumentList(HangDumpCommandLineProvider.HangDumpTypeIfSupportedOptionName, out string[]? dumpTypeIfSupported))
+        {
+            // The "-if-supported" variant accepts the full set of dump types regardless of TFM
+            // (see HangDumpCommandLineProvider.ValidateOptionArgumentsAsync). When the user
+            // requests a value that the current runtime cannot honor, fall back to the closest
+            // supported value (see MapToSupportedDumpType) and emit a single informational
+            // message so the CI log makes the substitution visible without breaking the run.
+            string requested = dumpTypeIfSupported[0];
+            _dumpType = HangDumpCommandLineProvider.MapToSupportedDumpType(requested);
+            if (!string.Equals(_dumpType, requested, StringComparison.OrdinalIgnoreCase))
+            {
+                await _outputDisplay.DisplayAsync(
+                    new FormattedTextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTypeIfSupportedFallbackInfoMessage, requested, _dumpType)),
+                    cancellationToken).ConfigureAwait(false);
+            }
+        }
 
         if (_commandLineOptions.TryGetOptionArgumentList(HangDumpCommandLineProvider.HangDumpFileNameOptionName, out string[]? fileName))
         {
