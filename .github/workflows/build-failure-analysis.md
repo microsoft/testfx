@@ -172,6 +172,12 @@ tools:
     - "NuGet.Mcp.Server"
 
 safe-outputs:
+  # The agent runs on every PR (gh-aw has no agent-job-level `if:` hook), so a
+  # transient AI service flake on an otherwise-successful build would
+  # otherwise spam tracking issues (see issue #8685). Suppress those: the
+  # workflow is advisory, and run-level failures are still visible in the
+  # Actions UI for anyone who wants to investigate.
+  report-failure-as-issue: false
   add-comment:
     max: 1
     hide-older-comments: true

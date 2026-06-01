@@ -148,6 +148,9 @@ tools:
     - "NuGet.Mcp.Server"
 
 safe-outputs:
+  # Match build-failure-analysis.md: suppress tracking-issue spam from
+  # transient AI service flakes (see issue #8685 and comments there).
+  report-failure-as-issue: false
   add-comment:
     max: 1
     hide-older-comments: true
