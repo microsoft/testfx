@@ -78,6 +78,11 @@ jobs:
     name: Build (for analysis)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # Mirror the workflow's `forks: []` trigger filter: skip fork PRs at the
+    # build-job level too. Without this guard the build job would still run
+    # for fork PRs (paying CI time and exposing dotnet-tools auth-gated
+    # installs to forks) even though the agent pipeline never runs for them.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: read
     outputs:
