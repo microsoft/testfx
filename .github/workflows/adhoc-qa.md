@@ -41,6 +41,7 @@ network: defaults
 safe-outputs:
   noop:
     report-as-issue: false
+  report-failure-as-issue: false
   mentions: false
   allowed-github-references: []
   create-discussion:
