@@ -129,12 +129,11 @@ internal sealed class ShutdownProgressReporter : IShutdownProgressReporter, IOut
             while (!stopToken.IsCancellationRequested)
             {
                 IReadOnlyList<TrackedWork> snapshot = Snapshot();
-                if (snapshot.Count == 0)
+                if (snapshot.Count > 0)
                 {
-                    return;
+                    await ReportAsync(snapshot, stopToken).ConfigureAwait(false);
                 }
 
-                await ReportAsync(snapshot, stopToken).ConfigureAwait(false);
                 await Task.Delay(_pollInterval, stopToken).ConfigureAwait(false);
             }
         }

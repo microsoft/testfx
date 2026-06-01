@@ -130,6 +130,31 @@ public sealed class ShutdownProgressReporterTests : IDisposable
         Assert.IsEmpty(reporter.Snapshot());
     }
 
+    [TestMethod]
+    public async Task Watchdog_EmitsForLateTracking_WhenQuietWindowElapsedWithNoWork()
+    {
+        // Repro: cancellation fires, the quiet window elapses with zero tracked work
+        // (e.g. extensions only start their shutdown handlers afterwards), then tracking
+        // begins. The watchdog must keep polling and report the late work instead of
+        // exiting after the first empty snapshot.
+        using ShutdownProgressReporter reporter = CreateReporter(quietWindow: TimeSpan.FromMilliseconds(40), pollInterval: TimeSpan.FromMilliseconds(30));
+
+        CancelTokenSource();
+
+        // Wait past the quiet window so the watchdog has observed at least one empty snapshot.
+        await Task.Delay(200, TestContext.CancellationToken);
+        Assert.IsEmpty(_outputDevice.Messages);
+
+        using IDisposable tracker = reporter.Track("uid-late", "Display Late", "Phase Late");
+
+        await WaitForMessageAsync(TimeSpan.FromSeconds(5));
+
+        IReadOnlyList<string> messages = _outputDevice.Messages;
+        Assert.IsGreaterThanOrEqualTo(1, messages.Count, $"Expected at least one message, got {messages.Count}");
+        Assert.Contains("Display Late", messages[0]);
+        Assert.Contains("Phase Late", messages[0]);
+    }
+
     private ShutdownProgressReporter CreateReporter(TimeSpan? quietWindow = null, TimeSpan? pollInterval = null)
         => new(
             _cancellationTokenSource.Object,
