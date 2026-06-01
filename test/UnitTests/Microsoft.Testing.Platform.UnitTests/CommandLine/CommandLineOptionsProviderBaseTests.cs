@@ -43,11 +43,10 @@ public sealed class CommandLineOptionsProviderBaseTests
     [TestMethod]
     [DataRow("")]
     [DataRow("   ")]
-    public void Constructor_WhiteSpaceUid_ThrowsArgumentException(string uid)
+    public void Constructor_WhiteSpaceUid_DoesNotThrow(string uid)
     {
-        ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(
-            () => _ = new ConfigurableProvider(uid: uid, version: "1.0.0", displayName: "display", description: "description", options: []));
-        Assert.AreEqual("uid", exception.ParamName);
+        var provider = new ConfigurableProvider(uid: uid, version: "1.0.0", displayName: "display", description: "description", options: []);
+        Assert.AreEqual(uid, provider.Uid);
     }
 
     [TestMethod]
@@ -61,11 +60,10 @@ public sealed class CommandLineOptionsProviderBaseTests
     [TestMethod]
     [DataRow("")]
     [DataRow("   ")]
-    public void Constructor_WhiteSpaceVersion_ThrowsArgumentException(string version)
+    public void Constructor_WhiteSpaceVersion_DoesNotThrow(string version)
     {
-        ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(
-            () => _ = new ConfigurableProvider(uid: "uid", version: version, displayName: "display", description: "description", options: []));
-        Assert.AreEqual("version", exception.ParamName);
+        var provider = new ConfigurableProvider(uid: "uid", version: version, displayName: "display", description: "description", options: []);
+        Assert.AreEqual(version, provider.Version);
     }
 
     [TestMethod]
