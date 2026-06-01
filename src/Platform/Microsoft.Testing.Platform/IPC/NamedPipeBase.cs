@@ -137,69 +137,69 @@ internal abstract class NamedPipeBase
         int missingBytesToReadOfWholeMessage = 0;
         _messageBuffer.Position = 0;
 
-        while (true)
+        try
         {
-            int currentReadIndex = 0;
+            while (true)
+            {
+                int currentReadIndex = 0;
 #if NET
-            int currentReadBytes = await stream.ReadAsync(_readBuffer.AsMemory(currentReadIndex, _readBuffer.Length), cancellationToken).ConfigureAwait(false);
+                int currentReadBytes = await stream.ReadAsync(_readBuffer.AsMemory(currentReadIndex, _readBuffer.Length), cancellationToken).ConfigureAwait(false);
 #else
-            int currentReadBytes = await stream.ReadAsync(_readBuffer, currentReadIndex, _readBuffer.Length, cancellationToken).ConfigureAwait(false);
+                int currentReadBytes = await stream.ReadAsync(_readBuffer, currentReadIndex, _readBuffer.Length, cancellationToken).ConfigureAwait(false);
 #endif
 
-            if (currentReadBytes == 0)
-            {
-                // EOF – peer disconnected; caller decides how to handle this.
-                return null;
-            }
+                if (currentReadBytes == 0)
+                {
+                    // EOF – peer disconnected; caller decides how to handle this.
+                    return null;
+                }
 
-            // Reset per-chunk tracking
-            int missingBytesToReadOfCurrentChunk = currentReadBytes;
+                // Reset per-chunk tracking
+                int missingBytesToReadOfCurrentChunk = currentReadBytes;
 
-            // If this is the start of a new message, read the 4-byte size header
-            if (currentMessageSize == 0)
-            {
-                if (currentReadBytes < sizeof(int))
+                // If this is the start of a new message, read the 4-byte size header
+                if (currentMessageSize == 0)
+                {
+                    if (currentReadBytes < sizeof(int))
+                    {
+                        throw ApplicationStateGuard.Unreachable();
+                    }
+
+                    currentMessageSize = BitConverter.ToInt32(_readBuffer, 0);
+                    missingBytesToReadOfCurrentChunk = currentReadBytes - sizeof(int);
+                    missingBytesToReadOfWholeMessage = currentMessageSize;
+                    currentReadIndex = sizeof(int);
+                }
+
+                if (missingBytesToReadOfCurrentChunk > 0)
+                {
+#if NET
+                    await _messageBuffer.WriteAsync(_readBuffer.AsMemory(currentReadIndex, missingBytesToReadOfCurrentChunk), cancellationToken).ConfigureAwait(false);
+#else
+                    await _messageBuffer.WriteAsync(_readBuffer, currentReadIndex, missingBytesToReadOfCurrentChunk, cancellationToken).ConfigureAwait(false);
+#endif
+                    missingBytesToReadOfWholeMessage -= missingBytesToReadOfCurrentChunk;
+                }
+
+                if (missingBytesToReadOfWholeMessage < 0)
                 {
                     throw ApplicationStateGuard.Unreachable();
                 }
 
-                currentMessageSize = BitConverter.ToInt32(_readBuffer, 0);
-                missingBytesToReadOfCurrentChunk = currentReadBytes - sizeof(int);
-                missingBytesToReadOfWholeMessage = currentMessageSize;
-                currentReadIndex = sizeof(int);
-            }
-
-            if (missingBytesToReadOfCurrentChunk > 0)
-            {
-#if NET
-                await _messageBuffer.WriteAsync(_readBuffer.AsMemory(currentReadIndex, missingBytesToReadOfCurrentChunk), cancellationToken).ConfigureAwait(false);
-#else
-                await _messageBuffer.WriteAsync(_readBuffer, currentReadIndex, missingBytesToReadOfCurrentChunk, cancellationToken).ConfigureAwait(false);
-#endif
-                missingBytesToReadOfWholeMessage -= missingBytesToReadOfCurrentChunk;
-            }
-
-            if (missingBytesToReadOfWholeMessage < 0)
-            {
-                throw ApplicationStateGuard.Unreachable();
-            }
-
-            if (missingBytesToReadOfWholeMessage == 0)
-            {
-                // Full message received – deserialize and return
-                _messageBuffer.Position = 0;
-                int serializerId = BitConverter.ToInt32(_messageBuffer.GetBuffer(), 0);
-                INamedPipeSerializer namedPipeSerializer = GetSerializer(serializerId);
-                _messageBuffer.Position += sizeof(int); // skip the serializer ID
-                try
+                if (missingBytesToReadOfWholeMessage == 0)
                 {
+                    // Full message received – deserialize and return
+                    _messageBuffer.Position = 0;
+                    int serializerId = BitConverter.ToInt32(_messageBuffer.GetBuffer(), 0);
+                    INamedPipeSerializer namedPipeSerializer = GetSerializer(serializerId);
+                    _messageBuffer.Position += sizeof(int); // skip the serializer ID
                     return namedPipeSerializer.Deserialize(_messageBuffer);
                 }
-                finally
-                {
-                    _messageBuffer.Position = 0;
-                }
             }
+        }
+        finally
+        {
+            _messageBuffer.Position = 0;
         }
     }
 
