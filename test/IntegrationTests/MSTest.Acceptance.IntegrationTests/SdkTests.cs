@@ -323,8 +323,18 @@ namespace MSTestSdkTest
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish -r {RID} -f {TargetFrameworks.NetCurrent} {testAsset.TargetAssetPath}",
+            warnAsError: false,
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
+
+        // MSTest.TestAdapter (referenced via MSTest.Sdk's NativeAOT runner) transitively pulls in
+        // vstest Microsoft.TestPlatform.ObjectModel and System.Private.DataContractSerialization which
+        // produce trim/AOT warnings outside this repo's control. Instead of failing on those warnings,
+        // we assert MSTest-owned source files do not appear in publish output. See TrimAndAotAssertions.
+        foreach (string fileName in TrimAndAotAssertions.MSTestOwnedSourceFiles)
+        {
+            compilationResult.AssertOutputDoesNotContain(fileName);
+        }
 
         var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, verb: Verb.publish);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);

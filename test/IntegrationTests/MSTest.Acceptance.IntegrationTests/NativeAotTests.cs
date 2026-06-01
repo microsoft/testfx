@@ -83,15 +83,31 @@ public class UnitTest1
             .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
             addPublicFeeds: true);
 
+        // Do NOT pass warnAsError: true here. MSTest.TestAdapter (required for the source-generator
+        // runtime hook host MSTestAdapter.PlatformServices.dll) transitively depends on the vstest
+        // Microsoft.TestPlatform.ObjectModel submodule and System.Private.DataContractSerialization,
+        // both of which emit trim/AOT warnings (IL20xx/IL30xx) outside this repo's control. Promoting
+        // them to errors would fail publish with NETSDK1144 before we can inspect the warning list.
+        // Instead, we assert below that MSTest-owned source files do not appear in publish output.
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
+            warnAsError: false,
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
+
+        // Source files in this repo (and the source-generator output filename) whose absence in
+        // publish output indicates MSTest itself is not surfacing trim/AOT warnings. Adding new MSTest
+        // code that produces ILxxxx warnings will cause its source file to show up here and fail this
+        // test. (The list mirrors TrimTests.Publish_WithTestAdapter_DoesNotSurfaceWarningsFromSuppressedSources.)
+        foreach (string fileName in TrimAndAotAssertions.MSTestOwnedSourceFiles)
+        {
+            compilationResult.AssertOutputDoesNotContain(fileName);
+        }
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
 
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        result.AssertOutputContains("Passed! - Failed: 0, Passed: 3, Skipped: 0, Total: 3");
+        result.AssertOutputContainsSummary(failed: 0, passed: 3, skipped: 0);
         result.AssertExitCodeIs(0);
     }
 

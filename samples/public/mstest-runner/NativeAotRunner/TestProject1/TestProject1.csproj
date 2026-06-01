@@ -1,41 +1,23 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="MSTest.Sdk">
 
+  <!--
+    NativeAOT sample for MSTest. Uses MSTest.Sdk (version is set in samples/public/global.json), which
+    detects PublishAot=true and wires the matching set of MSTest source-generation + runner packages.
+
+    Until the new MSTest.SourceGeneration version corresponding to https://github.com/microsoft/testfx/pull/8586
+    is published, this sample intentionally relies on MSTest.Sdk's published version rather than
+    referencing MSTest.SourceGeneration directly via $(MSTestAOTVersion).
+  -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <OutputType>exe</OutputType>
     <PublishAot>true</PublishAot>
   </PropertyGroup>
 
   <ItemGroup>
-    <!--
-      MSTest source generator for Native AOT support. Emits reflection-free metadata
-      that MSTest consumes at runtime through the source-generation hook.
-    -->
-    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestAOTVersion)" />
-
-    <PackageReference Include="Microsoft.CodeCoverage.MSBuild" Version="$(CodeCoverageVersion)" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(CodeCoverageVersion)" />
-
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(TestingPlatformVersion)" />
-    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(TestingPlatformVersion)" />
-    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\ClassLibrary1\ClassLibrary1.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
 </Project>

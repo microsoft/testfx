@@ -223,7 +223,8 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
             Type type => GetTypeAttributes(type),
             MethodInfo method => GetMethodAttributes(method),
             Assembly assembly => GetAssemblyAttributesForProvider(assembly),
-            _ => _fallback.GetCustomAttributesCached(provider),
+            MemberInfo memberInfo => GetMemberAttributesFromReflection(memberInfo),
+            _ => [],
         };
 
     private Attribute[] GetAssemblyAttributesForProvider(Assembly assembly)
@@ -231,7 +232,7 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
         object[] sourceGen = DataProvider.GetAssemblyAttributes(assembly);
         return sourceGen.Length > 0
             ? [.. sourceGen.OfType<Attribute>()]
-            : _fallback.GetCustomAttributesCached(assembly);
+            : GetAssemblyAttributesFromReflection(assembly);
     }
 
     public bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type)
@@ -242,12 +243,35 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
     private Attribute[] GetTypeAttributes(Type type)
         => DataProvider.TypeAttributes.TryGetValue(type, out Attribute[]? attributes)
             ? attributes
-            : _fallback.GetCustomAttributesCached(type);
+            : GetMemberAttributesFromReflection(type);
 
     private Attribute[] GetMethodAttributes(MethodInfo method)
         => method.DeclaringType is not null
             && DataProvider.TypeMethodAttributes.TryGetValue(method.DeclaringType, out Dictionary<string, Attribute[]>? methodAttributes)
             && methodAttributes.TryGetValue(method.Name, out Attribute[]? attributes)
                 ? attributes
-                : _fallback.GetCustomAttributesCached(method);
+                : GetMemberAttributesFromReflection(method);
+
+    // Bypass _fallback.GetCustomAttributesCached because its internal NotCachedReflectionAccessor
+    // routes through PlatformServiceProvider.Instance.ReflectionOperations, which after SetMetadata
+    // resolves back to this SourceGeneratedReflectionOperations instance — causing infinite mutual recursion.
+    // Use direct reflection (_fallback.GetCustomAttributes does not go through that indirection).
+    private Attribute[] GetMemberAttributesFromReflection(MemberInfo memberInfo)
+    {
+        object[]? attributes = _fallback.GetCustomAttributes(memberInfo);
+        return attributes switch
+        {
+            null => [],
+            Attribute[] attributeArray => attributeArray,
+            _ => [.. attributes.OfType<Attribute>()],
+        };
+    }
+
+    private Attribute[] GetAssemblyAttributesFromReflection(Assembly assembly)
+    {
+        object[] attributes = _fallback.GetCustomAttributes(assembly, typeof(Attribute));
+        return attributes is Attribute[] attributeArray
+            ? attributeArray
+            : [.. attributes.OfType<Attribute>()];
+    }
 }

@@ -24,6 +24,7 @@ internal static class ReflectionMetadataEmitter
         Append(sb, string.Empty);
         Append(sb, "using System;");
         Append(sb, "using System.Collections.Generic;");
+        Append(sb, "using System.Diagnostics.CodeAnalysis;");
         Append(sb, "using System.Reflection;");
         Append(sb, "using System.Runtime.CompilerServices;");
         Append(sb, string.Empty);
@@ -33,6 +34,17 @@ internal static class ReflectionMetadataEmitter
         Append(sb, $"    internal static class {GeneratedTypeName}");
         Append(sb, "    {");
         Append(sb, "        [ModuleInitializer]");
+        foreach (TestClassMetadata cls in metadata.Classes)
+        {
+            // Preserve the test class members at runtime even when the assembly is published with
+            // Native AOT / IL trimming. MSTest's adapter still needs to call GetConstructors,
+            // GetProperties and other reflection APIs on the class (the source generator only
+            // populates TypeMethods; constructors, properties, etc. fall back to runtime reflection).
+            // Without this hint the trimmer removes those members and discovery fails with
+            // "Cannot find a valid constructor for test class".
+            Append(sb, $"        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof({cls.FullyQualifiedName}))]");
+        }
+
         Append(sb, "        internal static void Initialize()");
         Append(sb, "        {");
         Append(sb, $"            var assembly = typeof({GeneratedTypeName}).Assembly;");
@@ -48,7 +60,7 @@ internal static class ReflectionMetadataEmitter
         Append(sb, $"            {Constants.ReflectionMetadataHookFullName}.SetMetadata(metadata);");
         Append(sb, "        }");
         Append(sb, string.Empty);
-        Append(sb, "        private static MethodInfo ResolveMethod(Type type, string name, Type[] parameterTypes)");
+        Append(sb, "        private static MethodInfo ResolveMethod([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type, string name, Type[] parameterTypes)");
         Append(sb, "        {");
         // Include inherited methods (no DeclaredOnly) so test methods defined on an abstract base
         // class are resolvable through the concrete test class's typeof().
