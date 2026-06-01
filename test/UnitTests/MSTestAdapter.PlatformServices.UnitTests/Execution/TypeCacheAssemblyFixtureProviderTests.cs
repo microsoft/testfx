@@ -254,6 +254,79 @@ public class TypeCacheAssemblyFixtureProviderTests : TestContainer
         info.AssemblyCleanupMethod.Should().BeNull();
     }
 
+    // Direct unit tests for the small, extracted helpers used by the discovery pipeline.
+    // Driving these branches through GetTestMethodInfo would require polluting AssemblyAttributes.cs
+    // with broken markers, which would then fire for every other test in this class. The helpers
+    // are scoped, internal, and self-contained, so testing them directly is both safer and clearer.
+    public void ProcessProviderFixtureTypeShouldThrowUTA070ForOpenGenericFixtureType()
+    {
+        TestAssemblyInfo assemblyInfo = new(Assembly.GetExecutingAssembly());
+
+        Action act = () => TypeCache.ProcessProviderFixtureType(
+            typeof(GenericFixtureProvider<>),
+            assemblyInfo,
+            _typeCache,
+            localProvidedInit: false,
+            localProvidedCleanup: false);
+
+        act.Should().Throw<TypeInspectionException>().WithMessage("*UTA070*");
+    }
+
+    public void ProcessProviderFixtureTypeShouldThrowUTA070ForClosedGenericFixtureType()
+    {
+        TestAssemblyInfo assemblyInfo = new(Assembly.GetExecutingAssembly());
+
+        Action act = () => TypeCache.ProcessProviderFixtureType(
+            typeof(GenericFixtureProvider<int>),
+            assemblyInfo,
+            _typeCache,
+            localProvidedInit: false,
+            localProvidedCleanup: false);
+
+        act.Should().Throw<TypeInspectionException>().WithMessage("*UTA070*");
+    }
+
+    public void CollectFixtureMethodsFromProviderTypeShouldThrowUTA071WhenMethodEnumerationFails()
+    {
+        // Force GetDeclaredMethods to throw for the provider type so we can observe how the
+        // extracted helper surfaces a reflection failure as UTA071 — i.e. the explicit opt-in
+        // marker does not silently disappear when method inspection blows up.
+        _testablePlatformServiceProvider.SetupMockReflectionOperations();
+        _testablePlatformServiceProvider.MockReflectionOperations
+            .Setup(ro => ro.GetDeclaredMethods(typeof(DummyFixtureProvider)))
+            .Throws(new InvalidOperationException("Simulated reflection failure"));
+
+        TestAssemblyInfo assemblyInfo = new(Assembly.GetExecutingAssembly());
+
+        Action act = () => TypeCache.CollectFixtureMethodsFromProviderType(
+            typeof(DummyFixtureProvider),
+            assemblyInfo,
+            _typeCache,
+            localProvidedInit: false,
+            localProvidedCleanup: false);
+
+        act.Should().Throw<TypeInspectionException>().WithMessage("*UTA071*");
+    }
+
+    public void LoadProviderMarkersShouldThrowUTA072WhenAttributeInstantiationFails()
+    {
+        // Force GetCustomAttributes to throw — this models the case where CustomAttributeData
+        // confirmed the marker is present but the attribute itself cannot be instantiated
+        // (typically a typeof(...) argument whose target assembly fails to resolve). Explicit
+        // opt-in markers must not silently disappear here, so the helper raises UTA072.
+        _testablePlatformServiceProvider.SetupMockReflectionOperations();
+        var assembly = Assembly.GetExecutingAssembly();
+        _testablePlatformServiceProvider.MockReflectionOperations
+            .Setup(ro => ro.GetCustomAttributes(assembly, typeof(AssemblyFixtureProviderAttribute)))
+            .Throws(new TypeLoadException("Simulated attribute load failure"));
+
+        Action act = () => TypeCache.LoadProviderMarkers(assembly);
+
+        act.Should().Throw<TypeInspectionException>()
+            .WithMessage("*UTA072*")
+            .WithInnerException(typeof(TypeLoadException));
+    }
+
     private static TestMethod CreateTestMethod(string methodName, string className, string assemblyName)
         => new(methodName, null, methodName, className, assemblyName, displayName: null, null);
 
@@ -287,6 +360,16 @@ public class TypeCacheAssemblyFixtureProviderTests : TestContainer
         }
 
         public static void SecondProviderAssemblyCleanup()
+        {
+        }
+    }
+
+    // Generic fixture provider type used by the UTA070 tests. Both the open form
+    // (typeof(GenericFixtureProvider<>)) and a closed form (typeof(GenericFixtureProvider<int>))
+    // must be rejected — the public contract is that the fixture type must be non-generic.
+    public class GenericFixtureProvider<T>
+    {
+        public static void ProviderAssemblyInit(TestContext context)
         {
         }
     }

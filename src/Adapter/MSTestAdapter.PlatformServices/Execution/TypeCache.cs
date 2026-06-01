@@ -476,25 +476,7 @@ internal sealed class TypeCache
                 continue;
             }
 
-            object[] markers;
-            try
-            {
-                markers = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(candidate, typeof(AssemblyFixtureProviderAttribute));
-            }
-            catch (Exception ex)
-            {
-                // The marker is present (CustomAttributeData saw it) but the attribute cannot be
-                // instantiated. This usually means the type referenced by typeof(...) cannot be
-                // loaded. [AssemblyFixtureProvider] is explicit opt-in: silently dropping the
-                // marker here would let assembly init/cleanup quietly disappear. Surface as a
-                // standard MSTest diagnostic so the failure is visible to the user.
-                string message = string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.UTA_AssemblyFixtureProviderLoadFailed,
-                    SafeGetAssemblyName(candidate) ?? "<unknown>",
-                    ex.Message);
-                throw new TypeInspectionException(message, ex);
-            }
+            object[] markers = LoadProviderMarkers(candidate);
 
             if (markers is null || markers.Length == 0)
             {
@@ -514,18 +496,54 @@ internal sealed class TypeCache
                     continue;
                 }
 
-                if (fixtureType.ContainsGenericParameters)
-                {
-                    string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_AssemblyFixtureProviderTypeIsGeneric, fixtureType.FullName);
-                    throw new TypeInspectionException(message);
-                }
-
-                CollectFixtureMethodsFromProviderType(fixtureType, assemblyInfo, @this, localProvidedInit, localProvidedCleanup);
+                ProcessProviderFixtureType(fixtureType, assemblyInfo, @this, localProvidedInit, localProvidedCleanup);
             }
         }
     }
 
-    private static void CollectFixtureMethodsFromProviderType(
+    internal static object[] LoadProviderMarkers(Assembly candidate)
+    {
+        try
+        {
+            return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(candidate, typeof(AssemblyFixtureProviderAttribute));
+        }
+        catch (Exception ex)
+        {
+            // The marker is present (CustomAttributeData saw it) but the attribute cannot be
+            // instantiated. This usually means the type referenced by typeof(...) cannot be
+            // loaded. [AssemblyFixtureProvider] is explicit opt-in: silently dropping the
+            // marker here would let assembly init/cleanup quietly disappear. Surface as a
+            // standard MSTest diagnostic so the failure is visible to the user.
+            string message = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_AssemblyFixtureProviderLoadFailed,
+                SafeGetAssemblyName(candidate) ?? "<unknown>",
+                ex.Message);
+            throw new TypeInspectionException(message, ex);
+        }
+    }
+
+    internal static void ProcessProviderFixtureType(
+        Type fixtureType,
+        TestAssemblyInfo assemblyInfo,
+        TypeCache @this,
+        bool localProvidedInit,
+        bool localProvidedCleanup)
+    {
+        // Reject both open generics (e.g. typeof(MyFixture<>)) and closed generics
+        // (e.g. typeof(MyFixture<int>)). The documented contract of
+        // [AssemblyFixtureProvider] is that the fixture type must be non-generic;
+        // ContainsGenericParameters alone would miss the closed case.
+        if (fixtureType.IsGenericType)
+        {
+            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_AssemblyFixtureProviderTypeIsGeneric, fixtureType.FullName);
+            throw new TypeInspectionException(message);
+        }
+
+        CollectFixtureMethodsFromProviderType(fixtureType, assemblyInfo, @this, localProvidedInit, localProvidedCleanup);
+    }
+
+    internal static void CollectFixtureMethodsFromProviderType(
         Type fixtureType,
         TestAssemblyInfo assemblyInfo,
         TypeCache @this,
@@ -572,10 +590,14 @@ internal sealed class TypeCache
 
     private static IEnumerable<Assembly> EnumerateCandidateAssemblies(Assembly currentAssembly)
     {
-        // BFS over the consumer assembly's reference graph. This both bounds the work to assemblies
-        // the consumer actually depends on (vs scanning the entire AppDomain) and lets us discover
-        // markers on libraries that haven't been touched by the test code yet — passively referencing
-        // them in a project file is enough.
+        // BFS over the consumer assembly's reference graph. This bounds the work to assemblies that
+        // are recorded in the metadata reference table (the runtime reference graph), instead of
+        // scanning the entire AppDomain. Note that a bare project / PackageReference is NOT
+        // sufficient: the C# compiler omits references that the compiled IL never uses, so a
+        // provider library only shows up here if its types are actually touched by the consumer
+        // (or a `[assembly: TypeForwardedTo]` / similar pulls the reference in). The acceptance
+        // asset for this feature accordingly calls into the provider library to materialize the
+        // reference.
         //
         // Dedup uses AssemblyName.FullName (name + version + culture + public-key-token) so multi-version
         // / multi-token references with the same simple name are not collapsed.
