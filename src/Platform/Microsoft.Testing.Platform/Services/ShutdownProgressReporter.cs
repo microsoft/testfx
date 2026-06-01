@@ -111,8 +111,12 @@ internal sealed class ShutdownProgressReporter : IShutdownProgressReporter, IOut
             return;
         }
 
+        // Capture the token synchronously here so a concurrent Dispose() (which disposes
+        // _watchdogStopSource) cannot turn the Task.Run lambda into an ObjectDisposedException.
+        CancellationToken stopToken = _watchdogStopSource.Token;
+
         // Fire-and-forget watchdog. The process is shutting down, so we accept the unobserved task.
-        _ = Task.Run(() => RunWatchdogAsync(_watchdogStopSource.Token));
+        _ = Task.Run(() => RunWatchdogAsync(stopToken));
     }
 
     private async Task RunWatchdogAsync(CancellationToken stopToken)
@@ -130,7 +134,7 @@ internal sealed class ShutdownProgressReporter : IShutdownProgressReporter, IOut
                     return;
                 }
 
-                await ReportAsync(snapshot).ConfigureAwait(false);
+                await ReportAsync(snapshot, stopToken).ConfigureAwait(false);
                 await Task.Delay(_pollInterval, stopToken).ConfigureAwait(false);
             }
         }
@@ -152,7 +156,7 @@ internal sealed class ShutdownProgressReporter : IShutdownProgressReporter, IOut
         }
     }
 
-    private async Task ReportAsync(IReadOnlyList<TrackedWork> snapshot)
+    private async Task ReportAsync(IReadOnlyList<TrackedWork> snapshot, CancellationToken stopToken)
     {
         DateTimeOffset now = _clock.UtcNow;
         StringBuilder builder = new();
@@ -184,7 +188,7 @@ internal sealed class ShutdownProgressReporter : IShutdownProgressReporter, IOut
         {
             try
             {
-                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(message), _watchdogStopSource.Token).ConfigureAwait(false);
+                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(message), stopToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
