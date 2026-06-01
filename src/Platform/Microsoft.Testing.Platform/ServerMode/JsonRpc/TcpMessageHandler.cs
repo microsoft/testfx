@@ -121,8 +121,8 @@ internal sealed class TcpMessageHandler(
     {
         string messageStr = await _formatter.SerializeAsync(message).ConfigureAwait(false);
 
-        // Encode the message body once to avoid scanning the string twice:
-        // once in GetByteCount (for the Content-Length header) and once via StreamWriter encoding.
+        // Encode the message body manually so Content-Length matches the UTF-8 byte count and
+        // the body can be written directly to the stream without StreamWriter transcoding.
 #if NETCOREAPP
         int byteCount = Encoding.UTF8.GetByteCount(messageStr);
         byte[] rentedBytes = ArrayPool<byte>.Shared.Rent(byteCount);
