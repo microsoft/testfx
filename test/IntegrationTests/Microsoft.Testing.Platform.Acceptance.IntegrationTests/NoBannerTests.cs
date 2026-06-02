@@ -63,7 +63,7 @@ public class NoBannerTests : AcceptanceTestBase<NoBannerTests.TestAssetFixture>
             null,
             new Dictionary<string, string?>
             {
-                // CLAUDECODE matches LLMEnvironmentDetector's claude rule (BooleanEnvironmentRule).
+                // CLAUDECODE matches LLMEnvironmentDetector's claude rule (AnyPresentEnvironmentRule).
                 { "CLAUDECODE", "1" },
             },
             cancellationToken: TestContext.CancellationToken);
