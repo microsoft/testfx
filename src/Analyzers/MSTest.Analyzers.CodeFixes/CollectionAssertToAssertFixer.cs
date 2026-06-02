@@ -101,9 +101,27 @@ public sealed class CollectionAssertToAssertFixer : CodeFixProvider
 
         ArgumentListSyntax newArgumentList = invocationExpr.ArgumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments));
 
-        // Replace `<anything>.CollectionAssert.<Method>` with `Assert.<ProperMethod>`.
+        // Replace `<qualifier>.CollectionAssert.<Method>` with `<qualifier>.Assert.<ProperMethod>`,
+        // preserving any namespace/alias qualifier so we don't accidentally bind to a different
+        // `Assert` type (or fail to bind at all) when the source file lacks
+        // `using Microsoft.VisualStudio.TestTools.UnitTesting;`.
+        ExpressionSyntax newAssertExpression = memberAccessExpr.Expression switch
+        {
+            // `CollectionAssert.X(...)` (with using directive) → `Assert.X(...)`.
+            IdentifierNameSyntax => SyntaxFactory.IdentifierName("Assert"),
+
+            // `Foo.Bar.CollectionAssert.X(...)` or `global::Foo.Bar.CollectionAssert.X(...)` →
+            // swap only the trailing `CollectionAssert` identifier for `Assert`.
+            MemberAccessExpressionSyntax qualified => qualified.WithName(SyntaxFactory.IdentifierName("Assert")),
+
+            // `SomeAlias::CollectionAssert.X(...)` → `SomeAlias::Assert.X(...)`.
+            AliasQualifiedNameSyntax aliasQualified => aliasQualified.WithName(SyntaxFactory.IdentifierName("Assert")),
+
+            _ => SyntaxFactory.IdentifierName("Assert"),
+        };
+
         MemberAccessExpressionSyntax newMemberAccess = memberAccessExpr
-            .WithExpression(SyntaxFactory.IdentifierName("Assert"))
+            .WithExpression(newAssertExpression)
             .WithName(SyntaxFactory.IdentifierName(properAssertMethodName));
 
         InvocationExpressionSyntax newInvocationExpr = invocationExpr

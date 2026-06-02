@@ -626,4 +626,88 @@ public sealed class CollectionAssertToAssertAnalyzerTests
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "Contains"),
             fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenCollectionAssertIsFullyQualified_FixPreservesQualifier()
+    {
+        // Regression: the fixer must preserve a fully-qualified CollectionAssert qualifier so the
+        // rewritten call binds to MSTest's Assert even when the file has no
+        // `using Microsoft.VisualStudio.TestTools.UnitTesting;` directive.
+        string code = """
+            using System.Collections.Generic;
+
+            [Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
+            public class MyTestClass
+            {
+                [Microsoft.VisualStudio.TestTools.UnitTesting.TestMethod]
+                public void MyTestMethod()
+                {
+                    var a = new List<int> { 1, 2, 3 };
+                    {|#0:Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Contains(a, 1)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+
+            [Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
+            public class MyTestClass
+            {
+                [Microsoft.VisualStudio.TestTools.UnitTesting.TestMethod]
+                public void MyTestMethod()
+                {
+                    var a = new List<int> { 1, 2, 3 };
+                    Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(1, a);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("Contains", "Contains"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenCollectionAssertIsGlobalQualified_FixPreservesGlobalQualifier()
+    {
+        // Regression: `global::` qualifier must be preserved so the rewrite continues to bind unambiguously.
+        string code = """
+            using System.Collections.Generic;
+
+            [global::Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
+            public class MyTestClass
+            {
+                [global::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethod]
+                public void MyTestMethod()
+                {
+                    var a = new List<int> { 1, 2, 3 };
+                    var b = new List<int> { 1, 2, 3 };
+                    {|#0:global::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(a, b)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+
+            [global::Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
+            public class MyTestClass
+            {
+                [global::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethod]
+                public void MyTestMethod()
+                {
+                    var a = new List<int> { 1, 2, 3 };
+                    var b = new List<int> { 1, 2, 3 };
+                    global::Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSequenceEqual(a, b);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreSequenceEqual", "AreEqual"),
+            fixedCode);
+    }
 }
