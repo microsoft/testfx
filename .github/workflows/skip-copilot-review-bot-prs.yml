@@ -1,0 +1,28 @@
+name: Skip Copilot code review for bot PRs
+
+on:
+  pull_request_target:
+    types: [opened, reopened, ready_for_review, synchronize]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  remove-copilot-reviewer:
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'microsoft/testfx' && (github.event.pull_request.user.login == 'dotnet-bot' || github.event.pull_request.user.login == 'dotnet-maestro[bot]') && (startsWith(github.event.pull_request.title, 'Localized file check-in') || startsWith(github.event.pull_request.title, '[main] Update dependencies from dotnet/') || startsWith(github.event.pull_request.title, '[main] Update dependencies from microsoft/') || startsWith(github.event.pull_request.title, '[main] Update dependencies from devdiv/')) }}
+    steps:
+    - name: Remove Copilot as a requested reviewer
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PR: ${{ github.event.pull_request.number }}
+        REPO: ${{ github.repository }}
+      run: |
+        # The CopilotAutoReview ruleset automatically requests a review from
+        # copilot-pull-request-reviewer on every PR. For mechanical bot PRs
+        # (OneLocBuild, Maestro dependency flow), that review is pure noise,
+        # so we drop the request as soon as it's added.
+        # Returns 422 if the reviewer wasn't requested (already removed or never added) - ignore.
+        gh api -X DELETE \
+          "repos/$REPO/pulls/$PR/requested_reviewers" \
+          -f 'reviewers[]=copilot-pull-request-reviewer' || true
