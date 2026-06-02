@@ -74,6 +74,9 @@ internal sealed partial class TypeCache
         }
         catch (InvalidManagedNameException)
         {
+            // A malformed managed name is treated as "method not resolvable"; the caller
+            // (GetMethodInfoForTestMethod) will surface a TypeInspectionException with a
+            // user-friendly UTA_MethodDoesNotExists message when testMethodInfo is null.
         }
 
         return testMethodInfo is null
