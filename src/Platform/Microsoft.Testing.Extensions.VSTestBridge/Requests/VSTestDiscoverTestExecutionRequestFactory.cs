@@ -2,14 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
-using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.Requests;
 
@@ -30,29 +23,29 @@ internal static class VSTestDiscoverTestExecutionRequestFactory
         DiscoverTestExecutionRequest discoverTestExecutionRequest,
         VSTestBridgedTestFrameworkBase adapterExtension, string[] testAssemblyPaths, CancellationToken cancellationToken)
     {
-        IServiceProvider serviceProvider = adapterExtension.ServiceProvider;
-        IConfiguration configuration = serviceProvider.GetConfiguration();
-        ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        IFileSystem fileSystem = serviceProvider.GetFileSystem();
-        IClientInfo clientInfo = serviceProvider.GetClientInfo();
+        VSTestBridgeRequestContext requestContext = new(adapterExtension);
 
-        IOutputDevice outputDevice = serviceProvider.GetOutputDevice();
-        MessageLoggerAdapter messageLogger = new(loggerFactory, outputDevice, adapterExtension, null, cancellationToken);
+        MessageLoggerAdapter messageLogger = new(requestContext.LoggerFactory, requestContext.OutputDevice, adapterExtension, null, cancellationToken);
 
-        ICommandLineOptions commandLineOptions = serviceProvider.GetRequiredService<ICommandLineOptions>();
-        RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, clientInfo, loggerFactory, messageLogger);
-        DiscoveryContextAdapter discoveryContext = new(commandLineOptions, runSettings, discoverTestExecutionRequest.Filter);
+        RunSettingsAdapter runSettings = new(
+            requestContext.CommandLineOptions,
+            requestContext.FileSystem,
+            requestContext.Configuration,
+            requestContext.ClientInfo,
+            requestContext.LoggerFactory,
+            messageLogger);
+        DiscoveryContextAdapter discoveryContext = new(requestContext.CommandLineOptions, runSettings, discoverTestExecutionRequest.Filter);
 
         TestCaseDiscoverySinkAdapter discoverySink = new(
             adapterExtension,
             discoverTestExecutionRequest.Session,
             testAssemblyPaths,
-            serviceProvider.GetTestApplicationModuleInfo(),
-            serviceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
-            serviceProvider.GetCommandLineOptions(),
-            serviceProvider.GetClientInfo(),
-            serviceProvider.GetMessageBus(),
-            loggerFactory,
+            requestContext.TestApplicationModuleInfo,
+            requestContext.NamedFeatureCapability,
+            requestContext.CommandLineOptions,
+            requestContext.ClientInfo,
+            requestContext.MessageBus,
+            requestContext.LoggerFactory,
             adapterExtension.IsTrxEnabled,
             cancellationToken);
 
