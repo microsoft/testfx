@@ -22,7 +22,16 @@ jobs:
         # copilot-pull-request-reviewer on every PR. For mechanical bot PRs
         # (OneLocBuild, Maestro dependency flow), that review is pure noise,
         # so we drop the request as soon as it's added.
-        # Returns 422 if the reviewer wasn't requested (already removed or never added) - ignore.
-        gh api -X DELETE \
-          "repos/$REPO/pulls/$PR/requested_reviewers" \
-          -f 'reviewers[]=copilot-pull-request-reviewer' || true
+        #
+        # We check first instead of unconditionally deleting so that real
+        # errors (auth, transient outages, etc.) still surface as workflow
+        # failures rather than being masked by `|| true`.
+        if gh api "repos/$REPO/pulls/$PR/requested_reviewers" \
+             --jq '.users[].login' | grep -qxF 'copilot-pull-request-reviewer'; then
+          echo "Removing copilot-pull-request-reviewer from PR #$PR."
+          gh api -X DELETE \
+            "repos/$REPO/pulls/$PR/requested_reviewers" \
+            -f 'reviewers[]=copilot-pull-request-reviewer'
+        else
+          echo "copilot-pull-request-reviewer is not currently requested on PR #$PR; nothing to do."
+        fi
