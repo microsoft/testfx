@@ -5,70 +5,38 @@ using Microsoft.Testing.Extensions.MSBuild.Serializers;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestHost;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
-using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
 [UnsupportedOSPlatform("browser")]
-internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestHostApplicationLifetime, IDisposable
+internal sealed class MSBuildTestApplicationLifecycleCallbacks : MSBuildLifecycleCallbacksBase, ITestHostApplicationLifetime, IDisposable
 {
-    private readonly IConfiguration _configuration;
-    private readonly ICommandLineOptions _commandLineOptions;
-
     public MSBuildTestApplicationLifecycleCallbacks(
         IConfiguration configuration,
         ICommandLineOptions commandLineOptions)
+        : base(configuration, commandLineOptions)
     {
-        _configuration = configuration;
-        _commandLineOptions = commandLineOptions;
     }
 
     public NamedPipeClient? PipeClient { get; private set; }
 
     public string Uid => nameof(MSBuildTestApplicationLifecycleCallbacks);
 
-    public string Version => ExtensionVersion.DefaultSemVer;
-
     public string DisplayName => nameof(MSBuildTestApplicationLifecycleCallbacks);
-
-    public string Description => Resources.ExtensionResources.MSBuildExtensionsDescription;
-
-    public Task<bool> IsEnabledAsync()
-        => Task.FromResult(_commandLineOptions.IsOptionSet(MSBuildConstants.MSBuildNodeOptionKey));
 
     public async Task BeforeRunAsync(CancellationToken cancellationToken)
     {
-        if (!_commandLineOptions.TryGetOptionArgumentList(MSBuildConstants.MSBuildNodeOptionKey, out string[]? msbuildInfo))
-        {
-            throw new InvalidOperationException($"MSBuild pipe name not found in the command line, missing {MSBuildConstants.MSBuildNodeOptionKey}");
-        }
+        PipeClient = CreatePipeClient();
+        await ConnectAndSendModuleInfoAsync(PipeClient, cancellationToken).ConfigureAwait(false);
+    }
 
-        if (msbuildInfo is null || msbuildInfo.Length != 1 || string.IsNullOrEmpty(msbuildInfo[0]))
-        {
-            throw new InvalidOperationException($"MSBuild pipe name not found in the command line, missing argument for {MSBuildConstants.MSBuildNodeOptionKey}");
-        }
-
-        PipeClient = new(msbuildInfo[0]);
-        PipeClient.RegisterSerializer(new ModuleInfoRequestSerializer(), typeof(ModuleInfoRequest));
-        PipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        PipeClient.RegisterSerializer(new FailedTestInfoRequestSerializer(), typeof(FailedTestInfoRequest));
-        PipeClient.RegisterSerializer(new RunSummaryInfoRequestSerializer(), typeof(RunSummaryInfoRequest));
-        using var cancellationTokenSource = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout);
-        using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, cancellationToken);
-        await PipeClient.ConnectAsync(linkedCancellationToken.Token).ConfigureAwait(false);
-        await PipeClient.RequestReplyAsync<ModuleInfoRequest, VoidResponse>(
-            new ModuleInfoRequest(
-            RuntimeInformation.FrameworkDescription,
-            RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),
-            _configuration.GetTestResultDirectory()),
-            cancellationToken).ConfigureAwait(false);
+    protected override void RegisterAdditionalSerializers(NamedPipeClient pipeClient)
+    {
+        pipeClient.RegisterSerializer(new FailedTestInfoRequestSerializer(), typeof(FailedTestInfoRequest));
+        pipeClient.RegisterSerializer(new RunSummaryInfoRequestSerializer(), typeof(RunSummaryInfoRequest));
     }
 
     public void Dispose()
         => PipeClient?.Dispose();
-
-    public Task AfterRunAsync(int exitCode, CancellationToken cancellationToken) => Task.CompletedTask;
 }
