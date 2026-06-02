@@ -164,6 +164,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         bool effectiveNoAnsi = noAnsi && ansiOverride == AnsiOverride.None;
 
         bool inCI = new CIEnvironmentDetector(_environment).IsCIEnvironment();
+        bool isLLMEnvironment = new LLMEnvironmentDetector(_environment).IsLLMEnvironment();
 
         AnsiMode ansiMode = ansiOverride switch
         {
@@ -178,7 +179,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             // No --ansi argument was provided, or `--ansi auto` was provided.
             // Fall back to environment-based detection.
             // In LLM environments, prefer simple text output so that the LLM can parse it easily.
-            _ when effectiveNoAnsi || LLMEnvironmentDetector.IsLLMEnvironment() => AnsiMode.NoAnsi,
+            _ when effectiveNoAnsi || isLLMEnvironment => AnsiMode.NoAnsi,
             _ when inCI => AnsiMode.SimpleAnsi,
             _ => AnsiMode.AnsiIfPossible,
         };
@@ -197,8 +198,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             showPassed = () => true;
         }
 
-        OutputShowMode showStdout = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption);
-        OutputShowMode showStderr = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption);
+        OutputShowMode showStdout = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption, isLLMEnvironment);
+        OutputShowMode showStderr = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption, isLLMEnvironment);
 
         Func<bool?> shouldShowProgress = noProgress || ansiMode is AnsiMode.NoAnsi or AnsiMode.SimpleAnsi
             // User preference is to not show progress.
@@ -229,7 +230,10 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         });
     }
 
-    private static OutputShowMode GetShowOutputMode(ICommandLineOptions commandLineOptions, string optionName)
+    // When the option is absent, default to OutputShowMode.Failed when running under a known
+    // LLM/AI environment (less token noise for agents) and to OutputShowMode.All otherwise.
+    // An explicit --show-stdout/--show-stderr value always wins over the LLM-aware default.
+    private static OutputShowMode GetShowOutputMode(ICommandLineOptions commandLineOptions, string optionName, bool isLLMEnvironment)
         => commandLineOptions.TryGetOptionArgumentList(optionName, out string[]? arguments) && arguments is { Length: > 0 }
             ? arguments[0] switch
             {
@@ -237,7 +241,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 string s when TerminalTestReporterCommandLineOptionsProvider.ShowOutputNoneArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => OutputShowMode.None,
                 _ => OutputShowMode.All,
             }
-            : OutputShowMode.All;
+            : isLLMEnvironment ? OutputShowMode.Failed : OutputShowMode.All;
 
     private enum AnsiOverride
     {
