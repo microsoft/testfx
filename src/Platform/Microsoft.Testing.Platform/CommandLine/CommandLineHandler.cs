@@ -27,11 +27,11 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
     {
     }
 
-    // Option C (issue #6349): the unified read model is keyed on IConfiguration. When the
-    // platform owns the construction (TestHostBuilder -> CommandLineManager.BuildAsync), the
-    // configuration is supplied so IsOptionSet/TryGetOptionArgumentList consult both the CLI
-    // and testconfig.json. When configuration is null (e.g. ad-hoc unit-test construction),
-    // we fall back to the legacy parse-result-only behavior.
+    // Issue #6349: the unified read model is keyed on IConfiguration. When the platform owns
+    // the construction (TestHostBuilder -> CommandLineManager.BuildAsync), the configuration is
+    // supplied so IsOptionSet/TryGetOptionArgumentList consult both the CLI and testconfig.json.
+    // When configuration is null (e.g. ad-hoc unit-test construction), we fall back to the
+    // legacy parse-result-only behavior.
     internal CommandLineHandler(CommandLineParseResult parseResult, IReadOnlyCollection<ICommandLineOptionsProvider> extensionsCommandLineOptionsProviders,
         IReadOnlyCollection<ICommandLineOptionsProvider> systemCommandLineOptionsProviders, ITestApplicationModuleInfo testApplicationModuleInfo,
         IRuntimeFeature runtimeFeature, IConfiguration? configuration)

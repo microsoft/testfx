@@ -40,10 +40,8 @@ public static class ConfigurationExtensions
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Used by <see cref="CommandLineHandler.IsOptionSet(string)"/> to implement Option C of
-    /// issue #6349 (unified read model for command-line options). Callers reading from
-    /// <see cref="ICommandLineOptions"/> transparently benefit from JSON/env-var-sourced
-    /// values without any code change.
+    /// Used by <see cref="CommandLineHandler.IsOptionSet(string)"/> so JSON-sourced options are
+    /// transparently visible to all <see cref="ICommandLineOptions"/> consumers (issue #6349).
     /// </para>
     /// <para>
     /// Resolution is performed at the option granularity by walking the configuration providers
@@ -60,7 +58,7 @@ public static class ConfigurationExtensions
     /// per-option.
     /// </para>
     /// <para>
-    /// LIMITATION (issue #6349): a JSON bare scalar that happens to be the string <c>"true"</c> or
+    /// Note: a JSON bare scalar that happens to be the string <c>"true"</c> or
     /// <c>"false"</c> for an option that takes arguments is ambiguous — it is interpreted here as
     /// a presence/absence marker rather than as the argument value. Authors should use the array
     /// form (<c>["true"]</c>, <c>["false"]</c>) when the literal string is intended.
@@ -91,7 +89,8 @@ public static class ConfigurationExtensions
     /// <remarks>
     /// <para>
     /// Used by <see cref="CommandLineHandler.TryGetOptionArgumentList(string, out string[])"/>
-    /// to implement Option C of issue #6349.
+    /// so JSON-sourced options are transparently visible to all <see cref="ICommandLineOptions"/>
+    /// consumers (issue #6349).
     /// </para>
     /// <para>
     /// Resolution mirrors <see cref="IsCommandLineOptionSet"/>: providers are walked in
@@ -112,12 +111,10 @@ public static class ConfigurationExtensions
     /// </list>
     /// </para>
     /// <para>
-    /// LIMITATION (intentionally exposed for review in Option C): for a multi-value option
-    /// defined in <c>testconfig.json</c> as a JSON array, this helper relies on contiguous
-    /// indices starting at 0. A user-authored mistake such as a non-array scalar where an
-    /// array is expected silently yields a single-element list rather than an arity error;
-    /// real arity validation against the option's <c>ArgumentArity</c> is performed by
-    /// <see cref="CommandLineOptionsValidator"/> on the <c>parseResult</c> only.
+    /// JSON-sourced entries are subject to arity, unknown-option, and per-argument validation
+    /// in <see cref="CommandLineOptionsValidator"/> (the validator is given the same JSON view
+    /// via <see cref="AggregatedConfiguration.EnumerateJsonCommandLineOptions"/>), so a JSON
+    /// typo or bad value fails at startup with the same diagnostics as on the CLI.
     /// </para>
     /// </remarks>
     internal static bool TryGetCommandLineOptionArguments(this IConfiguration configuration, string optionName, [NotNullWhen(true)] out string[]? arguments)

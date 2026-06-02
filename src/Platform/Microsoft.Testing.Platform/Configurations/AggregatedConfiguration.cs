@@ -75,8 +75,8 @@ internal sealed class AggregatedConfiguration(
     /// short-circuits the search.
     /// </para>
     /// <para>
-    /// Provider contract assumptions for the <c>commandLineOptions:*</c> section (Option C,
-    /// issue #6349):
+    /// Provider contract assumptions for the <c>commandLineOptions:*</c> section
+    /// (issue #6349):
     /// <list type="bullet">
     ///   <item><description><c>TryGet</c> returning <c>true</c> with a <c>null</c> value is
     ///   treated as if the key were absent at this provider — a custom provider that wants
@@ -155,6 +155,21 @@ internal sealed class AggregatedConfiguration(
         return jsonProvider?.GetSection(sectionName) ?? [];
     }
 
+    /// <summary>
+    /// Returns the typed command-line option entries declared in the loaded testconfig.json file.
+    /// Returns an empty list if no JSON configuration source is active or the section is absent.
+    /// Throws <see cref="FormatException"/> if the section contains an unsupported shape (see
+    /// <see cref="JsonConfigurationSource.JsonConfigurationProvider.EnumerateCommandLineOptions"/>).
+    /// </summary>
+    internal IReadOnlyList<JsonCommandLineOptionEntry> EnumerateJsonCommandLineOptions()
+    {
+        JsonConfigurationSource.JsonConfigurationProvider? jsonProvider = _configurationProviders
+            .OfType<JsonConfigurationSource.JsonConfigurationProvider>()
+            .FirstOrDefault();
+
+        return jsonProvider?.EnumerateCommandLineOptions() ?? [];
+    }
+
     public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(IFileLoggerProvider? fileLoggerProvider)
     {
         _resultsDirectory = _fileSystem.CreateDirectory(this[PlatformConfigurationConstants.PlatformResultDirectory]!);
@@ -183,10 +198,10 @@ internal sealed class AggregatedConfiguration(
         // results should be stored. But we will also still pass configuration file (e.g, runsettings via --settings) that the user originally specified.
         // In that case, we will want to respect --results-directory.
         //
-        // Option C (issue #6349): when the CLI configuration source is registered (the default
-        // host path), consult the unified command-line view first so a value supplied either via
-        // CLI or via testconfig.json's "commandLineOptions:results-directory" is honored with the
-        // same priority. CLI still wins over JSON because the CLI provider is Order=0.
+        // When the CLI configuration source is registered (the default host path), consult the
+        // unified command-line view first so a value supplied either via CLI or via
+        // testconfig.json's "commandLineOptions:results-directory" (issue #6349) is honored with
+        // the same priority. CLI still wins over JSON because the CLI provider is Order=0.
         //
         // When the CLI source is NOT registered (test-only callers that build AggregatedConfiguration
         // by hand), fall back to the legacy parseResult-first behavior so we don't silently demote

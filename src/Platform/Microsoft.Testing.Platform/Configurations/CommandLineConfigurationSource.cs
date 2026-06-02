@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform.Configurations;
 
 /// <summary>
 /// <see cref="IConfigurationSource"/> that exposes the parsed CLI options through the unified
-/// <see cref="IConfiguration"/> read model (Option C of issue #6349).
+/// <see cref="IConfiguration"/> read model (issue #6349).
 /// </summary>
 /// <remarks>
 /// <para>
