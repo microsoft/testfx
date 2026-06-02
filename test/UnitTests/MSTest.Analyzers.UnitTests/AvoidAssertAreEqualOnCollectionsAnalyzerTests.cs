@@ -689,6 +689,193 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code, ExpectedDiagnostic("Assert.AreEqual", "T"));
     }
 
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualWithExplicitObjectGenericArgumentAndArrayArguments_ReportDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int[] arr1 = [1, 2];
+                    int[] arr2 = [1, 2];
+                    {|#0:Assert.AreEqual<object>(arr1, arr2)|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, ExpectedDiagnostic("Assert.AreEqual", "int[]"));
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreNotEqualWithExplicitObjectGenericArgumentAndArrayArguments_ReportDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int[] arr1 = [1, 2];
+                    int[] arr2 = [1, 2];
+                    {|#0:Assert.AreNotEqual<object>(arr1, arr2)|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, ExpectedDiagnostic("Assert.AreNotEqual", "int[]"));
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualWithObjectCastOnCollections_ReportDiagnostic()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    List<int> expected = [1, 2];
+                    List<int> actual = [1, 2];
+                    {|#0:Assert.AreEqual((object)expected, (object)actual)|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, ExpectedDiagnostic("Assert.AreEqual", "List<int>"));
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualWithMixedObjectAndCollectionArguments_ReportDiagnostic()
+    {
+        // When T resolves to `object` because only one argument is widened, we should still flag the call
+        // based on the un-converted static type of the other argument.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    List<int> expected = [1, 2];
+                    object actual = new List<int> { 1, 2 };
+                    {|#0:Assert.AreEqual(expected, actual)|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, ExpectedDiagnostic("Assert.AreEqual", "List<int>"));
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualWithExplicitObjectGenericArgumentAndStringArguments_DoNotReportDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string s1 = "a";
+                    string s2 = "b";
+                    Assert.AreEqual<object>(s1, s2);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualWithObjectArgumentsAndNoCollectionType_DoNotReportDiagnostic()
+    {
+        // The user explicitly typed both arguments as object with no observable collection type at the call site.
+        // Without dataflow analysis we cannot know whether the runtime value is a collection, so we must not fire.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object expected = new List<int> { 1, 2 };
+                    object actual = new List<int> { 1, 2 };
+                    Assert.AreEqual(expected, actual);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualOnRecord_DoNotReportDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    MyRecord r1 = new(1);
+                    MyRecord r2 = new(1);
+                    Assert.AreEqual(r1, r2);
+                }
+
+                private sealed record MyRecord(int Value);
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualWithExplicitObjectGenericArgumentAndNullExpected_DoNotReportDiagnostic()
+    {
+        // The null-literal short-circuit must keep working regardless of how T is inferred at the call site.
+        string code = """
+            #nullable enable
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int[]? actual = [1, 2];
+                    Assert.AreEqual<object?>(null, actual);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     private static DiagnosticResult ExpectedDiagnostic(string methodName, string typeName)
         => VerifyCS.Diagnostic().WithLocation(0).WithArguments(methodName, typeName);
 
