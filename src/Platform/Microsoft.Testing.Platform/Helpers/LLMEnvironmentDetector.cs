@@ -63,20 +63,14 @@ internal sealed class LLMEnvironmentDetector
     /// </summary>
     /// <param name="environment">The environment abstraction to use for reading environment variables.</param>
     public LLMEnvironmentDetector(IEnvironment environment)
-        => _environment = environment;
+        => _environment = environment ?? throw new ArgumentNullException(nameof(environment));
 
     /// <summary>
     /// Detects if the current environment is hosted by a known LLM/AI agent CLI.
     /// </summary>
     /// <returns><c>true</c> if a known LLM agent environment is detected; otherwise, <c>false</c>.</returns>
     public bool IsLLMEnvironment()
-        => GetLLMEnvironment() is not null;
-
-    private string? GetLLMEnvironment()
-    {
-        string?[] results = DetectionRules.Select(r => r.GetResult(_environment)).Where(r => r != null).ToArray();
-        return results.Length > 0 ? string.Join(", ", results) : null;
-    }
+        => DetectionRules.Any(r => r.GetResult(_environment) is not null);
 
     /// <summary>
     /// Base class for environment detection rules that can be evaluated against environment variables.

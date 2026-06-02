@@ -9,7 +9,7 @@ public static class WellKnownEnvironmentVariables
     /// Environment variables that the Microsoft.Testing.Platform LLM detector inspects.
     /// Keep in sync with <c>LLMEnvironmentDetector</c>.
     /// </summary>
-    public static readonly string[] LLMEnvironmentVariables =
+    public static readonly IReadOnlyList<string> LLMEnvironmentVariables =
     [
         "CLAUDECODE",
         "CLAUDE_CODE_ENTRYPOINT",

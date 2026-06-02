@@ -233,6 +233,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     // When the option is absent, default to OutputShowMode.Failed when running under a known
     // LLM/AI environment (less token noise for agents) and to OutputShowMode.All otherwise.
     // An explicit --show-stdout/--show-stderr value always wins over the LLM-aware default.
+    // TODO(#8772): Update the --show-stdout/--show-stderr help text to reflect the LLM-aware default.
     private static OutputShowMode GetShowOutputMode(ICommandLineOptions commandLineOptions, string optionName, bool isLLMEnvironment)
         => commandLineOptions.TryGetOptionArgumentList(optionName, out string[]? arguments) && arguments is { Length: > 0 }
             ? arguments[0] switch
