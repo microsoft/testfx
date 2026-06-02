@@ -876,6 +876,36 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualWithUserDefinedConversionFromCollectionToNonCollection_DoNotReportDiagnostic()
+    {
+        // The argument's call-site static type is `Wrapper`, which is not a collection. The fact that
+        // a user-defined conversion exists from `int[]` to `Wrapper` must not cause MSTEST0065 to fire —
+        // the comparison the user actually wrote is on the Wrapper type, not the underlying array.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int[] arr1 = [1, 2];
+                    int[] arr2 = [1, 2];
+                    Assert.AreEqual<Wrapper>(arr1, arr2);
+                }
+
+                public sealed class Wrapper
+                {
+                    public static implicit operator Wrapper(int[] values) => new();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     private static DiagnosticResult ExpectedDiagnostic(string methodName, string typeName)
         => VerifyCS.Diagnostic().WithLocation(0).WithArguments(methodName, typeName);
 

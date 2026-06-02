@@ -107,7 +107,12 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
     private static ITypeSymbol? GetCollectionArgumentType(IInvocationOperation invocation, string parameterName, INamedTypeSymbol genericEnumerableSymbol)
     {
         IArgumentOperation? argument = invocation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == parameterName);
-        ITypeSymbol? argumentType = argument?.Value.WalkDownConversion().Type;
+
+        // Use WalkDownBuiltInConversion so we only peel off built-in conversions (boxing, reference,
+        // implicit numeric widening, etc.). A user-defined conversion can convert a collection-typed
+        // operand to a non-collection type (or vice versa), so the call-site static type — the result
+        // of the user-defined conversion — is what the user wrote and what we should reason about.
+        ITypeSymbol? argumentType = argument?.Value.WalkDownBuiltInConversion().Type;
         return argumentType is not null && ShouldReport(argumentType, genericEnumerableSymbol)
             ? argumentType
             : null;
