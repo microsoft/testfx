@@ -387,46 +387,6 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task CodeFix_InAnyOrder_ForAreEqual()
-    {
-        string code = """
-            using System.Collections.Generic;
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void MyTestMethod()
-                {
-                    List<int> expected = [1, 2];
-                    List<int> actual = [1, 2];
-                    {|#0:Assert.AreEqual(expected, actual)|};
-                }
-            }
-            """;
-
-        string fixedCode = """
-            using System.Collections.Generic;
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void MyTestMethod()
-                {
-                    List<int> expected = [1, 2];
-                    List<int> actual = [1, 2];
-                    Assert.AreSequenceEqual(expected, actual, Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InAnyOrder);
-                }
-            }
-            """;
-
-        await VerifyCodeFixAsync(code, fixedCode, codeActionIndex: 1, "Assert.AreEqual", "List<int>");
-    }
-
-    [TestMethod]
     public async Task CodeFix_Equivalent_ForAreEqual()
     {
         string code = """
@@ -463,7 +423,7 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
             }
             """;
 
-        await VerifyCodeFixAsync(code, fixedCode, codeActionIndex: 2, "Assert.AreEqual", "List<int>");
+        await VerifyCodeFixAsync(code, fixedCode, codeActionIndex: 1, "Assert.AreEqual", "List<int>");
     }
 
     [TestMethod]
@@ -507,46 +467,6 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task CodeFix_InAnyOrder_ForAreNotEqual()
-    {
-        string code = """
-            using System.Collections.Generic;
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void MyTestMethod()
-                {
-                    List<int> expected = [1, 2];
-                    List<int> actual = [1, 2];
-                    {|#0:Assert.AreNotEqual(expected, actual)|};
-                }
-            }
-            """;
-
-        string fixedCode = """
-            using System.Collections.Generic;
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void MyTestMethod()
-                {
-                    List<int> expected = [1, 2];
-                    List<int> actual = [1, 2];
-                    Assert.AreNotSequenceEqual(expected, actual, Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InAnyOrder);
-                }
-            }
-            """;
-
-        await VerifyCodeFixAsync(code, fixedCode, codeActionIndex: 1, "Assert.AreNotEqual", "List<int>");
-    }
-
-    [TestMethod]
     public async Task CodeFix_Equivalent_ForAreNotEqual()
     {
         string code = """
@@ -583,7 +503,7 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
             }
             """;
 
-        await VerifyCodeFixAsync(code, fixedCode, codeActionIndex: 2, "Assert.AreNotEqual", "List<int>");
+        await VerifyCodeFixAsync(code, fixedCode, codeActionIndex: 1, "Assert.AreNotEqual", "List<int>");
     }
 
     [TestMethod]
