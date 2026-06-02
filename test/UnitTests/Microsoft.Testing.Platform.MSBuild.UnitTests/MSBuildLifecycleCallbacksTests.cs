@@ -90,7 +90,7 @@ public sealed class MSBuildLifecycleCallbacksTests
             }
 
             Assert.Fail("Expected InvalidOperationException to be thrown.");
-            throw new InvalidOperationException("Expected InvalidOperationException to be thrown.");
+            return null!;
         }
     }
 }
