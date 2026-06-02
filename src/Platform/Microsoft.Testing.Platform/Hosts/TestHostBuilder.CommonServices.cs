@@ -182,6 +182,15 @@ internal sealed partial class TestHostBuilder
         serviceProvider.TryAddService(context.ProxyOutputDevice);
         serviceProvider.TryAddService(context.ProxyOutputDevice.OriginalOutputDevice);
 
+        // Reports extensions/consumers that have not yet completed once the test-application
+        // cancellation token is signalled. Registered after the output device so it can use it.
+        ShutdownProgressReporter shutdownProgressReporter = new(
+            context.TestApplicationCancellationTokenSource,
+            context.ProxyOutputDevice,
+            context.LoggerFactory,
+            systemClock);
+        serviceProvider.AddService(shutdownProgressReporter);
+
         context.TestFrameworkCapabilities = TestFramework!.TestFrameworkCapabilitiesFactory(serviceProvider);
         if (context.TestFrameworkCapabilities is IAsyncInitializableExtension testFrameworkCapabilitiesAsyncInitializable)
         {
