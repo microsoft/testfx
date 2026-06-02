@@ -127,6 +127,32 @@ internal static class AnsiCodes
     /// </remarks>
     public const string RemoveBusySpinner = $"{Esc}]9;4;0;{Esc}\\";
 
+    /// <summary>
+    /// Returns the pre-computed ANSI escape sequence that switches the foreground to <paramref name="color"/>.
+    /// Callers should prefer this over building the string inline to avoid per-call heap allocation.
+    /// </summary>
+    public static string GetSetColorEscapeCode(TerminalColor color) => color switch
+    {
+        TerminalColor.Black => "\x1b[30m",
+        TerminalColor.DarkRed => "\x1b[31m",
+        TerminalColor.DarkGreen => "\x1b[32m",
+        TerminalColor.DarkYellow => "\x1b[33m",
+        TerminalColor.DarkBlue => "\x1b[34m",
+        TerminalColor.DarkMagenta => "\x1b[35m",
+        TerminalColor.DarkCyan => "\x1b[36m",
+        TerminalColor.Gray => "\x1b[37m",
+        TerminalColor.Default => "\x1b[39m",
+        TerminalColor.DarkGray => "\x1b[90m",
+        TerminalColor.Red => "\x1b[91m",
+        TerminalColor.Green => "\x1b[92m",
+        TerminalColor.Yellow => "\x1b[93m",
+        TerminalColor.Blue => "\x1b[94m",
+        TerminalColor.Magenta => "\x1b[95m",
+        TerminalColor.Cyan => "\x1b[96m",
+        TerminalColor.White => "\x1b[97m",
+        _ => $"{CSI}{(int)color}{SetColor}",
+    };
+
     public static string Colorize(string? s, TerminalColor color)
         => RoslynString.IsNullOrWhiteSpace(s) ? s ?? string.Empty : $"{CSI}{(int)color}{SetColor}{s}{SetDefaultColor}";
 
