@@ -50,7 +50,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         _environment = environment;
         _task = task;
         _clock = clock;
-        if (_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName))
+        if (HangDumpOptions.IsEnabled(_commandLineOptions))
         {
             string namedPipeName = _environment.GetEnvironmentVariable(HangDumpEnvironmentVariableProvider.PipeNameEnvironmentVariableName)
                 ?? throw new InvalidOperationException($"Expected {HangDumpEnvironmentVariableProvider.PipeNameEnvironmentVariableName} environment variable set.");
@@ -71,7 +71,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
     public string Description => ExtensionResources.HangDumpExtensionDescription;
 
-    public Task<bool> IsEnabledAsync() => Task.FromResult(_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName));
+    public Task<bool> IsEnabledAsync() => Task.FromResult(HangDumpOptions.IsEnabled(_commandLineOptions));
 
     public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
