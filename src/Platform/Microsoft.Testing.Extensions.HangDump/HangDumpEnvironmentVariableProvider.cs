@@ -24,7 +24,7 @@ internal sealed class HangDumpEnvironmentVariableProvider : global::Microsoft.Te
 
     public override string Description => ExtensionResources.HangDumpExtensionDescription;
 
-    public override Task<bool> IsEnabledAsync() => Task.FromResult(_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName));
+    public override Task<bool> IsEnabledAsync() => Task.FromResult(HangDumpOptions.IsEnabled(_commandLineOptions));
 
     protected override string GetMissingEnvironmentVariableErrorMessage(string environmentVariableName)
         => string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpEnvironmentVariableIsMissingErrorMessage, environmentVariableName);
