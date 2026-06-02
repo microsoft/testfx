@@ -229,14 +229,13 @@ internal sealed class AnsiTerminal : ITerminal
 
     public void MoveCursorUp(int lineCount)
     {
-        string moveCursor = $"{AnsiCodes.CSI}{lineCount}{AnsiCodes.MoveUpToLineStart}";
         if (_isBatching)
         {
-            _stringBuilder.AppendLine(moveCursor);
+            _stringBuilder.Append(AnsiCodes.CSI).Append(lineCount).Append(AnsiCodes.MoveUpToLineStart).AppendLine();
         }
         else
         {
-            _console.WriteLine(moveCursor);
+            _console.WriteLine($"{AnsiCodes.CSI}{lineCount}{AnsiCodes.MoveUpToLineStart}");
         }
     }
 
@@ -264,7 +263,7 @@ internal sealed class AnsiTerminal : ITerminal
         }
 
         AppendLine($"{AnsiCodes.CSI}{_currentFrame.RenderedLines.Count + 2}{AnsiCodes.MoveUpToLineStart}");
-        Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInDisplay}");
+        Append(AnsiCodes.CsiEraseInDisplay);
         _currentFrame.Clear();
     }
 

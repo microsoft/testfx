@@ -243,14 +243,14 @@ internal sealed class AnsiTerminalTestProgressFrame
                         {
                             // Duration is not the same length (it is longer because time moves only forward), we need to re-render the whole line
                             // to avoid writing the duration over the last portion of text: my.dll (1s) -> my.d (1m 1s)
-                            terminal.Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInLine}");
+                            terminal.Append(AnsiCodes.CsiEraseInLine);
                             AppendTestWorkerProgress(progressItem, currentLine, terminal);
                         }
                     }
                     else
                     {
                         // These lines are different or the line was updated. Render the whole line.
-                        terminal.Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInLine}");
+                        terminal.Append(AnsiCodes.CsiEraseInLine);
                         AppendTestWorkerProgress(progressItem, currentLine, terminal);
                     }
                 }
@@ -278,14 +278,14 @@ internal sealed class AnsiTerminalTestProgressFrame
                         {
                             // Duration is not the same length (it is longer because time moves only forward), we need to re-render the whole line
                             // to avoid writing the duration over the last portion of text: my.dll (1s) -> my.d (1m 1s)
-                            terminal.Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInLine}");
+                            terminal.Append(AnsiCodes.CsiEraseInLine);
                             AppendTestWorkerDetail(detailItem, currentLine, terminal);
                         }
                     }
                     else
                     {
                         // These lines are different or the line was updated. Render the whole line.
-                        terminal.Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInLine}");
+                        terminal.Append(AnsiCodes.CsiEraseInLine);
                         AppendTestWorkerDetail(detailItem, currentLine, terminal);
                     }
                 }
@@ -317,7 +317,7 @@ internal sealed class AnsiTerminalTestProgressFrame
         // We rendered more lines in previous frame. Clear them.
         if (previousFrame.RenderedLines != null && i < previousFrame.RenderedLines.Count)
         {
-            terminal.Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInDisplay}");
+            terminal.Append(AnsiCodes.CsiEraseInDisplay);
         }
     }
 
