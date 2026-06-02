@@ -16,19 +16,17 @@ internal readonly struct VSTestBridgeRequestContext
 {
     public VSTestBridgeRequestContext(VSTestBridgedTestFrameworkBase adapterExtension)
     {
-        ServiceProvider = adapterExtension.ServiceProvider;
-        Configuration = ServiceProvider.GetConfiguration();
-        CommandLineOptions = ServiceProvider.GetRequiredService<ICommandLineOptions>();
-        LoggerFactory = ServiceProvider.GetRequiredService<ILoggerFactory>();
-        FileSystem = ServiceProvider.GetFileSystem();
-        ClientInfo = ServiceProvider.GetClientInfo();
-        OutputDevice = ServiceProvider.GetOutputDevice();
-        TestApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
-        NamedFeatureCapability = ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>();
-        MessageBus = ServiceProvider.GetMessageBus();
+        IServiceProvider serviceProvider = adapterExtension.ServiceProvider;
+        Configuration = serviceProvider.GetConfiguration();
+        CommandLineOptions = serviceProvider.GetRequiredService<ICommandLineOptions>();
+        LoggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        FileSystem = serviceProvider.GetFileSystem();
+        ClientInfo = serviceProvider.GetClientInfo();
+        OutputDevice = serviceProvider.GetOutputDevice();
+        TestApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
+        NamedFeatureCapability = serviceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>();
+        MessageBus = serviceProvider.GetMessageBus();
     }
-
-    public IServiceProvider ServiceProvider { get; }
 
     public IConfiguration Configuration { get; }
 
