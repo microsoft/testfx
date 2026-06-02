@@ -347,7 +347,7 @@ Maintain a single open issue titled `[test-improver] Monthly Activity {YYYY}-{MM
 
 The following constraints are **hard rules** for this repository. They override any opportunities surfaced from backlog, memory, or coverage gaps:
 
-- **Do NOT add VB.NET tests for analyzers.** The maintainers are not interested in VB.NET coverage for `MSTest.Analyzers` (or any analyzer project). Skip any backlog item that proposes adding VB-specific test cases for an analyzer (e.g. "Add VB.NET tests for `<Name>Analyzer`"). If memory still references such items, prune them from the backlog and do not surface them in the Monthly Activity Summary. C# tests for analyzers remain in scope.
+- **Do NOT add VB.NET tests for analyzers.** The maintainers are not interested in VB.NET coverage for `MSTest.Analyzers` (or any analyzer project). Skip any backlog item that proposes adding VB-specific test cases for an analyzer (e.g. "Add VB.NET tests for `<Name>Analyzer`"). If memory still references such items, **remove those entries from memory** and prune them from the backlog; do not surface them in the Monthly Activity Summary. C# tests for analyzers remain in scope.
 
 ## Guidelines
 
