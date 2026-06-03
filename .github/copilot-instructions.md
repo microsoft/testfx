@@ -63,6 +63,7 @@ In addition to the rules enforced by `.editorconfig`, you SHOULD:
 - Trust the C# null annotations and don't add null checks when the type system says a value cannot be null.
 - Prefer `?.` if applicable (e.g. `scope?.Dispose()`).
 - Use `ObjectDisposedException.ThrowIf` where applicable.
+- For dictionary initializers, always prefer the indexer syntax `[key] = value` over the collection-style `{ key, value }` syntax (e.g. `new Dictionary<string, int> { ["a"] = 1 }` rather than `new Dictionary<string, int> { { "a", 1 } }`).
 - Respect StyleCop.Analyzers rules, in particular:
   - SA1028: Code must not contain trailing whitespace
   - SA1316: Tuple element names should use correct casing
