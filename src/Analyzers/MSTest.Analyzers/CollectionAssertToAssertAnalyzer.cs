@@ -46,7 +46,7 @@ public sealed class CollectionAssertToAssertAnalyzer : DiagnosticAnalyzer
 
     /// <summary>
     /// Key used by the code-fix to recover the rewrite strategy from the diagnostic properties.
-    /// Values are <see cref="FixKindSimple"/>, <see cref="FixKindSwapTwoArgs"/>, or <see cref="FixKindAddInAnyOrder"/>.
+    /// Values are <see cref="FixKindSimple"/>, <see cref="FixKindSwapTwoArgs"/>, <see cref="FixKindAddInAnyOrder"/>, or <see cref="FixKindInstanceOfType"/>.
     /// </summary>
     internal const string FixKindKey = nameof(FixKindKey);
 
