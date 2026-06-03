@@ -393,32 +393,49 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
             return Marker;
         }
 
-        // Walk the string char-by-char and stop just before we exceed the budget.
         int byteCount = 0;
         int charCount = 0;
-        byte[] charBuffer = new byte[4];
-        foreach (char ch in content)
+        while (charCount < content.Length)
         {
-            int charBytes;
-            try
-            {
-                charBytes = Encoding.UTF8.GetBytes([ch], 0, 1, charBuffer, 0);
-            }
-            catch (EncoderFallbackException)
-            {
-                charBytes = 3; // worst case for a surrogate half
-            }
-
+            int charBytes = GetUtf8ByteCount(content, charCount, out int charsConsumed);
             if (byteCount + charBytes > budget)
             {
                 break;
             }
 
             byteCount += charBytes;
-            charCount++;
+            charCount += charsConsumed;
         }
 
-        return content.Substring(0, charCount) + Marker;
+        if (charCount > 0 && char.IsHighSurrogate(content[charCount - 1]))
+        {
+            charCount--;
+        }
+
+        return content[..charCount] + Marker;
+    }
+
+    private static int GetUtf8ByteCount(string content, int index, out int charsConsumed)
+    {
+        char ch = content[index];
+        charsConsumed = 1;
+        if (ch < 0x80)
+        {
+            return 1;
+        }
+
+        if (ch < 0x800)
+        {
+            return 2;
+        }
+
+        if (char.IsHighSurrogate(ch) && index + 1 < content.Length && char.IsLowSurrogate(content[index + 1]))
+        {
+            charsConsumed = 2;
+            return 4;
+        }
+
+        return 3;
     }
 
     private static AzureDevOpsTestResultAttachment? TryCreateRunAttachment(SessionFileArtifact sessionFileArtifact)
@@ -429,7 +446,7 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
         {
             name = fileInfo.Name;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or PathTooLongException)
         {
             return null;
         }

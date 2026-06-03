@@ -4,6 +4,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
@@ -25,6 +26,8 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class AzureDevOpsLivePublishingTests
 {
+    private const string TruncationMarker = "\n...[truncated]";
+
     private readonly List<string> _directoriesToDelete = [];
 
     [TestCleanup]
@@ -536,24 +539,60 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_DoesNotTruncateStdoutAtInlineByteLimit()
+    {
+        string stdout = new('x', AzureDevOpsLivePublishingConstants.MaxInlineAttachmentBytes);
+
+        AzureDevOpsTestResultAttachment uploaded = await UploadStdoutAttachmentAsync(stdout);
+
+        Assert.AreEqual(stdout, uploaded.InlineContent);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.MaxInlineAttachmentBytes, Encoding.UTF8.GetByteCount(uploaded.InlineContent!));
+    }
+
+    [TestMethod]
     public async Task ConsumeAsync_TruncatesLargeStdoutInline()
     {
-        using TestDirectory directory = CreateTestDirectory();
-        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(1, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out _);
-        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(205);
-
         string oversizedStdout = new('x', AzureDevOpsLivePublishingConstants.MaxInlineAttachmentBytes + 10_000);
-        TestNode node = CreateNode("failed-test", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), clock.UtcNow);
-        node.Properties.Add(new StandardOutputProperty(oversizedStdout));
 
-        await StartPublisherAsync(publisher);
-        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(node), CancellationToken.None);
+        AzureDevOpsTestResultAttachment uploaded = await UploadStdoutAttachmentAsync(oversizedStdout);
 
-        Assert.HasCount(1, client.UploadTestResultAttachmentCalls);
-        AzureDevOpsTestResultAttachment uploaded = client.UploadTestResultAttachmentCalls[0].Attachment;
         Assert.IsNotNull(uploaded.InlineContent);
-        Assert.IsLessThanOrEqualTo(AzureDevOpsLivePublishingConstants.MaxInlineAttachmentBytes, System.Text.Encoding.UTF8.GetByteCount(uploaded.InlineContent!));
-        Assert.EndsWith("...[truncated]", uploaded.InlineContent!, StringComparison.Ordinal);
+        Assert.IsLessThanOrEqualTo(AzureDevOpsLivePublishingConstants.MaxInlineAttachmentBytes, Encoding.UTF8.GetByteCount(uploaded.InlineContent!));
+        Assert.EndsWith(TruncationMarker, uploaded.InlineContent!, StringComparison.Ordinal);
+    }
+
+    [DataRow("€")]
+    [DataRow("😀")]
+    [TestMethod]
+    public async Task ConsumeAsync_TruncatesUnicodeStdoutWithinInlineByteLimit(string textElement)
+    {
+        int repeatCount = (AzureDevOpsLivePublishingConstants.MaxInlineAttachmentBytes / Encoding.UTF8.GetByteCount(textElement)) + 10_000;
+        string oversizedStdout = string.Concat(Enumerable.Repeat(textElement, repeatCount));
+
+        AzureDevOpsTestResultAttachment uploaded = await UploadStdoutAttachmentAsync(oversizedStdout);
+
+        Assert.IsNotNull(uploaded.InlineContent);
+        Assert.IsLessThanOrEqualTo(AzureDevOpsLivePublishingConstants.MaxInlineAttachmentBytes, Encoding.UTF8.GetByteCount(uploaded.InlineContent!));
+        Assert.EndsWith(TruncationMarker, uploaded.InlineContent!, StringComparison.Ordinal);
+
+        string retainedContent = uploaded.InlineContent![..^TruncationMarker.Length];
+        Assert.IsFalse(retainedContent.Length > 0 && char.IsHighSurrogate(retainedContent[^1]));
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_TruncatesStdoutWithoutSplittingSurrogatePairAtBoundary()
+    {
+        string emoji = "😀";
+        int markerBytes = Encoding.UTF8.GetByteCount(TruncationMarker);
+        int budget = AzureDevOpsLivePublishingConstants.MaxInlineAttachmentBytes - markerBytes;
+        string prefix = new('x', budget - Encoding.UTF8.GetByteCount(emoji));
+        string oversizedStdout = prefix + emoji + new string('x', markerBytes + 1);
+
+        AzureDevOpsTestResultAttachment uploaded = await UploadStdoutAttachmentAsync(oversizedStdout);
+
+        Assert.IsNotNull(uploaded.InlineContent);
+        Assert.IsLessThanOrEqualTo(AzureDevOpsLivePublishingConstants.MaxInlineAttachmentBytes, Encoding.UTF8.GetByteCount(uploaded.InlineContent!));
+        Assert.AreEqual(prefix + emoji + TruncationMarker, uploaded.InlineContent);
     }
 
     [TestMethod]
@@ -820,6 +859,22 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.AreEqual(123, coordinatedRun.RunId);
         Assert.IsTrue(coordinatedRun.IsOwner);
+    }
+
+    private async Task<AzureDevOpsTestResultAttachment> UploadStdoutAttachmentAsync(string stdout)
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(1, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out _);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(205);
+
+        TestNode node = CreateNode("failed-test", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), clock.UtcNow);
+        node.Properties.Add(new StandardOutputProperty(stdout));
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(node), CancellationToken.None);
+
+        Assert.HasCount(1, client.UploadTestResultAttachmentCalls);
+        return client.UploadTestResultAttachmentCalls[0].Attachment;
     }
 
     private static async Task StartPublisherAsync(AzureDevOpsTestResultsPublisher publisher)

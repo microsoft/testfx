@@ -19,7 +19,6 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
     private const int MaxAttempts = 3;
     private const int BaseDelayMilliseconds = 500;
     private static readonly TimeSpan AttemptTimeout = TimeSpan.FromSeconds(15);
-    private static readonly TimeSpan HttpClientTimeout = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(60);
 
     // Attachments can be up to 16 MB and base64 encoding bloats them ~4/3x. Allow generously longer timeouts.
@@ -62,6 +61,8 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
             : throw new InvalidOperationException(AzureDevOpsResources.AzureDevOpsLivePublishingInvalidResponse);
     }
 
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "Response types are internal, fixed, and controlled by this extension.")]
+    [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "Response types are internal, fixed, and controlled by this extension.")]
     public async Task<IReadOnlyList<int>?> PublishTestResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken)
     {
         using HttpRequestMessage request = CreateRequest(
@@ -73,7 +74,7 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
         // Transport/HTTP failures throw from SendCoreAsync — caller retries.
         using var requestTimeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         requestTimeoutSource.CancelAfter(RequestTimeout);
-        using HttpResponseMessage response = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken).ConfigureAwait(false);
+        using HttpResponseMessage response = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken, AttemptTimeout).ConfigureAwait(false);
         string payload = await ReadAsStringAsync(response.Content, requestTimeoutSource.Token).ConfigureAwait(false);
 
         // From this point on the AzDO server has accepted the results. Failing to parse the response
@@ -160,7 +161,7 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
 
         return new HttpClient(handler, disposeHandler: false)
         {
-            Timeout = HttpClientTimeout,
+            Timeout = Timeout.InfiniteTimeSpan,
         };
     }
 
@@ -174,7 +175,7 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
         => new(new Uri(collectionUri, UriKind.Absolute), $"{Uri.EscapeDataString(project)}/_apis/test/runs/{runId}/results?api-version={ApiVersion}");
 
     private static Uri BuildResultAttachmentsUri(string collectionUri, string project, int runId, int testCaseResultId)
-        => new(new Uri(collectionUri, UriKind.Absolute), $"{Uri.EscapeDataString(project)}/_apis/test/runs/{runId}/Results/{testCaseResultId}/attachments?api-version={ApiVersion}");
+        => new(new Uri(collectionUri, UriKind.Absolute), $"{Uri.EscapeDataString(project)}/_apis/test/runs/{runId}/results/{testCaseResultId}/attachments?api-version={ApiVersion}");
 
     private static Uri BuildRunAttachmentsUri(string collectionUri, string project, int runId)
         => new(new Uri(collectionUri, UriKind.Absolute), $"{Uri.EscapeDataString(project)}/_apis/test/runs/{runId}/attachments?api-version={ApiVersion}");
@@ -198,7 +199,7 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
                     return null;
                 }
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or PathTooLongException)
             {
                 return null;
             }
@@ -206,8 +207,12 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
             try
             {
                 bytes = File.ReadAllBytes(filePath);
+                if (bytes.Length > AzureDevOpsLivePublishingConstants.MaxAttachmentSizeBytes)
+                {
+                    return null;
+                }
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or PathTooLongException)
             {
                 return null;
             }
@@ -253,7 +258,7 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
         using var requestTimeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         requestTimeoutSource.CancelAfter(RequestTimeout);
 
-        using HttpResponseMessage response = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken).ConfigureAwait(false);
+        using HttpResponseMessage response = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken, AttemptTimeout).ConfigureAwait(false);
         string payload = await ReadAsStringAsync(response.Content, requestTimeoutSource.Token).ConfigureAwait(false);
         TResponse? deserialized = JsonSerializer.Deserialize<TResponse>(payload, JsonSerializerOptions);
         return deserialized ?? throw new InvalidOperationException(AzureDevOpsResources.AzureDevOpsLivePublishingInvalidResponse);
@@ -263,17 +268,17 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
     {
         using var requestTimeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         requestTimeoutSource.CancelAfter(RequestTimeout);
-        using HttpResponseMessage ignoredResponse = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken).ConfigureAwait(false);
+        using HttpResponseMessage ignoredResponse = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken, AttemptTimeout).ConfigureAwait(false);
     }
 
     private async Task SendAsync(HttpRequestMessage request, CancellationToken cancellationToken, TimeSpan requestTimeout)
     {
         using var requestTimeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         requestTimeoutSource.CancelAfter(requestTimeout);
-        using HttpResponseMessage ignoredResponse = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken).ConfigureAwait(false);
+        using HttpResponseMessage ignoredResponse = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken, requestTimeout).ConfigureAwait(false);
     }
 
-    private async Task<HttpResponseMessage> SendCoreAsync(HttpRequestMessage request, CancellationToken requestCancellationToken, CancellationToken userCancellationToken)
+    private async Task<HttpResponseMessage> SendCoreAsync(HttpRequestMessage request, CancellationToken requestCancellationToken, CancellationToken userCancellationToken, TimeSpan attemptTimeout)
     {
         Exception? lastException = null;
 
@@ -283,7 +288,7 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
             {
                 using HttpRequestMessage currentRequest = await CloneAsync(request, requestCancellationToken).ConfigureAwait(false);
                 using var attemptTimeoutSource = CancellationTokenSource.CreateLinkedTokenSource(requestCancellationToken);
-                attemptTimeoutSource.CancelAfter(AttemptTimeout);
+                attemptTimeoutSource.CancelAfter(attemptTimeout);
 
                 try
                 {
