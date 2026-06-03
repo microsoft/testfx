@@ -16,15 +16,11 @@ public sealed class InternalUnsafeActionTaskParameterizedTestNode<TData>
 
     Func<Task<IEnumerable>> ITaskParameterizedTestNode.GetArguments => async () => await GetArguments().ConfigureAwait(false);
 
-    internal override Func<TData, Task> CreateInvokeBody(ITestExecutionContext testExecutionContext)
-        => item =>
-        {
-            Body(testExecutionContext, item);
-            return Task.CompletedTask;
-        };
+    internal override Task<IEnumerable<TData>> GetArgumentsAsync()
+        => GetArguments();
 
-    internal override Task InvokeWithArgumentsAsync(Func<TData, Task> invokeBodyAsync, Func<Func<Task>, Task> safeInvoke)
-        => InternalUnsafeParameterizedTestNodeHelper.InvokeAsync(GetArguments, invokeBodyAsync, safeInvoke);
+    internal override Func<TData, Task> CreateInvokeBody(ITestExecutionContext testExecutionContext)
+        => CreateInvokeBody(Body, testExecutionContext);
 
     internal override TestNode Expand(object arguments, string argumentFragmentUid, string argumentFragmentDisplayName)
         => InternalUnsafeParameterizedTestNodeHelper.ExpandActionNode(this, arguments, argumentFragmentUid, argumentFragmentDisplayName, Body);
