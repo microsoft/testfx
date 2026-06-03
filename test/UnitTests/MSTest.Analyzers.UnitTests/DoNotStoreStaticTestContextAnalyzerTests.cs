@@ -131,4 +131,111 @@ public sealed class DoNotStoreStaticTestContextAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenAssigningToInstanceMember_NoDiagnostic()
+    {
+        // Assigning TestContext to an instance field or property should not trigger the diagnostic.
+        // The analyzer only fires when the assignment target has no 'Instance' (i.e. static member).
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private TestContext _testContext;
+                public TestContext TestContext { get; set; }
+
+                [ClassInitialize]
+                public static void ClassInit(TestContext tc)
+                {
+                }
+
+                [TestInitialize]
+                public void TestInit()
+                {
+                    _testContext = TestContext;
+                    TestContext = TestContext;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssigningToLocalVariable_NoDiagnostic()
+    {
+        // Assigning a TestContext parameter to a local variable is fine — not a static member reference.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblyInit(TestContext tc)
+                {
+                    TestContext local = tc;
+                    local.WriteLine("");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssigningNonTestContextParameterToStaticField_NoDiagnostic()
+    {
+        // Only assignments where the *value* is a TestContext parameter are flagged.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private static string s_name;
+
+                [AssemblyInitialize]
+                public static void AssemblyInit(TestContext tc)
+                {
+                    s_name = "value";
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+#if NET
+    [TestMethod]
+    public async Task WhenAssigningTestContextInHelperMethod_Diagnostic()
+    {
+        // The diagnostic fires on any static member assignment of a TestContext parameter,
+        // regardless of whether the containing method is [AssemblyInitialize] or [ClassInitialize].
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private static TestContext s_testContext;
+
+                [AssemblyInitialize]
+                public static void AssemblyInit(TestContext tc)
+                {
+                    Store(tc);
+                }
+
+                private static void Store(TestContext tc)
+                {
+                    [|s_testContext = tc|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+#endif
 }
