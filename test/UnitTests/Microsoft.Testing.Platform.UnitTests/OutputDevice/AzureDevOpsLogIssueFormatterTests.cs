@@ -20,10 +20,16 @@ public sealed class AzureDevOpsLogIssueFormatterTests
             AzureDevOpsLogIssueFormatter.FormatLogIssue("error", "boom").TrimStart('#'));
 
     [TestMethod]
-    public void FormatLogIssue_EscapesSemicolonsCarriageReturnsAndNewlines()
+    public void FormatLogIssue_EscapesSemicolonsCarriageReturnsNewlinesPercentAndCloseBracket()
         => Assert.AreEqual(
-            "vso[task.logissue type=warning]a%3Bb%0Dc%0Ad",
-            AzureDevOpsLogIssueFormatter.FormatLogIssue("warning", "a;b\rc\nd").TrimStart('#'));
+            "vso[task.logissue type=warning]a%3Bb%0Dc%0Ad%25e%5Df",
+            AzureDevOpsLogIssueFormatter.FormatLogIssue("warning", "a;b\rc\nd%e]f").TrimStart('#'));
+
+    [TestMethod]
+    public void Escape_PercentIsEscapedFirstSoOtherSequencesAreNotDoubleEncoded()
+        // If `;` were escaped before `%`, "%3B" in input would round-trip back to ";" on the
+        // agent side. We must produce "%253B" so the agent sees a literal "%3B" in the message.
+        => Assert.AreEqual("%253B%3B%0A%5D", AzureDevOpsLogIssueFormatter.Escape("%3B;\n]"));
 
     [TestMethod]
     public void FormatLogIssue_LeavesPlainAsciiUnchanged()

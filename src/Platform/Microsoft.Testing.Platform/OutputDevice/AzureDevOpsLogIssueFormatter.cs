@@ -44,9 +44,11 @@ internal static class AzureDevOpsLogIssueFormatter
         => $"##vso[task.logissue type={severity}]{Escape(message)}";
 
     /// <summary>
-    /// Escapes a value for inclusion in the message body of an Azure Pipelines logging command:
-    /// <c>;</c>, <c>\r</c> and <c>\n</c> are percent-encoded so the agent treats the line as a
-    /// single command terminated by the next real newline.
+    /// Escapes a value for inclusion in the message body of an Azure Pipelines logging command
+    /// per the official escaping rules
+    /// (<see href="https://learn.microsoft.com/azure/devops/pipelines/scripts/logging-commands#formatting-commands">formatting commands</see>):
+    /// <c>%</c> -> <c>%25</c>, <c>;</c> -> <c>%3B</c>, <c>\r</c> -> <c>%0D</c>, <c>\n</c> -> <c>%0A</c>, <c>]</c> -> <c>%5D</c>.
+    /// <c>%</c> must be escaped first so the other replacements don't get double-encoded.
     /// </summary>
     internal static string Escape(string value)
     {
@@ -61,9 +63,11 @@ internal static class AzureDevOpsLogIssueFormatter
             char c = value[i];
             string? replacement = c switch
             {
+                '%' => "%25",
                 ';' => "%3B",
                 '\r' => "%0D",
                 '\n' => "%0A",
+                ']' => "%5D",
                 _ => null,
             };
 
