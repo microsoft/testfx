@@ -38,7 +38,10 @@ internal readonly record struct EquatableArray<T>(ImmutableArray<T> Items)
 {
     public int Count => Items.IsDefault ? 0 : Items.Length;
 
-    public IEnumerator<T> GetEnumerator() => ((IEnumerable<T>)(Items.IsDefault ? ImmutableArray<T>.Empty : Items)).GetEnumerator();
+    // Return ImmutableArray<T>.Enumerator (a struct) by value so that 'foreach' uses the duck-typed
+    // enumerator and avoids boxing on the source-generator hot path. Returning IEnumerator<T> here
+    // would force an interface dispatch and allocate on every iteration.
+    public ImmutableArray<T>.Enumerator GetEnumerator() => (Items.IsDefault ? ImmutableArray<T>.Empty : Items).GetEnumerator();
 
     public bool Equals(EquatableArray<T> other)
     {
