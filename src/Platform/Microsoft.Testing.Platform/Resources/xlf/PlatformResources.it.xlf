@@ -895,15 +895,15 @@ I valori validi sono 'Normal', 'Detailed'. L'impostazione predefinita è 'Normal
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="needs-review-translation">Determina quando mostrare l'output degli errori acquisito di un test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Determina quando mostrare l'output degli errori acquisito di un test.
 I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="needs-review-translation">Determina quando mostrare l'output standard acquisito di un test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+        <target state="translated">Determina quando mostrare l'output standard acquisito di un test.
 I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All'.</target>
         <note />
       </trans-unit>
