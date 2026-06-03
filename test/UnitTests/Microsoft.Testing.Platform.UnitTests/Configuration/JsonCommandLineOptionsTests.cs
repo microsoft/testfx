@@ -427,9 +427,12 @@ public sealed class JsonCommandLineOptionsTests
             new Mock<ICommandLineOptions>().Object);
 
         Assert.IsFalse(result.IsValid);
-        // Verify it's the duplicate-options pass that fires (not a later ArgumentException
-        // or a different validator) by asserting on the unique wording from that pass.
+        // Pin the diagnostic to the duplicate-options pass (rather than any failure) by asserting
+        // on the unique wording from that pass plus both provider display names appearing in the
+        // error so a future refactor that swaps which pass surfaces the failure will be caught.
         Assert.Contains("declared by multiple", result.ErrorMessage);
+        Assert.Contains(providerA.DisplayName, result.ErrorMessage);
+        Assert.Contains(providerB.DisplayName, result.ErrorMessage);
     }
 
     [TestMethod]
@@ -450,6 +453,8 @@ public sealed class JsonCommandLineOptionsTests
 
         Assert.IsFalse(result.IsValid);
         Assert.Contains("declared by multiple", result.ErrorMessage);
+        Assert.Contains(systemA.DisplayName, result.ErrorMessage);
+        Assert.Contains(systemB.DisplayName, result.ErrorMessage);
     }
 
     [TestMethod]

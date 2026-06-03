@@ -57,7 +57,7 @@ internal static class CommandLineOptionsValidator
         // (testconfig.json is case-insensitive everywhere else). Use OrdinalIgnoreCase so a JSON
         // entry such as "Timeout": "30s" resolves to the same provider/option metadata as
         // "--timeout 30s" on the command line.
-        var providerAndOptionByOptionName = extensionOptionsByProvider.Union(systemOptionsByProvider)
+        var providerAndOptionByOptionName = extensionOptionsByProvider.Concat(systemOptionsByProvider)
             .SelectMany(tuple => tuple.Value.Select(option => (provider: tuple.Key, option)))
             .ToDictionary(tuple => tuple.option.Name, StringComparer.OrdinalIgnoreCase);
 
@@ -162,7 +162,7 @@ internal static class CommandLineOptionsValidator
         // duplicates — extension/extension, extension/system, or system/system — surfaces as a
         // ValidationResult.Invalid rather than crashing the platform.
         var optionNameToProviders = new Dictionary<string, HashSet<ICommandLineOptionsProvider>>(StringComparer.OrdinalIgnoreCase);
-        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> kvp in extensionOptionsByProvider.Union(systemOptionsByProvider))
+        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> kvp in extensionOptionsByProvider.Concat(systemOptionsByProvider))
         {
             ICommandLineOptionsProvider provider = kvp.Key;
             foreach (CommandLineOption option in kvp.Value)
