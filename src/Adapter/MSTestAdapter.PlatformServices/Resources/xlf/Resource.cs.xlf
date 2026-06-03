@@ -342,17 +342,17 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="UTA_AssemblyFixtureProviderTypeIsGeneric">
         <source>UTA070: Type '{0}' referenced by [AssemblyFixtureProvider] must not be generic.</source>
-        <target state="new">UTA070: Type '{0}' referenced by [AssemblyFixtureProvider] must not be generic.</target>
+        <target state="translated">UTA070: Typ {0}, na který odkazuje [AssemblyFixtureProvider], nesmí být obecný.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_AssemblyFixtureProviderTypeReflectionFailed">
         <source>UTA071: Failed to enumerate methods on type '{0}' referenced by [AssemblyFixtureProvider]. {1}</source>
-        <target state="new">UTA071: Failed to enumerate methods on type '{0}' referenced by [AssemblyFixtureProvider]. {1}</target>
+        <target state="translated">UTA071: Nepodařilo se vytvořit výčet metod pro typ {0}, na který odkazuje [AssemblyFixtureProvider]. {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_AssemblyFixtureProviderLoadFailed">
         <source>UTA072: Failed to load [AssemblyFixtureProvider] marker from assembly '{0}'. {1}</source>
-        <target state="new">UTA072: Failed to load [AssemblyFixtureProvider] marker from assembly '{0}'. {1}</target>
+        <target state="translated">UTA072: Nepodařilo se načíst značku [AssemblyFixtureProvider] ze sestavení {0}. {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_AssemblyInitMethodThrows">
