@@ -62,23 +62,16 @@ public sealed class IgnoreShouldHaveJustificationAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeMethod(SymbolAnalysisContext context, INamedTypeSymbol ignoreAttributeSymbol, INamedTypeSymbol testMethodAttributeSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
+        ImmutableArray<AttributeData> methodAttributes = methodSymbol.GetAttributes();
 
-        AttributeData? ignoreAttribute = null;
-        bool isTestMethod = false;
-        foreach (AttributeData methodAttribute in methodSymbol.GetAttributes())
+        if (!methodAttributes.IsTestMethod(testMethodAttributeSymbol))
         {
-            if (methodAttribute.AttributeClass.Inherits(testMethodAttributeSymbol))
-            {
-                isTestMethod = true;
-            }
-
-            if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, ignoreAttributeSymbol))
-            {
-                ignoreAttribute = methodAttribute;
-            }
+            return;
         }
 
-        if (!isTestMethod || ignoreAttribute is null)
+        AttributeData? ignoreAttribute = methodAttributes.FirstOrDefault(attribute =>
+            SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, ignoreAttributeSymbol));
+        if (ignoreAttribute is null)
         {
             return;
         }
@@ -89,23 +82,16 @@ public sealed class IgnoreShouldHaveJustificationAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeType(SymbolAnalysisContext context, INamedTypeSymbol ignoreAttributeSymbol, INamedTypeSymbol testClassAttributeSymbol)
     {
         var typeSymbol = (INamedTypeSymbol)context.Symbol;
+        ImmutableArray<AttributeData> typeAttributes = typeSymbol.GetAttributes();
 
-        AttributeData? ignoreAttribute = null;
-        bool isTestClass = false;
-        foreach (AttributeData typeAttribute in typeSymbol.GetAttributes())
+        if (!typeAttributes.IsTestClass(testClassAttributeSymbol))
         {
-            if (typeAttribute.AttributeClass.Inherits(testClassAttributeSymbol))
-            {
-                isTestClass = true;
-            }
-
-            if (SymbolEqualityComparer.Default.Equals(typeAttribute.AttributeClass, ignoreAttributeSymbol))
-            {
-                ignoreAttribute = typeAttribute;
-            }
+            return;
         }
 
-        if (!isTestClass || ignoreAttribute is null)
+        AttributeData? ignoreAttribute = typeAttributes.FirstOrDefault(attribute =>
+            SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, ignoreAttributeSymbol));
+        if (ignoreAttribute is null)
         {
             return;
         }
@@ -132,14 +118,26 @@ public sealed class IgnoreShouldHaveJustificationAnalyzer : DiagnosticAnalyzer
 
     private static bool HasJustification(AttributeData ignoreAttribute)
     {
-        // Parameterless [Ignore] - no justification.
-        if (ignoreAttribute.ConstructorArguments.Length == 0)
+        // First positional argument of IgnoreAttribute(string? message) is the justification when provided.
+        if (ignoreAttribute.ConstructorArguments.Length > 0
+            && ignoreAttribute.ConstructorArguments[0].Value is string positionalMessage
+            && !string.IsNullOrWhiteSpace(positionalMessage))
         {
-            return false;
+            return true;
         }
 
-        // First positional argument of IgnoreAttribute(string? message) is the justification.
-        TypedConstant messageArgument = ignoreAttribute.ConstructorArguments[0];
-        return messageArgument.Value is string message && !string.IsNullOrWhiteSpace(message);
+        // The IgnoreMessage property (inherited from ConditionBaseAttribute) can also carry the
+        // justification when applied via named-argument syntax: [Ignore(IgnoreMessage = "...")].
+        foreach (KeyValuePair<string, TypedConstant> namedArgument in ignoreAttribute.NamedArguments)
+        {
+            if (namedArgument.Key == "IgnoreMessage"
+                && namedArgument.Value.Value is string namedMessage
+                && !string.IsNullOrWhiteSpace(namedMessage))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

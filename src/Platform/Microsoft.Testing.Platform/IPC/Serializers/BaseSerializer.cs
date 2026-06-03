@@ -5,11 +5,8 @@
 using System.Buffers;
 #endif
 
-#if NET
-using Microsoft.Testing.Platform.Helpers;
-#endif
-
 using Microsoft.CodeAnalysis;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.IPC.Serializers;
 
@@ -69,34 +66,6 @@ internal abstract class BaseSerializer
         {
             ArrayPool<byte>.Shared.Return(bytes);
         }
-    }
-
-    protected static void WriteStringValue(Stream stream, string str)
-    {
-        int stringutf8TotalBytes = Encoding.UTF8.GetByteCount(str);
-        byte[] bytes = ArrayPool<byte>.Shared.Rent(stringutf8TotalBytes);
-        try
-        {
-            Encoding.UTF8.GetBytes(str, bytes);
-            stream.Write(bytes, 0, stringutf8TotalBytes);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(bytes);
-        }
-    }
-
-    protected static void WriteStringSize(Stream stream, string str)
-    {
-        int stringutf8TotalBytes = Encoding.UTF8.GetByteCount(str);
-        Span<byte> len = stackalloc byte[sizeof(int)];
-
-        if (!BitConverter.TryWriteBytes(len, stringutf8TotalBytes))
-        {
-            throw ApplicationStateGuard.Unreachable();
-        }
-
-        stream.Write(len);
     }
 
     protected static void WriteSize<T>(Stream stream)
@@ -213,19 +182,6 @@ internal abstract class BaseSerializer
         stream.Write(bytes, 0, bytes.Length);
     }
 
-    protected static void WriteStringValue(Stream stream, string str)
-    {
-        byte[] bytes = Encoding.UTF8.GetBytes(str);
-        stream.Write(bytes, 0, bytes.Length);
-    }
-
-    protected static void WriteStringSize(Stream stream, string str)
-    {
-        byte[] bytes = Encoding.UTF8.GetBytes(str);
-        byte[] len = BitConverter.GetBytes(bytes.Length);
-        stream.Write(len, 0, len.Length);
-    }
-
     protected static void WriteSize<T>(Stream stream)
         where T : struct
     {
@@ -299,8 +255,7 @@ internal abstract class BaseSerializer
         }
 
         WriteUShort(stream, id);
-        WriteStringSize(stream, value);
-        WriteStringValue(stream, value);
+        WriteString(stream, value);
     }
 
     protected static void WriteField(Stream stream, ushort id, long? value)
@@ -386,10 +341,10 @@ internal abstract class BaseSerializer
         Type type when type == typeof(int) => sizeof(int),
         Type type when type == typeof(long) => sizeof(long),
         Type type when type == typeof(short) => sizeof(short),
+        Type type when type == typeof(ushort) => sizeof(ushort),
         Type type when type == typeof(bool) => sizeof(bool),
         Type type when type == typeof(byte) => sizeof(byte),
-        Type type when type == typeof(long) => sizeof(long),
-        _ => 0,
+        _ => throw ApplicationStateGuard.Unreachable(),
     };
 
     public static bool IsNullOrEmpty<T>(T[]? list) => list is null || list.Length == 0;

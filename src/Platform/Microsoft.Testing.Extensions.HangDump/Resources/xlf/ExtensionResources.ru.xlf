@@ -119,6 +119,21 @@ The timeout value is specified in one of the following formats:
         <target state="translated">"--hangdump-timeout" ожидает один аргумент времени ожидания</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
+        <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
+        <target state="translated">Параметры "--hangdump-type" и "--hangdump-type-if-supported" являются взаимоисключающими. Используйте "--hangdump-type-if-supported", чтобы согласиться на использование типа дампа с наилучшим возможным результатом. Если запрошенный тип недоступен в текущей среде выполнения, выполняется переход на ближайший доступный тип (с информационным сообщением). Или используйте "--hangdump-type", чтобы завершать работу при первой ошибке в неподдерживаемых средах выполнения.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
+        <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
+        <target state="translated">"--hangdump-type-if-supported {0}" не поддерживается в текущей среде выполнения. Переход к "{1}".</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
+        <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
+        <target state="translated">То же, что и "--hangdump-type", но при недоступности запрошенного типа в текущей среде выполнения автоматически переходит (с информационным сообщением) на ближайший поддерживаемый тип дампа (например, "Triage" поддерживается только в .NET Core и в .NET Framework переходит на "Mini"). Используйте этот параметр, чтобы сохранять одну и ту же командную строку во всех матрицах CI, где сочетаются .NET Framework и .NET. Допустимые значения: "Mini", "Heap", "Full", "Triage", "None". Взаимоисключающий с "--hangdump-type".</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.

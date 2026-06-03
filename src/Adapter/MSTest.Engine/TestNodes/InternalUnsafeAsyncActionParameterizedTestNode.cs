@@ -8,7 +8,7 @@ namespace Microsoft.Testing.Framework;
 /// </summary>
 /// <typeparam name="TData">Type that holds the parameter data.</typeparam>
 public sealed class InternalUnsafeAsyncActionParameterizedTestNode<TData>
-    : TestNode, IParameterizedTestNode, IParameterizedAsyncActionTestNode
+    : InternalUnsafeParameterizedTestNodeBase<TData>, IParameterizedTestNode
 {
     public required Func<ITestExecutionContext, TData, Task> Body { get; init; }
 
@@ -16,12 +16,12 @@ public sealed class InternalUnsafeAsyncActionParameterizedTestNode<TData>
 
     Func<IEnumerable> IParameterizedTestNode.GetArguments => GetArguments;
 
-    async Task IParameterizedAsyncActionTestNode.InvokeAsync(ITestExecutionContext testExecutionContext, Func<Func<Task>, Task> safeInvoke)
-        => await InternalUnsafeParameterizedTestNodeHelper.InvokeAsync(
-            GetArguments,
-            item => Body(testExecutionContext, item),
-            safeInvoke).ConfigureAwait(false);
+    internal override Task<IEnumerable<TData>> GetArgumentsAsync()
+        => Task.FromResult(GetArguments());
 
-    TestNode IExpandableTestNode.GetExpandedTestNode(object arguments, string argumentFragmentUid, string argumentFragmentDisplayName)
+    internal override Func<TData, Task> CreateInvokeBody(ITestExecutionContext testExecutionContext)
+        => item => Body(testExecutionContext, item);
+
+    internal override TestNode Expand(object arguments, string argumentFragmentUid, string argumentFragmentDisplayName)
         => InternalUnsafeParameterizedTestNodeHelper.ExpandAsyncActionNode(this, arguments, argumentFragmentUid, argumentFragmentDisplayName, Body);
 }

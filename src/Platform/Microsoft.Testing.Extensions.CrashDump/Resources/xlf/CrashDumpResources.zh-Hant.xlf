@@ -111,6 +111,11 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
         <target state="translated">'--crashdump-type' 需要單一傾印類型做為引數 (例如 '--crashdump-type Heap')</target>
         <note />
       </trans-unit>
+      <trans-unit id="CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage">
+        <source>'--crash-report' and '--crash-report-if-supported' are mutually exclusive. Use '--crash-report-if-supported' to opt into a best-effort crash report that is silently skipped on platforms where it is not supported, or '--crash-report' to fail fast when the option cannot be honored.</source>
+        <target state="translated">'--crash-report' 與 '--crash-report-if-supported' 互斥。使用 '--crash-report-if-supported' 以選擇在不支援的平台上以無訊息方式略過的最佳毀損報告，或使用 '--crash-report' 以在無法使用該選項時快速檢錯。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CrashReportArtifactDescription">
         <source>The testhost process crash report file</source>
         <target state="translated">testhost 處理常式損毀報告檔案</target>
@@ -121,14 +126,29 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
         <target state="translated">損毀報告檔案</target>
         <note />
       </trans-unit>
+      <trans-unit id="CrashReportIfSupportedIgnoredOnNetFrameworkInfoMessage">
+        <source>'--crash-report-if-supported' was specified but is being ignored on this runtime: the .NET Framework testhost does not support the runtime-based crash dump / crash report mechanism. No crash report file will be produced.</source>
+        <target state="translated">已指定 '--crash-report-if-supported'，但在此執行階段遭到忽略: .NET Framework 測試主機不支援以執行階段為基礎的毀損傾印/毀損報告機制。不會產生損毀報告檔案。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashReportIfSupportedIgnoredOnWindowsInfoMessage">
+        <source>'--crash-report-if-supported' was specified but is being ignored on this platform: the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on Windows (see https://github.com/dotnet/runtime/issues/80191). No crash report file will be produced.</source>
+        <target state="translated">已指定 '--crash-report-if-supported'，但在此平台上遭到忽略: .NET 執行階段會忽略 Windows 上的基礎 'DOTNET_EnableCrashReport' 和 'DOTNET_EnableCrashReportOnly' 環境變數 (請參閱 https://github.com/dotnet/runtime/issues/80191)。不會產生損毀報告檔案。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashReportIfSupportedOptionDescription">
+        <source>Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</source>
+        <target state="translated">與 '--crash-report' 相同，但在不支援產生毀損報告的平台上以無訊息方式忽略 (包含資訊訊息)。使用此選項，在包含 Windows 的 CI 矩陣當中保持相同的命令列。與 '--crash-report' 互斥。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">
-        <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crashdump' to generate a crash dump file instead.</source>
-        <target state="translated">'--crash-report' 在 Windows 上不支援，因為 .NET 執行階段會忽略此平台上的底層 'DOTNET_EnableCrashReport' 和 'DOTNET_EnableCrashReportOnly' 環境變數。請參閱 https://github.com/dotnet/runtime/issues/80191。請改用 '--crashdump' 來產生損毀傾印檔案。</target>
+        <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</source>
+        <target state="translated">'--crash-report' 在 Windows 上不支援，因為 .NET 執行階段會忽略此平台上的底層 'DOTNET_EnableCrashReport' 和 'DOTNET_EnableCrashReportOnly' 環境變數。請參閱 https://github.com/dotnet/runtime/issues/80191。使用 '--crash-report-if-supported' 在 Windows 上以無訊息方式略過此選項，或改為使用 '--crashdump' 來產生損毀傾印檔案。</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashReportOptionDescription">
-        <source>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).</source>
-        <target state="translated">[僅限 Linux/macOS] 當測試處理序損毀時，產生 JSON 損毀報告。將此選項與 '--crashdump' 一起使用，也可產生傾印檔案。單獨使用時需要 .NET 7 以上版本；與 '--crashdump' 搭配使用時需要 .NET 6 以上版本。工具不會強制檢查此執行階段需求: 在不支援的執行階段上，不會輸出損毀報告。由於 .NET 執行階段的限制 (dotnet/runtime#80191)，Windows 不支援此功能。</target>
+        <source>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.</source>
+        <target state="translated">[僅限 Linux/macOS] 當測試處理序損毀時，產生 JSON 損毀報告。將此選項與 '--crashdump' 一起使用，也可產生傾印檔案。單獨使用時需要 .NET 7 以上版本；與 '--crashdump' 搭配使用時需要 .NET 6 以上版本。工具不會強制檢查此執行階段需求: 在不支援的執行階段上，不會輸出損毀報告。在 Windows 上不提供支援，因為 .NET 執行階段限制 (dotnet/runtime#80191)；使用 '--crash-report-if-supported' 以無訊息方式略過該選項。</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashSequenceOptionDescription">

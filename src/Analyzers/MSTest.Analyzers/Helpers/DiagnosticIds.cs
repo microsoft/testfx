@@ -71,4 +71,5 @@ internal static class DiagnosticIds
     public const string PreferAsyncAssertionRuleId = "MSTEST0064";
     public const string AvoidAssertAreEqualOnCollectionsRuleId = "MSTEST0065";
     public const string IgnoreShouldHaveJustificationRuleId = "MSTEST0066";
+    public const string AvoidThreadSleepAndTaskWaitInTestsRuleId = "MSTEST0067";
 }

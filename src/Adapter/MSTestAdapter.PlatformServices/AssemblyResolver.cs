@@ -307,15 +307,13 @@ internal
     /// </summary>
     /// <param name="path">The path of the assembly.</param>
     /// <returns>The loaded <see cref="Assembly"/>.</returns>
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:Members attributed with RequiresUnreferencedCode may break when trimming", Justification = "AssemblyResolver is part of the legacy reflection-mode loader and is not used in source-generator / Native AOT execution mode.")]
 #if NETFRAMEWORK
     protected virtual
 #else
     private static
 #endif
-    // This whole class is not used in source generator mode.
-#pragma warning disable IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
     Assembly LoadAssemblyFrom(string path) => Assembly.LoadFrom(path);
-#pragma warning restore IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
 
 #if NETFRAMEWORK
     /// <summary>

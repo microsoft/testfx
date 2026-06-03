@@ -4,8 +4,8 @@
 using Microsoft.Testing.Platform.Resources;
 
 // Most of the core logic is from:
-// - https://github.com/dotnet/command-line-api/blob/feb61c7f328a2401d74f4317b39d02126cfdfe24/src/System.CommandLine/Parsing/CliParser.cs#L40
-// - https://github.com/dotnet/command-line-api/blob/feb61c7f328a2401d74f4317b39d02126cfdfe24/src/System.CommandLine/Parsing/StringExtensions.cs#L349
+// - https://github.com/dotnet/command-line-api/blob/fa1991f84bc8c384aa636a251398a40e56ee1702/src/System.CommandLine/Parsing/CommandLineParser.cs#L40
+// - https://github.com/dotnet/command-line-api/blob/fa1991f84bc8c384aa636a251398a40e56ee1702/src/System.CommandLine/Parsing/StringExtensions.cs#L316
 internal static class ResponseFileHelper
 {
     internal static bool TryReadResponseFile(string rspFilePath, ICollection<string> errors, [NotNullWhen(true)] out string[]? newArguments)

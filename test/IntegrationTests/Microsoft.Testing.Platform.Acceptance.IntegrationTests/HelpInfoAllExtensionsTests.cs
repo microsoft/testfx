@@ -73,16 +73,18 @@ Options:
         The default is TestResults in the directory that contains the test application.
     --show-stderr
         Determines when to show captured error output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
     --show-stdout
         Determines when to show captured standard output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
     --timeout
         A global test execution timeout.
         Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.
 Extension options:
     --crash-report
-        [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).
+        [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.
+    --crash-report-if-supported
+        Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.
     --crash-sequence
         Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
         The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
@@ -114,6 +116,8 @@ Extension options:
         Specify the type of the dump.
         Valid values are {{GetExpectedHangDumpDescriptionOptions(tfm)}}.
         Default type is 'Full'
+    --hangdump-type-if-supported
+        Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.
     --publish-azdo-run-name
         Custom Azure DevOps test run name for live test-result publishing.
     --publish-azdo-test-results
@@ -124,10 +128,16 @@ Extension options:
         Demote failures with an Azure DevOps flaky history of at least 25% in the selected window to warnings.
     --report-azdo-flaky-history
         Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.
+    --report-azdo-progress
+        Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.
     --report-azdo-quarantine-file
         Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.
     --report-azdo-severity
         Severity to use for the reported event. Options are: error (default) and warning.
+    --report-azdo-stackframe-filter
+        Additional regex patterns (matched against the fully-qualified type prefix of each stack frame) that should be skipped when looking for the user's call site to annotate. Repeatable; up to 16 patterns. Compiled with a 500ms match timeout. Additive to the extension's built-in MSTest assertion-implementation prefixes.
+    --report-azdo-summary
+        Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.
     --report-azdo-upload-artifact-exclude
         Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.
     --report-azdo-upload-artifact-include
@@ -338,12 +348,12 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Determines when to show captured error output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
       --show-stdout
         Arity: 1
         Hidden: False
         Description: Determines when to show captured standard output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
 Registered command line providers:
   AzureDevOpsCommandLineProvider
     Name: Azure DevOps report generator
@@ -370,6 +380,10 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.
+      --report-azdo-progress
+        Arity: 0
+        Hidden: False
+        Description: Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.
       --report-azdo-quarantine-file
         Arity: 1
         Hidden: False
@@ -378,6 +392,14 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Severity to use for the reported event. Options are: error (default) and warning.
+      --report-azdo-stackframe-filter
+        Arity: 1..N
+        Hidden: False
+        Description: Additional regex patterns (matched against the fully-qualified type prefix of each stack frame) that should be skipped when looking for the user's call site to annotate. Repeatable; up to 16 patterns. Compiled with a 500ms match timeout. Additive to the extension's built-in MSTest assertion-implementation prefixes.
+      --report-azdo-summary
+        Arity: 0..1
+        Hidden: False
+        Description: Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.
       --report-azdo-upload-artifact-exclude
         Arity: 0..N
         Hidden: False
@@ -402,7 +424,11 @@ Registered command line providers:
       --crash-report
         Arity: 0
         Hidden: False
-        Description: [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).
+        Description: [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.
+      --crash-report-if-supported
+        Arity: 0
+        Hidden: False
+        Description: Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.
       --crash-sequence
         Arity: 1
         Hidden: False
@@ -455,6 +481,10 @@ Registered command line providers:
         Description: Specify the type of the dump.
         Valid values are {{GetExpectedHangDumpDescriptionOptions(tfm)}}.
         Default type is 'Full'
+      --hangdump-type-if-supported
+        Arity: 1
+        Hidden: False
+        Description: Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.
   HtmlReportGeneratorCommandLine
     Name: HTML report generator
     Version: *

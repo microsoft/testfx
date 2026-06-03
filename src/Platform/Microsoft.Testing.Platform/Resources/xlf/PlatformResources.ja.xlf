@@ -565,7 +565,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
         <source>'--server {0}' requires '--{1}' to be specified.</source>
-        <target state="new">'--server {0}' requires '--{1}' to be specified.</target>
+        <target state="translated">'--server {0}' には '--{1}' を指定する必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
@@ -676,7 +676,7 @@ The default is TestResults in the directory that contains the test application.<
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerInvalidArgument">
         <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
-        <target state="new">'--server' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <target state="translated">'--server' は予期しない値 '{0}'を受け取りました。サポートされている値: {1}。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
@@ -775,6 +775,11 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
         <target state="translated">'ITestFramework' 型のインスタンスは、サービス プロバイダーを介して登録することはできません。'ITestApplicationBuilder.RegisterTestFramework' を介して登録する必要があります</target>
         <note />
+      </trans-unit>
+      <trans-unit id="ShutdownProgressStillWaitingPrefix">
+        <source>Still waiting for: </source>
+        <target state="new">Still waiting for: </target>
+        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</note>
       </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
@@ -901,15 +906,15 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
-        <target state="translated">テストのキャプチャされたエラー出力を表示するタイミングを決定します。
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
+        <target state="needs-review-translation">テストのキャプチャされたエラー出力を表示するタイミングを決定します。
 有効な値は 'All'、'Failed'、'None' です。既定値は 'All' です。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
-        <target state="translated">テストのキャプチャされた標準の出力を表示するタイミングを決定します。
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
+        <target state="needs-review-translation">テストのキャプチャされた標準の出力を表示するタイミングを決定します。
 有効な値は 'All'、'Failed'、'None' です。既定値は 'All' です。</target>
         <note />
       </trans-unit>

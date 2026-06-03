@@ -177,6 +177,74 @@ public sealed class BFSTestNodeVisitorTests : TestBase
         Assert.HasCount(1, includedTestNodes);
     }
 
+    [DataRow(nameof(InternalUnsafeActionParameterizedTestNode<>))]
+    [DataRow(nameof(InternalUnsafeAsyncActionParameterizedTestNode<>))]
+    [DataRow(nameof(InternalUnsafeActionTaskParameterizedTestNode<>))]
+    [DataRow(nameof(InternalUnsafeAsyncActionTaskParameterizedTestNode<>))]
+    [TestMethod]
+    public async Task ParameterizedNodes_InvokeAsync_InvokesBodyForEachArgument(string parameterizedTestNode)
+    {
+        // Arrange
+        List<byte> invokedArguments = [];
+        IParameterizedAsyncActionTestNode parameterizedNode = parameterizedTestNode switch
+        {
+            nameof(InternalUnsafeActionParameterizedTestNode<>) => new InternalUnsafeActionParameterizedTestNode<byte>
+            {
+                StableUid = "ID1",
+                DisplayName = "A",
+                Body = (_, argument) => invokedArguments.Add(argument),
+                GetArguments = () => new byte[] { 0, 1 },
+            },
+            nameof(InternalUnsafeAsyncActionParameterizedTestNode<>) => new InternalUnsafeAsyncActionParameterizedTestNode<byte>
+            {
+                StableUid = "ID1",
+                DisplayName = "A",
+                Body = (_, argument) =>
+                {
+                    invokedArguments.Add(argument);
+                    return Task.CompletedTask;
+                },
+                GetArguments = () => new byte[] { 0, 1 },
+            },
+            nameof(InternalUnsafeActionTaskParameterizedTestNode<>) => new InternalUnsafeActionTaskParameterizedTestNode<byte>
+            {
+                StableUid = "ID1",
+                DisplayName = "A",
+                Body = (_, argument) => invokedArguments.Add(argument),
+                GetArguments = static () => Task.FromResult<IEnumerable<byte>>(new byte[] { 0, 1 }),
+            },
+            nameof(InternalUnsafeAsyncActionTaskParameterizedTestNode<>) => new InternalUnsafeAsyncActionTaskParameterizedTestNode<byte>
+            {
+                StableUid = "ID1",
+                DisplayName = "A",
+                Body = (_, argument) =>
+                {
+                    invokedArguments.Add(argument);
+                    return Task.CompletedTask;
+                },
+                GetArguments = static () => Task.FromResult<IEnumerable<byte>>(new byte[] { 0, 1 }),
+            },
+            _ => throw new ArgumentException($"Unknown test node type: {parameterizedTestNode}", nameof(parameterizedTestNode)),
+        };
+
+        int safeInvokeCount = 0;
+
+        // Act
+        await parameterizedNode.InvokeAsync(
+            null!,
+            async callback =>
+            {
+                safeInvokeCount++;
+                await callback();
+            });
+
+        // Assert
+        Assert.HasCount(2, invokedArguments);
+        Assert.AreEqual((byte)0, invokedArguments[0]);
+        Assert.AreEqual((byte)1, invokedArguments[1]);
+        Assert.AreEqual(2, safeInvokeCount);
+    }
+
     [TestMethod]
     public async Task Visit_WithModuleNamespaceClassMethodLevelAndExpansion_DiscoverTestsWithCorrectParentsAndTypes()
     {

@@ -119,6 +119,21 @@ The timeout value is specified in one of the following formats:
         <target state="translated">'--hangdump-timeout' 需要單一逾時引數</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
+        <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
+        <target state="translated">'--hangdump-type' 與 '--hangdump-type-if-supported' 互斥。使用 '--hangdump-type-if-supported' 以選擇最佳的傾印類型，該類型會在要求的類型無法用於目前執行階段時退回至最接近的可用類型 (包含資訊訊息)，或使用 '--hangdump-type' 以在不支援的執行階段快速檢錯。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
+        <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
+        <target state="translated">目前執行階段不支援 '--hangdump-type-if-supported {0}'。退回至 '{1}'。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
+        <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
+        <target state="translated">與 '--hangdump-type' 相同，但是當要求的類型無法用於目前執行階段時會以無訊息方式 (包含資訊訊息) 退回至最接近的支援傾印類型 (例如，'Triage' 僅在 .NET Core 上提供支援，而在 .NET Framework 上會退回至 'Mini')。使用此選項，在混合 .NET Framework 和 .NET 的 CI 矩陣當中保持相同的命令列。有效值為 'Mini'、'Heap'、'Full'、'Triage'、'None'。與 '--hangdump-type' 互斥。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.

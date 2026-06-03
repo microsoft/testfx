@@ -157,6 +157,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">명시적 'DynamicDataSourceType'을 전달하지 말고 기본 자동 검색 동작을 사용합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsDescription">
+        <source>Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</source>
+        <target state="translated">테스트 메서드 또는 테스트 픽스처 내에서 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' 또는 'Task&lt;TResult&gt;.Result'를 사용하여 현재 스레드를 동기적으로 차단하는 것은 불안정성(flakiness)의 일반적인 원인이며, 테스트 프레임워크가 협조적 스케줄링이 필요한 SynchronizationContext에서 테스트를 실행할 때 교착 상태를 일으킬 수도 있습니다. 시간 기반 대기에는 'await Task.Delay'를 사용하고 결과를 확인하려면 작업을 'await'하세요.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsMessageFormat">
+        <source>Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</source>
+        <target state="translated">테스트 코드에서 '{0}'은(는) 테스트 불안정성을 유발할 수 있으므로 사용하지 마세요. 'await Task.Delay'와 같은 비동기 대안을 고려하거나 작업을 'await'하세요</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsTitle">
+        <source>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</source>
+        <target state="translated">테스트 코드에서 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' 또는 'Task&lt;TResult&gt;.Result'와 같은 동기 차단 호출을 사용하지 마세요</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
         <target state="translated">'async void' 메서드, 로컬 함수 또는 람다 내에서 어설션하지 마십시오. 이 컨텍스트에서 throw된 예외는 처리되지 않은 예외가 됩니다. .NET Framework 아래에서 VSTest를 사용하면 자동으로 무시됩니다. 최신 .NET에서 Microsoft.Testing.Platform 또는 VSTest를 사용하는 경우 프로세스가 중단될 수 있습니다.</target>
@@ -524,17 +539,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationDescription">
         <source>An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</source>
-        <target state="new">An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</target>
+        <target state="translated">테스트 메서드 또는 테스트 클래스에 적용된 '[Ignore]' 특성에는 해당 테스트 또는 클래스가 무시되는 이유를 설명하는 비어 있지 않은 메시지가 포함되어야 합니다. 근거 메시지는 건너뛴 테스트를 더 쉽게 분류할 수 있게 하고, 검토자가 의도를 이해하는 데 도움이 되며, 테스트가 모르는 사이에 영구히 비활성화되는 것을 방지합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationMessageFormat">
         <source>'[Ignore]' should specify a message explaining why '{0}' is ignored</source>
-        <target state="new">'[Ignore]' should specify a message explaining why '{0}' is ignored</target>
+        <target state="translated">'[Ignore]'는 '{0}'이(가) 무시되는 이유를 설명하는 메시지를 지정해야 합니다</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationTitle">
         <source>'[Ignore]' should specify a justification</source>
-        <target state="new">'[Ignore]' should specify a justification</target>
+        <target state="translated">'[Ignore]'는 근거를 지정해야 합니다</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueDescription">
@@ -811,10 +826,10 @@ The type declaring these methods should also respect the following rules:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
-        <target state="new">'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
-- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
-- it should not be 'static'
-- it should have a setter.</target>
+        <target state="translated">'TestContext'는 정적이 아닌 속성이어야 하며, 생성자에서 할당되거나 MSTest에 의해 설정되어야 합니다. MSTest에서 설정하려면 다음 레이아웃을 따라야 합니다.
+- '[assembly: DiscoverInternals]' 특성이 설정되었는지 여부에 관계없이 'public'이어야 합니다.
+- 'static'이 아니어야 합니다.
+- setter가 있어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">

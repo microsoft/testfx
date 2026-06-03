@@ -565,7 +565,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
         <source>'--server {0}' requires '--{1}' to be specified.</source>
-        <target state="new">'--server {0}' requires '--{1}' to be specified.</target>
+        <target state="translated">'--server {0}' için '--{1}' belirtilmelidir.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
@@ -675,7 +675,7 @@ Varsayılan değer, test uygulamasını içeren dizindeki TestResults'dır.</tar
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerInvalidArgument">
         <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
-        <target state="new">'--server' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <target state="translated">'--server', beklenmeyen '{0}' değerini aldı. Desteklenen değerler: {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
@@ -774,6 +774,11 @@ Açık bir birim soneki bulunan bir zaman değeri olarak bir bağımsız değiş
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
         <target state="translated">'ITestFramework' türündeki örnekler hizmet sağlayıcısı aracılığıyla değil, 'ITestApplicationBuilder.RegisterTestFramework' aracılığıyla kaydedilmelidir</target>
         <note />
+      </trans-unit>
+      <trans-unit id="ShutdownProgressStillWaitingPrefix">
+        <source>Still waiting for: </source>
+        <target state="new">Still waiting for: </target>
+        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</note>
       </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
@@ -900,15 +905,15 @@ Geçerli değerler: ‘Normal’, ‘Ayrıntılı’. Varsayılan değer: ‘Nor
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
-        <target state="translated">Testte yakalanan hata çıktısının ne zaman gösterileceğini belirler.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
+        <target state="needs-review-translation">Testte yakalanan hata çıktısının ne zaman gösterileceğini belirler.
 Geçerli değerler: 'Tümü', 'Başarısız', 'Yok'. Varsayılan değer: 'Tümü'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
-        <target state="translated">Testte yakalanan standart çıktının ne zaman gösterileceğini belirler.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
+        <target state="needs-review-translation">Testte yakalanan standart çıktının ne zaman gösterileceğini belirler.
 Geçerli değerler: 'Tümü', 'Başarısız', 'Yok'. Varsayılan değer: 'Tümü'.</target>
         <note />
       </trans-unit>

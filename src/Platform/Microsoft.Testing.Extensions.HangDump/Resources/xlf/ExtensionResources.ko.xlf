@@ -119,6 +119,21 @@ The timeout value is specified in one of the following formats:
         <target state="translated">'--hangdump-timeout'에는 단일 시간 제한 인수가 필요합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
+        <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
+        <target state="translated">'--hangdump-type'과 '--hangdump-type-if-supported'는 함께 사용할 수 없습니다. 요청된 형식을 현재 런타임에서 사용할 수 없을 때 가장 가까운 사용 가능한 형식으로 대체하는 최선의 덤프 형식을 사용하려면 '--hangdump-type-if-supported'를 사용하고, 지원되지 않는 런타임에서 빠르게 실패하려면 '--hangdump-type'을 사용하세요.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
+        <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
+        <target state="translated">'--hangdump-type-if-supported {0}'은(는) 현재 런타임에서 지원되지 않습니다. '{1}'(으)로 대체하는 중입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
+        <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
+        <target state="translated">'--hangdump-type'과(와) 동일하지만 요청된 형식을 현재 런타임에서 사용할 수 없는 경우 가장 가까운 지원 덤프 형식으로 자동으로 대체됩니다(정보 메시지와 함께)(예: 'Triage'는 .NET Core에서만 지원되며 .NET Framework에서는 'Mini'로 대체됨). .NET Framework와 .NET이 혼합된 CI 매트릭스에서 동일한 명령줄을 유지하려면 이 옵션을 사용하세요. 유효한 값은 'Mini', 'Heap', 'Full', 'Triage', 'None'입니다. '--hangdump-type'과 함께 사용할 수 없습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.

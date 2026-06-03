@@ -62,15 +62,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzer : Diagnos
             return;
         }
 
-        bool isTestClass = false;
-        foreach (AttributeData classAttribute in namedTypeSymbol.GetAttributes())
-        {
-            if (classAttribute.AttributeClass.Inherits(testClassAttributeSymbol))
-            {
-                isTestClass = true;
-                break;
-            }
-        }
+        bool isTestClass = namedTypeSymbol.IsTestClass(testClassAttributeSymbol);
 
         if (isTestClass)
         {

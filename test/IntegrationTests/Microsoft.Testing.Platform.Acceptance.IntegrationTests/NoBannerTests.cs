@@ -56,6 +56,24 @@ public class NoBannerTests : AcceptanceTestBase<NoBannerTests.TestAssetFixture>
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task UsingLLMEnvironmentVar_TheBannerDoesNotAppear(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            null,
+            new Dictionary<string, string?>
+            {
+                // CLAUDECODE matches LLMEnvironmentDetector's claude rule (AnyPresentEnvironmentRule).
+                { "CLAUDECODE", "1" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
+        testHostResult.AssertOutputDoesNotMatchRegex(_bannerRegexMatchPattern);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task WithoutUsingNoBanner_TheBannerAppears(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);

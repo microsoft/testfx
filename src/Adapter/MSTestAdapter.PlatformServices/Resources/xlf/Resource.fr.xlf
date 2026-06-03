@@ -272,12 +272,12 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
       </trans-unit>
       <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
         <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>
-        <target state="new">Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</target>
+        <target state="translated">« RandomizeTestOrder » et « OrderTestsByNameInClass » sont définis. « OrderTestsByNameInClass » sera ignoré.</target>
         <note>{Locked="RandomizeTestOrder"}{Locked="OrderTestsByNameInClass"}</note>
       </trans-unit>
       <trans-unit id="RandomTestOrderBanner">
         <source>Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</source>
-        <target state="new">Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</target>
+        <target state="translated">Ordre de test aléatoire activé (Seed : {0}). Définissez « RandomTestOrderSeed » pour reproduire cet ordre.</target>
         <note>{Locked="Seed"}{Locked="RandomTestOrderSeed"}</note>
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
@@ -338,6 +338,21 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
       <trans-unit id="UTA_AssemblyCleanupMethodWasUnsuccesful">
         <source>Assembly Cleanup method {0}.{1} failed. Error Message: {2}. StackTrace: {3}</source>
         <target state="translated">La méthode Cleanup d'assembly {0}.{1} a échoué. Message d'erreur : {2}. StackTrace : {3}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_AssemblyFixtureProviderTypeIsGeneric">
+        <source>UTA070: Type '{0}' referenced by [AssemblyFixtureProvider] must not be generic.</source>
+        <target state="translated">UTA070 : le type « {0} » référencé par [AssemblyFixtureProvider] ne doit pas être générique.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_AssemblyFixtureProviderTypeReflectionFailed">
+        <source>UTA071: Failed to enumerate methods on type '{0}' referenced by [AssemblyFixtureProvider]. {1}</source>
+        <target state="translated">UTA071 : échec de l’énumération des méthodes sur le type « {0} » référencé par [AssemblyFixtureProvider]. {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_AssemblyFixtureProviderLoadFailed">
+        <source>UTA072: Failed to load [AssemblyFixtureProvider] marker from assembly '{0}'. {1}</source>
+        <target state="translated">UTA072 : échec du chargement du marqueur [AssemblyFixtureProvider] à partir de l’assembly « {0} ». {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_AssemblyInitMethodThrows">

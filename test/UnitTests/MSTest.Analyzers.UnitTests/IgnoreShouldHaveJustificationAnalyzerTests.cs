@@ -323,4 +323,204 @@ public sealed class IgnoreShouldHaveJustificationAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod1"), fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasIgnoreWithNamedIgnoreMessage_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [Ignore(IgnoreMessage = "Tracked by #12345")]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasIgnoreWithNamedIgnoreMessage_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [Ignore(IgnoreMessage = "Disabled until feature ships")]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasIgnoreWithEmptyPositionalAndValidNamedIgnoreMessage_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [Ignore("", IgnoreMessage = "Tracked by #12345")]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasIgnoreWithEmptyNamedIgnoreMessage_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:Ignore(IgnoreMessage = "")|}]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [Ignore(IgnoreMessage = "TODO: explain why this is ignored")]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod1"), fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasIgnoreWithWhitespaceNamedIgnoreMessage_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:Ignore(IgnoreMessage = "   ")|}]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [Ignore(IgnoreMessage = "TODO: explain why this is ignored")]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod1"), fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasIgnoreWithNullNamedIgnoreMessage_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            #nullable enable
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:Ignore(IgnoreMessage = null)|}]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            #nullable enable
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [Ignore(IgnoreMessage = "TODO: explain why this is ignored")]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod1"), fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasIgnoreWithEmptyNamedIgnoreMessage_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [{|#0:Ignore(IgnoreMessage = "")|}]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [Ignore(IgnoreMessage = "TODO: explain why this is ignored")]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic().WithLocation(0).WithArguments("MyTestClass"), fixedCode);
+    }
 }

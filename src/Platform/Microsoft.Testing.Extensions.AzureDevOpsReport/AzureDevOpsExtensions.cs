@@ -33,6 +33,26 @@ public static class AzureDevOpsExtensions
                     serviceProvider.GetTestApplicationModuleInfo(),
                     serviceProvider.GetLoggerFactory()));
 
+        var compositeSummaryReporter =
+            new CompositeExtensionFactory<AzureDevOpsSummaryReporter>(serviceProvider =>
+                new AzureDevOpsSummaryReporter(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetConfiguration(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetFileSystem(),
+                    serviceProvider.GetOutputDevice(),
+                    serviceProvider.GetTestApplicationModuleInfo(),
+                    serviceProvider.GetLoggerFactory()));
+
+        var compositeProgressReporter =
+            new CompositeExtensionFactory<AzureDevOpsProgressReporter>(serviceProvider =>
+                new AzureDevOpsProgressReporter(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetOutputDevice(),
+                    serviceProvider.GetTestApplicationModuleInfo(),
+                    serviceProvider.GetLoggerFactory()));
+
         var compositeTestResultsPublisher =
             new CompositeExtensionFactory<AzureDevOpsTestResultsPublisher>(serviceProvider =>
                new AzureDevOpsTestResultsPublisher(
@@ -60,10 +80,14 @@ public static class AzureDevOpsExtensions
                 historyService);
         });
         builder.TestHost.AddDataConsumer(compositeArtifactUploader);
+        builder.TestHost.AddDataConsumer(compositeSummaryReporter);
+        builder.TestHost.AddDataConsumer(compositeProgressReporter);
         builder.TestHost.AddDataConsumer(compositeTestResultsPublisher);
         builder.TestHost.AddTestSessionLifetimeHandler(serviceProvider =>
             historyService ??= CreateHistoryService(serviceProvider));
         builder.TestHost.AddTestSessionLifetimeHandler(compositeArtifactUploader);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeSummaryReporter);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeProgressReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeTestResultsPublisher);
         builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());
     }

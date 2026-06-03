@@ -48,47 +48,50 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
     public object[] GetCustomAttributes(Assembly assembly, Type type)
         => assembly.GetCustomAttributes(type, inherit: true);
 
-#pragma warning disable IL2070 // this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
-#pragma warning disable IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
-#pragma warning disable IL2067 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
-#pragma warning disable IL2057 // Unrecognized value passed to the typeName parameter of 'System.Type.GetType(String)'
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2070:'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method.", Justification = "Reflection-based discovery/execution is the MSTest reflection-mode adapter path. Native AOT support relies on MSTest source-generated reflection metadata, not on this code path.")]
     public ConstructorInfo[] GetDeclaredConstructors(Type classType)
         => classType.GetConstructors(DeclaredOnlyLookup);
 
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2070:'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method.", Justification = "Reflection-based discovery/execution is the MSTest reflection-mode adapter path. Native AOT support relies on MSTest source-generated reflection metadata, not on this code path.")]
     public MethodInfo[] GetDeclaredMethods(Type classType)
         => classType.GetMethods(DeclaredOnlyLookup);
 
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2070:'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method.", Justification = "Reflection-based discovery/execution is the MSTest reflection-mode adapter path. Native AOT support relies on MSTest source-generated reflection metadata, not on this code path.")]
     public PropertyInfo[] GetDeclaredProperties(Type type)
         => type.GetProperties(DeclaredOnlyLookup);
 
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:Members attributed with RequiresUnreferencedCode may break when trimming", Justification = "Reflection-based discovery/execution is the MSTest reflection-mode adapter path. Native AOT support relies on MSTest source-generated reflection metadata, not on this code path.")]
     public Type[] GetDefinedTypes(Assembly assembly)
         => assembly.GetTypes();
 
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2070:'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method.", Justification = "Reflection-based discovery/execution is the MSTest reflection-mode adapter path. Native AOT support relies on MSTest source-generated reflection metadata, not on this code path.")]
     public MethodInfo[] GetRuntimeMethods(Type type)
         => type.GetMethods(Everything);
 
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2070:'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method.", Justification = "Reflection-based discovery/execution is the MSTest reflection-mode adapter path. Native AOT support relies on MSTest source-generated reflection metadata, not on this code path.")]
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2067:'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method.", Justification = "Reflection-based discovery/execution is the MSTest reflection-mode adapter path. Native AOT support relies on MSTest source-generated reflection metadata, not on this code path.")]
     public MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters, bool includeNonPublic)
         => includeNonPublic
             ? declaringType.GetMethod(methodName, Everything, null, parameters, null)
             : declaringType.GetMethod(methodName, parameters);
 
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2070:'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method.", Justification = "Reflection-based discovery/execution is the MSTest reflection-mode adapter path. Native AOT support relies on MSTest source-generated reflection metadata, not on this code path.")]
     public PropertyInfo? GetRuntimeProperty(Type classType, string testContextPropertyName, bool includeNonPublic)
         => includeNonPublic
             ? classType.GetProperty(testContextPropertyName, Everything)
             : classType.GetProperty(testContextPropertyName);
 
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2057:Unrecognized value passed to the typeName parameter of 'System.Type.GetType(String)'.", Justification = "Reflection-based discovery/execution is the MSTest reflection-mode adapter path. Native AOT support relies on MSTest source-generated reflection metadata, not on this code path.")]
     public Type? GetType(string typeName)
         => Type.GetType(typeName);
 
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:Members attributed with RequiresUnreferencedCode may break when trimming", Justification = "Reflection-based discovery/execution is the MSTest reflection-mode adapter path. Native AOT support relies on MSTest source-generated reflection metadata, not on this code path.")]
     public Type? GetType(Assembly assembly, string typeName)
         => assembly.GetType(typeName);
 
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2067:'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method.", Justification = "Reflection-based discovery/execution is the MSTest reflection-mode adapter path. Native AOT support relies on MSTest source-generated reflection metadata, not on this code path.")]
     public object? CreateInstance(Type type, object?[] parameters)
         => Activator.CreateInstance(type, parameters);
-#pragma warning restore IL2070 // this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
-#pragma warning restore IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
-#pragma warning restore IL2067 // 'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to 'target method'.
-#pragma warning restore IL2057 // Unrecognized value passed to the typeName parameter of 'System.Type.GetType(String)'
 
     /// <summary>
     /// Checks to see if a member or type is decorated with the given attribute, or an attribute that derives from it. e.g. [MyTestClass] from [TestClass] will match if you look for [TestClass]. The inherit parameter does not impact this checking.

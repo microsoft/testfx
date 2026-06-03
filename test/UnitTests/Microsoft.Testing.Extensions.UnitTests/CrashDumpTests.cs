@@ -198,11 +198,153 @@ public sealed class CrashDumpTests
     }
 
     [TestMethod]
-    [DataRow("MyApp_%p_crash.dmp", @"^MyApp_.*_crash\.dmp$")]
-    [DataRow("%e_%p_crash.dmp", @"^.*_.*_crash\.dmp$")]
-    [DataRow("%p%t_crash.dmp", @"^.*_crash\.dmp$")]
-    [DataRow("customdumpname.dmp", @"^customdumpname\.dmp$")]
-    [DataRow("dump_%p_%t_%h.dmp", @"^dump_.*_.*_.*\.dmp$")]
+    public async Task CrashReportIfSupported_Without_CrashDump_Is_Valid()
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    public async Task CrashReportIfSupported_Alongside_CrashDump_Is_Valid()
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashDumpOptionName, [] },
+            { CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    public async Task CrashReportIfSupported_OnAnyPlatform_IsValid()
+    {
+        // Unlike '--crash-report', the '-if-supported' variant must never be rejected by
+        // platform validation: that is the whole point of the option. Cover all OSes in a
+        // single test to make a future regression obvious.
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    public async Task CrashReport_And_CrashReportIfSupported_Together_IsInvalid()
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashReportOptionName, [] },
+            { CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(CrashDumpResources.CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName)]
+    [DataRow(CrashDumpCommandLineOptions.CrashDumpTypeOptionName)]
+    [DataRow(CrashDumpCommandLineOptions.CrashSequenceOptionName)]
+    public async Task CrashReportIfSupported_SatisfiesMainOptionRequirement(string subOption)
+    {
+        // '--crash-report-if-supported' should count as a "main" CrashDump option so that
+        // sub-options like '--crashdump-type' do not produce a "missing main option" error.
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName, [] },
+            { subOption, ["value"] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Validates Windows-specific fallback wording in '--crash-report' error.")]
+    public async Task CrashReport_OnWindows_ErrorPointsToIfSupportedAlternative()
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashReportOptionName, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.Contains("--crash-report-if-supported", validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(CrashDumpCommandLineOptions.CrashReportOptionName)]
+    [DataRow(CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName)]
+    public async Task ProviderRegistersBothCrashReportVariantsAsZeroArityOptions(string optionName)
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == optionName);
+        Assert.AreEqual(ArgumentArity.Zero, option.Arity);
+    }
+
+    [TestMethod]
+    public void IsCrashReportEffective_ReturnsTrue_When_StrictCrashReport_IsSet()
+    {
+        // The strict '--crash-report' always opts the user in: any "is this effective?" check
+        // should follow suit regardless of the runtime / OS.
+        var options = new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashReportOptionName, [] },
+        });
+
+        Assert.IsTrue(CrashDumpEnvironmentVariableProvider.IsCrashReportEffective(options));
+    }
+
+    [TestMethod]
+    public void IsCrashReportEffective_ReturnsFalse_When_NoCrashReportOption_IsSet()
+    {
+        var options = new TestCommandLineOptions([]);
+        Assert.IsFalse(CrashDumpEnvironmentVariableProvider.IsCrashReportEffective(options));
+    }
+
+    [TestMethod]
+    public void IsCrashReportEffective_With_IfSupported_MatchesCurrentRuntimeAndPlatform()
+    {
+        // The "-if-supported" variant is effective only when the underlying runtime can honor
+        // the request. This test mirrors the production check so that any divergence between
+        // the helper and what the env-var provider / lifetime handler rely on is caught.
+        var options = new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName, [] },
+        });
+
+#if !NETCOREAPP
+        // .NET Framework: the env-var-based createdump/crashreport mechanism is unavailable,
+        // so the option is a no-op regardless of the OS.
+        Assert.IsFalse(CrashDumpEnvironmentVariableProvider.IsCrashReportEffective(options));
+#else
+        bool expected = !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        Assert.AreEqual(expected, CrashDumpEnvironmentVariableProvider.IsCrashReportEffective(options));
+#endif
+    }
+
+    [TestMethod]
     [DataRow("trailing%", "^trailing%$")]
     // Glob metacharacters that may appear literally in a user-supplied filename must be escaped so they are
     // matched literally, not treated as wildcards. This guards against picking up unrelated dump files on

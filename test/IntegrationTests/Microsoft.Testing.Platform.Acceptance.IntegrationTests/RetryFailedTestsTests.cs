@@ -310,6 +310,37 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         Assert.DoesNotContain("TestMethod3", trxContent);
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_WithMinimumExpectedTests_StripsThresholdOnRetry(string tfm)
+    {
+        // Regression test for https://github.com/microsoft/testfx/issues/5639.
+        // --minimum-expected-tests must be honored on the first attempt but stripped from retry-attempt
+        // arguments. Without the strip, the retry (which only re-runs the previously failed tests) would
+        // always trip the policy and exit with code 9 (MinimumExpectedTestsPolicyViolation) even though
+        // the full first-attempt run satisfied the threshold.
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+
+        // METHOD1=1 causes TestMethod1 to fail on the first attempt and pass on the second. The asset has
+        // 3 tests in total. With --minimum-expected-tests 3, the first attempt runs all 3 (so the policy
+        // is satisfied) and the retry attempt runs only TestMethod1 (so without the fix the policy would
+        // fail with "tests ran 1, minimum expected 3").
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 3 --minimum-expected-tests 3 --results-directory {resultDirectory}",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "METHOD1", "1" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
+        testHostResult.AssertOutputDoesNotContain("Minimum expected tests policy violation");
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public string TargetAssetPath => GetAssetPath(AssetName);

@@ -565,7 +565,7 @@ Opcjonalnie akceptuje „text” (domyślne dane wyjściowe czytelne dla człowi
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
         <source>'--server {0}' requires '--{1}' to be specified.</source>
-        <target state="new">'--server {0}' requires '--{1}' to be specified.</target>
+        <target state="translated">Element „--server {0}„ wymaga określenia elementu „--{1}”.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
@@ -675,7 +675,7 @@ Wartość domyślna to TestResults w katalogu zawierającym aplikację testową.
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerInvalidArgument">
         <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
-        <target state="new">'--server' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <target state="translated">Serwer „--server” odebrał nieoczekiwaną wartość „{0}”. Obsługiwane wartości to: {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
@@ -774,6 +774,11 @@ Przyjmuje jeden argument jako wartość czasu z jawnym sufiksem jednostki. Akcep
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
         <target state="translated">Wystąpienia typu „ITestFramework” nie powinny być rejestrowane za pośrednictwem dostawcy usług, ale za pośrednictwem elementu „ITestApplicationBuilder.RegisterTestFramework”</target>
         <note />
+      </trans-unit>
+      <trans-unit id="ShutdownProgressStillWaitingPrefix">
+        <source>Still waiting for: </source>
+        <target state="new">Still waiting for: </target>
+        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</note>
       </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
@@ -900,15 +905,15 @@ Prawidłowe wartości to „Normalne”, „Szczegółowe”. Wartość domyśln
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
-        <target state="translated">Określa, kiedy pokazać przechwycone dane wyjściowe błędu testu.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
+        <target state="needs-review-translation">Określa, kiedy pokazać przechwycone dane wyjściowe błędu testu.
 Prawidłowe wartości to „All”, „Failed”, „None”. Wartość domyślna to „All”.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
-        <target state="translated">Określa, kiedy pokazać przechwycone standardowe dane wyjściowe testu.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
+        <target state="needs-review-translation">Określa, kiedy pokazać przechwycone standardowe dane wyjściowe testu.
 Prawidłowe wartości to „All”, „Failed”, „None”. Wartość domyślna to „All”.</target>
         <note />
       </trans-unit>

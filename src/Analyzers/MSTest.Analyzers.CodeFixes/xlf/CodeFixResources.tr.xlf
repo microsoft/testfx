@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="AddIgnoreJustificationFix">
         <source>Add a placeholder justification to '[Ignore]'</source>
-        <target state="new">Add a placeholder justification to '[Ignore]'</target>
+        <target state="translated">'[Ignore]' için yer tutucu gerekçe ekleyin</target>
         <note />
       </trans-unit>
       <trans-unit id="AddTestClassFix">
@@ -28,18 +28,13 @@
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsEquivalentFix">
-        <source>Replace with `Assert.{0}`</source>
-        <target state="translated">`Assert.{0}` ile değiştirin</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidAssertAreEqualOnCollectionsInAnyOrderFix">
-        <source>Replace with `Assert.{0}(..., SequenceOrder.InAnyOrder)`</source>
-        <target state="translated">`Assert.{0}(..., SequenceOrder.InAnyOrder)` ile değiştirin</target>
+        <source>Use deep structural comparison ('Assert.{0}')</source>
+        <target state="new">Use deep structural comparison ('Assert.{0}')</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsOrderedFix">
-        <source>Replace with `Assert.{0}` (ordered)</source>
-        <target state="translated">`Assert.{0}` ile değiştirin (sıralı)</target>
+        <source>Use ordered, element-wise comparison ('Assert.{0}')</source>
+        <target state="new">Use ordered, element-wise comparison ('Assert.{0}')</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesFix">

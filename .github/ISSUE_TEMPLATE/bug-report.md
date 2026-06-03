@@ -1,7 +1,8 @@
 ---
 name: Bug report
 about: Create a bug report to help us improve Microsoft.Testing.Platform and MSTest
-labels: [type/bug, needs/triage]
+labels: [needs/triage]
+type: Bug
 ---
 
 ## Describe the bug
