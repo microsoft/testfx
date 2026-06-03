@@ -342,17 +342,17 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="UTA_AssemblyFixtureProviderTypeIsGeneric">
         <source>UTA070: Type '{0}' referenced by [AssemblyFixtureProvider] must not be generic.</source>
-        <target state="new">UTA070: Type '{0}' referenced by [AssemblyFixtureProvider] must not be generic.</target>
+        <target state="translated">UTA070: [AssemblyFixtureProvider] 引用的类型 "{0}" 不能是泛型类型。</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_AssemblyFixtureProviderTypeReflectionFailed">
         <source>UTA071: Failed to enumerate methods on type '{0}' referenced by [AssemblyFixtureProvider]. {1}</source>
-        <target state="new">UTA071: Failed to enumerate methods on type '{0}' referenced by [AssemblyFixtureProvider]. {1}</target>
+        <target state="translated">UTA071: 无法枚举 [AssemblyFixtureProvider] 引用的类型 "{0}" 上的方法。{1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_AssemblyFixtureProviderLoadFailed">
         <source>UTA072: Failed to load [AssemblyFixtureProvider] marker from assembly '{0}'. {1}</source>
-        <target state="new">UTA072: Failed to load [AssemblyFixtureProvider] marker from assembly '{0}'. {1}</target>
+        <target state="translated">UTA072: 无法从程序集 "{0}" 加载 [AssemblyFixtureProvider] 标记。{1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_AssemblyInitMethodThrows">
