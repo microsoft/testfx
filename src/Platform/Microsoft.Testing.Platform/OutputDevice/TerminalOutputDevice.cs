@@ -479,28 +479,19 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             // Machine-readable mode: keep stdout reserved for the JSON document so consumers can
             // pipe it directly. Errors and exceptions still need surfacing somewhere, so route
             // them to stderr via WriteToStandardErrorAsync (the only place that bypasses IConsole,
-            // which does not abstract stderr today). Warnings and informational text are dropped
-            // to keep stdout strictly JSON.
+            // which does not abstract stderr today). Azure Pipelines ##vso commands are skipped
+            // here: they must be written to stdout to be processed, but stdout belongs to JSON.
+            // Warnings and informational text are dropped to keep stdout strictly JSON.
             switch (data)
             {
                 case ErrorMessageOutputDeviceData errorData:
                     await LogDebugAsync(errorData.Message).ConfigureAwait(false);
-                    if (_isAzureDevOpsEnvironment)
-                    {
-                        await WriteToStandardErrorAsync(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityError, errorData.Message)).ConfigureAwait(false);
-                    }
-
                     await WriteToStandardErrorAsync(errorData.Message).ConfigureAwait(false);
                     break;
 
                 case ExceptionOutputDeviceData exceptionData:
                     string exceptionText = exceptionData.Exception.ToString();
                     await LogDebugAsync(exceptionText).ConfigureAwait(false);
-                    if (_isAzureDevOpsEnvironment)
-                    {
-                        await WriteToStandardErrorAsync(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityError, exceptionText)).ConfigureAwait(false);
-                    }
-
                     await WriteToStandardErrorAsync(exceptionText).ConfigureAwait(false);
                     break;
             }
