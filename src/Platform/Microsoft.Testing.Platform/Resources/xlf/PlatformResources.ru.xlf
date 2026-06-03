@@ -896,15 +896,15 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="needs-review-translation">Определяет, когда показывать зафиксированный вывод ошибок теста.
-Допустимые значения: "All" (Все), "Failed" (Сбой), "None" (Нет). Значение по умолчанию — "All" (Все).</target>
+        <target state="new">Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="needs-review-translation">Определяет, когда показывать зафиксированный стандартный вывод теста.
-Допустимые значения: "All" (Все), "Failed" (Сбой), "None" (Нет). Значение по умолчанию — "All" (Все).</target>
+        <target state="new">Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
