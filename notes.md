@@ -21,21 +21,21 @@
 
 ## Testing Opportunities Backlog
 
-1. **More Assert method coverage** — `AssertTests.StartsWithEndsWith.cs` had gaps (done 2026-06-02). Check other Assert files (IsInRange, Contains) for similar StringComparison/null gaps.
+1. **More Assert method coverage** — Check other Assert files (IsInRange, Contains) for StringComparison/null gaps.
 2. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo`.
-3. **DoNotStoreStaticTestContextAnalyzer edge cases** — Only 2 tests; missing: assigning in TestInitialize, assigning to local variable, assigning to instance field from static method.
-4. **TestMethodShouldNotBeIgnoredAnalyzer** — Only 3 tests; missing: `[Ignore]` on class (not method), multiple test method attributes.
+3. **TestMethodShouldNotBeIgnoredAnalyzer** — Only 4 tests; could add: [DataTestMethod]+[Ignore], multiple methods (some ignored/some not), [Ignore] on class-level.
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-03 | Task 3 (DoNotStoreStaticTestContextAnalyzer edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-02 | Task 2 (opportunities), Task 3 (Assert.StartsWith/EndsWith tests), Task 7 (Monthly Issue Jun) |
-| 2026-06-01 | Task 3 (AvoidAssertsInCatchBlocks VB tests — removed per constraint), Task 7 (Monthly Issue Jun) |
-| 2026-05-31 | Task 3 (MSTEST0041 edge cases + VB), Task 7 (Monthly Issue) |
-| 2026-05-30 | Task 3 (Implement MSTEST0067 edge cases), Task 7 (Monthly Issue) |
+| 2026-06-01 | Task 3 (VB tests — constraint violation, removed), Task 7 (Monthly Issue Jun) |
+| 2026-05-31 | Task 3 (MSTEST0041 edge cases), Task 7 (Monthly Issue) |
+| 2026-05-30 | Task 3 (MSTEST0067 edge cases), Task 7 (Monthly Issue) |
 | 2026-05-29 | Task 1 (Discovery), Task 2 (Opportunities), Task 7 (Monthly Issue) |
 
 ## Last Run
 
-2026-06-02 23:45 UTC
+2026-06-03 23:27 UTC
