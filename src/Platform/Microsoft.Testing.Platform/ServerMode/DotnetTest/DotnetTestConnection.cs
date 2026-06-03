@@ -103,6 +103,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             { HandshakeMessagePropertyNames.ModulePath, _testApplicationModuleInfo?.GetCurrentTestApplicationFullPath() ?? string.Empty },
             { HandshakeMessagePropertyNames.ExecutionId,  _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID) ?? string.Empty },
             { HandshakeMessagePropertyNames.InstanceId, InstanceId },
+            { HandshakeMessagePropertyNames.ExecutionMode, GetExecutionMode() },
         });
 
         HandshakeMessage response = await _dotnetTestPipeClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
@@ -113,6 +114,18 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
         return response.Properties?.TryGetValue(HandshakeMessagePropertyNames.SupportedProtocolVersions, out string? protocolVersion) == true &&
             IsVersionCompatible(protocolVersion, supportedProtocolVersions);
+    }
+
+    private string GetExecutionMode()
+    {
+        if (_commandLineHandler.IsHelpInvoked())
+        {
+            return HandshakeMessageExecutionModes.Help;
+        }
+
+        return _commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
+            ? HandshakeMessageExecutionModes.Discover
+            : HandshakeMessageExecutionModes.Run;
     }
 
     public static bool IsVersionCompatible(string protocolVersion, string supportedProtocolVersions) => supportedProtocolVersions.Split(';').Contains(protocolVersion);

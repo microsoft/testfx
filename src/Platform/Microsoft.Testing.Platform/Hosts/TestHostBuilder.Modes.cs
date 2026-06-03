@@ -49,6 +49,18 @@ internal sealed partial class TestHostBuilder
         {
             if (pushOnlyProtocol.IsServerMode)
             {
+                // Always perform the handshake (even though we are about to print help) so that
+                // dotnet test on the SDK side can validate the test host's execution mode and
+                // detect mismatches such as --help being injected via RunArguments during a
+                // normal run. The handshake is needed for the SDK to know that the test host
+                // is in help mode, so it can ignore any incoming CommandLineOptionMessages.
+                bool isProtocolCompatible = await pushOnlyProtocol.IsCompatibleProtocolAsync("TestHost").ConfigureAwait(false);
+                if (!isProtocolCompatible)
+                {
+                    CompleteBuilderActivity(context.BuilderActivity, nameof(InformativeCommandLineHost));
+                    return new InformativeCommandLineHost((int)ExitCode.IncompatibleProtocolVersion, context.ServiceProvider);
+                }
+
                 await pushOnlyProtocol.HelpInvokedAsync().ConfigureAwait(false);
             }
             else
