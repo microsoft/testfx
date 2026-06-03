@@ -73,10 +73,10 @@ Options:
         The default is TestResults in the directory that contains the test application.
     --show-stderr
         Determines when to show captured error output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
     --show-stdout
         Determines when to show captured standard output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
     --timeout
         A global test execution timeout.
         Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.
@@ -128,10 +128,16 @@ Extension options:
         Demote failures with an Azure DevOps flaky history of at least 25% in the selected window to warnings.
     --report-azdo-flaky-history
         Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.
+    --report-azdo-progress
+        Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.
     --report-azdo-quarantine-file
         Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.
     --report-azdo-severity
         Severity to use for the reported event. Options are: error (default) and warning.
+    --report-azdo-stackframe-filter
+        Additional regex patterns (matched against the fully-qualified type prefix of each stack frame) that should be skipped when looking for the user's call site to annotate. Repeatable; up to 16 patterns. Compiled with a 500ms match timeout. Additive to the extension's built-in MSTest assertion-implementation prefixes.
+    --report-azdo-summary
+        Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.
     --report-azdo-upload-artifact-exclude
         Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.
     --report-azdo-upload-artifact-include
@@ -342,12 +348,12 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Determines when to show captured error output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
       --show-stdout
         Arity: 1
         Hidden: False
         Description: Determines when to show captured standard output of a test.
-        Valid values are 'All', 'Failed', 'None'. Default is 'All'.
+        Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
 Registered command line providers:
   AzureDevOpsCommandLineProvider
     Name: Azure DevOps report generator
@@ -374,6 +380,10 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.
+      --report-azdo-progress
+        Arity: 0
+        Hidden: False
+        Description: Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.
       --report-azdo-quarantine-file
         Arity: 1
         Hidden: False
@@ -382,6 +392,14 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Severity to use for the reported event. Options are: error (default) and warning.
+      --report-azdo-stackframe-filter
+        Arity: 1..N
+        Hidden: False
+        Description: Additional regex patterns (matched against the fully-qualified type prefix of each stack frame) that should be skipped when looking for the user's call site to annotate. Repeatable; up to 16 patterns. Compiled with a 500ms match timeout. Additive to the extension's built-in MSTest assertion-implementation prefixes.
+      --report-azdo-summary
+        Arity: 0..1
+        Hidden: False
+        Description: Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.
       --report-azdo-upload-artifact-exclude
         Arity: 0..N
         Hidden: False

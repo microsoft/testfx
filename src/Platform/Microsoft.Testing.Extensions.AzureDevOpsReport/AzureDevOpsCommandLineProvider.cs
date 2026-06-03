@@ -23,10 +23,19 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
 
     private static readonly string[] SeverityOptions = ["error", "warning"];
 
+    internal const int MaxStackFrameFilterPatterns = 16;
+    internal const int StackFrameFilterMatchTimeoutMs = 500;
+
     private static readonly string DemoteKnownFlakyOptionDescriptionFormatted = string.Format(
         CultureInfo.InvariantCulture,
         AzureDevOpsResources.DemoteKnownFlakyOptionDescription,
         AzureDevOpsReporter.KnownFlakyFailureRateThreshold * 100);
+
+    private static readonly string StackFrameFilterOptionDescriptionFormatted = string.Format(
+        CultureInfo.InvariantCulture,
+        AzureDevOpsResources.StackFrameFilterOptionDescription,
+        MaxStackFrameFilterPatterns,
+        StackFrameFilterMatchTimeoutMs);
 
     public AzureDevOpsCommandLineProvider()
         : base(
@@ -38,8 +47,11 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName, AzureDevOpsResources.OptionDescription, ArgumentArity.Zero, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky, DemoteKnownFlakyOptionDescriptionFormatted, ArgumentArity.Zero, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory, AzureDevOpsResources.FlakyHistoryOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsProgress, AzureDevOpsResources.ProgressOptionDescription, ArgumentArity.Zero, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile, AzureDevOpsResources.QuarantineFileOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, AzureDevOpsResources.SeverityOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsStackFrameFilter, StackFrameFilterOptionDescriptionFormatted, ArgumentArity.OneOrMore, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsSummary, AzureDevOpsResources.SummaryOptionDescription, ArgumentArity.ZeroOrOne, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactExclude, AzureDevOpsResources.UploadArtifactExcludeOptionDescription, ArgumentArity.ZeroOrMore, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude, AzureDevOpsResources.UploadArtifactIncludeOptionDescription, ArgumentArity.ZeroOrMore, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactName, AzureDevOpsResources.UploadArtifactNameOptionDescription, ArgumentArity.ExactlyOne, false),
@@ -56,6 +68,7 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
             AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory => ValidateFlakyHistoryArgumentsAsync(arguments),
             AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity when !SeverityOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidSeverity, arguments[0])),
+            AzureDevOpsCommandLineOptions.AzureDevOpsStackFrameFilter => ValidateStackFrameFilterArgumentsAsync(arguments),
             AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts when !ArtifactUploadModes.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidArtifactUploadMode, arguments[0])),
             AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude or AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactExclude
@@ -76,6 +89,10 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
             {
                 errorMessage = AzureDevOpsResources.AzureDevOpsFlakyHistoryRequiresAzureDevOps;
             }
+            else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsProgress))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsProgressRequiresAzureDevOps;
+            }
             else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile))
             {
                 errorMessage = AzureDevOpsResources.AzureDevOpsQuarantineFileRequiresAzureDevOps;
@@ -83,6 +100,14 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
             else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity))
             {
                 errorMessage = AzureDevOpsResources.AzureDevOpsReportSeverityRequiresAzureDevOps;
+            }
+            else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsStackFrameFilter))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsStackFrameFilterRequiresAzureDevOps;
+            }
+            else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSummary))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsSummaryRequiresAzureDevOps;
             }
         }
         else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky)
@@ -154,4 +179,31 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
             && days is >= 1 and <= 90
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidFlakyHistoryDays, arguments[0]));
+
+    private static Task<ValidationResult> ValidateStackFrameFilterArgumentsAsync(string[] arguments)
+    {
+        if (arguments.Length > MaxStackFrameFilterPatterns)
+        {
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.StackFrameFilterTooManyRegexes, MaxStackFrameFilterPatterns));
+        }
+
+        foreach (string pattern in arguments)
+        {
+            if (RoslynString.IsNullOrEmpty(pattern))
+            {
+                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidStackFrameFilterRegex, pattern, "pattern is empty"));
+            }
+
+            try
+            {
+                _ = new Regex(pattern, RegexOptions.CultureInvariant | RegexOptions.Compiled, TimeSpan.FromMilliseconds(StackFrameFilterMatchTimeoutMs));
+            }
+            catch (ArgumentException ex)
+            {
+                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidStackFrameFilterRegex, pattern, ex.Message));
+            }
+        }
+
+        return ValidationResult.ValidTask;
+    }
 }

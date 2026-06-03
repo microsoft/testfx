@@ -895,15 +895,15 @@ Prawidłowe wartości to „Normalne”, „Szczegółowe”. Wartość domyśln
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
-        <target state="translated">Określa, kiedy pokazać przechwycone dane wyjściowe błędu testu.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
+        <target state="needs-review-translation">Określa, kiedy pokazać przechwycone dane wyjściowe błędu testu.
 Prawidłowe wartości to „All”, „Failed”, „None”. Wartość domyślna to „All”.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
-        <target state="translated">Określa, kiedy pokazać przechwycone standardowe dane wyjściowe testu.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
+        <target state="needs-review-translation">Określa, kiedy pokazać przechwycone standardowe dane wyjściowe testu.
 Prawidłowe wartości to „All”, „Failed”, „None”. Wartość domyślna to „All”.</target>
         <note />
       </trans-unit>

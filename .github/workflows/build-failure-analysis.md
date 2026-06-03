@@ -190,6 +190,13 @@ steps:
 
   - name: Install NuGet MCP Server
     continue-on-error: true
+    # Run from `/tmp` so `dotnet` does not walk into the repo's `global.json`,
+    # which pins an internal-only SDK preview that is unavailable on this
+    # fresh agent runner (the build job populates `.dotnet/` via `./build.sh`
+    # but this is a different runner, so only the `setup-dotnet`-installed
+    # SDK is present). Without this, the command exits with the custom
+    # `errorMessage` from `global.json` and the whole agent job fails.
+    working-directory: /tmp
     run: dotnet tool install --global NuGet.Mcp.Server --version "$NUGET_MCP_VERSION"
 
   # On `workflow_dispatch` runs, `github.sha` is the SHA of the dispatched ref
