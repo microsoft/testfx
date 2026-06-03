@@ -514,14 +514,10 @@ public sealed class AzureDevOpsLivePublishingTests
 
         AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(1, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out _);
         client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(204);
-        // Upload only succeeds for files within the size cap (the client filters oversized files).
-        client.UploadTestResultAttachmentAsyncFunc = (_, _, _, attachment, _) =>
-        {
-            // The publisher still queues the oversized attachment; the client side TryBuildAttachmentRequest
-            // drops it. In this fake we just record the call regardless — the contract is exercised end-to-end
-            // when running against the real client. For the unit test we only assert what the publisher sends.
-            return Task.CompletedTask;
-        };
+        // The publisher still queues the oversized attachment; the client side TryBuildAttachmentRequest
+        // drops it. In this fake we just record the call regardless — the contract is exercised end-to-end
+        // when running against the real client. For the unit test we only assert what the publisher sends.
+        client.UploadTestResultAttachmentAsyncFunc = (_, _, _, attachment, _) => Task.CompletedTask;
 
         TestNode node = CreateNode("failed-test", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), clock.UtcNow);
         node.Properties.Add(new FileArtifactProperty(new FileInfo(smallPath), "small"));
@@ -534,8 +530,8 @@ public sealed class AzureDevOpsLivePublishingTests
         // skips oversized ones. We sanity-check that the publisher does forward both names so the client
         // gets a chance to filter.
         Assert.HasCount(2, client.UploadTestResultAttachmentCalls);
-        Assert.IsTrue(client.UploadTestResultAttachmentCalls.Any(c => c.Attachment.FileName == "small.txt"));
-        Assert.IsTrue(client.UploadTestResultAttachmentCalls.Any(c => c.Attachment.FileName == "big.bin"));
+        Assert.Contains(c => c.Attachment.FileName == "small.txt", client.UploadTestResultAttachmentCalls);
+        Assert.Contains(c => c.Attachment.FileName == "big.bin", client.UploadTestResultAttachmentCalls);
     }
 
     [TestMethod]
@@ -618,9 +614,9 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.HasCount(3, client.UploadTestRunAttachmentCalls);
         Assert.IsTrue(client.UploadTestRunAttachmentCalls.All(c => c.Attachment.AttachmentType == AzureDevOpsAttachmentTypes.CodeCoverage));
-        Assert.IsTrue(client.UploadTestRunAttachmentCalls.Any(c => c.Attachment.FileName == "results.cobertura.xml"));
-        Assert.IsTrue(client.UploadTestRunAttachmentCalls.Any(c => c.Attachment.FileName == "results.opencover.xml"));
-        Assert.IsTrue(client.UploadTestRunAttachmentCalls.Any(c => c.Attachment.FileName == "results.coverage"));
+        Assert.Contains(c => c.Attachment.FileName == "results.cobertura.xml", client.UploadTestRunAttachmentCalls);
+        Assert.Contains(c => c.Attachment.FileName == "results.opencover.xml", client.UploadTestRunAttachmentCalls);
+        Assert.Contains(c => c.Attachment.FileName == "results.coverage", client.UploadTestRunAttachmentCalls);
     }
 
     [TestMethod]

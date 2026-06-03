@@ -442,9 +442,11 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
     {
         FileInfo fileInfo = sessionFileArtifact.FileInfo;
         string name;
+        string fullName;
         try
         {
             name = fileInfo.Name;
+            fullName = fileInfo.FullName;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or PathTooLongException)
         {
@@ -463,7 +465,7 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
         return !isCoverage
             ? null
             : AzureDevOpsTestResultAttachment.FromFile(
-                fileInfo.FullName,
+                fullName,
                 AzureDevOpsAttachmentTypes.CodeCoverage,
                 comment: sessionFileArtifact.Description ?? sessionFileArtifact.DisplayName);
     }
@@ -483,8 +485,8 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
             }
             catch (OperationCanceledException)
             {
-                // Re-queue so the caller could retry under a fresh token (the only such caller is
-                // session finishing; if it's canceled we accept the loss).
+                // Cancellation aborts the drain; the attachment is lost. The only caller is session
+                // finishing, where cancellation means the test host is tearing down anyway.
                 throw;
             }
             catch (Exception ex)
