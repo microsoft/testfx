@@ -183,6 +183,9 @@
   <data name="StringAssertToAssertTitle" xml:space="preserve">
     <value>Use 'Assert.{0}' instead of 'StringAssert'</value>
   </data>
+  <data name="CollectionAssertToAssertTitle" xml:space="preserve">
+    <value>Use 'Assert.{0}' instead of 'CollectionAssert'</value>
+  </data>
   <data name="PassCancellationTokenFix" xml:space="preserve">
     <value>Pass 'TestContext.CancellationToken' argument to method call</value>
   </data>
