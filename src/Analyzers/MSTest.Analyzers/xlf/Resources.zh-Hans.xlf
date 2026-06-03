@@ -285,6 +285,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">ClassInitialize 方法应具有有效的布局</target>
         <note />
       </trans-unit>
+      <trans-unit id="CollectionAssertToAssertMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'CollectionAssert.{1}'</source>
+        <target state="new">Use 'Assert.{0}' instead of 'CollectionAssert.{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CollectionAssertToAssertTitle">
+        <source>Use 'Assert' instead of 'CollectionAssert'</source>
+        <target state="new">Use 'Assert' instead of 'CollectionAssert'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DataRowShouldBeValidDescription">
         <source>DataRow entry should have the following layout to be valid:
 - should only be set on a test method;
