@@ -5,7 +5,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Shared;
 
-[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Banner capability uses MTP services")]
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Adapter and engine banner capabilities intentionally consume Microsoft.Testing.Platform.Services.IPlatformInformation to include build metadata in the banner.")]
 internal static class BannerMessageHelper
 {
     public static string BuildBannerMessage(IPlatformInformation platformInformation, string productName, string version)
