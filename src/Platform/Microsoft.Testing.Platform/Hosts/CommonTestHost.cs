@@ -5,6 +5,7 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -110,8 +111,8 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
     protected virtual string HostType
         => this switch
         {
-            ConsoleTestHost => "TestHost",
-            TestHostControllersTestHost => "TestHostController",
+            ConsoleTestHost => HandshakeMessageHostTypes.TestHost,
+            TestHostControllersTestHost => HandshakeMessageHostTypes.TestHostController,
             ServerTestHost => "ServerTestHost",
             _ => throw new InvalidOperationException($"Unknown host type '{GetType().FullName}'"),
         };

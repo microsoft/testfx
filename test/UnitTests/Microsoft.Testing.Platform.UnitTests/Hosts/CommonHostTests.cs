@@ -5,6 +5,7 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Hosts;
+using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
@@ -91,7 +92,7 @@ public sealed class CommonHostTests
 
     private sealed class TestableCommonHost(ServiceProvider serviceProvider, bool runTestApplicationLifeCycleCallbacks = false) : CommonHost(serviceProvider)
     {
-        protected override string HostType => "TestHost";
+        protected override string HostType => HandshakeMessageHostTypes.TestHost;
 
         protected override bool RunTestApplicationLifeCycleCallbacks => runTestApplicationLifeCycleCallbacks;
 

@@ -158,8 +158,10 @@ public sealed class ProtocolTests
     [TestMethod]
     public void HandshakeMessagePropertyNames_ValuesAreStable()
     {
-        // Round-trip the constants through the serializer so the MSTest analyzer
-        // does not flag the comparisons as "always true / always failing".
+        // Indirect the byte constants through a dictionary lookup so the MSTest
+        // analyzer does not see two compile-time constants on either side of
+        // Assert.AreEqual and flag the comparison as "always true / always
+        // failing". This keeps the wire-protocol freeze coverage intact.
         Dictionary<byte, string> properties = new()
         {
             { HandshakeMessagePropertyNames.PID, nameof(HandshakeMessagePropertyNames.PID) },
@@ -195,12 +197,36 @@ public sealed class ProtocolTests
     public void HandshakeMessageExecutionModes_ValuesAreStable()
     {
         // Indirect the comparisons through a collection so the MSTest analyzer
-        // does not flag string compile-time equalities as "always true".
+        // does not see two compile-time constant strings on either side of
+        // Assert.AreEqual and flag the comparison as "always true".
         string[] modes = [HandshakeMessageExecutionModes.Run, HandshakeMessageExecutionModes.Help, HandshakeMessageExecutionModes.Discover];
 
         Assert.AreEqual("run", modes[0]);
         Assert.AreEqual("help", modes[1]);
         Assert.AreEqual("discover", modes[2]);
+    }
+
+    // The HandshakeMessageHostTypes string values flow over IPC to dotnet
+    // test in the dotnet/sdk repository, which keys behavior on them (e.g.
+    // only "TestHost" triggers per-assembly run bookkeeping and the
+    // requirement that InstanceId be present). Renaming any of them is a
+    // wire-protocol break.
+    [TestMethod]
+    public void HandshakeMessageHostTypes_ValuesAreStable()
+    {
+        // Indirect the comparisons through a collection so the MSTest analyzer
+        // does not see two compile-time constant strings on either side of
+        // Assert.AreEqual and flag the comparison as "always true".
+        string[] hostTypes =
+        [
+            HandshakeMessageHostTypes.TestHost,
+            HandshakeMessageHostTypes.TestHostController,
+            HandshakeMessageHostTypes.InformativeHost,
+        ];
+
+        Assert.AreEqual("TestHost", hostTypes[0]);
+        Assert.AreEqual("TestHostController", hostTypes[1]);
+        Assert.AreEqual("InformativeHost", hostTypes[2]);
     }
 
     [TestMethod]
