@@ -166,6 +166,47 @@ public sealed class InheritedTestClassAttributeWithSourceGeneratorAnalyzerTests
         diagnostics[0].GetMessage(CultureInfo.InvariantCulture).Should().Contain("DerivedTests").And.Contain("BaseTests");
     }
 
+    [TestMethod]
+    public async Task NoDiagnostic_OnOpenGenericClass()
+    {
+        // The source generator skips open generic types, so warning on them would be misleading
+        // — applying [TestClass] directly still wouldn't make them discoverable.
+        const string source = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            namespace Sample
+            {
+                [TestClass]
+                public class BaseTests {}
+
+                public class DerivedTests<T> : BaseTests {}
+            }
+            """;
+
+        ImmutableArray<Diagnostic> diagnostics = await GetAnalyzerDiagnosticsAsync(source);
+
+        diagnostics.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public async Task NoDiagnostic_OnFileLocalClass()
+    {
+        // The source generator skips file-local types, so warning on them would be misleading.
+        const string source = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            namespace Sample
+            {
+                [TestClass]
+                public class BaseTests {}
+
+                file class DerivedTests : BaseTests {}
+            }
+            """;
+
+        ImmutableArray<Diagnostic> diagnostics = await GetAnalyzerDiagnosticsAsync(source);
+
+        diagnostics.Should().BeEmpty();
+    }
+
     private static async Task<ImmutableArray<Diagnostic>> GetAnalyzerDiagnosticsAsync(string source)
     {
         SyntaxTree[] trees =

@@ -69,9 +69,15 @@ public sealed class InheritedTestClassAttributeWithSourceGeneratorAnalyzer : Dia
     {
         var type = (INamedTypeSymbol)context.Symbol;
 
-        // Source generator skips static, abstract, open-generic, and file-local classes — they
-        // cannot be test classes regardless of the [TestClass] inheritance path.
-        if (type.TypeKind != TypeKind.Class || type.IsStatic || type.IsAbstract || type.IsImplicitClass)
+        // Mirror the source generator's filtering: it also skips static/abstract types, open
+        // generic types, and `file`-local types. Applying [TestClass] directly to any of those
+        // would not make them discoverable, so a MSTEST0069 warning would be actively misleading.
+        if (type.TypeKind != TypeKind.Class
+            || type.IsStatic
+            || type.IsAbstract
+            || type.IsImplicitClass
+            || type.IsGenericType
+            || type.IsFileLocal)
         {
             return;
         }
