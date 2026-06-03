@@ -895,15 +895,15 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
-        <target state="translated">테스트에서 캡처한 오류 출력을 언제 표시할지 결정합니다.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
+        <target state="needs-review-translation">테스트에서 캡처한 오류 출력을 언제 표시할지 결정합니다.
 유효한 값은 'All', 'Failed', 'None'입니다. 기본값은 'All'입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
-        <target state="translated">테스트에서 캡처한 표준 출력을 언제 표시할지 결정합니다.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
+        <target state="needs-review-translation">테스트에서 캡처한 표준 출력을 언제 표시할지 결정합니다.
 유효한 값은 'All', 'Failed', 'None'입니다. 기본값은 'All'입니다.</target>
         <note />
       </trans-unit>
