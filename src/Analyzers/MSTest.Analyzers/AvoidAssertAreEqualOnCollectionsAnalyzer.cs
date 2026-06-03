@@ -69,12 +69,6 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
             return;
         }
 
-        ITypeSymbol comparedType = targetMethod.TypeArguments[0];
-        if (!ShouldReport(comparedType, genericEnumerableSymbol))
-        {
-            return;
-        }
-
         // When either argument is the null literal, the user is performing a null check rather than
         // a collection equality check, so suggesting CollectionAssert.AreEqual / Assert.AreSequenceEqual
         // would be misleading.
@@ -89,9 +83,39 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
             return;
         }
 
+        // Determine the type to report on. Prefer the generic type argument when it itself is a collection
+        // (the historical behavior, which gives the cleanest diagnostic display). Otherwise, fall back to the
+        // un-converted static type of the `expected`/`actual` arguments at the call site so we still catch
+        // patterns where the caller widened to a non-collection type (e.g. `Assert.AreEqual<object>(arr1, arr2)`
+        // or `Assert.AreEqual((object)arr1, (object)arr2)`) which would otherwise silently use reference equality.
+        ITypeSymbol comparedType = targetMethod.TypeArguments[0];
+        ITypeSymbol? reportedType = ShouldReport(comparedType, genericEnumerableSymbol)
+            ? comparedType
+            : GetCollectionArgumentType(invocation, firstParameterName, genericEnumerableSymbol)
+                ?? GetCollectionArgumentType(invocation, "actual", genericEnumerableSymbol);
+
+        if (reportedType is null)
+        {
+            return;
+        }
+
         string methodName = $"Assert.{targetMethod.Name}";
-        string comparedTypeDisplay = comparedType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+        string comparedTypeDisplay = reportedType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
         context.ReportDiagnostic(invocation.CreateDiagnostic(Rule, methodName, comparedTypeDisplay));
+    }
+
+    private static ITypeSymbol? GetCollectionArgumentType(IInvocationOperation invocation, string parameterName, INamedTypeSymbol genericEnumerableSymbol)
+    {
+        IArgumentOperation? argument = invocation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == parameterName);
+
+        // Use WalkDownBuiltInConversion so we only peel off built-in conversions (boxing, reference,
+        // implicit numeric widening, etc.). A user-defined conversion can convert a collection-typed
+        // operand to a non-collection type (or vice versa), so the call-site static type — the result
+        // of the user-defined conversion — is what the user wrote and what we should reason about.
+        ITypeSymbol? argumentType = argument?.Value.WalkDownBuiltInConversion().Type;
+        return argumentType is not null && ShouldReport(argumentType, genericEnumerableSymbol)
+            ? argumentType
+            : null;
     }
 
     private static bool ShouldReport(ITypeSymbol comparedType, INamedTypeSymbol genericEnumerableSymbol)
