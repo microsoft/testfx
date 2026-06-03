@@ -3,8 +3,14 @@
 
 namespace Microsoft.Testing.Platform.Helpers;
 
-// Copy from https://github.com/dotnet/sdk/tree/eaad2a6f937b2c8d9247c53d71b57204f5d127b2/src/Cli/dotnet/Telemetry/LLMEnvironmentDetectorForTelemetry.cs
-internal static class LLMEnvironmentDetector
+// Adapted from https://github.com/dotnet/sdk/tree/eaad2a6f937b2c8d9247c53d71b57204f5d127b2/src/Cli/dotnet/Telemetry/LLMEnvironmentDetectorForTelemetry.cs
+// Diverged from the upstream telemetry-only version so detection results can drive
+// user-facing platform defaults (ANSI mode, banner, --show-stdout/--show-stderr).
+// IMPORTANT: keep the environment-variable list below in sync with
+// test/Utilities/Microsoft.Testing.TestInfrastructure/WellKnownEnvironmentVariables.cs
+// (LLMEnvironmentVariables) so child processes spawned by acceptance tests can be
+// deterministically isolated from an ambient agent shell.
+internal sealed class LLMEnvironmentDetector
 {
     private static readonly EnvironmentDetectionRuleWithResult<string>[] DetectionRules =
     [
@@ -50,15 +56,21 @@ internal static class LLMEnvironmentDetector
         new EnvironmentDetectionRuleWithResult<string>("generic_agent", new BooleanEnvironmentRule("AGENT_CLI")),
     ];
 
-    private static string? LLMEnvironment { get; } = GetLLMEnvironment();
+    private readonly IEnvironment _environment;
 
-    private static string? GetLLMEnvironment()
-    {
-        string?[] results = DetectionRules.Select(r => r.GetResult()).Where(r => r != null).ToArray();
-        return results.Length > 0 ? string.Join(", ", results) : null;
-    }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LLMEnvironmentDetector"/> class.
+    /// </summary>
+    /// <param name="environment">The environment abstraction to use for reading environment variables.</param>
+    public LLMEnvironmentDetector(IEnvironment environment)
+        => _environment = environment ?? throw new ArgumentNullException(nameof(environment));
 
-    public static bool IsLLMEnvironment() => !RoslynString.IsNullOrEmpty(LLMEnvironment);
+    /// <summary>
+    /// Detects if the current environment is hosted by a known LLM/AI agent CLI.
+    /// </summary>
+    /// <returns><c>true</c> if a known LLM agent environment is detected; otherwise, <c>false</c>.</returns>
+    public bool IsLLMEnvironment()
+        => DetectionRules.Any(r => r.GetResult(_environment) is not null);
 
     /// <summary>
     /// Base class for environment detection rules that can be evaluated against environment variables.
@@ -66,10 +78,11 @@ internal static class LLMEnvironmentDetector
     private abstract class EnvironmentDetectionRule
     {
         /// <summary>
-        /// Evaluates the rule against the current environment.
+        /// Evaluates the rule against the provided environment abstraction.
         /// </summary>
+        /// <param name="environment">The environment abstraction to use for reading environment variables.</param>
         /// <returns>True if the rule matches the current environment; otherwise, false.</returns>
-        public abstract bool IsMatch();
+        public abstract bool IsMatch(IEnvironment environment);
     }
 
     /// <summary>
@@ -82,10 +95,8 @@ internal static class LLMEnvironmentDetector
         public BooleanEnvironmentRule(params string[] variables)
             => _variables = variables ?? throw new ArgumentNullException(nameof(variables));
 
-        public override bool IsMatch()
-#pragma warning disable RS0030 // Do not use banned APIs - fine here.
-            => _variables.Any(variable => EnvironmentVariableParser.ParseBool(Environment.GetEnvironmentVariable(variable), defaultValue: false));
-#pragma warning restore RS0030 // Do not use banned APIs
+        public override bool IsMatch(IEnvironment environment)
+            => _variables.Any(variable => EnvironmentVariableParser.ParseBool(environment.GetEnvironmentVariable(variable), defaultValue: false));
     }
 
     private static class EnvironmentVariableParser
@@ -123,10 +134,8 @@ internal static class LLMEnvironmentDetector
         public AnyPresentEnvironmentRule(params string[] variables)
             => _variables = variables ?? throw new ArgumentNullException(nameof(variables));
 
-        public override bool IsMatch()
-#pragma warning disable RS0030 // Do not use banned APIs - fine here.
-            => _variables.Any(variable => !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable(variable)));
-#pragma warning restore RS0030 // Do not use banned APIs
+        public override bool IsMatch(IEnvironment environment)
+            => _variables.Any(variable => !RoslynString.IsNullOrEmpty(environment.GetEnvironmentVariable(variable)));
     }
 
     /// <summary>
@@ -139,8 +148,8 @@ internal static class LLMEnvironmentDetector
         public AnyMatchEnvironmentRule(params EnvironmentDetectionRule[] rules)
             => _rules = rules ?? throw new ArgumentNullException(nameof(rules));
 
-        public override bool IsMatch()
-            => _rules.Any(rule => rule.IsMatch());
+        public override bool IsMatch(IEnvironment environment)
+            => _rules.Any(rule => rule.IsMatch(environment));
     }
 
     /// <summary>
@@ -157,11 +166,9 @@ internal static class LLMEnvironmentDetector
             _expectedValue = expectedValue ?? throw new ArgumentNullException(nameof(expectedValue));
         }
 
-        public override bool IsMatch()
+        public override bool IsMatch(IEnvironment environment)
         {
-#pragma warning disable RS0030 // Do not use banned APIs - fine here.
-            string? value = Environment.GetEnvironmentVariable(_variable);
-#pragma warning restore RS0030 // Do not use banned APIs
+            string? value = environment.GetEnvironmentVariable(_variable);
             return !RoslynString.IsNullOrEmpty(value) && value.Equals(_expectedValue, StringComparison.OrdinalIgnoreCase);
         }
     }
@@ -184,10 +191,11 @@ internal static class LLMEnvironmentDetector
         }
 
         /// <summary>
-        /// Evaluates the rule and returns the result if matched.
+        /// Evaluates the rule against the provided environment and returns the result if matched.
         /// </summary>
+        /// <param name="environment">The environment abstraction to use for reading environment variables.</param>
         /// <returns>The result value if the rule matches; otherwise, null.</returns>
-        public T? GetResult()
-            => _rule.IsMatch() ? _result : null;
+        public T? GetResult(IEnvironment environment)
+            => _rule.IsMatch(environment) ? _result : null;
     }
 }

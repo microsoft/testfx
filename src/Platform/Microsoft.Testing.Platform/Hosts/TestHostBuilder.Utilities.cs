@@ -171,7 +171,12 @@ internal sealed partial class TestHostBuilder
         bool isNoBannerSet = loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.NoBannerOptionKey);
         string? noBannerEnvironmentVar = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER);
         string? dotnetNoLogoEnvironmentVar = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_NOLOGO);
-        if (!isNoBannerSet && !(noBannerEnvironmentVar is "1" or "true") && !(dotnetNoLogoEnvironmentVar is "1" or "true"))
+
+        // Skip the banner under detected LLM/AI agent environments to reduce token noise.
+        // To force the banner back on in an LLM environment, clear the LLM env var (or use a non-LLM shell).
+        bool isLLMEnvironment = new LLMEnvironmentDetector(_environment).IsLLMEnvironment();
+
+        if (!isNoBannerSet && !(noBannerEnvironmentVar is "1" or "true") && !(dotnetNoLogoEnvironmentVar is "1" or "true") && !isLLMEnvironment)
         {
             IBannerMessageOwnerCapability? bannerMessageOwnerCapability = testFrameworkCapabilities.GetCapability<IBannerMessageOwnerCapability>();
             string? bannerMessage = bannerMessageOwnerCapability is not null

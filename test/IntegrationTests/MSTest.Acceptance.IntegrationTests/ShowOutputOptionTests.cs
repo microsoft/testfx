@@ -65,6 +65,40 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task ShowStdout_DefaultInLLMEnvironment_ShowsStandardOutputOnlyForFailedTests(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--output detailed --no-progress --no-ansi",
+            new Dictionary<string, string?>
+            {
+                { "CLAUDECODE", "1" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertOutputContains("stdout from failing test");
+        testHostResult.AssertOutputDoesNotContain("stdout from passing test");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task ShowStdout_All_InLLMEnvironment_StillShowsAllStandardOutput(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--show-stdout all --output detailed --no-progress --no-ansi",
+            new Dictionary<string, string?>
+            {
+                { "CLAUDECODE", "1" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertOutputContains("stdout from failing test");
+        testHostResult.AssertOutputContains("stdout from passing test");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task ShowStdout_InvalidArgument_ReturnsError(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
@@ -123,6 +157,40 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--output detailed --no-progress --no-ansi",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertOutputContains("stderr from failing test");
+        testHostResult.AssertOutputContains("stderr from passing test");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task ShowStderr_DefaultInLLMEnvironment_ShowsErrorOutputOnlyForFailedTests(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--output detailed --no-progress --no-ansi",
+            new Dictionary<string, string?>
+            {
+                { "CLAUDECODE", "1" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertOutputContains("stderr from failing test");
+        testHostResult.AssertOutputDoesNotContain("stderr from passing test");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task ShowStderr_All_InLLMEnvironment_StillShowsAllErrorOutput(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--show-stderr all --output detailed --no-progress --no-ansi",
+            new Dictionary<string, string?>
+            {
+                { "CLAUDECODE", "1" },
+            },
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("stderr from failing test");
