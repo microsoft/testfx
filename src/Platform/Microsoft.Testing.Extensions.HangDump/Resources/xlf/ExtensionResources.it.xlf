@@ -121,17 +121,17 @@ Il valore del timeout è specificato in uno dei formati seguenti:
       </trans-unit>
       <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
         <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
-        <target state="new">'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</target>
+        <target state="translated">''--hangdump-type'' e ''--hangdump-type-if-supported'' si escludono a vicenda. Usare ''--hangdump-type-if-supported'' per scegliere un tipo di dump best effort che esegue il fallback al tipo disponibile più vicino (con un messaggio informativo) quando il tipo richiesto non è disponibile nel runtime corrente, oppure ''--hangdump-type'' per generare un errore rapido nei runtime non supportati.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
         <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
-        <target state="new">'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</target>
+        <target state="translated">''--hangdump-type-if-supported {0}'' non è supportato nel runtime corrente. Fallback a ''{1}''.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
         <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
-        <target state="new">Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</target>
+        <target state="translated">Uguale a ''--hangdump-type'' ma esegue il fallback in modo silenzioso (con un messaggio informativo) al tipo di dump supportato più vicino quando il tipo richiesto non è disponibile nel runtime corrente (ad esempio, ''Triage'' è supportato solo in .NET Core e viene eseguito il fallback a ''Mini'' in .NET Framework). Usare questa opzione per mantenere la stessa riga di comando tra matrici CI che combinano .NET Framework e .NET. I valori validi sono ''Mini'', ''Heap'', ''Full'', ''Triage'', ''None''. Si escludono a vicenda con ''--hangdump-type''.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">

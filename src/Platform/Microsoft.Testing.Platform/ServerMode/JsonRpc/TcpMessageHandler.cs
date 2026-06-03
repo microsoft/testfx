@@ -120,14 +120,40 @@ internal sealed class TcpMessageHandler(
     public async Task WriteRequestAsync(RpcMessage message, CancellationToken cancellationToken)
     {
         string messageStr = await _formatter.SerializeAsync(message).ConfigureAwait(false);
-        await _writer.WriteLineAsync($"Content-Length: {Encoding.UTF8.GetByteCount(messageStr)}").ConfigureAwait(false);
+
+        // Encode the message body manually so Content-Length matches the UTF-8 byte count and
+        // the body can be written directly to the stream without StreamWriter transcoding.
+#if NETCOREAPP
+        int byteCount = Encoding.UTF8.GetByteCount(messageStr);
+        byte[] rentedBytes = ArrayPool<byte>.Shared.Rent(byteCount);
+        try
+        {
+            Encoding.UTF8.GetBytes(messageStr, rentedBytes);
+            await _writer.WriteLineAsync($"Content-Length: {byteCount}").ConfigureAwait(false);
+            await _writer.WriteLineAsync("Content-Type: application/testingplatform").ConfigureAwait(false);
+            await _writer.WriteLineAsync().ConfigureAwait(false);
+            // Flush the StreamWriter's char buffer so the headers reach the underlying NetworkStream
+            // before we write the body bytes directly to BaseStream below (otherwise the body would
+            // overtake the still-buffered headers). No BaseStream.FlushAsync is needed here or after
+            // the body write because the underlying stream is always a NetworkStream (see
+            // MessageHandlerFactory) and NetworkStream.Flush/FlushAsync is a no-op.
+            await _writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+            await _writer.BaseStream.WriteAsync(rentedBytes.AsMemory(0, byteCount), cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(rentedBytes);
+        }
+#else
+        byte[] messageBytes = Encoding.UTF8.GetBytes(messageStr);
+        await _writer.WriteLineAsync($"Content-Length: {messageBytes.Length}").ConfigureAwait(false);
         await _writer.WriteLineAsync("Content-Type: application/testingplatform").ConfigureAwait(false);
         await _writer.WriteLineAsync().ConfigureAwait(false);
-        await _writer.WriteAsync(messageStr).ConfigureAwait(false);
-#if NETCOREAPP
-        await _writer.FlushAsync(cancellationToken).ConfigureAwait(false);
-#else
+
+        // See the NETCOREAPP branch above for why only StreamWriter.FlushAsync (not
+        // BaseStream.FlushAsync) is required here.
         await _writer.FlushAsync().ConfigureAwait(false);
+        await _writer.BaseStream.WriteAsync(messageBytes, 0, messageBytes.Length, cancellationToken).ConfigureAwait(false);
 #endif
     }
 

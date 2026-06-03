@@ -370,6 +370,15 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="UTA_ErrorMultiAssemblyInit" xml:space="preserve">
     <value>UTA013: {0}: Cannot define more than one method with the AssemblyInitialize attribute inside an assembly.</value>
   </data>
+  <data name="UTA_AssemblyFixtureProviderTypeIsGeneric" xml:space="preserve">
+    <value>UTA070: Type '{0}' referenced by [AssemblyFixtureProvider] must not be generic.</value>
+  </data>
+  <data name="UTA_AssemblyFixtureProviderTypeReflectionFailed" xml:space="preserve">
+    <value>UTA071: Failed to enumerate methods on type '{0}' referenced by [AssemblyFixtureProvider]. {1}</value>
+  </data>
+  <data name="UTA_AssemblyFixtureProviderLoadFailed" xml:space="preserve">
+    <value>UTA072: Failed to load [AssemblyFixtureProvider] marker from assembly '{0}'. {1}</value>
+  </data>
   <data name="UTA_ErrorMultiClassClean" xml:space="preserve">
     <value>UTA026: {0}: Cannot define more than one method with the ClassCleanup attribute inside a class.</value>
   </data>

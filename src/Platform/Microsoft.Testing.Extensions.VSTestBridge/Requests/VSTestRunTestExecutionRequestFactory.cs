@@ -2,13 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
-using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Requests;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.Requests;
 
@@ -30,29 +24,30 @@ internal static class VSTestRunTestExecutionRequestFactory
         string[] testAssemblyPaths,
         CancellationToken cancellationToken)
     {
-        IServiceProvider serviceProvider = adapterExtension.ServiceProvider;
-        IConfiguration configuration = serviceProvider.GetConfiguration();
-        ICommandLineOptions commandLineOptions = serviceProvider.GetRequiredService<ICommandLineOptions>();
-        ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        IFileSystem fileSystem = serviceProvider.GetFileSystem();
-        IClientInfo clientInfo = serviceProvider.GetClientInfo();
+        VSTestBridgeRequestContext requestContext = new(adapterExtension);
 
         FrameworkHandlerAdapter frameworkHandlerAdapter = new(
             adapterExtension,
             runTestExecutionRequest.Session,
             testAssemblyPaths,
-            serviceProvider.GetTestApplicationModuleInfo(),
-            serviceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>(),
-            serviceProvider.GetCommandLineOptions(),
-            serviceProvider.GetClientInfo(),
-            serviceProvider.GetMessageBus(),
-            serviceProvider.GetOutputDevice(),
-            loggerFactory,
+            requestContext.TestApplicationModuleInfo,
+            requestContext.NamedFeatureCapability,
+            requestContext.CommandLineOptions,
+            requestContext.ClientInfo,
+            requestContext.MessageBus,
+            requestContext.OutputDevice,
+            requestContext.LoggerFactory,
             adapterExtension.IsTrxEnabled,
             cancellationToken);
 
-        RunSettingsAdapter runSettings = new(commandLineOptions, fileSystem, configuration, clientInfo, loggerFactory, frameworkHandlerAdapter);
-        RunContextAdapter runContext = new(commandLineOptions, runSettings, runTestExecutionRequest.Filter);
+        RunSettingsAdapter runSettings = new(
+            requestContext.CommandLineOptions,
+            requestContext.FileSystem,
+            requestContext.Configuration,
+            requestContext.ClientInfo,
+            requestContext.LoggerFactory,
+            frameworkHandlerAdapter);
+        RunContextAdapter runContext = new(requestContext.CommandLineOptions, runSettings, runTestExecutionRequest.Filter);
 
         return new(runTestExecutionRequest.Session, runTestExecutionRequest.Filter, testAssemblyPaths, runContext, frameworkHandlerAdapter);
     }

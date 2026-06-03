@@ -340,6 +340,21 @@ mas {4} argumentos recebidos, com tipos '{5}'.</target>
         <target state="translated">Falha no método de Limpeza de Assembly {0}.{1}. Mensagem de Erro: {2}. StackTrace: {3}</target>
         <note />
       </trans-unit>
+      <trans-unit id="UTA_AssemblyFixtureProviderTypeIsGeneric">
+        <source>UTA070: Type '{0}' referenced by [AssemblyFixtureProvider] must not be generic.</source>
+        <target state="translated">UTA070: O tipo "{0}" referenciado por [AssemblyFixtureProvider] não deve ser genérico.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_AssemblyFixtureProviderTypeReflectionFailed">
+        <source>UTA071: Failed to enumerate methods on type '{0}' referenced by [AssemblyFixtureProvider]. {1}</source>
+        <target state="translated">UTA071: Falha ao enumerar métodos no tipo "{0}" referenciado por [AssemblyFixtureProvider]. {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_AssemblyFixtureProviderLoadFailed">
+        <source>UTA072: Failed to load [AssemblyFixtureProvider] marker from assembly '{0}'. {1}</source>
+        <target state="translated">UTA072: Falha ao carregar o marcador [AssemblyFixtureProvider] do assembly "{0}". {1}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_AssemblyInitMethodThrows">
         <source>Assembly Initialization method {0}.{1} threw exception. {2}: {3}. Aborting test execution.</source>
         <target state="translated">O método de Inicialização de Assembly {0}.{1} lançou uma exceção. {2}: {3}. Anulando execução de teste.</target>

@@ -24,6 +24,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
     private readonly Dictionary<Type, List<IAsyncConsumerDataProcessor>> _dataTypeConsumers = [];
     private readonly IDataConsumer[] _dataConsumers;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
+    private readonly IShutdownProgressReporter? _shutdownProgressReporter;
     private IAsyncConsumerDataProcessor[] _distinctProcessors = [];
     private long[] _drainLastReceived = [];
     private bool _disabled;
@@ -34,11 +35,23 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
         ITask task,
         ILoggerFactory loggerFactory,
         IEnvironment environment)
+        : this(dataConsumers, testApplicationCancellationTokenSource, task, loggerFactory, environment, shutdownProgressReporter: null)
+    {
+    }
+
+    public AsynchronousMessageBus(
+        IDataConsumer[] dataConsumers,
+        ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
+        ITask task,
+        ILoggerFactory loggerFactory,
+        IEnvironment environment,
+        IShutdownProgressReporter? shutdownProgressReporter)
     {
         _dataConsumers = dataConsumers;
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _task = task;
         _environment = environment;
+        _shutdownProgressReporter = shutdownProgressReporter;
         _logger = loggerFactory.CreateLogger<AsynchronousMessageBus>();
         _isTraceLoggingEnabled = _logger.IsEnabled(LogLevel.Trace);
     }
@@ -161,7 +174,11 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
             for (int i = 0; i < _distinctProcessors.Length; i++)
             {
-                await _distinctProcessors[i].DrainDataAsync().ConfigureAwait(false);
+                IAsyncConsumerDataProcessor processor = _distinctProcessors[i];
+                using (_shutdownProgressReporter?.Track(processor.DataConsumer.Uid, processor.DataConsumer.DisplayName, nameof(IAsyncConsumerDataProcessor.DrainDataAsync)))
+                {
+                    await processor.DrainDataAsync().ConfigureAwait(false);
+                }
             }
 
             bool anyNewlyReceived = false;

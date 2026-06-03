@@ -113,7 +113,7 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
       </trans-unit>
       <trans-unit id="CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage">
         <source>'--crash-report' and '--crash-report-if-supported' are mutually exclusive. Use '--crash-report-if-supported' to opt into a best-effort crash report that is silently skipped on platforms where it is not supported, or '--crash-report' to fail fast when the option cannot be honored.</source>
-        <target state="new">'--crash-report' and '--crash-report-if-supported' are mutually exclusive. Use '--crash-report-if-supported' to opt into a best-effort crash report that is silently skipped on platforms where it is not supported, or '--crash-report' to fail fast when the option cannot be honored.</target>
+        <target state="translated">'--crash-report'와 '--crash-report-if-supported'는 함께 사용할 수 없습니다. 지원되지 않는 플랫폼에서는 자동으로 건너뛰는 최선의 노력 방식의 크래시 보고서를 사용하려면 '--crash-report-if-supported'를 사용하거나, 옵션을 적용할 수 없을 때 페일 테스트하려면 '--crash-report'를 사용하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashReportArtifactDescription">
@@ -128,27 +128,27 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
       </trans-unit>
       <trans-unit id="CrashReportIfSupportedIgnoredOnNetFrameworkInfoMessage">
         <source>'--crash-report-if-supported' was specified but is being ignored on this runtime: the .NET Framework testhost does not support the runtime-based crash dump / crash report mechanism. No crash report file will be produced.</source>
-        <target state="new">'--crash-report-if-supported' was specified but is being ignored on this runtime: the .NET Framework testhost does not support the runtime-based crash dump / crash report mechanism. No crash report file will be produced.</target>
+        <target state="translated">'--crash-report-if-supported'가 지정되었지만 이 런타임에서는 무시됩니다. .NET Framework testhost는 런타임 기반 크래시 덤프/크래시 보고 메커니즘을 지원하지 않습니다. 크래시 보고서 파일은 생성되지 않습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashReportIfSupportedIgnoredOnWindowsInfoMessage">
         <source>'--crash-report-if-supported' was specified but is being ignored on this platform: the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on Windows (see https://github.com/dotnet/runtime/issues/80191). No crash report file will be produced.</source>
-        <target state="new">'--crash-report-if-supported' was specified but is being ignored on this platform: the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on Windows (see https://github.com/dotnet/runtime/issues/80191). No crash report file will be produced.</target>
+        <target state="translated">'--crash-report-if-supported'가 지정되었지만 이 플랫폼에서는 무시됩니다. Windows에서는 .NET 런타임이 기본 'DOTNET_EnableCrashReport' 및 'DOTNET_EnableCrashReportOnly' 환경 변수를 무시합니다(https://github.com/dotnet/runtime/issues/80191 참조). 크래시 보고서 파일은 생성되지 않습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashReportIfSupportedOptionDescription">
         <source>Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</source>
-        <target state="new">Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</target>
+        <target state="translated">'--crash-report'와 동일하지만, 크래시 보고서 생성이 지원되지 않는 플랫폼에서는 정보 메시지만 표시하고 자동으로 무시됩니다. Windows가 포함된 CI 매트릭스에서 같은 명령줄을 유지하려면 이 옵션을 사용하세요. '--crash-report'와는 함께 사용할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">
         <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</source>
-        <target state="new">'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</target>
+        <target state="translated">Windows에서는 '--crash-report'를 지원하지 않습니다. 이 플랫폼에서는 .NET 런타임이 기본 'DOTNET_EnableCrashReport' 및 'DOTNET_EnableCrashReportOnly' 환경 변수를 무시하기 때문입니다. https://github.com/dotnet/runtime/issues/80191을 참조하세요. Windows에서는 대신 옵션을 자동으로 건너뛰려면 '--crash-report-if-supported'를 사용하거나, 크래시 덤프 파일을 생성하려면 '--crashdump'를 사용하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashReportOptionDescription">
         <source>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.</source>
-        <target state="new">[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.</target>
+        <target state="translated">[Linux/macOS만 해당] 테스트 프로세스가 충돌할 때 JSON 크래시 보고서를 생성합니다. '--crashdump'와 함께 사용하면 덤프 파일도 생성합니다. 단독으로 사용할 때는 .NET 7+가 필요합니다. '--crashdump'와 함께 사용할 때는 .NET 6+가 필요합니다. 이 런타임 요구 사항은 도구에서 강제로 적용하지 않습니다. 지원되지 않는 런타임에서는 크래시 보고서가 생성되지 않습니다. .NET 런타임 제한 사항(dotnet/runtime#80191)으로 인해 Windows에서는 지원되지 않습니다. Windows에서 옵션을 자동으로 건너뛰려면 '--crash-report-if-supported'를 사용하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashSequenceOptionDescription">

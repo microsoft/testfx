@@ -53,20 +53,18 @@ public sealed class AvoidAssertAreEqualOnCollectionsFixer : CodeFixProvider
             return;
         }
 
+        // Intentionally only two code actions are offered: ordered element-wise comparison
+        // ('Assert.AreSequenceEqual') and deep structural comparison ('Assert.AreEquivalent').
+        // An 'Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)' action is NOT offered because
+        // order-insensitive comparison is a behavior change rather than a fidelity-preserving fix;
+        // users who want that semantic should opt in to it explicitly. See issue #8765.
         if (replacementContext.CanOfferSequenceFixes)
         {
             context.RegisterCodeFix(
                 CodeAction.Create(
                     title: string.Format(CultureInfo.InvariantCulture, CodeFixResources.AvoidAssertAreEqualOnCollectionsOrderedFix, replacementContext.SequenceMethodName),
-                    ct => ApplyFixAsync(context.Document, invocation, replacementContext, preserveGenericTypeArguments: false, addInAnyOrderArgument: false, useEquivalentMethod: false, ct),
+                    ct => ApplyFixAsync(context.Document, invocation, replacementContext, preserveGenericTypeArguments: false, useEquivalentMethod: false, ct),
                     equivalenceKey: $"{nameof(AvoidAssertAreEqualOnCollectionsFixer)}.Ordered"),
-                diagnostic);
-
-            context.RegisterCodeFix(
-                CodeAction.Create(
-                    title: string.Format(CultureInfo.InvariantCulture, CodeFixResources.AvoidAssertAreEqualOnCollectionsInAnyOrderFix, replacementContext.SequenceMethodName),
-                    ct => ApplyFixAsync(context.Document, invocation, replacementContext, preserveGenericTypeArguments: false, addInAnyOrderArgument: true, useEquivalentMethod: false, ct),
-                    equivalenceKey: $"{nameof(AvoidAssertAreEqualOnCollectionsFixer)}.InAnyOrder"),
                 diagnostic);
         }
 
@@ -75,7 +73,7 @@ public sealed class AvoidAssertAreEqualOnCollectionsFixer : CodeFixProvider
             context.RegisterCodeFix(
                 CodeAction.Create(
                     title: string.Format(CultureInfo.InvariantCulture, CodeFixResources.AvoidAssertAreEqualOnCollectionsEquivalentFix, replacementContext.EquivalentMethodName),
-                    ct => ApplyFixAsync(context.Document, invocation, replacementContext, preserveGenericTypeArguments: true, addInAnyOrderArgument: false, useEquivalentMethod: true, ct),
+                    ct => ApplyFixAsync(context.Document, invocation, replacementContext, preserveGenericTypeArguments: true, useEquivalentMethod: true, ct),
                     equivalenceKey: $"{nameof(AvoidAssertAreEqualOnCollectionsFixer)}.Equivalent"),
                 diagnostic);
         }
@@ -118,7 +116,6 @@ public sealed class AvoidAssertAreEqualOnCollectionsFixer : CodeFixProvider
         InvocationExpressionSyntax invocation,
         ReplacementContext replacementContext,
         bool preserveGenericTypeArguments,
-        bool addInAnyOrderArgument,
         bool useEquivalentMethod,
         CancellationToken cancellationToken)
     {
@@ -136,11 +133,6 @@ public sealed class AvoidAssertAreEqualOnCollectionsFixer : CodeFixProvider
         if (!useEquivalentMethod && replacementContext.ComparerArgument is not null)
         {
             arguments.Add(StripArgumentName(replacementContext.ComparerArgument));
-        }
-
-        if (addInAnyOrderArgument)
-        {
-            arguments.Add(SyntaxFactory.Argument(CreateInAnyOrderExpression()));
         }
 
         if (replacementContext.MessageArgument is not null)
@@ -172,9 +164,6 @@ public sealed class AvoidAssertAreEqualOnCollectionsFixer : CodeFixProvider
 
     private static ArgumentSyntax StripArgumentName(ArgumentSyntax argument)
         => argument.WithNameColon(null);
-
-    private static ExpressionSyntax CreateInAnyOrderExpression()
-        => SyntaxFactory.ParseExpression("Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InAnyOrder");
 
     private readonly record struct ReplacementContext(
         ArgumentSyntax ExpectedArgument,

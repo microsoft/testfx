@@ -765,6 +765,11 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
         <target state="translated">不应通过服务提供商注册类型为“ITestFramework”的实例，而应通过“ITestApplicationBuilder.RegisterTestFramework”进行注册</target>
         <note />
       </trans-unit>
+      <trans-unit id="ShutdownProgressStillWaitingPrefix">
+        <source>Still waiting for: </source>
+        <target state="new">Still waiting for: </target>
+        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</note>
+      </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
         <target state="translated">已跳过</target>

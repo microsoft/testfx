@@ -765,6 +765,11 @@ Recebe um argumento como valor temporal, com um sufixo de unidade explícito. O
         <target state="translated">Instâncias do tipo "ITestFramework" não devem ser registradas por meio do provedor de serviços, mas por meio de "ITestApplicationBuilder.RegisterTestFramework"</target>
         <note />
       </trans-unit>
+      <trans-unit id="ShutdownProgressStillWaitingPrefix">
+        <source>Still waiting for: </source>
+        <target state="new">Still waiting for: </target>
+        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</note>
+      </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
         <target state="translated">Ignorado</target>
