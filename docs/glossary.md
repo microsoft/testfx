@@ -20,11 +20,11 @@ An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats
 
 ### CodeCoverage
 
-An MTP extension (`Microsoft.Testing.Extensions.CodeCoverage`) that instruments .NET assemblies and collects code-coverage data during a test run. It is developed and maintained in the `devdiv/DevDiv/vs-code-coverage` repository and consumed by this project as a Maestro-managed dependency. The extension supports the `--coverage` command-line option and, via a [command-line option mapping](#commandlineoptionmapping), also accepts the VSTest-compatible `--collect "XPlat Code Coverage"` and `--collect "Code Coverage"` forms for smoother migration from VSTest.
+An MTP extension (`Microsoft.Testing.Extensions.CodeCoverage`) that instruments .NET assemblies and collects code-coverage data during a test run. It is developed and maintained in the `devdiv/DevDiv/vs-code-coverage` repository and consumed by this project as a Maestro-managed dependency. The extension supports the `--coverage` command-line option; VSTest-compatible `--collect "XPlat Code Coverage"` and `--collect "Code Coverage"` forms are proposed via a [command-line option mapping](#commandlineoptionmapping) (see `docs/RFCs/015-Command-Line-Option-Mappings.md`).
 
 ### CommandLineOptionMapping
 
-A proposed MTP extensibility point (see `docs/RFCs/015-Command-Line-Option-Mappings.md`) that lets an extension declaratively accept a user-facing option (e.g. `--collect "XPlat Code Coverage"`) and rewrite it at parse time into one or more first-class MTP options (e.g. `--coverage`). Implemented by `ICommandLineOptionMappingProvider`. Intended to smooth migration from VSTest by allowing legacy `--logger` and `--collect` argument forms to be forwarded to their MTP equivalents without polluting the canonical MTP option set.
+A proposed MTP extensibility point (see `docs/RFCs/015-Command-Line-Option-Mappings.md`) that would let an extension declaratively accept a user-facing option (e.g. `--collect "XPlat Code Coverage"`) and rewrite it at parse time into one or more first-class MTP options (e.g. `--coverage`). In RFC 015, this is expressed via `ICommandLineOptionMappingProvider`. Intended to smooth migration from VSTest by allowing legacy `--logger` and `--collect` argument forms to be forwarded to their MTP equivalents without polluting the canonical MTP option set.
 
 ### CrashDump
 
