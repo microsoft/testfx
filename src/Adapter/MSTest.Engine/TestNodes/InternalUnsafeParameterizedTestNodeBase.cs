@@ -16,6 +16,12 @@ public abstract class InternalUnsafeParameterizedTestNodeBase<TData> : TestNode,
         => Expand(arguments, argumentFragmentUid, argumentFragmentDisplayName);
 
     /// <summary>
+    /// Gets all argument items for this parameterized test node.
+    /// </summary>
+    /// <returns>Argument items for this parameterized test node.</returns>
+    internal abstract Task<IEnumerable<TData>> GetArgumentsAsync();
+
+    /// <summary>
     /// Creates the delegate that executes the test body for one argument item.
     /// </summary>
     /// <param name="testExecutionContext">Current test execution context.</param>
@@ -28,7 +34,15 @@ public abstract class InternalUnsafeParameterizedTestNodeBase<TData> : TestNode,
     /// <param name="invokeBodyAsync">Delegate that executes the test body for one argument item.</param>
     /// <param name="safeInvoke">Wrapper that safely executes each body invocation.</param>
     /// <returns>A task that completes when all arguments have been invoked.</returns>
-    internal abstract Task InvokeWithArgumentsAsync(Func<TData, Task> invokeBodyAsync, Func<Func<Task>, Task> safeInvoke);
+    internal Task InvokeWithArgumentsAsync(Func<TData, Task> invokeBodyAsync, Func<Func<Task>, Task> safeInvoke)
+        => InternalUnsafeParameterizedTestNodeHelper.InvokeAsync(GetArgumentsAsync, invokeBodyAsync, safeInvoke);
+
+    internal static Func<TData, Task> CreateInvokeBody(Action<ITestExecutionContext, TData> body, ITestExecutionContext testExecutionContext)
+        => item =>
+        {
+            body(testExecutionContext, item);
+            return Task.CompletedTask;
+        };
 
     /// <summary>
     /// Expands the current parameterized node into a concrete test node for one argument item.

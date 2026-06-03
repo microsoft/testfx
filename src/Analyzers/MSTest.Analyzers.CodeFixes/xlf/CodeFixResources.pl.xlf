@@ -29,12 +29,12 @@
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsEquivalentFix">
         <source>Use deep structural comparison ('Assert.{0}')</source>
-        <target state="needs-review-translation">Zamień na `Assert.{0}`</target>
+        <target state="new">Use deep structural comparison ('Assert.{0}')</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsOrderedFix">
         <source>Use ordered, element-wise comparison ('Assert.{0}')</source>
-        <target state="needs-review-translation">Zamień na `Assert.{0}` (uporządkowane)</target>
+        <target state="new">Use ordered, element-wise comparison ('Assert.{0}')</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesFix">
