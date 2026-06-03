@@ -158,8 +158,8 @@ public sealed class ProtocolTests
     [TestMethod]
     public void HandshakeMessagePropertyNames_ValuesAreStable()
     {
-        // Round-trip the constants through the serializer so the MSTest analyzer
-        // does not flag the comparisons as "always true / always failing".
+        // Indirect the comparisons through a dictionary lookup so the MSTest analyzer
+        // does not flag compile-time constant comparisons as "always true / always failing".
         Dictionary<byte, string> properties = new()
         {
             { HandshakeMessagePropertyNames.PID, nameof(HandshakeMessagePropertyNames.PID) },
