@@ -261,7 +261,7 @@ internal static class CommandLineOptionsValidator
         Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)> providerAndOptionByOptionName)
     {
         StringBuilder? stringBuilder = null;
-        foreach (IGrouping<string, CommandLineParseOption> groupedOptions in parseResult.Options.GroupBy(x => x.Name))
+        foreach (IGrouping<string, CommandLineParseOption> groupedOptions in parseResult.Options.GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
         {
             // getting the arguments count for an option.
             int arity = 0;

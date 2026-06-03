@@ -108,8 +108,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
-        <source>Option '--{0}' is declared by multiple extensions: '{1}'</source>
-        <target state="translated">L’option « --{0} » est déclarée par plusieurs extensions : « {1} »</target>
+        <source>Option '--{0}' is declared by multiple providers: '{1}'</source>
+        <target state="needs-review-translation">L’option « --{0} » est déclarée par plusieurs extensions : « {1} »</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
