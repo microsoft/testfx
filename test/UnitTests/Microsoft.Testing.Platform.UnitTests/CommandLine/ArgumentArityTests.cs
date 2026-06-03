@@ -126,6 +126,26 @@ public sealed class ArgumentArityTests
     }
 
     [TestMethod]
+    public async Task ParseAndValidate_WhenOptionWithArityZeroOrOneIsRepeatedWithDifferentCasing_ReturnsFalse()
+    {
+        // Arrange
+        string[] args = ["--zeroOrOneArgumentsOption", "arg1", "--ZeroOrOneArgumentsOption", "arg2"];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+
+        // Act
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+
+        // Assert
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(
+            """
+            Option '--zeroOrOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments
+            Command line: --zeroOrOneArgumentsOption arg1 --ZeroOrOneArgumentsOption arg2
+            """, result.ErrorMessage);
+    }
+
+    [TestMethod]
     public async Task ParseAndValidate_WhenOptionWithArityOneOrMoreIsCalledWithoutArguments_ReturnsFalse()
     {
         // Arrange

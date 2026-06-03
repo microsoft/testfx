@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
@@ -36,7 +37,7 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, ITestAp
         _commandLineProviderFactory.Add(commandLineProviderFactory);
     }
 
-    internal async Task<CommandLineHandler> BuildAsync(CommandLineParseResult parseResult, IServiceProvider serviceProvider)
+    internal async Task<CommandLineHandler> BuildAsync(CommandLineParseResult parseResult, IServiceProvider serviceProvider, IConfiguration configuration)
     {
         List<ICommandLineOptionsProvider> commandLineOptionsProviders = [];
         foreach (Func<IServiceProvider, ICommandLineOptionsProvider> commandLineProviderFactory in _commandLineProviderFactory)
@@ -62,6 +63,6 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, ITestAp
         ];
 
         return new CommandLineHandler(parseResult, commandLineOptionsProviders,
-            systemCommandLineOptionsProviders, _testApplicationModuleInfo, _runtimeFeature);
+            systemCommandLineOptionsProviders, _testApplicationModuleInfo, _runtimeFeature, configuration);
     }
 }

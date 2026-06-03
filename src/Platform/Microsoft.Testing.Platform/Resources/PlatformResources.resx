@@ -158,6 +158,14 @@
     <value>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</value>
     <comment>{0} is the full dotted/colon-separated key. {1} is the section name. {2} is the path to the testconfig.json file.</comment>
   </data>
+  <data name="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage" xml:space="preserve">
+    <value>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</value>
+    <comment>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file.</comment>
+  </data>
+  <data name="JsonCommandLineOptionsValidationErrorPrefix" xml:space="preserve">
+    <value>In testconfig.json under 'commandLineOptions': {0}</value>
+    <comment>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...).</comment>
+  </data>
   <data name="TestConfigurationEnvironmentVariableProviderDisplayName" xml:space="preserve">
     <value>testconfig.json environment variables provider</value>
   </data>
@@ -340,7 +348,7 @@
     <value>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</value>
   </data>
   <data name="CommandLineOptionIsDeclaredByMultipleProviders" xml:space="preserve">
-    <value>Option '--{0}' is declared by multiple extensions: '{1}'</value>
+    <value>Option '--{0}' is declared by multiple providers: '{1}'</value>
   </data>
   <data name="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround" xml:space="preserve">
     <value>You can fix the previous option clash by overriding the option name using the configuration file</value>
