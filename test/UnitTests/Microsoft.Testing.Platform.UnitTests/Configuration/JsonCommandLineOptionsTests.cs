@@ -116,6 +116,9 @@ public sealed class JsonCommandLineOptionsTests
             () => EnumerateAsync("{\"commandLineOptions\": {\"foo\": {\"nested\": \"value\"}}}"));
 
         Assert.Contains("foo", ex.Message);
+        // The error message should render the entry name relative to the section
+        // (e.g. 'foo') rather than the redundant flattened key ('commandLineOptions:foo').
+        Assert.DoesNotContain("'commandLineOptions:foo'", ex.Message);
     }
 
     [TestMethod]
@@ -407,12 +410,11 @@ public sealed class JsonCommandLineOptionsTests
     [TestMethod]
     public async Task Validator_DuplicateOptionNamesDifferingByCase_FailsGracefully()
     {
-        // Two extension providers register the same option with different casing. Pre-fix this
-        // silently passed because the duplicate-options pass used the default Ordinal comparer
-        // and treated "Timeout" / "timeout" as distinct keys; the collision then surfaced as a
-        // raw ArgumentException when CommandLineOptionsValidator built its OrdinalIgnoreCase
-        // providerAndOptionByOptionName lookup. The pass now uses OrdinalIgnoreCase throughout
-        // and produces a friendly ValidationResult.Invalid before that point.
+        // Two extension providers register the same option with different casing. Pre-fix the
+        // default Ordinal comparison in ValidateOptionsAreNotDuplicated treated them as distinct
+        // names and both were silently accepted, even though every downstream lookup
+        // (TryGetCommandLineOptionFromProviders, testconfig.json) is case-insensitive. The
+        // OrdinalIgnoreCase fix surfaces this as a clean ValidationResult.Invalid up front.
         ICommandLineOptionsProvider providerA = new TestProvider(
             new CommandLineOption("Timeout", "desc-A", ArgumentArity.ExactlyOne, isHidden: false));
         ICommandLineOptionsProvider providerB = new TestProvider(

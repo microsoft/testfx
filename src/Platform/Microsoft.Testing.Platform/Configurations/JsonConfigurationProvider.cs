@@ -433,12 +433,26 @@ internal sealed partial class JsonConfigurationSource
 
         [DoesNotReturn]
         private void ThrowEntryMustBeScalarOrArray(string fullKey, string sectionName)
-            => throw new FormatException(string.Format(
+        {
+            // Callers pass the full flattened configuration key (e.g. "commandLineOptions:foo" or
+            // "commandLineOptions:foo:0"). The resource message reads "The entry '{0}' under section
+            // '{1}'..." so strip the leading "<sectionName>:" prefix to keep {0} as the entry name
+            // relative to the section (e.g. "foo" or "foo:0") and avoid the redundant/confusing
+            // "The entry 'commandLineOptions:foo' under section 'commandLineOptions'..." rendering.
+            string entryName = fullKey;
+            string prefix = sectionName + PlatformConfigurationConstants.KeyDelimiter;
+            if (entryName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                entryName = entryName.Substring(prefix.Length);
+            }
+
+            throw new FormatException(string.Format(
                 CultureInfo.InvariantCulture,
                 PlatformResources.JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage,
-                fullKey,
+                entryName,
                 sectionName,
                 ConfigurationFile ?? "<unknown>"));
+        }
 
         private struct OptionBuilder
         {

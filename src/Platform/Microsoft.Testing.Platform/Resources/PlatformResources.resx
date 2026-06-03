@@ -160,7 +160,7 @@
   </data>
   <data name="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage" xml:space="preserve">
     <value>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</value>
-    <comment>{0} is the option name. {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file.</comment>
+    <comment>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file.</comment>
   </data>
   <data name="JsonCommandLineOptionsValidationErrorPrefix" xml:space="preserve">
     <value>In testconfig.json under 'commandLineOptions': {0}</value>
