@@ -4,6 +4,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
+using System.Security;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -18,8 +19,10 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
     private const int MaxAttempts = 3;
     private const int BaseDelayMilliseconds = 500;
     private static readonly TimeSpan AttemptTimeout = TimeSpan.FromSeconds(15);
-    private static readonly TimeSpan HttpClientTimeout = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(60);
+
+    // Attachments can be up to 16 MB and base64 encoding bloats them ~4/3x. Allow generously longer timeouts.
+    private static readonly TimeSpan AttachmentRequestTimeout = TimeSpan.FromMinutes(5);
     private static readonly HttpMethod PatchMethod = new("PATCH");
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
@@ -58,7 +61,9 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
             : throw new InvalidOperationException(AzureDevOpsResources.AzureDevOpsLivePublishingInvalidResponse);
     }
 
-    public Task PublishTestResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken)
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "Response types are internal, fixed, and controlled by this extension.")]
+    [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "Response types are internal, fixed, and controlled by this extension.")]
+    public async Task<IReadOnlyList<int>?> PublishTestResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken)
     {
         using HttpRequestMessage request = CreateRequest(
             HttpMethod.Post,
@@ -66,7 +71,74 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
             configuration.AccessToken,
             results);
 
-        return SendAsync(request, cancellationToken);
+        // Transport/HTTP failures throw from SendCoreAsync — caller retries.
+        using var requestTimeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        requestTimeoutSource.CancelAfter(RequestTimeout);
+        using HttpResponseMessage response = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken, AttemptTimeout).ConfigureAwait(false);
+        string payload = await ReadAsStringAsync(response.Content, requestTimeoutSource.Token).ConfigureAwait(false);
+
+        // From this point on the AzDO server has accepted the results. Failing to parse the response
+        // must not cause the caller to retry the publish (that would duplicate result rows).
+        try
+        {
+            PublishTestResultsResponse? parsed = JsonSerializer.Deserialize<PublishTestResultsResponse>(payload, JsonSerializerOptions);
+            if (parsed?.Value is null || parsed.Value.Length != results.Count)
+            {
+                return null;
+            }
+
+            int[] ids = new int[results.Count];
+            for (int i = 0; i < results.Count; i++)
+            {
+                if (parsed.Value[i].Id <= 0
+                    || !string.Equals(parsed.Value[i].AutomatedTestName, results[i].AutomatedTestName, StringComparison.Ordinal))
+                {
+                    return null;
+                }
+
+                ids[i] = parsed.Value[i].Id;
+            }
+
+            return ids;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    public async Task UploadTestResultAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, int testCaseResultId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken)
+    {
+        AttachmentRequest? payload = TryBuildAttachmentRequest(attachment);
+        if (payload is null)
+        {
+            return;
+        }
+
+        using HttpRequestMessage request = CreateRequest(
+            HttpMethod.Post,
+            BuildResultAttachmentsUri(configuration.CollectionUri, configuration.Project, runId, testCaseResultId),
+            configuration.AccessToken,
+            payload);
+
+        await SendAsync(request, cancellationToken, AttachmentRequestTimeout).ConfigureAwait(false);
+    }
+
+    public async Task UploadTestRunAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken)
+    {
+        AttachmentRequest? payload = TryBuildAttachmentRequest(attachment);
+        if (payload is null)
+        {
+            return;
+        }
+
+        using HttpRequestMessage request = CreateRequest(
+            HttpMethod.Post,
+            BuildRunAttachmentsUri(configuration.CollectionUri, configuration.Project, runId),
+            configuration.AccessToken,
+            payload);
+
+        await SendAsync(request, cancellationToken, AttachmentRequestTimeout).ConfigureAwait(false);
     }
 
     public Task UpdateTestRunStateAsync(AzureDevOpsPublishConfiguration configuration, int runId, string state, CancellationToken cancellationToken)
@@ -89,7 +161,7 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
 
         return new HttpClient(handler, disposeHandler: false)
         {
-            Timeout = HttpClientTimeout,
+            Timeout = Timeout.InfiniteTimeSpan,
         };
     }
 
@@ -101,6 +173,66 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
 
     private static Uri BuildResultsUri(string collectionUri, string project, int runId)
         => new(new Uri(collectionUri, UriKind.Absolute), $"{Uri.EscapeDataString(project)}/_apis/test/runs/{runId}/results?api-version={ApiVersion}");
+
+    private static Uri BuildResultAttachmentsUri(string collectionUri, string project, int runId, int testCaseResultId)
+        => new(new Uri(collectionUri, UriKind.Absolute), $"{Uri.EscapeDataString(project)}/_apis/test/runs/{runId}/results/{testCaseResultId}/attachments?api-version={ApiVersion}");
+
+    private static Uri BuildRunAttachmentsUri(string collectionUri, string project, int runId)
+        => new(new Uri(collectionUri, UriKind.Absolute), $"{Uri.EscapeDataString(project)}/_apis/test/runs/{runId}/attachments?api-version={ApiVersion}");
+
+    private static AttachmentRequest? TryBuildAttachmentRequest(AzureDevOpsTestResultAttachment attachment)
+    {
+        byte[]? bytes;
+        if (attachment.FilePath is { Length: > 0 } filePath)
+        {
+            FileInfo fileInfo;
+            try
+            {
+                fileInfo = new FileInfo(filePath);
+                if (!fileInfo.Exists)
+                {
+                    return null;
+                }
+
+                if (fileInfo.Length > AzureDevOpsLivePublishingConstants.MaxAttachmentSizeBytes)
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or PathTooLongException)
+            {
+                return null;
+            }
+
+            try
+            {
+                bytes = File.ReadAllBytes(filePath);
+                if (bytes.Length > AzureDevOpsLivePublishingConstants.MaxAttachmentSizeBytes)
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or PathTooLongException)
+            {
+                return null;
+            }
+        }
+        else if (attachment.InlineContent is { } inline)
+        {
+            // Inline content (stdout/stderr) is already truncated by the publisher to MaxInlineAttachmentBytes.
+            bytes = Encoding.UTF8.GetBytes(inline);
+        }
+        else
+        {
+            return null;
+        }
+
+        return new AttachmentRequest(
+            Convert.ToBase64String(bytes),
+            attachment.FileName,
+            attachment.Comment,
+            attachment.AttachmentType);
+    }
 
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "Payload types are internal, fixed, and controlled by this extension.")]
     [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "Payload types are internal, fixed, and controlled by this extension.")]
@@ -126,7 +258,7 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
         using var requestTimeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         requestTimeoutSource.CancelAfter(RequestTimeout);
 
-        using HttpResponseMessage response = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken).ConfigureAwait(false);
+        using HttpResponseMessage response = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken, AttemptTimeout).ConfigureAwait(false);
         string payload = await ReadAsStringAsync(response.Content, requestTimeoutSource.Token).ConfigureAwait(false);
         TResponse? deserialized = JsonSerializer.Deserialize<TResponse>(payload, JsonSerializerOptions);
         return deserialized ?? throw new InvalidOperationException(AzureDevOpsResources.AzureDevOpsLivePublishingInvalidResponse);
@@ -136,10 +268,17 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
     {
         using var requestTimeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         requestTimeoutSource.CancelAfter(RequestTimeout);
-        using HttpResponseMessage ignoredResponse = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken).ConfigureAwait(false);
+        using HttpResponseMessage ignoredResponse = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken, AttemptTimeout).ConfigureAwait(false);
     }
 
-    private async Task<HttpResponseMessage> SendCoreAsync(HttpRequestMessage request, CancellationToken requestCancellationToken, CancellationToken userCancellationToken)
+    private async Task SendAsync(HttpRequestMessage request, CancellationToken cancellationToken, TimeSpan requestTimeout)
+    {
+        using var requestTimeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        requestTimeoutSource.CancelAfter(requestTimeout);
+        using HttpResponseMessage ignoredResponse = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken, requestTimeout).ConfigureAwait(false);
+    }
+
+    private async Task<HttpResponseMessage> SendCoreAsync(HttpRequestMessage request, CancellationToken requestCancellationToken, CancellationToken userCancellationToken, TimeSpan attemptTimeout)
     {
         Exception? lastException = null;
 
@@ -149,7 +288,7 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
             {
                 using HttpRequestMessage currentRequest = await CloneAsync(request, requestCancellationToken).ConfigureAwait(false);
                 using var attemptTimeoutSource = CancellationTokenSource.CreateLinkedTokenSource(requestCancellationToken);
-                attemptTimeoutSource.CancelAfter(AttemptTimeout);
+                attemptTimeoutSource.CancelAfter(attemptTimeout);
 
                 try
                 {
@@ -283,4 +422,18 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
     private sealed record CreateTestRunResponse([property: JsonPropertyName("id")] int Id);
 
     private sealed record UpdateTestRunStateRequest([property: JsonPropertyName("state")] string State);
+
+    private sealed record PublishTestResultsResponse(
+        [property: JsonPropertyName("count")] int Count,
+        [property: JsonPropertyName("value")] PublishedTestResult[]? Value);
+
+    private sealed record PublishedTestResult(
+        [property: JsonPropertyName("id")] int Id,
+        [property: JsonPropertyName("automatedTestName")] string? AutomatedTestName);
+
+    private sealed record AttachmentRequest(
+        [property: JsonPropertyName("stream")] string Stream,
+        [property: JsonPropertyName("fileName")] string FileName,
+        [property: JsonPropertyName("comment")] string? Comment,
+        [property: JsonPropertyName("attachmentType")] string AttachmentType);
 }

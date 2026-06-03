@@ -77,6 +77,21 @@
         <target state="translated">모든 재시도 후 Azure DevOps REST API 요청이 실패했습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultAttachmentFailed">
+        <source>Azure DevOps live publishing failed to upload a test result attachment.</source>
+        <target state="new">Azure DevOps live publishing failed to upload a test result attachment.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultIdParseFailedWarning">
+        <source>Azure DevOps live publishing accepted a batch of test results but could not parse the assigned result IDs; result-level attachments for this batch will be skipped.</source>
+        <target state="new">Azure DevOps live publishing accepted a batch of test results but could not parse the assigned result IDs; result-level attachments for this batch will be skipped.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunAttachmentFailed">
+        <source>Azure DevOps live publishing failed to upload a test run attachment.</source>
+        <target state="new">Azure DevOps live publishing failed to upload a test run attachment.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunIdFileMismatch">
         <source>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</source>
         <target state="translated">Azure DevOps 라이브 게시에서 다른 Azure DevOps 프로젝트에 대한 azdo-runid.&lt;buildId&gt;.json 파일을 찾았습니다.</target>
