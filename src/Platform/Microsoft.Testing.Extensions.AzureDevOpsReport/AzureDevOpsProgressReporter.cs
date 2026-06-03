@@ -169,9 +169,12 @@ internal sealed class AzureDevOpsProgressReporter : IDataConsumer, ITestSessionL
                 }
 
                 int denominator = Math.Max(_seen, _completed);
+                // Cap in-progress emissions at 99 so 100% is reserved for the final
+                // `state=Completed` emission in OnTestSessionFinishingAsync. Otherwise
+                // hitting 100 here would prevent any further updates (updates are monotonic).
                 percent = denominator <= 0
                     ? 0
-                    : Math.Min(100, Math.Max(0, (int)(_completed * 100L / denominator)));
+                    : Math.Min(99, Math.Max(0, (int)(_completed * 100L / denominator)));
 
                 if (percent <= _lastEmittedPercent)
                 {
@@ -179,7 +182,7 @@ internal sealed class AzureDevOpsProgressReporter : IDataConsumer, ITestSessionL
                 }
 
                 long elapsed = _emissionThrottle.ElapsedMilliseconds;
-                if (_hasEmittedInitial && percent < 100 && elapsed < MinimumEmissionIntervalMs)
+                if (_hasEmittedInitial && elapsed < MinimumEmissionIntervalMs)
                 {
                     return;
                 }

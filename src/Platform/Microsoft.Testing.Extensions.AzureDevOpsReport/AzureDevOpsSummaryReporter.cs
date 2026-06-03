@@ -352,11 +352,32 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
     }
 
     private static string FormatDuration(TimeSpan duration)
-        => duration < TimeSpan.FromSeconds(1)
-            ? string.Format(CultureInfo.InvariantCulture, "{0}ms", (int)duration.TotalMilliseconds)
-            : duration < TimeSpan.FromMinutes(1)
-                ? string.Format(CultureInfo.InvariantCulture, "{0:0.00}s", duration.TotalSeconds)
-                : string.Format(CultureInfo.InvariantCulture, "{0:hh\\:mm\\:ss}", duration);
+    {
+        if (duration < TimeSpan.FromSeconds(1))
+        {
+            return string.Format(CultureInfo.InvariantCulture, "{0}ms", (int)duration.TotalMilliseconds);
+        }
+
+        if (duration < TimeSpan.FromMinutes(1))
+        {
+            return string.Format(CultureInfo.InvariantCulture, "{0:0.00}s", duration.TotalSeconds);
+        }
+
+        if (duration < TimeSpan.FromHours(1))
+        {
+            return string.Format(CultureInfo.InvariantCulture, "{0:mm\\:ss}", duration);
+        }
+
+        // Custom format `hh` is the *hour component* and wraps at 24 hours, so for >= 1 hour runs
+        // we compute total hours explicitly to keep multi-day sessions accurate.
+        long totalHours = (long)Math.Floor(duration.TotalHours);
+        return string.Format(
+            CultureInfo.InvariantCulture,
+            "{0}:{1:D2}:{2:D2}",
+            totalHours,
+            duration.Minutes,
+            duration.Seconds);
+    }
 
     private static string EscapeCell(string value)
     {

@@ -141,6 +141,35 @@ public sealed class AzureDevOpsProgressReporterTests
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_CapsInProgressEmissionAt99_ReservesHundredForCompletedAsync()
+    {
+        AzureDevOpsProgressReporter reporter = CreateReporter(enabled: true);
+        _ = _environmentMock.Setup(e => e.GetEnvironmentVariable("TF_BUILD")).Returns("true");
+
+        await reporter.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
+        _outputData.Clear();
+
+        // Two tests, both completed without any prior `InProgress` event so seen==completed==2.
+        // The raw percentage is 100; the in-progress emission must cap at 99 so the final
+        // state=Completed emission can still surface as 100.
+        await reporter.ConsumeAsync(CreateProducer(), CreateTestNodeUpdateMessage("t1", new PassedTestNodeStateProperty()), CancellationToken.None).ConfigureAwait(false);
+        await Task.Delay(AzureDevOpsProgressReporter.MinimumEmissionIntervalMs + 50, TestContext.CancellationToken).ConfigureAwait(false);
+        await reporter.ConsumeAsync(CreateProducer(), CreateTestNodeUpdateMessage("t2", new PassedTestNodeStateProperty()), CancellationToken.None).ConfigureAwait(false);
+
+        string[] inProgressLines = GetFormattedLines();
+        foreach (string line in inProgressLines)
+        {
+            Assert.DoesNotContain(";progress=100;", line);
+            Assert.DoesNotContain(";progress=100]", line);
+        }
+
+        await reporter.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
+
+        string[] allLines = GetFormattedLines();
+        Assert.Contains(";progress=100;state=Completed;result=Succeeded]", allLines[^1]);
+    }
+
+    [TestMethod]
     public async Task SessionFinishing_DoesNothing_WhenTfBuildNotSetAsync()
     {
         AzureDevOpsProgressReporter reporter = CreateReporter(enabled: true);

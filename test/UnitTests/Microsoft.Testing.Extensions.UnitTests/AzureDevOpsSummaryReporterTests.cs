@@ -92,6 +92,35 @@ public sealed class AzureDevOpsSummaryReporterTests
     }
 
     [TestMethod]
+    public void BuildMarkdown_FormatsTotalDurationCorrectly_BeyondTwentyFourHours()
+    {
+        // 25 hours 7 minutes 8 seconds total: TimeSpan custom format `hh` wraps at 24h
+        // (would render as 01:07:08), so the implementation must use TotalHours for >= 1h.
+        var records = new List<AzureDevOpsSummaryReporter.TestRecord>
+        {
+            new("LongTest", "MyCo.X.LongTest", AzureDevOpsSummaryReporter.TerminalKind.Passed, new TimeSpan(25, 7, 8)),
+        };
+
+        string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
+
+        Assert.Contains("| Total duration | 25:07:08 |", md);
+        Assert.DoesNotContain("| Total duration | 01:07:08 |", md);
+    }
+
+    [TestMethod]
+    public void BuildMarkdown_FormatsTotalDurationAsMinutesAndSeconds_WhenBelowOneHour()
+    {
+        var records = new List<AzureDevOpsSummaryReporter.TestRecord>
+        {
+            new("MidTest", "MyCo.X.MidTest", AzureDevOpsSummaryReporter.TerminalKind.Passed, new TimeSpan(0, 5, 30)),
+        };
+
+        string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
+
+        Assert.Contains("| Total duration | 05:30 |", md);
+    }
+
+    [TestMethod]
     public void BuildMarkdown_EscapesPipesAndNewlinesInCells()
     {
         var records = new List<AzureDevOpsSummaryReporter.TestRecord>
