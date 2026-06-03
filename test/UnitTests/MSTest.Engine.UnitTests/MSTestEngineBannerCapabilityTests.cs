@@ -17,8 +17,8 @@ public sealed class MSTestEngineBannerCapabilityTests
         string? bannerMessage = await sut.GetBannerMessageAsync();
 
         Assert.IsNotNull(bannerMessage);
-        StringAssert.StartsWith(bannerMessage, $"MSTest.Engine v{MSTestEngineRepositoryVersion.Version}");
-        StringAssert.Contains(bannerMessage, $"(UTC {buildDate.UtcDateTime.ToShortDateString()})");
+        Assert.StartsWith($"MSTest.Engine v{MSTestEngineRepositoryVersion.Version}", bannerMessage);
+        Assert.Contains($"(UTC {buildDate.UtcDateTime.ToShortDateString()})", bannerMessage);
     }
 
     [TestMethod]
@@ -29,7 +29,7 @@ public sealed class MSTestEngineBannerCapabilityTests
         string? bannerMessage = await sut.GetBannerMessageAsync();
 
         Assert.IsNotNull(bannerMessage);
-        StringAssert.StartsWith(bannerMessage, $"MSTest.Engine v{MSTestEngineRepositoryVersion.Version}");
+        Assert.StartsWith($"MSTest.Engine v{MSTestEngineRepositoryVersion.Version}", bannerMessage);
         Assert.IsFalse(bannerMessage.Contains("(UTC ", StringComparison.Ordinal));
     }
 

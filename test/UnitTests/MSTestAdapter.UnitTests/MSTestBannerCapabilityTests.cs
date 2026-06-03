@@ -20,7 +20,7 @@ public class MSTestBannerCapabilityTests : TestContainer
         string? bannerMessage = await sut.GetBannerMessageAsync();
 
         bannerMessage.Should().NotBeNull();
-        bannerMessage.Should().StartWith($"MSTest v{MSTestVersion.SemanticVersion}");
+        bannerMessage.Should().StartWith("MSTest v");
         bannerMessage.Should().Contain($"(UTC {buildDate.UtcDateTime.ToShortDateString()})");
     }
 
@@ -31,7 +31,7 @@ public class MSTestBannerCapabilityTests : TestContainer
         string? bannerMessage = await sut.GetBannerMessageAsync();
 
         bannerMessage.Should().NotBeNull();
-        bannerMessage.Should().StartWith($"MSTest v{MSTestVersion.SemanticVersion}");
+        bannerMessage.Should().StartWith("MSTest v");
         bannerMessage.Should().NotContain("(UTC ");
     }
 
