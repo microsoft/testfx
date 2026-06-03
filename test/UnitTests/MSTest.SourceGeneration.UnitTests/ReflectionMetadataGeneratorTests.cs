@@ -27,17 +27,9 @@ public sealed class ReflectionMetadataGeneratorTests
     private const string RuntimeHookStub = """
         namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration
         {
-            public sealed class MetadataBuilder
-            {
-                internal MetadataBuilder(System.Reflection.Assembly assembly) { }
-                public MetadataBuilder WithTypes(System.Type[] types) => this;
-                public MetadataBuilder WithTestMethods(System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods) => this;
-                public void Register() { }
-            }
-
             public static class ReflectionMetadataHook
             {
-                public static MetadataBuilder ForAssembly(System.Reflection.Assembly assembly) => new MetadataBuilder(assembly);
+                public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods) { }
             }
         }
         """;
@@ -94,20 +86,19 @@ public sealed class ReflectionMetadataGeneratorTests
                     internal static void Initialize()
                     {
                         var assembly = typeof(MSTestSourceGeneratedReflectionMetadata).Assembly;
-                        var builder = global::Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.ReflectionMetadataHook.ForAssembly(assembly);
-                        builder.WithTypes(new Type[]
+                        var types = new Type[]
                         {
                             typeof(global::Sample.MyTests),
-                        });
-                        builder.WithTestMethods(new Dictionary<Type, MethodInfo[]>
+                        };
+                        var testMethods = new Dictionary<Type, MethodInfo[]>
                         {
                             [typeof(global::Sample.MyTests)] = new MethodInfo[]
                             {
                                 ResolveMethod(typeof(global::Sample.MyTests), "Test1", Type.EmptyTypes),
                                 ResolveMethod(typeof(global::Sample.MyTests), "Test2", Type.EmptyTypes),
                             },
-                        });
-                        builder.Register();
+                        };
+                        global::Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.ReflectionMetadataHook.Register(assembly, types, testMethods);
                     }
 
                     private static MethodInfo ResolveMethod([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type, string name, Type[] parameterTypes)
@@ -208,10 +199,10 @@ public sealed class ReflectionMetadataGeneratorTests
         result.Diagnostics.Should().BeEmpty();
         string generated = NormalizeNewlines(result.GeneratedSources[0].SourceText.ToString());
 
-        // Match the full WithTestMethods block as a contiguous snippet so order, the new-array vs
+        // Match the full testMethods block as a contiguous snippet so order, the new-array vs
         // Type.EmptyTypes choice, and the FullName-qualified parameter types are all locked in.
         const string expectedTypeMethodsBlock = """
-                    builder.WithTestMethods(new Dictionary<Type, MethodInfo[]>
+                    var testMethods = new Dictionary<Type, MethodInfo[]>
                     {
                         [typeof(global::Sample.OverloadTests)] = new MethodInfo[]
                         {
@@ -219,7 +210,7 @@ public sealed class ReflectionMetadataGeneratorTests
                             ResolveMethod(typeof(global::Sample.OverloadTests), "Run", new Type[] { typeof(global::System.Int32) }),
                             ResolveMethod(typeof(global::Sample.OverloadTests), "Run", new Type[] { typeof(global::System.String), typeof(global::System.Int32) }),
                         },
-                    });
+                    };
         """;
 
         generated.Should().Contain(NormalizeNewlines(expectedTypeMethodsBlock));
@@ -610,7 +601,7 @@ public sealed class ReflectionMetadataGeneratorTests
         result.Diagnostics.Should().BeEmpty();
         string generated = NormalizeNewlines(result.GeneratedSources[0].SourceText.ToString());
 
-        // Two [TestClass]es must produce two entries in WithTypes/WithTestMethods and
+        // Two [TestClass]es must produce two entries in the types/testMethods locals and
         // two [DynamicDependency] attributes on Initialize. We assert each block as a
         // contiguous snippet so the per-class layout is locked in.
         const string expectedDynamicDependencies = """
@@ -620,16 +611,16 @@ public sealed class ReflectionMetadataGeneratorTests
         generated.Should().Contain(NormalizeNewlines(expectedDynamicDependencies));
 
         const string expectedTypes = """
-                    builder.WithTypes(new Type[]
+                    var types = new Type[]
                     {
                         typeof(global::Sample.AlphaTests),
                         typeof(global::Sample.BetaTests),
-                    });
+                    };
         """;
         generated.Should().Contain(NormalizeNewlines(expectedTypes));
 
         const string expectedTypeMethods = """
-                    builder.WithTestMethods(new Dictionary<Type, MethodInfo[]>
+                    var testMethods = new Dictionary<Type, MethodInfo[]>
                     {
                         [typeof(global::Sample.AlphaTests)] = new MethodInfo[]
                         {
@@ -639,7 +630,7 @@ public sealed class ReflectionMetadataGeneratorTests
                         {
                             ResolveMethod(typeof(global::Sample.BetaTests), "TestB", Type.EmptyTypes),
                         },
-                    });
+                    };
         """;
         generated.Should().Contain(NormalizeNewlines(expectedTypeMethods));
     }
@@ -665,7 +656,7 @@ public sealed class ReflectionMetadataGeneratorTests
 
         // A test class declared in the global namespace must be referenced with `global::TypeName`
         // (no namespace segment between `global::` and the type), and still produce both the
-        // WithTypes entry and the WithTestMethods entry.
+        // types-array entry and the testMethods-dictionary entry.
         generated.Should().Contain("typeof(global::GlobalNamespaceTests)");
         generated.Should().Contain("ResolveMethod(typeof(global::GlobalNamespaceTests), \"Test1\", Type.EmptyTypes)");
     }

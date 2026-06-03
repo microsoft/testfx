@@ -48,10 +48,9 @@ internal static class ReflectionMetadataEmitter
         Append(sb, "        internal static void Initialize()");
         Append(sb, "        {");
         Append(sb, $"            var assembly = typeof({GeneratedTypeName}).Assembly;");
-        Append(sb, $"            var builder = {Constants.ReflectionMetadataHookFullName}.ForAssembly(assembly);");
-        EmitWithTypes(sb, metadata);
-        EmitWithTestMethods(sb, metadata);
-        Append(sb, "            builder.Register();");
+        Append(sb, $"            var types = {EmitTypesExpression(metadata)};");
+        EmitTestMethodsLocal(sb, metadata);
+        Append(sb, $"            {Constants.ReflectionMetadataHookFullName}.Register(assembly, types, testMethods);");
         Append(sb, "        }");
         Append(sb, string.Empty);
         Append(sb, "        private static MethodInfo ResolveMethod([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type, string name, Type[] parameterTypes)");
@@ -96,33 +95,34 @@ internal static class ReflectionMetadataEmitter
         return sb.ToString();
     }
 
-    private static void EmitWithTypes(StringBuilder sb, TestAssemblyMetadata metadata)
+    private static string EmitTypesExpression(TestAssemblyMetadata metadata)
     {
         if (metadata.Classes.Count == 0)
         {
-            Append(sb, "            builder.WithTypes(Array.Empty<Type>());");
-            return;
+            return "Array.Empty<Type>()";
         }
 
-        Append(sb, "            builder.WithTypes(new Type[]");
-        Append(sb, "            {");
+        var sb = new StringBuilder();
+        sb.Append("new Type[]").Append(Constants.NewLine);
+        sb.Append("            {").Append(Constants.NewLine);
         foreach (TestClassMetadata cls in metadata.Classes)
         {
-            Append(sb, $"                typeof({cls.FullyQualifiedName}),");
+            sb.Append($"                typeof({cls.FullyQualifiedName}),").Append(Constants.NewLine);
         }
 
-        Append(sb, "            });");
+        sb.Append("            }");
+        return sb.ToString();
     }
 
-    private static void EmitWithTestMethods(StringBuilder sb, TestAssemblyMetadata metadata)
+    private static void EmitTestMethodsLocal(StringBuilder sb, TestAssemblyMetadata metadata)
     {
         if (metadata.Classes.Count == 0)
         {
-            Append(sb, "            builder.WithTestMethods(new Dictionary<Type, MethodInfo[]>());");
+            Append(sb, "            var testMethods = new Dictionary<Type, MethodInfo[]>();");
             return;
         }
 
-        Append(sb, "            builder.WithTestMethods(new Dictionary<Type, MethodInfo[]>");
+        Append(sb, "            var testMethods = new Dictionary<Type, MethodInfo[]>");
         Append(sb, "            {");
         foreach (TestClassMetadata cls in metadata.Classes)
         {
@@ -152,7 +152,7 @@ internal static class ReflectionMetadataEmitter
             Append(sb, "                },");
         }
 
-        Append(sb, "            });");
+        Append(sb, "            };");
     }
 
     private static void Append(StringBuilder sb, string line)

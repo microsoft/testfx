@@ -1,7 +1,3 @@
 #nullable enable
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.MetadataBuilder
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.MetadataBuilder.Register() -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.MetadataBuilder.WithTestMethods(System.Collections.Generic.IReadOnlyDictionary<System.Type!, System.Reflection.MethodInfo![]!>! testMethods) -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.MetadataBuilder!
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.MetadataBuilder.WithTypes(System.Type![]! types) -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.MetadataBuilder!
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.ReflectionMetadataHook
-static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.ReflectionMetadataHook.ForAssembly(System.Reflection.Assembly! assembly) -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.MetadataBuilder!
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.ReflectionMetadataHook.Register(System.Reflection.Assembly! assembly, System.Type![]! types, System.Collections.Generic.IReadOnlyDictionary<System.Type!, System.Reflection.MethodInfo![]!>! testMethods) -> void
