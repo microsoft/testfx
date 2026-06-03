@@ -117,16 +117,11 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     }
 
     private string GetExecutionMode()
-    {
-        if (_commandLineHandler.IsHelpInvoked())
-        {
-            return HandshakeMessageExecutionModes.Help;
-        }
-
-        return _commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
-            ? HandshakeMessageExecutionModes.Discover
-            : HandshakeMessageExecutionModes.Run;
-    }
+        => _commandLineHandler.IsHelpInvoked()
+            ? HandshakeMessageExecutionModes.Help
+            : _commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
+                ? HandshakeMessageExecutionModes.Discover
+                : HandshakeMessageExecutionModes.Run;
 
     public static bool IsVersionCompatible(string protocolVersion, string supportedProtocolVersions) => supportedProtocolVersions.Split(';').Contains(protocolVersion);
 
