@@ -179,30 +179,27 @@ internal static class SerializerUtilities
                     [JsonRpcStrings.DisplayName] = n.DisplayName,
                 };
 
-                TestMetadataProperty[] metadataProperties = n.Properties.OfType<TestMetadataProperty>();
-                if (metadataProperties.Length > 0)
-                {
-#if NETCOREAPP
-                    properties["traits"] = metadataProperties.Select(x => new KeyValuePair<string, string>(x.Key, x.Value));
-#else
-                    JsonArray collection = [];
-                    foreach (TestMetadataProperty metadata in metadataProperties)
-                    {
-                        JsonObject o = new()
-                        {
-                            { metadata.Key, metadata.Value },
-                        };
-                        collection.Add(o);
-                    }
-
-                    properties["traits"] = collection;
-#endif
-                }
-
                 int attachmentIndex = 0;
+#if !NETCOREAPP
+                JsonArray? traitsCollection = null;
+#else
+                List<KeyValuePair<string, string>>? traitsList = null;
+#endif
 
                 foreach (IProperty property in n.Properties)
                 {
+                    if (property is TestMetadataProperty metadataProperty)
+                    {
+#if NETCOREAPP
+                        traitsList ??= [];
+                        traitsList.Add(new KeyValuePair<string, string>(metadataProperty.Key, metadataProperty.Value));
+#else
+                        traitsCollection ??= [];
+                        traitsCollection.Add(new JsonObject { { metadataProperty.Key, metadataProperty.Value } });
+#endif
+                        continue;
+                    }
+
                     if (property is SerializableKeyValuePairStringProperty keyValuePairProperty)
                     {
                         properties[keyValuePairProperty.Key] = keyValuePairProperty.Value;
@@ -355,8 +352,18 @@ internal static class SerializerUtilities
                 }
 
 #if NETCOREAPP
+                if (traitsList is not null)
+                {
+                    properties["traits"] = traitsList;
+                }
+
                 properties.Add("node-type", "group");
 #else
+                if (traitsCollection is not null)
+                {
+                    properties["traits"] = traitsCollection;
+                }
+
                 if (!properties.ContainsKey("node-type"))
                 {
                     properties.Add("node-type", "group");
