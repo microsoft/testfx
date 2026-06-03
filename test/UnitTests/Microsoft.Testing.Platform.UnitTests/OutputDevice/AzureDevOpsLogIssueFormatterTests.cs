@@ -39,9 +39,7 @@ public sealed class AzureDevOpsLogIssueFormatterTests
 
     [TestMethod]
     public void Escape_EmptyStringRoundTrips()
-    {
-        Assert.AreEqual(string.Empty, AzureDevOpsLogIssueFormatter.Escape(string.Empty));
-    }
+        => Assert.AreEqual(string.Empty, AzureDevOpsLogIssueFormatter.Escape(string.Empty));
 
     [TestMethod]
     public void Escape_NoEscapableCharsReturnsInputInstance()
