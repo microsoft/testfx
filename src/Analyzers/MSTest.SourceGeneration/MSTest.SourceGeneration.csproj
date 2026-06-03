@@ -36,6 +36,8 @@ This package provides the C# source generators that emit reflection metadata so 
 
   <ItemGroup>
     <AdditionalFiles Include="BannedSymbols.txt" />
+    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
   </ItemGroup>
 
   <ItemGroup>

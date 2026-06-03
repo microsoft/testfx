@@ -72,4 +72,5 @@ internal static class DiagnosticIds
     public const string AvoidAssertAreEqualOnCollectionsRuleId = "MSTEST0065";
     public const string IgnoreShouldHaveJustificationRuleId = "MSTEST0066";
     public const string AvoidThreadSleepAndTaskWaitInTestsRuleId = "MSTEST0067";
+    // public const string InheritedTestClassAttributeWithSourceGeneratorRuleId = "MSTEST0069"; - // Reserved. Owned by MSTest.SourceGeneration analyzer; don't reuse this ID.
 }

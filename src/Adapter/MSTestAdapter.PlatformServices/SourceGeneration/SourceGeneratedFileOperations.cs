@@ -19,7 +19,10 @@ internal sealed class SourceGeneratedFileOperations : IFileOperations
 
     internal SourceGeneratedReflectionDataProvider DataProvider { get; }
 
-    public Assembly LoadAssembly(string assemblyName) => DataProvider.GetAssembly(assemblyName);
+    public Assembly LoadAssembly(string assemblyName)
+        => DataProvider.TryGetAssembly(assemblyName, out Assembly? assembly)
+            ? assembly
+            : _inner.LoadAssembly(assemblyName);
 
     public bool DoesFileExist(string assemblyFileName) => _inner.DoesFileExist(assemblyFileName);
 

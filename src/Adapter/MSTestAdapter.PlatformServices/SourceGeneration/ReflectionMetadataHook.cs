@@ -7,13 +7,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 
 /// <summary>
 /// Entry point used by MSTest's source generator to register pre-computed reflection metadata
-/// for the test assembly. Once <see cref="SetMetadata"/> has been called, MSTest's discovery and
-/// execution paths will read metadata from the supplied <see cref="SourceGeneratedReflectionDataProvider"/>
-/// instead of doing reflection at runtime.
+/// for the test assembly. Once a builder returned from <see cref="ForAssembly(Assembly)"/> has
+/// been <see cref="MetadataBuilder.Register">registered</see>, MSTest's discovery and execution
+/// paths read metadata from the source-generated data instead of doing reflection at runtime.
 /// </summary>
 /// <remarks>
-/// This API is intended to be invoked from a <c>[ModuleInitializer]</c> in the test assembly that
-/// is emitted by the MSTest source generator. Hand-written code should not depend on it.
+/// <para>
+/// This API is intended to be invoked from a <c>[ModuleInitializer]</c> in the test assembly
+/// that is emitted by the MSTest source generator. Hand-written code should not depend on it.
+/// </para>
+/// <para>
+/// <b>Discovery limitation.</b> The MSTest source generator only enumerates types that carry
+/// <c>[TestClass]</c> declared directly on the type. Test classes that inherit
+/// <c>[TestClass]</c> from a base class are <i>not</i> registered through this hook and will
+/// not be discovered when the source-generated provider is the active reflection backend.
+/// Apply <c>[TestClass]</c> directly to the derived class to opt it back into discovery.
+/// Analyzer <c>MSTEST0069</c> (shipped in the MSTest.SourceGeneration package) flags classes
+/// that hit this limitation.
+/// </para>
 /// </remarks>
 public static class ReflectionMetadataHook
 {
@@ -25,21 +36,24 @@ public static class ReflectionMetadataHook
     private static readonly CompositeSourceGeneratedReflectionDataProvider Composite = new();
 
     /// <summary>
-    /// Registers the source-generated reflection metadata for a test assembly. Safe to call from
-    /// multiple module initializers — each call adds the supplied provider to a process-wide
-    /// composite so that previously registered assemblies remain accessible.
+    /// Begins building a source-generated metadata registration for <paramref name="assembly"/>.
     /// </summary>
-    /// <param name="metadata">The metadata describing the test assembly.</param>
-    public static void SetMetadata(SourceGeneratedReflectionDataProvider metadata)
-    {
-        if (metadata is null)
-        {
-            throw new ArgumentNullException(nameof(metadata));
-        }
+    /// <param name="assembly">The test assembly the metadata describes.</param>
+    /// <returns>
+    /// A builder that the source-generated module initializer fills in and then publishes via
+    /// <see cref="MetadataBuilder.Register"/>.
+    /// </returns>
+    public static MetadataBuilder ForAssembly(Assembly assembly)
+        => assembly is null
+            ? throw new ArgumentNullException(nameof(assembly))
+            : new MetadataBuilder(assembly);
 
+    // Invoked by MetadataBuilder.Register; serialized with the rest of process-wide state.
+    internal static void Register(SourceGeneratedReflectionDataProvider provider)
+    {
         lock (Lock)
         {
-            Composite.Add(metadata);
+            Composite.Add(provider);
 
             SourceGeneratorToggle.Enable();
 

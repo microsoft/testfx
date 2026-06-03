@@ -48,16 +48,10 @@ internal static class ReflectionMetadataEmitter
         Append(sb, "        internal static void Initialize()");
         Append(sb, "        {");
         Append(sb, $"            var assembly = typeof({GeneratedTypeName}).Assembly;");
-        Append(sb, $"            var metadata = new {Constants.SourceGeneratedReflectionDataProviderFullName}");
-        Append(sb, "            {");
-        Append(sb, "                Assembly = assembly,");
-        Append(sb, $"                AssemblyName = {ToCSharpLiteral(metadata.AssemblyName)},");
-        EmitTypesArray(sb, metadata);
-        EmitTypesByName(sb, metadata);
-        EmitTypeMethods(sb, metadata);
-        Append(sb, "            };");
-        Append(sb, string.Empty);
-        Append(sb, $"            {Constants.ReflectionMetadataHookFullName}.SetMetadata(metadata);");
+        Append(sb, $"            var builder = {Constants.ReflectionMetadataHookFullName}.ForAssembly(assembly);");
+        EmitWithTypes(sb, metadata);
+        EmitWithTestMethods(sb, metadata);
+        Append(sb, "            builder.Register();");
         Append(sb, "        }");
         Append(sb, string.Empty);
         Append(sb, "        private static MethodInfo ResolveMethod([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type, string name, Type[] parameterTypes)");
@@ -102,59 +96,38 @@ internal static class ReflectionMetadataEmitter
         return sb.ToString();
     }
 
-    private static void EmitTypesArray(StringBuilder sb, TestAssemblyMetadata metadata)
+    private static void EmitWithTypes(StringBuilder sb, TestAssemblyMetadata metadata)
     {
         if (metadata.Classes.Count == 0)
         {
-            Append(sb, "                Types = Array.Empty<Type>(),");
+            Append(sb, "            builder.WithTypes(Array.Empty<Type>());");
             return;
         }
 
-        Append(sb, "                Types = new Type[]");
-        Append(sb, "                {");
+        Append(sb, "            builder.WithTypes(new Type[]");
+        Append(sb, "            {");
         foreach (TestClassMetadata cls in metadata.Classes)
         {
-            Append(sb, $"                    typeof({cls.FullyQualifiedName}),");
+            Append(sb, $"                typeof({cls.FullyQualifiedName}),");
         }
 
-        Append(sb, "                },");
+        Append(sb, "            });");
     }
 
-    private static void EmitTypesByName(StringBuilder sb, TestAssemblyMetadata metadata)
+    private static void EmitWithTestMethods(StringBuilder sb, TestAssemblyMetadata metadata)
     {
         if (metadata.Classes.Count == 0)
         {
-            Append(sb, "                TypesByName = new Dictionary<string, Type>(),");
+            Append(sb, "            builder.WithTestMethods(new Dictionary<Type, MethodInfo[]>());");
             return;
         }
 
-        // Emit typeof(X).FullName! at runtime so the key always matches the value the consumer
-        // gets from Type.FullName — including for nested types (Outer+Nested) and generic types
-        // (MyClass`1[[…]]) where a compile-time string would not match.
-        Append(sb, "                TypesByName = new Dictionary<string, Type>");
-        Append(sb, "                {");
+        Append(sb, "            builder.WithTestMethods(new Dictionary<Type, MethodInfo[]>");
+        Append(sb, "            {");
         foreach (TestClassMetadata cls in metadata.Classes)
         {
-            Append(sb, $"                    [typeof({cls.FullyQualifiedName}).FullName!] = typeof({cls.FullyQualifiedName}),");
-        }
-
-        Append(sb, "                },");
-    }
-
-    private static void EmitTypeMethods(StringBuilder sb, TestAssemblyMetadata metadata)
-    {
-        if (metadata.Classes.Count == 0)
-        {
-            Append(sb, "                TypeMethods = new Dictionary<Type, MethodInfo[]>(),");
-            return;
-        }
-
-        Append(sb, "                TypeMethods = new Dictionary<Type, MethodInfo[]>");
-        Append(sb, "                {");
-        foreach (TestClassMetadata cls in metadata.Classes)
-        {
-            Append(sb, $"                    [typeof({cls.FullyQualifiedName})] = new MethodInfo[]");
-            Append(sb, "                    {");
+            Append(sb, $"                [typeof({cls.FullyQualifiedName})] = new MethodInfo[]");
+            Append(sb, "                {");
             foreach (TestMethodMetadata method in cls.Methods)
             {
                 string parameterTypesArray;
@@ -173,13 +146,13 @@ internal static class ReflectionMetadataEmitter
                     parameterTypesArray = "new Type[] { " + string.Join(", ", parts) + " }";
                 }
 
-                Append(sb, $"                        ResolveMethod(typeof({cls.FullyQualifiedName}), {ToCSharpLiteral(method.Name)}, {parameterTypesArray}),");
+                Append(sb, $"                    ResolveMethod(typeof({cls.FullyQualifiedName}), {ToCSharpLiteral(method.Name)}, {parameterTypesArray}),");
             }
 
-            Append(sb, "                    },");
+            Append(sb, "                },");
         }
 
-        Append(sb, "                },");
+        Append(sb, "            });");
     }
 
     private static void Append(StringBuilder sb, string line)

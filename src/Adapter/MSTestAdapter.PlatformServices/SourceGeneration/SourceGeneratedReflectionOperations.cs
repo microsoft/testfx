@@ -43,27 +43,40 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
     }
 
     public ConstructorInfo[] GetDeclaredConstructors(Type classType)
-        => DataProvider.TypeConstructors.TryGetValue(classType, out ConstructorInfo[]? constructors)
+    {
+        SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
+        return data.TypeConstructors.TryGetValue(classType, out ConstructorInfo[]? constructors)
             ? constructors
             : _fallback.GetDeclaredConstructors(classType);
+    }
 
+    // The source-generated TypeMethods dictionary is partial — today it only contains methods
+    // annotated with [TestMethod] (and inherited [TestMethod]s), so it cannot satisfy the
+    // GetDeclaredMethods contract which is expected to return every method declared on the
+    // type. Always delegate to the runtime fallback to preserve correctness; the source-generated
+    // data is still used elsewhere (e.g. attribute lookup) to avoid reflection at runtime.
     public MethodInfo[] GetDeclaredMethods(Type classType)
-        => DataProvider.TypeMethods.TryGetValue(classType, out MethodInfo[]? methods)
-            ? methods
-            : _fallback.GetDeclaredMethods(classType);
+        => _fallback.GetDeclaredMethods(classType);
 
     public PropertyInfo[] GetDeclaredProperties(Type type)
-        => DataProvider.TypeProperties.TryGetValue(type, out PropertyInfo[]? properties)
+    {
+        SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
+        return data.TypeProperties.TryGetValue(type, out PropertyInfo[]? properties)
             ? properties
             : _fallback.GetDeclaredProperties(type);
+    }
 
     public Type[] GetDefinedTypes(Assembly assembly)
     {
-        Type[] filtered = [.. DataProvider.Types.Where(t => t.Assembly.Equals(assembly))];
+        SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
+        Type[] filtered = [.. data.Types.Where(t => t.Assembly.Equals(assembly))];
         return filtered.Length > 0 ? filtered : _fallback.GetDefinedTypes(assembly);
     }
 
-    public MethodInfo[] GetRuntimeMethods(Type type) => GetDeclaredMethods(type);
+    // The source-generated TypeMethods dictionary is partial (only [TestMethod]-annotated
+    // methods, no generics or by-ref) and the runtime contract requires returning every
+    // runtime method. Always delegate to the fallback.
+    public MethodInfo[] GetRuntimeMethods(Type type) => _fallback.GetRuntimeMethods(type);
 
     public MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters, bool includeNonPublic)
     {
@@ -106,7 +119,8 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
 
     public PropertyInfo? GetRuntimeProperty(Type classType, string propertyName, bool includeNonPublic)
     {
-        if (DataProvider.TypePropertiesByName.TryGetValue(classType, out Dictionary<string, PropertyInfo>? properties)
+        SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
+        if (data.TypePropertiesByName.TryGetValue(classType, out Dictionary<string, PropertyInfo>? properties)
             && properties.TryGetValue(propertyName, out PropertyInfo? property))
         {
             if (!includeNonPublic)
@@ -134,13 +148,17 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
         => _fallback.GetType(typeName);
 
     public Type? GetType(Assembly assembly, string typeName)
-        => DataProvider.TypesByName.TryGetValue(typeName, out Type? type) && type.Assembly.Equals(assembly)
+    {
+        SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
+        return data.TypesByName.TryGetValue(typeName, out Type? type) && type.Assembly.Equals(assembly)
             ? type
             : _fallback.GetType(assembly, typeName);
+    }
 
     public object? CreateInstance(Type type, object?[] parameters)
     {
-        if (!DataProvider.TypeConstructorsInvoker.TryGetValue(type, out SourceGeneratedReflectionDataProvider.ConstructorInvoker[]? invokers))
+        SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
+        if (!data.TypeConstructorsInvoker.TryGetValue(type, out SourceGeneratedReflectionDataProvider.ConstructorInvoker[]? invokers))
         {
             return _fallback.CreateInstance(type, parameters);
         }
@@ -241,16 +259,20 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
     internal void ClearCache() => _attributeCache.Clear();
 
     private Attribute[] GetTypeAttributes(Type type)
-        => DataProvider.TypeAttributes.TryGetValue(type, out Attribute[]? attributes)
+    {
+        SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
+        return data.TypeAttributes.TryGetValue(type, out Attribute[]? attributes)
             ? attributes
             : GetMemberAttributesFromReflection(type);
+    }
 
     private Attribute[] GetMethodAttributes(MethodInfo method)
-        => method.DeclaringType is not null
-            && DataProvider.TypeMethodAttributes.TryGetValue(method.DeclaringType, out Dictionary<string, Attribute[]>? methodAttributes)
-            && methodAttributes.TryGetValue(method.Name, out Attribute[]? attributes)
-                ? attributes
-                : GetMemberAttributesFromReflection(method);
+    {
+        SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
+        return data.TypeMethodAttributes.TryGetValue(method, out Attribute[]? attributes)
+            ? attributes
+            : GetMemberAttributesFromReflection(method);
+    }
 
     // Bypass _fallback.GetCustomAttributesCached because its internal NotCachedReflectionAccessor
     // routes through PlatformServiceProvider.Instance.ReflectionOperations, which after SetMetadata

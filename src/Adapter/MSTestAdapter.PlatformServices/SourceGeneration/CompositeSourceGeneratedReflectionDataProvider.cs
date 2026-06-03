@@ -6,43 +6,50 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// <summary>
 /// Merges multiple per-assembly <see cref="SourceGeneratedReflectionDataProvider"/> instances into
 /// a single provider so that more than one test assembly can be registered with
-/// <see cref="ReflectionMetadataHook.SetMetadata(SourceGeneratedReflectionDataProvider)"/> in a
-/// single process. The merged dictionaries are recomputed from scratch on every
-/// <see cref="Add(SourceGeneratedReflectionDataProvider)"/> so that lookups remain a simple
-/// dictionary read on the hot path.
+/// <see cref="ReflectionMetadataHook"/> in a single process.
 /// </summary>
+/// <remarks>
+/// Thread-safety: every mutation rebuilds an immutable <see cref="CompositeState"/> from scratch
+/// and publishes it via a single atomic field write (<c>Volatile.Write</c>). Readers go through
+/// <see cref="GetSnapshot"/> / the per-provider lookup overrides which read the field with
+/// <c>Volatile.Read</c>, so they always see a fully-constructed point-in-time view (no torn
+/// dictionaries) even though they do not take a lock. Callers of
+/// <see cref="Add(SourceGeneratedReflectionDataProvider)"/> are expected to serialize themselves
+/// (today via <see cref="ReflectionMetadataHook"/>'s lock).
+/// </remarks>
 internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGeneratedReflectionDataProvider
 {
-    private readonly List<SourceGeneratedReflectionDataProvider> _providers = [];
-#pragma warning disable IDE0028 // Collection initialization can be simplified — Dictionary needs explicit comparer
-    private readonly Dictionary<string, SourceGeneratedReflectionDataProvider> _providersByAssemblyName = new(StringComparer.OrdinalIgnoreCase);
-#pragma warning restore IDE0028
-    private readonly Dictionary<Assembly, SourceGeneratedReflectionDataProvider> _providersByAssembly = [];
+    private CompositeState _state = CompositeState.Empty;
 
     public void Add(SourceGeneratedReflectionDataProvider provider)
     {
-        _providers.Add(provider);
-        _providersByAssemblyName[provider.AssemblyName] = provider;
-        if (provider.Assembly is not null)
-        {
-            _providersByAssembly[provider.Assembly] = provider;
-        }
-
-        Rebuild();
+        CompositeState previous = Volatile.Read(ref _state);
+        CompositeState next = previous.With(provider);
+        Volatile.Write(ref _state, next);
     }
 
-    internal override Assembly GetAssembly(string assemblyPath)
+    internal override SourceGeneratedReflectionDataProvider GetSnapshot()
+        => Volatile.Read(ref _state).MergedSnapshot;
+
+    internal override bool TryGetAssembly(string assemblyPath, [NotNullWhen(true)] out Assembly? assembly)
     {
         string name = Path.GetFileNameWithoutExtension(assemblyPath);
-        return _providersByAssemblyName.TryGetValue(name, out SourceGeneratedReflectionDataProvider? provider)
-            && provider.Assembly is { } assembly
-            ? assembly
-            : throw new ArgumentException($"Assembly '{assemblyPath}' is not registered with the MSTest source generator.");
+        CompositeState state = Volatile.Read(ref _state);
+        if (state.ProvidersByAssemblyName.TryGetValue(name, out SourceGeneratedReflectionDataProvider? provider)
+            && provider.Assembly is { } resolved)
+        {
+            assembly = resolved;
+            return true;
+        }
+
+        assembly = null;
+        return false;
     }
 
     internal override void GetNavigationData(string className, string methodName, out int minLineNumber, out string? fileName)
     {
-        foreach (SourceGeneratedReflectionDataProvider provider in _providers)
+        CompositeState state = Volatile.Read(ref _state);
+        foreach (SourceGeneratedReflectionDataProvider provider in state.Providers)
         {
             provider.GetNavigationData(className, methodName, out minLineNumber, out fileName);
             if (fileName is not null)
@@ -56,86 +63,126 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
     }
 
     internal override object[] GetAssemblyAttributes(Assembly assembly)
-        => _providersByAssembly.TryGetValue(assembly, out SourceGeneratedReflectionDataProvider? provider)
+    {
+        CompositeState state = Volatile.Read(ref _state);
+        return state.ProvidersByAssembly.TryGetValue(assembly, out SourceGeneratedReflectionDataProvider? provider)
             ? provider.AssemblyAttributes
             : [];
+    }
 
-    private void Rebuild()
+    /// <summary>
+    /// Immutable snapshot of the merged state. A new instance is produced for every
+    /// <see cref="CompositeSourceGeneratedReflectionDataProvider.Add"/> and published as a single
+    /// atomic field write, so any reader that observes a non-default state observes a fully
+    /// rebuilt snapshot.
+    /// </summary>
+    private sealed class CompositeState
     {
-        // AssemblyName / Assembly do not make sense for a composite; leave at defaults.
-        var types = new List<Type>();
-        var typesByName = new Dictionary<string, Type>(StringComparer.Ordinal);
-        var typeAttributes = new Dictionary<Type, Attribute[]>();
-        var assemblyAttributes = new List<object>();
-        var typeProperties = new Dictionary<Type, PropertyInfo[]>();
-        var typeMethods = new Dictionary<Type, MethodInfo[]>();
-        var typeMethodLocations = new Dictionary<string, TypeLocation>(StringComparer.Ordinal);
-        var typeMethodAttributes = new Dictionary<Type, Dictionary<string, Attribute[]>>();
-        var typeConstructors = new Dictionary<Type, ConstructorInfo[]>();
-        var typePropertiesByName = new Dictionary<Type, Dictionary<string, PropertyInfo>>();
-        var typeConstructorsInvoker = new Dictionary<Type, ConstructorInvoker[]>();
+#pragma warning disable IDE0028 // Dictionary needs an explicit comparer
+        public static readonly CompositeState Empty = new(
+            providers: [],
+            providersByAssemblyName: new Dictionary<string, SourceGeneratedReflectionDataProvider>(StringComparer.OrdinalIgnoreCase),
+            providersByAssembly: [],
+            mergedSnapshot: new SourceGeneratedReflectionDataProvider());
+#pragma warning restore IDE0028
 
-        foreach (SourceGeneratedReflectionDataProvider provider in _providers)
+        private CompositeState(
+            IReadOnlyList<SourceGeneratedReflectionDataProvider> providers,
+            Dictionary<string, SourceGeneratedReflectionDataProvider> providersByAssemblyName,
+            Dictionary<Assembly, SourceGeneratedReflectionDataProvider> providersByAssembly,
+            SourceGeneratedReflectionDataProvider mergedSnapshot)
         {
-            types.AddRange(provider.Types);
-            foreach (KeyValuePair<string, Type> kvp in provider.TypesByName)
-            {
-                typesByName[kvp.Key] = kvp.Value;
-            }
-
-            foreach (KeyValuePair<Type, Attribute[]> kvp in provider.TypeAttributes)
-            {
-                typeAttributes[kvp.Key] = kvp.Value;
-            }
-
-            assemblyAttributes.AddRange(provider.AssemblyAttributes);
-
-            foreach (KeyValuePair<Type, PropertyInfo[]> kvp in provider.TypeProperties)
-            {
-                typeProperties[kvp.Key] = kvp.Value;
-            }
-
-            foreach (KeyValuePair<Type, MethodInfo[]> kvp in provider.TypeMethods)
-            {
-                typeMethods[kvp.Key] = kvp.Value;
-            }
-
-            foreach (KeyValuePair<string, TypeLocation> kvp in provider.TypeMethodLocations)
-            {
-                typeMethodLocations[kvp.Key] = kvp.Value;
-            }
-
-            foreach (KeyValuePair<Type, Dictionary<string, Attribute[]>> kvp in provider.TypeMethodAttributes)
-            {
-                typeMethodAttributes[kvp.Key] = kvp.Value;
-            }
-
-            foreach (KeyValuePair<Type, ConstructorInfo[]> kvp in provider.TypeConstructors)
-            {
-                typeConstructors[kvp.Key] = kvp.Value;
-            }
-
-            foreach (KeyValuePair<Type, Dictionary<string, PropertyInfo>> kvp in provider.TypePropertiesByName)
-            {
-                typePropertiesByName[kvp.Key] = kvp.Value;
-            }
-
-            foreach (KeyValuePair<Type, ConstructorInvoker[]> kvp in provider.TypeConstructorsInvoker)
-            {
-                typeConstructorsInvoker[kvp.Key] = kvp.Value;
-            }
+            Providers = providers;
+            ProvidersByAssemblyName = providersByAssemblyName;
+            ProvidersByAssembly = providersByAssembly;
+            MergedSnapshot = mergedSnapshot;
         }
 
-        Types = [.. types];
-        TypesByName = typesByName;
-        TypeAttributes = typeAttributes;
-        AssemblyAttributes = [.. assemblyAttributes];
-        TypeProperties = typeProperties;
-        TypeMethods = typeMethods;
-        TypeMethodLocations = typeMethodLocations;
-        TypeMethodAttributes = typeMethodAttributes;
-        TypeConstructors = typeConstructors;
-        TypePropertiesByName = typePropertiesByName;
-        TypeConstructorsInvoker = typeConstructorsInvoker;
+        public IReadOnlyList<SourceGeneratedReflectionDataProvider> Providers { get; }
+
+        public Dictionary<string, SourceGeneratedReflectionDataProvider> ProvidersByAssemblyName { get; }
+
+        public Dictionary<Assembly, SourceGeneratedReflectionDataProvider> ProvidersByAssembly { get; }
+
+        public SourceGeneratedReflectionDataProvider MergedSnapshot { get; }
+
+        public CompositeState With(SourceGeneratedReflectionDataProvider added)
+        {
+            var providers = new List<SourceGeneratedReflectionDataProvider>(Providers.Count + 1);
+            providers.AddRange(Providers);
+            providers.Add(added);
+
+#pragma warning disable IDE0028 // Dictionary needs an explicit comparer
+            var byName = new Dictionary<string, SourceGeneratedReflectionDataProvider>(ProvidersByAssemblyName, StringComparer.OrdinalIgnoreCase);
+#pragma warning restore IDE0028
+            byName[added.AssemblyName] = added;
+
+            var byAssembly = new Dictionary<Assembly, SourceGeneratedReflectionDataProvider>(ProvidersByAssembly);
+            if (added.Assembly is { } addedAssembly)
+            {
+                byAssembly[addedAssembly] = added;
+            }
+
+            return new CompositeState(
+                providers,
+                byName,
+                byAssembly,
+                BuildMergedSnapshot(providers));
+        }
+
+        private static SourceGeneratedReflectionDataProvider BuildMergedSnapshot(IReadOnlyList<SourceGeneratedReflectionDataProvider> providers)
+        {
+            // AssemblyName / Assembly do not make sense for a composite; leave at defaults.
+            var types = new List<Type>();
+            var typesByName = new Dictionary<string, Type>(StringComparer.Ordinal);
+            var typeAttributes = new Dictionary<Type, Attribute[]>();
+            var assemblyAttributes = new List<object>();
+            var typeProperties = new Dictionary<Type, PropertyInfo[]>();
+            var typeMethods = new Dictionary<Type, MethodInfo[]>();
+            var typeMethodLocations = new Dictionary<string, TypeLocation>(StringComparer.Ordinal);
+            var typeMethodAttributes = new Dictionary<MethodInfo, Attribute[]>();
+            var typeConstructors = new Dictionary<Type, ConstructorInfo[]>();
+            var typePropertiesByName = new Dictionary<Type, Dictionary<string, PropertyInfo>>();
+            var typeConstructorsInvoker = new Dictionary<Type, ConstructorInvoker[]>();
+
+            foreach (SourceGeneratedReflectionDataProvider provider in providers)
+            {
+                types.AddRange(provider.Types);
+                MergeInto(typesByName, provider.TypesByName);
+                MergeInto(typeAttributes, provider.TypeAttributes);
+                assemblyAttributes.AddRange(provider.AssemblyAttributes);
+                MergeInto(typeProperties, provider.TypeProperties);
+                MergeInto(typeMethods, provider.TypeMethods);
+                MergeInto(typeMethodLocations, provider.TypeMethodLocations);
+                MergeInto(typeMethodAttributes, provider.TypeMethodAttributes);
+                MergeInto(typeConstructors, provider.TypeConstructors);
+                MergeInto(typePropertiesByName, provider.TypePropertiesByName);
+                MergeInto(typeConstructorsInvoker, provider.TypeConstructorsInvoker);
+            }
+
+            return new SourceGeneratedReflectionDataProvider
+            {
+                Types = [.. types],
+                TypesByName = typesByName,
+                TypeAttributes = typeAttributes,
+                AssemblyAttributes = [.. assemblyAttributes],
+                TypeProperties = typeProperties,
+                TypeMethods = typeMethods,
+                TypeMethodLocations = typeMethodLocations,
+                TypeMethodAttributes = typeMethodAttributes,
+                TypeConstructors = typeConstructors,
+                TypePropertiesByName = typePropertiesByName,
+                TypeConstructorsInvoker = typeConstructorsInvoker,
+            };
+        }
+
+        private static void MergeInto<TKey, TValue>(Dictionary<TKey, TValue> target, Dictionary<TKey, TValue> source)
+            where TKey : notnull
+        {
+            foreach (KeyValuePair<TKey, TValue> kvp in source)
+            {
+                target[kvp.Key] = kvp.Value;
+            }
+        }
     }
 }
