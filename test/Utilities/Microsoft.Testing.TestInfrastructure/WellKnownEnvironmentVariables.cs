@@ -72,6 +72,10 @@ public static class WellKnownEnvironmentVariables
         "DOTNET_NOLOGO",
         "TESTINGPLATFORM_NOBANNER",
 
+        // Azure DevOps output device opt-out. Tests inject this explicitly when needed, so we
+        // keep the parent process value from bleeding into child test hosts.
+        "TESTINGPLATFORM_AZDO_OUTPUT",
+
         // Diagnostics
         "TESTINGPLATFORM_DIAGNOSTIC",
 

@@ -49,7 +49,9 @@ public sealed class TerminalOutputDeviceTests
 
             string standardError = errorWriter.ToString();
             Assert.Contains(expectedMessage, standardError);
-            Assert.IsFalse(standardError.Contains("##vso[task.logissue", StringComparison.Ordinal), standardError);
+            // Replace "##" so the assertion failure (if it fires) does not itself contain a literal
+            // ##vso command that an Azure DevOps agent watching the test output could mistakenly act on.
+            Assert.IsFalse(standardError.Contains("##vso[task.logissue", StringComparison.Ordinal), standardError.Replace("##", "[hash][hash]"));
         }
         finally
         {
