@@ -28,13 +28,18 @@
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsEquivalentFix">
-        <source>Use deep structural comparison ('Assert.{0}')</source>
-        <target state="needs-review-translation">`Assert.{0}` で置き換える</target>
+        <source>Replace with `Assert.{0}`</source>
+        <target state="translated">`Assert.{0}` で置き換える</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertAreEqualOnCollectionsInAnyOrderFix">
+        <source>Replace with `Assert.{0}(..., SequenceOrder.InAnyOrder)`</source>
+        <target state="translated">`Assert.{0}(..., SequenceOrder.InAnyOrder)` で置き換える</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsOrderedFix">
-        <source>Use ordered, element-wise comparison ('Assert.{0}')</source>
-        <target state="needs-review-translation">`Assert.{0}` で置き換える (順序指定)</target>
+        <source>Replace with `Assert.{0}` (ordered)</source>
+        <target state="translated">`Assert.{0}` で置き換える (順序指定)</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesFix">
