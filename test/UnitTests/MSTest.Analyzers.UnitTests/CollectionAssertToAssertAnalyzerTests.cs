@@ -350,7 +350,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenCollectionAssertAllItemsAreInstancesOfType_FixesToAreAllOfTypeWithSwappedArgs()
+    public async Task WhenCollectionAssertAllItemsAreInstancesOfType_WithTypeof_FixesToGenericAreAllOfType()
     {
         string code = """
             using System;
@@ -382,8 +382,58 @@ public sealed class CollectionAssertToAssertAnalyzerTests
                 public void MyTestMethod()
                 {
                     var a = new List<object> { 1, 2, 3 };
-                    Assert.AreAllOfType(typeof(int), a);
-                    Assert.AreAllOfType(typeof(int), a, "message");
+                    Assert.AreAllOfType<int>(a);
+                    Assert.AreAllOfType<int>(a, "message");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreAllOfType", "AllItemsAreInstancesOfType"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("AreAllOfType", "AllItemsAreInstancesOfType"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenCollectionAssertAllItemsAreInstancesOfType_WithRuntimeType_FixesToNonGenericAreAllOfTypeWithSwappedArgs()
+    {
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var a = new List<object> { 1, 2, 3 };
+                    Type t = typeof(int);
+                    {|#0:CollectionAssert.AllItemsAreInstancesOfType(a, t)|};
+                    {|#1:CollectionAssert.AllItemsAreInstancesOfType(a, t, "message")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var a = new List<object> { 1, 2, 3 };
+                    Type t = typeof(int);
+                    Assert.AreAllOfType(t, a);
+                    Assert.AreAllOfType(t, a, "message");
                 }
             }
             """;
