@@ -328,10 +328,39 @@ internal sealed class AnsiTerminalTestProgressFrame
         // Note: We want to render the list of active tests, but this can easily fill up the full screen.
         // As such, we should balance the number of active tests shown per project.
         // We do this by distributing the remaining lines for each projects.
-        TestProgressState[] progressItems = [.. progress.OfType<TestProgressState>()];
+
+        // Collect non-null progress items without LINQ OfType allocation.
+        int itemCount = 0;
+        for (int j = 0; j < progress.Length; j++)
+        {
+            if (progress[j] is not null)
+            {
+                itemCount++;
+            }
+        }
+
+        var progressItems = new TestProgressState[itemCount];
+        int idx = 0;
+        for (int j = 0; j < progress.Length; j++)
+        {
+            if (progress[j] is not null)
+            {
+                progressItems[idx++] = progress[j]!;
+            }
+        }
+
         int linesToDistribute = (int)(Height * 0.7) - 1 - progressItems.Length;
-        var detailItems = new IEnumerable<TestDetailState>[progressItems.Length];
-        IEnumerable<int> sortedItemsIndices = Enumerable.Range(0, progressItems.Length).OrderBy(i => progressItems[i].TestNodeResultsState?.Count ?? 0);
+        var detailItems = new List<TestDetailState>[progressItems.Length];
+
+        // Sort indices by detail count ascending to distribute lines fairly,
+        // without LINQ Enumerable.Range + OrderBy allocation.
+        int[] sortedItemsIndices = new int[progressItems.Length];
+        for (int j = 0; j < progressItems.Length; j++)
+        {
+            sortedItemsIndices[j] = j;
+        }
+
+        Array.Sort(sortedItemsIndices, (a, b) => (progressItems[a].TestNodeResultsState?.Count ?? 0).CompareTo(progressItems[b].TestNodeResultsState?.Count ?? 0));
 
         foreach (int sortedItemIndex in sortedItemsIndices)
         {
