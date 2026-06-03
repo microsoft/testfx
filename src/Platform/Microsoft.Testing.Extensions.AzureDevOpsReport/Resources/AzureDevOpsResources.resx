@@ -166,6 +166,15 @@
   <data name="AzureDevOpsLivePublishingRequestFailed" xml:space="preserve">
     <value>Azure DevOps REST API request failed after all retries.</value>
   </data>
+  <data name="AzureDevOpsLivePublishingResultAttachmentFailed" xml:space="preserve">
+    <value>Azure DevOps live publishing failed to upload a test result attachment.</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingResultIdParseFailedWarning" xml:space="preserve">
+    <value>Azure DevOps live publishing accepted a batch of test results but could not parse the assigned result IDs; result-level attachments for this batch will be skipped.</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingRunAttachmentFailed" xml:space="preserve">
+    <value>Azure DevOps live publishing failed to upload a test run attachment.</value>
+  </data>
   <data name="AzureDevOpsLivePublishingRunIdFileMismatch" xml:space="preserve">
     <value>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</value>
     <comment>{Locked="azdo-runid.&lt;buildId&gt;.json"}</comment>
