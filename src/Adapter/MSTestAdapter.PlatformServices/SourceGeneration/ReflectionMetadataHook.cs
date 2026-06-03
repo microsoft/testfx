@@ -1,22 +1,27 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration;
 
 /// <summary>
-/// Entry point used by MSTest's source generator to register pre-computed reflection metadata
-/// for a test assembly. After a successful <see cref="Register(Assembly, Type[], IReadOnlyDictionary{Type, MethodInfo[]})"/>
-/// call, MSTest's discovery and execution paths read metadata from the source-generated data
-/// instead of doing reflection at runtime.
+/// <b>Infrastructure.</b> Entry point used by the MSTest source generator to register pre-computed
+/// reflection metadata for a test assembly. After a successful
+/// <see cref="Register(Assembly, Type[], IReadOnlyDictionary{Type, MethodInfo[]})"/> call, MSTest's
+/// discovery and execution paths read metadata from the source-generated data instead of doing
+/// reflection at runtime.
 /// </summary>
 /// <remarks>
 /// <para>
-/// This API is intended to be invoked from a <c>[ModuleInitializer]</c> in the test assembly
-/// emitted by the MSTest source generator. Hand-written code should not depend on it; the
-/// shape of the registered metadata is an implementation detail that may evolve with the
-/// generator.
+/// <b>This type is not intended to be used directly from application code.</b> It is public only
+/// because the MSTest source generator emits a <c>[ModuleInitializer]</c> in the test assembly
+/// that needs to call it across the assembly boundary, and module initializers cannot use
+/// <c>internal</c> APIs from a different assembly. The signature and behaviour of this hook are
+/// implementation details that may evolve with the generator without a major version bump; do
+/// not hand-roll a call to <see cref="Register"/> from your own code.
 /// </para>
 /// <para>
 /// <b>Discovery limitation.</b> The MSTest source generator only enumerates types that carry
@@ -28,6 +33,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// that hit this limitation.
 /// </para>
 /// </remarks>
+[EditorBrowsable(EditorBrowsableState.Never)]
 public static class ReflectionMetadataHook
 {
 #if NET9_0_OR_GREATER
@@ -38,9 +44,9 @@ public static class ReflectionMetadataHook
     private static readonly CompositeSourceGeneratedReflectionDataProvider Composite = new();
 
     /// <summary>
-    /// Publishes source-generated metadata for <paramref name="assembly"/> to the MSTest adapter.
-    /// Safe to call from multiple module initializers; later registrations are merged with
-    /// earlier ones.
+    /// <b>Infrastructure.</b> Publishes source-generated metadata for <paramref name="assembly"/>
+    /// to the MSTest adapter. Safe to call from multiple module initializers; later registrations
+    /// are merged with earlier ones.
     /// </summary>
     /// <param name="assembly">The test assembly the metadata describes.</param>
     /// <param name="types">All types directly annotated with <c>[TestClass]</c> in the assembly.</param>
@@ -49,6 +55,12 @@ public static class ReflectionMetadataHook
     /// set. The dictionary and arrays are copied defensively; the caller may mutate the inputs
     /// after the call.
     /// </param>
+    /// <remarks>
+    /// Do not call this method from hand-written code; it is meant to be invoked exclusively from
+    /// the <c>[ModuleInitializer]</c> emitted by the MSTest source generator. The signature is
+    /// not covered by API-stability guarantees.
+    /// </remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static void Register(Assembly assembly, Type[] types, IReadOnlyDictionary<Type, MethodInfo[]> testMethods)
     {
         if (assembly is null)
