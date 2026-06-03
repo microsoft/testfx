@@ -109,7 +109,7 @@
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
         <source>Option '--{0}' is declared by multiple providers: '{1}'</source>
-        <target state="needs-review-translation">Параметр "--{0}" объявлен несколькими расширениями: "{1}"</target>
+        <target state="new">Option '--{0}' is declared by multiple providers: '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
@@ -777,7 +777,7 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
       </trans-unit>
       <trans-unit id="ShutdownProgressStillWaitingPrefix">
         <source>Still waiting for: </source>
-        <target state="new">Still waiting for: </target>
+        <target state="translated">По-прежнему ожидается: </target>
         <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</note>
       </trans-unit>
       <trans-unit id="Skipped">
