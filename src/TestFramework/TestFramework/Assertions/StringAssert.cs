@@ -29,6 +29,38 @@ public sealed class StringAssert
     /// For more information, see <see href="https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-writing-tests-assertions#extension-hooks-on-stringassert-and-collectionassert">Extension hooks on StringAssert and CollectionAssert</see>.
     /// </para>
     /// </remarks>
+    /// <example>
+    /// The following example defines a custom <c>ContainsWords</c> assertion as an extension method
+    /// on <see cref="StringAssert"/> and invokes it through <c>StringAssert.That</c>:
+    /// <code language="csharp">
+    /// using System.Collections.Generic;
+    /// using Microsoft.VisualStudio.TestTools.UnitTesting;
+    ///
+    /// public static class CustomStringAssertExtensions
+    /// {
+    ///     public static void ContainsWords(this StringAssert stringAssert, string value, IEnumerable&lt;string&gt; words)
+    ///     {
+    ///         foreach (string word in words)
+    ///         {
+    ///             if (value == null || !value.Contains(word))
+    ///             {
+    ///                 throw new AssertFailedException($"StringAssert.That.ContainsWords failed. Word &lt;{word}&gt; not found in &lt;{value}&gt;.");
+    ///             }
+    ///         }
+    ///     }
+    /// }
+    ///
+    /// [TestClass]
+    /// public class MessageTests
+    /// {
+    ///     [TestMethod]
+    ///     public void Greeting_ContainsExpectedWords()
+    ///     {
+    ///         StringAssert.That.ContainsWords("Hello, world!", new[] { "Hello", "world" });
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     public static StringAssert That { get; } = new();
 
     #endregion
