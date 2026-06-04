@@ -133,10 +133,11 @@ public sealed class DoNotStoreStaticTestContextAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssigningToInstanceMember_NoDiagnostic()
+    public async Task WhenAssigningTestContextParameterToInstanceMember_NoDiagnostic()
     {
-        // Assigning TestContext to an instance field or property should not trigger the diagnostic.
-        // The analyzer only fires when the assignment target has no 'Instance' (i.e. static member).
+        // Assigning a TestContext *parameter* to an instance field or property should not trigger
+        // the diagnostic. This exercises the analyzer's 'Instance: null' guard while the value still
+        // satisfies the 'Value: IParameterReferenceOperation' check (only the target-side guard fails).
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -144,18 +145,12 @@ public sealed class DoNotStoreStaticTestContextAnalyzerTests
             public class MyTestClass
             {
                 private TestContext _testContext;
-                public TestContext TestContext { get; set; }
+                public TestContext TestContextProperty { get; set; }
 
-                [ClassInitialize]
-                public static void ClassInit(TestContext tc)
+                public void Store(TestContext tc)
                 {
-                }
-
-                [TestInitialize]
-                public void TestInit()
-                {
-                    _testContext = TestContext;
-                    TestContext = TestContext;
+                    _testContext = tc;
+                    TestContextProperty = tc;
                 }
             }
             """;
@@ -164,9 +159,11 @@ public sealed class DoNotStoreStaticTestContextAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssigningToLocalVariable_NoDiagnostic()
+    public async Task WhenAssigningTestContextParameterToLocalVariable_NoDiagnostic()
     {
-        // Assigning a TestContext parameter to a local variable is fine — not a static member reference.
+        // Assigning a TestContext parameter to a local variable is fine — the assignment target is
+        // not an IMemberReferenceOperation, so the analyzer's pattern doesn't match. An explicit
+        // assignment (not a declaration initializer) is used so OperationKind.SimpleAssignment fires.
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -176,7 +173,8 @@ public sealed class DoNotStoreStaticTestContextAnalyzerTests
                 [AssemblyInitialize]
                 public static void AssemblyInit(TestContext tc)
                 {
-                    TestContext local = tc;
+                    TestContext local;
+                    local = tc;
                     local.WriteLine("");
                 }
             }
@@ -188,7 +186,37 @@ public sealed class DoNotStoreStaticTestContextAnalyzerTests
     [TestMethod]
     public async Task WhenAssigningNonTestContextParameterToStaticField_NoDiagnostic()
     {
-        // Only assignments where the *value* is a TestContext parameter are flagged.
+        // Covers the IParameterReferenceOperation *type-mismatch* path: the value is a parameter
+        // reference, but its type is not TestContext, so the analyzer must not fire.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private static string s_name;
+
+                [AssemblyInitialize]
+                public static void AssemblyInit(TestContext tc)
+                {
+                    Store("value");
+                }
+
+                private static void Store(string name)
+                {
+                    s_name = name;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssigningNonParameterValueToStaticField_NoDiagnostic()
+    {
+        // Covers the 'Value is not IParameterReferenceOperation' path: a literal (or any non-parameter
+        // expression) assigned to a static field must not be flagged, even when the field type is TestContext.
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
