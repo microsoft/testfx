@@ -102,17 +102,7 @@ public sealed class InheritedTestClassAttributeWithSourceGeneratorAnalyzer : Dia
     }
 
     private static bool HasDirectAttribute(ISymbol symbol, INamedTypeSymbol attributeType)
-    {
-        foreach (AttributeData attribute in symbol.GetAttributes())
-        {
-            if (IsOrInheritsFrom(attribute.AttributeClass, attributeType))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+        => symbol.GetAttributes().Any(attribute => IsOrInheritsFrom(attribute.AttributeClass, attributeType));
 
     private static INamedTypeSymbol? FindBaseTypeWithAttribute(INamedTypeSymbol? baseType, INamedTypeSymbol attributeType)
     {
