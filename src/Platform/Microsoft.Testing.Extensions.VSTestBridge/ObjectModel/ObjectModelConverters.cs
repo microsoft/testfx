@@ -138,6 +138,35 @@ internal static class ObjectModelConverters
 
         testNode.AddOutcome(testResult);
 
+        // Single pass over testResult.Messages: collect TRX messages, standard-error, and
+        // standard-output in one loop, avoiding a separate LINQ Select + spread + foreach.
+        List<TrxMessage>? trxMessages = isTrxEnabled ? [] : null;
+        List<string>? standardErrorMessages = null;
+        List<string>? standardOutputMessages = null;
+        foreach (TestResultMessage msg in testResult.Messages)
+        {
+            if (isTrxEnabled)
+            {
+                TrxMessage trxMsg = msg.Category switch
+                {
+                    string x when x == TestResultMessage.StandardErrorCategory => new StandardErrorTrxMessage(msg.Text),
+                    string x when x == TestResultMessage.StandardOutCategory => new StandardOutputTrxMessage(msg.Text),
+                    string x when x == TestResultMessage.DebugTraceCategory => new DebugOrTraceTrxMessage(msg.Text),
+                    _ => throw new UnreachableException(),
+                };
+                trxMessages!.Add(trxMsg);
+            }
+
+            if (msg.Category == TestResultMessage.StandardErrorCategory)
+            {
+                (standardErrorMessages ??= []).Add(msg.Text ?? string.Empty);
+            }
+            else if (msg.Category == TestResultMessage.StandardOutCategory)
+            {
+                (standardOutputMessages ??= []).Add(msg.Text ?? string.Empty);
+            }
+        }
+
         if (isTrxEnabled)
         {
             if (!RoslynString.IsNullOrEmpty(testResult.ErrorMessage) || !RoslynString.IsNullOrEmpty(testResult.ErrorStackTrace))
@@ -171,36 +200,10 @@ internal static class ObjectModelConverters
                 throw new InvalidOperationException("Unable to parse fully qualified type name from test case: " + testResult.TestCase.FullyQualifiedName);
             }
 
-            testNode.Properties.Add(new TrxMessagesProperty([.. testResult.Messages
-                .Select(msg =>
-                    msg.Category switch
-                    {
-                        string x when x == TestResultMessage.StandardErrorCategory => (TrxMessage)new StandardErrorTrxMessage(msg.Text),
-                        string x when x == TestResultMessage.StandardOutCategory => new StandardOutputTrxMessage(msg.Text),
-                        string x when x == TestResultMessage.DebugTraceCategory => new DebugOrTraceTrxMessage(msg.Text),
-                        _ => throw new UnreachableException(),
-                    })]));
+            testNode.Properties.Add(new TrxMessagesProperty(trxMessages is { Count: > 0 } ? [.. trxMessages] : []));
         }
 
         testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
-
-        List<string>? standardErrorMessages = null;
-        List<string>? standardOutputMessages = null;
-        bool addVSTestProviderProperties = ShouldAddVSTestProviderProperties(namedFeatureCapability, commandLineOptions);
-        foreach (TestResultMessage testResultMessage in testResult.Messages)
-        {
-            if (testResultMessage.Category == TestResultMessage.StandardErrorCategory)
-            {
-                string message = testResultMessage.Text ?? string.Empty;
-                (standardErrorMessages ??= []).Add(message);
-            }
-
-            if (testResultMessage.Category == TestResultMessage.StandardOutCategory)
-            {
-                string message = testResultMessage.Text ?? string.Empty;
-                (standardOutputMessages ??= []).Add(message);
-            }
-        }
 
         foreach (AttachmentSet attachmentSet in testResult.Attachments)
         {
