@@ -112,8 +112,6 @@ public static class ReflectionMetadataHook
         {
             Composite.Add(provider);
 
-            SourceGeneratorToggle.Enable();
-
             var reflectionOperations = new SourceGeneratedReflectionOperations(Composite);
             var fileOperations = new SourceGeneratedFileOperations(Composite);
 
