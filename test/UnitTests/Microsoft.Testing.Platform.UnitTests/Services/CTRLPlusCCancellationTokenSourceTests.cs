@@ -83,13 +83,16 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         Assert.IsTrue(source.DrainingToken.IsCancellationRequested);
         Assert.IsFalse(source.AbortingToken.IsCancellationRequested);
 
-        // Wait for grace to elapse plus a margin.
-        using var waitCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-        while (!source.AbortingToken.IsCancellationRequested && !waitCts.IsCancellationRequested)
-        {
-            await Task.Delay(10, TestContext.CancellationToken).ConfigureAwait(false);
-        }
+        // Event-driven wait: complete a TaskCompletionSource as soon as the token
+        // is canceled rather than polling, so the test finishes immediately after
+        // the grace period elapses (avoids Task.Delay flakiness under load).
+        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using CancellationTokenRegistration registration = source.AbortingToken.Register(() => tcs.TrySetResult(true));
 
+        Task timeoutTask = Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
+        Task completed = await Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
+
+        Assert.AreSame(tcs.Task, completed, "Aborting must trip before the timeout.");
         Assert.IsTrue(source.AbortingToken.IsCancellationRequested, "Aborting must trip after the grace period.");
     }
 
