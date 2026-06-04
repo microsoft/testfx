@@ -63,6 +63,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private bool _isListTests;
     private bool _isListTestsJson;
     private bool _isServerMode;
+    private bool _isAzureDevOpsEnvironment;
     private ILogger? _logger;
     private TestProcessRole? _processRole;
 
@@ -119,6 +120,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
         _isListTests = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
         _isListTestsJson = PlatformCommandLineProvider.IsListTestsJsonOutput(_commandLineOptions);
+        _isAzureDevOpsEnvironment = AzureDevOpsLogIssueFormatter.IsAzureDevOpsEnvironment(_environment);
 
         if (_isListTestsJson)
         {
@@ -482,8 +484,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             // Machine-readable mode: keep stdout reserved for the JSON document so consumers can
             // pipe it directly. Errors and exceptions still need surfacing somewhere, so route
             // them to stderr via WriteToStandardErrorAsync (the only place that bypasses IConsole,
-            // which does not abstract stderr today). Warnings and informational text are dropped
-            // to keep stdout strictly JSON.
+            // which does not abstract stderr today). Azure Pipelines ##vso commands are skipped
+            // here: they must be written to stdout to be processed, but stdout belongs to JSON.
+            // Warnings and informational text are dropped to keep stdout strictly JSON.
             switch (data)
             {
                 case ErrorMessageOutputDeviceData errorData:
@@ -492,8 +495,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                     break;
 
                 case ExceptionOutputDeviceData exceptionData:
-                    await LogDebugAsync(exceptionData.Exception.ToString()).ConfigureAwait(false);
-                    await WriteToStandardErrorAsync(exceptionData.Exception.ToString()).ConfigureAwait(false);
+                    string exceptionText = exceptionData.Exception.ToString();
+                    await LogDebugAsync(exceptionText).ConfigureAwait(false);
+                    await WriteToStandardErrorAsync(exceptionText).ConfigureAwait(false);
                     break;
             }
 
@@ -516,16 +520,32 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
                 case WarningMessageOutputDeviceData warningData:
                     await LogDebugAsync(warningData.Message).ConfigureAwait(false);
+                    if (_isAzureDevOpsEnvironment)
+                    {
+                        _terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityWarning, warningData.Message));
+                    }
+
                     _terminalTestReporter.WriteWarningMessage(warningData.Message, null);
                     break;
 
                 case ErrorMessageOutputDeviceData errorData:
                     await LogDebugAsync(errorData.Message).ConfigureAwait(false);
+                    if (_isAzureDevOpsEnvironment)
+                    {
+                        _terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityError, errorData.Message));
+                    }
+
                     _terminalTestReporter.WriteErrorMessage(errorData.Message, null);
                     break;
 
                 case ExceptionOutputDeviceData exceptionOutputDeviceData:
-                    await LogDebugAsync(exceptionOutputDeviceData.Exception.ToString()).ConfigureAwait(false);
+                    string exceptionMessage = exceptionOutputDeviceData.Exception.ToString();
+                    await LogDebugAsync(exceptionMessage).ConfigureAwait(false);
+                    if (_isAzureDevOpsEnvironment)
+                    {
+                        _terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityError, exceptionMessage));
+                    }
+
                     _terminalTestReporter.WriteErrorMessage(exceptionOutputDeviceData.Exception);
                     break;
             }
