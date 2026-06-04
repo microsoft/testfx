@@ -179,11 +179,17 @@ internal static class SerializerUtilities
                     [JsonRpcStrings.DisplayName] = n.DisplayName,
                 };
 
+                // Reserve the "traits" slot up-front so it appears immediately after
+                // "display-name" in the serialized output (preserving the original wire
+                // format). The placeholder is either assigned with the collected traits
+                // below, or removed when no TestMetadataProperty is found.
+                properties["traits"] = null;
+
                 int attachmentIndex = 0;
-#if !NETCOREAPP
-                JsonArray? traitsCollection = null;
+#if NETCOREAPP
+                List<KeyValuePair<string, string>>? traits = null;
 #else
-                List<KeyValuePair<string, string>>? traitsList = null;
+                JsonArray? traits = null;
 #endif
 
                 foreach (IProperty property in n.Properties)
@@ -191,11 +197,9 @@ internal static class SerializerUtilities
                     if (property is TestMetadataProperty metadataProperty)
                     {
 #if NETCOREAPP
-                        traitsList ??= [];
-                        traitsList.Add(new KeyValuePair<string, string>(metadataProperty.Key, metadataProperty.Value));
+                        (traits ??= []).Add(new KeyValuePair<string, string>(metadataProperty.Key, metadataProperty.Value));
 #else
-                        traitsCollection ??= [];
-                        traitsCollection.Add(new JsonObject { { metadataProperty.Key, metadataProperty.Value } });
+                        (traits ??= []).Add(new JsonObject { { metadataProperty.Key, metadataProperty.Value } });
 #endif
                         continue;
                     }
@@ -351,24 +355,19 @@ internal static class SerializerUtilities
                     }
                 }
 
-#if NETCOREAPP
-                if (traitsList is not null)
+                if (traits is not null)
                 {
-                    properties["traits"] = traitsList;
+                    properties["traits"] = traits;
                 }
-
-                properties.Add("node-type", "group");
-#else
-                if (traitsCollection is not null)
+                else
                 {
-                    properties["traits"] = traitsCollection;
+                    properties.Remove("traits");
                 }
 
                 if (!properties.ContainsKey("node-type"))
                 {
                     properties.Add("node-type", "group");
                 }
-#endif
 
                 return properties;
             });
