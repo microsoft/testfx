@@ -140,12 +140,14 @@ internal static class ObjectModelConverters
 
         // Single pass over testResult.Messages: collect TRX messages, standard-error, and
         // standard-output in one loop, avoiding a separate LINQ Select + spread + foreach.
-        List<TrxMessage>? trxMessages = isTrxEnabled ? [] : null;
+        // Pre-size trxMessages to the exact capacity to avoid List<T> growth reallocations
+        // (every entry in testResult.Messages produces one TRX message when TRX is enabled).
+        List<TrxMessage>? trxMessages = isTrxEnabled ? new List<TrxMessage>(testResult.Messages.Count) : null;
         List<string>? standardErrorMessages = null;
         List<string>? standardOutputMessages = null;
         foreach (TestResultMessage msg in testResult.Messages)
         {
-            if (isTrxEnabled)
+            if (trxMessages is not null)
             {
                 TrxMessage trxMsg = msg.Category switch
                 {
@@ -154,7 +156,7 @@ internal static class ObjectModelConverters
                     string x when x == TestResultMessage.DebugTraceCategory => new DebugOrTraceTrxMessage(msg.Text),
                     _ => throw new UnreachableException(),
                 };
-                trxMessages!.Add(trxMsg);
+                trxMessages.Add(trxMsg);
             }
 
             if (msg.Category == TestResultMessage.StandardErrorCategory)
