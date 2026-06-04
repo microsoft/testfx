@@ -449,7 +449,7 @@ public sealed class CrashDumpTests
                 .OrderBy(static p => p, StringComparer.Ordinal)
                 .ToArray();
             string[] expected = new[] { fresh1, fresh2 }.OrderBy(static p => p, StringComparer.Ordinal).ToArray();
-            CollectionAssert.AreEqual(expected, publishedDumps);
+            Assert.AreSequenceEqual(expected, publishedDumps);
         }
         finally
         {
@@ -499,7 +499,7 @@ public sealed class CrashDumpTests
                 .OfType<FileArtifact>()
                 .Select(static a => a.FileInfo.FullName)
                 .ToArray();
-            CollectionAssert.AreEqual(new[] { testhostDump }, publishedDumps);
+            Assert.AreSequenceEqual(new[] { testhostDump }, publishedDumps);
 
             // The "expected dump not found" warning must NOT be emitted: the testhost dump was
             // recognized via the regex even though `expectedDumpFile` (literal `%p` substitution)
@@ -550,7 +550,7 @@ public sealed class CrashDumpTests
                 .OfType<FileArtifact>()
                 .Select(static a => a.FileInfo.FullName)
                 .ToArray();
-            CollectionAssert.AreEqual(new[] { testhostDump }, publishedDumps);
+            Assert.AreSequenceEqual(new[] { testhostDump }, publishedDumps);
             string captured = string.Join(" | ", outputDevice.Displayed);
             Assert.DoesNotContain("dump_555_backup_555.dmp", captured, "CannotFindExpectedCrashDumpFile must not be displayed when the testhost dump was recognized via the regex.");
         }
@@ -602,7 +602,7 @@ public sealed class CrashDumpTests
                 .OrderBy(static p => p, StringComparer.Ordinal)
                 .ToArray();
             string[] expected = new[] { testhostDump, childDump }.OrderBy(static p => p, StringComparer.Ordinal).ToArray();
-            CollectionAssert.AreEqual(expected, publishedDumps);
+            Assert.AreSequenceEqual(expected, publishedDumps);
             string captured = string.Join(" | ", outputDevice.Displayed);
             Assert.DoesNotContain("Dump_%e_123.dmp", captured, "CannotFindExpectedCrashDumpFile must not be displayed when the testhost dump was recognized via the regex.");
         }

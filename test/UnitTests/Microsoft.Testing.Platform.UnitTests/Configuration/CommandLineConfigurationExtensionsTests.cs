@@ -110,7 +110,7 @@ public sealed class CommandLineConfigurationExtensionsTests
 
         Assert.IsTrue(configuration.TryGetCommandLineOptionArguments("hangdump-timeout", out string[]? arguments));
         Assert.IsNotNull(arguments);
-        CollectionAssert.AreEqual(new[] { "5m" }, arguments);
+        Assert.AreSequenceEqual(new[] { "5m" }, arguments);
     }
 
     [TestMethod]
@@ -124,7 +124,7 @@ public sealed class CommandLineConfigurationExtensionsTests
 
         Assert.IsTrue(configuration.TryGetCommandLineOptionArguments("filter-uid", out string[]? arguments));
         Assert.IsNotNull(arguments);
-        CollectionAssert.AreEqual(new[] { "a", "b", "c" }, arguments);
+        Assert.AreSequenceEqual(new[] { "a", "b", "c" }, arguments);
     }
 
     [TestMethod]
@@ -140,7 +140,7 @@ public sealed class CommandLineConfigurationExtensionsTests
 
         Assert.IsTrue(configuration.TryGetCommandLineOptionArguments("foo", out string[]? arguments));
         Assert.IsNotNull(arguments);
-        CollectionAssert.AreEqual(new[] { "indexed" }, arguments);
+        Assert.AreSequenceEqual(new[] { "indexed" }, arguments);
     }
 
     [TestMethod]
@@ -175,14 +175,14 @@ public sealed class CommandLineConfigurationExtensionsTests
         Assert.IsTrue(options.IsOptionSet("filter-uid"));
 
         Assert.IsTrue(options.TryGetOptionArgumentList("hangdump-timeout", out string[]? timeoutArgs));
-        CollectionAssert.AreEqual(new[] { "10m" }, timeoutArgs);
+        Assert.AreSequenceEqual(new[] { "10m" }, timeoutArgs);
 
         Assert.IsTrue(options.TryGetOptionArgumentList("hangdump", out string[]? hangdumpArgs));
         Assert.IsNotNull(hangdumpArgs);
         Assert.IsEmpty(hangdumpArgs);
 
         Assert.IsTrue(options.TryGetOptionArgumentList("filter-uid", out string[]? filterArgs));
-        CollectionAssert.AreEqual(new[] { "a", "b" }, filterArgs);
+        Assert.AreSequenceEqual(new[] { "a", "b" }, filterArgs);
     }
 
     private static IConfiguration BuildConfiguration(IReadOnlyList<KeyValuePair<string, string?>> entries)
