@@ -81,14 +81,15 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.ConsumeAsync(CreateProducer(), CreateFailedTestNodeUpdateMessage(), CancellationToken.None).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new[]
             {
                 "##vso[build.addbuildtag]has-crashdump",
                 "##vso[build.addbuildtag]has-hangdump",
                 "##vso[build.addbuildtag]has-test-failures",
             },
-            GetFormattedLines());
+            GetFormattedLines(),
+            SequenceOrder.InAnyOrder);
         Assert.DoesNotContain(line => line.Contains("artifact.upload", StringComparison.Ordinal), GetFormattedLines());
         Assert.IsEmpty(GetWarnings());
     }
@@ -134,7 +135,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             new[] { $"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{InResults("inside.trx")}" },
             GetFormattedLines());
     }
@@ -158,7 +159,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.ConsumeAsync(CreateProducer(), CreateFailedTestNodeUpdateMessage(), CancellationToken.None).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             new[]
             {
                 "##vso[build.addbuildtag]has-crashdump",
@@ -187,7 +188,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             new[] { $"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{InResults("keep.trx")}" },
             GetFormattedLines());
     }
@@ -207,13 +208,14 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.ConsumeAsync(CreateProducer("HangDumpProcessLifetimeHandler", "Hang dump"), CreateFileArtifact(InResults("hang", "dump.log")), CancellationToken.None).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new[]
             {
                 "##vso[build.addbuildtag]has-crashdump",
                 "##vso[build.addbuildtag]has-hangdump",
             },
-            GetFormattedLines());
+            GetFormattedLines(),
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -268,7 +270,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.ConsumeAsync(CreateProducer(), CreateFailedTestNodeUpdateMessage(), CancellationToken.None).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             new[] { "Azure DevOps artifact upload was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps artifact upload and build tags." },
             GetWarnings());
         Assert.IsEmpty(GetFormattedLines());
@@ -329,7 +331,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             new[] { $"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{escapedSpecialPath}" },
             GetFormattedLines());
     }

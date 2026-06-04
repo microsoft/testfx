@@ -304,7 +304,7 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(7, runId);
         Assert.HasCount(1, task.DelayCalls);
         Assert.AreEqual(TimeSpan.FromSeconds(3), task.DelayCalls[0]);
-        CollectionAssert.AreEqual(new[] { "send:1", "delay:3", "send:2" }, events);
+        Assert.AreSequenceEqual(new[] { "send:1", "delay:3", "send:2" }, events);
     }
 
     [TestMethod]
