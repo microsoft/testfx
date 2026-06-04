@@ -91,3 +91,10 @@
 ###############################################################################
 *.resx merge=union
 *.xlf  merge=union
+
+# BEGIN gh-copilot-curate managed
+# Keep installed skills and agents at stable bytes across CRLF/LF checkouts
+# so gh copilot-curate verify does not report spurious drift.
+.agents/skills/** text eol=lf
+.github/agents/** text eol=lf
+# END gh-copilot-curate managed
