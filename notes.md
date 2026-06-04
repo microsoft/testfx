@@ -9,7 +9,7 @@
 - **Integration Tests**: `./build.sh -pack -test -integrationTest`
 - **Single test (MTP)**: `dotnet run --project test/UnitTests/<Project> -f net8.0 --no-build -- --treenode-filter "/*/*/*/MyClass/MyMethod"`
 - **Single test (MSTest UID)**: `dotnet run --project test/UnitTests/<Project> -f net8.0 --no-build -- --filter-uid <TestUid>`
-- **Single project test**: `./build.sh -test --projects "$(pwd)/test/UnitTests/<Project>/<Project>.csproj"`
+- **Single project test**: `./build.sh --test --projects "$(pwd)/test/UnitTests/<Project>/<Project>.csproj"`
 
 ## Testing Frameworks & Patterns
 
@@ -21,14 +21,15 @@
 
 ## Testing Opportunities Backlog
 
-1. **More Assert method coverage** — Check other Assert files (IsInRange, Contains) for StringComparison/null gaps.
-2. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo`.
-3. **TestMethodShouldNotBeIgnoredAnalyzer** — Only 4 tests; could add: [DataTestMethod]+[Ignore], multiple methods (some ignored/some not), [Ignore] on class-level.
+1. **TestMethodShouldNotBeIgnoredAnalyzer** — Could add: multiple methods (some ignored/some not), `[DataTestMethod]+[Ignore]`.
+2. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo` or integration tests.
+3. **More Assert method coverage** — Any remaining gaps in newer Assert overloads (IsInRange is well covered; Contains is well covered).
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-04 | Task 3 (NonNullableReferenceNotInitializedSuppressor edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-03 | Task 3 (DoNotStoreStaticTestContextAnalyzer edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-02 | Task 2 (opportunities), Task 3 (Assert.StartsWith/EndsWith tests), Task 7 (Monthly Issue Jun) |
 | 2026-06-01 | Task 3 (VB tests — constraint violation, removed), Task 7 (Monthly Issue Jun) |
@@ -38,4 +39,11 @@
 
 ## Last Run
 
-2026-06-03 23:27 UTC
+2026-06-04 23:21 UTC
+
+## Completed Work
+
+- PR #8809 merged (DoNotStoreStaticTestContextAnalyzer edge cases)
+- PR #8781 merged (Assert.StartsWith/EndsWith StringComparison overloads and null handling)
+- PR #8721 merged (MSTEST0041 abstract method edge case)
+- PR #8706 merged (MSTEST0067 AvoidThreadSleepAndTaskWaitInTests edge cases)
