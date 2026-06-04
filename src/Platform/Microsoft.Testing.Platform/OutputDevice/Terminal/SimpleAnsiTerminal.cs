@@ -12,6 +12,9 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 internal sealed class SimpleAnsiTerminal : SimpleTerminal
 {
     private string? _foregroundColor;
+    // Cached concatenation of "\n" + _foregroundColor, computed once in SetColor to avoid
+    // re-allocating the same string on every Append/AppendLine call when a color is active.
+    private string? _newlineAndColor;
     private bool _prependColor;
 
     public SimpleAnsiTerminal(IConsole console)
@@ -49,6 +52,7 @@ internal sealed class SimpleAnsiTerminal : SimpleTerminal
     {
         string setColor = $"{AnsiCodes.CSI}{(int)color}{AnsiCodes.SetColor}";
         _foregroundColor = setColor;
+        _newlineAndColor = "\n" + setColor;
         Console.Write(setColor);
         // This call set the color for current line, no need to prepend on next write.
         _prependColor = false;
@@ -57,10 +61,11 @@ internal sealed class SimpleAnsiTerminal : SimpleTerminal
     public override void ResetColor()
     {
         _foregroundColor = null;
+        _newlineAndColor = null;
         _prependColor = false;
         Console.Write(AnsiCodes.SetDefaultColor);
     }
 
     private string? SetColorPerLine(string value)
-        => _foregroundColor == null ? value : value.Replace("\n", $"\n{_foregroundColor}");
+        => _newlineAndColor == null ? value : value.Replace("\n", _newlineAndColor);
 }
