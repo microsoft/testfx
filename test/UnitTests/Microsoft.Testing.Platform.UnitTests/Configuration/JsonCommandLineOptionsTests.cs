@@ -52,7 +52,7 @@ public sealed class JsonCommandLineOptionsTests
         JsonCommandLineOptionEntry entry = Assert.ContainsSingle(entries);
         Assert.AreEqual("timeout", entry.OptionName);
         Assert.IsFalse(entry.IsDisabled);
-        CollectionAssert.AreEqual(new[] { "30s" }, entry.Arguments.ToArray());
+        Assert.AreSequenceEqual(new[] { "30s" }, entry.Arguments.ToArray());
     }
 
     [TestMethod]
@@ -88,7 +88,7 @@ public sealed class JsonCommandLineOptionsTests
         JsonCommandLineOptionEntry entry = Assert.ContainsSingle(entries);
         Assert.AreEqual("filter-uid", entry.OptionName);
         Assert.IsFalse(entry.IsDisabled);
-        CollectionAssert.AreEqual(new[] { "a", "b", "c" }, entry.Arguments.ToArray());
+        Assert.AreSequenceEqual(new[] { "a", "b", "c" }, entry.Arguments.ToArray());
     }
 
     [TestMethod]
@@ -164,7 +164,7 @@ public sealed class JsonCommandLineOptionsTests
         Assert.HasCount(4, entries);
 
         JsonCommandLineOptionEntry timeout = entries.Single(e => e.OptionName == "timeout");
-        CollectionAssert.AreEqual(new[] { "30s" }, timeout.Arguments.ToArray());
+        Assert.AreSequenceEqual(new[] { "30s" }, timeout.Arguments.ToArray());
         Assert.IsFalse(timeout.IsDisabled);
 
         JsonCommandLineOptionEntry noBanner = entries.Single(e => e.OptionName == "no-banner");
@@ -175,7 +175,7 @@ public sealed class JsonCommandLineOptionsTests
         Assert.IsTrue(hangdump.IsDisabled);
 
         JsonCommandLineOptionEntry filterUid = entries.Single(e => e.OptionName == "filter-uid");
-        CollectionAssert.AreEqual(new[] { "a", "b" }, filterUid.Arguments.ToArray());
+        Assert.AreSequenceEqual(new[] { "a", "b" }, filterUid.Arguments.ToArray());
     }
 
     // ---------------------------------------------------------------------
