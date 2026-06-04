@@ -21,10 +21,15 @@ public sealed partial class CollectionAssert
     /// Gets the singleton instance of the CollectionAssert functionality.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Users can use this to plug-in custom assertions through C# extension methods.
-    /// For instance, the signature of a custom assertion provider could be "public static void AreEqualUnordered(this CollectionAssert customAssert, ICollection expected, ICollection actual)"
-    /// Users could then use a syntax similar to the default assertions which in this case is "CollectionAssert.That.AreEqualUnordered(list1, list2);"
-    /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
+    /// For instance, the signature of a custom assertion provider could be <c>public static void AreEqualUnordered(this CollectionAssert customAssert, ICollection expected, ICollection actual)</c>
+    /// and the call-site would be <c>CollectionAssert.That.AreEqualUnordered(list1, list2);</c>.
+    /// </para>
+    /// <para>
+    /// For new custom assertions, prefer extending <see cref="Assert.That"/> instead, because <see cref="CollectionAssert"/> is likely to be deprecated in a future release.
+    /// For more information, see <see href="https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-writing-tests-assertions#extension-hooks-on-stringassert-and-collectionassert">Extension hooks on StringAssert and CollectionAssert</see>.
+    /// </para>
     /// </remarks>
     public static CollectionAssert That { get; } = new();
 
