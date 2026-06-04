@@ -86,10 +86,25 @@ public sealed class ReflectionMetadataGenerator : IIncrementalGenerator
 
         ImmutableArray<TestMethodMetadata>.Builder methods = ImmutableArray.CreateBuilder<TestMethodMetadata>();
         var seenSignatures = new HashSet<string>(StringComparer.Ordinal);
+        ImmutableArray<string>.Builder baseTypes = ImmutableArray.CreateBuilder<string>();
         INamedTypeSymbol? currentType = typeSymbol;
         while (currentType is not null && currentType.SpecialType != SpecialType.System_Object)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            // Capture every base type that the generated module initializer can reference, so we
+            // can root its members (ClassInitialize / ClassCleanup / AssemblyInitialize /
+            // AssemblyCleanup / TestContext setter) via [DynamicDependency] under trimming or
+            // Native AOT. Without this, those members live on the abstract base only and the
+            // trimmer removes them because [DynamicDependency(All, typeof(Concrete))] does not
+            // preserve base-type members. We intentionally do NOT add the base to types[] or
+            // testMethods{}; runtime discovery still flows through the concrete [TestClass].
+            if (!SymbolEqualityComparer.Default.Equals(currentType, typeSymbol)
+                && !currentType.IsGenericType
+                && IsAccessibleFromGeneratedCode(currentType))
+            {
+                baseTypes.Add(currentType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+            }
 
             foreach (ISymbol member in currentType.GetMembers())
             {
@@ -151,7 +166,8 @@ public sealed class ReflectionMetadataGenerator : IIncrementalGenerator
             FullyQualifiedName: fullyQualifiedName,
             DisplayName: typeSymbol.Name,
             Namespace: containingNamespace,
-            Methods: new EquatableArray<TestMethodMetadata>(methods.ToImmutable()));
+            Methods: new EquatableArray<TestMethodMetadata>(methods.ToImmutable()),
+            BaseTypeFullyQualifiedNames: new EquatableArray<string>(baseTypes.ToImmutable()));
     }
 
     private static bool HasByRefParameter(IMethodSymbol method)

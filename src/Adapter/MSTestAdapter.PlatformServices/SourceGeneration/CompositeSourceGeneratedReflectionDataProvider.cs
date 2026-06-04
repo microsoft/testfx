@@ -70,6 +70,19 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
             : [];
     }
 
+    internal override bool TryGetTypeByName(Assembly assembly, string typeName, [NotNullWhen(true)] out Type? type)
+    {
+        CompositeState state = Volatile.Read(ref _state);
+        if (state.ProvidersByAssembly.TryGetValue(assembly, out SourceGeneratedReflectionDataProvider? provider)
+            && provider.TypesByName.TryGetValue(typeName, out type))
+        {
+            return true;
+        }
+
+        type = null;
+        return false;
+    }
+
     /// <summary>
     /// Immutable snapshot of the merged state. A new instance is produced for every
     /// <see cref="CompositeSourceGeneratedReflectionDataProvider.Add"/> and published as a single
@@ -133,8 +146,11 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
         private static SourceGeneratedReflectionDataProvider BuildMergedSnapshot(IReadOnlyList<SourceGeneratedReflectionDataProvider> providers)
         {
             // AssemblyName / Assembly do not make sense for a composite; leave at defaults.
+            // TypesByName is intentionally NOT merged: it is consulted only by
+            // SourceGeneratedReflectionOperations.GetType(Assembly, string), which now routes
+            // through the per-provider TryGetTypeByName override to avoid same-FQN collisions
+            // between assemblies shadowing each other.
             var types = new List<Type>();
-            var typesByName = new Dictionary<string, Type>(StringComparer.Ordinal);
             var typeAttributes = new Dictionary<Type, Attribute[]>();
             var assemblyAttributes = new List<object>();
             var typeProperties = new Dictionary<Type, PropertyInfo[]>();
@@ -148,7 +164,6 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
             foreach (SourceGeneratedReflectionDataProvider provider in providers)
             {
                 types.AddRange(provider.Types);
-                MergeInto(typesByName, provider.TypesByName);
                 MergeInto(typeAttributes, provider.TypeAttributes);
                 assemblyAttributes.AddRange(provider.AssemblyAttributes);
                 MergeInto(typeProperties, provider.TypeProperties);
@@ -163,7 +178,6 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
             return new SourceGeneratedReflectionDataProvider
             {
                 Types = [.. types],
-                TypesByName = typesByName,
                 TypeAttributes = typeAttributes,
                 AssemblyAttributes = [.. assemblyAttributes],
                 TypeProperties = typeProperties,

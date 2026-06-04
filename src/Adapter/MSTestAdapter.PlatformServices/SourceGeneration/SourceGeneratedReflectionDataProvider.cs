@@ -144,6 +144,28 @@ internal class SourceGeneratedReflectionDataProvider
         => assembly.Equals(Assembly) ? AssemblyAttributes : [];
 
     /// <summary>
+    /// Looks up a type by <see cref="Type.FullName"/> scoped to a specific <paramref name="assembly"/>.
+    /// The composite override routes the call to the per-assembly provider so that two assemblies
+    /// containing a type with the same full name do not shadow each other in a merged dictionary.
+    /// </summary>
+    /// <remarks>
+    /// Returning <see langword="false"/> instructs the caller to fall back to reflection. This is
+    /// the right behavior when <paramref name="assembly"/> did not opt into source generation, when
+    /// the type was skipped by the generator (open generic, file-local, inaccessible), or when the
+    /// composite has no entry for the assembly yet.
+    /// </remarks>
+    internal virtual bool TryGetTypeByName(Assembly assembly, string typeName, [NotNullWhen(true)] out Type? type)
+    {
+        if (assembly.Equals(Assembly) && TypesByName.TryGetValue(typeName, out type))
+        {
+            return true;
+        }
+
+        type = null;
+        return false;
+    }
+
+    /// <summary>
     /// Per-type source-location information used by IDE / explorer navigation.
     /// </summary>
     internal sealed class TypeLocation

@@ -6,14 +6,72 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration;
 
 /// <summary>
-/// Source-generator-backed implementation of <see cref="IReflectionOperations"/>. All metadata is
-/// read from a <see cref="SourceGeneratedReflectionDataProvider"/> populated at compile time, which
-/// avoids the runtime reflection calls that the regular <see cref="ReflectionOperations"/> performs.
-/// When the source-generated data does not contain an entry for a given lookup (e.g. an attribute
-/// added by an unaware extension, or a type defined in an assembly that does not participate in
-/// source generation), the operation transparently falls back to runtime reflection so that
-/// mixed scenarios keep working.
+/// Source-generator-backed implementation of <see cref="IReflectionOperations"/>.
 /// </summary>
+/// <remarks>
+/// <para>
+/// <b>Scope of the source-generated data.</b> The MSTest source generator's
+/// <c>[ModuleInitializer]</c> calls <see cref="ReflectionMetadataHook.Register"/> with only:
+/// the assembly, the <c>[TestClass]</c> types, and their <c>[TestMethod]</c>-annotated
+/// <see cref="MethodInfo"/>s. Everything else (type attributes, method attributes, assembly
+/// attributes, constructors, properties, navigation data) is intentionally <i>not</i>
+/// populated today; reads of those fields fall back to runtime reflection. The source-gen
+/// payload is therefore best understood as "type / test-method rooting + trimmer hints"
+/// rather than a full reflection replacement.
+/// </para>
+/// <para>
+/// <b>Why a fallback exists at all.</b> Each fallback in this class falls into one of three
+/// categories. Cataloguing them here so that adding a new fallback is a deliberate choice,
+/// not an accidental hidden one:
+/// </para>
+/// <list type="bullet">
+///   <item>
+///     <description>
+///     <b>Category A — Generator-gap fallback.</b> The corresponding field on
+///     <see cref="SourceGeneratedReflectionDataProvider"/> is not populated by today's
+///     emitter, so every call falls back to runtime reflection. These are closable: extend
+///     the emitter to populate the field and the fallback stops firing. Today this covers
+///     <see cref="GetCustomAttributes(MemberInfo)"/> (for <see cref="Type"/> and
+///     <see cref="MethodInfo"/>), <see cref="GetCustomAttributes(Assembly, Type)"/>,
+///     <see cref="GetDeclaredConstructors"/>, <see cref="GetDeclaredProperties"/>,
+///     <see cref="GetRuntimeProperty"/>, and <see cref="CreateInstance"/>.
+///     </description>
+///   </item>
+///   <item>
+///     <description>
+///     <b>Category B — Contract-mismatch fallback.</b> The interface returns "every method"
+///     (or similar), but the source generator intentionally models only test methods. Always
+///     delegating is correct here; the only way to avoid the fallback would be to either
+///     change the contract or to enumerate all methods at compile time (which is exactly
+///     what reflection already does at runtime). Today this covers
+///     <see cref="GetDeclaredMethods"/>, <see cref="GetRuntimeMethods"/>, and
+///     <see cref="GetRuntimeMethod"/>.
+///     </description>
+///   </item>
+///   <item>
+///     <description>
+///     <b>Category C — Cross-assembly fallback.</b> The lookup targets an assembly that did
+///     not participate in source generation (test framework, adapter, extensions, or assets
+///     packed without the generator). No amount of generator work eliminates this — assemblies
+///     we do not compile cannot register source-gen data. Today this covers
+///     <see cref="GetType(string)"/>, the no-match branch of <see cref="GetType(Assembly, string)"/>,
+///     <see cref="GetDefinedTypes"/>, and the non-<see cref="Type"/>/non-<see cref="MethodInfo"/>
+///     branch of <see cref="GetCustomAttributes(MemberInfo)"/>.
+///     </description>
+///   </item>
+/// </list>
+/// <para>
+/// <b>Trim/AOT safety.</b> Because most reads still fall through to reflection at runtime,
+/// trim safety relies on the <c>[DynamicDependency(All, typeof(T))]</c> attributes emitted
+/// by the source generator for each <c>[TestClass]</c> and each of its accessible base
+/// types. Those preserve the members reflection then enumerates.
+/// </para>
+/// <para>
+/// <b>Adding a new fallback?</b> Mark the method with a <c>// Category A/B/C</c> comment and
+/// explain which one and why. The blind-corner risk is fallbacks that look intentional but
+/// were really just oversights — labelling each call site makes the design choice visible.
+/// </para>
+/// </remarks>
 internal sealed class SourceGeneratedReflectionOperations : IReflectionOperations
 {
     private readonly ConcurrentDictionary<ICustomAttributeProvider, Attribute[]> _attributeCache = [];
@@ -24,6 +82,9 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
 
     internal SourceGeneratedReflectionDataProvider DataProvider { get; }
 
+    // Category A for Type / MethodInfo (TypeAttributes / TypeMethodAttributes are not emitted).
+    // Category C for every other MemberInfo subtype — the source generator never models
+    // FieldInfo, EventInfo, ParameterInfo, etc. and we have no plans to.
     [return: NotNullIfNotNull(nameof(memberInfo))]
     public object[]? GetCustomAttributes(MemberInfo memberInfo)
         => memberInfo switch
@@ -34,6 +95,8 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
             _ => _fallback.GetCustomAttributes(memberInfo),
         };
 
+    // Category A: AssemblyAttributes is not populated by today's emitter, so this always
+    // falls through unless a future emitter snapshots assembly-level attributes.
     public object[] GetCustomAttributes(Assembly assembly, Type type)
     {
         object[] sourceGenAttributes = DataProvider.GetAssemblyAttributes(assembly);
@@ -42,6 +105,7 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
             : [.. sourceGenAttributes.Where(type.IsInstanceOfType)];
     }
 
+    // Category A: TypeConstructors is not populated by today's emitter.
     public ConstructorInfo[] GetDeclaredConstructors(Type classType)
     {
         SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
@@ -50,14 +114,16 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
             : _fallback.GetDeclaredConstructors(classType);
     }
 
-    // The source-generated TypeMethods dictionary is partial — today it only contains methods
-    // annotated with [TestMethod] (and inherited [TestMethod]s), so it cannot satisfy the
-    // GetDeclaredMethods contract which is expected to return every method declared on the
-    // type. Always delegate to the runtime fallback to preserve correctness; the source-generated
-    // data is still used elsewhere (e.g. attribute lookup) to avoid reflection at runtime.
+    // Category B: the source-generated TypeMethods dictionary is partial — today it only
+    // contains methods annotated with [TestMethod] (and inherited [TestMethod]s), so it
+    // cannot satisfy the GetDeclaredMethods contract which is expected to return every
+    // method declared on the type. Always delegate to the runtime fallback to preserve
+    // correctness; the source-generated data is still used elsewhere (e.g. attribute
+    // lookup) to avoid reflection at runtime.
     public MethodInfo[] GetDeclaredMethods(Type classType)
         => _fallback.GetDeclaredMethods(classType);
 
+    // Category A: TypeProperties is not populated by today's emitter.
     public PropertyInfo[] GetDeclaredProperties(Type type)
     {
         SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
@@ -66,6 +132,10 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
             : _fallback.GetDeclaredProperties(type);
     }
 
+    // Category C: assemblies that did not opt into source generation (typically the test
+    // framework, the adapter, MSTest extensions, or test assets packed without the
+    // generator) have no entries in `data.Types`. Fall back so those assemblies behave the
+    // same as in non-source-gen mode.
     public Type[] GetDefinedTypes(Assembly assembly)
     {
         SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
@@ -73,50 +143,21 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
         return filtered.Length > 0 ? filtered : _fallback.GetDefinedTypes(assembly);
     }
 
-    // The source-generated TypeMethods dictionary is partial (only [TestMethod]-annotated
-    // methods, no generics or by-ref) and the runtime contract requires returning every
-    // runtime method. Always delegate to the fallback.
+    // Category B: the source-generated TypeMethods dictionary is partial (only
+    // [TestMethod]-annotated methods, no generics or by-ref) and the runtime contract
+    // requires returning every runtime method. Always delegate to the fallback.
     public MethodInfo[] GetRuntimeMethods(Type type) => _fallback.GetRuntimeMethods(type);
 
+    // Category B: the source-generator does not pre-resolve arbitrary methods (the
+    // partial TypeMethods dictionary only carries [TestMethod]-annotated entries). Doing
+    // our own GetRuntimeMethods + parameter-match here would (a) duplicate the scan that
+    // the fallback already performs on miss and (b) diverge from Type.GetMethod's binder
+    // semantics (overload resolution, generic / by-ref handling). Delegate so callers get
+    // the same selection rules as reflection mode.
     public MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters, bool includeNonPublic)
-    {
-        foreach (MethodInfo method in GetRuntimeMethods(declaringType))
-        {
-            if (method.Name != methodName)
-            {
-                continue;
-            }
+        => _fallback.GetRuntimeMethod(declaringType, methodName, parameters, includeNonPublic);
 
-            if (!includeNonPublic && !method.IsPublic)
-            {
-                continue;
-            }
-
-            ParameterInfo[] candidateParameters = method.GetParameters();
-            if (candidateParameters.Length != parameters.Length)
-            {
-                continue;
-            }
-
-            bool matches = true;
-            for (int i = 0; i < parameters.Length; i++)
-            {
-                if (candidateParameters[i].ParameterType != parameters[i])
-                {
-                    matches = false;
-                    break;
-                }
-            }
-
-            if (matches)
-            {
-                return method;
-            }
-        }
-
-        return _fallback.GetRuntimeMethod(declaringType, methodName, parameters, includeNonPublic);
-    }
-
+    // Category A: TypePropertiesByName is not populated by today's emitter.
     public PropertyInfo? GetRuntimeProperty(Type classType, string propertyName, bool includeNonPublic)
     {
         SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
@@ -138,23 +179,29 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
         return _fallback.GetRuntimeProperty(classType, propertyName, includeNonPublic);
     }
 
-    // `Type.GetType(string)` only resolves assembly-qualified names (or types in the calling
-    // assembly / mscorlib). The source-generated `TypesByName` dictionary is keyed by full type
-    // name without assembly qualification and aggregates entries across every registered test
-    // assembly, so consulting it here could silently bind to a same-named type from the wrong
-    // assembly. Match the runtime contract by always delegating; callers that have an assembly
-    // in hand use the `GetType(Assembly, string)` overload below for source-generated lookups.
+    // Category C: `Type.GetType(string)` only resolves assembly-qualified names (or types
+    // in the calling assembly / mscorlib). The source-generated `TypesByName` dictionary is
+    // keyed by full type name without assembly qualification and aggregates entries across
+    // every registered test assembly, so consulting it here could silently bind to a
+    // same-named type from the wrong assembly. Match the runtime contract by always
+    // delegating; callers that have an assembly in hand use the `GetType(Assembly, string)`
+    // overload below for source-generated lookups.
     public Type? GetType(string typeName)
         => _fallback.GetType(typeName);
 
+    // Category C: assemblies that did not opt into source generation (and types in
+    // opted-in assemblies that the generator skipped, such as open generics) are not in
+    // TypesByName; fall back so cross-assembly lookups still resolve. The composite routes
+    // this through the per-provider TryGetTypeByName override so two assemblies with the
+    // same fully-qualified type name do not shadow each other.
     public Type? GetType(Assembly assembly, string typeName)
-    {
-        SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
-        return data.TypesByName.TryGetValue(typeName, out Type? type) && type.Assembly.Equals(assembly)
+        => DataProvider.TryGetTypeByName(assembly, typeName, out Type? type)
             ? type
             : _fallback.GetType(assembly, typeName);
-    }
 
+    // Category A: TypeConstructorsInvoker is not populated by today's emitter, so this
+    // method always falls through. When it is populated in the future, the invoker path
+    // avoids both Activator.CreateInstance and the trim-unfriendly constructor reflection.
     public object? CreateInstance(Type type, object?[] parameters)
     {
         SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();

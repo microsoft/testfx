@@ -34,6 +34,7 @@ internal static class ReflectionMetadataEmitter
         Append(sb, $"    internal static class {GeneratedTypeName}");
         Append(sb, "    {");
         Append(sb, "        [ModuleInitializer]");
+        var emittedBaseTypeDependencies = new HashSet<string>(StringComparer.Ordinal);
         foreach (TestClassMetadata cls in metadata.Classes)
         {
             // Preserve the test class members at runtime even when the assembly is published with
@@ -43,6 +44,22 @@ internal static class ReflectionMetadataEmitter
             // Without this hint the trimmer removes those members and discovery fails with
             // "Cannot find a valid constructor for test class".
             Append(sb, $"        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof({cls.FullyQualifiedName}))]");
+        }
+
+        // Emit a [DynamicDependency] for every accessible non-generic base type of every
+        // discovered [TestClass]. This roots members declared on the abstract base — most
+        // importantly [ClassInitialize] / [ClassCleanup] / [AssemblyInitialize] / [AssemblyCleanup]
+        // and any [TestContext] property — so the trimmer / Native AOT does not remove them.
+        // Dedupe across classes so a base shared by many derived classes is emitted once.
+        foreach (TestClassMetadata cls in metadata.Classes)
+        {
+            foreach (string baseTypeName in cls.BaseTypeFullyQualifiedNames)
+            {
+                if (emittedBaseTypeDependencies.Add(baseTypeName))
+                {
+                    Append(sb, $"        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof({baseTypeName}))]");
+                }
+            }
         }
 
         Append(sb, "        internal static void Initialize()");

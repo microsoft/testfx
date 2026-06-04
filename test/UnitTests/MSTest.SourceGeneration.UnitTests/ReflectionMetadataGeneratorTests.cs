@@ -284,13 +284,26 @@ public sealed class ReflectionMetadataGeneratorTests
         result.Diagnostics.Should().BeEmpty();
         string generated = result.GeneratedSources[0].SourceText.ToString();
 
+        // Neither the static nor the abstract test class is a runnable test class, so they must
+        // not be emitted into the `types[]` array or the `testMethods{}` dictionary. The
+        // discovery-side rules have not changed.
         generated.Should().NotContain("typeof(global::Sample.StaticTests)");
-        generated.Should().NotContain("typeof(global::Sample.AbstractTests)");
+        generated.Should().NotContain("[typeof(global::Sample.AbstractTests)]");
+
+        // The concrete derived class is the runnable test class — it must be emitted.
         generated.Should().Contain("typeof(global::Sample.Concrete)");
 
         // Concrete must surface BOTH its own Test2 AND the inherited Test1 from AbstractTests.
         generated.Should().Contain("ResolveMethod(typeof(global::Sample.Concrete), \"Test1\", Type.EmptyTypes)");
         generated.Should().Contain("ResolveMethod(typeof(global::Sample.Concrete), \"Test2\", Type.EmptyTypes)");
+
+        // The abstract base class must still be referenced by a [DynamicDependency] on the
+        // generated module initializer so that members declared on it ([ClassInitialize],
+        // [ClassCleanup], [AssemblyInitialize], [AssemblyCleanup], TestContext setter) are
+        // preserved by the IL trimmer / Native AOT. Without this hint those members live only
+        // on the abstract base and are trimmed because [DynamicDependency(All, typeof(Concrete))]
+        // does not preserve base-type members.
+        generated.Should().Contain("[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.AbstractTests))]");
     }
 
     [TestMethod]
@@ -724,6 +737,218 @@ public sealed class ReflectionMetadataGeneratorTests
         // initializer (same assembly) and so must be emitted just like public ones.
         generated.Should().Contain("typeof(global::Sample.InternalTests)");
         generated.Should().Contain("ResolveMethod(typeof(global::Sample.InternalTests), \"Test1\", Type.EmptyTypes)");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsDynamicDependencyForFullBaseTypeChain()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public abstract class GrandparentTests
+                {
+                    [AssemblyInitialize]
+                    public static void AssemblyInit(TestContext context) {}
+                }
+
+                public abstract class ParentTests : GrandparentTests
+                {
+                    [ClassInitialize]
+                    public static void ClassInit(TestContext context) {}
+                }
+
+                [TestClass]
+                public class Derived : ParentTests
+                {
+                    [TestMethod]
+                    public void Test1() {}
+                }
+            }
+            """;
+
+        const string testContextStub = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class TestContext {}
+
+                [System.AttributeUsage(System.AttributeTargets.Method)]
+                public sealed class AssemblyInitializeAttribute : System.Attribute {}
+
+                [System.AttributeUsage(System.AttributeTargets.Method)]
+                public sealed class ClassInitializeAttribute : System.Attribute {}
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, testContextStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string generated = result.GeneratedSources[0].SourceText.ToString();
+
+        // Every base type up the chain must be referenced by a [DynamicDependency] so the
+        // trimmer keeps members like [AssemblyInitialize] (declared on GrandparentTests) and
+        // [ClassInitialize] (declared on ParentTests). The concrete [TestClass] still owns the
+        // discovery entry, but the trimmer roots are emitted per type.
+        generated.Should().Contain("[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.Derived))]");
+        generated.Should().Contain("[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.ParentTests))]");
+        generated.Should().Contain("[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.GrandparentTests))]");
+
+        // Bases must NOT appear in the types[] array or the testMethods{} dictionary — they are
+        // not runnable test classes; discovery still goes through the concrete [TestClass].
+        generated.Should().NotContain("typeof(global::Sample.GrandparentTests),");
+        generated.Should().NotContain("[typeof(global::Sample.GrandparentTests)]");
+        generated.Should().NotContain("typeof(global::Sample.ParentTests),");
+        generated.Should().NotContain("[typeof(global::Sample.ParentTests)]");
+    }
+
+    [TestMethod]
+    public void Generator_DedupesDynamicDependencyForBaseShared()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public abstract class SharedBase
+                {
+                    [TestMethod]
+                    public void Inherited() {}
+                }
+
+                [TestClass]
+                public class DerivedA : SharedBase
+                {
+                    [TestMethod]
+                    public void TestA() {}
+                }
+
+                [TestClass]
+                public class DerivedB : SharedBase
+                {
+                    [TestMethod]
+                    public void TestB() {}
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string generated = result.GeneratedSources[0].SourceText.ToString();
+
+        // The shared abstract base produces only ONE [DynamicDependency] regardless of how
+        // many derived test classes reference it. Without deduping, every shared base would
+        // be emitted N times for N derived classes, bloating the generated source.
+        int sharedBaseCount = CountOccurrences(
+            generated,
+            "[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.SharedBase))]");
+        sharedBaseCount.Should().Be(1);
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotEmitDynamicDependencyForObjectBase()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class StandaloneTests
+                {
+                    [TestMethod]
+                    public void Test1() {}
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string generated = result.GeneratedSources[0].SourceText.ToString();
+
+        // The base-type walk stops at System.Object — we never emit a [DynamicDependency] for
+        // it (would be useless noise and would increase the surface of types we root with the trimmer).
+        generated.Should().NotContain("typeof(global::System.Object)");
+        generated.Should().NotContain("typeof(object)");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotEmitDynamicDependencyForInaccessibleBase()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class Outer
+                {
+                    // A private nested base cannot be referenced from the generated `internal`
+                    // module initializer (CS0122). Skip it from [DynamicDependency] emission to
+                    // keep the generated source compilable.
+                    private class PrivateBase
+                    {
+                        [TestMethod]
+                        public void InheritedFromPrivate() {}
+                    }
+
+                    [TestClass]
+                    public class PublicDerived : PrivateBase
+                    {
+                        [TestMethod]
+                        public void TestB() {}
+                    }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string generated = result.GeneratedSources[0].SourceText.ToString();
+
+        // The private base must not surface in any reference; the derived class still must.
+        generated.Should().NotContain("PrivateBase");
+        generated.Should().Contain("typeof(global::Sample.Outer.PublicDerived)");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotEmitDynamicDependencyForGenericBase()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public abstract class GenericBase<T>
+                {
+                    [TestMethod]
+                    public void InheritedTest() {}
+                }
+
+                [TestClass]
+                public class Derived : GenericBase<int>
+                {
+                    [TestMethod]
+                    public void Test1() {}
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string generated = result.GeneratedSources[0].SourceText.ToString();
+
+        // For this conservative iteration we skip generic base types from [DynamicDependency]
+        // emission — emitting `typeof(GenericBase<int>)` is technically valid but adds edge
+        // cases (open vs. closed, type-parameter capture) that the rest of the generator does
+        // not exercise. The derived class itself is still emitted, and the inherited test
+        // method is still surfaced through the base-walk in the methods collection.
+        generated.Should().NotContain("typeof(global::Sample.GenericBase");
+        generated.Should().Contain("typeof(global::Sample.Derived)");
+        generated.Should().Contain("ResolveMethod(typeof(global::Sample.Derived), \"InheritedTest\", Type.EmptyTypes)");
     }
 
     private static string NormalizeNewlines(string value)

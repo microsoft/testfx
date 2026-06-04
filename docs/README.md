@@ -37,6 +37,10 @@ For technical reasoning and implementation details, you can refer to the list of
 - [DataSource Attribute Vs ITestDataSource](RFCs/007-DataSource-Attribute-VS-ITestDataSource.md)
 - [Test case timeout via runsettings](RFCs/008-TestCase-Timeout.md)
 
+## Design notes
+
+- [MSTest source generator — design](source-generator/design.md): scope, fallback categories, discovery limitations and trim/AOT story for the `MSTest.SourceGeneration` package.
+
 ## Releases
 
 You can find all features and bugs fixed in all our releases by looking at [releases.md](releases.md).

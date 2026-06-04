@@ -13,7 +13,8 @@ internal sealed record TestClassMetadata(
     string FullyQualifiedName,
     string DisplayName,
     string? Namespace,
-    EquatableArray<TestMethodMetadata> Methods);
+    EquatableArray<TestMethodMetadata> Methods,
+    EquatableArray<string> BaseTypeFullyQualifiedNames);
 
 /// <summary>
 /// Equatable snapshot of a discovered test method.
