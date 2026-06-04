@@ -154,6 +154,7 @@
     ".github/ISSUE_TEMPLATE/**/*.md",
     ".github/skills/**/*.md",
     ".github/agents/**/*.md",
+    ".agents/skills/**/*.md",
     // GitHub agentic workflow sources (compiled by `gh aw compile`)
     ".github/workflows/**/*.md",
     "**/AnalyzerReleases.*.md"

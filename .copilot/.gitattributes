@@ -1,0 +1,2 @@
+# managed by gh-copilot-curate: keep stable byte content across CRLF/LF checkouts
+* text eol=lf
