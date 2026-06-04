@@ -23,7 +23,7 @@
 
   <Target Name="_MTPAddArguments" BeforeTargets="ComputeRunArguments">
     <PropertyGroup>
-      <RunArguments Condition="'(TestingPlatformCommandLineArguments)' != ''">$(RunArguments) $(TestingPlatformCommandLineArguments)</RunArguments>
+      <RunArguments Condition="'$(TestingPlatformCommandLineArguments)' != ''">$(RunArguments) $(TestingPlatformCommandLineArguments)</RunArguments>
     </PropertyGroup>
   </Target>
 
