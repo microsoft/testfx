@@ -123,17 +123,18 @@ internal sealed class Json
                 (JsonRpcStrings.DisplayName, message.DisplayName)
             ];
 
-            TestMetadataProperty[] metadataProperties = message.Properties.OfType<TestMetadataProperty>();
+            List<KeyValuePair<string, string>>? traits = null;
             bool hasActionNodeType = false;
-
-            if (metadataProperties.Length > 0)
-            {
-                properties.Add(("traits", metadataProperties.Select(x => new KeyValuePair<string, string>(x.Key, x.Value))));
-            }
 
             int attachmentIndex = 0;
             foreach (IProperty property in message.Properties)
             {
+                if (property is TestMetadataProperty metadataProperty)
+                {
+                    (traits ??= []).Add(new KeyValuePair<string, string>(metadataProperty.Key, metadataProperty.Value));
+                    continue;
+                }
+
                 if (property is SerializableKeyValuePairStringProperty keyValuePairProperty)
                 {
                     properties.Add((keyValuePairProperty.Key, keyValuePairProperty.Value));
@@ -285,6 +286,13 @@ internal sealed class Json
                     attachmentIndex++;
                     continue;
                 }
+            }
+
+            if (traits is not null)
+            {
+                // Insert "traits" right after "uid" and "display-name" to preserve the
+                // original wire format ordering.
+                properties.Insert(2, ("traits", traits));
             }
 
             if (!hasActionNodeType)
