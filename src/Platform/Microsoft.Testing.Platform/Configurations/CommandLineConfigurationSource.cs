@@ -22,23 +22,11 @@ namespace Microsoft.Testing.Platform.Configurations;
 /// <see cref="CommandLineConfigurationProvider"/> for the key shape.
 /// </para>
 /// </remarks>
-internal sealed class CommandLineConfigurationSource : IConfigurationSource
+internal sealed class CommandLineConfigurationSource : ConfigurationSourceBase
 {
-    public string Uid => nameof(CommandLineConfigurationSource);
-
-    public string Version => PlatformVersion.Version;
-
-    // Can be empty string because it's not used in the UI.
-    public string DisplayName => string.Empty;
-
-    // Can be empty string because it's not used in the UI.
-    public string Description => string.Empty;
-
     // Lowest Order so the CLI wins against env vars (1) and testconfig.json (3).
-    public int Order => 0;
+    public override int Order => 0;
 
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)
+    public override Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)
         => Task.FromResult<IConfigurationProvider>(new CommandLineConfigurationProvider(commandLineParseResult));
 }

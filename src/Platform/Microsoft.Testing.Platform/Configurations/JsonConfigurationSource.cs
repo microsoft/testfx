@@ -8,31 +8,14 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Configurations;
 
-internal sealed partial class JsonConfigurationSource(ITestApplicationModuleInfo testApplicationModuleInfo, IFileSystem fileSystem, FileLoggerProvider? fileLoggerProvider) : IConfigurationSource
+internal sealed partial class JsonConfigurationSource(ITestApplicationModuleInfo testApplicationModuleInfo, IFileSystem fileSystem, FileLoggerProvider? fileLoggerProvider) : ConfigurationSourceBase
 {
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly FileLoggerProvider? _fileLoggerProvider = fileLoggerProvider;
 
-    /// <inheritdoc />
-    public string Uid => nameof(JsonConfigurationSource);
+    public override int Order => 3;
 
-    /// <inheritdoc />
-    public string Version => PlatformVersion.Version;
-
-    /// <inheritdoc />
-    // Can be empty string because it's not used in the UI
-    public string DisplayName => string.Empty;
-
-    /// <inheritdoc />
-    // Can be empty string because it's not used in the UI
-    public string Description => string.Empty;
-
-    public int Order => 3;
-
-    /// <inheritdoc />
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)
+    public override Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)
         => Task.FromResult((IConfigurationProvider)new JsonConfigurationProvider(_testApplicationModuleInfo, _fileSystem, commandLineParseResult, _fileLoggerProvider?.CreateLogger(typeof(JsonConfigurationProvider).ToString())));
 }
