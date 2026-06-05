@@ -8,6 +8,7 @@ public sealed partial class Assert
     /// <summary>
     /// Walks two object graphs and reports the first structural difference, if any.
     /// </summary>
+    [StackTraceHidden]
     private sealed partial class EquivalenceComparer
     {
         // Member info caches keyed by runtime type.

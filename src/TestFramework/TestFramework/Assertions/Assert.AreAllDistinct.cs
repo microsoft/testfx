@@ -224,6 +224,7 @@ public sealed partial class Assert
 
     // TODO: Deduplicate with the same adapter in Assert.CollectionEquivalence.cs (introduced by PR #8234)
     // once both PRs have landed.
+    [StackTraceHidden]
     private sealed class NonGenericEqualityComparerAdapter : IEqualityComparer<object?>
     {
         private readonly IEqualityComparer _comparer;

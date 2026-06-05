@@ -277,6 +277,7 @@ public sealed partial class CollectionAssert
     /// <summary>
     /// compares the objects using object.Equals.
     /// </summary>
+    [StackTraceHidden]
     private sealed class ObjectComparer : IComparer
     {
         int IComparer.Compare(object? x, object? y) => Equals(x, y) ? 0 : -1;

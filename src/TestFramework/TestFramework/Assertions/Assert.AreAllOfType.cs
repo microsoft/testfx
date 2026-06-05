@@ -159,6 +159,7 @@ public sealed partial class Assert
         ReportAssertFailed(structured);
     }
 
+    [StackTraceHidden]
     private readonly struct TypeMismatch
     {
         public TypeMismatch(int index, Type? actualType)

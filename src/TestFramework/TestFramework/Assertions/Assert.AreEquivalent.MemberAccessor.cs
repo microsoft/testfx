@@ -8,6 +8,7 @@ public sealed partial class Assert
     /// <summary>
     /// Reference-equality comparer used for keys in the topology maps of <see cref="EquivalenceComparer"/>.
     /// </summary>
+    [StackTraceHidden]
     private sealed class ReferenceObjectComparer : IEqualityComparer<object>
     {
         internal static readonly ReferenceObjectComparer Instance = new();
@@ -25,6 +26,7 @@ public sealed partial class Assert
     /// Cached set of public instance properties and fields for a type, with both an alphabetically-sorted
     /// array (for deterministic traversal) and a name-keyed dictionary (for O(1) lookup).
     /// </summary>
+    [StackTraceHidden]
     private sealed class MemberLookup
     {
         internal MemberLookup(MemberAccessor[] sorted, IReadOnlyDictionary<string, MemberAccessor> byName)
@@ -41,6 +43,7 @@ public sealed partial class Assert
     /// <summary>
     /// Describes how to read a single member (property or field) from an instance.
     /// </summary>
+    [StackTraceHidden]
     private sealed class MemberAccessor
     {
         private readonly PropertyInfo? _property;
