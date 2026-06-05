@@ -17,6 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// This class is responsible to running tests and converting framework TestResults to adapter TestResults.
 /// </summary>
+[StackTraceHidden]
 internal sealed class TestMethodRunner
 {
     /// <summary>
