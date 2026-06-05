@@ -37,7 +37,7 @@ public sealed class CollectionAssertToAssertFixer : CodeFixProvider
     public override Task RegisterCodeFixesAsync(CodeFixContext context)
         => AssertToAssertFixerHelpers.RegisterCodeFixAsync(
             context,
-            CollectionAssertToAssertAnalyzer.ProperAssertMethodNameKey,
+            AssertToAssertAnalyzerHelpers.ProperAssertMethodNameKey,
             CodeFixResources.CollectionAssertToAssertTitle,
             CollectionAssertToAssertAnalyzer.FixKindKey,
             FixAssertAsync);

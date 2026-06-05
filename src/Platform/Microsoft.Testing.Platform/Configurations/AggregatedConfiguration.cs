@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
@@ -168,6 +169,28 @@ internal sealed class AggregatedConfiguration(
             .FirstOrDefault();
 
         return jsonProvider?.EnumerateCommandLineOptions() ?? [];
+    }
+
+    /// <summary>
+    /// Normalizes JSON-sourced scalar command-line option entries to the indexed shape for any
+    /// option in <paramref name="optionByName"/> with <see cref="ArgumentArity.Min"/> &gt;= 1,
+    /// so that subsequent <see cref="TryGetCommandLineOptionFromProviders"/> and validator passes
+    /// see a uniform representation. See
+    /// <see cref="JsonConfigurationSource.JsonConfigurationProvider.NormalizeCommandLineOptionScalars"/>
+    /// for the full rationale.
+    /// </summary>
+    /// <remarks>
+    /// A no-op when no JSON configuration source is registered. Safe to call at most once after
+    /// the option registry is fully assembled and before any consumer reads command-line option
+    /// values from <see cref="IConfiguration"/>.
+    /// </remarks>
+    internal void NormalizeJsonCommandLineOptionScalars(IReadOnlyDictionary<string, CommandLineOption> optionByName)
+    {
+        JsonConfigurationSource.JsonConfigurationProvider? jsonProvider = _configurationProviders
+            .OfType<JsonConfigurationSource.JsonConfigurationProvider>()
+            .FirstOrDefault();
+
+        jsonProvider?.NormalizeCommandLineOptionScalars(optionByName);
     }
 
     public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(IFileLoggerProvider? fileLoggerProvider)

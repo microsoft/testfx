@@ -111,6 +111,77 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
         result.AssertOutputContains("Option '--ansi' from provider 'Terminal test reporter' (UID: TerminalTestReporterCommandLineOptionsProvider) expects at least 1 arguments");
     }
 
+    [TestMethod]
+    public async Task NoColorEnvVar_NonEmpty_DisablesAnsiOutput()
+    {
+        // The de-facto NO_COLOR convention (https://no-color.org): when present with any non-empty
+        // value, color (and in our implementation, all ANSI escape codes) must be suppressed.
+        // TestHost.ExecuteAsync auto-injects `--no-ansi --no-progress` which would already suppress ESC,
+        // so we use `--ansi auto` together with the CI env (which would otherwise produce SimpleAnsi
+        // ESC) to deterministically prove NO_COLOR alone forces NoAnsi. With NO_COLOR set the output
+        // must contain no ESC even though `--ansi auto` is opted in.
+        Dictionary<string, string?> environmentVariables = new(InCIEnvironmentVariablesWithLLMCleared)
+        {
+            ["NO_COLOR"] = "1",
+        };
+
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult result = await testHost.ExecuteAsync(
+            "--ansi auto",
+            environmentVariables: environmentVariables,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsFalse(
+            result.StandardOutput.Contains(EscapeCharacter, StringComparison.Ordinal),
+            $"Expected output to NOT contain ANSI escape characters when NO_COLOR is set, but got:\n{result.StandardOutput}");
+    }
+
+    [TestMethod]
+    public async Task NoColorEnvVar_Empty_IsIgnored()
+    {
+        // Per the NO_COLOR spec, ONLY a non-empty value disables color. An empty NO_COLOR must be a no-op.
+        // With `--ansi auto` in a CI environment (and LLM detection cleared), MTP picks SimpleAnsi which
+        // does emit color ESC sequences. Asserting ESC presence proves empty NO_COLOR did not force NoAnsi.
+        Dictionary<string, string?> environmentVariables = new(InCIEnvironmentVariablesWithLLMCleared)
+        {
+            ["NO_COLOR"] = string.Empty,
+        };
+
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult result = await testHost.ExecuteAsync(
+            "--ansi auto",
+            environmentVariables: environmentVariables,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsTrue(
+            result.StandardOutput.Contains(EscapeCharacter, StringComparison.Ordinal),
+            $"Expected output to contain ANSI escape characters when NO_COLOR is empty (spec: only non-empty disables color), but got:\n{result.StandardOutput}");
+    }
+
+    [TestMethod]
+    public async Task NoColorEnvVar_OverriddenByExplicitAnsiOn()
+    {
+        // Precedence rule documented in TerminalOutputDevice: `--ansi on` short-circuits CI / LLM /
+        // NO_COLOR detection. NO_COLOR is honored "unless the user explicitly opted in via --ansi on".
+        Dictionary<string, string?> environmentVariables = new(InCIEnvironmentVariablesWithLLMCleared)
+        {
+            ["NO_COLOR"] = "1",
+        };
+
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult result = await testHost.ExecuteAsync(
+            "--ansi on",
+            environmentVariables: environmentVariables,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsTrue(
+            result.StandardOutput.Contains(EscapeCharacter, StringComparison.Ordinal),
+            $"Expected output to contain ANSI escape characters because `--ansi on` overrides NO_COLOR, but got:\n{result.StandardOutput}");
+    }
+
     public TestContext TestContext { get; set; } = null!;
 
     // Env vars that force the platform to consider it to be in CI while clearing the known LLM env
@@ -119,6 +190,7 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
     private static Dictionary<string, string?> InCIEnvironmentVariablesWithLLMCleared => new()
     {
         ["GITHUB_ACTIONS"] = "true",
+        ["NO_COLOR"] = string.Empty,
         ["CLAUDECODE"] = string.Empty,
         ["CLAUDE_CODE_ENTRYPOINT"] = string.Empty,
         ["CURSOR_EDITOR"] = string.Empty,

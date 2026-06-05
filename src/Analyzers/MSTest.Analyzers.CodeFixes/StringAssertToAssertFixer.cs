@@ -33,7 +33,7 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
     public override Task RegisterCodeFixesAsync(CodeFixContext context)
         => AssertToAssertFixerHelpers.RegisterCodeFixAsync(
             context,
-            StringAssertToAssertAnalyzer.ProperAssertMethodNameKey,
+            AssertToAssertAnalyzerHelpers.ProperAssertMethodNameKey,
             CodeFixResources.StringAssertToAssertTitle,
             fixKindPropertyKey: null,
             FixAssertAsync);

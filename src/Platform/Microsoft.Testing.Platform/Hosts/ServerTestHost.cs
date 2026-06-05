@@ -21,6 +21,7 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
+[StackTraceHidden]
 internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDisposable, IOutputDeviceDataProducer
 {
     public const string ProtocolVersion = PlatformVersion.Version;

@@ -79,17 +79,17 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingResultAttachmentFailed">
         <source>Azure DevOps live publishing failed to upload a test result attachment.</source>
-        <target state="new">Azure DevOps live publishing failed to upload a test result attachment.</target>
+        <target state="translated">La publicación en tiempo real de Azure DevOps no pudo cargar un dato adjunto del resultado de la prueba.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingResultIdParseFailedWarning">
         <source>Azure DevOps live publishing accepted a batch of test results but could not parse the assigned result IDs; result-level attachments for this batch will be skipped.</source>
-        <target state="new">Azure DevOps live publishing accepted a batch of test results but could not parse the assigned result IDs; result-level attachments for this batch will be skipped.</target>
+        <target state="translated">La publicación en tiempo real de Azure DevOps aceptó un lote de resultados de pruebas, pero no pudo analizar los identificadores de resultado asignados; se omitirán los datos adjuntos de nivel de resultado para este lote.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunAttachmentFailed">
         <source>Azure DevOps live publishing failed to upload a test run attachment.</source>
-        <target state="new">Azure DevOps live publishing failed to upload a test run attachment.</target>
+        <target state="translated">La publicación en tiempo real de Azure DevOps no pudo cargar un dato adjunto de una ejecución de prueba.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunIdFileMismatch">
@@ -109,7 +109,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsProgressRequiresAzureDevOps">
         <source>'--report-azdo-progress' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-progress' requires '--report-azdo' to be enabled</target>
+        <target state="translated">"--report-azdo-progress" requiere que se habilite "--report-azdo"</target>
         <note>{Locked='--report-azdo-progress'}{Locked='--report-azdo'}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
@@ -124,12 +124,12 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsStackFrameFilterRequiresAzureDevOps">
         <source>'--report-azdo-stackframe-filter' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-stackframe-filter' requires '--report-azdo' to be enabled</target>
+        <target state="translated">"--report-azdo-stackframe-filter" requiere que se habilite "--report-azdo"</target>
         <note>{Locked='--report-azdo-stackframe-filter'}{Locked='--report-azdo'}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsSummaryRequiresAzureDevOps">
         <source>'--report-azdo-summary' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-summary' requires '--report-azdo' to be enabled</target>
+        <target state="translated">"--report-azdo-summary" requiere que se habilite "--report-azdo"</target>
         <note>{Locked='--report-azdo-summary'}{Locked='--report-azdo'}</note>
       </trans-unit>
       <trans-unit id="DemoteKnownFlakyOptionDescription">
@@ -209,7 +209,7 @@
       </trans-unit>
       <trans-unit id="InvalidStackFrameFilterRegex">
         <source>Invalid '--report-azdo-stackframe-filter' regex '{0}': {1}</source>
-        <target state="new">Invalid '--report-azdo-stackframe-filter' regex '{0}': {1}</target>
+        <target state="translated">Expresión regular no válida de "--report-azdo-stackframe-filter" "{0}": {1}</target>
         <note>{Locked="--report-azdo-stackframe-filter"}</note>
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
@@ -224,12 +224,12 @@
       </trans-unit>
       <trans-unit id="ProgressOptionDescription">
         <source>Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.</source>
-        <target state="new">Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.</target>
+        <target state="translated">Emita registros de progreso de la línea de tiempo de Azure DevOps durante la ejecución de la prueba para que las sesiones de larga duración muestren una barra de progreso en directo en la línea de tiempo de la compilación. Requiere "--report-azdo".</target>
         <note>{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="ProgressRequiresTfBuildWarning">
         <source>Azure DevOps progress reporting was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps progress emissions.</source>
-        <target state="new">Azure DevOps progress reporting was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps progress emissions.</target>
+        <target state="translated">Se solicitó la generación de informes de progreso de Azure DevOps, pero TF_BUILD no está establecido en "true"; se omite el envío de información de progreso de Azure DevOps.</target>
         <note>{Locked="TF_BUILD"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="PublishAzdoRunNameOptionDescription">
@@ -284,27 +284,27 @@
       </trans-unit>
       <trans-unit id="StackFrameFilterOptionDescription">
         <source>Additional regex patterns (matched against the fully-qualified type prefix of each stack frame) that should be skipped when looking for the user's call site to annotate. Repeatable; up to {0} patterns. Compiled with a {1}ms match timeout. Additive to the extension's built-in MSTest assertion-implementation prefixes.</source>
-        <target state="new">Additional regex patterns (matched against the fully-qualified type prefix of each stack frame) that should be skipped when looking for the user's call site to annotate. Repeatable; up to {0} patterns. Compiled with a {1}ms match timeout. Additive to the extension's built-in MSTest assertion-implementation prefixes.</target>
+        <target state="translated">Patrones de expresiones regulares adicionales (que coinciden con el prefijo del tipo completamente calificado de cada marco de pila) que se deben omitir al buscar el punto de llamada del usuario que se va a anotar. Repetible; hasta {0} patrones. Compilado con un {1}tiempo de espera de coincidencia ms. Adición a los prefijos de implementación de aserción de MSTest integrados de la extensión.</target>
         <note>{0} is the maximum allowed pattern count, {1} is the per-match timeout in ms.</note>
       </trans-unit>
       <trans-unit id="StackFrameFilterTooManyRegexes">
         <source>'--report-azdo-stackframe-filter' accepts at most {0} patterns.</source>
-        <target state="new">'--report-azdo-stackframe-filter' accepts at most {0} patterns.</target>
+        <target state="translated">"--report-azdo-stackframe-filter" acepta como máximo {0} patrones.</target>
         <note>{Locked="--report-azdo-stackframe-filter"}</note>
       </trans-unit>
       <trans-unit id="SummaryOptionDescription">
         <source>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.</source>
-        <target state="new">Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.</target>
+        <target state="translated">Escriba un resumen del trabajo de Markdown al final de la serie de pruebas y cárguelo a través de "##vso[task.uploadsummary]". Un argumento de ruta de acceso de archivo opcional invalida la ubicación predeterminada ("{testResultsDir}/azdo-summary-{tfm}.md"). Requiere "--report-azdo".</target>
         <note>{Locked="--report-azdo"}{Locked="##vso[task.uploadsummary]"}{Locked="azdo-summary-{tfm}.md"}</note>
       </trans-unit>
       <trans-unit id="SummaryRequiresTfBuildWarning">
         <source>Azure DevOps job summary was requested, but TF_BUILD is not set to 'true'; skipping summary emission.</source>
-        <target state="new">Azure DevOps job summary was requested, but TF_BUILD is not set to 'true'; skipping summary emission.</target>
+        <target state="translated">Se solicitó el resumen del trabajo de Azure DevOps, pero TF_BUILD no está establecido en "true"; se omite la generación del resumen.</target>
         <note>{Locked="TF_BUILD"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="SummaryWriteFailedWarning">
         <source>Failed to write Azure DevOps summary file '{0}': {1}</source>
-        <target state="new">Failed to write Azure DevOps summary file '{0}': {1}</target>
+        <target state="translated">No se pudo escribir el archivo de resumen de Azure DevOps "{0}": {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UploadArtifactExcludeOptionDescription">

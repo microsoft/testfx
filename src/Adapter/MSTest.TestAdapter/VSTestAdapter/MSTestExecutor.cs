@@ -17,6 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// Contains the execution logic for this adapter.
 /// </summary>
 [ExtensionUri(EngineConstants.ExecutorUriString)]
+[StackTraceHidden]
 internal sealed class MSTestExecutor : ITestExecutor
 {
     private readonly CancellationToken _cancellationToken;

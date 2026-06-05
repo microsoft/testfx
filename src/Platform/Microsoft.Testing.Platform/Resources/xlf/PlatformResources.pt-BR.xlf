@@ -109,7 +109,7 @@
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
         <source>Option '--{0}' is declared by multiple providers: '{1}'</source>
-        <target state="new">Option '--{0}' is declared by multiple providers: '{1}'</target>
+        <target state="translated">A opção '--{0}' é declarada por vários provedores: '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
@@ -378,12 +378,12 @@
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</source>
-        <target state="new">The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</target>
+        <target state="translated">A entrada '{0}' na seção '{1}' no arquivo testconfig.json ('{2}') deve ser um valor escalar (cadeia de caracteres, número, booliano) ou uma matriz de valores escalares. Não há suporte para objetos aninhados.</target>
         <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file.</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptions': {0}</source>
-        <target state="new">In testconfig.json under 'commandLineOptions': {0}</target>
+        <target state="translated">No testconfig.json em 'commandLineOptions': {0}</target>
         <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...).</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
@@ -906,15 +906,15 @@ Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal�
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="new">Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
+        <target state="translated">Determina quando mostrar a saída de erro capturada de um teste.
+Os valores válidos são 'All', 'Failed', 'None'. O padrão é 'All' (ou 'Failed' quando um ambiente de agente de LLM/IA é detectado).</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="new">Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
+        <target state="translated">Determina quando mostrar a saída padrão capturada de um teste.
+Os valores válidos são 'All', 'Failed', 'None'. O padrão é 'All' (ou 'Failed' quando um ambiente de agente de LLM/IA é detectado).</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">

@@ -18,6 +18,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 /// This represents either a test host (console or server), or a test host controller.
 /// This doesn't represent an orchestrator host.
 /// </summary>
+[StackTraceHidden]
 internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 {
     public ServiceProvider ServiceProvider => serviceProvider;

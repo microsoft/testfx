@@ -29,12 +29,12 @@
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsEquivalentFix">
         <source>Use deep structural comparison ('Assert.{0}')</source>
-        <target state="new">Use deep structural comparison ('Assert.{0}')</target>
+        <target state="translated">Tiefen strukturellen Vergleich verwenden („Assert.{0}“)</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsOrderedFix">
         <source>Use ordered, element-wise comparison ('Assert.{0}')</source>
-        <target state="new">Use ordered, element-wise comparison ('Assert.{0}')</target>
+        <target state="translated">Verwenden eines sortierten, elementweisen Vergleichs („Assert.{0}“)</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesFix">
@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertTitle">
         <source>Use 'Assert.{0}' instead of 'CollectionAssert'</source>
-        <target state="new">Use 'Assert.{0}' instead of 'CollectionAssert'</target>
+        <target state="translated">Verwenden Sie „Assert.{0}“ anstelle von „CollectionAssert“</target>
         <note />
       </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">

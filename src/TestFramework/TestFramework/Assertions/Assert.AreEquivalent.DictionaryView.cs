@@ -11,6 +11,7 @@ public sealed partial class Assert
     /// Routes lookups back to the source dictionary so the source's own
     /// <see cref="IEqualityComparer{T}"/> for keys is preserved.
     /// </summary>
+    [StackTraceHidden]
     private abstract class DictionaryView
     {
         internal abstract IEnumerable<KeyValuePair<object, object?>> Entries { get; }
@@ -30,6 +31,7 @@ public sealed partial class Assert
         }
     }
 
+    [StackTraceHidden]
     private readonly struct DictionaryLookup
     {
         internal DictionaryLookup(bool found, object? value)
@@ -43,6 +45,7 @@ public sealed partial class Assert
         internal object? Value { get; }
     }
 
+    [StackTraceHidden]
     private sealed class NonGenericDictionaryView : DictionaryView
     {
         private readonly IDictionary _source;
@@ -84,6 +87,7 @@ public sealed partial class Assert
         }
     }
 
+    [StackTraceHidden]
     private sealed class GenericDictionaryView : DictionaryView
     {
         private static readonly ConcurrentDictionary<Type, GenericDictionaryAccessors> AccessorCache = new();
@@ -123,6 +127,7 @@ public sealed partial class Assert
     /// source's native methods (<c>TryGetValue</c>, <c>ContainsKey</c>) so the source's
     /// <see cref="IEqualityComparer{TKey}"/> is honored.
     /// </summary>
+    [StackTraceHidden]
     private sealed class GenericDictionaryAccessors
     {
         private readonly MethodInfo _tryGetValueMethod;
