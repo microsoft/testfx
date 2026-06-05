@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+using System.Xml.Linq;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
@@ -44,11 +47,8 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
         Match match = Regex.Match(testHostResult.StandardOutput, xmlPathPattern);
         Assert.IsTrue(match.Success, $"JUnit report path not found in output:\n{testHostResult.StandardOutput}");
 
-        string xmlContent = File.ReadAllText(match.Value);
-        Assert.Contains("<?xml version=\"1.0\"", xmlContent, "Generated file does not appear to be a valid XML report.");
-        Assert.Contains("<testsuites", xmlContent, "Generated JUnit report does not contain the <testsuites> root element.");
-        Assert.Contains("<testsuite", xmlContent, "Generated JUnit report does not contain any <testsuite> element.");
-        Assert.Contains("<testcase", xmlContent, "Generated JUnit report does not contain any <testcase> element.");
+        var document = XDocument.Load(match.Value);
+        AssertWellFormedJUnitReport(document, expectedTestCount: 1, expectedFailures: 0, expectedErrors: 0, expectedSkipped: 0);
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -77,9 +77,8 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
             File.Exists(customFilePath),
             $"Expected custom JUnit report file '{customFileName}' was not found in '{testResultsPath}'.");
 
-        string xmlContent = File.ReadAllText(customFilePath);
-        Assert.Contains("<?xml version=\"1.0\"", xmlContent, "Generated file does not appear to be a valid XML report.");
-        Assert.Contains("<testsuites", xmlContent, "Generated JUnit report does not contain the <testsuites> root element.");
+        var document = XDocument.Load(customFilePath);
+        AssertWellFormedJUnitReport(document, expectedTestCount: 1, expectedFailures: 0, expectedErrors: 0, expectedSkipped: 0);
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -157,52 +156,62 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
             File.Exists(customFilePath),
             $"Expected JUnit report '{customFileName}' was not found in '{testResultsPath}'.\nOutput:\n{testHostResult.StandardOutput}");
 
-        string xmlContent = File.ReadAllText(customFilePath);
+        var document = XDocument.Load(customFilePath);
 
-        // Outcome mappings per RFC 016.
-        Assert.Contains("<failure", xmlContent, "Expected a <failure> child for the failing test.");
-        Assert.Contains("<skipped", xmlContent, "Expected a <skipped> child for the skipped test.");
-        Assert.Contains("<error", xmlContent, "Expected an <error> child for the errored test.");
+        // 1 passing + 1 failing + 1 skipped + 1 errored = 4 tests across the assembly.
+        AssertWellFormedJUnitReport(document, expectedTestCount: 4, expectedFailures: 1, expectedErrors: 1, expectedSkipped: 1);
 
-        // Per-testcase metadata is emitted with the RFC-documented property names.
-        Assert.Contains("name=\"uid\"", xmlContent, "Per-testcase <property name=\"uid\"/> should be emitted (not 'test-uid').");
-        Assert.DoesNotContain("name=\"test-uid\"", xmlContent, "Legacy 'test-uid' property name must no longer be emitted.");
+        XElement[] testcases = document.Descendants("testcase").ToArray();
+        Dictionary<string, XElement> testcasesByName = testcases.ToDictionary(tc => tc.Attribute("name")!.Value);
 
-        // testpath now always includes the leaf display name; the parented children
-        // must therefore include "Container1/<leaf>".
-        Assert.Contains("Container1/FailingChild", xmlContent, "testpath should include the parent chain plus the leaf display name.");
-        Assert.Contains("Container1/SkippedChild", xmlContent, "testpath should include the parent chain plus the leaf display name.");
+        // Outcome mappings per RFC 016 — every outcome lands in the right child element.
+        XElement failingChild = testcasesByName["FailingChild"];
+        Assert.HasCount(1, failingChild.Elements("failure"), "FailingChild should have exactly one <failure> child.");
+        Assert.IsEmpty(failingChild.Elements("error"));
+        Assert.IsEmpty(failingChild.Elements("skipped"));
 
-        // Schema-conformance smoke (per RFC 016): parse the produced XML and assert
-        // that every <testcase>'s children follow the strict normative ordering
-        // (properties?, skipped?, error*, failure*, system-out*, system-err*).
-        // Substring checks alone would silently accept a regression that, for instance,
-        // emitted <system-out> before <failure>.
-        var doc = System.Xml.Linq.XDocument.Parse(xmlContent);
-        Assert.AreEqual("testsuites", doc.Root!.Name.LocalName, "Root element must be <testsuites>.");
+        XElement skippedChild = testcasesByName["SkippedChild"];
+        Assert.HasCount(1, skippedChild.Elements("skipped"), "SkippedChild should have exactly one <skipped> child.");
+        Assert.IsEmpty(skippedChild.Elements("error"));
+        Assert.IsEmpty(skippedChild.Elements("failure"));
 
-        int testcasesChecked = 0;
-        string[] orderedNames = ["properties", "skipped", "error", "failure", "system-out", "system-err"];
-        foreach (System.Xml.Linq.XElement testcase in doc.Descendants("testcase"))
+        XElement erroredChild = testcasesByName["ErroredChild"];
+        Assert.HasCount(1, erroredChild.Elements("error"), "ErroredChild should have exactly one <error> child.");
+        Assert.IsEmpty(erroredChild.Elements("failure"));
+        Assert.IsEmpty(erroredChild.Elements("skipped"));
+
+        XElement passingTest = testcasesByName["PassingTest"];
+        Assert.IsEmpty(passingTest.Elements("failure"));
+        Assert.IsEmpty(passingTest.Elements("error"));
+        Assert.IsEmpty(passingTest.Elements("skipped"));
+
+        // Per-RFC child ordering inside <testcase>: properties?, skipped?, error*, failure*, system-out*, system-err*.
+        foreach (XElement testcase in testcases)
         {
-            testcasesChecked++;
-            int lastSeen = -1;
-            foreach (System.Xml.Linq.XElement child in testcase.Elements())
-            {
-                int idx = Array.IndexOf(orderedNames, child.Name.LocalName);
-                Assert.IsGreaterThanOrEqualTo(
-                    0,
-                    idx,
-                    $"Unexpected <testcase> child element <{child.Name.LocalName}> — RFC 016 only allows: {string.Join(", ", orderedNames)}.");
-                Assert.IsGreaterThanOrEqualTo(
-                    lastSeen,
-                    idx,
-                    $"<testcase name=\"{testcase.Attribute("name")?.Value}\"> children are out of order: <{child.Name.LocalName}> appeared after a later-ordered element. Expected order: {string.Join(" -> ", orderedNames)}.");
-                lastSeen = idx;
-            }
+            AssertTestcaseChildOrdering(testcase);
         }
 
-        Assert.IsGreaterThan(0, testcasesChecked, "Expected at least one <testcase> element to be present for ordering validation.");
+        // Per-testcase metadata is emitted with the RFC-documented property names.
+        XElement[] uidProperties = document.Descendants("property")
+            .Where(p => p.Attribute("name")?.Value == "uid")
+            .ToArray();
+        Assert.IsGreaterThanOrEqualTo(4, uidProperties.Length, $"Expected at least one <property name=\"uid\"/> per testcase, but found {uidProperties.Length}.");
+
+        XElement[] legacyUidProperties = document.Descendants("property")
+            .Where(p => p.Attribute("name")?.Value == "test-uid")
+            .ToArray();
+        Assert.IsEmpty(legacyUidProperties);
+
+        // testpath always includes the leaf display name; parented children are prefixed by their container.
+        Assert.AreEqual(
+            "Container1/FailingChild",
+            failingChild.Element("properties")!.Elements("property").Single(p => p.Attribute("name")?.Value == "testpath").Attribute("value")!.Value);
+        Assert.AreEqual(
+            "Container1/SkippedChild",
+            skippedChild.Element("properties")!.Elements("property").Single(p => p.Attribute("name")?.Value == "testpath").Attribute("value")!.Value);
+        Assert.AreEqual(
+            "Container1/ErroredChild",
+            erroredChild.Element("properties")!.Elements("property").Single(p => p.Attribute("name")?.Value == "testpath").Attribute("value")!.Value);
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -216,6 +225,63 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
         testHostResult.AssertOutputContains("'--report-junit-filename' requires '--report-junit' to be enabled");
+    }
+
+    private static void AssertWellFormedJUnitReport(XDocument document, int expectedTestCount, int expectedFailures, int expectedErrors, int expectedSkipped)
+    {
+        // Document is well-formed XML and uses the no-namespace JUnit shape per RFC 016.
+        Assert.IsNotNull(document.Root);
+        Assert.AreEqual("testsuites", document.Root!.Name.LocalName);
+        Assert.AreEqual(string.Empty, document.Root.Name.Namespace.NamespaceName, "JUnit report must not use an XML namespace per RFC 016.");
+
+        // <testsuites> attributes reflect the aggregated counts.
+        Assert.AreEqual(expectedTestCount.ToString(CultureInfo.InvariantCulture), document.Root.Attribute("tests")!.Value);
+        Assert.AreEqual(expectedFailures.ToString(CultureInfo.InvariantCulture), document.Root.Attribute("failures")!.Value);
+        Assert.AreEqual(expectedErrors.ToString(CultureInfo.InvariantCulture), document.Root.Attribute("errors")!.Value);
+        Assert.AreEqual(expectedSkipped.ToString(CultureInfo.InvariantCulture), document.Root.Attribute("skipped")!.Value);
+
+        // At least one <testsuite> with the expected attributes; <testcase> count matches the document total.
+        XElement[] testsuites = document.Root.Elements("testsuite").ToArray();
+        Assert.IsNotEmpty(testsuites, "Expected at least one <testsuite> child.");
+        foreach (XElement testsuite in testsuites)
+        {
+            Assert.IsNotNull(testsuite.Attribute("name"));
+            Assert.IsNotNull(testsuite.Attribute("tests"));
+        }
+
+        XElement[] testcases = document.Descendants("testcase").ToArray();
+        Assert.HasCount(expectedTestCount, testcases);
+        foreach (XElement testcase in testcases)
+        {
+            Assert.IsNotNull(testcase.Attribute("name"));
+            Assert.IsNotNull(testcase.Attribute("classname"));
+        }
+    }
+
+    private static void AssertTestcaseChildOrdering(XElement testcase)
+    {
+        // RFC 016: children of <testcase> appear in the order
+        //   properties?, skipped?, error*, failure*, system-out*, system-err*
+        string[] expectedOrder = ["properties", "skipped", "error", "failure", "system-out", "system-err"];
+
+        int currentIndex = 0;
+        foreach (XElement child in testcase.Elements())
+        {
+            int childIndex = Array.IndexOf(expectedOrder, child.Name.LocalName);
+            Assert.IsGreaterThanOrEqualTo(
+                0,
+                childIndex,
+                $"Unexpected child <{child.Name.LocalName}> under <testcase name=\"{testcase.Attribute("name")?.Value}\">.");
+            Assert.IsGreaterThanOrEqualTo(
+                currentIndex,
+                childIndex,
+                $"Child <{child.Name.LocalName}> appears out of order under <testcase name=\"{testcase.Attribute("name")?.Value}\">; expected ordering is {string.Join(", ", expectedOrder)}.");
+            currentIndex = childIndex;
+        }
+
+        // properties and skipped, when present, must be unique.
+        Assert.IsLessThanOrEqualTo(1, testcase.Elements("properties").Count(), "<testcase> may have at most one <properties> child.");
+        Assert.IsLessThanOrEqualTo(1, testcase.Elements("skipped").Count(), "<testcase> may have at most one <skipped> child.");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()

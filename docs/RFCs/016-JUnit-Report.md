@@ -77,6 +77,23 @@ We target the **Jenkins/Surefire** JUnit XML flavor (the schema published at `je
 
 **Element ordering inside `<testcase>` is normative**: `properties?, skipped?, error*, failure*, system-out*, system-err*`. Stricter consumers (and some IDEs) reject documents that emit elements out of order.
 
+### JUnit XML flavors compared
+
+"JUnit XML" is not a single specification — it is a family of dialects that grew organically from Ant's original `junitreport` task. The most commonly encountered flavors:
+
+| Flavor                          | Root element     | Nested suites | `<properties>` placement                 | Retry / rerun support                         | Output layout              | Notes                                                                                                                                                                |
+| ------------------------------- | ---------------- | ------------- | ---------------------------------------- | --------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Jenkins / Surefire** *(chosen)* | `<testsuites>`   | Discouraged   | Per-suite **and** per-testcase           | None native (handled per source — see [Retry handling](#retry-handling)) | Single file                | The most portable, broadest-consumer flavor. Accepted by Jenkins JUnit plugin, GitLab CI, Azure DevOps, GitHub Actions reporters, CircleCI, TeamCity, Bamboo, codecov-like services. |
+| **Maven Surefire (legacy)**     | `<testsuite>`    | No            | Per-suite, optionally per-testcase       | None native                                   | One file per suite         | Surefire's on-disk layout. Equivalent on the wire to Jenkins/Surefire but split across files; many parsers tolerate both.                                            |
+| **Maven Surefire 3.x (`<rerunFailure>`)** | `<testsuites>` | No | Per-suite **and** per-testcase | `<rerunFailure>` / `<rerunError>` / `<flakyFailure>` child elements of `<testcase>` | One file per suite | Adds explicit rerun children. Only a small fraction of consumers parse these elements; the rest silently ignore them. Not portable. |
+| **JUnit 5 Open Test Reporting** | `<events>`       | n/a (event stream) | n/a (attributes on events)         | First-class                                   | Single file (event log)    | A completely different schema (event-based, not result-based). Designed for IDE consumption, not CI reporters. None of the major CI services parse it.               |
+| **xUnit.net's `--report-junit`** | `<testsuites>`   | No            | Per-testcase only                        | None                                          | Single file                | Targets the Jenkins/Surefire shape but skips some optional metadata (no per-suite `<properties>`, no `<system-out>` mirror at suite level). Will be renamed to `--report-xunit-junit` in xUnit 4.0. |
+| **pytest's `--junitxml`**       | `<testsuites>` (with `junit_family=xunit2`) or `<testsuite>` (legacy `xunit1`) | No | Per-testcase | None native — flaky output via `<system-out>` / properties | Single file                | The default `xunit2` family is functionally a Jenkins/Surefire dialect with a few pytest-specific extras (`<properties>` for fixtures, `file`/`line` attributes).    |
+| **NUnit 2 XML**                 | `<test-results>` | Yes           | n/a (different schema)                   | None                                          | Single file                | Predates the JUnit consensus. Some parsers accept it via auto-detection; most do not. Out of scope for an interop format.                                            |
+| **testmoapp / testmo-junit**    | `<testsuites>`   | No            | Per-testcase (rich, opinionated)         | Vendor-specific `<flaky>`                     | Single file                | A vendor-specific superset. Strict supersets of Jenkins/Surefire are safe; we do not adopt their extensions.                                                         |
+
+The trade-offs in one line: **portability ↔ expressiveness**. Jenkins/Surefire is the largest-common-denominator that every mainstream CI ingests verbatim; everything else either loses a chunk of consumers or carries data the consumer will not display anyway. Where MTP needs to express something the flat schema lacks (test tree, retry, traits), we encode it via standard `<property>` children so portable consumers see uniform `<testcase>` rows while richer consumers can dig deeper.
+
 ## Tree of tests
 
 MTP exposes parent-child test relationships via `TestNodeUpdateMessage.ParentTestNodeUid`. The natural mapping would be **nested `<testsuite>` elements**.
@@ -169,7 +186,23 @@ Each cap appends the standard `\n…[truncated, original length: N]` marker.
 
 Multiple `<testcase>` rows in the same `<testsuite>` that share both `classname` and `name` are technically legal but **break in practice**: older Surefire collapses them, Jenkins' badge counts go wrong, GitLab's diff view shows one row, and so on.
 
-When the same `(classname, name)` pair is emitted more than once (parameterized rows that share an identifier, retries, framework reruns), the writer **uniquifies** by appending `[attempt 2]`, `[attempt 3]`, … (preceded by a single space) and stores the original name + original UID as `<property>` children. We never drop a row — every captured result reaches the XML.
+When the same `(classname, name)` pair is emitted more than once (parameterized rows that share an identifier, retries, framework reruns), the writer **uniquifies** by suffixing each occurrence with `[attempt 1]`, `[attempt 2]`, … in capture order (preceded by a single space), and stores the original name + `attempt-index` / `attempt-of` as `<property>` children. We never drop a row — every captured result reaches the XML.
+
+## Retry handling
+
+Different retry mechanisms publish attempts to MTP differently, and the engine reflects that faithfully:
+
+- **MSTest `[Retry]` attribute** — The MSTest adapter retries internally and surfaces only the **final** attempt as a `TestNodeUpdateMessage`. The JUnit report therefore contains a single `<testcase>` row per logical test, with its eventual outcome. No per-attempt disambiguation is applied.
+- **`Microsoft.Testing.Extensions.Retry` (MTP-level orchestrator, `--retry-failed-tests`)** — The orchestrator re-runs the entire test-host child process on failure. Each attempt is a separate process and therefore produces **its own JUnit XML file** under the run's results directory. No special handling is required inside the report engine.
+- **Per-attempt `TestNodeUpdateMessage`s within a single run** (e.g. some 3rd-party test frameworks, or future MSTest behavior that exposes each attempt) — The Jenkins/Surefire flavor has no native rerun element, but consumers require `(classname, name)` pairs to be unique within a suite (see [Duplicate test identities](#duplicate-test-identities) above). When the engine sees two or more nodes with the same `(classname, name)` pair within one report it:
+    - Preserves every attempt as its own `<testcase>` row (never drops history) so flaky-test dashboards can compute pass-rate over the run.
+    - Disambiguates each row by appending `[attempt 1]`, `[attempt 2]`, … to `name` (preceded by a single space), so portable consumers see distinct entries.
+    - Emits two `<property>` children per disambiguated attempt — `attempt-index` (`1`, `2`, …) and `attempt-of` (total attempts for that logical test) — so retry-aware consumers can collapse the rows back into a single logical test.
+    - Emits `<property name="original-name">` on every disambiguated attempt so consumers can recover the un-suffixed display name without parsing the `[attempt N]` marker.
+    - Keeps the original `<property name="uid">` value on every attempt (when present), reflecting whatever attempt-disambiguating UID the framework chose to publish.
+- **IO-collision retry on file rename** — The engine writes to a `<final>.<random>.tmp` sibling (random suffix from `Path.GetRandomFileName`) and then renames it onto the final path; if that final path already exists it falls back to `<final>_1.xml`, `<final>_2.xml`, … (5-second budget). This protects concurrent processes producing default-named reports.
+
+We deliberately do **not** emit Maven Surefire 3.x's `<rerunFailure>` / `<flakyFailure>` children: only a small fraction of consumers parse them, and they require nesting attempt outcomes inside the *last* `<testcase>` element — which the majority of parsers would then mis-count.
 
 ## File naming
 
