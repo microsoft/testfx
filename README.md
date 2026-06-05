@@ -14,7 +14,7 @@ This repository is the home for Microsoft.Testing.Platform and extensions, as we
 
 Microsoft.Testing.Platform is a lightweight alternative to VSTest. For more information, see [Microsoft.Testing.Platform overview](https://aka.ms/mtp-overview).
 
-MSTest, Microsoft Testing Framework, is a testing framework for .NET applications. It allows you to write tests, use Test Explorer, create test suites, and apply the red, green, and refactor patterns to write code.
+MSTest, Microsoft Test Framework, is a testing framework for .NET applications. It allows you to write tests, use Test Explorer, create test suites, and apply the red, green, and refactor patterns to write code.
 
 This is a fully supported, open source, and cross-platform test framework with which to write tests targeting .NET Framework, .NET Core, .NET, UWP, and WinUI on Windows, Linux, and Mac.
 
