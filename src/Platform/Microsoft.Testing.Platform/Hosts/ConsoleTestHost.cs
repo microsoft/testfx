@@ -15,6 +15,7 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
+[StackTraceHidden]
 internal sealed class ConsoleTestHost(
     ServiceProvider serviceProvider,
     Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,

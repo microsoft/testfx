@@ -22,6 +22,7 @@ using Microsoft.Testing.Platform.TestHostControllers;
 namespace Microsoft.Testing.Platform.Hosts;
 
 [UnsupportedOSPlatform("browser")]
+[StackTraceHidden]
 internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposable, IOutputDeviceDataProducer
 {
     private readonly TestHostControllerConfiguration _testHostsInformation;

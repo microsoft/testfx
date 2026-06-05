@@ -20,6 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// The runner that runs a single unit test. Also manages the assembly and class cleanup methods at the end of the run.
 /// </summary>
+[StackTraceHidden]
 internal sealed class UnitTestRunner
 #if NETFRAMEWORK
     : MarshalByRefObject

@@ -19,6 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// Class responsible for execution of tests at assembly level and sending tests via framework handle.
 /// </summary>
 #pragma warning disable CA1852 // Seal internal types - This class is inherited in tests.
+[StackTraceHidden]
 internal class TestExecutionManager
 {
     private sealed class RemotingMessageLogger :

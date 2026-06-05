@@ -16,6 +16,7 @@ namespace Microsoft.Testing.Extensions.VSTestBridge;
 /// <summary>
 /// A specialized bridged test framework base class that supports a single test session.
 /// </summary>
+[StackTraceHidden]
 public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTestBridgedTestFrameworkBase, IDisposable
 {
     private readonly IExtension _extension;
