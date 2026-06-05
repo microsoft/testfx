@@ -19,7 +19,7 @@ public sealed class ConfigurationSourceDefaultsTests
         [
             new CommandLineConfigurationSource(),
             new EnvironmentVariablesConfigurationSource(new SystemEnvironment()),
-            new JsonConfigurationSource(testApplicationModuleInfo, new SystemFileSystem(), fileLoggerProvider: null),
+            new JsonConfigurationSource(testApplicationModuleInfo, new SystemFileSystem(), null),
         ];
         string expectedVersion = sources[0].Version;
         Assert.IsFalse(string.IsNullOrWhiteSpace(expectedVersion));
