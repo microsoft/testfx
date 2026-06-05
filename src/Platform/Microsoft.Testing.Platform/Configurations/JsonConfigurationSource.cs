@@ -14,6 +14,8 @@ internal sealed partial class JsonConfigurationSource(ITestApplicationModuleInfo
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly FileLoggerProvider? _fileLoggerProvider = fileLoggerProvider;
 
+    public override string Uid => nameof(JsonConfigurationSource);
+
     public override int Order => 3;
 
     public override Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)

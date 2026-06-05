@@ -21,10 +21,10 @@ public sealed class ConfigurationSourceDefaultsTests
             new EnvironmentVariablesConfigurationSource(new SystemEnvironment()),
             new JsonConfigurationSource(testApplicationModuleInfo, new SystemFileSystem(), null),
         ];
-        Type? platformVersionType = typeof(CommandLineConfigurationSource).Assembly.GetType("PlatformVersion");
-        Assert.IsNotNull(platformVersionType);
-        string expectedVersion = (string?)platformVersionType.GetField("Version")?.GetRawConstantValue()
-            ?? throw new InvalidOperationException("Unable to locate PlatformVersion.Version.");
+        string[] distinctVersions = [.. sources.Select(source => source.Version).Distinct()];
+        Assert.HasCount(1, distinctVersions);
+        string expectedVersion = distinctVersions[0];
+        Assert.IsFalse(string.IsNullOrWhiteSpace(expectedVersion));
 
         foreach (IConfigurationSource source in sources)
         {

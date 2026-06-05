@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform.Configurations;
 
 internal abstract class ConfigurationSourceBase : IConfigurationSource
 {
-    public virtual string Uid => GetType().Name;
+    public abstract string Uid { get; }
 
     public string Version => PlatformVersion.Version;
 

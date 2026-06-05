@@ -10,6 +10,8 @@ internal sealed class EnvironmentVariablesConfigurationSource(IEnvironment envir
 {
     private readonly IEnvironment _environmentVariables = environmentVariables;
 
+    public override string Uid => nameof(EnvironmentVariablesConfigurationSource);
+
     public override int Order => 1;
 
     public override Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)

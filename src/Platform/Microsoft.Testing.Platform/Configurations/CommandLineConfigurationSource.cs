@@ -24,6 +24,8 @@ namespace Microsoft.Testing.Platform.Configurations;
 /// </remarks>
 internal sealed class CommandLineConfigurationSource : ConfigurationSourceBase
 {
+    public override string Uid => nameof(CommandLineConfigurationSource);
+
     // Lowest Order so the CLI wins against env vars (1) and testconfig.json (3).
     public override int Order => 0;
 
