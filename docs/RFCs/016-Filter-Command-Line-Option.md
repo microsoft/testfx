@@ -41,10 +41,13 @@ This is unsatisfactory for several reasons:
 1. **`--treenode-filter` is jargon.** Users do not think in trees. They think
    in *assemblies, namespaces, classes, methods, categories, traits*. The
    name is opaque to a newcomer reading `--help`.
-2. **No `--filter`.** The single most-typed test-filter option in the .NET
-   ecosystem (`dotnet test --filter "FullyQualifiedName~Foo"`) does not work
-   with MTP today. Users hit `Unknown option '--filter'` and assume MTP is
-   broken or hostile to their workflows.
+2. **No `--filter` at the platform level.** Several test frameworks already
+   support `--filter` on top of MTP (MSTest and NUnit ship it today; xUnit v3
+   is filling the gap in 4.x). But each adapter implements its own grammar and
+   nothing flows from MTP. Users that drop down to a platform-only entry point
+   — or to a framework that has not added the feature yet — still hit
+   `Unknown option '--filter'`, and the `dotnet test --filter "FullyQualifiedName~Foo"`
+   muscle memory does not work uniformly across the ecosystem.
 3. **No bridge to VSTest filter expressions.** Users with existing CI
    pipelines that pass `--filter TestCategory=Smoke&Priority=1` have no
    migration path that does not require them to first learn the tree-node
@@ -53,10 +56,11 @@ This is unsatisfactory for several reasons:
    `Owner`, `Priority`, `Traits`, or any framework-specific kind. Everything
    has to be expressed in terms of MTP `Properties` plus the tree-node
    grammar, even when the framework already has rich, well-named concepts.
-5. **xUnit v3 and other emerging frameworks** are converging independently
-   on their own `--filter`-style options. Without an MTP convention, every
-   framework will invent its own syntax and the ecosystem will fragment
-   further.
+5. **Per-framework `--filter` grammars diverge.** MSTest, NUnit, and xUnit v3
+   (4.x) each accept `--filter`, but they each interpret the expression with
+   their own grammar. Without an MTP convention for prefix-routed kinds, the
+   ecosystem stays fragmented and a `--filter` that works under one adapter is
+   not portable to another.
 
 ### The shape of the solution
 
