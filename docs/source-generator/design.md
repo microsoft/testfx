@@ -459,7 +459,7 @@ redundant. The recommended sunset plan:
    - Ship one final `2.0.0-alpha.<date>` of `MSTest.SourceGeneration` containing an
      info-severity analyzer diagnostic (`MSTEST0NNN`) that reads
      *"`MSTest.SourceGeneration` is being replaced by integrated AOT support in
-     `MSTest.TestAdapter` X.Y; see <link>"*. Then stop publishing.
+     `MSTest.TestAdapter` X.Y; see &lt;link&gt;"*. Then stop publishing.
    - Stop publishing `MSTest.Engine` from its (closed-source) repo on the same
      cadence. Users on the alpha packages pin the last version if they cannot move.
 4. **Preserve the public API surface even after deleting the implementation.** Keep
