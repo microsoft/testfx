@@ -222,8 +222,7 @@ public sealed partial class Assert
 
     #endregion // AreAllDistinct
 
-    // Note: This duplicates the adapter in Assert.CollectionEquivalence.cs (introduced by PR #8234).
-    // Consider deduplicating once both PRs have landed.
+    // Adapts a non-generic IEqualityComparer to IEqualityComparer<object?> for assertion helpers.
     [StackTraceHidden]
     private sealed class NonGenericEqualityComparerAdapter : IEqualityComparer<object?>
     {
