@@ -109,7 +109,7 @@
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
         <source>Option '--{0}' is declared by multiple providers: '{1}'</source>
-        <target state="new">Option '--{0}' is declared by multiple providers: '{1}'</target>
+        <target state="translated">オプション '--{0}' は複数のプロバイダーによって宣言されています: '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
@@ -378,12 +378,12 @@
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</source>
-        <target state="new">The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</target>
+        <target state="translated">testconfig.json ファイル ('{0}') のセクション '{1}' にあるエントリ '{2}' は、スカラー値 (文字列、数値、ブール値) またはスカラー値の配列のいずれかである必要があります。入れ子になったオブジェクトはサポートされていません。</target>
         <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file.</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptions': {0}</source>
-        <target state="new">In testconfig.json under 'commandLineOptions': {0}</target>
+        <target state="translated">In testconfig.json under 'commandLineOptions': {0}</target>
         <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...).</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
@@ -907,15 +907,15 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="new">Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
+        <target state="translated">テストのキャプチャされたエラー出力を表示するタイミングを決定します。
+有効な値は 'All'、'Failed'、'None' です。既定値は 'All' (LLM/AI エージェント環境が検出された場合は 'Failed') です。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="new">Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
+        <target state="translated">テストのキャプチャされた標準の出力を表示するタイミングを決定します。
+有効な値は 'All'、'Failed'、'None' です。既定値は 'All' (LLM/AI エージェント環境が検出された場合は 'Failed') です。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
