@@ -20,10 +20,41 @@ public sealed partial class Assert
     /// </summary>
     /// <remarks>
     /// Users can use this to plug-in custom assertions through C# extension methods.
-    /// For instance, the signature of a custom assertion provider could be "public static void IsOfType&lt;T&gt;(this Assert assert, object obj)"
-    /// Users could then use a syntax similar to the default assertions which in this case is "Assert.That.IsOfType&lt;Dog&gt;(animal);"
-    /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
+    /// For instance, the signature of a custom assertion provider could be <c>public static void IsOfType&lt;T&gt;(this Assert assert, object obj)</c>
+    /// and the call-site would be <c>Assert.That.IsOfType&lt;Dog&gt;(animal);</c>.
+    /// For more information, see <see href="https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-writing-tests-assertions#create-custom-assertions-with-assertthat">Create custom assertions with Assert.That</see>.
     /// </remarks>
+    /// <example>
+    /// The following example defines a custom <c>IsPrime</c> assertion as an extension method on
+    /// <see cref="Assert"/> and invokes it through <c>Assert.That</c>:
+    /// <code language="csharp">
+    /// using System;
+    /// using System.Linq;
+    /// using Microsoft.VisualStudio.TestTools.UnitTesting;
+    ///
+    /// public static class CustomAssertExtensions
+    /// {
+    ///     public static void IsPrime(this Assert assert, int value)
+    ///     {
+    ///         if (value &lt; 2 || Enumerable.Range(2, (int)Math.Sqrt(value) - 1).Any(i =&gt; value % i == 0))
+    ///         {
+    ///             throw new AssertFailedException($"Assert.That.IsPrime failed. Value &lt;{value}&gt; is not a prime number.");
+    ///         }
+    ///     }
+    /// }
+    ///
+    /// [TestClass]
+    /// public class CalculatorTests
+    /// {
+    ///     [TestMethod]
+    ///     public void NextPrime_ReturnsPrime()
+    ///     {
+    ///         int result = new Calculator().NextPrime(10);
+    ///         Assert.That.IsPrime(result);
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     public static Assert That { get; } = new();
 
     /// <summary>

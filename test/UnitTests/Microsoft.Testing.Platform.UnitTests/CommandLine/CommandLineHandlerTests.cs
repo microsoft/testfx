@@ -135,7 +135,7 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.Contains("Option '--userOption' is declared by multiple extensions: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'", result.ErrorMessage);
+        Assert.Contains("Option '--userOption' is declared by multiple providers: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'", result.ErrorMessage);
     }
 
     [TestMethod]
@@ -324,7 +324,28 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.Contains("Option '--userOption' is declared by multiple extensions: 'ProviderOne', 'ProviderTwo'", result.ErrorMessage);
+        Assert.Contains("Option '--userOption' is declared by multiple providers: 'ProviderOne', 'ProviderTwo'", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_DuplicateOptionFromSystemProviders_ReportsProviders()
+    {
+        // Arrange
+        string[] args = [];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+        ICommandLineOptionsProvider[] systemCommandLineOptionsProviders =
+        [
+            new ExtensionCommandLineProviderMockWithNamedOption("userOption", "ProviderOne"),
+            new ExtensionCommandLineProviderMockWithNamedOption("userOption", "ProviderTwo")
+        ];
+
+        // Act
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+
+        // Assert
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("Option '--userOption' is declared by multiple providers: 'ProviderOne', 'ProviderTwo'", result.ErrorMessage);
     }
 
     [TestMethod]

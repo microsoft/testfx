@@ -5,6 +5,7 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -90,6 +91,11 @@ internal sealed partial class TestHostBuilder
             Configuration.AddConfigurationSource(() => new EnvironmentVariablesConfigurationSource(systemEnvironment));
         }
 
+        // Issue #6349: expose the parsed CLI options through IConfiguration under the
+        // "commandLineOptions" section so that the same lookup helpers consult both the CLI and
+        // testconfig.json. Highest priority (Order=0) so the CLI always wins.
+        Configuration.AddConfigurationSource(() => new CommandLineConfigurationSource());
+
         Configuration.AddConfigurationSource(() => new JsonConfigurationSource(_testApplicationModuleInfo, _fileSystem, loggingState.FileLoggerProvider));
 
         context.Configuration = (AggregatedConfiguration)await ((ConfigurationManager)Configuration).BuildAsync(loggingState.FileLoggerProvider, loggingState.CommandLineParseResult).ConfigureAwait(false);
@@ -152,7 +158,7 @@ internal sealed partial class TestHostBuilder
         LoggerFactoryProxy loggerFactoryProxy = new();
         serviceProvider.TryAddService(loggerFactoryProxy);
 
-        context.CommandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(loggingState.CommandLineParseResult, serviceProvider).ConfigureAwait(false);
+        context.CommandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(loggingState.CommandLineParseResult, serviceProvider, context.Configuration).ConfigureAwait(false);
         commandLineOptionsProxy.SetCommandLineOptions(context.CommandLineHandler);
 
         context.PoliciesService = new StopPoliciesService(context.TestApplicationCancellationTokenSource);
@@ -199,15 +205,64 @@ internal sealed partial class TestHostBuilder
 
         serviceProvider.AddService(context.TestFrameworkCapabilities);
 
+        IReadOnlyList<JsonCommandLineOptionEntry> jsonCommandLineOptions;
+        try
+        {
+            // Normalize JSON-sourced scalar option entries to the indexed shape for arg-bearing
+            // options before any consumer reads them. This makes "foo": "value" in testconfig.json
+            // behave identically to "foo": ["value"], removing the foot-gun where a scalar like
+            // "timeout": "true" was misinterpreted as a presence marker. See #6349/#8830.
+            //
+            // Defensive: option providers may register duplicate names; CommandLineOptionsValidator
+            // catches that later (ValidateOptionsAreNotDuplicated) and reports a clear error. Skip
+            // duplicates here so the normalization step itself doesn't crash for that malformed setup.
+            var optionByName = new Dictionary<string, CommandLineOption>(StringComparer.OrdinalIgnoreCase);
+            foreach (ICommandLineOptionsProvider optionsProvider in context.CommandLineHandler.SystemCommandLineOptionsProviders
+                .Concat(context.CommandLineHandler.ExtensionsCommandLineOptionsProviders))
+            {
+                foreach (CommandLineOption option in optionsProvider.GetCommandLineOptions())
+                {
+                    if (!optionByName.ContainsKey(option.Name))
+                    {
+                        optionByName.Add(option.Name, option);
+                    }
+                }
+            }
+
+            context.Configuration.NormalizeJsonCommandLineOptionScalars(optionByName);
+
+            jsonCommandLineOptions = context.Configuration.EnumerateJsonCommandLineOptions();
+        }
+        catch (FormatException ex) when (!loggingState.CommandLineParseResult.HasTool)
+        {
+            await DisplayBannerIfEnabledAsync(context.CommandLineHandler, context.ProxyOutputDevice, context.TestFrameworkCapabilities, context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            StringBuilder sb = new();
+            sb.AppendLine(PlatformResources.InvalidCommandLineArguments);
+            sb.AppendLine(CultureInfo.InvariantCulture, $"\t- {ex.Message}");
+            await context.ProxyOutputDevice.DisplayAsync(context.CommandLineHandler, new ErrorMessageOutputDeviceData(sb.ToString().TrimEnd()), context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            await context.CommandLineHandler.PrintHelpAsync(context.ProxyOutputDevice, null, context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+
+            CompleteBuilderActivity(context.BuilderActivity, nameof(InformativeCommandLineHost));
+            context.EarlyHost = new InformativeCommandLineHost((int)ExitCode.InvalidCommandLine, serviceProvider);
+            return context;
+        }
+        catch (FormatException)
+        {
+            // A tool such as --info or --version is being invoked. Degrade gracefully by treating
+            // the malformed testconfig.json as empty so the tool can still complete its job.
+            jsonCommandLineOptions = [];
+        }
+
         ValidationResult commandLineValidationResult = await CommandLineOptionsValidator.ValidateAsync(
             loggingState.CommandLineParseResult,
             context.CommandLineHandler.SystemCommandLineOptionsProviders,
             context.CommandLineHandler.ExtensionsCommandLineOptionsProviders,
-            context.CommandLineHandler).ConfigureAwait(false);
+            context.CommandLineHandler,
+            jsonCommandLineOptions).ConfigureAwait(false);
 
         if (!loggingState.CommandLineParseResult.HasTool && !commandLineValidationResult.IsValid)
         {
-            await DisplayBannerIfEnabledAsync(loggingState, context.ProxyOutputDevice, context.TestFrameworkCapabilities, context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            await DisplayBannerIfEnabledAsync(context.CommandLineHandler, context.ProxyOutputDevice, context.TestFrameworkCapabilities, context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
             await context.ProxyOutputDevice.DisplayAsync(context.CommandLineHandler, new ErrorMessageOutputDeviceData(commandLineValidationResult.ErrorMessage), context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
             await context.CommandLineHandler.PrintHelpAsync(context.ProxyOutputDevice, null, context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
@@ -237,7 +292,7 @@ internal sealed partial class TestHostBuilder
             await context.Configuration.CheckTestResultsDirectoryOverrideAndCreateItAsync(loggingState.FileLoggerProvider).ConfigureAwait(false);
         }
 
-        await DisplayBannerIfEnabledAsync(loggingState, context.ProxyOutputDevice, context.TestFrameworkCapabilities, context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+        await DisplayBannerIfEnabledAsync(context.CommandLineHandler, context.ProxyOutputDevice, context.TestFrameworkCapabilities, context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
         ITelemetryCollector telemetryService = await ((TelemetryManager)Telemetry).BuildTelemetryAsync(serviceProvider, context.LoggerFactory, testApplicationOptions).ConfigureAwait(false);
         serviceProvider.TryAddService(telemetryService);

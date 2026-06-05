@@ -46,7 +46,8 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
             },
-            disableTelemetry: false, TestContext.CancellationToken);
+            disableTelemetry: false,
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
 
@@ -74,7 +75,8 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
             {
                 { EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "1" },
             },
-            disableTelemetry: false, TestContext.CancellationToken);
+            disableTelemetry: false,
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
 

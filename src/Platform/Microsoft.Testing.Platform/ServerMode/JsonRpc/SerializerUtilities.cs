@@ -179,30 +179,31 @@ internal static class SerializerUtilities
                     [JsonRpcStrings.DisplayName] = n.DisplayName,
                 };
 
-                TestMetadataProperty[] metadataProperties = n.Properties.OfType<TestMetadataProperty>();
-                if (metadataProperties.Length > 0)
-                {
-#if NETCOREAPP
-                    properties["traits"] = metadataProperties.Select(x => new KeyValuePair<string, string>(x.Key, x.Value));
-#else
-                    JsonArray collection = [];
-                    foreach (TestMetadataProperty metadata in metadataProperties)
-                    {
-                        JsonObject o = new()
-                        {
-                            { metadata.Key, metadata.Value },
-                        };
-                        collection.Add(o);
-                    }
-
-                    properties["traits"] = collection;
-#endif
-                }
+                // Reserve the "traits" slot up-front so it appears immediately after
+                // "display-name" in the serialized output (preserving the original wire
+                // format). The placeholder is either assigned with the collected traits
+                // below, or removed when no TestMetadataProperty is found.
+                properties["traits"] = null;
 
                 int attachmentIndex = 0;
+#if NETCOREAPP
+                List<KeyValuePair<string, string>>? traits = null;
+#else
+                JsonArray? traits = null;
+#endif
 
                 foreach (IProperty property in n.Properties)
                 {
+                    if (property is TestMetadataProperty metadataProperty)
+                    {
+#if NETCOREAPP
+                        (traits ??= []).Add(new KeyValuePair<string, string>(metadataProperty.Key, metadataProperty.Value));
+#else
+                        (traits ??= []).Add(new JsonObject { { metadataProperty.Key, metadataProperty.Value } });
+#endif
+                        continue;
+                    }
+
                     if (property is SerializableKeyValuePairStringProperty keyValuePairProperty)
                     {
                         properties[keyValuePairProperty.Key] = keyValuePairProperty.Value;
@@ -354,14 +355,19 @@ internal static class SerializerUtilities
                     }
                 }
 
-#if NETCOREAPP
-                properties.Add("node-type", "group");
-#else
+                if (traits is not null)
+                {
+                    properties["traits"] = traits;
+                }
+                else
+                {
+                    properties.Remove("traits");
+                }
+
                 if (!properties.ContainsKey("node-type"))
                 {
                     properties.Add("node-type", "group");
                 }
-#endif
 
                 return properties;
             });

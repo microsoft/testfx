@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Security;
+
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Platform;
@@ -30,8 +32,9 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
     private readonly ILogger _logger;
     private readonly AzureDevOpsTestResultsPublisherOptions _options;
     // Mutate only while holding _flushSemaphore.
-    private readonly Stack<AzureDevOpsTestCaseResult> _retryResults = new();
-    private readonly ConcurrentQueue<AzureDevOpsTestCaseResult> _pendingResults = new();
+    private readonly Stack<AzureDevOpsTestCaseResultWithAttachments> _retryResults = new();
+    private readonly ConcurrentQueue<AzureDevOpsTestCaseResultWithAttachments> _pendingResults = new();
+    private readonly ConcurrentQueue<AzureDevOpsTestResultAttachment> _pendingRunAttachments = new();
     private readonly SemaphoreSlim _flushSemaphore = new(1, 1);
 
     private AzureDevOpsPublishConfiguration? _publishConfiguration;
@@ -85,7 +88,7 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
         _lastFlushTime = clock.UtcNow;
     }
 
-    public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage)];
+    public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage), typeof(SessionFileArtifact)];
 
     public string Uid => nameof(AzureDevOpsTestResultsPublisher);
 
@@ -165,22 +168,31 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (_publishConfiguration is null || _runIdCoordinator is null || _coordinatedRun is null || CurrentRunId is null || value is not TestNodeUpdateMessage testNodeUpdateMessage)
+        if (_publishConfiguration is null || _runIdCoordinator is null || _coordinatedRun is null || CurrentRunId is null)
         {
             return;
         }
 
         try
         {
-            AzureDevOpsTestCaseResult? testCaseResult = CreateTestCaseResult(testNodeUpdateMessage.TestNode, _publishConfiguration.AutomatedTestStorage);
-            if (testCaseResult is null)
+            switch (value)
             {
-                return;
-            }
+                case TestNodeUpdateMessage testNodeUpdateMessage:
+                    AzureDevOpsTestCaseResultWithAttachments? testCaseResult = CreateTestCaseResult(testNodeUpdateMessage.TestNode, _publishConfiguration.AutomatedTestStorage);
+                    if (testCaseResult is null)
+                    {
+                        return;
+                    }
 
-            await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
-            _pendingResults.Enqueue(testCaseResult);
-            await FlushPendingResultsAsync(force: false, cancellationToken).ConfigureAwait(false);
+                    await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
+                    _pendingResults.Enqueue(testCaseResult);
+                    await FlushPendingResultsAsync(force: false, cancellationToken).ConfigureAwait(false);
+                    break;
+
+                case SessionFileArtifact sessionFileArtifact when TryCreateRunAttachment(sessionFileArtifact) is { } runAttachment:
+                    _pendingRunAttachments.Enqueue(runAttachment);
+                    break;
+            }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -231,6 +243,19 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
             _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
         }
 
+        try
+        {
+            await UploadPendingRunAttachmentsAsync(testSessionContext.CancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            // Best-effort: don't fail finalization if the session was canceled mid-upload.
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}");
+        }
+
         // Azure DevOps test runs use "Aborted" specifically for cancellation or session-level
         // infrastructure failures. Individual failing tests should still mark the run as
         // "Completed" — only treat process exit codes other than Success/AtLeastOneTestFailed as
@@ -260,7 +285,7 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
         }
     }
 
-    internal static AzureDevOpsTestCaseResult? CreateTestCaseResult(TestNode testNode, string automatedTestStorage)
+    internal static AzureDevOpsTestCaseResultWithAttachments? CreateTestCaseResult(TestNode testNode, string automatedTestStorage)
     {
         TestNodeStateProperty? state = testNode.Properties.SingleOrDefault<TestNodeStateProperty>();
         if (state is null or DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
@@ -271,7 +296,7 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
         TimingProperty? timing = testNode.Properties.SingleOrDefault<TimingProperty>();
         string automatedTestName = testNode.Uid.Value;
 
-        return state switch
+        AzureDevOpsTestCaseResult? result = state switch
         {
             PassedTestNodeStateProperty passed => CreateResult(testNode.DisplayName, automatedTestName, automatedTestStorage, AzureDevOpsLivePublishingConstants.PassedTestOutcome, passed.Explanation, null, timing),
             FailedTestNodeStateProperty failed => CreateResult(testNode.DisplayName, automatedTestName, automatedTestStorage, AzureDevOpsLivePublishingConstants.FailedTestOutcome, failed.Exception?.Message ?? failed.Explanation, failed.Exception?.StackTrace, timing),
@@ -283,6 +308,216 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
             _ => null,
         };
+
+        if (result is null)
+        {
+            return null;
+        }
+
+        // Only attach artifacts for non-passing outcomes to avoid uploading large dumps/logs for every
+        // passing test. Users who want pass-time artifacts can use the pipeline-level
+        // `--report-azdo-upload-artifacts files` option instead.
+        bool isFailure = state is FailedTestNodeStateProperty or ErrorTestNodeStateProperty or TimeoutTestNodeStateProperty
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
+            or CancelledTestNodeStateProperty
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
+            ;
+
+        IReadOnlyList<AzureDevOpsTestResultAttachment> attachments = isFailure
+            ? BuildAttachmentsFromTestNode(testNode)
+            : [];
+
+        return new AzureDevOpsTestCaseResultWithAttachments(result, attachments);
+    }
+
+    private static IReadOnlyList<AzureDevOpsTestResultAttachment> BuildAttachmentsFromTestNode(TestNode testNode)
+    {
+        List<AzureDevOpsTestResultAttachment>? attachments = null;
+
+        foreach (FileArtifactProperty fileArtifact in testNode.Properties.OfType<FileArtifactProperty>())
+        {
+            string? fullPath;
+            try
+            {
+                fullPath = fileArtifact.FileInfo.FullName;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or PathTooLongException)
+            {
+                continue;
+            }
+
+            attachments ??= [];
+            attachments.Add(AzureDevOpsTestResultAttachment.FromFile(
+                fullPath,
+                AzureDevOpsAttachmentTypes.GeneralAttachment,
+                comment: fileArtifact.Description ?? fileArtifact.DisplayName));
+        }
+
+        StandardOutputProperty? stdout = testNode.Properties.OfType<StandardOutputProperty>().FirstOrDefault();
+        if (stdout is not null && !RoslynString.IsNullOrEmpty(stdout.StandardOutput))
+        {
+            attachments ??= [];
+            attachments.Add(AzureDevOpsTestResultAttachment.FromString(
+                TruncateInline(stdout.StandardOutput),
+                "stdout.log",
+                AzureDevOpsAttachmentTypes.ConsoleLog));
+        }
+
+        StandardErrorProperty? stderr = testNode.Properties.OfType<StandardErrorProperty>().FirstOrDefault();
+        if (stderr is not null && !RoslynString.IsNullOrEmpty(stderr.StandardError))
+        {
+            attachments ??= [];
+            attachments.Add(AzureDevOpsTestResultAttachment.FromString(
+                TruncateInline(stderr.StandardError),
+                "stderr.log",
+                AzureDevOpsAttachmentTypes.GeneralAttachment));
+        }
+
+        return (IReadOnlyList<AzureDevOpsTestResultAttachment>?)attachments ?? [];
+    }
+
+    private static string TruncateInline(string content)
+    {
+        int maxBytes = AzureDevOpsLivePublishingConstants.MaxInlineAttachmentBytes;
+        if (Encoding.UTF8.GetByteCount(content) <= maxBytes)
+        {
+            return content;
+        }
+
+        // UTF-8 can use up to 4 bytes per char; reserve room for the truncation marker.
+        const string Marker = "\n...[truncated]";
+        int markerBytes = Encoding.UTF8.GetByteCount(Marker);
+        int budget = maxBytes - markerBytes;
+        if (budget <= 0)
+        {
+            return Marker;
+        }
+
+        int byteCount = 0;
+        int charCount = 0;
+        while (charCount < content.Length)
+        {
+            int charBytes = GetUtf8ByteCount(content, charCount, out int charsConsumed);
+            if (byteCount + charBytes > budget)
+            {
+                break;
+            }
+
+            byteCount += charBytes;
+            charCount += charsConsumed;
+        }
+
+        if (charCount > 0 && char.IsHighSurrogate(content[charCount - 1]))
+        {
+            charCount--;
+        }
+
+        return content[..charCount] + Marker;
+    }
+
+    private static int GetUtf8ByteCount(string content, int index, out int charsConsumed)
+    {
+        char ch = content[index];
+        charsConsumed = 1;
+        if (ch < 0x80)
+        {
+            return 1;
+        }
+
+        if (ch < 0x800)
+        {
+            return 2;
+        }
+
+        if (char.IsHighSurrogate(ch) && index + 1 < content.Length && char.IsLowSurrogate(content[index + 1]))
+        {
+            charsConsumed = 2;
+            return 4;
+        }
+
+        return 3;
+    }
+
+    private static AzureDevOpsTestResultAttachment? TryCreateRunAttachment(SessionFileArtifact sessionFileArtifact)
+    {
+        FileInfo fileInfo = sessionFileArtifact.FileInfo;
+        string name;
+        string fullName;
+        try
+        {
+            name = fileInfo.Name;
+            fullName = fileInfo.FullName;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or PathTooLongException)
+        {
+            return null;
+        }
+
+        if (RoslynString.IsNullOrEmpty(name))
+        {
+            return null;
+        }
+
+        bool isCoverage = name.EndsWith(".coverage", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith(".cobertura.xml", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith(".opencover.xml", StringComparison.OrdinalIgnoreCase);
+
+        return !isCoverage
+            ? null
+            : AzureDevOpsTestResultAttachment.FromFile(
+                fullName,
+                AzureDevOpsAttachmentTypes.CodeCoverage,
+                comment: sessionFileArtifact.Description ?? sessionFileArtifact.DisplayName);
+    }
+
+    private async Task UploadPendingRunAttachmentsAsync(CancellationToken cancellationToken)
+    {
+        if (_publishConfiguration is null || CurrentRunId is null)
+        {
+            return;
+        }
+
+        while (_pendingRunAttachments.TryDequeue(out AzureDevOpsTestResultAttachment? attachment))
+        {
+            try
+            {
+                await _client.UploadTestRunAttachmentAsync(_publishConfiguration, CurrentRunId.Value, attachment, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // Cancellation aborts the drain; the attachment is lost. The only caller is session
+                // finishing, where cancellation means the test host is tearing down anyway.
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}");
+            }
+        }
+    }
+
+    private async Task UploadResultAttachmentsAsync(int testCaseResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> attachments, CancellationToken cancellationToken)
+    {
+        if (_publishConfiguration is null || CurrentRunId is null || attachments.Count == 0)
+        {
+            return;
+        }
+
+        foreach (AzureDevOpsTestResultAttachment attachment in attachments)
+        {
+            try
+            {
+                await _client.UploadTestResultAttachmentAsync(_publishConfiguration, CurrentRunId.Value, testCaseResultId, attachment, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
+            }
+        }
     }
 
     private async Task BackgroundFlushLoopAsync(CancellationToken cancellationToken)
@@ -330,13 +565,13 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                     return;
                 }
 
-                List<AzureDevOpsTestCaseResult> batch = [];
+                List<AzureDevOpsTestCaseResultWithAttachments> batch = [];
                 while (batch.Count < _options.BatchSize && _retryResults.Count > 0)
                 {
                     batch.Add(_retryResults.Pop());
                 }
 
-                while (batch.Count < _options.BatchSize && _pendingResults.TryDequeue(out AzureDevOpsTestCaseResult? result))
+                while (batch.Count < _options.BatchSize && _pendingResults.TryDequeue(out AzureDevOpsTestCaseResultWithAttachments? result))
                 {
                     batch.Add(result);
                 }
@@ -346,6 +581,7 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                     return;
                 }
 
+                IReadOnlyList<int>? resultIds;
                 try
                 {
                     if (_coordinatedRun is not null && _runIdCoordinator is not null)
@@ -353,12 +589,19 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                         await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
                     }
 
-                    await _client.PublishTestResultsAsync(_publishConfiguration, CurrentRunId.Value, batch, cancellationToken).ConfigureAwait(false);
+                    var resultsOnly = new AzureDevOpsTestCaseResult[batch.Count];
+                    for (int i = 0; i < batch.Count; i++)
+                    {
+                        resultsOnly[i] = batch[i].Result;
+                    }
+
+                    resultIds = await _client.PublishTestResultsAsync(_publishConfiguration, CurrentRunId.Value, resultsOnly, cancellationToken).ConfigureAwait(false);
                     _lastFlushTime = _clock.UtcNow;
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    // Push results in reverse so Pop retries them in the original batch order.
+                    // Transport/HTTP failure — AzDO may not have accepted the batch, so it's safe to
+                    // requeue and retry. Push results in reverse so Pop retries them in batch order.
                     for (int i = batch.Count - 1; i >= 0; i--)
                     {
                         _retryResults.Push(batch[i]);
@@ -369,12 +612,64 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
                     _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
                     return;
                 }
+
+                // POST succeeded. If we couldn't parse the response we cannot upload result-level
+                // attachments for this batch, but we MUST NOT republish (that would create duplicate
+                // result rows in AzDO). Continue with the next batch.
+                if (resultIds is null)
+                {
+                    if (BatchHasAttachments(batch))
+                    {
+                        _logger.LogWarning(AzureDevOpsResources.AzureDevOpsLivePublishingResultIdParseFailedWarning);
+                    }
+
+                    continue;
+                }
+
+                for (int i = 0; i < batch.Count; i++)
+                {
+                    if (batch[i].Attachments.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        if (_coordinatedRun is not null && _runIdCoordinator is not null)
+                        {
+                            await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
+                        }
+
+                        await UploadResultAttachmentsAsync(resultIds[i], batch[i].Attachments, cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
+                    }
+                }
             }
         }
         finally
         {
             _flushSemaphore.Release();
         }
+    }
+
+    private static bool BatchHasAttachments(IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> batch)
+    {
+        for (int i = 0; i < batch.Count; i++)
+        {
+            if (batch[i].Attachments.Count > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private bool TryCreatePublishConfiguration(out AzureDevOpsPublishConfiguration? publishConfiguration, out string? warning)

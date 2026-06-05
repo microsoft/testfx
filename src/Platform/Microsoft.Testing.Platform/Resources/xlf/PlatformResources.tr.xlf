@@ -108,8 +108,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
-        <source>Option '--{0}' is declared by multiple extensions: '{1}'</source>
-        <target state="translated">'--{0}' seçeneği birden çok uzantı tarafından bildirildi: '{1}'</target>
+        <source>Option '--{0}' is declared by multiple providers: '{1}'</source>
+        <target state="translated">'--{0}' seçeneği birden çok sağlayıcı tarafından bildirildi: '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
@@ -375,6 +375,16 @@
         <source>Invalid command line arguments:</source>
         <target state="translated">Geçersiz komut satırı bağımsız değişkenleri:</target>
         <note />
+      </trans-unit>
+      <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
+        <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</source>
+        <target state="translated">testconfig.json dosyasında ('{2}') '{1}' bölümü altındaki '{0}' girdisi ya bir skaler değer (dize, sayı, boole) ya da skaler değerlerden oluşan bir dizi olmalıdır. İç içe nesneler desteklenmez.</target>
+        <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file.</note>
+      </trans-unit>
+      <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
+        <source>In testconfig.json under 'commandLineOptions': {0}</source>
+        <target state="translated">testconfig.json dosyasındaki 'commandLineOptions' altında: {0}</target>
+        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...).</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
@@ -767,7 +777,7 @@ Açık bir birim soneki bulunan bir zaman değeri olarak bir bağımsız değiş
       </trans-unit>
       <trans-unit id="ShutdownProgressStillWaitingPrefix">
         <source>Still waiting for: </source>
-        <target state="new">Still waiting for: </target>
+        <target state="translated">Hala bekleyenler: </target>
         <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</note>
       </trans-unit>
       <trans-unit id="Skipped">
@@ -896,15 +906,15 @@ Geçerli değerler: ‘Normal’, ‘Ayrıntılı’. Varsayılan değer: ‘Nor
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="new">Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
+        <target state="translated">Testte yakalanan hata çıktısının ne zaman gösterileceğini belirler.
+Geçerli değerler: 'Tümü', 'Başarısız', 'Yok'. Varsayılan değer 'All' (veya bir LLM/AI destekli aracı ortamı algılandığında 'Failed').</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="new">Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
+        <target state="translated">Testte yakalanan standart çıktının ne zaman gösterileceğini belirler.
+Geçerli değerler: 'Tümü', 'Başarısız', 'Yok'. Varsayılan değer 'All' (veya bir LLM/AI destekli aracı ortamı algılandığında 'Failed').</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">

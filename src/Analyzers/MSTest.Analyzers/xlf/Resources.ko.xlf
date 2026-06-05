@@ -287,12 +287,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'CollectionAssert.{1}'</source>
-        <target state="new">Use 'Assert.{0}' instead of 'CollectionAssert.{1}'</target>
+        <target state="translated">'CollectionAssert.{1}' 대신 'Assert.{0}'을(를) 사용하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertTitle">
         <source>Use 'Assert' instead of 'CollectionAssert'</source>
-        <target state="new">Use 'Assert' instead of 'CollectionAssert'</target>
+        <target state="translated">'CollectionAssert' 대신 'Assert'를 사용하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidDescription">
