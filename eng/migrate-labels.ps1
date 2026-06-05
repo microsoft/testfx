@@ -542,25 +542,46 @@ function Convert-LabelToIssueType {
     $issues = Get-IssuesWithLabel -Label $Label
     Write-Host "    found $($issues.Count) issue(s) with '$Label' (will set issue type '$IssueTypeName' where unset)" -ForegroundColor DarkGray
 
+    $failures = @()
     foreach ($issue in $issues) {
-        if ($issue.issueType -and $issue.issueType.name) {
-            Write-Host "      = #$($issue.number) already has issue type '$($issue.issueType.name)' - keeping it" -ForegroundColor DarkGray
-        } else {
-            Write-Host "      + #$($issue.number) -> issue type '$IssueTypeName'" -ForegroundColor Green
-            Set-IssueType -IssueNodeId $issue.id -IssueTypeName $IssueTypeName
+        try {
+            if ($issue.issueType -and $issue.issueType.name) {
+                Write-Host "      = #$($issue.number) already has issue type '$($issue.issueType.name)' - keeping it" -ForegroundColor DarkGray
+            } else {
+                Write-Host "      + #$($issue.number) -> issue type '$IssueTypeName'" -ForegroundColor Green
+                Set-IssueType -IssueNodeId $issue.id -IssueTypeName $IssueTypeName
+            }
+            Invoke-Gh issue edit $issue.number --repo $Repo --remove-label $Label | Out-Null
         }
-        Invoke-Gh issue edit $issue.number --repo $Repo --remove-label $Label | Out-Null
+        catch {
+            $failures += [pscustomobject]@{ Kind = 'issue'; Number = $issue.number; Error = $_.Exception.Message }
+            Write-Host "      ! failed to convert issue #$($issue.number): $($_.Exception.Message)" -ForegroundColor Red
+        }
     }
 
     # PRs also carry these labels (no Issue Type on PRs - just strip the label).
     $prJson = & gh pr list --repo $Repo --label $Label --state all --limit 5000 --json number
     if ($LASTEXITCODE -ne 0) { throw "Failed to list PRs with label '$Label'" }
     $prs = @($prJson | ConvertFrom-Json | ForEach-Object { $_.number })
+    if ($prs.Count -ge 5000) {
+        throw "Label '$Label' has >=5000 PRs - pagination support required, refusing to proceed."
+    }
     if ($prs.Count -gt 0) {
         Write-Host "    found $($prs.Count) PR(s) with '$Label' - stripping label (no issue type on PRs)" -ForegroundColor DarkGray
         foreach ($n in $prs) {
-            Invoke-Gh pr edit $n --repo $Repo --remove-label $Label | Out-Null
+            try {
+                Invoke-Gh pr edit $n --repo $Repo --remove-label $Label | Out-Null
+            }
+            catch {
+                $failures += [pscustomobject]@{ Kind = 'pr'; Number = $n; Error = $_.Exception.Message }
+                Write-Host "      ! failed to strip label from PR #${n}: $($_.Exception.Message)" -ForegroundColor Red
+            }
         }
+    }
+
+    if ($failures.Count -gt 0) {
+        $summary = ($failures | ForEach-Object { "$($_.Kind) #$($_.Number): $($_.Error)" }) -join "`n  "
+        throw "$($failures.Count) item(s) failed while converting '$Label' to issue type '$IssueTypeName':`n  $summary"
     }
 }
 
