@@ -129,7 +129,7 @@ internal sealed partial class ServerTestHost
                     if (_clientToServerRequests.TryGetValue(args.CancelRequestId, out RpcInvocationState? rpcState))
                     {
                         Exception? cancellationException = rpcState.CancelRequest();
-                        if (cancellationException is null)
+                        if (cancellationException is not null)
                         {
                             // This is intentionally not using PlatformResources.ExceptionDuringCancellationWarningMessage
                             // It's meant for troubleshooting and shouldn't be localized.
