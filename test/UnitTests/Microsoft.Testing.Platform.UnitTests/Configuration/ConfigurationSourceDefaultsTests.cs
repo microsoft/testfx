@@ -19,11 +19,11 @@ public sealed class ConfigurationSourceDefaultsTests
         [
             new CommandLineConfigurationSource(),
             new EnvironmentVariablesConfigurationSource(new SystemEnvironment()),
-            new JsonConfigurationSource(testApplicationModuleInfo, new SystemFileSystem(), null),
+            new JsonConfigurationSource(testApplicationModuleInfo, new SystemFileSystem(), fileLoggerProvider: null),
         ];
-        string[] distinctVersions = [.. sources.Select(source => source.Version).Distinct()];
-        Assert.HasCount(1, distinctVersions);
-        string expectedVersion = distinctVersions[0];
+        string expectedVersion = sources[0].Version;
+        Assert.AreEqual(expectedVersion, sources[1].Version);
+        Assert.AreEqual(expectedVersion, sources[2].Version);
         Assert.IsFalse(string.IsNullOrWhiteSpace(expectedVersion));
 
         foreach (IConfigurationSource source in sources)
