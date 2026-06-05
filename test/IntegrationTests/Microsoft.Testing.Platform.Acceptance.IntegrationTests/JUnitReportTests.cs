@@ -111,6 +111,33 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task JUnit_WhenReportJUnitFilenameContainsPlaceholders_PlaceholdersAreResolved(string tfm)
+    {
+        // Use {tfm}, {pname}, and {asm} — all three resolve to predictable, non-time-sensitive values.
+        const string fileNameTemplate = "MyReport_{tfm}_{pname}_{asm}.xml";
+        string expectedFileName = $"MyReport_{tfm}_{TestAssetFixture.AssetName}_{TestAssetFixture.AssetName}.xml";
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, "TestResults");
+        string expectedFilePath = Path.Combine(testResultsPath, expectedFileName);
+
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-junit --report-junit-filename {fileNameTemplate}",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+
+        Assert.IsTrue(
+            File.Exists(expectedFilePath),
+            $"Expected JUnit report with resolved placeholders '{expectedFileName}' was not found in '{testResultsPath}'.\nOutput:\n{testHostResult.StandardOutput}");
+
+        // Sanity: ensure no literal placeholder tokens leaked into the produced file name.
+        Assert.IsFalse(
+            File.Exists(Path.Combine(testResultsPath, fileNameTemplate)),
+            $"A file with the literal placeholder template name '{fileNameTemplate}' was produced; placeholders were not substituted.");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task JUnit_WhenReportJUnitFilenameIsSpecifiedWithoutReportJUnit_ErrorIsDisplayed(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
