@@ -7,7 +7,6 @@ using System.Composition;
 using Analyzer.Utilities;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -35,39 +34,23 @@ public sealed class CollectionAssertToAssertFixer : CodeFixProvider
         => WellKnownFixAllProviders.BatchFixer;
 
     /// <inheritdoc />
-    public override async Task RegisterCodeFixesAsync(CodeFixContext context)
-    {
-        SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+    public override Task RegisterCodeFixesAsync(CodeFixContext context)
+        => AssertToAssertFixerHelpers.RegisterCodeFixAsync(
+            context,
+            AssertToAssertAnalyzerHelpers.ProperAssertMethodNameKey,
+            CodeFixResources.CollectionAssertToAssertTitle,
+            CollectionAssertToAssertAnalyzer.FixKindKey,
+            FixAssertAsync);
 
-        Diagnostic diagnostic = context.Diagnostics[0];
-        if (!diagnostic.Properties.TryGetValue(AssertToAssertAnalyzerHelpers.ProperAssertMethodNameKey, out string? properAssertMethodName)
-            || properAssertMethodName is null
-            || !diagnostic.Properties.TryGetValue(CollectionAssertToAssertAnalyzer.FixKindKey, out string? fixKind)
-            || fixKind is null)
-        {
-            return;
-        }
-
-        if (root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true) is not InvocationExpressionSyntax invocationExpr)
-        {
-            return;
-        }
-
-        // We only know how to rewrite `<expr>.<member>(...)`-shaped invocations. `using static` and similar
-        // shapes fall through without a fix; the diagnostic still surfaces so the user can migrate manually.
-        if (invocationExpr.Expression is not MemberAccessExpressionSyntax)
-        {
-            return;
-        }
-
-        string title = string.Format(CultureInfo.InvariantCulture, CodeFixResources.CollectionAssertToAssertTitle, properAssertMethodName);
-        var action = CodeAction.Create(
-            title: title,
-            createChangedDocument: ct => FixCollectionAssertAsync(context.Document, invocationExpr, properAssertMethodName, fixKind, ct),
-            equivalenceKey: title);
-
-        context.RegisterCodeFix(action, diagnostic);
-    }
+    private static Task<Document> FixAssertAsync(
+        Document document,
+        InvocationExpressionSyntax invocationExpr,
+        string properAssertMethodName,
+        string? fixKind,
+        CancellationToken cancellationToken)
+        => fixKind is null
+            ? Task.FromResult(document)
+            : FixCollectionAssertAsync(document, invocationExpr, properAssertMethodName, fixKind, cancellationToken);
 
     private static async Task<Document> FixCollectionAssertAsync(
         Document document,
@@ -94,8 +77,6 @@ public sealed class CollectionAssertToAssertFixer : CodeFixProvider
         {
             return document;
         }
-
-        SyntaxNode root = await document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 
         // FixKindInstanceOfType prefers the generic `Assert.AreAllOfType<T>(coll, ...)` overload
         // when the `expectedType` argument is a `typeof(T)` literal. When it isn't (e.g. a
@@ -149,7 +130,7 @@ public sealed class CollectionAssertToAssertFixer : CodeFixProvider
             .WithLeadingTrivia(invocationExpr.GetLeadingTrivia())
             .WithAdditionalAnnotations(Formatter.Annotation);
 
-        return document.WithSyntaxRoot(root.ReplaceNode(invocationExpr, newInvocationExpr));
+        return await AssertToAssertFixerHelpers.ReplaceInvocationAsync(document, invocationExpr, newInvocationExpr, cancellationToken).ConfigureAwait(false);
     }
 
     private static bool TryGetArgumentsByOrdinal(IInvocationOperation invocationOperation, out ArgumentSyntax[]? orderedArguments)
