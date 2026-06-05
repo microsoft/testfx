@@ -111,7 +111,15 @@ on:
         ref: ${{ steps.resolve.outputs.head_sha }}
         fetch-depth: 0
 
-    - name: Extract changed test methods
+    # Emit one row per changed `.cs` file under `test/`, with the HEAD-side
+    # changed line ranges. Identifying which methods in those regions are
+    # *tests* (vs. helpers, fixtures, sub-classes deriving from custom
+    # `[TestMethod]`-like attributes, etc.) is left to the agent — the
+    # LLM is significantly more robust at this judgment than any regex
+    # would be, especially given testfx's many derived attributes such as
+    # `[STATestMethod]`, `[UITestMethod]`, `[IterativeTestMethod]`, and
+    # locally-defined `MyTestMethodAttribute : TestMethodAttribute` etc.
+    - name: Extract changed test file regions
       id: extract
       if: steps.skip.outputs.should_run == 'true'
       env:
@@ -119,22 +127,56 @@ on:
         HEAD_SHA: ${{ steps.resolve.outputs.head_sha }}
       run: |
         set -euo pipefail
-        OUT="$RUNNER_TEMP/changed-tests.tsv"
+        OUT="$RUNNER_TEMP/changed-test-regions.tsv"
+        : > "$OUT"
 
-        python3 .github/workflows/scripts/grade-tests/extract-changed-tests.py \
-          "$BASE_SHA" "$HEAD_SHA" "$OUT"
+        mapfile -t CHANGED < <(
+          git diff --name-only --diff-filter=AMR "$BASE_SHA" "$HEAD_SHA" -- 'test/' \
+            | grep -E '\.cs$' || true
+        )
 
-        if [[ ! -s "$OUT" ]]; then
-          echo "No changed test methods detected."
+        if (( ${#CHANGED[@]} == 0 )); then
+          echo "No test files changed."
           echo "has_changed_tests=false" >> "$GITHUB_OUTPUT"
-          echo "count=0" >> "$GITHUB_OUTPUT"
+          echo "file_count=0" >> "$GITHUB_OUTPUT"
           exit 0
         fi
 
-        COUNT=$(wc -l < "$OUT")
-        echo "Found $COUNT changed test method(s)."
+        for f in "${CHANGED[@]}"; do
+          [[ -f "$f" ]] || continue
+          RANGES=$(
+            git diff --unified=0 "$BASE_SHA" "$HEAD_SHA" -- "$f" \
+              | awk '
+                  /^@@/ {
+                    if (match($0, /\+[0-9]+(,[0-9]+)?/)) {
+                      hunk = substr($0, RSTART+1, RLENGTH-1)
+                      n = split(hunk, a, ",")
+                      start = a[1] + 0
+                      count = (n == 2 ? a[2] + 0 : 1)
+                      if (count == 0) next
+                      end = start + count - 1
+                      printf("%d-%d,", start, end)
+                    }
+                  }
+                ' \
+              | sed 's/,$//'
+          )
+          if [[ -n "$RANGES" ]]; then
+            printf '%s\t%s\n' "$f" "$RANGES" >> "$OUT"
+          fi
+        done
+
+        if [[ ! -s "$OUT" ]]; then
+          echo "No changed line ranges in test files."
+          echo "has_changed_tests=false" >> "$GITHUB_OUTPUT"
+          echo "file_count=0" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        FILE_COUNT=$(wc -l < "$OUT")
+        echo "Found $FILE_COUNT test file(s) with changes."
         echo "has_changed_tests=true" >> "$GITHUB_OUTPUT"
-        echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+        echo "file_count=$FILE_COUNT" >> "$GITHUB_OUTPUT"
         echo "tsv_path=$OUT" >> "$GITHUB_OUTPUT"
 
 # Gate the agent on (a) skip checks passing and (b) at least one changed test method.
@@ -159,7 +201,7 @@ tools:
     lockdown: true
     toolsets: [pull_requests, repos]
     min-integrity: none
-  bash: ["git", "find", "ls", "cat", "grep", "head", "tail", "wc", "awk", "sed", "sort", "uniq", "python3"]
+  bash: ["git", "find", "ls", "cat", "grep", "head", "tail", "wc", "awk", "sed", "sort", "uniq"]
 
 safe-outputs:
   noop:
@@ -184,28 +226,62 @@ Do not request changes — your role is to inform, not to block.
 
 ## Inputs you have
 
-A deterministic pre-step has already identified the changed test methods.
+A deterministic pre-step has already identified the **test files** whose
+content changed in this PR and the line ranges that changed in each.
 The list is in the tab-separated file at
 `${{ steps.extract.outputs.tsv_path }}`. Each row is:
 
 ```
-<filepath>\t<start_line>\t<end_line>\t<fully.qualified.name>
+<filepath>\t<comma-separated-line-ranges>
 ```
 
-There are **${{ steps.extract.outputs.count }}** changed test methods.
+For example:
+
+```
+test/UnitTests/Foo.Tests/BarTests.cs	12-25,40-67
+test/IntegrationTests/Acceptance.IntegrationTests/QuxTests.cs	5-30
+```
+
+There are **${{ steps.extract.outputs.file_count }}** changed test
+file(s). The pre-step intentionally does **not** decide which methods
+are tests — that judgment is yours, because testfx has many derived
+test attributes (e.g. `[STATestMethod]`, `[UITestMethod]`,
+`[IterativeTestMethod]`, and locally-defined `MyTestMethodAttribute`
+subclasses) that a regex extractor would silently miss.
 
 ## Instructions
 
-### Step 1 — Read the changed test methods
+### Step 1 — Identify changed test methods
 
-1. `cat` the TSV file to get the full list.
-2. For each row, read the corresponding file and extract the method body
-   from `start_line` to `end_line` (inclusive). The line numbers are
-   already accurate spans for the method including its attributes.
-3. If a method's source range is now out-of-bounds (file was rewritten),
-   record it as `N/A — method not found` and continue.
+For each row in the TSV:
 
-### Step 2 — Grade each method
+1. Read the file (use `cat`, or `sed -n '<start>,<end>p'` for large files).
+2. Walk the file to find every method whose source span (attributes
+   through closing brace) **overlaps any of the listed line ranges**.
+3. Decide which of those methods are **test methods**. A method is a
+   test if either:
+   - It is decorated with a test attribute. Treat the standard ones —
+     `[TestMethod]`, `[DataTestMethod]`, `[Fact]`, `[Theory]`, `[Test]`,
+     `[TestCase]` — as tests, **and also** any attribute that
+     transitively derives from one of them. testfx-known examples
+     include `[STATestMethod]`, `[UITestMethod]`,
+     `[IterativeTestMethod]`, `[DerivedSTATestMethod]`, and project-
+     local `[MyTestMethod]`-style attributes. When unsure, `grep` the
+     repo (e.g. `grep -rn "class FooAttribute" src test`) to verify
+     the inheritance chain before grading.
+   - The surrounding test file uses a by-convention framework where
+     plain methods are tests (rare in C#; ignore unless obvious).
+4. Skip helpers, fixtures, `[TestInitialize]` / `[TestCleanup]` /
+   `[ClassInitialize]` / `[AssemblyInitialize]` methods, `[DataRow]`
+   data providers, and any non-test method even if it was modified.
+5. For each kept method, capture its fully-qualified name
+   (`Namespace.ClassName.MethodName`, walking up nested classes) and
+   keep the source body (including attributes) for grading.
+
+If after filtering no test methods remain, emit a short comment saying
+so (see Step 4 fallback) and stop — do not invent grades.
+
+### Step 2 — Grade each test method
 
 This repository is C# / MSTest. Apply the **grade-tests rubric** below to
 each test method. Start every test at grade **A (band 90–100)** and deduct
@@ -332,8 +408,23 @@ Rules for the table:
 configured with `hide-older-comments: true`, so re-runs will replace any
 earlier grade comment automatically — do not append additional comments.
 
+#### Fallback: no test methods found
+
+If after Step 1 the kept-method list is empty (every changed method was
+a helper, fixture, data row, or non-test), post this short comment
+instead of the table:
+
+```markdown
+### 🧪 Test quality grade — PR #${{ github.event.pull_request.number || github.event.issue.number }}
+
+No new or modified test methods were identified in the changed regions
+of this PR. Nothing to grade.
+
+<sub>Re-run with `/grade-tests`.</sub>
+```
+
 ### Step 5 — Stop
 
 After the single `add-comment` call, call `noop` with a brief status
-message such as `"Posted test-quality grade comment for PR #N (M tests graded)."`
+message such as `"Posted test-quality grade for PR #N (M test methods graded across K files)."`
 and stop. Do not call any other tools.
