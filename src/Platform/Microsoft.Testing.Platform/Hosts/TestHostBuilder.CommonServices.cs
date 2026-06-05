@@ -5,6 +5,7 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -207,6 +208,29 @@ internal sealed partial class TestHostBuilder
         IReadOnlyList<JsonCommandLineOptionEntry> jsonCommandLineOptions;
         try
         {
+            // Normalize JSON-sourced scalar option entries to the indexed shape for arg-bearing
+            // options before any consumer reads them. This makes "foo": "value" in testconfig.json
+            // behave identically to "foo": ["value"], removing the foot-gun where a scalar like
+            // "timeout": "true" was misinterpreted as a presence marker. See #6349/#8830.
+            //
+            // Defensive: option providers may register duplicate names; CommandLineOptionsValidator
+            // catches that later (ValidateOptionsAreNotDuplicated) and reports a clear error. Skip
+            // duplicates here so the normalization step itself doesn't crash for that malformed setup.
+            var optionByName = new Dictionary<string, CommandLineOption>(StringComparer.OrdinalIgnoreCase);
+            foreach (ICommandLineOptionsProvider optionsProvider in context.CommandLineHandler.SystemCommandLineOptionsProviders
+                .Concat(context.CommandLineHandler.ExtensionsCommandLineOptionsProviders))
+            {
+                foreach (CommandLineOption option in optionsProvider.GetCommandLineOptions())
+                {
+                    if (!optionByName.ContainsKey(option.Name))
+                    {
+                        optionByName.Add(option.Name, option);
+                    }
+                }
+            }
+
+            context.Configuration.NormalizeJsonCommandLineOptionScalars(optionByName);
+
             jsonCommandLineOptions = context.Configuration.EnumerateJsonCommandLineOptions();
         }
         catch (FormatException ex) when (!loggingState.CommandLineParseResult.HasTool)

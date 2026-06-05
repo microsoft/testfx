@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
@@ -479,9 +478,196 @@ public sealed class JsonCommandLineOptionsTests
     }
 
     // ---------------------------------------------------------------------
+    // NormalizeJsonCommandLineOptionScalars (issue #8830 — scalar/bool ambiguity)
+    // ---------------------------------------------------------------------
+    [TestMethod]
+    public async Task NormalizeScalars_ArgBearingOption_BooleanStringTrue_BecomesArgumentValue()
+    {
+        // The pre-#8830 behavior treated "timeout": "true" as a presence marker because the
+        // scalar value parsed as a bool. After normalization the value must be surfaced as the
+        // first argument, both through EnumerateJsonCommandLineOptions and through the unified
+        // ICommandLineOptions lookup.
+        AggregatedConfiguration aggregated = await BuildAggregatedAsync(
+            "{\"commandLineOptions\": {\"timeout\": \"true\"}}");
+
+        aggregated.NormalizeJsonCommandLineOptionScalars(OptionsByName(
+            new CommandLineOption("timeout", "desc", ArgumentArity.ExactlyOne, isHidden: false)));
+
+        JsonCommandLineOptionEntry entry = Assert.ContainsSingle(aggregated.EnumerateJsonCommandLineOptions());
+        Assert.AreEqual("timeout", entry.OptionName);
+        Assert.IsFalse(entry.IsDisabled);
+        Assert.AreSequenceEqual(new[] { "true" }, entry.Arguments.ToArray());
+
+        Assert.IsTrue(aggregated.TryGetCommandLineOptionFromProviders("timeout", out bool isSet, out string[] arguments));
+        Assert.IsTrue(isSet);
+        Assert.AreSequenceEqual(new[] { "true" }, arguments);
+    }
+
+    [TestMethod]
+    public async Task NormalizeScalars_ArgBearingOption_BooleanStringFalse_BecomesArgumentValue()
+    {
+        // Symmetric to the "true" case: "false" must not be interpreted as an explicit disable for
+        // an arg-bearing option. Without normalization the unified lookup would report isSet=false
+        // and the option would silently appear unset to the rest of the platform.
+        AggregatedConfiguration aggregated = await BuildAggregatedAsync(
+            "{\"commandLineOptions\": {\"timeout\": \"false\"}}");
+
+        aggregated.NormalizeJsonCommandLineOptionScalars(OptionsByName(
+            new CommandLineOption("timeout", "desc", ArgumentArity.ExactlyOne, isHidden: false)));
+
+        JsonCommandLineOptionEntry entry = Assert.ContainsSingle(aggregated.EnumerateJsonCommandLineOptions());
+        Assert.AreEqual("timeout", entry.OptionName);
+        Assert.IsFalse(entry.IsDisabled);
+        Assert.AreSequenceEqual(new[] { "false" }, entry.Arguments.ToArray());
+
+        Assert.IsTrue(aggregated.TryGetCommandLineOptionFromProviders("timeout", out bool isSet, out string[] arguments));
+        Assert.IsTrue(isSet);
+        Assert.AreSequenceEqual(new[] { "false" }, arguments);
+    }
+
+    [TestMethod]
+    public async Task NormalizeScalars_ArgBearingOption_NonBoolScalar_RemainsAsArgument()
+    {
+        // Non-bool scalars already worked before #8830 thanks to the second branch in
+        // TryGetCommandLineOptionFromProviders; normalization must preserve this behavior while
+        // moving the storage into the canonical indexed shape.
+        AggregatedConfiguration aggregated = await BuildAggregatedAsync(
+            "{\"commandLineOptions\": {\"timeout\": \"30s\"}}");
+
+        aggregated.NormalizeJsonCommandLineOptionScalars(OptionsByName(
+            new CommandLineOption("timeout", "desc", ArgumentArity.ExactlyOne, isHidden: false)));
+
+        JsonCommandLineOptionEntry entry = Assert.ContainsSingle(aggregated.EnumerateJsonCommandLineOptions());
+        Assert.AreEqual("timeout", entry.OptionName);
+        Assert.AreSequenceEqual(new[] { "30s" }, entry.Arguments.ToArray());
+
+        Assert.IsTrue(aggregated.TryGetCommandLineOptionFromProviders("timeout", out bool isSet, out string[] arguments));
+        Assert.IsTrue(isSet);
+        Assert.AreSequenceEqual(new[] { "30s" }, arguments);
+    }
+
+    [TestMethod]
+    public async Task NormalizeScalars_ZeroArityOption_BooleanScalar_RemainsPresenceMarker()
+    {
+        // Zero-arity flags must keep their bool→presence-marker semantics. Normalization is a
+        // no-op for them because their arity (Min == 0) signals that the bare key is meaningful
+        // as-is.
+        AggregatedConfiguration aggregated = await BuildAggregatedAsync(
+            "{\"commandLineOptions\": {\"no-banner\": true}}");
+
+        aggregated.NormalizeJsonCommandLineOptionScalars(OptionsByName(
+            new CommandLineOption("no-banner", "desc", ArgumentArity.Zero, isHidden: false)));
+
+        JsonCommandLineOptionEntry entry = Assert.ContainsSingle(aggregated.EnumerateJsonCommandLineOptions());
+        Assert.AreEqual("no-banner", entry.OptionName);
+        Assert.IsFalse(entry.IsDisabled);
+        Assert.IsEmpty(entry.Arguments);
+
+        Assert.IsTrue(aggregated.TryGetCommandLineOptionFromProviders("no-banner", out bool isSet, out string[] arguments));
+        Assert.IsTrue(isSet);
+        Assert.IsEmpty(arguments);
+    }
+
+    [TestMethod]
+    public async Task NormalizeScalars_OptionalArgOption_BooleanScalar_LeftUntouched()
+    {
+        // Min=0, Max>=1 (optional-arg) is genuinely ambiguous between a presence marker and a
+        // scalar argument. We preserve the historical presence-marker interpretation; users that
+        // really mean to pass "true"/"false" as a value must use the explicit array form.
+        AggregatedConfiguration aggregated = await BuildAggregatedAsync(
+            "{\"commandLineOptions\": {\"opt-arg\": \"true\"}}");
+
+        aggregated.NormalizeJsonCommandLineOptionScalars(OptionsByName(
+            new CommandLineOption("opt-arg", "desc", ArgumentArity.ZeroOrOne, isHidden: false)));
+
+        JsonCommandLineOptionEntry entry = Assert.ContainsSingle(aggregated.EnumerateJsonCommandLineOptions());
+        Assert.AreEqual("opt-arg", entry.OptionName);
+        Assert.IsFalse(entry.IsDisabled);
+        Assert.IsEmpty(entry.Arguments);
+    }
+
+    [TestMethod]
+    public async Task NormalizeScalars_UnknownOption_LeftUntouched()
+    {
+        // Unknown options must not be rewritten — the validator's unknown-option pass needs to see
+        // the original entry to emit a clear error referencing testconfig.json.
+        AggregatedConfiguration aggregated = await BuildAggregatedAsync(
+            "{\"commandLineOptions\": {\"unknown\": \"true\"}}");
+
+        aggregated.NormalizeJsonCommandLineOptionScalars(OptionsByName(
+            new CommandLineOption("other", "desc", ArgumentArity.ExactlyOne, isHidden: false)));
+
+        JsonCommandLineOptionEntry entry = Assert.ContainsSingle(aggregated.EnumerateJsonCommandLineOptions());
+        Assert.AreEqual("unknown", entry.OptionName);
+        Assert.IsFalse(entry.IsDisabled);
+        Assert.IsEmpty(entry.Arguments);
+    }
+
+    [TestMethod]
+    public async Task NormalizeScalars_IndexedEntries_LeftUntouched()
+    {
+        // Array form is already in the canonical shape and must not be touched, including when an
+        // option that takes multiple args is involved.
+        AggregatedConfiguration aggregated = await BuildAggregatedAsync(
+            "{\"commandLineOptions\": {\"filter-uid\": [\"a\",\"b\"]}}");
+
+        aggregated.NormalizeJsonCommandLineOptionScalars(OptionsByName(
+            new CommandLineOption("filter-uid", "desc", ArgumentArity.OneOrMore, isHidden: false)));
+
+        JsonCommandLineOptionEntry entry = Assert.ContainsSingle(aggregated.EnumerateJsonCommandLineOptions());
+        Assert.AreSequenceEqual(new[] { "a", "b" }, entry.Arguments.ToArray());
+
+        Assert.IsTrue(aggregated.TryGetCommandLineOptionFromProviders("filter-uid", out bool isSet, out string[] arguments));
+        Assert.IsTrue(isSet);
+        Assert.AreSequenceEqual(new[] { "a", "b" }, arguments);
+    }
+
+    [TestMethod]
+    public async Task NormalizeScalars_CaseInsensitive_RewritesByOptionName()
+    {
+        // testconfig.json keys are case-insensitive throughout the platform. A JSON entry "Timeout"
+        // must be matched against the registry's "timeout" and normalized accordingly.
+        AggregatedConfiguration aggregated = await BuildAggregatedAsync(
+            "{\"commandLineOptions\": {\"Timeout\": \"true\"}}");
+
+        aggregated.NormalizeJsonCommandLineOptionScalars(OptionsByName(
+            new CommandLineOption("timeout", "desc", ArgumentArity.ExactlyOne, isHidden: false)));
+
+        JsonCommandLineOptionEntry entry = Assert.ContainsSingle(aggregated.EnumerateJsonCommandLineOptions());
+        Assert.AreSequenceEqual(new[] { "true" }, entry.Arguments.ToArray());
+    }
+
+    [TestMethod]
+    public async Task NormalizeScalars_NoJsonSource_IsNoOp()
+    {
+        // The platform may build an AggregatedConfiguration without a JSON source registered;
+        // normalization must degrade to a no-op rather than throw.
+        AggregatedConfiguration configuration = new(
+            [],
+            new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()),
+            new Mock<IFileSystem>().Object,
+            new SystemEnvironment(),
+            CommandLineParseResult.Empty);
+
+        configuration.NormalizeJsonCommandLineOptionScalars(OptionsByName(
+            new CommandLineOption("timeout", "desc", ArgumentArity.ExactlyOne, isHidden: false)));
+
+        Assert.IsEmpty(configuration.EnumerateJsonCommandLineOptions());
+
+        // The await keeps the test method asynchronous to match the surrounding suite style.
+        await Task.CompletedTask;
+    }
+
+    // ---------------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------------
     private static async Task<IReadOnlyList<JsonCommandLineOptionEntry>> EnumerateAsync(string json)
+    {
+        AggregatedConfiguration aggregated = await BuildAggregatedAsync(json);
+        return aggregated.EnumerateJsonCommandLineOptions();
+    }
+
+    private static async Task<AggregatedConfiguration> BuildAggregatedAsync(string json)
     {
         Mock<IFileSystem> fileSystem = new();
         fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
@@ -492,8 +678,18 @@ public sealed class JsonCommandLineOptionsTests
         configurationManager.AddConfigurationSource(() => new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
 
         IConfiguration configuration = await configurationManager.BuildAsync(null, CommandLineParseResult.Empty);
-        var aggregated = (AggregatedConfiguration)configuration;
-        return aggregated.EnumerateJsonCommandLineOptions();
+        return (AggregatedConfiguration)configuration;
+    }
+
+    private static IReadOnlyDictionary<string, CommandLineOption> OptionsByName(params CommandLineOption[] options)
+    {
+        var dict = new Dictionary<string, CommandLineOption>(StringComparer.OrdinalIgnoreCase);
+        foreach (CommandLineOption option in options)
+        {
+            dict[option.Name] = option;
+        }
+
+        return dict;
     }
 
     private sealed class TestProvider : ICommandLineOptionsProvider
