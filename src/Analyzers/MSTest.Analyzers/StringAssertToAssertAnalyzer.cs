@@ -47,7 +47,7 @@ namespace MSTest.Analyzers;
 /// </list>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-public sealed class StringAssertToAssertAnalyzer : AssertToAssertAnalyzerBase
+public sealed class StringAssertToAssertAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.StringAssertToAssertTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.StringAssertToAssertMessageFormat), Resources.ResourceManager, typeof(Resources));
@@ -62,16 +62,22 @@ public sealed class StringAssertToAssertAnalyzer : AssertToAssertAnalyzerBase
         isEnabledByDefault: true);
 
     /// <inheritdoc />
-    protected override DiagnosticDescriptor DiagnosticRule => Rule;
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
     /// <inheritdoc />
-    protected override string SourceAssertTypeMetadataName
-        => WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingStringAssert;
-
-    /// <inheritdoc />
-    protected override void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol sourceAssertTypeSymbol)
+    public override void Initialize(AnalysisContext context)
     {
-        if (!TryGetTargetMethod(context, sourceAssertTypeSymbol, out IInvocationOperation operation, out IMethodSymbol targetMethod))
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        context.EnableConcurrentExecution();
+        AssertToAssertAnalyzerHelpers.RegisterCompilationStart(
+            context,
+            WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingStringAssert,
+            AnalyzeInvocationOperation);
+    }
+
+    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol sourceAssertTypeSymbol)
+    {
+        if (!AssertToAssertAnalyzerHelpers.TryGetTargetMethod(context, sourceAssertTypeSymbol, out IInvocationOperation operation, out IMethodSymbol targetMethod))
         {
             return;
         }
@@ -98,7 +104,7 @@ public sealed class StringAssertToAssertAnalyzer : AssertToAssertAnalyzerBase
             return;
         }
 
-        ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty.Add(ProperAssertMethodNameKey, assertMethodName);
+        ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty.Add(AssertToAssertAnalyzerHelpers.ProperAssertMethodNameKey, assertMethodName);
 
         context.ReportDiagnostic(context.Operation.CreateDiagnostic(
             Rule,

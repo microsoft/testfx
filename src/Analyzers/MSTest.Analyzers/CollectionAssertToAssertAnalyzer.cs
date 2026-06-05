@@ -37,7 +37,7 @@ namespace MSTest.Analyzers;
 /// direct <c>Assert</c> equivalent today and are not handled.
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-public sealed class CollectionAssertToAssertAnalyzer : AssertToAssertAnalyzerBase
+public sealed class CollectionAssertToAssertAnalyzer : DiagnosticAnalyzer
 {
     /// <summary>
     /// Key used by the code-fix to recover the rewrite strategy from the diagnostic properties.
@@ -63,16 +63,22 @@ public sealed class CollectionAssertToAssertAnalyzer : AssertToAssertAnalyzerBas
         isEnabledByDefault: true);
 
     /// <inheritdoc />
-    protected override DiagnosticDescriptor DiagnosticRule => Rule;
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
     /// <inheritdoc />
-    protected override string SourceAssertTypeMetadataName
-        => WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCollectionAssert;
-
-    /// <inheritdoc />
-    protected override void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol sourceAssertTypeSymbol)
+    public override void Initialize(AnalysisContext context)
     {
-        if (!TryGetTargetMethod(context, sourceAssertTypeSymbol, out IInvocationOperation operation, out IMethodSymbol targetMethod))
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        context.EnableConcurrentExecution();
+        AssertToAssertAnalyzerHelpers.RegisterCompilationStart(
+            context,
+            WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCollectionAssert,
+            AnalyzeInvocationOperation);
+    }
+
+    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol sourceAssertTypeSymbol)
+    {
+        if (!AssertToAssertAnalyzerHelpers.TryGetTargetMethod(context, sourceAssertTypeSymbol, out IInvocationOperation operation, out IMethodSymbol targetMethod))
         {
             return;
         }
@@ -104,7 +110,7 @@ public sealed class CollectionAssertToAssertAnalyzer : AssertToAssertAnalyzerBas
         }
 
         ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty
-            .Add(ProperAssertMethodNameKey, map.AssertMethodName)
+            .Add(AssertToAssertAnalyzerHelpers.ProperAssertMethodNameKey, map.AssertMethodName)
             .Add(FixKindKey, map.FixKind);
 
         context.ReportDiagnostic(context.Operation.CreateDiagnostic(
