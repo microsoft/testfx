@@ -228,12 +228,12 @@ The file is **written to a `.tmp` sibling first, then renamed on success.** This
 
 Validation rules:
 
-- `--report-junit-filename` may not be combined with `--discover-tests`.
+- `--report-junit-filename` may not be combined with `--list-tests`.
 - `--report-junit-filename` requires `--report-junit`.
 - The supplied file name must end with `.xml` (case-insensitive).
 - The supplied path must not contain `..` segments.
 - The supplied path must not be drive-relative (`C:foo.xml`).
-- Reserved Windows filenames (`CON`, `PRN`, ...) are rejected.
+- Reserved Windows filenames (`CON`, `PRN`, `AUX`, `NUL`, `CLOCK$`, `COM1`–`COM9`, `LPT1`–`LPT9`) are sanitized by prefixing with `_` (e.g. `CON.xml` → `_CON.xml`), mirroring the behavior of `Microsoft.Testing.Extensions.HtmlReport`. Invalid file-name characters (control characters, `" < > | : * ? \ / @ ( ) ^` and space) are likewise replaced with `_`.
 
 ## MSBuild auto-registration
 
