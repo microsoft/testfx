@@ -454,9 +454,12 @@ function Get-IssueTypeId {
     param([string] $Name)
 
     if ($null -eq $script:IssueTypeIdCache) {
-        $owner, $name = $Repo -split '/', 2
+        # NOTE: Use distinct local variable names ($repoOwner/$repoName) to avoid
+        # shadowing the $Name parameter - PowerShell variable names are
+        # case-insensitive, so `$name` and `$Name` are the same variable.
+        $repoOwner, $repoName = $Repo -split '/', 2
         $query = 'query($owner:String!,$name:String!){ repository(owner:$owner,name:$name){ issueTypes(first:50){ nodes{ id name } } } }'
-        $json = & gh api graphql -f query=$query -F owner=$owner -F name=$name
+        $json = & gh api graphql -f query=$query -F owner=$repoOwner -F name=$repoName
         if ($LASTEXITCODE -ne 0) {
             throw "Failed to fetch issue types for $Repo (exit $LASTEXITCODE)"
         }
@@ -478,7 +481,7 @@ function Get-IssueTypeId {
 function Get-IssuesWithLabel {
     param([string] $Label)
 
-    $owner, $name = $Repo -split '/', 2
+    $repoOwner, $repoName = $Repo -split '/', 2
     $query = @'
 query($owner:String!,$name:String!,$label:String!,$cursor:String){
   repository(owner:$owner,name:$name){
@@ -490,21 +493,20 @@ query($owner:String!,$name:String!,$label:String!,$cursor:String){
 }
 '@
 
-    $results = @()
+    $results = [System.Collections.Generic.List[object]]::new()
     $cursor = $null
     do {
-        if ($cursor) {
-            $json = & gh api graphql -f query=$query -F owner=$owner -F name=$name -F label=$Label -F cursor=$cursor
-        } else {
-            $json = & gh api graphql -f query=$query -F owner=$owner -F name=$name -F label=$Label
-        }
+        $ghArgs = @('api', 'graphql', '-f', "query=$query",
+                    '-F', "owner=$repoOwner", '-F', "name=$repoName", '-F', "label=$Label")
+        if ($cursor) { $ghArgs += @('-F', "cursor=$cursor") }
+        $json = & gh @ghArgs
         if ($LASTEXITCODE -ne 0) { throw "Failed to query issues with label '$Label' (exit $LASTEXITCODE)" }
         $page = ($json | ConvertFrom-Json).data.repository.issues
-        foreach ($n in $page.nodes) { $results += $n }
+        if ($page.nodes) { $results.AddRange([object[]]$page.nodes) }
         $cursor = if ($page.pageInfo.hasNextPage) { $page.pageInfo.endCursor } else { $null }
     } while ($cursor)
 
-    return $results
+    return $results.ToArray()
 }
 
 function Set-IssueType {
@@ -701,7 +703,7 @@ foreach ($label in @($IssueTypeReplacement.Keys)) {
         Write-Host "  = '$label' not present - skipping" -ForegroundColor DarkGray
         continue
     }
-    Write-Host "  c converting '$label' -> issue type '$typeName'" -ForegroundColor Magenta
+    Write-Host "  > converting '$label' -> issue type '$typeName'" -ForegroundColor Magenta
     Convert-LabelToIssueType -Label $label -IssueTypeName $typeName
 }
 
