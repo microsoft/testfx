@@ -96,7 +96,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         await _flushSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            while (_publishConfiguration is not null && CurrentRunId is not null)
+            while (true)
             {
                 if (!ShouldFlushUnsafe(force))
                 {
