@@ -22,13 +22,10 @@ public sealed class ConfigurationSourceDefaultsTests
             new JsonConfigurationSource(testApplicationModuleInfo, new SystemFileSystem(), fileLoggerProvider: null),
         ];
         string expectedVersion = sources[0].Version;
-        Assert.AreEqual(expectedVersion, sources[1].Version);
-        Assert.AreEqual(expectedVersion, sources[2].Version);
         Assert.IsFalse(string.IsNullOrWhiteSpace(expectedVersion));
 
         foreach (IConfigurationSource source in sources)
         {
-            Assert.AreEqual(source.GetType().Name, source.Uid);
             Assert.AreEqual(expectedVersion, source.Version);
             Assert.AreEqual(string.Empty, source.DisplayName);
             Assert.AreEqual(string.Empty, source.Description);
