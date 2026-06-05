@@ -36,15 +36,7 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
             AssertToAssertAnalyzerHelpers.ProperAssertMethodNameKey,
             CodeFixResources.StringAssertToAssertTitle,
             fixKindPropertyKey: null,
-            FixAssertAsync);
-
-    private static Task<Document> FixAssertAsync(
-        Document document,
-        InvocationExpressionSyntax invocationExpr,
-        string properAssertMethodName,
-        string? fixKind,
-        CancellationToken cancellationToken)
-        => FixStringAssertAsync(document, invocationExpr, properAssertMethodName, cancellationToken);
+            (doc, expr, methodName, _, ct) => FixStringAssertAsync(doc, expr, methodName, ct));
 
     private static async Task<Document> FixStringAssertAsync(
         Document document,
@@ -52,7 +44,6 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
         string properAssertMethodName,
         CancellationToken cancellationToken)
     {
-        // Check if the invocation expression has a member access expression
         if (invocationExpr.Expression is not MemberAccessExpressionSyntax memberAccessExpr)
         {
             return document;
@@ -73,8 +64,6 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
         ArgumentListSyntax newArgumentList = invocationExpr.ArgumentList.WithArguments(SyntaxFactory.SeparatedList<ArgumentSyntax>(newArguments));
         InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(newArgumentList);
 
-        // Replace StringAssert with Assert in the member access expression
-        // Change StringAssert.MethodName to Assert.ProperMethodName
         MemberAccessExpressionSyntax newMemberAccess = memberAccessExpr.WithExpression(SyntaxFactory.IdentifierName("Assert"))
             .WithName(SyntaxFactory.IdentifierName(properAssertMethodName));
         newInvocationExpr = newInvocationExpr.WithExpression(newMemberAccess);

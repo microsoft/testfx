@@ -31,8 +31,6 @@ internal static class AssertToAssertFixerHelpers
         string? fixKindPropertyKey,
         Func<Document, InvocationExpressionSyntax, string, string?, CancellationToken, Task<Document>> fixAssertAsync)
     {
-        SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
-
         Diagnostic diagnostic = context.Diagnostics[0];
         if (!diagnostic.Properties.TryGetValue(properAssertMethodNamePropertyKey, out string? properAssertMethodName)
             || properAssertMethodName is null)
@@ -46,6 +44,8 @@ internal static class AssertToAssertFixerHelpers
         {
             return;
         }
+
+        SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
         if (root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true) is not InvocationExpressionSyntax invocationExpr)
         {
