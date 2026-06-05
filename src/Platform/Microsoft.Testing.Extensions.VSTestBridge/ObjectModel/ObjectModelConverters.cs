@@ -142,7 +142,9 @@ internal static class ObjectModelConverters
         // standard-output in one loop, avoiding a separate LINQ Select + spread + foreach.
         // Pre-size trxMessages to the exact capacity to avoid List<T> growth reallocations
         // (every entry in testResult.Messages produces one TRX message when TRX is enabled).
+#pragma warning disable IDE0028 // Collection initialization can be simplified - capacity hint is intentional.
         List<TrxMessage>? trxMessages = isTrxEnabled ? new List<TrxMessage>(testResult.Messages.Count) : null;
+#pragma warning restore IDE0028
         List<string>? standardErrorMessages = null;
         List<string>? standardOutputMessages = null;
         foreach (TestResultMessage msg in testResult.Messages)
