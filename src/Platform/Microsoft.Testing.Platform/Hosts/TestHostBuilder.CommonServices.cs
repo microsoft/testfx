@@ -214,8 +214,8 @@ internal sealed partial class TestHostBuilder
             // "timeout": "true" was misinterpreted as a presence marker. See #6349/#8830.
             //
             // Defensive: option providers may register duplicate names; CommandLineOptionsValidator
-            // catches that later (ValidateOptionsAreNotDuplicated) and reports a clear error. Use
-            // TryAdd here so the normalization step itself doesn't crash for that malformed setup.
+            // catches that later (ValidateOptionsAreNotDuplicated) and reports a clear error. Skip
+            // duplicates here so the normalization step itself doesn't crash for that malformed setup.
             var optionByName = new Dictionary<string, CommandLineOption>(StringComparer.OrdinalIgnoreCase);
             foreach (ICommandLineOptionsProvider optionsProvider in context.CommandLineHandler.SystemCommandLineOptionsProviders
                 .Concat(context.CommandLineHandler.ExtensionsCommandLineOptionsProviders))
