@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CtrfReportArtifactDescription" xml:space="preserve">
+    <value>CTRF (Common Test Report Format) JSON test report</value>
+  </data>
+  <data name="CtrfReportArtifactDisplayName" xml:space="preserve">
+    <value>CTRF Report</value>
+  </data>
+  <data name="CtrfReportFileExistsAndWillBeOverwritten" xml:space="preserve">
+    <value>Warning: CTRF report file '{0}' already exists and will be overwritten.</value>
+  </data>
+  <data name="CtrfReportFileNameExtensionIsNotJson" xml:space="preserve">
+    <value>'--report-ctrf-filename' file name argument must end with '.json' (e.g. --report-ctrf-filename myreport.ctrf.json)</value>
+  </data>
+  <data name="CtrfReportFileNameMustNotBeEmpty" xml:space="preserve">
+    <value>'--report-ctrf-filename' file name part must not be empty (e.g. --report-ctrf-filename myreport.ctrf.json)</value>
+  </data>
+  <data name="CtrfReportFileNameOptionDescription" xml:space="preserve">
+    <value>The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Example: MyReport_{tfm}.ctrf.json</value>
+  </data>
+  <data name="CtrfReportFileNameRelativePathMustStayUnderResultsDirectory" xml:space="preserve">
+    <value>'--report-ctrf-filename' relative paths must stay under the test results directory (e.g. --report-ctrf-filename nested/myreport.ctrf.json)</value>
+  </data>
+  <data name="CtrfReportFileNameRequiresCtrfReport" xml:space="preserve">
+    <value>'--report-ctrf-filename' requires '--report-ctrf' to be enabled</value>
+  </data>
+  <data name="CtrfReportGeneratorDescription" xml:space="preserve">
+    <value>Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)</value>
+  </data>
+  <data name="CtrfReportGeneratorDisplayName" xml:space="preserve">
+    <value>CTRF report generator</value>
+  </data>
+  <data name="CtrfReportIsNotValidForDiscovery" xml:space="preserve">
+    <value>'--report-ctrf' cannot be enabled when using '--list-tests'</value>
+  </data>
+  <data name="CtrfReportOptionDescription" xml:space="preserve">
+    <value>Enable generating a CTRF (Common Test Report Format) JSON report</value>
+  </data>
+  <data name="InvalidTestApplicationBuilderType" xml:space="preserve">
+    <value>CTRF report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</value>
+  </data>
+</root>

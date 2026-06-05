@@ -28,6 +28,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         testHostResult.AssertOutputContains("--hangdump");
         testHostResult.AssertOutputContains("--publish-azdo-run-name");
         testHostResult.AssertOutputContains("--publish-azdo-test-results");
+        testHostResult.AssertOutputContains("--report-ctrf");
         testHostResult.AssertOutputContains("--report-html");
         testHostResult.AssertOutputContains("--report-trx");
         testHostResult.AssertOutputContains("--retry-failed-tests");
@@ -39,6 +40,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
 
         Assert.Contains("Microsoft.Testing.Extensions.AzureDevOpsReport.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.CrashDump.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
+        Assert.Contains("Microsoft.Testing.Extensions.CtrfReport.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.HangDump.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.HotReload.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.HtmlReport.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
@@ -100,6 +102,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Version="$MicrosoftTestingPlatformVersion$" />

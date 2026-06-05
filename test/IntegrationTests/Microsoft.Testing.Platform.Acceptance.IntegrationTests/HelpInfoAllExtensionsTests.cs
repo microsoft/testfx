@@ -146,6 +146,12 @@ Extension options:
         Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.
     --report-azdo-upload-artifacts
         Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.
+    --report-ctrf
+        Enable generating a CTRF (Common Test Report Format) JSON report
+    --report-ctrf-filename
+        The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+        Example: MyReport_{tfm}.ctrf.json
     --report-html
         Enable generating an HTML report
     --report-html-filename
@@ -500,6 +506,21 @@ Registered command line providers:
         Description: The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
         Example: MyReport_{tfm}.html
+  CtrfReportGeneratorCommandLine
+    Name: CTRF report generator
+    Version: *
+    Description: Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)
+    Options:
+      --report-ctrf
+        Arity: 0
+        Hidden: False
+        Description: Enable generating a CTRF (Common Test Report Format) JSON report
+      --report-ctrf-filename
+        Arity: 1
+        Hidden: False
+        Description: The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+        Example: MyReport_{tfm}.ctrf.json
   MSBuildCommandLineProvider
     Name: MSBuildCommandLineProvider
     Version: *
@@ -598,6 +619,7 @@ Registered tools:
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Version="$MicrosoftTestingPlatformVersion$" />
