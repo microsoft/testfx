@@ -86,6 +86,12 @@ public static class WellKnownEnvironmentVariables
         // Isolate from the skip banner in case of parent, children tests
         "TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER",
 
+        // The de-facto cross-tool NO_COLOR convention (https://no-color.org). MTP honors any non-empty
+        // value as "disable ANSI". We filter it out so acceptance tests that rely on ANSI output are not
+        // affected when contributors / CI happen to have NO_COLOR set in their shell. Tests that need
+        // to exercise NO_COLOR behavior must set the variable explicitly.
+        "NO_COLOR",
+
         // LLM / AI agent CLI environment variables - keep in sync with
         // src/Platform/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs.
         // We filter these out so acceptance tests are not affected by the ambient

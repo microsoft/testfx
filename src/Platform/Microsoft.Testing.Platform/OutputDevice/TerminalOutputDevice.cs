@@ -165,13 +165,18 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         // When --ansi auto is explicitly specified, it overrides --no-ansi too.
         bool effectiveNoAnsi = noAnsi && ansiOverride == AnsiOverride.None;
 
+        // Honor the de-facto cross-tool NO_COLOR convention (https://no-color.org): when present with any
+        // non-empty value, suppress ANSI color/cursor codes unless the user explicitly opted in via
+        // `--ansi on` (which still wins, matching the precedence documented in --help).
+        bool noColorEnv = !RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable("NO_COLOR"));
+
         bool inCI = new CIEnvironmentDetector(_environment).IsCIEnvironment();
         bool isLLMEnvironment = new LLMEnvironmentDetector(_environment).IsLLMEnvironment();
 
         AnsiMode ansiMode = ansiOverride switch
         {
-            // User explicitly forced ANSI on (e.g. `--ansi on`). Bypass CI / LLM / redirection detection
-            // so colors and cursor movement are emitted even when stdout is redirected.
+            // User explicitly forced ANSI on (e.g. `--ansi on`). Bypass CI / LLM / NO_COLOR / redirection
+            // detection so colors and cursor movement are emitted even when stdout is redirected.
             AnsiOverride.ForceOn => AnsiMode.ForceAnsi,
 
             // User explicitly disabled ANSI (`--ansi off`).
@@ -181,7 +186,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             // No --ansi argument was provided, or `--ansi auto` was provided.
             // Fall back to environment-based detection.
             // In LLM environments, prefer simple text output so that the LLM can parse it easily.
-            _ when effectiveNoAnsi || isLLMEnvironment => AnsiMode.NoAnsi,
+            // NO_COLOR (https://no-color.org) is honored as well: any non-empty value suppresses ANSI.
+            _ when effectiveNoAnsi || noColorEnv || isLLMEnvironment => AnsiMode.NoAnsi,
             _ when inCI => AnsiMode.SimpleAnsi,
             _ => AnsiMode.AnsiIfPossible,
         };
