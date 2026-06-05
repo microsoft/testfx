@@ -2,7 +2,6 @@
   "solution": {
     "path": "TestFx.slnx",
     "projects": [
-      "src\\Adapter\\MSTest.Engine\\MSTest.Engine.csproj",
       "src\\Adapter\\MSTest.TestAdapter\\MSTest.TestAdapter.csproj",
       "src\\Adapter\\MSTestAdapter.PlatformServices\\MSTestAdapter.PlatformServices.csproj",
       "src\\Analyzers\\MSTest.Analyzers.CodeFixes\\MSTest.Analyzers.CodeFixes.csproj",

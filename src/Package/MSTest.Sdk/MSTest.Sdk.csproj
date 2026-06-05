@@ -36,13 +36,13 @@
   <Target Name="GenerateTemplates" AfterTargets="PrepareForBuild">
     <PropertyGroup>
       <!-- https://github.com/dotnet/arcade/blob/cb9979d0e7061c2252f4a3057c20eb72f503cff7/src/Microsoft.DotNet.Arcade.Sdk/tools/Version.BeforeCommonTargets.targets#L111-L114 -->
-      <_MSTestEnginePreReleaseVersionLabel>$(MSTestEnginePreReleaseVersionLabel)</_MSTestEnginePreReleaseVersionLabel>
-      <_MSTestEnginePreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuild)' != 'true'">ci</_MSTestEnginePreReleaseVersionLabel>
-      <_MSTestEnginePreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(OfficialBuild)' != 'true'">dev</_MSTestEnginePreReleaseVersionLabel>
-      <_MSTestEngineVersionSuffix>$(_MSTestEnginePreReleaseVersionLabel)$(_BuildNumberLabels)</_MSTestEngineVersionSuffix>
-      <_MSTestEngineVersion>$(MSTestEngineVersionPrefix)</_MSTestEngineVersion>
-      <_MSTestEngineVersion Condition="'$(_MSTestEngineVersionSuffix)' != ''">$(_MSTestEngineVersion)-$(_MSTestEngineVersionSuffix)</_MSTestEngineVersion>
-      <_TemplateProperties>MSTestEngineVersion=$(_MSTestEngineVersion);MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion)</_TemplateProperties>
+      <_MSTestSourceGenerationPreReleaseVersionLabel>$(MSTestSourceGenerationPreReleaseVersionLabel)</_MSTestSourceGenerationPreReleaseVersionLabel>
+      <_MSTestSourceGenerationPreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuild)' != 'true'">ci</_MSTestSourceGenerationPreReleaseVersionLabel>
+      <_MSTestSourceGenerationPreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(OfficialBuild)' != 'true'">dev</_MSTestSourceGenerationPreReleaseVersionLabel>
+      <_MSTestSourceGenerationVersionSuffix>$(_MSTestSourceGenerationPreReleaseVersionLabel)$(_BuildNumberLabels)</_MSTestSourceGenerationVersionSuffix>
+      <_MSTestSourceGenerationVersion>$(MSTestSourceGenerationVersionPrefix)</_MSTestSourceGenerationVersion>
+      <_MSTestSourceGenerationVersion Condition="'$(_MSTestSourceGenerationVersionSuffix)' != ''">$(_MSTestSourceGenerationVersion)-$(_MSTestSourceGenerationVersionSuffix)</_MSTestSourceGenerationVersion>
+      <_TemplateProperties>MSTestSourceGenerationVersion=$(_MSTestSourceGenerationVersion);MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion)</_TemplateProperties>
     </PropertyGroup>
 
     <!--

@@ -50,12 +50,12 @@
 
   <!-- Versioning -->
   <PropertyGroup>
-    <MSTestEnginePreReleaseVersionLabel>alpha</MSTestEnginePreReleaseVersionLabel>
+    <MSTestSourceGenerationPreReleaseVersionLabel>alpha</MSTestSourceGenerationPreReleaseVersionLabel>
 
     <!--
       This is a early preview package, keep 2.0.0-alpha or similar suffix even in official builds.
     -->
-    <MSTestEngineVersionPrefix>2.0.0</MSTestEngineVersionPrefix>
+    <MSTestSourceGenerationVersionPrefix>2.0.0</MSTestSourceGenerationVersionPrefix>
   </PropertyGroup>
 
   <!-- Pack config -->

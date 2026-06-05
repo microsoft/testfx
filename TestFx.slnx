@@ -55,7 +55,6 @@
     <Project Path="src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj" />
   </Folder>
   <Folder Name="/src/2 - Adapter/">
-    <Project Path="src/Adapter/MSTest.Engine/MSTest.Engine.csproj" />
     <Project Path="src/Adapter/MSTest.TestAdapter/MSTest.TestAdapter.csproj" />
     <Project Path="src/Adapter/MSTestAdapter.PlatformServices/MSTestAdapter.PlatformServices.csproj" />
   </Folder>
@@ -133,7 +132,6 @@
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testing.Platform.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj" />
-    <Project Path="test/UnitTests/MSTest.Engine.UnitTests/MSTest.Engine.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTest.SelfRealExamples.UnitTests/MSTest.SelfRealExamples.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTest.SourceGeneration.UnitTests/MSTest.SourceGeneration.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/MSTestAdapter.PlatformServices.UnitTests.csproj" />

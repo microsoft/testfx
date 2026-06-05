@@ -68,7 +68,6 @@ Analyze the pull request diff to identify source files that were added or modifi
    - `src/TestFramework/` → `test/UnitTests/TestFramework.UnitTests/`
    - `src/Adapter/MSTest.TestAdapter/` → `test/UnitTests/MSTestAdapter.UnitTests/`
    - `src/Adapter/MSTestAdapter.PlatformServices/` → `test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/`
-   - `src/Adapter/MSTest.Engine/` → `test/UnitTests/MSTest.Engine.UnitTests/`
    - `src/Analyzers/MSTest.Analyzers/` → `test/UnitTests/MSTest.Analyzers.Tests/` (if exists)
    - `src/Analyzers/MSTest.SourceGeneration/` → `test/UnitTests/MSTest.SourceGeneration.UnitTests/`
    - `src/Platform/` → `test/UnitTests/` (find matching test project by name)
