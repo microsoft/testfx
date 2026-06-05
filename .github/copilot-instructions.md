@@ -136,9 +136,11 @@ How to set the Issue Type from each surface:
 - **Issue templates** (`.github/ISSUE_TEMPLATE/*.md`): set `type:` in the frontmatter (already done for `bug-report.md` and `feature-request.md`). New templates that map to a native type MUST include the matching `type:` field.
 - **GitHub web UI**: pick the type from the "Type" picker in the right sidebar of the issue editor. Do not add `type/bug` or `type/feature` from the labels dropdown.
 - **`gh` CLI / scripts** (current `gh` releases do not yet expose `--type` on `gh issue create`): create the issue, then set the type via GraphQL, e.g.:
+
   ```bash
   gh api graphql -f query='mutation($issue:ID!, $type:ID!){ updateIssueIssueType(input:{issueId:$issue, issueTypeId:$type}){ issue { number } } }' -F issue=<issue-node-id> -F type=<type-node-id>
   ```
+
   The available `issueTypeId` values can be listed once with `gh api graphql -f query='query{ repository(owner:"microsoft",name:"testfx"){ issueTypes(first:20){ nodes{ id name } } } }'`.
 - **Agentic workflows (`gh aw`)**: in `safe-outputs.create-issue`, set the issue type using the agent's prompt or `allowed-fields` settings; never list `type/bug` / `type/feature` under `labels`.
 

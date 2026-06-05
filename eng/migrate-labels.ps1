@@ -547,14 +547,7 @@ function Convert-LabelToIssueType {
             Write-Host "      + #$($issue.number) -> issue type '$IssueTypeName'" -ForegroundColor Green
             Set-IssueType -IssueNodeId $issue.id -IssueTypeName $IssueTypeName
         }
-        if (-not $DryRun) {
-            & gh issue edit $issue.number --repo $Repo --remove-label $Label | Out-Null
-            if ($LASTEXITCODE -ne 0) {
-                throw "Failed to remove label '$Label' from issue #$($issue.number) (exit $LASTEXITCODE)"
-            }
-        } else {
-            Write-Host "    [dry-run] would remove label '$Label' from #$($issue.number)" -ForegroundColor DarkGray
-        }
+        Invoke-Gh issue edit $issue.number --repo $Repo --remove-label $Label | Out-Null
     }
 
     # PRs also carry these labels (no Issue Type on PRs - just strip the label).
