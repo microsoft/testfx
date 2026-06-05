@@ -138,6 +138,44 @@ internal static class ObjectModelConverters
 
         testNode.AddOutcome(testResult);
 
+        // Validate TRX prerequisites (and add TRX-only properties that don't depend on the message
+        // loop) BEFORE iterating testResult.Messages, so that an InvalidOperationException from a
+        // malformed FullyQualifiedName still wins over the UnreachableException that the message
+        // loop can throw on an unexpected msg.Category. This preserves the pre-PR exception order.
+        if (isTrxEnabled)
+        {
+            if (!RoslynString.IsNullOrEmpty(testResult.ErrorMessage) || !RoslynString.IsNullOrEmpty(testResult.ErrorStackTrace))
+            {
+                testNode.Properties.Add(new TrxExceptionProperty(testResult.ErrorMessage, testResult.ErrorStackTrace));
+            }
+
+            testNode.Properties.Add(new TrxTestDefinitionName(testResult.TestCase.DisplayName ?? testResult.TestCase.FullyQualifiedName));
+
+            TestMethodIdentifierProperty? testMethodIdentifierProperty = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+            if (testMethodIdentifierProperty is not null)
+            {
+                // TODO: Should TRX className have arity for generic classes?
+                if (RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace))
+                {
+                    testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(testMethodIdentifierProperty.TypeName));
+                }
+                else
+                {
+                    testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty($"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}"));
+                }
+            }
+            else if (TryParseFullyQualifiedType(testResult.TestCase.FullyQualifiedName, out string? fullyQualifiedType))
+            {
+                // VSTest's TestCase.FQN is very non-standard.
+                // We should avoid using it if we can, and so we prefer TestMethodIdentifierProperty first.
+                testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(fullyQualifiedType));
+            }
+            else
+            {
+                throw new InvalidOperationException("Unable to parse fully qualified type name from test case: " + testResult.TestCase.FullyQualifiedName);
+            }
+        }
+
         // Single pass over testResult.Messages: collect TRX messages, standard-error, and
         // standard-output in one loop, avoiding a separate LINQ Select + spread + foreach.
         // Pre-size trxMessages to the exact capacity to avoid List<T> growth reallocations
@@ -173,37 +211,6 @@ internal static class ObjectModelConverters
 
         if (isTrxEnabled)
         {
-            if (!RoslynString.IsNullOrEmpty(testResult.ErrorMessage) || !RoslynString.IsNullOrEmpty(testResult.ErrorStackTrace))
-            {
-                testNode.Properties.Add(new TrxExceptionProperty(testResult.ErrorMessage, testResult.ErrorStackTrace));
-            }
-
-            testNode.Properties.Add(new TrxTestDefinitionName(testResult.TestCase.DisplayName ?? testResult.TestCase.FullyQualifiedName));
-
-            TestMethodIdentifierProperty? testMethodIdentifierProperty = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
-            if (testMethodIdentifierProperty is not null)
-            {
-                // TODO: Should TRX className have arity for generic classes?
-                if (RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace))
-                {
-                    testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(testMethodIdentifierProperty.TypeName));
-                }
-                else
-                {
-                    testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty($"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}"));
-                }
-            }
-            else if (TryParseFullyQualifiedType(testResult.TestCase.FullyQualifiedName, out string? fullyQualifiedType))
-            {
-                // VSTest's TestCase.FQN is very non-standard.
-                // We should avoid using it if we can, and so we prefer TestMethodIdentifierProperty first.
-                testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(fullyQualifiedType));
-            }
-            else
-            {
-                throw new InvalidOperationException("Unable to parse fully qualified type name from test case: " + testResult.TestCase.FullyQualifiedName);
-            }
-
             testNode.Properties.Add(new TrxMessagesProperty(trxMessages is { Count: > 0 } ? [.. trxMessages] : []));
         }
 
