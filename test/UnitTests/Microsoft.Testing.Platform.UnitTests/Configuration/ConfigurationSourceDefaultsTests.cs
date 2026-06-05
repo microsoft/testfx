@@ -14,15 +14,20 @@ public sealed class ConfigurationSourceDefaultsTests
     public async Task BuiltInSources_UseExpectedCommonDefaults()
     {
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
+        CommandLineConfigurationSource commandLineSource = new();
+        EnvironmentVariablesConfigurationSource environmentVariablesSource = new(new SystemEnvironment());
+        JsonConfigurationSource jsonConfigurationSource = new(testApplicationModuleInfo, new SystemFileSystem(), null);
 
         IConfigurationSource[] sources =
         [
-            new CommandLineConfigurationSource(),
-            new EnvironmentVariablesConfigurationSource(new SystemEnvironment()),
-            new JsonConfigurationSource(testApplicationModuleInfo, new SystemFileSystem(), null),
+            commandLineSource,
+            environmentVariablesSource,
+            jsonConfigurationSource,
         ];
-        string expectedVersion = sources[0].Version;
+        string expectedVersion = commandLineSource.Version;
         Assert.IsFalse(string.IsNullOrWhiteSpace(expectedVersion));
+        Assert.AreEqual(expectedVersion, environmentVariablesSource.Version);
+        Assert.AreEqual(expectedVersion, jsonConfigurationSource.Version);
 
         foreach (IConfigurationSource source in sources)
         {
