@@ -40,11 +40,6 @@ namespace MSTest.Analyzers;
 public sealed class CollectionAssertToAssertAnalyzer : DiagnosticAnalyzer
 {
     /// <summary>
-    /// Key used by the code-fix to recover the target <c>Assert</c> method name from the diagnostic properties.
-    /// </summary>
-    internal const string ProperAssertMethodNameKey = nameof(ProperAssertMethodNameKey);
-
-    /// <summary>
     /// Key used by the code-fix to recover the rewrite strategy from the diagnostic properties.
     /// Values are <see cref="FixKindSimple"/>, <see cref="FixKindSwapTwoArgs"/>, <see cref="FixKindAddInAnyOrder"/>, or <see cref="FixKindInstanceOfType"/>.
     /// </summary>
@@ -68,32 +63,22 @@ public sealed class CollectionAssertToAssertAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     /// <inheritdoc />
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(Rule);
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-
-        context.RegisterCompilationStartAction(context =>
-        {
-            if (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCollectionAssert, out INamedTypeSymbol? collectionAssertTypeSymbol))
-            {
-                return;
-            }
-
-            context.RegisterOperationAction(context => AnalyzeInvocationOperation(context, collectionAssertTypeSymbol), OperationKind.Invocation);
-        });
+        AssertToAssertAnalyzerHelpers.RegisterCompilationStart(
+            context,
+            WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCollectionAssert,
+            AnalyzeInvocationOperation);
     }
 
-    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol collectionAssertTypeSymbol)
+    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol sourceAssertTypeSymbol)
     {
-        var operation = (IInvocationOperation)context.Operation;
-        IMethodSymbol targetMethod = operation.TargetMethod;
-
-        if (!SymbolEqualityComparer.Default.Equals(targetMethod.ContainingType, collectionAssertTypeSymbol))
+        if (!AssertToAssertAnalyzerHelpers.TryGetTargetMethod(context, sourceAssertTypeSymbol, out IInvocationOperation operation, out IMethodSymbol targetMethod))
         {
             return;
         }
@@ -125,7 +110,7 @@ public sealed class CollectionAssertToAssertAnalyzer : DiagnosticAnalyzer
         }
 
         ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty
-            .Add(ProperAssertMethodNameKey, map.AssertMethodName)
+            .Add(AssertToAssertAnalyzerHelpers.ProperAssertMethodNameKey, map.AssertMethodName)
             .Add(FixKindKey, map.FixKind);
 
         context.ReportDiagnostic(context.Operation.CreateDiagnostic(
