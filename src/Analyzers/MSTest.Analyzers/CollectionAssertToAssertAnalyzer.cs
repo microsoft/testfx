@@ -37,13 +37,8 @@ namespace MSTest.Analyzers;
 /// direct <c>Assert</c> equivalent today and are not handled.
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-public sealed class CollectionAssertToAssertAnalyzer : DiagnosticAnalyzer
+public sealed class CollectionAssertToAssertAnalyzer : AssertToAssertAnalyzerBase
 {
-    /// <summary>
-    /// Key used by the code-fix to recover the target <c>Assert</c> method name from the diagnostic properties.
-    /// </summary>
-    internal const string ProperAssertMethodNameKey = nameof(ProperAssertMethodNameKey);
-
     /// <summary>
     /// Key used by the code-fix to recover the rewrite strategy from the diagnostic properties.
     /// Values are <see cref="FixKindSimple"/>, <see cref="FixKindSwapTwoArgs"/>, <see cref="FixKindAddInAnyOrder"/>, or <see cref="FixKindInstanceOfType"/>.
@@ -68,32 +63,16 @@ public sealed class CollectionAssertToAssertAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     /// <inheritdoc />
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(Rule);
+    protected override DiagnosticDescriptor DiagnosticRule => Rule;
 
     /// <inheritdoc />
-    public override void Initialize(AnalysisContext context)
+    protected override string SourceAssertTypeMetadataName
+        => WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCollectionAssert;
+
+    /// <inheritdoc />
+    protected override void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol sourceAssertTypeSymbol)
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-        context.EnableConcurrentExecution();
-
-        context.RegisterCompilationStartAction(context =>
-        {
-            if (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCollectionAssert, out INamedTypeSymbol? collectionAssertTypeSymbol))
-            {
-                return;
-            }
-
-            context.RegisterOperationAction(context => AnalyzeInvocationOperation(context, collectionAssertTypeSymbol), OperationKind.Invocation);
-        });
-    }
-
-    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol collectionAssertTypeSymbol)
-    {
-        var operation = (IInvocationOperation)context.Operation;
-        IMethodSymbol targetMethod = operation.TargetMethod;
-
-        if (!SymbolEqualityComparer.Default.Equals(targetMethod.ContainingType, collectionAssertTypeSymbol))
+        if (!TryGetTargetMethod(context, sourceAssertTypeSymbol, out IInvocationOperation operation, out IMethodSymbol targetMethod))
         {
             return;
         }

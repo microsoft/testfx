@@ -40,7 +40,7 @@ public sealed class CollectionAssertToAssertFixer : CodeFixProvider
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
         Diagnostic diagnostic = context.Diagnostics[0];
-        if (!diagnostic.Properties.TryGetValue(CollectionAssertToAssertAnalyzer.ProperAssertMethodNameKey, out string? properAssertMethodName)
+        if (!diagnostic.Properties.TryGetValue(AssertToAssertAnalyzerBase.ProperAssertMethodNameKey, out string? properAssertMethodName)
             || properAssertMethodName is null
             || !diagnostic.Properties.TryGetValue(CollectionAssertToAssertAnalyzer.FixKindKey, out string? fixKind)
             || fixKind is null)

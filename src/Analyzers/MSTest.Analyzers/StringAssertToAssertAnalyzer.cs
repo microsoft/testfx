@@ -47,13 +47,8 @@ namespace MSTest.Analyzers;
 /// </list>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-public sealed class StringAssertToAssertAnalyzer : DiagnosticAnalyzer
+public sealed class StringAssertToAssertAnalyzer : AssertToAssertAnalyzerBase
 {
-    /// <summary>
-    /// Key to retrieve the proper assert method name from the properties bag.
-    /// </summary>
-    internal const string ProperAssertMethodNameKey = nameof(ProperAssertMethodNameKey);
-
     private static readonly LocalizableResourceString Title = new(nameof(Resources.StringAssertToAssertTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.StringAssertToAssertMessageFormat), Resources.ResourceManager, typeof(Resources));
 
@@ -67,32 +62,16 @@ public sealed class StringAssertToAssertAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     /// <inheritdoc />
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(Rule);
+    protected override DiagnosticDescriptor DiagnosticRule => Rule;
 
     /// <inheritdoc />
-    public override void Initialize(AnalysisContext context)
+    protected override string SourceAssertTypeMetadataName
+        => WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingStringAssert;
+
+    /// <inheritdoc />
+    protected override void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol sourceAssertTypeSymbol)
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-        context.EnableConcurrentExecution();
-
-        context.RegisterCompilationStartAction(context =>
-        {
-            if (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingStringAssert, out INamedTypeSymbol? stringAssertTypeSymbol))
-            {
-                return;
-            }
-
-            context.RegisterOperationAction(context => AnalyzeInvocationOperation(context, stringAssertTypeSymbol), OperationKind.Invocation);
-        });
-    }
-
-    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol stringAssertTypeSymbol)
-    {
-        var operation = (IInvocationOperation)context.Operation;
-        IMethodSymbol targetMethod = operation.TargetMethod;
-
-        if (!SymbolEqualityComparer.Default.Equals(targetMethod.ContainingType, stringAssertTypeSymbol))
+        if (!TryGetTargetMethod(context, sourceAssertTypeSymbol, out IInvocationOperation operation, out IMethodSymbol targetMethod))
         {
             return;
         }

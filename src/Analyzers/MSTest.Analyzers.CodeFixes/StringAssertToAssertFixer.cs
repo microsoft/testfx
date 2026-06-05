@@ -38,7 +38,7 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
         SyntaxNode? root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
         Diagnostic diagnostic = context.Diagnostics[0];
-        if (!diagnostic.Properties.TryGetValue(StringAssertToAssertAnalyzer.ProperAssertMethodNameKey, out string? properAssertMethodName)
+        if (!diagnostic.Properties.TryGetValue(AssertToAssertAnalyzerBase.ProperAssertMethodNameKey, out string? properAssertMethodName)
             || properAssertMethodName == null)
         {
             return;
