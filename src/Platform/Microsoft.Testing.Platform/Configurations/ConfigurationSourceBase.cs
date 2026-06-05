@@ -9,13 +9,13 @@ internal abstract class ConfigurationSourceBase : IConfigurationSource
 {
     public abstract string Uid { get; }
 
-    public string Version => PlatformVersion.Version;
+    public virtual string Version => PlatformVersion.Version;
 
     // Can be empty string because it's not used in the UI.
-    public string DisplayName => string.Empty;
+    public virtual string DisplayName => string.Empty;
 
     // Can be empty string because it's not used in the UI.
-    public string Description => string.Empty;
+    public virtual string Description => string.Empty;
 
     public virtual Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

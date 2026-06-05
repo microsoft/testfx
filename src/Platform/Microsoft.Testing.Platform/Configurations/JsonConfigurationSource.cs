@@ -19,5 +19,5 @@ internal sealed partial class JsonConfigurationSource(ITestApplicationModuleInfo
     public override int Order => 3;
 
     public override Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)
-        => Task.FromResult((IConfigurationProvider)new JsonConfigurationProvider(_testApplicationModuleInfo, _fileSystem, commandLineParseResult, _fileLoggerProvider?.CreateLogger(typeof(JsonConfigurationProvider).ToString())));
+        => Task.FromResult<IConfigurationProvider>(new JsonConfigurationProvider(_testApplicationModuleInfo, _fileSystem, commandLineParseResult, _fileLoggerProvider?.CreateLogger(typeof(JsonConfigurationProvider).ToString())));
 }
