@@ -1,7 +1,7 @@
 # Efficiency Improver Memory — microsoft/testfx
 
 ## Last Updated
-2026-06-04
+2026-06-05
 
 ## Build/Test Commands
 - Build: `./build.sh` (Linux/macOS), `.\build.cmd` (Windows)
@@ -20,6 +20,7 @@
 - 2026-06-02: Task 2, Task 3 (SimpleAnsiTerminal cache), Task 7
 - 2026-06-03: Task 3 (SerializerUtilities single-pass), Task 7
 - 2026-06-04: Task 3 (SimpleAnsiTerminal cache - actually submitted), Task 7
+- 2026-06-05: Task 2, Task 3 (DotnetTestDataConsumer - cache ExecutionId + single-pass property scan), Task 7
 
 ## Completed Work
 - PR #8692: perf: reduce redundant UTF-8 string encoding in IPC BaseSerializer (MERGED 2026-05-31)
@@ -27,7 +28,8 @@
 - PR #8720: perf: encode JSON body once in TcpMessageHandler.WriteRequestAsync (MERGED 2026-06-01)
 - PR #8743: perf: single-pass TRX message partitioning in TrxReportEngine (MERGED 2026-06-02)
 - PR #8806: perf: single-pass TestNode property serialization in SerializerUtilities (MERGED 2026-06-04)
-- PR (efficiency/simple-ansi-terminal-cache-newline-color): perf: cache newline+color string in SimpleAnsiTerminal (submitted 2026-06-04, awaiting merge)
+- PR #8834: perf: cache newline+color string in SimpleAnsiTerminal (MERGED 2026-06-05)
+- PR (efficiency/cache-execution-id-single-pass-dotnet-test): perf: cache ExecutionId + single-pass property scan in DotnetTestDataConsumer (submitted 2026-06-05, awaiting merge)
 
 ## Optimisation Backlog
 | Priority | Focus Area | Opportunity | Estimated Impact |
@@ -46,3 +48,6 @@
 - SerializerUtilities TestNode: Properties was enumerated twice; now single-pass (2026-06-03)
 - SimpleAnsiTerminal: SetColorPerLine cached "\n"+_foregroundColor to avoid per-call allocation (2026-06-04)
 - SimpleAnsiTerminal used in CI environments (Azure DevOps, GitHub Actions) with ANSI but no cursor control
+- DotnetTestDataConsumer: ExecutionId was computed property (env var lookup + string alloc per test); now readonly field (2026-06-05)
+- DotnetTestDataConsumer: GetTestNodeDetails did 3 separate PropertyBag linked-list walks per test; now single pass via GetStructEnumerator() (2026-06-05)
+- PropertyBag.GetStructEnumerator() returns internal struct (zero alloc); accessible within Microsoft.Testing.Platform assembly
