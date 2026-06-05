@@ -4,6 +4,13 @@
     "prefix/name" convention (area/, type/, external/, state/, resolution/,
     needs/, priority/).
 
+    NOTE: 'type/bug' and 'type/feature' are intentionally NOT part of the
+    target taxonomy. Bug / feature / task categorization is owned by the
+    native GitHub Issue Type field. The migration table deletes those legacy
+    labels (and their pre-existing aliases like 'bug', 'enhancement',
+    'feature-request'). See .github/copilot-instructions.md >
+    "GitHub issue creation guidelines" for the policy.
+
 .DESCRIPTION
     Migration is performed in phases that minimize the risk of losing
     issue/PR associations:
@@ -108,13 +115,17 @@ $Targets = [ordered]@{
     'area/winui'               = @{ Color = $Color.Area; Description = 'WinUI support.' }
 
     # type/*
+    # NOTE: 'type/bug' and 'type/feature' are intentionally absent. They have
+    # been replaced by the native GitHub Issue Type field (Bug / Feature /
+    # Task) on the repo. The migration map below routes the legacy 'bug',
+    # 'enhancement' and 'feature-request' labels (and the now-deprecated
+    # 'type/bug' / 'type/feature' labels themselves) to deletion. See
+    # .github/copilot-instructions.md > "GitHub issue creation guidelines".
     'type/announcement'        = @{ Color = $Color.Type;     Description = 'Announcement to the community.' }
     'type/automation'          = @{ Color = $Color.Type;     Description = 'Created or maintained by an agentic workflow.' }
     'type/ai-inspected'        = @{ Color = $Color.AI;       Description = 'Reviewed or generated with AI assistance.' }
     'type/breaking-change'     = @{ Color = $Color.Breaking; Description = 'Behavioral or API breaking change.' }
-    'type/bug'                 = @{ Color = $Color.Type;     Description = 'Something is not working as intended.' }
     'type/discussion'          = @{ Color = $Color.Type;     Description = 'Open discussion / brainstorming.' }
-    'type/feature'             = @{ Color = $Color.Type;     Description = 'New capability or enhancement.' }
     'type/flaky-test'          = @{ Color = $Color.Flaky;    Description = 'Tracks flaky tests in CI.' }
     'type/partner-request'     = @{ Color = $Color.Type;     Description = 'Request from a partner team.' }
     'type/pr-fix'              = @{ Color = $Color.Type;     Description = 'Created by the pr-fix agentic workflow.' }
@@ -229,16 +240,22 @@ $Migration = [ordered]@{
     'Area: WinUI'                   = 'area/winui'
 
     # Type
+    # Bug / feature categorization now uses the native GitHub Issue Type field
+    # (Bug, Feature, Task) on the repo, so the corresponding legacy labels are
+    # deleted rather than remapped. See .github/copilot-instructions.md >
+    # "GitHub issue creation guidelines".
     'Announcement'                  = 'type/announcement'
     'automated'                     = 'type/automation'
     'automated-analysis'            = 'type/automation'
     'automation'                    = 'type/automation'
     'ai-inspected'                  = 'type/ai-inspected'
     'Breaking :bangbang:'           = 'type/breaking-change'
-    'bug'                           = 'type/bug'
+    'bug'                           = $null
+    'type/bug'                      = $null
     'Discussion'                    = 'type/discussion'
-    'enhancement'                   = 'type/feature'
-    'feature-request'               = 'type/feature'
+    'enhancement'                   = $null
+    'feature-request'               = $null
+    'type/feature'                  = $null
     'Flaky-Test'                    = 'type/flaky-test'
     'Partner request'               = 'type/partner-request'
     'pr-fix'                        = 'type/pr-fix'
@@ -310,6 +327,22 @@ $Migration = [ordered]@{
     'Area: Expecto'                 = $null
     'build'                         = $null
     'cross-platform'                = $null
+}
+
+# ---------------------------------------------------------------------------
+# Labels that should be replaced by the repo's native GitHub Issue Type field
+# (Bug / Feature / Task) on every issue that carries them, before the label
+# itself is deleted in Phase 4. Pull requests do not have an Issue Type, so
+# the label is just removed for PRs without any other action.
+#
+# See .github/copilot-instructions.md > "GitHub issue creation guidelines".
+# ---------------------------------------------------------------------------
+$IssueTypeReplacement = [ordered]@{
+    'bug'             = 'Bug'
+    'type/bug'        = 'Bug'
+    'enhancement'     = 'Feature'
+    'feature-request' = 'Feature'
+    'type/feature'    = 'Feature'
 }
 
 # Labels to keep untouched: not in the new taxonomy but kept on purpose.
@@ -409,6 +442,147 @@ function Merge-LabelInto {
     }
 
     Invoke-Gh label delete $From --repo $Repo --yes | Out-Null
+}
+
+# ---------------------------------------------------------------------------
+# Issue-type cache (one query per repo). Maps type name (e.g. 'Bug') to its
+# global node ID for the GraphQL updateIssueIssueType mutation.
+# ---------------------------------------------------------------------------
+$script:IssueTypeIdCache = $null
+
+function Get-IssueTypeId {
+    param([string] $Name)
+
+    if ($null -eq $script:IssueTypeIdCache) {
+        # NOTE: Use distinct local variable names ($repoOwner/$repoName) to avoid
+        # shadowing the $Name parameter - PowerShell variable names are
+        # case-insensitive, so `$name` and `$Name` are the same variable.
+        $repoOwner, $repoName = $Repo -split '/', 2
+        $query = 'query($owner:String!,$name:String!){ repository(owner:$owner,name:$name){ issueTypes(first:50){ nodes{ id name } } } }'
+        $json = & gh api graphql -f query=$query -F owner=$repoOwner -F name=$repoName
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to fetch issue types for $Repo (exit $LASTEXITCODE)"
+        }
+        $data = $json | ConvertFrom-Json
+        $script:IssueTypeIdCache = @{}
+        foreach ($t in $data.data.repository.issueTypes.nodes) {
+            $script:IssueTypeIdCache[$t.name] = $t.id
+        }
+    }
+
+    if (-not $script:IssueTypeIdCache.ContainsKey($Name)) {
+        throw "Issue type '$Name' is not configured on $Repo. Available: $($script:IssueTypeIdCache.Keys -join ', ')"
+    }
+    return $script:IssueTypeIdCache[$Name]
+}
+
+# Returns issue node IDs and current issueType name for every (issue) item with
+# the given label. PRs are excluded because they do not have an Issue Type.
+function Get-IssuesWithLabel {
+    param([string] $Label)
+
+    $repoOwner, $repoName = $Repo -split '/', 2
+    $query = @'
+query($owner:String!,$name:String!,$label:String!,$cursor:String){
+  repository(owner:$owner,name:$name){
+    issues(first:100,filterBy:{labels:[$label],states:[OPEN,CLOSED]},after:$cursor){
+      pageInfo{ hasNextPage endCursor }
+      nodes{ id number issueType{ name } }
+    }
+  }
+}
+'@
+
+    $results = [System.Collections.Generic.List[object]]::new()
+    $cursor = $null
+    do {
+        $ghArgs = @('api', 'graphql', '-f', "query=$query",
+                    '-F', "owner=$repoOwner", '-F', "name=$repoName", '-F', "label=$Label")
+        if ($cursor) { $ghArgs += @('-F', "cursor=$cursor") }
+        $json = & gh @ghArgs
+        if ($LASTEXITCODE -ne 0) { throw "Failed to query issues with label '$Label' (exit $LASTEXITCODE)" }
+        $page = ($json | ConvertFrom-Json).data.repository.issues
+        if ($page.nodes) { $results.AddRange([object[]]$page.nodes) }
+        $cursor = if ($page.pageInfo.hasNextPage) { $page.pageInfo.endCursor } else { $null }
+    } while ($cursor)
+
+    return $results.ToArray()
+}
+
+function Set-IssueType {
+    param(
+        [string] $IssueNodeId,
+        [string] $IssueTypeName
+    )
+
+    if ($DryRun) {
+        Write-Host "    [dry-run] would set issue type '$IssueTypeName' on $IssueNodeId" -ForegroundColor DarkGray
+        return
+    }
+
+    $typeId = Get-IssueTypeId -Name $IssueTypeName
+    $mutation = 'mutation($issue:ID!,$type:ID!){ updateIssueIssueType(input:{issueId:$issue,issueTypeId:$type}){ issue{ number } } }'
+    & gh api graphql -f query=$mutation -F issue=$IssueNodeId -F type=$typeId | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to set issue type '$IssueTypeName' on $IssueNodeId (exit $LASTEXITCODE)"
+    }
+}
+
+# Sets the native GitHub Issue Type field on every open/closed issue carrying
+# the given $Label (only when the issue does not already have an explicit
+# type), then removes the label from every issue and PR. Used to migrate the
+# legacy 'type/bug', 'type/feature', 'bug', 'enhancement' and
+# 'feature-request' labels into the native Issue Type field.
+function Convert-LabelToIssueType {
+    param(
+        [string] $Label,
+        [string] $IssueTypeName
+    )
+
+    $issues = Get-IssuesWithLabel -Label $Label
+    Write-Host "    found $($issues.Count) issue(s) with '$Label' (will set issue type '$IssueTypeName' where unset)" -ForegroundColor DarkGray
+
+    $failures = @()
+    foreach ($issue in $issues) {
+        try {
+            if ($issue.issueType -and $issue.issueType.name) {
+                Write-Host "      = #$($issue.number) already has issue type '$($issue.issueType.name)' - keeping it" -ForegroundColor DarkGray
+            } else {
+                Write-Host "      + #$($issue.number) -> issue type '$IssueTypeName'" -ForegroundColor Green
+                Set-IssueType -IssueNodeId $issue.id -IssueTypeName $IssueTypeName
+            }
+            Invoke-Gh issue edit $issue.number --repo $Repo --remove-label $Label | Out-Null
+        }
+        catch {
+            $failures += [pscustomobject]@{ Kind = 'issue'; Number = $issue.number; Error = $_.Exception.Message }
+            Write-Host "      ! failed to convert issue #$($issue.number): $($_.Exception.Message)" -ForegroundColor Red
+        }
+    }
+
+    # PRs also carry these labels (no Issue Type on PRs - just strip the label).
+    $prJson = & gh pr list --repo $Repo --label $Label --state all --limit 5000 --json number
+    if ($LASTEXITCODE -ne 0) { throw "Failed to list PRs with label '$Label'" }
+    $prs = @($prJson | ConvertFrom-Json | ForEach-Object { $_.number })
+    if ($prs.Count -ge 5000) {
+        throw "Label '$Label' has >=5000 PRs - pagination support required, refusing to proceed."
+    }
+    if ($prs.Count -gt 0) {
+        Write-Host "    found $($prs.Count) PR(s) with '$Label' - stripping label (no issue type on PRs)" -ForegroundColor DarkGray
+        foreach ($n in $prs) {
+            try {
+                Invoke-Gh pr edit $n --repo $Repo --remove-label $Label | Out-Null
+            }
+            catch {
+                $failures += [pscustomobject]@{ Kind = 'pr'; Number = $n; Error = $_.Exception.Message }
+                Write-Host "      ! failed to strip label from PR #${n}: $($_.Exception.Message)" -ForegroundColor Red
+            }
+        }
+    }
+
+    if ($failures.Count -gt 0) {
+        $summary = ($failures | ForEach-Object { "$($_.Kind) #$($_.Number): $($_.Error)" }) -join "`n  "
+        throw "$($failures.Count) item(s) failed while converting '$Label' to issue type '$IssueTypeName':`n  $summary"
+    }
 }
 
 function Ensure-Target {
@@ -529,6 +703,29 @@ Write-Host "=== Phase 3: ensure target taxonomy ===" -ForegroundColor Cyan
 if (-not $DryRun) { $existing = Get-AllLabels }
 foreach ($name in @($Targets.Keys)) {
     Ensure-Target -Name $name -Existing $existing
+}
+
+# ---------------------------------------------------------------------------
+# Phase 3.5: convert deprecated bug/feature labels to native Issue Type field
+#
+# Issues carrying 'type/bug', 'type/feature', 'bug', 'enhancement' or
+# 'feature-request' get their native GitHub Issue Type set to Bug or Feature
+# (only if no explicit type is already set) and the label is then removed.
+# PRs lose the label without any Issue Type change (PRs do not have one).
+# Once this phase succeeds, Phase 4 deletes the now-empty labels.
+# ---------------------------------------------------------------------------
+Write-Host ""
+Write-Host "=== Phase 3.5: convert deprecated labels to native Issue Types ===" -ForegroundColor Cyan
+if (-not $DryRun) { $existing = Get-AllLabels }
+foreach ($label in @($IssueTypeReplacement.Keys)) {
+    $typeName = $IssueTypeReplacement[$label]
+    $labelObj = Get-LabelByName -Labels $existing -Name $label
+    if (-not $labelObj) {
+        Write-Host "  = '$label' not present - skipping" -ForegroundColor DarkGray
+        continue
+    }
+    Write-Host "  > converting '$label' -> issue type '$typeName'" -ForegroundColor Magenta
+    Convert-LabelToIssueType -Label $label -IssueTypeName $typeName
 }
 
 # ---------------------------------------------------------------------------
