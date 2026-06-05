@@ -191,5 +191,4 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
             TaskScheduler.UnobservedTaskException -= OnTaskSchedulerUnobservedTaskException;
         }
     }
-
 }
