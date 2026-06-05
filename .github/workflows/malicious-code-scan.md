@@ -19,6 +19,8 @@ tools:
   bash: true
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   create-code-scanning-alert:
     driver: "Malicious Code Scanner"
   threat-detection: false
@@ -58,14 +60,14 @@ Since this is a fresh clone, fetch the complete git history:
 git fetch --unshallow || echo "Repository already has full history"
 
 # Get list of files changed in last 3 days
-git log --since="3 days ago" --name-only --pretty=format: | sort | uniq > /tmp/changed_files.txt
+git log --since="3 days ago" --name-only --pretty=format: | sort | uniq > /tmp/gh-aw/agent/changed_files.txt
 
 # Get commit details for context
-git log --since="3 days ago" --pretty=format:"%h - %an, %ar : %s" > /tmp/recent_commits.txt
+git log --since="3 days ago" --pretty=format:"%h - %an, %ar : %s" > /tmp/gh-aw/agent/recent_commits.txt
 
-cat /tmp/recent_commits.txt
+cat /tmp/gh-aw/agent/recent_commits.txt
 echo "---"
-cat /tmp/changed_files.txt
+cat /tmp/gh-aw/agent/changed_files.txt
 ```
 
 ### 2. Suspicious Pattern Detection
@@ -93,7 +95,7 @@ while IFS= read -r file; do
       echo "WARNING: Potential secret exfiltration in $file"
     fi
   fi
-done < /tmp/changed_files.txt
+done < /tmp/gh-aw/agent/changed_files.txt
 ```
 
 #### Out-of-Context Code Patterns
@@ -138,7 +140,7 @@ For each file that changed in the last 3 days:
 
 1. **Get the full diff** to understand what changed:
    ```bash
-   git log --since="3 days ago" --all -p -- $(cat /tmp/changed_files.txt | tr '\n' ' ') 2>/dev/null | head -2000
+   git log --since="3 days ago" --all -p -- $(cat /tmp/gh-aw/agent/changed_files.txt | tr '\n' ' ') 2>/dev/null | head -2000
    ```
 
 2. **Analyze new function additions** for suspicious logic:

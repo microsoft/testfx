@@ -7,6 +7,11 @@
         <target state="translated">'[CallerFilePath]' パラメーターと '[CallerLineNumber]' パラメーターを追加する</target>
         <note />
       </trans-unit>
+      <trans-unit id="AddIgnoreJustificationFix">
+        <source>Add a placeholder justification to '[Ignore]'</source>
+        <target state="translated">プレースホルダーの両端揃えに '[無視]' を追加する</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AddTestClassFix">
         <source>Add '[TestClass]'</source>
         <target state="translated">'[TestClass]' の追加</target>
@@ -23,18 +28,13 @@
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsEquivalentFix">
-        <source>Replace with `Assert.{0}`</source>
-        <target state="translated">`Assert.{0}` で置き換える</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidAssertAreEqualOnCollectionsInAnyOrderFix">
-        <source>Replace with `Assert.{0}(..., SequenceOrder.InAnyOrder)`</source>
-        <target state="translated">`Assert.{0}(..., SequenceOrder.InAnyOrder)` で置き換える</target>
+        <source>Use deep structural comparison ('Assert.{0}')</source>
+        <target state="translated">詳細な構造比較 ('Assert.{0}') を使用する</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsOrderedFix">
-        <source>Replace with `Assert.{0}` (ordered)</source>
-        <target state="translated">`Assert.{0}` で置き換える (順序指定)</target>
+        <source>Use ordered, element-wise comparison ('Assert.{0}')</source>
+        <target state="translated">順序付きの要素ごとの比較 ('Assert.{0}') を使用する</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesFix">
@@ -65,6 +65,11 @@
       <trans-unit id="ChangeStructToClassAndAddTestClassFix">
         <source>Change to 'class' and add '[TestClass]'</source>
         <target state="translated">'class' に変更し、'[TestClass]' を追加します</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CollectionAssertToAssertTitle">
+        <source>Use 'Assert.{0}' instead of 'CollectionAssert'</source>
+        <target state="translated">'CollectionAssert' の代わりに 'Assert.{0}' を使用する</target>
         <note />
       </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">

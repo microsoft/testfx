@@ -10,8 +10,8 @@
           "repo": "dotnet/runtime",
           "ref": "main",
           "path": "src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/NullableAttributes.cs",
-          "baseline_ref_sha": "39b9607807f29e48cae4652cd74735182b31182e",
-          "baseline_blob_sha": "ff64dbf87889bd5fe2f19e13dff9b762c9be2dc7",
+          "baseline_ref_sha": "906c53718074c669286fd5b0cd88bc7a56a0cd10",
+          "baseline_blob_sha": "78908b119ae07e92f7e89fe507eb0fc69b21fa99",
           "scope": "entire file; attribute scope changed to internal"
         }
       ]
@@ -19,15 +19,15 @@
     {
       "id": "source-gen-system-polyfills",
       "local_path": "src/Analyzers/MSTest.SourceGeneration/Helpers/SystemPolyfills.cs",
-      "notes": "Nullable attribute polyfills for source generator. Originally referenced retired dotnet/coreclr@60f1e626 -- successor file lives in dotnet/runtime with the same content.",
+      "notes": "Nullable attribute polyfills for source generator. Only NotNullWhenAttribute is mirrored locally; combined with a locally-defined IsExternalInit shim. Originally referenced retired dotnet/coreclr@60f1e626 -- successor file lives in dotnet/runtime with the same content.",
       "sources": [
         {
           "repo": "dotnet/runtime",
           "ref": "main",
           "path": "src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/NullableAttributes.cs",
-          "baseline_ref_sha": "39b9607807f29e48cae4652cd74735182b31182e",
-          "baseline_blob_sha": "ff64dbf87889bd5fe2f19e13dff9b762c9be2dc7",
-          "scope": "Nullable attribute types only; combined with locally-defined IsExternalInit"
+          "baseline_ref_sha": "906c53718074c669286fd5b0cd88bc7a56a0cd10",
+          "baseline_blob_sha": "78908b119ae07e92f7e89fe507eb0fc69b21fa99",
+          "scope": "NotNullWhenAttribute only; combined with locally-defined IsExternalInit"
         }
       ]
     },
@@ -64,15 +64,15 @@
     {
       "id": "platform-file-utilities-case-sensitivity",
       "local_path": "src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal/FileUtilities.cs",
-      "notes": "Only GetIsFileSystemCaseSensitive is copied. Drift signal fires on the whole upstream file; reviewer should check whether changes touch the copied region (lines 41-59 at baseline).",
+      "notes": "Originally copied lines 41-59 (GetIsFileSystemCaseSensitive) from the runtime probe. Upstream has since replaced the probe with an OS-based check (OperatingSystem.IsWindows/MacOS/IOS/TvOS); we intentionally keep the file-system probe locally because (a) the platform targets netstandard2.0 where those APIs are not first-class, and (b) the probe better reflects mount-level case sensitivity. Drift signal fires on the whole upstream file; reviewer should check whether any new change affects the historical copied region.",
       "sources": [
         {
           "repo": "dotnet/runtime",
           "ref": "main",
           "path": "src/libraries/Common/src/System/IO/PathInternal.CaseSensitivity.cs",
-          "baseline_ref_sha": "73ba11f3015216b39cb866d9fb7d3d25e93489f2",
-          "baseline_blob_sha": "e5e97847ddd8e678112b31fa123932463170ccb5",
-          "scope": "lines 41-59 only (GetIsFileSystemCaseSensitive)"
+          "baseline_ref_sha": "906c53718074c669286fd5b0cd88bc7a56a0cd10",
+          "baseline_blob_sha": "0e1278fd1a2cab8dcbcf860f9297cf4eecca4600",
+          "scope": "originally lines 41-59 (GetIsFileSystemCaseSensitive); upstream has since rewritten the helper -- local copy intentionally diverges"
         }
       ]
     },
@@ -124,23 +124,203 @@
     {
       "id": "platform-response-file-helper",
       "local_path": "src/Platform/Microsoft.Testing.Platform/CommandLine/ResponseFileHelper.cs",
-      "notes": "Core logic taken from command-line-api's CliParser and StringExtensions response-file parsing.",
+      "notes": "Core logic taken from command-line-api's CommandLineParser (formerly CliParser) and StringExtensions response-file parsing. Local copy intentionally omits recursive @file expansion.",
       "sources": [
         {
           "repo": "dotnet/command-line-api",
           "ref": "main",
-          "path": "src/System.CommandLine/Parsing/CliParser.cs",
-          "baseline_ref_sha": "feb61c7f328a2401d74f4317b39d02126cfdfe24",
-          "baseline_blob_sha": "d05b9f05521af2ed05f7f33cf319255820b338de",
-          "scope": "response-file expansion logic (around line 40)"
+          "path": "src/System.CommandLine/Parsing/CommandLineParser.cs",
+          "baseline_ref_sha": "fa1991f84bc8c384aa636a251398a40e56ee1702",
+          "baseline_blob_sha": "ee60fedddabe429d172756fe1b908309164bd805",
+          "scope": "SplitCommandLine implementation (around line 40); upstream file was renamed from CliParser.cs"
         },
         {
           "repo": "dotnet/command-line-api",
           "ref": "main",
           "path": "src/System.CommandLine/Parsing/StringExtensions.cs",
-          "baseline_ref_sha": "feb61c7f328a2401d74f4317b39d02126cfdfe24",
-          "baseline_blob_sha": "169070c5f707aee86c376bad6456e00183718763",
-          "scope": "ExpandResponseFile and string-splitting helpers (around line 349)"
+          "baseline_ref_sha": "fa1991f84bc8c384aa636a251398a40e56ee1702",
+          "baseline_blob_sha": "ab6be26ba8cd23058ee60df184a20ad607899eca",
+          "scope": "ExpandResponseFile/SplitLine helpers (around line 316)"
+        }
+      ]
+    },
+    {
+      "id": "platform-paste-arguments",
+      "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/PasteArguments.cs",
+      "notes": "Verbatim port of runtime's PasteArguments. Used by TestHostControllersTestHost on non-net8 TFMs to escape ProcessStartInfo arguments.",
+      "sources": [
+        {
+          "repo": "dotnet/runtime",
+          "ref": "main",
+          "path": "src/libraries/System.Private.CoreLib/src/System/PasteArguments.cs",
+          "baseline_ref_sha": "62dfdbff84a97796938836c60697287fc6161aa1",
+          "baseline_blob_sha": "39008fc101067a42be33b747d3cee5f208a202d5",
+          "scope": "entire file; namespace and accessibility adapted to internal"
+        }
+      ]
+    },
+    {
+      "id": "platform-task-extensions",
+      "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/TaskExtensions.cs",
+      "notes": "WaitAsync downlevel polyfill, modeled after the runtime's TaskExtensions shared helper.",
+      "sources": [
+        {
+          "repo": "dotnet/aspnetcore",
+          "ref": "main",
+          "path": "src/Shared/TaskExtensions.cs",
+          "baseline_ref_sha": "b9015295c392a23e0bf1cc74cc06633fe75704a4",
+          "baseline_blob_sha": "b06f6efe402a0844c8a258f5aad361f6a38383d3",
+          "scope": "WaitAsync overloads for non-net5 TFMs"
+        }
+      ]
+    },
+    {
+      "id": "platform-ui-language-override",
+      "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/UILanguageOverride.cs",
+      "notes": "Adapted from the dotnet CLI's UILanguageOverride with small tweaks for testability (IEnvironment abstraction).",
+      "sources": [
+        {
+          "repo": "dotnet/sdk",
+          "ref": "main",
+          "path": "src/Cli/Microsoft.DotNet.Cli.Utils/UILanguageOverride.cs",
+          "baseline_ref_sha": "1ab3ae8e0338cdd06b3974959c5802ccc5a85978",
+          "baseline_blob_sha": "ea50251065dc0f5ea142812ef39ecfbe37779b4b",
+          "scope": "entire file; environment variable name renamed to TESTINGPLATFORM_UI_LANGUAGE"
+        }
+      ]
+    },
+    {
+      "id": "platform-ci-environment-detector",
+      "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/CIEnvironmentDetector.cs",
+      "notes": "Adapted from dotnet CLI telemetry CI detection. Maintained per https://learn.microsoft.com/dotnet/core/tools/telemetry#continuous-integration-detection.",
+      "sources": [
+        {
+          "repo": "dotnet/sdk",
+          "ref": "main",
+          "path": "src/Cli/Microsoft.DotNet.Cli.Definitions/Telemetry/CIEnvironmentDetectorForTelemetry.cs",
+          "baseline_ref_sha": "1ab3ae8e0338cdd06b3974959c5802ccc5a85978",
+          "baseline_blob_sha": "e10e1fc2cd973c6123fd983b16a8f0c1e9191c31",
+          "scope": "CI detection rules and environment variable lists"
+        }
+      ]
+    },
+    {
+      "id": "platform-llm-environment-detector",
+      "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs",
+      "notes": "Adapted from dotnet CLI telemetry LLM/agent environment detection.",
+      "sources": [
+        {
+          "repo": "dotnet/sdk",
+          "ref": "main",
+          "path": "src/Cli/dotnet/Telemetry/LLMEnvironmentDetectorForTelemetry.cs",
+          "baseline_ref_sha": "1ab3ae8e0338cdd06b3974959c5802ccc5a85978",
+          "baseline_blob_sha": "94cd49826baadaa10154f13d71a7e2ede224b663",
+          "scope": "LLM/agent detection rules"
+        }
+      ]
+    },
+    {
+      "id": "platform-roslyn-hashcode",
+      "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/RoslynHashCode.cs",
+      "notes": "Roslyn-style adaptation of runtime's HashCode (preserves the xxHash32 algorithm published by Yann Collet). Tracks the upstream runtime file for drift on the algorithm itself; see also dotnet/roslyn#50156 commentary.",
+      "sources": [
+        {
+          "repo": "dotnet/runtime",
+          "ref": "main",
+          "path": "src/libraries/System.Private.CoreLib/src/System/HashCode.cs",
+          "baseline_ref_sha": "62dfdbff84a97796938836c60697287fc6161aa1",
+          "baseline_blob_sha": "6a80fa07da246f095ee25407aaf6d5c6e8fa5fc5",
+          "scope": "xxHash32 Combine/Add implementation"
+        }
+      ]
+    },
+    {
+      "id": "platform-terminal-native-methods",
+      "local_path": "src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal/NativeMethods.cs",
+      "notes": "Only QueryIsScreenAndTryEnableAnsiColorCodes and its console-mode P/Invokes are copied from msbuild's Framework NativeMethods.",
+      "sources": [
+        {
+          "repo": "dotnet/msbuild",
+          "ref": "main",
+          "path": "src/Framework/NativeMethods.cs",
+          "baseline_ref_sha": "fd084bd416a21d504b5d9bb19c0a1ca83c33533d",
+          "baseline_blob_sha": "915cf0673e4f49f2e7bc286592c036d23441321e",
+          "scope": "QueryIsScreenAndTryEnableAnsiColorCodes and supporting console-mode P/Invokes"
+        }
+      ]
+    },
+    {
+      "id": "platform-terminal-ansi-detector",
+      "local_path": "src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal/AnsiDetector.cs",
+      "notes": "Ported from Spectre.Console's AnsiDetector (with additional regexes from supports-ansi).",
+      "sources": [
+        {
+          "repo": "spectreconsole/spectre.console",
+          "ref": "main",
+          "path": "src/Spectre.Console.Ansi/AnsiDetector.cs",
+          "baseline_ref_sha": "bbf51e4c2841dae4d574193a7a5695499d453f60",
+          "baseline_blob_sha": "a31831944cb05dac9b48942fe7cb14dac89444d8",
+          "scope": "terminal regex list and ANSI capability detection logic"
+        }
+      ]
+    },
+    {
+      "id": "trx-xxhash128",
+      "local_path": "src/Platform/Microsoft.Testing.Extensions.TrxReport/Hashing/XxHash128.cs",
+      "notes": "Verbatim port of runtime's System.IO.Hashing XxHash128 (BSD-2-Clause xxHash algorithm by Yann Collet). Lives under TestFx.Hashing namespace and is consumed by TRX report hashing.",
+      "sources": [
+        {
+          "repo": "dotnet/runtime",
+          "ref": "main",
+          "path": "src/libraries/System.IO.Hashing/src/System/IO/Hashing/XxHash128.cs",
+          "baseline_ref_sha": "62dfdbff84a97796938836c60697287fc6161aa1",
+          "baseline_blob_sha": "23ff9fce02a671f415a535f0a5d1151cda6ed9ba",
+          "scope": "entire file; namespace adapted to TestFx.Hashing"
+        }
+      ]
+    },
+    {
+      "id": "trx-xxhash-shared",
+      "local_path": "src/Platform/Microsoft.Testing.Extensions.TrxReport/Hashing/XxHashShared.cs",
+      "notes": "Verbatim port of runtime's System.IO.Hashing XxHashShared (shared XXH3 implementation used by XxHash128).",
+      "sources": [
+        {
+          "repo": "dotnet/runtime",
+          "ref": "main",
+          "path": "src/libraries/System.IO.Hashing/src/System/IO/Hashing/XxHashShared.cs",
+          "baseline_ref_sha": "62dfdbff84a97796938836c60697287fc6161aa1",
+          "baseline_blob_sha": "00f1f919a93c706cbd41a2a2e9d62f26c74b6f92",
+          "scope": "entire file"
+        }
+      ]
+    },
+    {
+      "id": "testframework-ci-environment-detector",
+      "local_path": "src/TestFramework/TestFramework/Internal/CIEnvironmentDetector.cs",
+      "notes": "Independent in-tree copy of the CI detector (test-framework variant exposing an IEnvironment-backed Instance) sharing the rules with the platform copy.",
+      "sources": [
+        {
+          "repo": "dotnet/sdk",
+          "ref": "main",
+          "path": "src/Cli/Microsoft.DotNet.Cli.Definitions/Telemetry/CIEnvironmentDetectorForTelemetry.cs",
+          "baseline_ref_sha": "1ab3ae8e0338cdd06b3974959c5802ccc5a85978",
+          "baseline_blob_sha": "e10e1fc2cd973c6123fd983b16a8f0c1e9191c31",
+          "scope": "CI detection rules and environment variable lists"
+        }
+      ]
+    },
+    {
+      "id": "source-gen-equatable-array",
+      "local_path": "src/Analyzers/MSTest.SourceGeneration/Helpers/EquatableArray{T}.cs",
+      "notes": "Value-equality wrapper over ImmutableArray<T> for incremental source generator caching, ported from ComputeSharp.",
+      "sources": [
+        {
+          "repo": "Sergio0694/ComputeSharp",
+          "ref": "main",
+          "path": "src/ComputeSharp.SourceGeneration/Helpers/EquatableArray%7BT%7D.cs",
+          "baseline_ref_sha": "c3e9ad4faada0d67a122c0e458cf3978993cf6c5",
+          "baseline_blob_sha": "b63b1c8773635ffc132b728d5711acc40aae97e3",
+          "scope": "entire struct"
         }
       ]
     }

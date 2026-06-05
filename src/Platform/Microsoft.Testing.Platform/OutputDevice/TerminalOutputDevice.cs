@@ -63,6 +63,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private bool _isListTests;
     private bool _isListTestsJson;
     private bool _isServerMode;
+    private bool _isAzureDevOpsEnvironment;
     private ILogger? _logger;
     private TestProcessRole? _processRole;
 
@@ -119,6 +120,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
         _isListTests = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
         _isListTestsJson = PlatformCommandLineProvider.IsListTestsJsonOutput(_commandLineOptions);
+        _isAzureDevOpsEnvironment = AzureDevOpsLogIssueFormatter.IsAzureDevOpsEnvironment(_environment);
 
         if (_isListTestsJson)
         {
@@ -127,7 +129,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             // stdout, corrupting the JSON document. Route a single-line cancellation notice
             // to stderr instead so the user still gets feedback on Ctrl+C.
             await _policiesService.RegisterOnAbortCallbackAsync(
-                () => WriteToStandardErrorAsync(PlatformResources.CancellingTestSession)).ConfigureAwait(false);
+                async () =>
+                {
+                    await WriteToStandardErrorAsync(PlatformResources.CancellingTestSession).ConfigureAwait(false);
+                    await WriteToStandardErrorAsync(PlatformResources.PressCtrlCAgainToForceExit).ConfigureAwait(false);
+                }).ConfigureAwait(false);
         }
         else
         {
@@ -159,12 +165,18 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         // When --ansi auto is explicitly specified, it overrides --no-ansi too.
         bool effectiveNoAnsi = noAnsi && ansiOverride == AnsiOverride.None;
 
+        // Honor the de-facto cross-tool NO_COLOR convention (https://no-color.org): when present with any
+        // non-empty value, suppress ANSI color/cursor codes unless the user explicitly opted in via
+        // `--ansi on` (which still wins, matching the precedence documented in --help).
+        bool noColorEnv = !RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable("NO_COLOR"));
+
         bool inCI = new CIEnvironmentDetector(_environment).IsCIEnvironment();
+        bool isLLMEnvironment = new LLMEnvironmentDetector(_environment).IsLLMEnvironment();
 
         AnsiMode ansiMode = ansiOverride switch
         {
-            // User explicitly forced ANSI on (e.g. `--ansi on`). Bypass CI / LLM / redirection detection
-            // so colors and cursor movement are emitted even when stdout is redirected.
+            // User explicitly forced ANSI on (e.g. `--ansi on`). Bypass CI / LLM / NO_COLOR / redirection
+            // detection so colors and cursor movement are emitted even when stdout is redirected.
             AnsiOverride.ForceOn => AnsiMode.ForceAnsi,
 
             // User explicitly disabled ANSI (`--ansi off`).
@@ -174,7 +186,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             // No --ansi argument was provided, or `--ansi auto` was provided.
             // Fall back to environment-based detection.
             // In LLM environments, prefer simple text output so that the LLM can parse it easily.
-            _ when effectiveNoAnsi || LLMEnvironmentDetector.IsLLMEnvironment() => AnsiMode.NoAnsi,
+            // NO_COLOR (https://no-color.org) is honored as well: any non-empty value suppresses ANSI.
+            _ when effectiveNoAnsi || noColorEnv || isLLMEnvironment => AnsiMode.NoAnsi,
             _ when inCI => AnsiMode.SimpleAnsi,
             _ => AnsiMode.AnsiIfPossible,
         };
@@ -193,8 +206,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             showPassed = () => true;
         }
 
-        OutputShowMode showStdout = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption);
-        OutputShowMode showStderr = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption);
+        OutputShowMode showStdout = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption, isLLMEnvironment);
+        OutputShowMode showStderr = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption, isLLMEnvironment);
 
         Func<bool?> shouldShowProgress = noProgress || ansiMode is AnsiMode.NoAnsi or AnsiMode.SimpleAnsi
             // User preference is to not show progress.
@@ -225,7 +238,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         });
     }
 
-    private static OutputShowMode GetShowOutputMode(ICommandLineOptions commandLineOptions, string optionName)
+    // When the option is absent, default to OutputShowMode.Failed when running under a known
+    // LLM/AI environment (less token noise for agents) and to OutputShowMode.All otherwise.
+    // An explicit --show-stdout/--show-stderr value always wins over the LLM-aware default.
+    // TODO(#8772): Update the --show-stdout/--show-stderr help text to reflect the LLM-aware default.
+    private static OutputShowMode GetShowOutputMode(ICommandLineOptions commandLineOptions, string optionName, bool isLLMEnvironment)
         => commandLineOptions.TryGetOptionArgumentList(optionName, out string[]? arguments) && arguments is { Length: > 0 }
             ? arguments[0] switch
             {
@@ -233,7 +250,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 string s when TerminalTestReporterCommandLineOptionsProvider.ShowOutputNoneArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => OutputShowMode.None,
                 _ => OutputShowMode.All,
             }
-            : OutputShowMode.All;
+            : isLLMEnvironment ? OutputShowMode.Failed : OutputShowMode.All;
 
     private enum AnsiOverride
     {
@@ -473,8 +490,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             // Machine-readable mode: keep stdout reserved for the JSON document so consumers can
             // pipe it directly. Errors and exceptions still need surfacing somewhere, so route
             // them to stderr via WriteToStandardErrorAsync (the only place that bypasses IConsole,
-            // which does not abstract stderr today). Warnings and informational text are dropped
-            // to keep stdout strictly JSON.
+            // which does not abstract stderr today). Azure Pipelines ##vso commands are skipped
+            // here: they must be written to stdout to be processed, but stdout belongs to JSON.
+            // Warnings and informational text are dropped to keep stdout strictly JSON.
             switch (data)
             {
                 case ErrorMessageOutputDeviceData errorData:
@@ -483,8 +501,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                     break;
 
                 case ExceptionOutputDeviceData exceptionData:
-                    await LogDebugAsync(exceptionData.Exception.ToString()).ConfigureAwait(false);
-                    await WriteToStandardErrorAsync(exceptionData.Exception.ToString()).ConfigureAwait(false);
+                    string exceptionText = exceptionData.Exception.ToString();
+                    await LogDebugAsync(exceptionText).ConfigureAwait(false);
+                    await WriteToStandardErrorAsync(exceptionText).ConfigureAwait(false);
                     break;
             }
 
@@ -507,16 +526,32 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
                 case WarningMessageOutputDeviceData warningData:
                     await LogDebugAsync(warningData.Message).ConfigureAwait(false);
+                    if (_isAzureDevOpsEnvironment)
+                    {
+                        _terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityWarning, warningData.Message));
+                    }
+
                     _terminalTestReporter.WriteWarningMessage(warningData.Message, null);
                     break;
 
                 case ErrorMessageOutputDeviceData errorData:
                     await LogDebugAsync(errorData.Message).ConfigureAwait(false);
+                    if (_isAzureDevOpsEnvironment)
+                    {
+                        _terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityError, errorData.Message));
+                    }
+
                     _terminalTestReporter.WriteErrorMessage(errorData.Message, null);
                     break;
 
                 case ExceptionOutputDeviceData exceptionOutputDeviceData:
-                    await LogDebugAsync(exceptionOutputDeviceData.Exception.ToString()).ConfigureAwait(false);
+                    string exceptionMessage = exceptionOutputDeviceData.Exception.ToString();
+                    await LogDebugAsync(exceptionMessage).ConfigureAwait(false);
+                    if (_isAzureDevOpsEnvironment)
+                    {
+                        _terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityError, exceptionMessage));
+                    }
+
                     _terminalTestReporter.WriteErrorMessage(exceptionOutputDeviceData.Exception);
                     break;
             }

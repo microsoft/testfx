@@ -12,6 +12,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// Defines the TestMethod Info object.
 /// </summary>
 #pragma warning disable CA1852 // Seal internal types - This class is inherited in tests.
+[StackTraceHidden]
 internal partial class TestMethodInfo : ITestMethod
 {
     /// <summary>

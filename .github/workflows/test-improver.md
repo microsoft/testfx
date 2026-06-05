@@ -25,7 +25,17 @@ on:
       run: |
         MAX_OPEN_PRS=8
         if [[ "$GITHUB_EVENT_NAME" != "schedule" ]]; then exit 0; fi
-        COUNT=$(gh pr list --repo ${{ github.repository }} --state open --search 'in:title "[test-improver]"' --json number --jq 'length')
+        # gh pr list exits with code 4 when --search returns no matches; treat that as 0 but
+        # let other failures (auth, API, rate limit) propagate so we don't silently proceed.
+        set +e
+        COUNT=$(gh pr list --repo ${{ github.repository }} --state open --search 'in:title "[test-improver]"' --json number --jq 'length' 2>/dev/null)
+        rc=$?
+        set -e
+        case $rc in
+          0) ;;
+          4) COUNT=0 ;;
+          *) echo "gh pr list failed with exit code $rc" >&2; exit $rc ;;
+        esac
         [[ "$COUNT" -lt "$MAX_OPEN_PRS" ]]
       # exits 0 if not scheduled or <MAX_OPEN_PRS open PRs, 1 if ≥MAX_OPEN_PRS
 
@@ -45,6 +55,8 @@ network:
   - java
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   add-comment:
     max: 10
     target: "*"
@@ -330,6 +342,12 @@ Maintain a single open issue titled `[test-improver] Monthly Activity {YYYY}-{MM
    - **Actively remove completed items** from "Suggested Actions" - do not tick them `[x]`; delete the line when actioned. The checklist contains only pending items.
    - Use `* [ ]` checkboxes in "Suggested Actions". Never use plain bullets there.
 4. Do not update the activity issue if nothing was done in the current run.
+
+## Repository-specific constraints
+
+The following constraints are **hard rules** for this repository. They override any opportunities surfaced from backlog, memory, or coverage gaps:
+
+- **Do NOT add VB.NET tests for analyzers.** The maintainers are not interested in VB.NET coverage for `MSTest.Analyzers` (or any analyzer project). Skip any backlog item that proposes adding VB-specific test cases for an analyzer (e.g. "Add VB.NET tests for `<Name>Analyzer`"). If memory still references such items, **remove those entries from memory** and prune them from the backlog; do not surface them in the Monthly Activity Summary. C# tests for analyzers remain in scope.
 
 ## Guidelines
 

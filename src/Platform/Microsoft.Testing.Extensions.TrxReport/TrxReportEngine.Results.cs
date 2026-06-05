@@ -110,22 +110,44 @@ internal sealed partial class TrxReportEngine
             IReadOnlyList<TrxStreamMessage>? trxMessages = testResult.Messages;
             if (trxMessages is not null)
             {
-                IEnumerable<string?> nonErrorMessages = trxMessages.Where(x => x.Kind == TrxStreamMessageKind.StandardOutput).Select(x => x.Message);
-                if (nonErrorMessages.Any())
+                // Single pass: partition messages by kind into separate StringBuilders,
+                // avoiding the double-enumeration that .Any() + string.Join() would cause.
+                StringBuilder? stdOut = null;
+                StringBuilder? stdErr = null;
+                StringBuilder? debugTrace = null;
+
+                foreach (TrxStreamMessage msg in trxMessages)
                 {
-                    output.Add(new XElement("StdOut", RemoveInvalidXmlChar(string.Join(Environment.NewLine, nonErrorMessages))));
+                    switch (msg.Kind)
+                    {
+                        case TrxStreamMessageKind.StandardOutput:
+                            stdOut?.Append(Environment.NewLine);
+                            (stdOut ??= new StringBuilder()).Append(msg.Message);
+                            break;
+                        case TrxStreamMessageKind.StandardError:
+                            stdErr?.Append(Environment.NewLine);
+                            (stdErr ??= new StringBuilder()).Append(msg.Message);
+                            break;
+                        case TrxStreamMessageKind.DebugOrTrace:
+                            debugTrace?.Append(Environment.NewLine);
+                            (debugTrace ??= new StringBuilder()).Append(msg.Message);
+                            break;
+                    }
                 }
 
-                IEnumerable<string?> errorMessages = trxMessages.Where(x => x.Kind == TrxStreamMessageKind.StandardError).Select(x => x.Message);
-                if (errorMessages.Any())
+                if (stdOut is not null)
                 {
-                    output.Add(new XElement("StdErr", RemoveInvalidXmlChar(string.Join(Environment.NewLine, errorMessages))));
+                    output.Add(new XElement("StdOut", RemoveInvalidXmlChar(stdOut.ToString())));
                 }
 
-                IEnumerable<string?> debugOrTraceMessages = trxMessages.Where(x => x.Kind == TrxStreamMessageKind.DebugOrTrace).Select(x => x.Message);
-                if (debugOrTraceMessages.Any())
+                if (stdErr is not null)
                 {
-                    output.Add(new XElement("DebugTrace", RemoveInvalidXmlChar(string.Join(Environment.NewLine, debugOrTraceMessages))));
+                    output.Add(new XElement("StdErr", RemoveInvalidXmlChar(stdErr.ToString())));
+                }
+
+                if (debugTrace is not null)
+                {
+                    output.Add(new XElement("DebugTrace", RemoveInvalidXmlChar(debugTrace.ToString())));
                 }
             }
 

@@ -18,6 +18,14 @@ An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats
 
 ## C
 
+### CodeCoverage
+
+An MTP extension (`Microsoft.Testing.Extensions.CodeCoverage`) that instruments .NET assemblies and collects code-coverage data during a test run. It is developed and maintained in the `devdiv/DevDiv/vs-code-coverage` repository and consumed by this project as a Maestro-managed dependency. The extension supports the `--coverage` command-line option; VSTest-compatible `--collect "XPlat Code Coverage"` and `--collect "Code Coverage"` forms are proposed via a [command-line option mapping](#commandlineoptionmapping) (see `docs/RFCs/015-Command-Line-Option-Mappings.md`).
+
+### CommandLineOptionMapping
+
+A proposed MTP extensibility point (see `docs/RFCs/015-Command-Line-Option-Mappings.md`) that would let an extension declaratively accept a user-facing option (e.g. `--collect "XPlat Code Coverage"`) and rewrite it at parse time into one or more first-class MTP options (e.g. `--coverage`). In RFC 015, this is expressed via `ICommandLineOptionMappingProvider`. Intended to smooth migration from VSTest by allowing legacy `--logger` and `--collect` argument forms to be forwarded to their MTP equivalents without polluting the canonical MTP option set.
+
 ### CrashDump
 
 An MTP extension (`Microsoft.Testing.Extensions.CrashDump`) that automatically captures a process memory dump when the test host crashes. Useful for diagnosing unexpected process termination during test runs.
@@ -87,7 +95,7 @@ An automated agentic workflow (`.github/workflows/lean-squad.md`) that manages t
 An optional argument value for the MTP `--list-tests` command-line option that switches test discovery output from the default human-readable text to a machine-readable JSON document emitted on stdout. Introduced in [PR #8280](https://github.com/microsoft/testfx/pull/8280).
 
 | Invocation | Behavior |
-|---|---|
+| --- | --- |
 | `--list-tests` | Default human-readable text output (unchanged) |
 | `--list-tests text` | Explicit alias for the default text mode |
 | `--list-tests json` | JSON document on stdout; banner, progress, and per-test text are suppressed; errors go to stderr |

@@ -74,22 +74,22 @@
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDescription">
         <source>The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</source>
-        <target state="new">The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</target>
+        <target state="translated">Kilitlenme sırasında çalışan testleri belirlemek için kullanılan, test oturumu sırasında başlatılan ve sonlandırılan testlerin listesi</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDisplayName">
         <source>Crash sequence file</source>
-        <target state="new">Crash sequence file</target>
+        <target state="translated">Kilitlenme sırası dosyası</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>
-        <target state="new">Failed to read the crash sequence file '{0}': {1}</target>
+        <target state="translated">'{0}' kilitlenme sırası dosyası okunamadı: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
         <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
-        <target state="new">The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
+        <target state="translated">Test konağı kilitlendiğinde aşağıdaki testler hala çalışıyordu (biçim: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionDescription">
@@ -111,6 +111,11 @@ Daha fazla bilgi için https://learn.microsoft.com/dotnet/core/diagnostics/colle
         <target state="translated">'--crashdump-type' argüman olarak tek bir döküm tipini bekler (örneğin, '--crashdump-type Heap')</target>
         <note />
       </trans-unit>
+      <trans-unit id="CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage">
+        <source>'--crash-report' and '--crash-report-if-supported' are mutually exclusive. Use '--crash-report-if-supported' to opt into a best-effort crash report that is silently skipped on platforms where it is not supported, or '--crash-report' to fail fast when the option cannot be honored.</source>
+        <target state="translated">'--crash-report' ve '--crash-report-if-supported' birlikte kullanılamaz. Desteklenmeyen platformlarda sessizce atlanan, en iyi çabalı kilitlenme raporu oluşturulmasını istiyorsanız '--crash-report-if-supported' seçeneğini kullanın veya seçenek karşılanamadığında işlemin hızlıca başarısız olmasını istiyorsanız '--crash-report' seçeneğini kullanın.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CrashReportArtifactDescription">
         <source>The testhost process crash report file</source>
         <target state="translated">Test ana bilgisayarı işlemi kilitlenme raporu dosyası</target>
@@ -121,28 +126,43 @@ Daha fazla bilgi için https://learn.microsoft.com/dotnet/core/diagnostics/colle
         <target state="translated">Çökme raporu dosyası</target>
         <note />
       </trans-unit>
+      <trans-unit id="CrashReportIfSupportedIgnoredOnNetFrameworkInfoMessage">
+        <source>'--crash-report-if-supported' was specified but is being ignored on this runtime: the .NET Framework testhost does not support the runtime-based crash dump / crash report mechanism. No crash report file will be produced.</source>
+        <target state="translated">'--crash-report-if-supported' belirtildi ancak bu çalışma zamanında yok sayılıyor: .NET Framework test ana bilgisayarı, çalışma zamanı tabanlı kilitlenme dökümü/kilitlenme raporu mekanizmasını desteklemiyor. Kilitlenme raporu dosyası oluşturulmaz.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashReportIfSupportedIgnoredOnWindowsInfoMessage">
+        <source>'--crash-report-if-supported' was specified but is being ignored on this platform: the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on Windows (see https://github.com/dotnet/runtime/issues/80191). No crash report file will be produced.</source>
+        <target state="translated">'--crash-report-if-supported' belirtildi ancak bu platformda yok sayılıyor: .NET çalışma zamanı, Windows'ta temel alınan 'DOTNET_EnableCrashReport' ve 'DOTNET_EnableCrashReportOnly' ortam değişkenlerini yok sayıyor (bkz. https://github.com/dotnet/runtime/issues/80191). Kilitlenme raporu dosyası oluşturulmaz.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CrashReportIfSupportedOptionDescription">
+        <source>Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</source>
+        <target state="translated">'--crash-report' ile aynıdır ancak kilitlenme raporu oluşturmanın desteklenmediği platformlarda sessizce yok sayılır (bilgilendirme iletisi gönderilir). Windows içeren CI matrislerinde aynı komut satırını korumak için bu seçeneği kullanın. '--crash-report' ile birlikte kullanılamaz.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">
-        <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crashdump' to generate a crash dump file instead.</source>
-        <target state="translated">`.NET çalışma zamanı bu platformda temel alınan 'DOTNET_EnableCrashReport' ve 'DOTNET_EnableCrashReportOnly' ortam değişkenlerini yok saydığı için Windows'ta '--crash-report' desteklenmez. Bkz. https://github.com/dotnet/runtime/issues/80191. Bunun yerine bir kilitlenme dökümü dosyası oluşturmak için '--crashdump' kullanın.</target>
+        <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</source>
+        <target state="translated">.NET çalışma zamanı bu platformda temel alınan 'DOTNET_EnableCrashReport' ve 'DOTNET_EnableCrashReportOnly' ortam değişkenlerini yok saydığı için Windows'ta '--crash-report' desteklenmez. Bkz. https://github.com/dotnet/runtime/issues/80191. Seçeneği Windows'ta sessizce atlamak için '--crash-report-if-supported' kullanın ya da bunun yerine bir kilitlenme dökümü dosyası oluşturmak için '--crashdump' kullanın.</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashReportOptionDescription">
-        <source>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191).</source>
-        <target state="translated">`[Yalnızca Linux/macOS] Test işlemi kilitlendiğinde bir JSON kilitlenme raporu oluşturun. Ayrıca bir döküm dosyası oluşturmak için '--crashdump' ile birlikte kullanın. Tek başına kullanıldığında .NET 7+ gerektirir. '--crashdump' ile birlikte kullanıldığında .NET 6+ gerektirir. Bu çalışma zamanı gereksinimi araç tarafından zorunlu kılınmaz. Desteklenmeyen çalışma zamanlarında kilitlenme raporu oluşturulmaz. .NET çalışma zamanı sınırlaması nedeniyle Windows'ta desteklenmez (dotnet/runtime#80191).</target>
+        <source>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.</source>
+        <target state="translated">[Yalnızca Linux/macOS] Test işlemi kilitlendiğinde bir JSON kilitlenme raporu oluşturun. Ayrıca bir döküm dosyası oluşturmak için '--crashdump' ile birlikte kullanın. Tek başına kullanıldığında .NET 7+ gerektirir. '--crashdump' ile birlikte kullanıldığında .NET 6+ gerektirir. Bu çalışma zamanı gereksinimi araç tarafından zorunlu kılınmaz: desteklenmeyen çalışma zamanlarında kilitlenme raporu çıkarılmaz. .NET çalışma zamanı sınırlaması nedeniyle Windows'ta desteklenmez (dotnet/runtime#80191); seçeneği sessizce atlamak için '--crash-report-if-supported' kullanın.</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashSequenceOptionDescription">
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
-The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
-Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <target state="translated">Test oturumu sırasında başlatılan ve sonlandırılan testleri listeleyen bir sıra dosyasının kilitlenme bilgi dökümü veya kilitlenme raporuyla birlikte oluşturulup oluşturulmadığını denetleyin.
+Dosya, dökümü incelemeye gerek kalmadan kilitlenme sırasında çalışan testlerin belirlenmesini mümkün kılar.
+Geçerli değerler: 'on' (varsayılan: 'true', 'enable', '1' değerlerini de kabul eder) ve 'off' ('false', 'disable', '0' değerlerini de kabul eder).</target>
         <note />
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--crash-sequence, değeri 'on' (veya 'true', 'enable', '1') ya da 'off' (veya 'false', 'disable', '0') olan tek bir parametre bekliyor.</target>
         <note />
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">

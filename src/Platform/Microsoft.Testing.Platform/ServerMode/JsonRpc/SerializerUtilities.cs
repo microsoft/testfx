@@ -179,30 +179,31 @@ internal static class SerializerUtilities
                     [JsonRpcStrings.DisplayName] = n.DisplayName,
                 };
 
-                TestMetadataProperty[] metadataProperties = n.Properties.OfType<TestMetadataProperty>();
-                if (metadataProperties.Length > 0)
-                {
-#if NETCOREAPP
-                    properties["traits"] = metadataProperties.Select(x => new KeyValuePair<string, string>(x.Key, x.Value));
-#else
-                    JsonArray collection = [];
-                    foreach (TestMetadataProperty metadata in metadataProperties)
-                    {
-                        JsonObject o = new()
-                        {
-                            { metadata.Key, metadata.Value },
-                        };
-                        collection.Add(o);
-                    }
-
-                    properties["traits"] = collection;
-#endif
-                }
+                // Reserve the "traits" slot up-front so it appears immediately after
+                // "display-name" in the serialized output (preserving the original wire
+                // format). The placeholder is either assigned with the collected traits
+                // below, or removed when no TestMetadataProperty is found.
+                properties["traits"] = null;
 
                 int attachmentIndex = 0;
+#if NETCOREAPP
+                List<KeyValuePair<string, string>>? traits = null;
+#else
+                JsonArray? traits = null;
+#endif
 
                 foreach (IProperty property in n.Properties)
                 {
+                    if (property is TestMetadataProperty metadataProperty)
+                    {
+#if NETCOREAPP
+                        (traits ??= []).Add(new KeyValuePair<string, string>(metadataProperty.Key, metadataProperty.Value));
+#else
+                        (traits ??= []).Add(new JsonObject { { metadataProperty.Key, metadataProperty.Value } });
+#endif
+                        continue;
+                    }
+
                     if (property is SerializableKeyValuePairStringProperty keyValuePairProperty)
                     {
                         properties[keyValuePairProperty.Key] = keyValuePairProperty.Value;
@@ -354,14 +355,19 @@ internal static class SerializerUtilities
                     }
                 }
 
-#if NETCOREAPP
-                properties.Add("node-type", "group");
-#else
+                if (traits is not null)
+                {
+                    properties["traits"] = traits;
+                }
+                else
+                {
+                    properties.Remove("traits");
+                }
+
                 if (!properties.ContainsKey("node-type"))
                 {
                     properties.Add("node-type", "group");
                 }
-#endif
 
                 return properties;
             });
@@ -482,22 +488,33 @@ internal static class SerializerUtilities
                             ? null
                             : GetIdFromJson(idObj) ?? throw new MessageFormatException("id field should be a string or an int");
 
-                // TODO: Should we be forgiving in the deserialization (if it throws)?
-                // This way we'd be able to send an ErrorMessage back to the client,
-                // rather than send a log notification.
-
-                // Parse the specific methods
-                object? @params = method switch
+                object? @params;
+                try
                 {
-                    JsonRpcMethods.Initialize => Deserialize<InitializeRequestArgs>(paramsObj),
-                    JsonRpcMethods.TestingDiscoverTests => Deserialize<DiscoverRequestArgs>(paramsObj),
-                    JsonRpcMethods.TestingRunTests => Deserialize<RunRequestArgs>(paramsObj),
-                    JsonRpcMethods.CancelRequest => Deserialize<CancelRequestArgs>(paramsObj),
-                    JsonRpcMethods.Exit => Deserialize<ExitRequestArgs>(paramsObj),
+                    // Parse the specific methods
+                    @params = method switch
+                    {
+                        JsonRpcMethods.Initialize => Deserialize<InitializeRequestArgs>(paramsObj),
+                        JsonRpcMethods.TestingDiscoverTests => Deserialize<DiscoverRequestArgs>(paramsObj),
+                        JsonRpcMethods.TestingRunTests => Deserialize<RunRequestArgs>(paramsObj),
+                        JsonRpcMethods.CancelRequest => Deserialize<CancelRequestArgs>(paramsObj),
+                        JsonRpcMethods.Exit => Deserialize<ExitRequestArgs>(paramsObj),
 
-                    // Note: Let the server report unknown RPC request back to the client.
-                    _ => null,
-                };
+                        // Note: Let the server report unknown RPC request back to the client.
+                        _ => null,
+                    };
+                }
+                catch (Exception ex) when (ex is MessageFormatException or InvalidCastException)
+                {
+                    // If params can't be deserialized for a request, capture the failure so
+                    // we can later send back a properly coded JSON-RPC error using the request id.
+                    // For notifications there's no one to respond to, but we still avoid
+                    // crashing the message-handling loop by swallowing into the sentinel.
+                    // We catch the broader set of deserialization-related exceptions because the
+                    // request payload is untrusted client input and the lower-level helpers can
+                    // throw types other than MessageFormatException.
+                    @params = new InvalidRequestParamsArgs(ErrorCodes.InvalidParams, ex.Message);
+                }
 
                 return id.HasValue
                     ? new RequestMessage(id.Value, method, @params)
@@ -587,7 +604,11 @@ internal static class SerializerUtilities
 
         Deserializers[typeof(DiscoverRequestArgs)] = new ObjectDeserializer<DiscoverRequestArgs>(properties =>
         {
-            _ = Guid.TryParse(GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.RunId), out Guid runId);
+            string runIdString = GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.RunId);
+            if (!Guid.TryParse(runIdString, out Guid runId))
+            {
+                throw new MessageFormatException(JsonRpcStrings.InvalidRunIdErrorMessage);
+            }
 
             var testsJson = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Tests) as ICollection<object>;
 
@@ -600,7 +621,11 @@ internal static class SerializerUtilities
 
         Deserializers[typeof(RunRequestArgs)] = new ObjectDeserializer<RunRequestArgs>(properties =>
         {
-            _ = Guid.TryParse(GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.RunId), out Guid runId);
+            string runIdString = GetRequiredPropertyFromJson<string>(properties, JsonRpcStrings.RunId);
+            if (!Guid.TryParse(runIdString, out Guid runId))
+            {
+                throw new MessageFormatException(JsonRpcStrings.InvalidRunIdErrorMessage);
+            }
 
             var testsJson = GetOptionalPropertyFromJson(properties, JsonRpcStrings.Tests) as ICollection<object>;
 
@@ -746,7 +771,14 @@ internal static class SerializerUtilities
         => properties.TryGetValue(propertyName, out object? propObj) ? propObj : null;
 
     private static T GetRequiredPropertyFromJson<T>(IDictionary<string, object?> properties, string propertyName)
-        => (T)(GetOptionalPropertyFromJson(properties, propertyName) ?? throw new MessageFormatException($"'{propertyName}' field is missing"));
+    {
+        object? value = GetOptionalPropertyFromJson(properties, propertyName)
+            ?? throw new MessageFormatException($"'{propertyName}' field is missing");
+
+        return value is T typed
+            ? typed
+            : throw new MessageFormatException($"'{propertyName}' field has wrong type (expected {typeof(T).Name})");
+    }
 
     private static int? GetIdFromJson(object? idObj)
         => idObj switch

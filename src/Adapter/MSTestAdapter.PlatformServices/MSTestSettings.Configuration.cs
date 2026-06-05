@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
@@ -59,6 +59,11 @@ internal sealed partial class MSTestSettings
 
         CurrentSettings = settings;
         RunConfigurationSettings = runConfigurationSettings;
+
+        if (settings.RandomizeTestOrder && settings.OrderTestsByNameInClass)
+        {
+            logger?.SendMessage(TestMessageLevel.Warning, Resource.RandomTestOrderAndOrderTestsByNameInClassConflict);
+        }
 
         // Track configuration source for telemetry.
 #if !WINDOWS_UWP && !WIN_UI
@@ -144,6 +149,23 @@ internal sealed partial class MSTestSettings
         }
     }
 
+    private static void ParseSignedIntegerSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<int> setSetting)
+    {
+        if (configuration[$"mstest:{key}"] is not string value)
+        {
+            return;
+        }
+
+        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int result))
+        {
+            setSetting(result);
+        }
+        else
+        {
+            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
+        }
+    }
+
     /// <summary>
     /// Convert the parameter xml to TestSettings.
     /// </summary>
@@ -153,6 +175,8 @@ internal sealed partial class MSTestSettings
     internal static void SetSettingsFromConfig(IConfiguration configuration, IMessageLogger? logger, MSTestSettings settings)
     {
         ParseBooleanSetting(configuration, "orderTestsByNameInClass", logger, value => settings.OrderTestsByNameInClass = value);
+        ParseBooleanSetting(configuration, "execution:randomizeTestOrder", logger, value => settings.RandomizeTestOrder = value);
+        ParseSignedIntegerSetting(configuration, "execution:randomTestOrderSeed", logger, value => settings.RandomTestOrderSeed = value);
         ParseBooleanSetting(configuration, "output:captureTrace", logger, value => settings.CaptureDebugTraces = value);
         ParseBooleanSetting(configuration, "parallelism:enabled", logger, value => settings.DisableParallelization = !value);
         ParseBooleanSetting(configuration, "execution:mapInconclusiveToFailed", logger, value => settings.MapInconclusiveToFailed = value);

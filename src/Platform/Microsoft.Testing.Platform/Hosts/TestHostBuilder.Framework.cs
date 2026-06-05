@@ -111,7 +111,8 @@ internal sealed partial class TestHostBuilder
             serviceProvider.GetTestApplicationCancellationTokenSource(),
             serviceProvider.GetTask(),
             serviceProvider.GetLoggerFactory(),
-            serviceProvider.GetEnvironment());
+            serviceProvider.GetEnvironment(),
+            serviceProvider.GetService<IShutdownProgressReporter>());
         await concreteMessageBusService.InitAsync().ConfigureAwait(false);
         testFrameworkBuilderData.MessageBusProxy.SetBuiltMessageBus(concreteMessageBusService);
 

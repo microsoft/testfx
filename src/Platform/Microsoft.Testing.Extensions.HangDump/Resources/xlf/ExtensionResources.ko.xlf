@@ -79,8 +79,8 @@ Disk info:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">덤프 파일의 이름을 지정합니다.
+자리 표시자 {pname}(테스트 애플리케이션 이름), {pid}(프로세스 ID), {asm}(항목 어셈블리 이름), {tfm}(대상 프레임워크 모니커), {time}(타임스탬프)을 지원합니다. 레거시 %p 토큰(프로세스 ID)도 이전 버전과의 호환성을 위해 지원됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -96,15 +96,21 @@ Supports the following placeholders: {pname} (test application name), {pid} (pro
       <trans-unit id="HangDumpTimeoutOptionDescription">
         <source>Specify the timeout after which the dump will be generated.
 The timeout value is specified in one of the following formats:
-    1.5h, 1.5hour, 1.5hours,
+    500ms, 500mil, 500millisecond, 500milliseconds,
+    5400s, 5400sec, 5400second, 5400seconds,
     90m, 90min, 90minute, 90minutes,
-    5400s, 5400sec, 5400second, 5400seconds.
+    1.5h, 1.5hour, 1.5hours,
+    1d, 1day, 1days.
+    A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
         <target state="translated">덤프가 생성될 시간 제한을 지정합니다.
 시간 제한 값은 다음 형식 중 하나로 지정됩니다.
-    1.5시간, 1.5시간, 1.5시간,
-    90m, 90분, 90분, 90분,
-    5400초, 5400초, 5400초, 5400초.
+    500ms, 500mil, 500millisecond, 500milliseconds,
+    5400s, 5400sec, 5400second, 5400seconds,
+    90m, 90min, 90minute, 90minutes,
+    1.5h, 1.5hour, 1.5hours,
+    1d, 1day, 1days.
+    단위 생략 시 기본 단위는 밀리초(ms)입니다.
     기본값은 30m입니다.</target>
         <note />
       </trans-unit>
@@ -113,20 +119,35 @@ The timeout value is specified in one of the following formats:
         <target state="translated">'--hangdump-timeout'에는 단일 시간 제한 인수가 필요합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
+        <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
+        <target state="translated">'--hangdump-type'과 '--hangdump-type-if-supported'는 함께 사용할 수 없습니다. 요청된 형식을 현재 런타임에서 사용할 수 없을 때 가장 가까운 사용 가능한 형식으로 대체하는 최선의 덤프 형식을 사용하려면 '--hangdump-type-if-supported'를 사용하고, 지원되지 않는 런타임에서 빠르게 실패하려면 '--hangdump-type'을 사용하세요.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
+        <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
+        <target state="translated">'--hangdump-type-if-supported {0}'은(는) 현재 런타임에서 지원되지 않습니다. '{1}'(으)로 대체하는 중입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
+        <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
+        <target state="translated">'--hangdump-type'과(와) 동일하지만 요청된 형식을 현재 런타임에서 사용할 수 없는 경우 가장 가까운 지원 덤프 형식으로 자동으로 대체됩니다(정보 메시지와 함께)(예: 'Triage'는 .NET Core에서만 지원되며 .NET Framework에서는 'Mini'로 대체됨). .NET Framework와 .NET이 혼합된 CI 매트릭스에서 동일한 명령줄을 유지하려면 이 옵션을 사용하세요. 유효한 값은 'Mini', 'Heap', 'Full', 'Triage', 'None'입니다. '--hangdump-type'과 함께 사용할 수 없습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are {0}.
-Default type is 'Full'</target>
+        <target state="translated">덤프의 유형을 지정합니다.
+유효한 값은 {0}입니다.
+기본 유형은 'Full'입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are {1}</target>
+        <target state="translated">'{0}'은(는) 올바른 덤프 유형이 아닙니다.
+유효한 옵션은 {1}입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

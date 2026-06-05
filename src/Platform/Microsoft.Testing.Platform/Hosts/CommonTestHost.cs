@@ -18,6 +18,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 /// This represents either a test host (console or server), or a test host controller.
 /// This doesn't represent an orchestrator host.
 /// </summary>
+[StackTraceHidden]
 internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 {
     public ServiceProvider ServiceProvider => serviceProvider;
@@ -250,6 +251,8 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             return;
         }
 
+        IShutdownProgressReporter? shutdownProgressReporter = serviceProvider.GetService<IShutdownProgressReporter>();
+
         // First, we call OnTestSessionFinishingAsync on all non-consumers.
         bool hasNonDataConsumers = false;
         foreach (ITestSessionLifetimeHandler testSessionLifetimeHandler in testSessionLifetimeHandlersContainer.TestSessionLifetimeHandlers)
@@ -272,6 +275,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             hasNonDataConsumers = true;
 
             using (otelService?.StartActivity(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.ToOTelTags()))
+            using (shutdownProgressReporter?.Track(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.DisplayName, nameof(ITestSessionLifetimeHandler.OnTestSessionFinishingAsync)))
             {
                 await testSessionLifetimeHandler.OnTestSessionFinishingAsync(testSessionContext).ConfigureAwait(false);
             }
@@ -294,6 +298,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             }
 
             using (otelService?.StartActivity(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.ToOTelTags()))
+            using (shutdownProgressReporter?.Track(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.DisplayName, nameof(ITestSessionLifetimeHandler.OnTestSessionFinishingAsync)))
             {
                 await testSessionLifetimeHandler.OnTestSessionFinishingAsync(testSessionContext).ConfigureAwait(false);
             }

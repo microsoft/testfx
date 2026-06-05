@@ -183,6 +183,9 @@
   <data name="StringAssertToAssertTitle" xml:space="preserve">
     <value>Use 'Assert.{0}' instead of 'StringAssert'</value>
   </data>
+  <data name="CollectionAssertToAssertTitle" xml:space="preserve">
+    <value>Use 'Assert.{0}' instead of 'CollectionAssert'</value>
+  </data>
   <data name="PassCancellationTokenFix" xml:space="preserve">
     <value>Pass 'TestContext.CancellationToken' argument to method call</value>
   </data>
@@ -229,12 +232,12 @@
     <value>Use async assertion</value>
   </data>
   <data name="AvoidAssertAreEqualOnCollectionsOrderedFix" xml:space="preserve">
-    <value>Replace with `Assert.{0}` (ordered)</value>
-  </data>
-  <data name="AvoidAssertAreEqualOnCollectionsInAnyOrderFix" xml:space="preserve">
-    <value>Replace with `Assert.{0}(..., SequenceOrder.InAnyOrder)`</value>
+    <value>Use ordered, element-wise comparison ('Assert.{0}')</value>
   </data>
   <data name="AvoidAssertAreEqualOnCollectionsEquivalentFix" xml:space="preserve">
-    <value>Replace with `Assert.{0}`</value>
+    <value>Use deep structural comparison ('Assert.{0}')</value>
+  </data>
+  <data name="AddIgnoreJustificationFix" xml:space="preserve">
+    <value>Add a placeholder justification to '[Ignore]'</value>
   </data>
 </root>

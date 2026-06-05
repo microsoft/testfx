@@ -110,5 +110,20 @@ automation:
 
 - `src/Platform/Microsoft.Testing.Extensions.Retry/RetryOrchestrator.cs` —
   intra-repo copy, no external upstream.
+- `src/Platform/Microsoft.Testing.Extensions.Retry/RandomId.cs` —
+  intra-repo copy from `test/Utilities/Microsoft.Testing.TestInfrastructure`,
+  no external upstream.
+- `src/Analyzers/MSTest.SourceGeneration/ObjectModels/DynamicDataTestMethodArgumentsInfo.cs` —
+  intra-repo `// Based on DynamicDataSourceType in:` reference to an MSTest
+  attribute, no external upstream.
+- `src/Adapter/MSTestAdapter.PlatformServices/Discovery/AssemblyEnumeratorWrapper.cs` —
+  the line-44 helper is annotated `// Copy from https://stackoverflow.com/a/15608028/...`;
+  Stack Overflow snippets don't have a trackable upstream file.
 - `src/TestFramework/TestFramework.Extensions/AppModel.cs` — only mentions
   "WinUI source base" without a concrete upstream URL.
+- `src/Polyfills/HashHelpers.cs` — the upstream reference is to the
+  `dotnet/coreclr#1830` pull request (now merged into `dotnet/runtime`), not a
+  specific file; the local code is a trivial three-line helper.
+- `src/Platform/Microsoft.Testing.Extensions.TrxReport/Hashing/BitOperations.cs`
+  and `EmbeddedAttribute.cs` — trivial compiler shims/polyfills that have not
+  meaningfully changed upstream.

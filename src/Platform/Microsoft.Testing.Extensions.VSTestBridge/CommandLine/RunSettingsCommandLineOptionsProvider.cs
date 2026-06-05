@@ -13,7 +13,7 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
 /// <summary>
 /// A command line service provider to support VSTest .runsettings files.
 /// </summary>
-internal sealed class RunSettingsCommandLineOptionsProvider : ICommandLineOptionsProvider
+internal sealed class RunSettingsCommandLineOptionsProvider : CommandLineOptionsProviderBase
 {
     public const string RunSettingsOptionName = "settings";
     private readonly IFileSystem _fileSystem;
@@ -24,35 +24,13 @@ internal sealed class RunSettingsCommandLineOptionsProvider : ICommandLineOption
     }
 
     internal /* for testing purposes */ RunSettingsCommandLineOptionsProvider(IExtension extension, IFileSystem fileSystem)
+        : base(extension, [new CommandLineOption(RunSettingsOptionName, ExtensionResources.RunSettingsOptionDescription, ArgumentArity.ExactlyOne, false)])
     {
-        Uid = extension.Uid;
-        DisplayName = extension.DisplayName;
-        Description = extension.Description;
-        Version = extension.Version;
         _fileSystem = fileSystem;
     }
 
     /// <inheritdoc />
-    public string Uid { get; }
-
-    /// <inheritdoc />
-    public string Version { get; }
-
-    /// <inheritdoc />
-    public string DisplayName { get; }
-
-    /// <inheritdoc />
-    public string Description { get; }
-
-    /// <inheritdoc />
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    /// <inheritdoc />
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        => [new CommandLineOption(RunSettingsOptionName, ExtensionResources.RunSettingsOptionDescription, ArgumentArity.ExactlyOne, false)];
-
-    /// <inheritdoc />
-    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
         RoslynDebug.Assert(commandOption.Name == RunSettingsOptionName);
         string filePath = arguments[0];
@@ -71,9 +49,6 @@ internal sealed class RunSettingsCommandLineOptionsProvider : ICommandLineOption
         // No problem found
         return ValidationResult.ValidTask;
     }
-
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => ValidationResult.ValidTask;
 
     private bool CanReadFile(string filePath)
     {

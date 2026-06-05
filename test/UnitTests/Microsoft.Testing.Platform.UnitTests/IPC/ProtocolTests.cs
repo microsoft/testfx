@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
 
@@ -148,6 +149,105 @@ public sealed class ProtocolTests
         Assert.IsNull(message.Properties);
 
         Assert.IsEmpty(actual.Properties);
+    }
+
+    // The HandshakeMessagePropertyNames values are part of the wire protocol
+    // shared with dotnet test in the dotnet/sdk repository. Changing any
+    // existing value is a binary-breaking change for older platform <-> SDK
+    // pairings, so it is intentionally pinned by this test.
+    [TestMethod]
+    public void HandshakeMessagePropertyNames_ValuesAreStable()
+    {
+        // Indirect the comparisons through a dictionary lookup so the MSTest analyzer
+        // does not flag compile-time constant comparisons as "always true / always failing".
+        Dictionary<byte, string> properties = new()
+        {
+            { HandshakeMessagePropertyNames.PID, nameof(HandshakeMessagePropertyNames.PID) },
+            { HandshakeMessagePropertyNames.Architecture, nameof(HandshakeMessagePropertyNames.Architecture) },
+            { HandshakeMessagePropertyNames.Framework, nameof(HandshakeMessagePropertyNames.Framework) },
+            { HandshakeMessagePropertyNames.OS, nameof(HandshakeMessagePropertyNames.OS) },
+            { HandshakeMessagePropertyNames.SupportedProtocolVersions, nameof(HandshakeMessagePropertyNames.SupportedProtocolVersions) },
+            { HandshakeMessagePropertyNames.HostType, nameof(HandshakeMessagePropertyNames.HostType) },
+            { HandshakeMessagePropertyNames.ModulePath, nameof(HandshakeMessagePropertyNames.ModulePath) },
+            { HandshakeMessagePropertyNames.ExecutionId, nameof(HandshakeMessagePropertyNames.ExecutionId) },
+            { HandshakeMessagePropertyNames.InstanceId, nameof(HandshakeMessagePropertyNames.InstanceId) },
+            { HandshakeMessagePropertyNames.IsIDE, nameof(HandshakeMessagePropertyNames.IsIDE) },
+            { HandshakeMessagePropertyNames.ExecutionMode, nameof(HandshakeMessagePropertyNames.ExecutionMode) },
+        };
+
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.PID), properties[0]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.Architecture), properties[1]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.Framework), properties[2]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.OS), properties[3]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedProtocolVersions), properties[4]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.HostType), properties[5]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.ModulePath), properties[6]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.ExecutionId), properties[7]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.InstanceId), properties[8]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.IsIDE), properties[9]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.ExecutionMode), properties[10]);
+    }
+
+    // The HandshakeMessageExecutionModes string values flow over IPC to
+    // dotnet test in the dotnet/sdk repository and are compared by value
+    // there. Renaming any of them is a wire-protocol break.
+    [TestMethod]
+    public void HandshakeMessageExecutionModes_ValuesAreStable()
+    {
+        // Indirect the comparisons through a collection so the MSTest analyzer
+        // does not flag string compile-time equalities as "always true".
+        string[] modes = [HandshakeMessageExecutionModes.Run, HandshakeMessageExecutionModes.Help, HandshakeMessageExecutionModes.Discover];
+
+        Assert.AreEqual("run", modes[0]);
+        Assert.AreEqual("help", modes[1]);
+        Assert.AreEqual("discover", modes[2]);
+    }
+
+    [TestMethod]
+    public void TestInProgressMessagesSerializeDeserialize()
+    {
+        object serializer = new TestInProgressMessagesSerializer();
+
+        var message = new TestInProgressMessages(
+            "MyExecId",
+            "MyInstId",
+            [
+                new TestInProgressMessage("uid-1", "Display 1"),
+                new TestInProgressMessage("uid-2", null),
+                new TestInProgressMessage(null, "Display 3"),
+            ]);
+
+        var stream = new MemoryStream();
+        Serialize(serializer, message, stream);
+        stream.Seek(0, SeekOrigin.Begin);
+        var actual = (TestInProgressMessages)Deserialize(serializer, stream);
+
+        Assert.AreEqual(message.ExecutionId, actual.ExecutionId);
+        Assert.AreEqual(message.InstanceId, actual.InstanceId);
+        Assert.HasCount(message.InProgressMessages.Length, actual.InProgressMessages);
+        for (int i = 0; i < message.InProgressMessages.Length; i++)
+        {
+            Assert.AreEqual(message.InProgressMessages[i].Uid, actual.InProgressMessages[i].Uid);
+            Assert.AreEqual(message.InProgressMessages[i].DisplayName, actual.InProgressMessages[i].DisplayName);
+        }
+    }
+
+    [TestMethod]
+    public void TestInProgressMessagesSerializeDeserialize_EmptyList()
+    {
+        object serializer = new TestInProgressMessagesSerializer();
+
+        var message = new TestInProgressMessages("execId", "instId", []);
+
+        var stream = new MemoryStream();
+        Serialize(serializer, message, stream);
+        stream.Seek(0, SeekOrigin.Begin);
+        var actual = (TestInProgressMessages)Deserialize(serializer, stream);
+
+        Assert.AreEqual(message.ExecutionId, actual.ExecutionId);
+        Assert.AreEqual(message.InstanceId, actual.InstanceId);
+        Assert.IsNotNull(actual.InProgressMessages);
+        Assert.HasCount(0, actual.InProgressMessages);
     }
 
     private static void Serialize<TMessage>(object serializer, TMessage message, Stream stream)

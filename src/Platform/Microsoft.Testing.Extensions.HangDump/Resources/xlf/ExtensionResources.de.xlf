@@ -79,8 +79,8 @@ Datenträgerinformationen:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">Namen der Speicherabbilddatei angeben.
+Unterstützt die folgenden Platzhalter: {pname} (Name der Testanwendung), {pid} (Prozess-ID), {asm} (Name der Eintragsassembly), {tfm} (Zielframeworkmoniker), {time} (Zeitstempel). Das Legacytoken %p (Prozess-ID) wird aus Gründen der Abwärtskompatibilität ebenfalls unterstützt.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -96,16 +96,22 @@ Supports the following placeholders: {pname} (test application name), {pid} (pro
       <trans-unit id="HangDumpTimeoutOptionDescription">
         <source>Specify the timeout after which the dump will be generated.
 The timeout value is specified in one of the following formats:
-    1.5h, 1.5hour, 1.5hours,
+    500ms, 500mil, 500millisecond, 500milliseconds,
+    5400s, 5400sec, 5400second, 5400seconds,
     90m, 90min, 90minute, 90minutes,
-    5400s, 5400sec, 5400second, 5400seconds.
+    1.5h, 1.5hour, 1.5hours,
+    1d, 1day, 1days.
+    A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
         <target state="translated">Geben Sie das Timeout an, nach dem das Speicherabbild generiert wird.
 Der Timeoutwert wird in einem der folgenden Formate angegeben:
+    500 ms, 500 mil, 500 Millisekunde, 500 Millisekunden,
+    5400 s, 5400 Sek, 5400 Sekunde, 5400 Sekunden,
+    90 m, 90 Min, 90 Minute, 90 Minuten,
     1,5 h, 1,5 Stunde, 1,5 Stunden,
-    90 m, 90 Min., 90 Minute, 90 Minuten,
-    5400 s, 5400 Sek, 5400 Sekunde, 5400 Sekunden.
-    Der Standardwert ist 30m.</target>
+    1d, 1 Tag, 1 Tage.
+    Eine reine Zahl (ohne Suffix) wird als Millisekunden interpretiert.
+    Der Standardwert ist 30 m.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
@@ -113,20 +119,35 @@ Der Timeoutwert wird in einem der folgenden Formate angegeben:
         <target state="translated">"--hangdump-timeout" erwartet ein einzelnes Timeoutargument.</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
+        <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
+        <target state="translated">“--hangdump-type“ und „--hangdump-type-if-supported“ schließen sich gegenseitig aus. Verwenden Sie „--hangdump-type-if-supported“, um einen Absturzabbildtyp nach bestem Bemühen zu wählen, der mit einer Informationsmeldung auf den nächstverfügbaren Typ zurückfällt, wenn der angeforderte Typ in der aktuellen Laufzeit nicht verfügbar ist, oder „--hangdump-type“, um auf nicht unterstützten Laufzeiten sofort mit einem Fehler abzubrechen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
+        <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
+        <target state="translated">„--hangdump-type-if-supported {0}“ wird in der aktuellen Laufzeit nicht unterstützt. Wird auf „{1}“ zurückgesetzt.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
+        <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
+        <target state="translated">Entspricht „--hangdump-type“, fällt aber automatisch mit einer Informationsmeldung auf den nächstunterstützten Speicherabbildtyp zurück, wenn der angeforderte Typ in der aktuellen Laufzeit nicht verfügbar ist (z. B. wird „Triage“ nur unter .NET Core unterstützt und fällt unter .NET Framework auf „Mini“ zurück). Verwenden Sie diese Option, um dieselbe Befehlszeile für CI-Matrizen beizubehalten, die .NET Framework und .NET mischen. Gültige Werte sind „Mini“, „Heap“, „Full“, „Triage“, „None“. Schließt sich mit „--hangdump-type“ gegenseitig aus.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are {0}.
-Default type is 'Full'</target>
+        <target state="translated">Geben Sie den Typ des Speicherabbilds an.
+Gültige Werte sind {0}.
+Der Standardtyp ist „Full“</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are {1}</target>
+        <target state="translated">„{0}“ ist kein gültiger Speicherabbildtyp.
+Gültige Optionen sind {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

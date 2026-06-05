@@ -54,6 +54,7 @@ internal sealed class AzureDevOpsReporter :
     private QuarantineFile? _quarantineFile;
     private bool _hasLoadedEnabledConfiguration;
     private int _quarantineBuildTagEmitted;
+    private Regex[]? _userStackFrameFilters;
 
     public AzureDevOpsReporter(
         ICommandLineOptions commandLine,
@@ -166,7 +167,7 @@ internal sealed class AzureDevOpsReporter :
 
         string severity = GetSeverity(testName, isQuarantined);
         string annotationSuffix = BuildAnnotationSuffix(testName, isQuarantined);
-        string? line = GetErrorText(testDisplayName, explanation, exception, severity, _fileSystem, _logger, _targetFrameworkMoniker, annotationSuffix);
+        string? line = GetErrorText(testDisplayName, explanation, exception, severity, _fileSystem, _logger, _targetFrameworkMoniker, annotationSuffix, _userStackFrameFilters);
         if (line is null)
         {
             if (_logger.IsEnabled(LogLevel.Trace))
@@ -186,9 +187,12 @@ internal sealed class AzureDevOpsReporter :
     }
 
     internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker)
-        => GetErrorText(testDisplayName, explanation, exception, severity, fileSystem, logger, targetFrameworkMoniker, additionalMessageSuffix: null);
+        => GetErrorText(testDisplayName, explanation, exception, severity, fileSystem, logger, targetFrameworkMoniker, additionalMessageSuffix: null, userStackFrameFilters: null);
 
     internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker, string? additionalMessageSuffix)
+        => GetErrorText(testDisplayName, explanation, exception, severity, fileSystem, logger, targetFrameworkMoniker, additionalMessageSuffix, userStackFrameFilters: null);
+
+    internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker, string? additionalMessageSuffix, Regex[]? userStackFrameFilters)
     {
         string message = explanation ?? exception?.Message ?? AzureDevOpsResources.NoFailureMessageFallback;
         string formattedMessage = $"{FormatErrorMessage(testDisplayName, targetFrameworkMoniker, message)}{additionalMessageSuffix}";
@@ -217,7 +221,7 @@ internal sealed class AzureDevOpsReporter :
                 string file = location.Value.File;
                 string code = location.Value.Code;
 
-                if (IsAssertionImplementationFrame(code))
+                if (IsAssertionImplementationFrame(code) || IsUserStackFrameFilterMatch(code, userStackFrameFilters, logger))
                 {
                     if (logger.IsEnabled(LogLevel.Trace))
                     {
@@ -394,7 +398,39 @@ internal sealed class AzureDevOpsReporter :
         _severity = GetConfiguredSeverity();
         _demoteKnownFlaky = _commandLine.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky);
         _quarantineFile = LoadQuarantineFile();
+        _userStackFrameFilters = LoadUserStackFrameFilters();
         _hasLoadedEnabledConfiguration = true;
+    }
+
+    private Regex[] LoadUserStackFrameFilters()
+    {
+        if (!_commandLine.TryGetOptionArgumentList(AzureDevOpsCommandLineOptions.AzureDevOpsStackFrameFilter, out string[]? patterns)
+            || patterns is not { Length: > 0 })
+        {
+            return [];
+        }
+
+        var compiled = new List<Regex>(patterns.Length);
+        foreach (string pattern in patterns)
+        {
+            try
+            {
+                compiled.Add(new Regex(
+                    pattern,
+                    RegexOptions.CultureInvariant | RegexOptions.Compiled,
+                    TimeSpan.FromMilliseconds(AzureDevOpsCommandLineProvider.StackFrameFilterMatchTimeoutMs)));
+            }
+            catch (ArgumentException ex)
+            {
+                // Should have been caught at validation time, but log and skip if not.
+                if (_logger.IsEnabled(LogLevel.Warning))
+                {
+                    _logger.LogWarning($"Skipping invalid '--report-azdo-stackframe-filter' regex '{pattern}': {ex.Message}");
+                }
+            }
+        }
+
+        return [.. compiled];
     }
 
     private static string GetTestName(TestNode testNode)
@@ -434,6 +470,34 @@ internal sealed class AzureDevOpsReporter :
             if (code.StartsWith(prefix, StringComparison.Ordinal))
             {
                 return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsUserStackFrameFilterMatch(string code, Regex[]? userStackFrameFilters, ILogger logger)
+    {
+        if (userStackFrameFilters is null || userStackFrameFilters.Length == 0)
+        {
+            return false;
+        }
+
+        foreach (Regex filter in userStackFrameFilters)
+        {
+            try
+            {
+                if (filter.IsMatch(code))
+                {
+                    return true;
+                }
+            }
+            catch (RegexMatchTimeoutException ex)
+            {
+                if (logger.IsEnabled(LogLevel.Warning))
+                {
+                    logger.LogWarning($"'--report-azdo-stackframe-filter' regex '{filter}' timed out matching frame '{code}': {ex.Message}. Treating as no-match.");
+                }
             }
         }
 

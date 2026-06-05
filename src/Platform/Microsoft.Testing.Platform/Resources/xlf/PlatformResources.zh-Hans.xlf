@@ -108,8 +108,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
-        <source>Option '--{0}' is declared by multiple extensions: '{1}'</source>
-        <target state="translated">选项“--{0}”由多个扩展:“{1}”声明</target>
+        <source>Option '--{0}' is declared by multiple providers: '{1}'</source>
+        <target state="translated">选项“--{0}”已由多个提供程序声明:“{1}”</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
@@ -144,12 +144,12 @@
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInCommandLine">
         <source>Unclosed quote in command line</source>
-        <target state="new">Unclosed quote in command line</target>
+        <target state="translated">命令行中存在未闭合的引号</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInResponseFile">
         <source>Unclosed quote in response file at line {0}</source>
-        <target state="new">Unclosed quote in response file at line {0}</target>
+        <target state="translated">响应文件的第 {0} 行存在未闭合的引号</target>
         <note>{0} is the line number</note>
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
@@ -376,6 +376,16 @@
         <target state="translated">无效的命令行参数:</target>
         <note />
       </trans-unit>
+      <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
+        <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</source>
+        <target state="translated">testconfig.json 文件(“{2}”)中节“{1}”下的条目“{0}”必须为标量值(字符串、数字、布尔)或标量值数组。不支持嵌套对象。</target>
+        <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file.</note>
+      </trans-unit>
+      <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
+        <source>In testconfig.json under 'commandLineOptions': {0}</source>
+        <target state="translated">在 testconfig.json 的 'commandLineOptions' 下: {0}</target>
+        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...).</note>
+      </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
         <target state="translated">发现重复的键“{0}”</target>
@@ -553,6 +563,11 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
 (可选)接受 "text"(默认的人类可读输出)或 "json"，以便将发现的测试作为 JSON 文档打印到标准输出。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
+        <source>'--server {0}' requires '--{1}' to be specified.</source>
+        <target state="translated">“--server {0}”需要指定“--{1}”。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
         <target state="translated">dotnet 测试管道。</target>
@@ -658,6 +673,11 @@ The default is TestResults in the directory that contains the test application.<
 默认值是包含测试应用程序的目录中的 TestResults。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineServerInvalidArgument">
+        <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="translated">"--server" 收到意外值“{0}”。支持的值为: {1}。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
         <source>Enable the server mode.</source>
         <target state="translated">启用服务器模式。</target>
@@ -674,15 +694,20 @@ The default is TestResults in the directory that contains the test application.<
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
-        <target state="translated">“超时”选项应有一个字符串类型的参数，格式为 &lt;value&gt;[h|m|s]，其中 "value" 是一个有限的非负数，且不超过支持的最大持续时间</target>
+        <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
+        <target state="translated">"timeout" 选项应具有一个参数，该参数为带明确单位后缀的时间值，且为支持范围内的正数值(最长约 49.7 天)。支持的后缀为: "ms"/"mil(s)"/"millisecond(s)"、"s"/"sec(s)"/"second(s)", "m"/"min(s)"/"minute(s)"、"h"/"hour(s)" 和 "d"/"day(s)"，例如 "500ms"、"5400s"、"90m"、"1.5h"、"1d"。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
-Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
+Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
         <target state="translated">全局测试执行超时。
-获取一个字符串形式的参数，格式为 &lt;value&gt;[h|m|s]，其中 "value" 为浮点型。</target>
+接收一个参数，该参数为带明确单位后缀的时间值。支持的后缀为: "ms"/"mil(s)"/"millisecond(s)"、"s"/"sec(s)"/"second(s)", "m"/"min(s)"/"minute(s)"、"h"/"hour(s)" 和 "d"/"day(s)"，例如 "500ms"、"5400s"、"90m"、"1.5h"、"1d"。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PressCtrlCAgainToForceExit">
+        <source>Press Ctrl+C again to force exit.</source>
+        <target state="translated">再次按 Ctrl+C 强制退出。</target>
         <note />
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
@@ -749,6 +774,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
         <target state="translated">不应通过服务提供商注册类型为“ITestFramework”的实例，而应通过“ITestApplicationBuilder.RegisterTestFramework”进行注册</target>
         <note />
+      </trans-unit>
+      <trans-unit id="ShutdownProgressStillWaitingPrefix">
+        <source>Still waiting for: </source>
+        <target state="translated">仍在等待:</target>
+        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</note>
       </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
@@ -875,16 +905,16 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
-        <target state="translated">确定何时显示测试的捕获错误输出。
-有效值为“全部”、“失败”、“无”。默认值为“全部”。</target>
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
+        <target state="translated">确定何时显示测试捕获的错误输出。
+有效值为“全部”、“失败”、“无”。默认值为“全部”(如果检测到 LLM/AI 智能体环境，则为“失败”)。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
         <target state="translated">确定何时显示测试的捕获标准输出。
-有效值为“全部”、“失败”、“无”。默认值为“全部”。</target>
+有效值为“全部”、“失败”、“无”。默认值为“全部”(如果检测到 LLM/AI 智能体环境，则为“失败”)。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
@@ -1047,6 +1077,11 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
         <target state="translated">筛选在带圆括号的表达式中包含意外“/”运算符</target>
         <note />
       </trans-unit>
+      <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage">
+        <source>Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</source>
+        <target state="translated">筛选器在括号表达式中包含意外的 "/" 运算符。筛选器:“{0}”。要将某个路径段的替代项组合在一起，请使用类似 "/A/B/C/(X|Y)" 的语法。</target>
+        <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'.</note>
+      </trans-unit>
       <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
         <source>Unexpected telemetry call, the telemetry is disabled.</source>
         <target state="translated">意外的遥测调用，遥测功能已被禁用。</target>
@@ -1081,7 +1116,7 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
-        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
+        <target state="translated">wasi 不支持等待调试程序附加(TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1)。</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

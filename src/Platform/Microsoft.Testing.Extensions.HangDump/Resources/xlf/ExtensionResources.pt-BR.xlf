@@ -79,8 +79,8 @@ Informações do disco:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">Especifique o nome do arquivo de despejar.
+A compatibilidade com os seguintes placeholders: {pname} (nome do aplicativo de teste), {pid} (ID do processo), {asm} (nome da assembly de entrada), {tfm} (moniker da estrutura de destino), {time} (carimbo de data/hora). O token %p herdado (ID do processo) também é aceito para compatibilidade com versões anteriores.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -96,15 +96,21 @@ Supports the following placeholders: {pname} (test application name), {pid} (pro
       <trans-unit id="HangDumpTimeoutOptionDescription">
         <source>Specify the timeout after which the dump will be generated.
 The timeout value is specified in one of the following formats:
-    1.5h, 1.5hour, 1.5hours,
+    500ms, 500mil, 500millisecond, 500milliseconds,
+    5400s, 5400sec, 5400second, 5400seconds,
     90m, 90min, 90minute, 90minutes,
-    5400s, 5400sec, 5400second, 5400seconds.
+    1.5h, 1.5hour, 1.5hours,
+    1d, 1day, 1days.
+    A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
         <target state="translated">Especifique o tempo limite após o qual o despejo será gerado.
 O valor de tempo limite é especificado em um dos seguintes formatos:
-    1,5h, 1,5hora, 1,5horas,
+    500 ms, 500mil, 500 milissegundos, 500 milissegundos,
+    5400s, 5400seg, 5400segundos, 5400segundos,
     90m, 90min, 90minutos, 90 minutos,
-    5400s, 5400seg, 5400segundos, 5400segundos.
+    1,5h, 1,5hora, 1,5horas,
+    1d, 1dia, 1dias.
+    Um número simples (sem sufixo) é interpretado como milissegundos.
     O padrão é 30m.</target>
         <note />
       </trans-unit>
@@ -113,20 +119,35 @@ O valor de tempo limite é especificado em um dos seguintes formatos:
         <target state="translated">''--hangdump-timeout'' espera um único argumento de tempo limite</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
+        <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
+        <target state="translated">"--hangdump-type" e "--hangdump-type-if-supported" são mutuamente exclusivos. Use "--hangdump-type-if-supported" para optar por um tipo de despejo de melhor esforço que volte para o tipo mais próximo disponível (com uma mensagem informativa) quando o tipo solicitado não estiver disponível no runtime atual ou "--hangdump-type" para falhar rapidamente em runtimes sem suporte.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
+        <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
+        <target state="translated">"--hangdump-type-if-supported {0}" não tem suporte no runtime atual. Voltando para "{1}".</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
+        <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
+        <target state="translated">O mesmo que "--hangdump-type", mas silenciosamente retorna (com uma mensagem informativa) para o tipo de despejo com suporte mais próximo quando o tipo solicitado não está disponível no runtime atual (por exemplo, "Triage" só tem suporte no .NET Core e volta para "Mini" em .NET Framework). Use essa opção para manter a mesma linha de comando entre matrizes de CI que misturam .NET Framework e .NET. Os valores válidos são "Mini", "Heap", "Full", "Triage", "None". Mutuamente exclusivo com "--hangdump-type".</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are {0}.
-Default type is 'Full'</target>
+        <target state="translated">Especifique o tipo do despejar.
+Os valores válidos são {0}.
+O tipo padrão é "Full"</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are {1}</target>
+        <target state="translated">"{0}" não é um tipo de despejar válido.
+As opções válidas são {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

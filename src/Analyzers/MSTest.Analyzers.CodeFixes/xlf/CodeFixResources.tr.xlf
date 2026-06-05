@@ -7,6 +7,11 @@
         <target state="translated">'[CallerFilePath]' ve '[CallerLineNumber]' parametrelerini ekleyin</target>
         <note />
       </trans-unit>
+      <trans-unit id="AddIgnoreJustificationFix">
+        <source>Add a placeholder justification to '[Ignore]'</source>
+        <target state="translated">'[Ignore]' için yer tutucu gerekçe ekleyin</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AddTestClassFix">
         <source>Add '[TestClass]'</source>
         <target state="translated">'[TestClass]' Ekle</target>
@@ -23,18 +28,13 @@
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsEquivalentFix">
-        <source>Replace with `Assert.{0}`</source>
-        <target state="translated">`Assert.{0}` ile değiştirin</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidAssertAreEqualOnCollectionsInAnyOrderFix">
-        <source>Replace with `Assert.{0}(..., SequenceOrder.InAnyOrder)`</source>
-        <target state="translated">`Assert.{0}(..., SequenceOrder.InAnyOrder)` ile değiştirin</target>
+        <source>Use deep structural comparison ('Assert.{0}')</source>
+        <target state="translated">Derin yapısal karşılaştırma ('Assert.{0}') kullanın</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsOrderedFix">
-        <source>Replace with `Assert.{0}` (ordered)</source>
-        <target state="translated">`Assert.{0}` ile değiştirin (sıralı)</target>
+        <source>Use ordered, element-wise comparison ('Assert.{0}')</source>
+        <target state="translated">Sıralı, öğe bazında karşılaştırma kullanın ('Assert.{0}')</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesFix">
@@ -65,6 +65,11 @@
       <trans-unit id="ChangeStructToClassAndAddTestClassFix">
         <source>Change to 'class' and add '[TestClass]'</source>
         <target state="translated">‘class’ olarak değiştirin ve ‘[TestClass]’ ekleyin.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CollectionAssertToAssertTitle">
+        <source>Use 'Assert.{0}' instead of 'CollectionAssert'</source>
+        <target state="translated">'CollectionAssert' yerine 'Assert.{0}' kullanın</target>
         <note />
       </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">

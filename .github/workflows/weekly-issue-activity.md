@@ -27,6 +27,8 @@ tools:
     min-integrity: none # This workflow is allowed to examine and comment on any issues or PRs
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   upload-asset:
   create-discussion:
     title-prefix: "[weekly-issue-activity] "
@@ -36,7 +38,7 @@ safe-outputs:
 steps:
   - name: Setup Python environment
     run: |
-      mkdir -p /tmp/charts /tmp/data
+      mkdir -p /tmp/gh-aw/agent/charts /tmp/gh-aw/agent/data
       pip install --user --quiet numpy pandas matplotlib seaborn scipy
       python3 -c "import pandas, matplotlib, seaborn; print('Python environment ready')"
 ---
@@ -60,7 +62,7 @@ Write Python scripts to create exactly 2 high-quality trend charts and execute t
 
 ### Chart 1: Issue Activity Trends
 
-Save data to `/tmp/data/issue_activity.csv` with columns: `date,opened,closed,open_total`
+Save data to `/tmp/gh-aw/agent/data/issue_activity.csv` with columns: `date,opened,closed,open_total`
 
 Generate a multi-line chart:
 
@@ -68,12 +70,12 @@ Generate a multi-line chart:
 - Issues closed per week (bar or line)
 - Running total of open issues (secondary line)
 - X-axis: last 12 weeks, Y-axis: count
-- Save as `/tmp/charts/issue_activity_trends.png` at 300 DPI, 12×7 inches
+- Save as `/tmp/gh-aw/agent/charts/issue_activity_trends.png` at 300 DPI, 12×7 inches
 - Use seaborn whitegrid style with a professional color palette
 
 ### Chart 2: Issue Resolution Time Trends
 
-Save data to `/tmp/data/issue_resolution.csv` with columns: `date,avg_days,median_days`
+Save data to `/tmp/gh-aw/agent/data/issue_resolution.csv` with columns: `date,avg_days,median_days`
 
 Generate a line chart with moving average overlay:
 
@@ -81,7 +83,7 @@ Generate a line chart with moving average overlay:
 - Median time to close
 - Shaded variance band
 - X-axis: last 30 days, Y-axis: days to resolution
-- Save as `/tmp/charts/issue_resolution_trends.png` at 300 DPI, 12×7 inches
+- Save as `/tmp/gh-aw/agent/charts/issue_resolution_trends.png` at 300 DPI, 12×7 inches
 
 Run your Python scripts via bash and verify the charts exist before proceeding.
 

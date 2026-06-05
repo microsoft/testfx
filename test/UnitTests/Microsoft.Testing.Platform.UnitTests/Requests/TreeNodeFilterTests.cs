@@ -71,6 +71,35 @@ public sealed class TreeNodeFilterTests
     }
 
     [TestMethod]
+    public void OrExpression_WorksForSinglePathSegmentInsideParentheses()
+    {
+        TreeNodeFilter filter = new("/*/*/*/(MyTest1|MyTest2)");
+
+        Assert.IsTrue(filter.MatchesFilter("/A/B/C/MyTest1", new PropertyBag()));
+        Assert.IsTrue(filter.MatchesFilter("/A/B/C/MyTest2", new PropertyBag()));
+        Assert.IsFalse(filter.MatchesFilter("/A/B/C/MyTest3", new PropertyBag()));
+    }
+
+    [TestMethod]
+    public void FullPathOrInsideParenthesizedExpressions_IsNotSupported_ThrowsActionableMessage()
+    {
+        const string Filter = "(/*/*/*/MyTest1)|(/*/*/*/MyTest2)";
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => _ = new TreeNodeFilter(Filter));
+
+        // Verify the diagnostic includes the original filter string (so the test fails if the
+        // filter is no longer threaded through to the exception message).
+        Assert.IsTrue(
+            exception.Message.Contains(Filter, StringComparison.Ordinal),
+            $"Expected exception message to contain the original filter '{Filter}', but was: {exception.Message}");
+
+        // Verify the diagnostic also surfaces the suggested supported syntax.
+        Assert.IsTrue(
+            exception.Message.Contains("/A/B/C/(X|Y)", StringComparison.Ordinal),
+            $"Expected exception message to contain the suggested syntax '/A/B/C/(X|Y)', but was: {exception.Message}");
+    }
+
+    [TestMethod]
     public void AndExpression()
     {
         TreeNodeFilter filter = new("/(*.UnitTests)&(*ProjectB*)");

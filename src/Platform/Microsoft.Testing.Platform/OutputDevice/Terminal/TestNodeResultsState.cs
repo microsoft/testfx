@@ -25,12 +25,17 @@ internal sealed class TestNodeResultsState
 
     public void RemoveRunningTestNode(string uid) => _testNodeProgressStates.TryRemove(uid, out _);
 
-    public IEnumerable<TestDetailState> GetRunningTasks(int maxCount)
+    public List<TestDetailState> GetRunningTasks(int maxCount)
     {
-        var sortedDetails = _testNodeProgressStates
-            .Select(d => d.Value)
-            .OrderByDescending(d => d.Stopwatch?.Elapsed ?? TimeSpan.Zero)
-            .ToList();
+        // Build the list directly from the dictionary to avoid LINQ iterator chain allocations.
+        var sortedDetails = new List<TestDetailState>(_testNodeProgressStates.Count);
+        foreach (KeyValuePair<string, TestDetailState> kvp in _testNodeProgressStates)
+        {
+            sortedDetails.Add(kvp.Value);
+        }
+
+        // Sort descending by elapsed time without LINQ overhead.
+        sortedDetails.Sort(static (a, b) => (b.Stopwatch?.Elapsed ?? TimeSpan.Zero).CompareTo(a.Stopwatch?.Elapsed ?? TimeSpan.Zero));
 
         bool tooManyItems = sortedDetails.Count > maxCount;
 
@@ -45,17 +50,16 @@ internal sealed class TestNodeResultsState
                     ? string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, sortedDetails.Count)
                     // If itemsToTake is larger, then we show the project summary, active tests, and the number of active tests that are not shown.
                     : $"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_MoreTestsCount, sortedDetails.Count - itemsToTake)}";
-            sortedDetails = [.. sortedDetails.Take(itemsToTake)];
+
+            // Truncate in-place to avoid allocating a second list/array.
+            if (itemsToTake < sortedDetails.Count)
+            {
+                sortedDetails.RemoveRange(itemsToTake, sortedDetails.Count - itemsToTake);
+            }
+
+            sortedDetails.Add(_summaryDetail);
         }
 
-        foreach (TestDetailState? detail in sortedDetails)
-        {
-            yield return detail;
-        }
-
-        if (tooManyItems)
-        {
-            yield return _summaryDetail;
-        }
+        return sortedDetails;
     }
 }

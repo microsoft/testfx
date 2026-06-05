@@ -19,11 +19,48 @@ public sealed class StringAssert
     /// Gets the singleton instance of the StringAssert functionality.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Users can use this to plug-in custom assertions through C# extension methods.
-    /// For instance, the signature of a custom assertion provider could be "public static void ContainsWords(this StringAssert customAssert, string value, ICollection substrings)"
-    /// Users could then use a syntax similar to the default assertions which in this case is "StringAssert.That.ContainsWords(value, substrings);"
-    /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
+    /// For instance, the signature of a custom assertion provider could be <c>public static void ContainsWords(this StringAssert customAssert, string value, ICollection substrings)</c>
+    /// and the call-site would be <c>StringAssert.That.ContainsWords(value, substrings);</c>.
+    /// </para>
+    /// <para>
+    /// For new custom assertions, prefer extending <see cref="Assert.That"/> instead, because <see cref="StringAssert"/> is likely to be deprecated in a future release.
+    /// For more information, see <see href="https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-writing-tests-assertions#extension-hooks-on-stringassert-and-collectionassert">Extension hooks on StringAssert and CollectionAssert</see>.
+    /// </para>
     /// </remarks>
+    /// <example>
+    /// The following example defines a custom <c>ContainsWords</c> assertion as an extension method
+    /// on <see cref="StringAssert"/> and invokes it through <c>StringAssert.That</c>:
+    /// <code language="csharp">
+    /// using System.Collections.Generic;
+    /// using Microsoft.VisualStudio.TestTools.UnitTesting;
+    ///
+    /// public static class CustomStringAssertExtensions
+    /// {
+    ///     public static void ContainsWords(this StringAssert stringAssert, string value, IEnumerable&lt;string&gt; words)
+    ///     {
+    ///         foreach (string word in words)
+    ///         {
+    ///             if (value == null || !value.Contains(word))
+    ///             {
+    ///                 throw new AssertFailedException($"StringAssert.That.ContainsWords failed. Word &lt;{word}&gt; not found in &lt;{value}&gt;.");
+    ///             }
+    ///         }
+    ///     }
+    /// }
+    ///
+    /// [TestClass]
+    /// public class MessageTests
+    /// {
+    ///     [TestMethod]
+    ///     public void Greeting_ContainsExpectedWords()
+    ///     {
+    ///         StringAssert.That.ContainsWords("Hello, world!", new[] { "Hello", "world" });
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     public static StringAssert That { get; } = new();
 
     #endregion

@@ -674,6 +674,7 @@ public sealed partial class Assert
         WrongExceptionType,
     }
 
+    [StackTraceHidden]
     private readonly struct ThrowsExceptionState
     {
         public Exception? ExceptionThrown { get; }

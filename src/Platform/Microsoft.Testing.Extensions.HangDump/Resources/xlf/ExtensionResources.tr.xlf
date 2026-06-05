@@ -79,8 +79,8 @@ Disk bilgileri:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">Döküm dosyasının adını belirtin.
+Şu yer tutucuları destekler: {pname} (test uygulaması adı), {pid} (işlem kimliği), {asm} (girdi derleme adı), {tfm} (hedef çerçeve bilinen adı), {time} (zaman damgası). Geriye dönük uyumluluk için eski %p belirteci (işlem kimliği) de desteklenir.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -96,15 +96,21 @@ Supports the following placeholders: {pname} (test application name), {pid} (pro
       <trans-unit id="HangDumpTimeoutOptionDescription">
         <source>Specify the timeout after which the dump will be generated.
 The timeout value is specified in one of the following formats:
-    1.5h, 1.5hour, 1.5hours,
+    500ms, 500mil, 500millisecond, 500milliseconds,
+    5400s, 5400sec, 5400second, 5400seconds,
     90m, 90min, 90minute, 90minutes,
-    5400s, 5400sec, 5400second, 5400seconds.
+    1.5h, 1.5hour, 1.5hours,
+    1d, 1day, 1days.
+    A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
         <target state="translated">Dökümün oluşturulacağı zaman aşımını belirtin.
 Zaman aşımı değeri, aşağıdaki biçimlerden biri ile belirtilir:
-    1,5 sa, 1,5 saat, 1,5 saat,
-    90 dk, 90 dak, 90 dakika, 90 dakika,
-    5400s, 5400sec, 5400second, 5400seconds.
+    500ms, 500mil, 500millisecond, 500milliseconds,
+    5400s, 5400sec, 5400second, 5400seconds,
+    90m, 90min, 90minute, 90minutes,
+    1.5h, 1.5hour, 1.5hours,
+    1d, 1day, 1days.
+    Soneki olmayan düz sayı milisaniye olarak yorumlanır.
     Varsayılan değer 30m.</target>
         <note />
       </trans-unit>
@@ -113,20 +119,35 @@ Zaman aşımı değeri, aşağıdaki biçimlerden biri ile belirtilir:
         <target state="translated">'--hangdump-timeout' tek bir zaman aşımı bağımsız değişkeni bekliyor</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
+        <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
+        <target state="translated">'--hangdump-type' ve '--hangdump-type-if-supported' birlikte kullanılamaz. İstenen tür geçerli çalışma zamanında kullanılamadığında kullanılabilen en yakın türe bir bilgi iletisiyle geri dönen en iyi çabalı döküm türünü seçmek için '--hangdump-type-if-supported' seçeneğini belirtin ya da desteklenmeyen çalışma zamanlarında hızlıca başarısız olmak için '--hangdump-type' seçeneğini belirtin.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
+        <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
+        <target state="translated">'--hangdump-type-if-supported {0}' geçerli çalışma zamanında desteklenmiyor. Geri dönülüyor: '{1}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
+        <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
+        <target state="translated">'--hangdump-type' ile aynıdır, ancak istenen tür geçerli çalışma zamanında kullanılamıyorsa sessizce bir bilgi iletisiyle desteklenen en yakın döküm türüne geri döner. (Örneğin, 'Triage' yalnızca .NET Core'da desteklenir ve .NET Framework'te 'Mini' değerine geri döner). Bu seçeneği, .NET Framework ve .NET'i birlikte kullanan CI matrislerinde aynı komut satırını korumak için kullanın. Geçerli değerler 'Mini', 'Heap', 'Full', 'Triage' ve 'None' olur. '--hangdump-type' ile birlikte kullanılamaz.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are {0}.
-Default type is 'Full'</target>
+        <target state="translated">Dökümün türünü belirtin.
+Geçerli değerler: {0}.
+Varsayılan tür: 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are {1}</target>
+        <target state="translated">'{0}' geçerli bir döküm türü değil.
+Geçerli seçenekler: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

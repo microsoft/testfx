@@ -79,8 +79,8 @@ Disk info:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">指定转储文件的名称。
+支持以下占位符: {pname} (测试应用程序名称)、{pid} (进程 ID)、{asm} (入口程序集名称)、{tfm} (目标框架名字对象)、{time} (时间戳)。为了向后兼容，还支持旧版 %p 令牌(进程 ID)。</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -96,15 +96,21 @@ Supports the following placeholders: {pname} (test application name), {pid} (pro
       <trans-unit id="HangDumpTimeoutOptionDescription">
         <source>Specify the timeout after which the dump will be generated.
 The timeout value is specified in one of the following formats:
-    1.5h, 1.5hour, 1.5hours,
+    500ms, 500mil, 500millisecond, 500milliseconds,
+    5400s, 5400sec, 5400second, 5400seconds,
     90m, 90min, 90minute, 90minutes,
-    5400s, 5400sec, 5400second, 5400seconds.
+    1.5h, 1.5hour, 1.5hours,
+    1d, 1day, 1days.
+    A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
         <target state="translated">指定生成转储后的超时。
 超时值按以下格式之一指定:
-    1.5h、1.5hour、1.5hours、
-    90m、90min、90minute、90minutes、
-    5400s、5400sec、5400second、5400seconds。
+    500ms、500mil、500millisecond、500milliseconds，
+    5400s、5400sec、5400second、5400seconds，
+    90m、90min、90minute、90minutes，
+    1.5h、1.5hour、1.5hours，
+    1d、1day、1days。
+    不带后缀的纯数字将被解释为毫秒。
     默认值为 30m。</target>
         <note />
       </trans-unit>
@@ -113,20 +119,35 @@ The timeout value is specified in one of the following formats:
         <target state="translated">“--hangdump-timeout”需要单一超时参数</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
+        <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
+        <target state="translated">"--hangdump-type" 与 "--hangdump-type-if-supported" 互斥。使用 "--hangdump-type-if-supported" 可选择一种尽力而为的转储类型: 当请求的类型在当前运行时不可用时，它会回退到最接近的可用类型(并显示一条信息性消息)；或使用 "--hangdump-type" 在不支持的运行时上快速失败。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
+        <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
+        <target state="translated">当前运行时不支持 "--hangdump-type-if-supported {0}"。正在回退到 "{1}"。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
+        <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
+        <target state="translated">与 "--hangdump-type" 作用相同，但当请求的类型在当前运行时不可用时，会静默回退到最接近的受支持转储类型(并显示一条信息性消息) (例如 "Triage" 仅在 .NET Core 上受支持，在 .NET Framework 上会回退到 "Mini")。使用此选项可在混合 .NET Framework 和 .NET 的 CI 矩阵中保持相同的命令行。有效值为 "Mini"、"Heap"、"Full"、"Triage"、"None"。与 "--hangdump-type" 互斥。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are {0}.
-Default type is 'Full'</target>
+        <target state="translated">指定转储的类型。
+有效值为 {0}。
+默认类型为 "Full"</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are {1}</target>
+        <target state="translated">“{0}”不是有效的转储类型。
+有效选项为 {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

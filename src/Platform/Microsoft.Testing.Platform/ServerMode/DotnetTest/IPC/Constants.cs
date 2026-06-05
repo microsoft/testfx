@@ -33,6 +33,24 @@ internal static class HandshakeMessagePropertyNames
     internal const byte ExecutionId = 7;
     internal const byte InstanceId = 8;
     internal const byte IsIDE = 9;
+
+    // Reports which command-line execution mode the test host is running in,
+    // so consumers (e.g. dotnet test in the SDK) can detect mismatches such
+    // as a help/list-tests option leaking from RunArguments into a normal run.
+    // Values come from HandshakeMessageExecutionModes.
+    internal const byte ExecutionMode = 10;
+}
+
+internal static class HandshakeMessageExecutionModes
+{
+    // Standard test run.
+    internal const string Run = "run";
+
+    // The host is going to print command-line help (e.g. --help, -?).
+    internal const string Help = "help";
+
+    // The host is going to discover tests (e.g. --list-tests).
+    internal const string Discover = "discover";
 }
 
 internal static class ProtocolConstants

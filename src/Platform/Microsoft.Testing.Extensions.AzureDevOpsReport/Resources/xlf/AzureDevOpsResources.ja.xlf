@@ -77,6 +77,21 @@
         <target state="translated">Azure DevOps REST API 要求は、すべての再試行後に失敗しました。</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultAttachmentFailed">
+        <source>Azure DevOps live publishing failed to upload a test result attachment.</source>
+        <target state="translated">Azure DevOps のライブ公開で、テスト結果の添付ファイルをアップロードできませんでした。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultIdParseFailedWarning">
+        <source>Azure DevOps live publishing accepted a batch of test results but could not parse the assigned result IDs; result-level attachments for this batch will be skipped.</source>
+        <target state="translated">Azure DevOps のライブ公開はテスト結果のバッチを受け入れましたが、割り当てられた結果 ID を解析できませんでした。このバッチの結果レベルの添付ファイルはスキップされます。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunAttachmentFailed">
+        <source>Azure DevOps live publishing failed to upload a test run attachment.</source>
+        <target state="translated">Azure DevOps のライブ公開で、テスト実行の添付ファイルをアップロードできませんでした。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunIdFileMismatch">
         <source>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</source>
         <target state="translated">Azure DevOps ライブ公開で、別の Azure DevOps プロジェクトの azdo-runid.&lt;buildId&gt;.json ファイルが見つかりました。</target>
@@ -92,6 +107,11 @@
         <target state="translated">タイムアウト: {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsProgressRequiresAzureDevOps">
+        <source>'--report-azdo-progress' requires '--report-azdo' to be enabled</source>
+        <target state="translated">'--report-azdo-progress' では、'--report-azdo' を有効にする必要があります</target>
+        <note>{Locked='--report-azdo-progress'}{Locked='--report-azdo'}</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
         <source>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</source>
         <target state="translated">'--report-azdo-quarantine-file' では、'--report-azdo' を有効にする必要があります</target>
@@ -101,6 +121,16 @@
         <source>'--report-azdo-severity' requires '--report-azdo' to be enabled</source>
         <target state="translated">'--report-azdo-severity' では、'--report-azdo' を有効にする必要があります</target>
         <note>{Locked='--report-azdo-severity'}{Locked='--report-azdo'}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsStackFrameFilterRequiresAzureDevOps">
+        <source>'--report-azdo-stackframe-filter' requires '--report-azdo' to be enabled</source>
+        <target state="translated">'--report-azdo-stackframe-filter' では、'--report-azdo' を有効にする必要があります</target>
+        <note>{Locked='--report-azdo-stackframe-filter'}{Locked='--report-azdo'}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsSummaryRequiresAzureDevOps">
+        <source>'--report-azdo-summary' requires '--report-azdo' to be enabled</source>
+        <target state="translated">'--report-azdo-summary' では、'--report-azdo' を有効にする必要があります</target>
+        <note>{Locked='--report-azdo-summary'}{Locked='--report-azdo'}</note>
       </trans-unit>
       <trans-unit id="DemoteKnownFlakyOptionDescription">
         <source>Demote failures with an Azure DevOps flaky history of at least {0}% in the selected window to warnings.</source>
@@ -177,15 +207,30 @@
         <target state="translated">オプション {0} が無効です。</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidStackFrameFilterRegex">
+        <source>Invalid '--report-azdo-stackframe-filter' regex '{0}': {1}</source>
+        <target state="translated">無効 '--report-azdo-stackframe-filter' regex '{0}': {1}</target>
+        <note>{Locked="--report-azdo-stackframe-filter"}</note>
+      </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>Test failed without an additional message.</source>
-        <target state="new">Test failed without an additional message.</target>
+        <target state="translated">追加のメッセージなしでテストに失敗しました。</target>
         <note />
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
         <target state="translated">AzureDevOps が理解する方法で出力にエラーを書き込む Azure DevOps レポート生成プログラムを有効にします。</target>
         <note />
+      </trans-unit>
+      <trans-unit id="ProgressOptionDescription">
+        <source>Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.</source>
+        <target state="translated">テスト実行中に Azure DevOps のタイムライン進行状況レコードを出力して、長時間実行されるセッションでビルドのタイムラインにライブ進行状況バーが表示されるようにします。'--report-azdo' が必要です。</target>
+        <note>{Locked="--report-azdo"}</note>
+      </trans-unit>
+      <trans-unit id="ProgressRequiresTfBuildWarning">
+        <source>Azure DevOps progress reporting was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps progress emissions.</source>
+        <target state="translated">Azure DevOps の進行状況レポートが要求されましたが、TF_BUILD が 'true' に設定されていないため、Azure DevOps の進行状況の出力をスキップしています。</target>
+        <note>{Locked="TF_BUILD"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="PublishAzdoRunNameOptionDescription">
         <source>Custom Azure DevOps test run name for live test-result publishing.</source>
@@ -236,6 +281,31 @@
         <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
         <target state="translated">報告されたイベントに使用する重大度。オプションは、error (既定) と warning です。</target>
         <note>{Locked="error"}{Locked="warning"}</note>
+      </trans-unit>
+      <trans-unit id="StackFrameFilterOptionDescription">
+        <source>Additional regex patterns (matched against the fully-qualified type prefix of each stack frame) that should be skipped when looking for the user's call site to annotate. Repeatable; up to {0} patterns. Compiled with a {1}ms match timeout. Additive to the extension's built-in MSTest assertion-implementation prefixes.</source>
+        <target state="translated">注釈を付けるユーザーの呼び出しサイトを探す際にスキップすべき追加の正規表現パターン (各スタック フレームの完全修飾型プレフィックスに一致するもの)。繰り返し指定可能。最大 {0} 個のパターンです。{1} ミリ秒の一致タイムアウトでコンパイルされました。拡張機能に組み込まれている MSTest のアサーション実装プレフィックスに追加されます。</target>
+        <note>{0} is the maximum allowed pattern count, {1} is the per-match timeout in ms.</note>
+      </trans-unit>
+      <trans-unit id="StackFrameFilterTooManyRegexes">
+        <source>'--report-azdo-stackframe-filter' accepts at most {0} patterns.</source>
+        <target state="translated">'--report-azdo-stackframe-filter' は最大 {0} 個のパターンを受け入れます。</target>
+        <note>{Locked="--report-azdo-stackframe-filter"}</note>
+      </trans-unit>
+      <trans-unit id="SummaryOptionDescription">
+        <source>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.</source>
+        <target state="translated">テスト実行の最後に Markdown のジョブ サマリーを作成し、'##vso[task.uploadsummary]' 経由でアップロードします。省略可能なファイル パス引数で、既定の場所 ('{testResultsDir}/azdo-summary-{tfm}.md') をオーバーライドできます。'--report-azdo' が必要です。</target>
+        <note>{Locked="--report-azdo"}{Locked="##vso[task.uploadsummary]"}{Locked="azdo-summary-{tfm}.md"}</note>
+      </trans-unit>
+      <trans-unit id="SummaryRequiresTfBuildWarning">
+        <source>Azure DevOps job summary was requested, but TF_BUILD is not set to 'true'; skipping summary emission.</source>
+        <target state="translated">Azure DevOps のジョブ サマリーが要求されましたが、TF_BUILD が 'true' に設定されていないため、概要の出力をスキップしています。</target>
+        <note>{Locked="TF_BUILD"}{Locked="true"}</note>
+      </trans-unit>
+      <trans-unit id="SummaryWriteFailedWarning">
+        <source>Failed to write Azure DevOps summary file '{0}': {1}</source>
+        <target state="translated">Azure DevOps の概要ファイル '{0}' を書き込めませんでした: {1}</target>
+        <note />
       </trans-unit>
       <trans-unit id="UploadArtifactExcludeOptionDescription">
         <source>Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.</source>

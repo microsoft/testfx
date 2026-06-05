@@ -108,8 +108,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
-        <source>Option '--{0}' is declared by multiple extensions: '{1}'</source>
-        <target state="translated">L'opzione '--{0}' è dichiarata da più estensioni: '{1}'</target>
+        <source>Option '--{0}' is declared by multiple providers: '{1}'</source>
+        <target state="translated">L'opzione '--{0}' è dichiarata da più provider: '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
@@ -144,12 +144,12 @@
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInCommandLine">
         <source>Unclosed quote in command line</source>
-        <target state="new">Unclosed quote in command line</target>
+        <target state="translated">Virgolette non chiuse nella riga di comando</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInResponseFile">
         <source>Unclosed quote in response file at line {0}</source>
-        <target state="new">Unclosed quote in response file at line {0}</target>
+        <target state="translated">Virgolette non chiuse nel file di risposta alla riga {0}</target>
         <note>{0} is the line number</note>
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
@@ -376,6 +376,16 @@
         <target state="translated">Argomenti della riga di comando non validi:</target>
         <note />
       </trans-unit>
+      <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
+        <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</source>
+        <target state="translated">La voce '{0}' nella sezione '{1}' del file testconfig.json ('{2}') deve essere un valore scalare (stringa, numero, booleano) oppure una matrice di valori scalari. Gli oggetti annidati non sono supportati.</target>
+        <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file.</note>
+      </trans-unit>
+      <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
+        <source>In testconfig.json under 'commandLineOptions': {0}</source>
+        <target state="translated">In testconfig.json in 'commandLineOptions': {0}</target>
+        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...).</note>
+      </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
         <target state="translated">È stata trovata una chiave '{0}' duplicata.</target>
@@ -553,6 +563,11 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
 Facoltativamente accetta ''text'' (output leggibile predefinito) o ''json'' per stampare i test individuati come documento JSON nell'output standard.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
+        <source>'--server {0}' requires '--{1}' to be specified.</source>
+        <target state="translated">'--server {0}' richiede che sia specificato '--{1}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
         <target state="translated">pipe di test dotnet.</target>
@@ -658,6 +673,11 @@ Se la directory specificata non esiste, viene creata.
 L’impostazione predefinita è TestResults nella directory che contiene l'applicazione di test.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineServerInvalidArgument">
+        <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="translated">'--server' ha ricevuto il valore imprevisto '{0}'. I valori supportati sono: {1}.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
         <source>Enable the server mode.</source>
         <target state="translated">Abilita la modalità server.</target>
@@ -674,15 +694,20 @@ L’impostazione predefinita è TestResults nella directory che contiene l'appli
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
-        <target state="translated">L'opzione 'timeout' deve avere un argomento di tipo stringa nel formato &lt;value&gt;[h|m|s], in cui 'value' è un numero finito non negativo che non supera la durata massima supportata</target>
+        <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
+        <target state="translated">L'opzione 'timeout' richiede un argomento costituito da un valore temporale con un suffisso di unità esplicito e un valore numerico positivo compreso nell'intervallo supportato (fino a circa 49,7 giorni). I suffissi accettati sono 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)' e 'd'/'day(s)', ad esempio '500ms', '5400s', '90m', '1,5h', '1d'.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
-Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
-        <target state="translated">Un timeout di esecuzione test globale.
-Acquisisce un argomento come stringa nel formato &lt;value&gt;[h|m|s] dove 'value' è float.</target>
+Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
+        <target state="translated">Timeout globale per l'esecuzione dei test.
+Accetta un argomento come valore di ora con un suffisso di unità esplicito. I suffissi accettati sono 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)' e 'd'/'day(s)', ad esempio '500ms', '5400s', '90m', '1,5h', '1d'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PressCtrlCAgainToForceExit">
+        <source>Press Ctrl+C again to force exit.</source>
+        <target state="translated">Premere di nuovo Ctrl+C per forzare l'uscita.</target>
         <note />
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
@@ -749,6 +774,11 @@ Acquisisce un argomento come stringa nel formato &lt;value&gt;[h|m|s] dove 'valu
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
         <target state="translated">Le istanze di tipo 'ITestFramework' non devono essere registrate tramite il provider di servizi, ma tramite 'ITestApplicationBuilder.RegisterTestFramework'</target>
         <note />
+      </trans-unit>
+      <trans-unit id="ShutdownProgressStillWaitingPrefix">
+        <source>Still waiting for: </source>
+        <target state="translated">Ancora in attesa di: </target>
+        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</note>
       </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
@@ -875,16 +905,16 @@ I valori validi sono 'Normal', 'Detailed'. L'impostazione predefinita è 'Normal
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
         <target state="translated">Determina quando mostrare l'output degli errori acquisito di un test.
-I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All'.</target>
+I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All' (o 'Failed' quando viene rilevato un ambiente agente LLM/IA).</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
         <target state="translated">Determina quando mostrare l'output standard acquisito di un test.
-I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All'.</target>
+I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All' (o 'Failed' quando viene rilevato un ambiente agente LLM/IA).</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
@@ -1047,6 +1077,11 @@ I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All
         <target state="translated">Il filtro contiene un operatore '/' imprevisto all'interno di un'espressione tra parentesi</target>
         <note />
       </trans-unit>
+      <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage">
+        <source>Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</source>
+        <target state="translated">Il filtro contiene un operatore '/' imprevisto all'interno di un'espressione tra parentesi. Filtro: '{0}'. Per combinare alternative per un segmento di percorso, usare la sintassi '/A/B/C/(X|Y)'.</target>
+        <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'.</note>
+      </trans-unit>
       <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
         <source>Unexpected telemetry call, the telemetry is disabled.</source>
         <target state="translated">Chiamata di telemetria imprevista. La telemetria è disabilitata.</target>
@@ -1081,7 +1116,7 @@ I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
-        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
+        <target state="translated">L'attesa per il collegamento di (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) non è supportata in wasi.</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

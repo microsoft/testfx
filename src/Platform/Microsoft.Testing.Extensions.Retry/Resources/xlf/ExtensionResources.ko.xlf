@@ -51,13 +51,13 @@ Moving last attempt asset files to the default result directory
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
-        <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</source>
-        <target state="translated">재시도 간 지연을 추가합니다. 지연은 시간 값으로 표현됩니다(예: 200, 1s, 2.5m, 1h). 기본 단위는 밀리초입니다.</target>
+        <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</source>
+        <target state="translated">재시도 간 지연을 추가합니다. 지연은 시간 값으로 표현됩니다(예: 200, 500ms, 1s, 2.5m, 1h, 1d). 기본 단위는 밀리초입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
-        <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 1s, 2.5m, 1h)</source>
-        <target state="translated">'--retry-failed-tests-delay' 옵션에는 음수가 아닌 2147483647ms(~24.20:31:23.647) 이하인 유효한 시간 범위 값이 필요합니다(예: 200, 1s, 2.5m, 1h)</target>
+        <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</source>
+        <target state="translated">'--retry-failed-tests-delay' 옵션에는 음수가 아니고 2147483647ms(~24.20:31:23.647) 이하인 유효한 시간 범위 값이 필요합니다(예: 200, 500ms, 1s, 2.5m, 1h, 1d).</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">

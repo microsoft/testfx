@@ -16,25 +16,9 @@ internal sealed class AnsiTerminal : ITerminal
     /// File extensions that we will link to directly, all other files
     /// are linked to their directory, to avoid opening dlls, or executables.
     /// </summary>
-    private static readonly string[] KnownFileExtensions =
-    [
-        // code files
-        ".cs",
-        ".vb",
-        ".fs",
-        // logs
-        ".log",
-        ".txt",
-        // reports
-        ".coverage",
-        ".ctrf",
-        ".html",
-        ".junit",
-        ".nunit",
-        ".trx",
-        ".xml",
-        ".xunit"
-    ];
+    private static readonly HashSet<string> KnownFileExtensions = new HashSet<string>(
+        [".cs", ".vb", ".fs", ".log", ".txt", ".coverage", ".ctrf", ".html", ".junit", ".nunit", ".trx", ".xml", ".xunit"],
+        StringComparer.Ordinal);
 
     private readonly IConsole _console;
     private readonly string? _baseDirectory;
@@ -113,7 +97,7 @@ internal sealed class AnsiTerminal : ITerminal
 
     public void SetColor(TerminalColor color)
     {
-        string setColor = $"{AnsiCodes.CSI}{(int)color}{AnsiCodes.SetColor}";
+        string setColor = AnsiCodes.GetSetColorEscapeCode(color);
         if (_isBatching)
         {
             _stringBuilder.Append(setColor);
@@ -245,14 +229,13 @@ internal sealed class AnsiTerminal : ITerminal
 
     public void MoveCursorUp(int lineCount)
     {
-        string moveCursor = $"{AnsiCodes.CSI}{lineCount}{AnsiCodes.MoveUpToLineStart}";
         if (_isBatching)
         {
-            _stringBuilder.AppendLine(moveCursor);
+            _stringBuilder.Append(AnsiCodes.CSI).Append(lineCount).Append(AnsiCodes.MoveUpToLineStart).AppendLine();
         }
         else
         {
-            _console.WriteLine(moveCursor);
+            _console.WriteLine($"{AnsiCodes.CSI}{lineCount}{AnsiCodes.MoveUpToLineStart}");
         }
     }
 
@@ -280,7 +263,7 @@ internal sealed class AnsiTerminal : ITerminal
         }
 
         AppendLine($"{AnsiCodes.CSI}{_currentFrame.RenderedLines.Count + 2}{AnsiCodes.MoveUpToLineStart}");
-        Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInDisplay}");
+        Append(AnsiCodes.CsiEraseInDisplay);
         _currentFrame.Clear();
     }
 

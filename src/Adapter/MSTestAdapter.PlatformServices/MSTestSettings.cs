@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using DebuggerLaunchMode = Microsoft.VisualStudio.TestTools.UnitTesting.DebuggerLaunchMode;
@@ -46,6 +46,8 @@ internal sealed partial class MSTestSettings
         TestCleanupTimeout = 0;
         CooperativeCancellationTimeout = false;
         OrderTestsByNameInClass = false;
+        RandomizeTestOrder = false;
+        RandomTestOrderSeed = null;
         LaunchDebuggerOnAssertionFailure = DebuggerLaunchMode.Disabled;
     }
 
@@ -160,6 +162,25 @@ internal sealed partial class MSTestSettings
     /// Gets a value indicating whether tests should be ordered by name in the class.
     /// </summary>
     internal bool OrderTestsByNameInClass { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether tests should be executed in a random order to help expose hidden dependencies between tests.
+    /// </summary>
+    /// <remarks>
+    /// When enabled, the adapter shuffles assemblies, parallel chunks and individual tests using <see cref="RandomTestOrderSeed"/>
+    /// (or an auto-generated seed). Tests marked with <c>[DoNotParallelize]</c> are still executed after the parallelizable set,
+    /// but their relative order is also randomized. When this option is enabled, <see cref="OrderTestsByNameInClass"/> is ignored.
+    /// </remarks>
+    internal bool RandomizeTestOrder { get; private set; }
+
+    /// <summary>
+    /// Gets the seed used to randomize test execution order when <see cref="RandomizeTestOrder"/> is enabled.
+    /// </summary>
+    /// <remarks>
+    /// When <see langword="null"/>, the adapter generates a seed at run time and reports it in the run output so that the same
+    /// order can be reproduced by setting this value to the reported seed.
+    /// </remarks>
+    internal int? RandomTestOrderSeed { get; private set; }
 
     /// <summary>
     /// Gets a value specifying when to launch the debugger on assertion failure.

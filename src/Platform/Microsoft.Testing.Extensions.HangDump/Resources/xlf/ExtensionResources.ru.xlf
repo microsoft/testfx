@@ -79,8 +79,8 @@ Disk info:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">Укажите имя файла дампа.
+Поддерживаются следующие заполнители: {pname} (имя тестового приложения), {pid} (идентификатор процесса), {asm} (имя входной сборки), {tfm} (идентификатор целевой платформы), {time} (метка времени). Для обеспечения обратной совместимости также поддерживается устаревший токен (идентификатор процесса) %p.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -96,16 +96,22 @@ Supports the following placeholders: {pname} (test application name), {pid} (pro
       <trans-unit id="HangDumpTimeoutOptionDescription">
         <source>Specify the timeout after which the dump will be generated.
 The timeout value is specified in one of the following formats:
-    1.5h, 1.5hour, 1.5hours,
+    500ms, 500mil, 500millisecond, 500milliseconds,
+    5400s, 5400sec, 5400second, 5400seconds,
     90m, 90min, 90minute, 90minutes,
-    5400s, 5400sec, 5400second, 5400seconds.
+    1.5h, 1.5hour, 1.5hours,
+    1d, 1day, 1days.
+    A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
-        <target state="translated">Укажите время ожидания, по истечении которого будет создан дамп.
+        <target state="translated">Укажите время ожидания, по истечении которого будет сгенерирован дамп.
 Значение времени ожидания задано в одном из следующих форматов:
-    1,5 ч, 1,5 ч, 1,5 часа,
-    90 м, 90 мин, 90 минут, 90 минут,
-    5400 с, 5400 сек, 5400 секунд, 5400s секунд.
-    Значение по умолчанию — 30 м.</target>
+    500ms, 500mil, 500millisecond, 500milliseconds,
+    5400s, 5400sec, 5400second, 5400seconds,
+    90m, 90min, 90minute, 90minutes,
+    1.5h, 1.5hour, 1.5hours,
+    1d, 1day, 1days.
+    Одно число (без суффикса) интерпретируется как миллисекунды.
+    Значение по умолчанию — 30m (30 минут).</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
@@ -113,20 +119,35 @@ The timeout value is specified in one of the following formats:
         <target state="translated">"--hangdump-timeout" ожидает один аргумент времени ожидания</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
+        <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
+        <target state="translated">Параметры "--hangdump-type" и "--hangdump-type-if-supported" являются взаимоисключающими. Используйте "--hangdump-type-if-supported", чтобы согласиться на использование типа дампа с наилучшим возможным результатом. Если запрошенный тип недоступен в текущей среде выполнения, выполняется переход на ближайший доступный тип (с информационным сообщением). Или используйте "--hangdump-type", чтобы завершать работу при первой ошибке в неподдерживаемых средах выполнения.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
+        <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
+        <target state="translated">"--hangdump-type-if-supported {0}" не поддерживается в текущей среде выполнения. Переход к "{1}".</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
+        <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
+        <target state="translated">То же, что и "--hangdump-type", но при недоступности запрошенного типа в текущей среде выполнения автоматически переходит (с информационным сообщением) на ближайший поддерживаемый тип дампа (например, "Triage" поддерживается только в .NET Core и в .NET Framework переходит на "Mini"). Используйте этот параметр, чтобы сохранять одну и ту же командную строку во всех матрицах CI, где сочетаются .NET Framework и .NET. Допустимые значения: "Mini", "Heap", "Full", "Triage", "None". Взаимоисключающий с "--hangdump-type".</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are {0}.
-Default type is 'Full'</target>
+        <target state="translated">Укажите тип дампа.
+Допустимые значения: {0}.
+Тип по умолчанию — "Full"</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are {1}</target>
+        <target state="translated">"{0}" не является допустимым типом дампа.
+Допустимые варианты: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

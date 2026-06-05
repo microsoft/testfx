@@ -115,8 +115,12 @@ public sealed class AppInsightsProviderTests
 
             if (calls == 1)
             {
-                // Timeout for more than 3 seconds
+                // Deliberately block the synchronous Moq callback to simulate a slow telemetry
+                // client and validate that the provider's dispose path times out gracefully.
+                // The signature of Moq's Callback is Action<...>, so an async alternative is not viable here.
+#pragma warning disable MSTEST0067 // Avoid 'Thread.Sleep' in test code as it can cause test flakiness
                 Thread.Sleep(10_000);
+#pragma warning restore MSTEST0067
             }
         });
 
@@ -216,5 +220,90 @@ public sealed class AppInsightsProviderTests
 
         Assert.IsTrue(capturedProperties.TryGetValue("my.bool", out string? value), "Expected 'my.bool' property in tracked event.");
         Assert.AreEqual(TelemetryProperties.True, value);
+    }
+
+    [TestMethod]
+    public async Task Dispose_FlushesTelemetryClientOnceAfterAllTrackedEvents()
+    {
+        // Regression: previously AppInsightTelemetryClient.TrackEvent called Flush() per event,
+        // which serialized the ingest loop on each network round-trip. On slow Linux CI a
+        // single slow flush could exhaust the 3-second dispose timeout before later payloads
+        // (e.g. mstest sessionexit) were ever read from the channel and ship their
+        // "Send telemetry event:" trace line. The fix removes per-event flushing and flushes
+        // exactly once after the ingest loop drains.
+        Mock<IEnvironment> environment = new();
+        Mock<IClock> clock = new();
+        Mock<IConfiguration> config = new();
+        Mock<ITelemetryInformation> telemetryInformation = new();
+
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+
+        List<string> trackedEvents = [];
+        int flushCallCount = 0;
+        using ManualResetEventSlim secondEventTracked = new(initialState: false);
+        using ManualResetEventSlim flushInvoked = new(initialState: false);
+        Mock<ITelemetryClient> testTelemetryClient = new();
+        testTelemetryClient.Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
+            .Callback((string eventName, Dictionary<string, string> _, Dictionary<string, double> _) =>
+            {
+                lock (trackedEvents)
+                {
+                    trackedEvents.Add(eventName);
+                    if (trackedEvents.Count >= 2)
+                    {
+                        secondEventTracked.Set();
+                    }
+                }
+            });
+        testTelemetryClient.Setup(x => x.Flush())
+            .Callback(() =>
+            {
+                Interlocked.Increment(ref flushCallCount);
+                flushInvoked.Set();
+            });
+
+        Mock<ITelemetryClientFactory> telemetryClientFactory = new();
+        telemetryClientFactory.Setup(x => x.Create(It.IsAny<string?>(), It.IsAny<string>())).Returns(testTelemetryClient.Object);
+
+        CancellationTokenSource cancellationTokenSource = new();
+        Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new();
+        testApplicationCancellationTokenSource.Setup(x => x.CancellationToken).Returns(cancellationTokenSource.Token);
+
+        AppInsightsProvider appInsightsProvider = new(
+            environment.Object,
+            testApplicationCancellationTokenSource.Object,
+            new SystemTask(),
+            loggerFactory.Object,
+            clock.Object,
+            config.Object,
+            telemetryInformation.Object,
+            telemetryClientFactory.Object,
+            "sessionId");
+
+        await appInsightsProvider.LogEventAsync("FirstEvent", new Dictionary<string, object>(), CancellationToken.None);
+        await appInsightsProvider.LogEventAsync("SecondEvent", new Dictionary<string, object>(), CancellationToken.None);
+
+        Assert.IsTrue(secondEventTracked.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Telemetry consumer did not invoke TrackEvent for both events within the timeout.");
+
+        // Flush must not have happened per-event: it should only occur during shutdown drain.
+        Assert.AreEqual(0, Volatile.Read(ref flushCallCount), "Flush should not be invoked per-event; only once during dispose drain.");
+
+#if NETCOREAPP
+        await appInsightsProvider.DisposeAsync();
+#else
+        appInsightsProvider.Dispose();
+#endif
+
+        // Dispose only waits up to 3 seconds for the ingest task to drain, and may proceed even
+        // before the task reaches its finally block (especially under thread-pool pressure on CI).
+        // Wait explicitly for the Flush callback so the assertions below are not racing the
+        // background continuation.
+        Assert.IsTrue(flushInvoked.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Flush was not invoked within the timeout after dispose.");
+
+        Assert.HasCount(2, trackedEvents);
+        Assert.AreEqual("FirstEvent", trackedEvents[0]);
+        Assert.AreEqual("SecondEvent", trackedEvents[1]);
+        Assert.AreEqual(1, Volatile.Read(ref flushCallCount), "Flush should be invoked exactly once after the ingest loop drains.");
     }
 }

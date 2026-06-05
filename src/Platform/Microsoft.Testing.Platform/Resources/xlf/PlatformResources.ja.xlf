@@ -108,8 +108,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
-        <source>Option '--{0}' is declared by multiple extensions: '{1}'</source>
-        <target state="translated">オプション '--{0}' は複数の拡張機能によって宣言されています: '{1}'</target>
+        <source>Option '--{0}' is declared by multiple providers: '{1}'</source>
+        <target state="translated">オプション '--{0}' は複数のプロバイダーによって宣言されています: '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
@@ -144,12 +144,12 @@
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInCommandLine">
         <source>Unclosed quote in command line</source>
-        <target state="new">Unclosed quote in command line</target>
+        <target state="translated">閉じられていないコマンド ラインの引用符</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInResponseFile">
         <source>Unclosed quote in response file at line {0}</source>
-        <target state="new">Unclosed quote in response file at line {0}</target>
+        <target state="translated">応答ファイルの {0} 行で引用符が閉じられていません</target>
         <note>{0} is the line number</note>
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
@@ -376,6 +376,16 @@
         <target state="translated">コマンド ラインの引数が無効です:</target>
         <note />
       </trans-unit>
+      <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
+        <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</source>
+        <target state="translated">testconfig.json ファイル ('{0}') のセクション '{1}' にあるエントリ '{2}' は、スカラー値 (文字列、数値、ブール値) またはスカラー値の配列のいずれかである必要があります。入れ子になったオブジェクトはサポートされていません。</target>
+        <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file.</note>
+      </trans-unit>
+      <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
+        <source>In testconfig.json under 'commandLineOptions': {0}</source>
+        <target state="translated">In testconfig.json under 'commandLineOptions': {0}</target>
+        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...).</note>
+      </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
         <target state="translated">重複したキー '{0}' が見つかりました</target>
@@ -553,6 +563,11 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
 必要に応じて、'text' (既定の人間が判読できる出力) または 'json' を指定すると、検出されたテストを標準出力に JSON ドキュメントとして印刷します。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
+        <source>'--server {0}' requires '--{1}' to be specified.</source>
+        <target state="translated">'--server {0}' には '--{1}' を指定する必要があります。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
         <target state="translated">dotnet テスト パイプ。</target>
@@ -659,6 +674,11 @@ The default is TestResults in the directory that contains the test application.<
 既定値は、テスト アプリケーションを含むディレクトリ内の TestResults です。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineServerInvalidArgument">
+        <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="translated">'--server' は予期しない値 '{0}'を受け取りました。サポートされている値: {1}。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
         <source>Enable the server mode.</source>
         <target state="translated">サーバー モードを有効にします。</target>
@@ -675,15 +695,20 @@ The default is TestResults in the directory that contains the test application.<
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
-        <target state="translated">'timeout' オプションには、1 つの引数を &lt;value&gt;[h|m|s] 形式の文字列として指定する必要があります。ここで 'value' は、サポートされる最大継続時間を超えない、負でない有限の数値です</target>
+        <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
+        <target state="translated">'timeout' オプションには、引数として明示的な単位サフィックスと、サポートされている範囲内 (最大約 49.7 日) の正の数値を持つ時間値を 1 つ指定する必要があります。使用可能なサフィックスは、'ms'/'mil(s)'/'millisecond(s)'、's'/'sec(s)'/'second(s)'、'm'/'min(s)'/'minute(s)'、'h'/'hour(s)'、'd'/'day(s)' です (例: '500ms'、'5400s'、'90m'、'1.5h'、'1d')。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
-Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
+Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
         <target state="translated">グローバル テスト実行のタイムアウト。
-1 つの引数を文字列として &lt;value&gt;[h|m|s] の形式で使用します。この場合、'value' は float です。</target>
+明示的な単位サフィックスを持つ時間値を 1 つ、引数として指定します。使用可能なサフィックスは、'ms'/'mil(s)'/'millisecond(s)'、's'/'sec(s)'/'second(s)'、'm'/'min(s)'/'minute(s)'、'h'/'hour(s)'、'd'/'day(s)' です (例: '500ms'、'5400s'、'90m'、'1.5h'、'1d')。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PressCtrlCAgainToForceExit">
+        <source>Press Ctrl+C again to force exit.</source>
+        <target state="translated">強制終了するには、Ctrl + C キーをもう一度押してください。</target>
         <note />
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
@@ -750,6 +775,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
         <target state="translated">'ITestFramework' 型のインスタンスは、サービス プロバイダーを介して登録することはできません。'ITestApplicationBuilder.RegisterTestFramework' を介して登録する必要があります</target>
         <note />
+      </trans-unit>
+      <trans-unit id="ShutdownProgressStillWaitingPrefix">
+        <source>Still waiting for: </source>
+        <target state="translated">まだ次の完了を待機中:</target>
+        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</note>
       </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
@@ -876,16 +906,16 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
         <target state="translated">テストのキャプチャされたエラー出力を表示するタイミングを決定します。
-有効な値は 'All'、'Failed'、'None' です。既定値は 'All' です。</target>
+有効な値は 'All'、'Failed'、'None' です。既定値は 'All' (LLM/AI エージェント環境が検出された場合は 'Failed') です。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
         <target state="translated">テストのキャプチャされた標準の出力を表示するタイミングを決定します。
-有効な値は 'All'、'Failed'、'None' です。既定値は 'All' です。</target>
+有効な値は 'All'、'Failed'、'None' です。既定値は 'All' (LLM/AI エージェント環境が検出された場合は 'Failed') です。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
@@ -1048,6 +1078,11 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
         <target state="translated">かっこで囲まれた式内に、予期しない '/' 演算子がフィルターに含まれています</target>
         <note />
       </trans-unit>
+      <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage">
+        <source>Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</source>
+        <target state="translated">フィルターのかっこで囲まれた式内に、予期しない '/' 演算子が含まれています。フィルター: '{0}'。1 つのパス セグメントの代替候補を組み合わせるには、'/A/B/C/(X|Y)' のような構文を使用します。</target>
+        <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'.</note>
+      </trans-unit>
       <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
         <source>Unexpected telemetry call, the telemetry is disabled.</source>
         <target state="translated">予期しないテレメトリ呼び出しです。テレメトリは無効になっています。</target>
@@ -1082,7 +1117,7 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
-        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
+        <target state="translated">デバッガーのアタッチの待機 (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) は、wasi ではサポートされていません。</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

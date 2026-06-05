@@ -13,6 +13,8 @@ tools:
   github:
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   create-issue:
     title-prefix: '[dependabot-bundler] '
     max: 10

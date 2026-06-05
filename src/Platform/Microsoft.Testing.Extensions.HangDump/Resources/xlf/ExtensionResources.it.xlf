@@ -79,8 +79,8 @@ Informazioni sul disco:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">Specificare il nome del file di dump.
+Supporta i segnaposto seguenti: {pname} (nome applicazione di test), {pid} (ID processo), {asm} (nome assembly voce), {tfm} (moniker framework di destinazione), {time} (timestamp). Il token legacy %p (ID processo) è supportato anche per la compatibilità con le versioni precedenti.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -96,16 +96,22 @@ Supports the following placeholders: {pname} (test application name), {pid} (pro
       <trans-unit id="HangDumpTimeoutOptionDescription">
         <source>Specify the timeout after which the dump will be generated.
 The timeout value is specified in one of the following formats:
-    1.5h, 1.5hour, 1.5hours,
+    500ms, 500mil, 500millisecond, 500milliseconds,
+    5400s, 5400sec, 5400second, 5400seconds,
     90m, 90min, 90minute, 90minutes,
-    5400s, 5400sec, 5400second, 5400seconds.
+    1.5h, 1.5hour, 1.5hours,
+    1d, 1day, 1days.
+    A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
         <target state="translated">Specificare il timeout dopo il quale verrà generato il dump.
 Il valore del timeout è specificato in uno dei formati seguenti:
-    1.5h, 1.5hour, 1.5hours,
-    90m, 90min, 90minute, 90minutes,
-    5400s, 5400sec, 5400second, 5400seconds.
-    L’impostazione predefinita è 30m.</target>
+    500 ms, 500 mil, 500 millisecondo, 500 millisecondi,
+    5400 s, 5400 sec, 5400 secondo, 5400 secondi,
+    90 m, 90 min, 90 minuto, 90 minuti,
+    1,5 h, 1,5 ora, 1,5 ore,
+    1 g, 1 giorno, 1 giorni.
+    Un semplice numero (senza suffisso) viene interpretato come millisecondi.
+    L'impostazione predefinita è 30 m.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
@@ -113,20 +119,35 @@ Il valore del timeout è specificato in uno dei formati seguenti:
         <target state="translated">'--hangdump-timeout' prevede un singolo argomento di timeout</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
+        <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
+        <target state="translated">''--hangdump-type'' e ''--hangdump-type-if-supported'' si escludono a vicenda. Usare ''--hangdump-type-if-supported'' per scegliere un tipo di dump best effort che esegue il fallback al tipo disponibile più vicino (con un messaggio informativo) quando il tipo richiesto non è disponibile nel runtime corrente, oppure ''--hangdump-type'' per generare un errore rapido nei runtime non supportati.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
+        <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
+        <target state="translated">''--hangdump-type-if-supported {0}'' non è supportato nel runtime corrente. Fallback a ''{1}''.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
+        <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
+        <target state="translated">Uguale a ''--hangdump-type'' ma esegue il fallback in modo silenzioso (con un messaggio informativo) al tipo di dump supportato più vicino quando il tipo richiesto non è disponibile nel runtime corrente (ad esempio, ''Triage'' è supportato solo in .NET Core e viene eseguito il fallback a ''Mini'' in .NET Framework). Usare questa opzione per mantenere la stessa riga di comando tra matrici CI che combinano .NET Framework e .NET. I valori validi sono ''Mini'', ''Heap'', ''Full'', ''Triage'', ''None''. Si escludono a vicenda con ''--hangdump-type''.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are {0}.
-Default type is 'Full'</target>
+        <target state="translated">Specificare il tipo di dump.
+I valori validi sono {0}.
+Il tipo predefinito è 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are {1}</target>
+        <target state="translated">''{0}'' non è un tipo di dump valido.
+Le opzioni valide sono {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

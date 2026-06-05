@@ -123,7 +123,8 @@ Each rule has a category letter and an index. Cite findings as `Rule A-3`, `Rule
 2. **NuGet package file name mismatch** — Files in `build/` and `buildTransitive/` folders **must** match the NuGet package ID exactly (e.g. `<PackageId>.props`). A mismatch causes NuGet to silently skip the import. **Severity: 🔴 Error.**
 3. **Overwriting `CustomBefore*` / `CustomAfter*` properties** — These properties must be appended to (with `;`), not overwritten, to avoid dropping prior hooks. **Severity: 🔴 Error.**
 4. **Missing import guard pattern** — When a package ships both `.props` and `.targets`, the `.targets` file should guard-import the `.props` using a sentinel property to handle projects that only import `.targets`. **Severity: 🟡 Warning.**
-5. **Cross-platform path separators** — `.props`/`.targets` files that ship in NuGet packages must use forward slashes in paths for Linux/macOS compatibility. Backslash-only paths break on non-Windows. **Severity: 🔴 Error.**
+
+> **Not a rule — do not flag:** Backslash path separators in `.props`/`.targets` files. MSBuild normalizes `\` to `/` on non-Windows for `Import Project`, `UsingTask AssemblyFile`, and item `Include` globs. Mixed or backslash-only paths in this repository are intentional and work cross-platform.
 
 ### Category E: NuGet Build Extension Layout
 
@@ -231,7 +232,6 @@ Only the following classes of fix are considered safe enough to ship as a draft 
 - Adding `Condition="'$(Prop)' == ''"` to a clearly-intended default property setter (Rule B-1).
 - Quoting both sides of a condition expression (Rule B-2).
 - Adding `Exists()` guard to an obviously optional import (Rule D-1).
-- Replacing `\` with `/` in NuGet package files that ship to customers (Rule D-5).
 
 Never auto-fix:
 

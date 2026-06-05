@@ -157,6 +157,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">避免傳遞明確的 'DynamicDataSourceType'，並使用預設的自動偵測行為</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsDescription">
+        <source>Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</source>
+        <target state="translated">使用測試方法或測試固件內的 'Thread.Sleep'、'Task.Wait'、'Task.WaitAll'、'Task.WaitAny' 或 'Task&lt;TResult&gt;.Result' 同步封鎖目前的執行緒是不穩定性的常見來源，而且當測試架構在需要合作排程的 SynchronizationContext 上執行測試時，也可能鎖死。以時間為基礎的等待偏好使用 'await Task.Delay'，並 'await' 工作來觀察其結果。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsMessageFormat">
+        <source>Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</source>
+        <target state="translated">避免測試程式碼中有 '{0}'，因為它可能造成測試不穩定性；考慮非同步替代項目，例如 'await Task.Delay' 或 'await' 工作</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsTitle">
+        <source>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</source>
+        <target state="translated">避免同步封鎖呼叫，例如測試程式碼中的 'Thread.Sleep'、'Task.Wait'、'Task.WaitAll'、'Task.WaitAny' 或 'Task&lt;TResult&gt;.Result'。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
         <target state="translated">不要在 'async void' 方法、本機函數或 lambdas 內判斷提示。在此內容中擲回的例外狀況將會是未處理的例外狀況。在 .NET Framework 下使用 VSTest 時，會以無訊息方式接受。在現代 .NET 下使用 Microsoft.Testing.Platform 或 VSTest 時，可能會損毀進程。</target>
@@ -268,6 +283,16 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="ClassInitializeShouldBeValidTitle">
         <source>ClassInitialize methods should have valid layout</source>
         <target state="translated">ClassInitialize 方法應該具有有效的配置</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CollectionAssertToAssertMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'CollectionAssert.{1}'</source>
+        <target state="translated">使用 'Assert.{0}' 而不是 'CollectionAssert.{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CollectionAssertToAssertTitle">
+        <source>Use 'Assert' instead of 'CollectionAssert'</source>
+        <target state="translated">使用 'Assert' 而不是 'CollectionAssert'</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidDescription">
@@ -520,6 +545,21 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="GlobalTestFixtureShouldBeValidTitle">
         <source>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</source>
         <target state="translated">GlobalTestInitialize 和 GlobalTestCleanup 方法應具備有效的配置</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreShouldHaveJustificationDescription">
+        <source>An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</source>
+        <target state="translated">套用於測試方法或測試類別的 '[Ignore]' 屬性應該包含非空白的訊息，說明為何忽略測試或類別。理由訊息可簡化對略過測試的分級、協助檢閱者瞭解意圖，並防止測試以無訊息方式永遠停用。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreShouldHaveJustificationMessageFormat">
+        <source>'[Ignore]' should specify a message explaining why '{0}' is ignored</source>
+        <target state="translated">'[Ignore]' 應該指定訊息，說明為何忽略 '{0}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreShouldHaveJustificationTitle">
+        <source>'[Ignore]' should specify a justification</source>
+        <target state="translated">'[Ignore]' 應該指定理由</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueDescription">
@@ -792,12 +832,12 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidDescription">
-        <source>'TestContext' should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
+        <source>'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
-        <target state="translated">'TestContext' 應是在建構函式中指派的非靜態欄位或屬性，或是針對由 MSTest 所設定的屬性，其應遵循下列配置:
-- 它應該是 'public' (無論是否有設定 '[assembly: DiscoverInternals]' 屬性)。
+        <target state="translated">'TestContext' 應是在建構函式中指派的非靜態屬性，或是由 MSTest 設定的屬性。若要由 MSTest 設定，則應遵循下列配置:
+- 無論是否有設定 '[assembly: DiscoverInternals]' 屬性，都應該是 'public'。
 - 它不應該是 'static'
 - 它應該有 setter。</target>
         <note />
@@ -991,12 +1031,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">
         <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</source>
-        <target state="new">An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</target>
+        <target state="translated">衍生自 'RetryBaseAttribute' 的屬性只能在測試方法或測試類別上指定</target>
         <note />
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method or test class</source>
-        <target state="new">Use retry attribute on test method or test class</target>
+        <target state="translated">在測試方和測試類別法上使用重試屬性</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">

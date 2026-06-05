@@ -58,7 +58,7 @@ public class TrxStreamingSerializerTests
         Assert.AreEqual(TrxStreamMessageKind.DebugOrTrace, round.Messages[2].Kind);
         Assert.IsNull(round.Messages[2].Message);
         Assert.IsNotNull(round.Categories);
-        CollectionAssert.AreEqual(new[] { "cat-a", "cat-b" }, round.Categories.ToArray());
+        Assert.AreSequenceEqual(new[] { "cat-a", "cat-b" }, round.Categories.ToArray());
         Assert.IsNotNull(round.Metadata);
         Assert.AreEqual("k", round.Metadata[0].Key);
         Assert.AreEqual("v", round.Metadata[0].Value);

@@ -166,6 +166,15 @@
   <data name="AzureDevOpsLivePublishingRequestFailed" xml:space="preserve">
     <value>Azure DevOps REST API request failed after all retries.</value>
   </data>
+  <data name="AzureDevOpsLivePublishingResultAttachmentFailed" xml:space="preserve">
+    <value>Azure DevOps live publishing failed to upload a test result attachment.</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingResultIdParseFailedWarning" xml:space="preserve">
+    <value>Azure DevOps live publishing accepted a batch of test results but could not parse the assigned result IDs; result-level attachments for this batch will be skipped.</value>
+  </data>
+  <data name="AzureDevOpsLivePublishingRunAttachmentFailed" xml:space="preserve">
+    <value>Azure DevOps live publishing failed to upload a test run attachment.</value>
+  </data>
   <data name="AzureDevOpsLivePublishingRunIdFileMismatch" xml:space="preserve">
     <value>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</value>
     <comment>{Locked="azdo-runid.&lt;buildId&gt;.json"}</comment>
@@ -176,12 +185,24 @@
   <data name="AzureDevOpsLivePublishingTimeoutErrorMessageWithReason" xml:space="preserve">
     <value>Timeout: {0}</value>
   </data>
+  <data name="AzureDevOpsProgressRequiresAzureDevOps" xml:space="preserve">
+    <value>'--report-azdo-progress' requires '--report-azdo' to be enabled</value>
+    <comment>{Locked='--report-azdo-progress'}{Locked='--report-azdo'}</comment>
+  </data>
   <data name="AzureDevOpsQuarantineFileRequiresAzureDevOps" xml:space="preserve">
     <value>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</value>
   </data>
   <data name="AzureDevOpsReportSeverityRequiresAzureDevOps" xml:space="preserve">
     <value>'--report-azdo-severity' requires '--report-azdo' to be enabled</value>
     <comment>{Locked='--report-azdo-severity'}{Locked='--report-azdo'}</comment>
+  </data>
+  <data name="AzureDevOpsStackFrameFilterRequiresAzureDevOps" xml:space="preserve">
+    <value>'--report-azdo-stackframe-filter' requires '--report-azdo' to be enabled</value>
+    <comment>{Locked='--report-azdo-stackframe-filter'}{Locked='--report-azdo'}</comment>
+  </data>
+  <data name="AzureDevOpsSummaryRequiresAzureDevOps" xml:space="preserve">
+    <value>'--report-azdo-summary' requires '--report-azdo' to be enabled</value>
+    <comment>{Locked='--report-azdo-summary'}{Locked='--report-azdo'}</comment>
   </data>
   <data name="DemoteKnownFlakyOptionDescription" xml:space="preserve">
     <value>Demote failures with an Azure DevOps flaky history of at least {0}% in the selected window to warnings.</value>
@@ -233,11 +254,23 @@
   <data name="InvalidSeverity" xml:space="preserve">
     <value>Invalid option {0}.</value>
   </data>
+  <data name="InvalidStackFrameFilterRegex" xml:space="preserve">
+    <value>Invalid '--report-azdo-stackframe-filter' regex '{0}': {1}</value>
+    <comment>{Locked="--report-azdo-stackframe-filter"}</comment>
+  </data>
   <data name="NoFailureMessageFallback" xml:space="preserve">
     <value>Test failed without an additional message.</value>
   </data>
   <data name="OptionDescription" xml:space="preserve">
     <value>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</value>
+  </data>
+  <data name="ProgressOptionDescription" xml:space="preserve">
+    <value>Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.</value>
+    <comment>{Locked="--report-azdo"}</comment>
+  </data>
+  <data name="ProgressRequiresTfBuildWarning" xml:space="preserve">
+    <value>Azure DevOps progress reporting was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps progress emissions.</value>
+    <comment>{Locked="TF_BUILD"}{Locked="true"}</comment>
   </data>
   <data name="PublishAzdoRunNameOptionDescription" xml:space="preserve">
     <value>Custom Azure DevOps test run name for live test-result publishing.</value>
@@ -272,6 +305,25 @@
   <data name="SeverityOptionDescription" xml:space="preserve">
     <value>Severity to use for the reported event. Options are: error (default) and warning.</value>
     <comment>{Locked="error"}{Locked="warning"}</comment>
+  </data>
+  <data name="StackFrameFilterOptionDescription" xml:space="preserve">
+    <value>Additional regex patterns (matched against the fully-qualified type prefix of each stack frame) that should be skipped when looking for the user's call site to annotate. Repeatable; up to {0} patterns. Compiled with a {1}ms match timeout. Additive to the extension's built-in MSTest assertion-implementation prefixes.</value>
+    <comment>{0} is the maximum allowed pattern count, {1} is the per-match timeout in ms.</comment>
+  </data>
+  <data name="StackFrameFilterTooManyRegexes" xml:space="preserve">
+    <value>'--report-azdo-stackframe-filter' accepts at most {0} patterns.</value>
+    <comment>{Locked="--report-azdo-stackframe-filter"}</comment>
+  </data>
+  <data name="SummaryOptionDescription" xml:space="preserve">
+    <value>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.</value>
+    <comment>{Locked="--report-azdo"}{Locked="##vso[task.uploadsummary]"}{Locked="azdo-summary-{tfm}.md"}</comment>
+  </data>
+  <data name="SummaryRequiresTfBuildWarning" xml:space="preserve">
+    <value>Azure DevOps job summary was requested, but TF_BUILD is not set to 'true'; skipping summary emission.</value>
+    <comment>{Locked="TF_BUILD"}{Locked="true"}</comment>
+  </data>
+  <data name="SummaryWriteFailedWarning" xml:space="preserve">
+    <value>Failed to write Azure DevOps summary file '{0}': {1}</value>
   </data>
   <data name="UploadArtifactExcludeOptionDescription" xml:space="preserve">
     <value>Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.</value>

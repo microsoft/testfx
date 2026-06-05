@@ -8,7 +8,7 @@ using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
+internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBase
 {
     public const string HelpOptionKey = "help";
     public const string HelpOptionQuestionMark = "?";
@@ -26,6 +26,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string DiscoverTestsTextArgument = "text";
 
     private static readonly string SupportedDiscoverTestsValues = $"'{DiscoverTestsTextArgument}', '{DiscoverTestsJsonArgument}'";
+    private static readonly string SupportedServerProtocolValues = $"'{JsonRpcProtocolName}', '{DotnetTestCliProtocolName}'";
     public const string ResultDirectoryOptionKey = "results-directory";
     public const string IgnoreExitCodeOptionKey = "ignore-exit-code";
     public const string MinimumExpectedTestsOptionKey = "minimum-expected-tests";
@@ -77,25 +78,17 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         new(DotNetTestPipeOptionKey, PlatformResources.PlatformCommandLineDotnetTestPipe, ArgumentArity.ExactlyOne, true, isBuiltIn: true)
     ];
 
-    /// <inheritdoc />
-    public string Uid => nameof(PlatformCommandLineProvider);
+    public PlatformCommandLineProvider()
+        : base(
+            nameof(PlatformCommandLineProvider),
+            PlatformVersion.Version,
+            PlatformResources.PlatformCommandLineProviderDisplayName,
+            PlatformResources.PlatformCommandLineProviderDescription,
+            PlatformCommandLineProviderCache)
+    {
+    }
 
-    /// <inheritdoc />
-    public string Version => PlatformVersion.Version;
-
-    /// <inheritdoc />
-    public string DisplayName { get; } = PlatformResources.PlatformCommandLineProviderDisplayName;
-
-    /// <inheritdoc />
-    public string Description { get; } = PlatformResources.PlatformCommandLineProviderDescription;
-
-    /// <inheritdoc />
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        => PlatformCommandLineProviderCache;
-
-    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
         if (commandOption.Name == DiagnosticVerbosityOptionKey)
         {
@@ -113,6 +106,14 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDiscoverTestsInvalidArgument, arguments[0], SupportedDiscoverTestsValues));
         }
 
+        if (commandOption.Name == ServerOptionKey
+            && arguments.Length == 1
+            && !JsonRpcProtocolName.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
+            && !DotnetTestCliProtocolName.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
+        {
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineServerInvalidArgument, arguments[0], SupportedServerProtocolValues));
+        }
+
         if (commandOption.Name == ClientPortOptionKey
             && (!int.TryParse(arguments[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int port)
                 || port < System.Net.IPEndPoint.MinPort
@@ -126,8 +127,14 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitSingleArgument, ExitOnProcessExitOptionKey));
         }
 
+        // CancellationTokenSource.CancelAfter caps at Timer.MaxSupportedTimeout
+        // (~49.7 days). Reject values above that range here so the user gets a friendly
+        // CLI error instead of an ArgumentOutOfRangeException from CancelAfter when the
+        // value is consumed later.
         if (commandOption.Name == TimeoutOptionKey
-            && !TryParseTimeoutArgument(arguments[0], out _))
+            && (!TimeSpanParser.TryParseRequireSuffix(arguments[0], out TimeSpan timeout)
+                || timeout <= TimeSpan.Zero
+                || timeout.TotalMilliseconds > Helpers.TaskExtensions.MaxSupportedTimeoutMs))
         {
             return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage);
         }
@@ -178,48 +185,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             ? ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionSingleArgument)
             : ValidationResult.ValidTask;
 
-    internal static bool TryParseTimeoutArgument(string arg, out TimeSpan timeout)
-    {
-        timeout = TimeSpan.Zero;
-
-        if (arg is null || arg.Length < 2)
-        {
-            return false;
-        }
-
-        char unit = char.ToLowerInvariant(arg[^1]);
-        if (unit is not ('h' or 'm' or 's'))
-        {
-            return false;
-        }
-
-        if (!float.TryParse(arg[..^1], NumberStyles.Float, CultureInfo.InvariantCulture, out float value)
-            || float.IsNaN(value)
-            || float.IsInfinity(value)
-            || value < 0)
-        {
-            return false;
-        }
-
-        try
-        {
-            timeout = unit switch
-            {
-                'h' => TimeSpan.FromHours(value),
-                'm' => TimeSpan.FromMinutes(value),
-                's' => TimeSpan.FromSeconds(value),
-                _ => throw ApplicationStateGuard.Unreachable(),
-            };
-        }
-        catch (OverflowException)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+    public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
     {
         if (!commandLineOptions.IsOptionSet(DiagnosticOptionKey))
         {
@@ -238,6 +204,18 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             && commandLineOptions.IsOptionSet(MinimumExpectedTestsOptionKey))
         {
             return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests);
+        }
+
+        // The '--server dotnettestcli' protocol path requires '--dotnet-test-pipe' to connect to the
+        // dotnet test pipe. Without it, the dotnet test connection silently never activates and the
+        // application falls back to console mode, leading to confusing behavior. Both options are
+        // internal and are expected to be passed together by 'dotnet test'.
+        if (commandLineOptions.TryGetOptionArgumentList(ServerOptionKey, out string[]? serverProtocolArgs)
+            && serverProtocolArgs is { Length: 1 }
+            && DotnetTestCliProtocolName.Equals(serverProtocolArgs[0], StringComparison.OrdinalIgnoreCase)
+            && !commandLineOptions.IsOptionSet(DotNetTestPipeOptionKey))
+        {
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe, DotnetTestCliProtocolName, DotNetTestPipeOptionKey));
         }
 
         if (commandLineOptions.IsOptionSet(DiagnosticFileLoggerSynchronousWriteOptionKey))

@@ -79,8 +79,8 @@ Informace o disku:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">Zadejte název souboru výpisu paměti.
+Podporuje následující zástupné symboly: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). Starší token %p (ID procesu) je také podporován z důvodu zpětné kompatibility.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -96,15 +96,21 @@ Supports the following placeholders: {pname} (test application name), {pid} (pro
       <trans-unit id="HangDumpTimeoutOptionDescription">
         <source>Specify the timeout after which the dump will be generated.
 The timeout value is specified in one of the following formats:
-    1.5h, 1.5hour, 1.5hours,
+    500ms, 500mil, 500millisecond, 500milliseconds,
+    5400s, 5400sec, 5400second, 5400seconds,
     90m, 90min, 90minute, 90minutes,
-    5400s, 5400sec, 5400second, 5400seconds.
+    1.5h, 1.5hour, 1.5hours,
+    1d, 1day, 1days.
+    A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
         <target state="translated">Zadejte časový limit, po kterém bude vygenerován výpis paměti.
 Hodnota časového limitu se zadává v jednom z následujících formátů:
-    1.5h, 1.5hour, 1.5hours,
+    500ms, 500mil, 500millisecond, 500milliseconds,
+    5400s, 5400sec, 5400second, 5400seconds,
     90m, 90min, 90minute, 90minutes,
-    5400s, 5400sec, 5400second, 5400seconds.
+    1.5h, 1.5hour, 1.5hours,
+    1d, 1day, 1days.
+    Holé číslo (bez přípony) se interpretuje jako milisekundy.
     Výchozí hodnota je 30m.</target>
         <note />
       </trans-unit>
@@ -113,20 +119,35 @@ Hodnota časového limitu se zadává v jednom z následujících formátů:
         <target state="translated">--hangdump-timeout očekává jeden argument časového limitu.</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
+        <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
+        <target state="translated">--hangdump-type a --hangdump-type-if-supported se vzájemně vylučují. Pomocí --hangdump-type-if-supported zvolíte typ výpisu paměti s nejlepším úsilím, který se při nedostupnosti požadovaného typu v aktuálním modulu runtime vrátí k nejbližšímu dostupnému typu se zobrazením informační zprávy, nebo pomocí --hangdump-type způsobíte okamžité ukončení při selhání v nepodporovaných modulech runtime.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
+        <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
+        <target state="translated">--hangdump-type-if-supported {0} se v aktuálním modulu runtime nepodporuje. Místo toho se použije {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
+        <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
+        <target state="translated">Stejné jako --hangdump-type, ale se zadaným typem výpisu paměti se tiše vrátí k nejbližšímu podporovanému typu výpisu paměti se zobrazením informační zprávy, pokud požadovaný typ není v aktuálním modulu runtime k dispozici (např. Triage se podporuje jen v .NET Core a v .NET Framework se vrátí k Mini). Pomocí této možnosti můžete zachovat stejný příkazový řádek napříč maticemi CI, které kombinují .NET Framework a .NET. Platné hodnoty jsou Mini, Heap, Full, Triage, None. Vzájemně se vylučují s --hangdump-type.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are {0}.
-Default type is 'Full'</target>
+        <target state="translated">Určete typ výpisu paměti.
+Platné hodnoty jsou: {0}.
+Výchozí typ je Full</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are {1}</target>
+        <target state="translated">{0} není platný typ výpisu paměti.
+Platné možnosti jsou {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

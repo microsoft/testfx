@@ -108,8 +108,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
-        <source>Option '--{0}' is declared by multiple extensions: '{1}'</source>
-        <target state="translated">옵션 '--{0}'이(가) 여러 확장에 의해 선언되었습니다. '{1}'</target>
+        <source>Option '--{0}' is declared by multiple providers: '{1}'</source>
+        <target state="translated">옵션 '--{0}'이(가) 여러 공급자에 의해 선언됨: '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
@@ -144,12 +144,12 @@
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInCommandLine">
         <source>Unclosed quote in command line</source>
-        <target state="new">Unclosed quote in command line</target>
+        <target state="translated">명령줄의 닫히지 않은 따옴표</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInResponseFile">
         <source>Unclosed quote in response file at line {0}</source>
-        <target state="new">Unclosed quote in response file at line {0}</target>
+        <target state="translated">응답 파일 {0}번째 줄의 닫히지 않은 따옴표</target>
         <note>{0} is the line number</note>
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
@@ -376,6 +376,16 @@
         <target state="translated">잘못된 명령줄 인수:</target>
         <note />
       </trans-unit>
+      <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
+        <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</source>
+        <target state="translated">testconfig.json 파일의 '{1}' 섹션 아래에 있는 항목 '{0}'('{2}')은(는) 스칼라 값(문자열, 숫자, 부울) 또는 스칼라 값의 배열이어야 합니다. 중첩된 개체는 지원되지 않습니다.</target>
+        <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file.</note>
+      </trans-unit>
+      <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
+        <source>In testconfig.json under 'commandLineOptions': {0}</source>
+        <target state="translated">testconfig.json의 'commandLineOptions' 아래: {0}</target>
+        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...).</note>
+      </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
         <target state="translated">중복 키('{0}')를 찾았습니다.</target>
@@ -553,6 +563,11 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
 필요에 따라 'text'(사람이 읽을 수 있는 기본 출력) 또는 'json'을 수락하여 검색된 테스트를 표준 출력의 JSON 문서로 인쇄합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
+        <source>'--server {0}' requires '--{1}' to be specified.</source>
+        <target state="translated">'--server {0}'를 사용하려면 '--{1}'를 지정해야 합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
         <target state="translated">.NET 테스트 파이프입니다.</target>
@@ -658,6 +673,11 @@ The default is TestResults in the directory that contains the test application.<
 기본값은 테스트 애플리케이션을 포함하는 디렉터리의 TestResults입니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineServerInvalidArgument">
+        <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="translated">'--server'가 예기치 않은 값 '{0}'을(를) 받았습니다. 지원되는 값은 {1}입니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
         <source>Enable the server mode.</source>
         <target state="translated">서버 모드를 사용하도록 설정합니다.</target>
@@ -674,15 +694,20 @@ The default is TestResults in the directory that contains the test application.<
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</source>
-        <target state="translated">'timeout' 옵션에는 &lt;value&gt;[h|m|s] 형식의 문자열 인수가 하나 필요합니다. 'value'는 지원되는 최대 기간을 초과하지 않는 유한한 음이 아닌 숫자여야 합니다.</target>
+        <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
+        <target state="translated">'timeout' 옵션은 명시적 단위 접미사가 포함된 시간 값이어야 하며, 지원되는 범위(최대 약 49.7일) 내의 양수 값을 하나의 인수로 입력해야 합니다. 허용되는 접미사는 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', 'd'/'day(s)'입니다. (예: '500ms', '5400s', '90m', '1.5h', '1d')</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
-Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
+Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
         <target state="translated">전역 테스트 실행 시간 제한입니다.
-'value'가 float인 &lt;value&gt;[h|m|s] 형식의 문자열로 인수 하나를 사용합니다.</target>
+명시적 단위 접미사가 포함된 시간 값을 하나의 인수로 입력해야 합니다. 허용되는 접미사는 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', 'd'/'day(s)'입니다. (예: '500ms', '5400s', '90m', '1.5h', '1d')</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PressCtrlCAgainToForceExit">
+        <source>Press Ctrl+C again to force exit.</source>
+        <target state="translated">강제 종료하려면 Ctrl+C를 한 번 더 누르세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
@@ -749,6 +774,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
         <target state="translated">'ITestFramework' 형식의 인스턴스는 서비스 공급자를 통해 등록하지 않아야 하지만 'ITestApplicationBuilder.RegisterTestFramework'를 통해 등록해야 합니다.</target>
         <note />
+      </trans-unit>
+      <trans-unit id="ShutdownProgressStillWaitingPrefix">
+        <source>Still waiting for: </source>
+        <target state="translated">아직 대기 중: </target>
+        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</note>
       </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
@@ -875,16 +905,16 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
         <target state="translated">테스트에서 캡처한 오류 출력을 언제 표시할지 결정합니다.
-유효한 값은 'All', 'Failed', 'None'입니다. 기본값은 'All'입니다.</target>
+유효한 값은 'All', 'Failed', 'None'입니다. LLM/AI 에이전트 환경이 감지되면 기본값은 'All'(또는 'Failed')입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
         <target state="translated">테스트에서 캡처한 표준 출력을 언제 표시할지 결정합니다.
-유효한 값은 'All', 'Failed', 'None'입니다. 기본값은 'All'입니다.</target>
+유효한 값은 'All', 'Failed', 'None'입니다. LLM/AI 에이전트 환경이 감지되면 기본값은 'All'(또는 'Failed')입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
@@ -1047,6 +1077,11 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
         <target state="translated">필터는 괄호가 있는 식 내에 예기치 않은 '/' 연산자를 포함함</target>
         <note />
       </trans-unit>
+      <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage">
+        <source>Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</source>
+        <target state="translated">필터는 괄호가 있는 식 내에 예기치 않은 '/' 연산자를 포함합니다. 필터: '{0}'. 하나의 경로 세그먼트에 대한 여러 대안을 결합하려면 '/A/B/C/(X|Y)'와 같은 구문을 사용하세요.</target>
+        <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'.</note>
+      </trans-unit>
       <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
         <source>Unexpected telemetry call, the telemetry is disabled.</source>
         <target state="translated">예기치 않은 원격 분석 호출로 인해 원격 분석을 사용할 수 없습니다.</target>
@@ -1081,7 +1116,7 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All'.</source>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
-        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
+        <target state="translated">디버거 연결 대기(TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1)는 wasi 환경에서 지원되지 않습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
@@ -14,7 +15,8 @@ internal static class CommandLineOptionsValidator
         CommandLineParseResult commandLineParseResult,
         IEnumerable<ICommandLineOptionsProvider> systemCommandLineOptionsProviders,
         IEnumerable<ICommandLineOptionsProvider> extensionCommandLineOptionsProviders,
-        ICommandLineOptions commandLineOptions)
+        ICommandLineOptions commandLineOptions,
+        IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions = null)
     {
         if (commandLineParseResult.HasError)
         {
@@ -40,26 +42,31 @@ internal static class CommandLineOptionsValidator
             return result2;
         }
 
-        if (ValidateOptionsAreNotDuplicated(extensionOptionsByProvider) is { IsValid: false } result3)
+        if (ValidateOptionsAreNotDuplicated(extensionOptionsByProvider, systemOptionsByProvider) is { IsValid: false } result3)
         {
             return result3;
         }
 
-        if (ValidateNoUnknownOptions(commandLineParseResult, extensionOptionsByProvider, systemOptionsByProvider) is { IsValid: false } result4)
+        if (ValidateNoUnknownOptions(commandLineParseResult, jsonCommandLineOptions, extensionOptionsByProvider, systemOptionsByProvider) is { IsValid: false } result4)
         {
             return AddCommandLine(commandLineParseResult, result4);
         }
 
-        var providerAndOptionByOptionName = extensionOptionsByProvider.Union(systemOptionsByProvider)
+        // Option names from the platform side are unique (validated above) and lookups against this
+        // dictionary may be triggered from the CLI parse result (case-sensitive) or from JSON
+        // (testconfig.json is case-insensitive everywhere else). Use OrdinalIgnoreCase so a JSON
+        // entry such as "Timeout": "30s" resolves to the same provider/option metadata as
+        // "--timeout 30s" on the command line.
+        var providerAndOptionByOptionName = extensionOptionsByProvider.Concat(systemOptionsByProvider)
             .SelectMany(tuple => tuple.Value.Select(option => (provider: tuple.Key, option)))
-            .ToDictionary(tuple => tuple.option.Name);
+            .ToDictionary(tuple => tuple.option.Name, StringComparer.OrdinalIgnoreCase);
 
-        if (ValidateOptionsArgumentArity(commandLineParseResult, providerAndOptionByOptionName) is { IsValid: false } result5)
+        if (ValidateOptionsArgumentArity(commandLineParseResult, jsonCommandLineOptions, providerAndOptionByOptionName) is { IsValid: false } result5)
         {
             return AddCommandLine(commandLineParseResult, result5);
         }
 
-        if (await ValidateOptionsArgumentsAsync(commandLineParseResult, providerAndOptionByOptionName).ConfigureAwait(false) is { IsValid: false } result6)
+        if (await ValidateOptionsArgumentsAsync(commandLineParseResult, jsonCommandLineOptions, providerAndOptionByOptionName).ConfigureAwait(false) is { IsValid: false } result6)
         {
             return AddCommandLine(commandLineParseResult, result6);
         }
@@ -101,8 +108,10 @@ internal static class CommandLineOptionsValidator
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider,
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> systemOptionsByProvider)
     {
-        // Create a HashSet of all system option names for faster lookup
-        var systemOptionNames = new HashSet<string>();
+        // Create a HashSet of all system option names for faster lookup. OrdinalIgnoreCase keeps
+        // duplicate detection consistent with the case-insensitive lookups performed later in the
+        // pipeline and with how testconfig.json stores keys.
+        var systemOptionNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in systemOptionsByProvider)
         {
             foreach (CommandLineOption option in provider.Value)
@@ -112,7 +121,7 @@ internal static class CommandLineOptionsValidator
         }
 
         // Aggregate reserved options by name and track all offending providers
-        var reservedOptionToProviderNames = new Dictionary<string, HashSet<string>>();
+        var reservedOptionToProviderNames = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
         foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> kvp in extensionOptionsByProvider)
         {
             foreach (CommandLineOption option in kvp.Value)
@@ -143,11 +152,17 @@ internal static class CommandLineOptionsValidator
     }
 
     private static ValidationResult ValidateOptionsAreNotDuplicated(
-        Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider)
+        Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider,
+        Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> systemOptionsByProvider)
     {
-        // Use a dictionary to track option names and their distinct providers
-        var optionNameToProviders = new Dictionary<string, HashSet<ICommandLineOptionsProvider>>();
-        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> kvp in extensionOptionsByProvider)
+        // Use a dictionary to track option names and their distinct providers. OrdinalIgnoreCase
+        // ensures we catch case-differing duplicates (e.g. "Timeout" vs "timeout") with a friendly
+        // error rather than a later ArgumentException when building the lookup dictionary.
+        // We cover both extension and system providers so that any pair of case-differing
+        // duplicates — extension/extension, extension/system, or system/system — surfaces as a
+        // ValidationResult.Invalid rather than crashing the platform.
+        var optionNameToProviders = new Dictionary<string, HashSet<ICommandLineOptionsProvider>>(StringComparer.OrdinalIgnoreCase);
+        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> kvp in extensionOptionsByProvider.Concat(systemOptionsByProvider))
         {
             ICommandLineOptionsProvider provider = kvp.Key;
             foreach (CommandLineOption option in kvp.Value)
@@ -183,11 +198,15 @@ internal static class CommandLineOptionsValidator
 
     private static ValidationResult ValidateNoUnknownOptions(
         CommandLineParseResult parseResult,
+        IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions,
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider,
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> systemOptionsByProvider)
     {
-        // Create a HashSet of all valid option names for faster lookup
-        var validOptionNames = new HashSet<string>();
+        // Use OrdinalIgnoreCase so a JSON entry like "Timeout" resolves to the registered "timeout"
+        // option (testconfig.json keys are case-insensitive everywhere else in the platform). CLI
+        // parsing is already case-sensitive but a case-insensitive lookup is a strict superset and
+        // does not change CLI behavior.
+        var validOptionNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in extensionOptionsByProvider)
         {
             foreach (CommandLineOption option in provider.Value)
@@ -214,6 +233,23 @@ internal static class CommandLineOptionsValidator
             }
         }
 
+        // Also surface unknown entries under the testconfig.json "commandLineOptions" section.
+        // We intentionally validate even when the CLI provides a matching option of the same name
+        // (which would shadow the JSON value at lookup time): a JSON typo silently overridden by
+        // the CLI is still a typo that the user wants to know about.
+        if (jsonCommandLineOptions is { Count: > 0 })
+        {
+            foreach (JsonCommandLineOptionEntry entry in jsonCommandLineOptions)
+            {
+                if (!validOptionNames.Contains(entry.OptionName))
+                {
+                    stringBuilder ??= new();
+                    string innerError = string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineUnknownOption, entry.OptionName);
+                    stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionsValidationErrorPrefix, innerError));
+                }
+            }
+        }
+
         return stringBuilder?.Length > 0
             ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
@@ -221,10 +257,11 @@ internal static class CommandLineOptionsValidator
 
     private static ValidationResult ValidateOptionsArgumentArity(
         CommandLineParseResult parseResult,
+        IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions,
         Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)> providerAndOptionByOptionName)
     {
         StringBuilder? stringBuilder = null;
-        foreach (IGrouping<string, CommandLineParseOption> groupedOptions in parseResult.Options.GroupBy(x => x.Name))
+        foreach (IGrouping<string, CommandLineParseOption> groupedOptions in parseResult.Options.GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
         {
             // getting the arguments count for an option.
             int arity = 0;
@@ -236,20 +273,27 @@ internal static class CommandLineOptionsValidator
             string optionName = groupedOptions.Key;
             (ICommandLineOptionsProvider provider, CommandLineOption option) = providerAndOptionByOptionName[optionName];
 
-            if (arity > option.Arity.Max && option.Arity.Max == 0)
+            AppendArityErrorIfNeeded(stringBuilder: ref stringBuilder, arity, optionName, provider, option, jsonPrefix: false);
+        }
+
+        // Apply the same arity rules to entries sourced from testconfig.json. We skip
+        // explicit disable entries ("foo": false) because they convey "the option is not set" —
+        // there are no arguments to validate. Unknown options were rejected earlier.
+        if (jsonCommandLineOptions is { Count: > 0 })
+        {
+            foreach (JsonCommandLineOptionEntry entry in jsonCommandLineOptions)
             {
-                stringBuilder ??= new();
-                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsNoArguments, optionName, provider.DisplayName, provider.Uid));
-            }
-            else if (arity < option.Arity.Min)
-            {
-                stringBuilder ??= new();
-                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsAtLeastArguments, optionName, provider.DisplayName, provider.Uid, option.Arity.Min));
-            }
-            else if (arity > option.Arity.Max)
-            {
-                stringBuilder ??= new();
-                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsAtMostArguments, optionName, provider.DisplayName, provider.Uid, option.Arity.Max));
+                if (entry.IsDisabled)
+                {
+                    continue;
+                }
+
+                if (!providerAndOptionByOptionName.TryGetValue(entry.OptionName, out (ICommandLineOptionsProvider Provider, CommandLineOption Option) match))
+                {
+                    continue;
+                }
+
+                AppendArityErrorIfNeeded(stringBuilder: ref stringBuilder, entry.Arguments.Count, entry.OptionName, match.Provider, match.Option, jsonPrefix: true);
             }
         }
 
@@ -258,8 +302,42 @@ internal static class CommandLineOptionsValidator
             : ValidationResult.Valid();
     }
 
+    private static void AppendArityErrorIfNeeded(
+        ref StringBuilder? stringBuilder,
+        int arity,
+        string optionName,
+        ICommandLineOptionsProvider provider,
+        CommandLineOption option,
+        bool jsonPrefix)
+    {
+        string? message = null;
+        if (arity > option.Arity.Max && option.Arity.Max == 0)
+        {
+            message = string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsNoArguments, optionName, provider.DisplayName, provider.Uid);
+        }
+        else if (arity < option.Arity.Min)
+        {
+            message = string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsAtLeastArguments, optionName, provider.DisplayName, provider.Uid, option.Arity.Min);
+        }
+        else if (arity > option.Arity.Max)
+        {
+            message = string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsAtMostArguments, optionName, provider.DisplayName, provider.Uid, option.Arity.Max);
+        }
+
+        if (message is null)
+        {
+            return;
+        }
+
+        stringBuilder ??= new();
+        stringBuilder.AppendLine(jsonPrefix
+            ? string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionsValidationErrorPrefix, message)
+            : message);
+    }
+
     private static async Task<ValidationResult> ValidateOptionsArgumentsAsync(
         CommandLineParseResult parseResult,
+        IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions,
         Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)> providerAndOptionByOptionName)
     {
         ApplicationStateGuard.Ensure(parseResult is not null);
@@ -273,6 +351,40 @@ internal static class CommandLineOptionsValidator
             {
                 stringBuilder ??= new();
                 stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidArgumentsForOption, optionRecord.Name, result.ErrorMessage));
+            }
+        }
+
+        // Apply the per-option argument validators to JSON-sourced entries as well. Skip disabled
+        // entries (nothing to validate) and entries that the prior arity pass already flagged
+        // (calling a provider's validator with too-few/too-many arguments may produce confusing
+        // secondary errors or, worse, index out of bounds inside the validator itself).
+        if (jsonCommandLineOptions is { Count: > 0 })
+        {
+            foreach (JsonCommandLineOptionEntry entry in jsonCommandLineOptions)
+            {
+                if (entry.IsDisabled)
+                {
+                    continue;
+                }
+
+                if (!providerAndOptionByOptionName.TryGetValue(entry.OptionName, out (ICommandLineOptionsProvider Provider, CommandLineOption Option) match))
+                {
+                    continue;
+                }
+
+                if (entry.Arguments.Count < match.Option.Arity.Min || entry.Arguments.Count > match.Option.Arity.Max)
+                {
+                    continue;
+                }
+
+                string[] argumentsArray = entry.Arguments as string[] ?? entry.Arguments.ToArray();
+                ValidationResult result = await match.Provider.ValidateOptionArgumentsAsync(match.Option, argumentsArray).ConfigureAwait(false);
+                if (!result.IsValid)
+                {
+                    stringBuilder ??= new();
+                    string innerError = string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidArgumentsForOption, entry.OptionName, result.ErrorMessage);
+                    stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionsValidationErrorPrefix, innerError));
+                }
             }
         }
 

@@ -24,21 +24,21 @@
       </trans-unit>
       <trans-unit id="HtmlReportFileNameMustNotBeEmpty">
         <source>'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</source>
-        <target state="new">'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</target>
+        <target state="translated">'--report-html-filename' 檔名部分不得空白 (例如 --report-html-filename myreport.html)</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameOptionDescription">
         <source>The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
 Example: MyReport_{tfm}.html</source>
-        <target state="new">The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
-Example: MyReport_{tfm}.html</target>
+        <target state="translated">產生的 TRX 報告名稱。可以包含相對或絕對路徑; 系統會針對測試結果目錄解析相對路徑，並建立遺漏的目錄。
+支援下列預留位置: {pname}(測試應用程式名稱)、{pid}(處理序識別碼)、{asm}(進入組件名稱)、{tfm}(目標 Framework Moniker)、{time}(時間戳記)。
+範例: MyReport_{tfm}.html</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</source>
-        <target state="new">'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</target>
+        <target state="translated">'--report-html-filename' 相對路徑必須留在測試結果目錄之下 (例如 --report-html-filename nested/myreport.html)</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRequiresHtmlReport">

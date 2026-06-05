@@ -21,11 +21,46 @@ public sealed partial class CollectionAssert
     /// Gets the singleton instance of the CollectionAssert functionality.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Users can use this to plug-in custom assertions through C# extension methods.
-    /// For instance, the signature of a custom assertion provider could be "public static void AreEqualUnordered(this CollectionAssert customAssert, ICollection expected, ICollection actual)"
-    /// Users could then use a syntax similar to the default assertions which in this case is "CollectionAssert.That.AreEqualUnordered(list1, list2);"
-    /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
+    /// For instance, the signature of a custom assertion provider could be <c>public static void AreEqualUnordered(this CollectionAssert customAssert, ICollection expected, ICollection actual)</c>
+    /// and the call-site would be <c>CollectionAssert.That.AreEqualUnordered(list1, list2);</c>.
+    /// </para>
+    /// <para>
+    /// For new custom assertions, prefer extending <see cref="Assert.That"/> instead, because <see cref="CollectionAssert"/> is likely to be deprecated in a future release.
+    /// For more information, see <see href="https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-writing-tests-assertions#extension-hooks-on-stringassert-and-collectionassert">Extension hooks on StringAssert and CollectionAssert</see>.
+    /// </para>
     /// </remarks>
+    /// <example>
+    /// The following example defines a custom <c>AreEqualUnordered</c> assertion as an extension method
+    /// on <see cref="CollectionAssert"/> and invokes it through <c>CollectionAssert.That</c>:
+    /// <code language="csharp">
+    /// using System.Collections.Generic;
+    /// using System.Linq;
+    /// using Microsoft.VisualStudio.TestTools.UnitTesting;
+    ///
+    /// public static class CustomCollectionAssertExtensions
+    /// {
+    ///     public static void AreEqualUnordered&lt;T&gt;(this CollectionAssert collectionAssert, IEnumerable&lt;T&gt; expected, IEnumerable&lt;T&gt; actual)
+    ///     {
+    ///         if (!expected.OrderBy(x =&gt; x).SequenceEqual(actual.OrderBy(x =&gt; x)))
+    ///         {
+    ///             throw new AssertFailedException("CollectionAssert.That.AreEqualUnordered failed. Collections do not contain the same elements.");
+    ///         }
+    ///     }
+    /// }
+    ///
+    /// [TestClass]
+    /// public class SetTests
+    /// {
+    ///     [TestMethod]
+    ///     public void Items_MatchRegardlessOfOrder()
+    ///     {
+    ///         CollectionAssert.That.AreEqualUnordered(new[] { 1, 2, 3 }, new[] { 3, 1, 2 });
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     public static CollectionAssert That { get; } = new();
 
     #endregion

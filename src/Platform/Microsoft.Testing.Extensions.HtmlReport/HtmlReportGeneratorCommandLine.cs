@@ -9,36 +9,27 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 
 namespace Microsoft.Testing.Extensions.HtmlReport;
 
-internal sealed class HtmlReportGeneratorCommandLine : ICommandLineOptionsProvider
+internal sealed class HtmlReportGeneratorCommandLine : CommandLineOptionsProviderBase
 {
     public const string HtmlReportOptionName = "report-html";
     public const string HtmlReportFileNameOptionName = "report-html-filename";
 
     private static readonly char[] DirectorySeparators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
 
-    /// <inheritdoc />
-    public string Uid => nameof(HtmlReportGeneratorCommandLine);
+    public HtmlReportGeneratorCommandLine()
+        : base(
+            nameof(HtmlReportGeneratorCommandLine),
+            ExtensionVersion.DefaultSemVer,
+            ExtensionResources.HtmlReportGeneratorDisplayName,
+            ExtensionResources.HtmlReportGeneratorDescription,
+            [
+                new(HtmlReportOptionName, ExtensionResources.HtmlReportOptionDescription, ArgumentArity.Zero, false),
+                new(HtmlReportFileNameOptionName, ExtensionResources.HtmlReportFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
+            ])
+    {
+    }
 
-    /// <inheritdoc />
-    public string Version => ExtensionVersion.DefaultSemVer;
-
-    /// <inheritdoc />
-    public string DisplayName { get; } = ExtensionResources.HtmlReportGeneratorDisplayName;
-
-    /// <inheritdoc />
-    public string Description { get; } = ExtensionResources.HtmlReportGeneratorDescription;
-
-    /// <inheritdoc />
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        =>
-        [
-            new(HtmlReportOptionName, ExtensionResources.HtmlReportOptionDescription, ArgumentArity.Zero, false),
-            new(HtmlReportFileNameOptionName, ExtensionResources.HtmlReportFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
-        ];
-
-    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
         if (commandOption.Name == HtmlReportFileNameOptionName)
         {
@@ -69,7 +60,7 @@ internal sealed class HtmlReportGeneratorCommandLine : ICommandLineOptionsProvid
         return ValidationResult.ValidTask;
     }
 
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+    public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
         => commandLineOptions.IsOptionSet(HtmlReportFileNameOptionName) && !commandLineOptions.IsOptionSet(HtmlReportOptionName)
             ? ValidationResult.InvalidTask(ExtensionResources.HtmlReportFileNameRequiresHtmlReport)
             : commandLineOptions.IsOptionSet(HtmlReportOptionName) && commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)

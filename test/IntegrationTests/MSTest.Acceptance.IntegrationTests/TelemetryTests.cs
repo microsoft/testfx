@@ -102,7 +102,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
                 { "TESTINGPLATFORM_TELEMETRY_OPTOUT", "1" },
             },
             disableTelemetry: false,
-            TestContext.CancellationToken);
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 

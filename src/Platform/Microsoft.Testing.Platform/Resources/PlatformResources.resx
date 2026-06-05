@@ -158,6 +158,14 @@
     <value>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</value>
     <comment>{0} is the full dotted/colon-separated key. {1} is the section name. {2} is the path to the testconfig.json file.</comment>
   </data>
+  <data name="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage" xml:space="preserve">
+    <value>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</value>
+    <comment>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file.</comment>
+  </data>
+  <data name="JsonCommandLineOptionsValidationErrorPrefix" xml:space="preserve">
+    <value>In testconfig.json under 'commandLineOptions': {0}</value>
+    <comment>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...).</comment>
+  </data>
   <data name="TestConfigurationEnvironmentVariableProviderDisplayName" xml:space="preserve">
     <value>testconfig.json environment variables provider</value>
   </data>
@@ -234,6 +242,10 @@
   </data>
   <data name="TreeNodeFilterUnexpectedSlashOperatorErrorMessage" xml:space="preserve">
     <value>Filter contains an unexpected '/' operator inside a parenthesized expression</value>
+  </data>
+  <data name="TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage" xml:space="preserve">
+    <value>Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</value>
+    <comment>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'.</comment>
   </data>
   <data name="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage" xml:space="preserve">
     <value>An 'ITestExecutionFilterFactory' factory is already set</value>
@@ -336,7 +348,7 @@
     <value>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</value>
   </data>
   <data name="CommandLineOptionIsDeclaredByMultipleProviders" xml:space="preserve">
-    <value>Option '--{0}' is declared by multiple extensions: '{1}'</value>
+    <value>Option '--{0}' is declared by multiple providers: '{1}'</value>
   </data>
   <data name="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround" xml:space="preserve">
     <value>You can fix the previous option clash by overriding the option name using the configuration file</value>
@@ -452,6 +464,12 @@ The default is TestResults in the directory that contains the test application.<
   <data name="PlatformCommandLineServerOptionDescription" xml:space="preserve">
     <value>Enable the server mode.</value>
   </data>
+  <data name="PlatformCommandLineServerInvalidArgument" xml:space="preserve">
+    <value>'--server' received unexpected value '{0}'. Supported values are: {1}.</value>
+  </data>
+  <data name="PlatformCommandLineDotnetTestCliRequiresPipe" xml:space="preserve">
+    <value>'--server {0}' requires '--{1}' to be specified.</value>
+  </data>
   <data name="PlatformCommandLineSkipBuildersNumberCheckOptionDescription" xml:space="preserve">
     <value>For testing purposes</value>
   </data>
@@ -521,6 +539,13 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   </data>
   <data name="CancellingTestSession" xml:space="preserve">
     <value>Canceling the test session...</value>
+  </data>
+  <data name="PressCtrlCAgainToForceExit" xml:space="preserve">
+    <value>Press Ctrl+C again to force exit.</value>
+  </data>
+  <data name="ShutdownProgressStillWaitingPrefix" xml:space="preserve">
+    <value>Still waiting for: </value>
+    <comment>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</comment>
   </data>
   <data name="DiagnosticFileLevelWithAsyncFlush" xml:space="preserve">
     <value>Diagnostic file (level '{0}' with async flush): {1}</value>
@@ -643,21 +668,21 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</value>
   </data>
   <data name="TerminalShowStdoutOptionDescription" xml:space="preserve">
     <value>Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</value>
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</value>
   </data>
   <data name="TerminalShowStderrOptionDescription" xml:space="preserve">
     <value>Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</value>
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</value>
   </data>
   <data name="TerminalShowOutputOptionInvalidArgument" xml:space="preserve">
     <value>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</value>
   </data>
   <data name="PlatformCommandLineTimeoutArgumentErrorMessage" xml:space="preserve">
-    <value>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</value>
+    <value>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</value>
   </data>
   <data name="PlatformCommandLineTimeoutOptionDescription" xml:space="preserve">
     <value>A global test execution timeout.
-Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</value>
+Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</value>
   </data>
   <data name="LoggerFactoryNotReady" xml:space="preserve">
     <value>The ILoggerFactory has not been built yet.</value>

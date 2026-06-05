@@ -157,6 +157,21 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">Vyhněte se předávání explicitního typu DynamicDataSourceType a použijte výchozí chování automatického zjišťování.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsDescription">
+        <source>Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</source>
+        <target state="translated">Synchronní blokování aktuálního vlákna pomocí „Thread.Sleep“, „Task.Wait“, „Task.WaitAll“, „Task.WaitAny“ nebo „Task&lt;TResult&gt;.Result“ uvnitř testovacích metod nebo testovacích přípravků je běžným zdrojem nestability a může také způsobit zablokování, když testovací rámec spouští testy na SynchronizationContextu, který vyžaduje kooperativní plánování. Pokud chcete sledovat příslušný výsledek, upřednostňujte „await Task.Delay“ pro čekání na základě času a „await“.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsMessageFormat">
+        <source>Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</source>
+        <target state="translated">Vyhněte se v testovacím kódu „{0}“, protože to může způsobit nestabilitu testů; zvažte asynchronní alternativu, například „await Task.Delay“ nebo „await“ pro danou úlohu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsTitle">
+        <source>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</source>
+        <target state="translated">Vyhněte se synchronnímu blokování volání, jako jsou „Thread.Sleep“, „Task.Wait“, „Task.WaitAll“, „Task.WaitAny“ nebo „Task&lt;TResult&gt;.Result“ v testovacím kódu</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
         <target state="translated">Nepoužívejte výraz uvnitř metod async void, místních funkcí nebo výrazů lambda. Výjimky vyvolané v tomto kontextu budou neošetřené výjimky. Když používáte VSTest v .NET Framework, budou se bezobslužně používat. Když používáte Microsoft.Testing.Platform nebo VSTest v moderním rozhraní .NET, může dojít k chybovému ukončení procesu.</target>
@@ -268,6 +283,16 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       <trans-unit id="ClassInitializeShouldBeValidTitle">
         <source>ClassInitialize methods should have valid layout</source>
         <target state="translated">Metody ClassInitialize musí mít platné rozložení</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CollectionAssertToAssertMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'CollectionAssert.{1}'</source>
+        <target state="translated">Použijte Assert.{0} namísto CollectionAssert.{1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CollectionAssertToAssertTitle">
+        <source>Use 'Assert' instead of 'CollectionAssert'</source>
+        <target state="translated">Použijte Assert namísto CollectionAssert</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidDescription">
@@ -520,6 +545,21 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       <trans-unit id="GlobalTestFixtureShouldBeValidTitle">
         <source>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</source>
         <target state="translated">Metody GlobalTestInitialize a GlobalTestCleanup by měly mít platné rozložení.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreShouldHaveJustificationDescription">
+        <source>An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</source>
+        <target state="translated">Atribut „[Ignore]“ použitý u testovací metody nebo testovací třídy by měl obsahovat neprázdnou zprávu vysvětlující, proč jsou test nebo třída ignorovány. Zpráva o odůvodnění usnadňuje třídění přeskočených testů, pomáhá revidujícím porozumět záměru a zabránit tomu, aby se testy navždy bezobslužně zakázaly.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreShouldHaveJustificationMessageFormat">
+        <source>'[Ignore]' should specify a message explaining why '{0}' is ignored</source>
+        <target state="translated">[Ignore] by měl určovat zprávu vysvětlující, proč se {0} ignoruje</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreShouldHaveJustificationTitle">
+        <source>'[Ignore]' should specify a justification</source>
+        <target state="translated">„[Ignore]“ by mělo určovat odůvodnění</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueDescription">
@@ -792,11 +832,11 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidDescription">
-        <source>'TestContext' should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
+        <source>'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
-        <target state="translated">TestContext musí být nestatické pole nebo vlastnost přiřazené v konstruktoru nebo pro vlastnost nastavenou přes MSTest. Musí se řídit následujícím rozložením:
+        <target state="translated">TestContext musí být nestatická vlastnost přiřazená v konstruktoru nebo nastavená přes MSTest. Pokud se má nastavit přes MSTest, musí splňovat následující rozložení:
 – Musí být public bez ohledu na to, jestli je nastavený atribut [assembly: DiscoverInternals].
 – Nesmí být static.
 – Musí mít metodu setter.</target>
@@ -991,12 +1031,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">
         <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</source>
-        <target state="new">An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</target>
+        <target state="translated">Atribut, který je odvozen od retryBaseAttribute, lze zadat pouze v testovací metodě nebo testovací třídě</target>
         <note />
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method or test class</source>
-        <target state="new">Use retry attribute on test method or test class</target>
+        <target state="translated">Použití atributu retry u testovací metody nebo testovací třídy</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">

@@ -202,6 +202,11 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 RemoveOption(finalArguments, TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter);
                 RemoveOption(finalArguments, PlatformCommandLineProvider.FilterUidOptionKey);
 
+                // Strip --minimum-expected-tests on retry attempts: a retry only re-runs the previously
+                // failed tests, so propagating the original threshold (computed against the full test
+                // set) would always trip the policy and fail the run. See issue #5639.
+                RemoveOption(finalArguments, PlatformCommandLineProvider.MinimumExpectedTestsOptionKey);
+
                 // The RSP parser (ResponseFileHelper.SplitCommandLine) strips all '"' characters
                 // from tokens, so UIDs containing literal '"' (e.g. parameterized tests with
                 // string arguments that include double quotes) cannot safely round-trip through

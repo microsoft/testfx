@@ -1,0 +1,15 @@
+# .copilot/curate/manifest.yml — declared skill/agent intent.
+# Edit this file by hand to declare which plugins this repo wants.
+# Run "gh copilot-curate sync" (or any "gh copilot-curate" mutating command) to apply.
+version: 1
+plugins:
+    - id: dotnet-test
+      source: dotnet/skills
+      ref: v1.0.0
+      install:
+        mode: summary
+    - id: dotnet-msbuild
+      source: dotnet/skills
+      ref: v1.0.0
+      install:
+        mode: summary

@@ -61,26 +61,13 @@ internal sealed class TestFrameworkEngine : IDataProducer
     private async Task<Result> ExecuteTestNodeRunAsync(RunTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
-        List<TestNode> allRootTestNodes = [];
         var fixtureManager = new TestFixtureManager();
-        var argumentsManager = new TestArgumentsManager();
-        var testSessionContext = new TestSessionContext(_configuration, request.Session.SessionUid, PublishDataAsync, cancellationToken);
 
         try
         {
-            foreach (ITestNodesBuilder testNodeBuilder in _testNodesBuilders)
-            {
-                TestNode[] testNodes = await testNodeBuilder.BuildAsync(testSessionContext).ConfigureAwait(false);
-                allRootTestNodes.AddRange(testNodes);
-            }
-
-            // We have built all test nodes, now we need to process them. Before that, we want to make sure to freeze managers
-            // to ensure that no new registrations are allowed.
-            argumentsManager.FreezeRegistration();
-
-            BFSTestNodeVisitor testNodesVisitor = new(allRootTestNodes, request.Filter, argumentsManager);
+            BFSTestNodeVisitor testNodesVisitor = await BuildTestNodesVisitorAsync(request, messageBus, cancellationToken).ConfigureAwait(false);
             ThreadPoolTestNodeRunner testNodeRunner = new(_testFrameworkConfiguration, _capabilities, _clock, _task, _configuration, request.Session.SessionUid,
-                PublishDataAsync, fixtureManager, cancellationToken);
+                data => PublishDataAsync(messageBus, data), fixtureManager, cancellationToken);
 
             await testNodesVisitor.VisitAsync((testNode, parentTestNodeUid) =>
             {
@@ -96,17 +83,10 @@ internal sealed class TestFrameworkEngine : IDataProducer
                 return Task.CompletedTask;
             }).ConfigureAwait(false);
 
-            if (testNodesVisitor.DuplicatedNodes.Length > 0)
+            Result? duplicateNodeResult = CreateDuplicateNodeErrorResult(testNodesVisitor);
+            if (duplicateNodeResult is not null)
             {
-                StringBuilder errorMessageBuilder = new();
-                errorMessageBuilder.AppendLine("Found multiple test nodes with the same UID:");
-                foreach (KeyValuePair<TestNodeUid, List<TestNode>> duplicate in testNodesVisitor.DuplicatedNodes)
-                {
-                    errorMessageBuilder.Append(CultureInfo.InvariantCulture, $"- For {duplicate.Key}: tests ");
-                    errorMessageBuilder.AppendLine(string.Join(", ", duplicate.Value.Select(x => x.DisplayName)));
-                }
-
-                return Result.Fail(errorMessageBuilder.ToString());
+                return duplicateNodeResult;
             }
 
             // Then, we want to freeze the registration of the fixtures, so that we can't add new fixtures.
@@ -118,42 +98,16 @@ internal sealed class TestFrameworkEngine : IDataProducer
         }
         finally
         {
-            foreach (ITestNodesBuilder testNodeBuilder in _testNodesBuilders)
-            {
-                await DisposeHelper.DisposeAsync(testNodeBuilder).ConfigureAwait(false);
-            }
-        }
-
-        // Local functions
-        Task PublishDataAsync(IData data)
-        {
-            RoslynDebug.Assert(DataTypesProduced.Contains(data.GetType()), "Published data type hasn't been declared");
-
-            return messageBus.PublishAsync(this, data);
+            await DisposeTestNodeBuildersAsync().ConfigureAwait(false);
         }
     }
 
     private async Task<Result> ExecuteTestNodeDiscoveryAsync(DiscoverTestExecutionRequest request, IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
-        List<TestNode> allRootTestNodes = [];
-        var fixtureManager = new TestFixtureManager();
-        var argumentsManager = new TestArgumentsManager();
-        var testSessionContext = new TestSessionContext(_configuration, request.Session.SessionUid, PublishDataAsync, cancellationToken);
-
         try
         {
-            foreach (ITestNodesBuilder testNodeBuilder in _testNodesBuilders)
-            {
-                TestNode[] testNodes = await testNodeBuilder.BuildAsync(testSessionContext).ConfigureAwait(false);
-                allRootTestNodes.AddRange(testNodes);
-            }
-
-            // We have built all test nodes, now we need to process them. Before that, we want to make sure to freeze managers
-            // to ensure that no new registrations are allowed.
-            argumentsManager.FreezeRegistration();
-
-            BFSTestNodeVisitor testNodesVisitor = new(allRootTestNodes, request.Filter, argumentsManager);
+            BFSTestNodeVisitor testNodesVisitor = await BuildTestNodesVisitorAsync(request, messageBus, cancellationToken).ConfigureAwait(false);
 
             await testNodesVisitor.VisitAsync(async (testNode, parentTestNodeUid) =>
             {
@@ -167,35 +121,69 @@ internal sealed class TestFrameworkEngine : IDataProducer
                     parentTestNodeUid?.ToPlatformTestNodeUid())).ConfigureAwait(false);
             }).ConfigureAwait(false);
 
-            if (testNodesVisitor.DuplicatedNodes.Length > 0)
+            Result? duplicateNodeResult = CreateDuplicateNodeErrorResult(testNodesVisitor);
+            if (duplicateNodeResult is not null)
             {
-                StringBuilder errorMessageBuilder = new();
-                errorMessageBuilder.AppendLine("Found multiple test nodes with the same UID:");
-                foreach (KeyValuePair<TestNodeUid, List<TestNode>> duplicate in testNodesVisitor.DuplicatedNodes)
-                {
-                    errorMessageBuilder.Append(CultureInfo.InvariantCulture, $"- For {duplicate.Key}: tests ");
-                    errorMessageBuilder.AppendLine(string.Join(", ", duplicate.Value.Select(x => x.DisplayName)));
-                }
-
-                return Result.Fail(errorMessageBuilder.ToString());
+                return duplicateNodeResult;
             }
         }
         finally
         {
-            foreach (ITestNodesBuilder testNodeBuilder in _testNodesBuilders)
-            {
-                await DisposeHelper.DisposeAsync(testNodeBuilder).ConfigureAwait(false);
-            }
+            await DisposeTestNodeBuildersAsync().ConfigureAwait(false);
         }
 
         return Result.Ok();
+    }
 
-        // Local functions
-        Task PublishDataAsync(IData data)
+    private async Task<BFSTestNodeVisitor> BuildTestNodesVisitorAsync(TestExecutionRequest executionRequest, IMessageBus messageBus, CancellationToken cancellationToken)
+    {
+        List<TestNode> allRootTestNodes = [];
+        var argumentsManager = new TestArgumentsManager();
+        var testSessionContext = new TestSessionContext(_configuration, executionRequest.Session.SessionUid, data => PublishDataAsync(messageBus, data), cancellationToken);
+
+        foreach (ITestNodesBuilder testNodeBuilder in _testNodesBuilders)
         {
-            RoslynDebug.Assert(DataTypesProduced.Contains(data.GetType()), "Published data type hasn't been declared");
-
-            return messageBus.PublishAsync(this, data);
+            TestNode[] testNodes = await testNodeBuilder.BuildAsync(testSessionContext).ConfigureAwait(false);
+            allRootTestNodes.AddRange(testNodes);
         }
+
+        // We have built all test nodes, now we need to process them. Before that, we want to make sure to freeze managers
+        // to ensure that no new registrations are allowed.
+        argumentsManager.FreezeRegistration();
+
+        return new BFSTestNodeVisitor(allRootTestNodes, executionRequest.Filter, argumentsManager);
+    }
+
+    private static Result? CreateDuplicateNodeErrorResult(BFSTestNodeVisitor testNodesVisitor)
+    {
+        if (testNodesVisitor.DuplicatedNodes.Length == 0)
+        {
+            return null;
+        }
+
+        StringBuilder errorMessageBuilder = new();
+        errorMessageBuilder.AppendLine("Found multiple test nodes with the same UID:");
+        foreach (KeyValuePair<TestNodeUid, List<TestNode>> duplicate in testNodesVisitor.DuplicatedNodes)
+        {
+            errorMessageBuilder.Append(CultureInfo.InvariantCulture, $"- For {duplicate.Key}: tests ");
+            errorMessageBuilder.AppendLine(string.Join(", ", duplicate.Value.Select(x => x.DisplayName)));
+        }
+
+        return Result.Fail(errorMessageBuilder.ToString());
+    }
+
+    private async Task DisposeTestNodeBuildersAsync()
+    {
+        foreach (ITestNodesBuilder testNodeBuilder in _testNodesBuilders)
+        {
+            await DisposeHelper.DisposeAsync(testNodeBuilder).ConfigureAwait(false);
+        }
+    }
+
+    private Task PublishDataAsync(IMessageBus messageBus, IData data)
+    {
+        RoslynDebug.Assert(DataTypesProduced.Contains(data.GetType()), "Published data type hasn't been declared");
+
+        return messageBus.PublishAsync(this, data);
     }
 }

@@ -51,13 +51,13 @@ Medienobjektdateien des letzten Versuchs werden in das Standardergebnisverzeichn
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
-        <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 1s, 2.5m, 1h. Default unit is milliseconds.</source>
-        <target state="translated">Fügen Sie eine Verzögerung zwischen den Wiederholungen hinzu. Die Verzögerung wird als Zeitwert ausgedrückt, z. B. 200, 1 s, 2,5 m, 1 h. Die Standardeinheit ist Millisekunden (ms).</target>
+        <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</source>
+        <target state="translated">Fügen Sie eine Verzögerung zwischen den Wiederholungen hinzu. Die Verzögerung wird als Zeitwert ausgedrückt, z. B. 200, 500 ms, 1 s, 2,5 m, 1 h, 1 d. Die Standardeinheit ist Millisekunden (ms).</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
-        <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 1s, 2.5m, 1h)</source>
-        <target state="translated">Die Option „--retry-failed-tests-delay“ erfordert einen gültigen Zeitbereichswert, der nicht negativ und nicht größer als 2147483647 ms (~24,20:31:23.647) ist (z. B. 200, 1 s., 2,5 m, 1 h).</target>
+        <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</source>
+        <target state="translated">Die Option „--retry-failed-tests-delay“ erfordert einen gültigen Zeitbereichswert, der nicht negativ und nicht größer als 2147483647 ms (~24.20:31:23.647) ist (z. B. 200, 500 ms, 1 s., 2,5 m, 1 h, 1 d)</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">

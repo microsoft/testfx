@@ -167,6 +167,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         {
             terminal.AppendLine();
             terminal.AppendLine(PlatformResources.CancellingTestSession);
+            terminal.AppendLine(PlatformResources.PressCtrlCAgainToForceExit);
             terminal.AppendLine();
         });
     }

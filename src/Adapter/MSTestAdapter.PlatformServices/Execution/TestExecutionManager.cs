@@ -19,6 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// Class responsible for execution of tests at assembly level and sending tests via framework handle.
 /// </summary>
 #pragma warning disable CA1852 // Seal internal types - This class is inherited in tests.
+[StackTraceHidden]
 internal class TestExecutionManager
 {
     private sealed class RemotingMessageLogger :
@@ -47,6 +48,12 @@ internal class TestExecutionManager
     /// Specifies whether the test run is canceled or not.
     /// </summary>
     private TestRunCancellationToken? _testRunCancellationToken;
+
+    /// <summary>
+    /// Random number generator used to shuffle test execution order when <see cref="MSTestSettings.RandomizeTestOrder"/> is enabled.
+    /// Mutated only on the source-processing thread before parallel workers are started.
+    /// </summary>
+    private Random? _testOrderRandom;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestExecutionManager"/> class.
@@ -198,14 +205,51 @@ internal class TestExecutionManager
     /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
     internal virtual async Task ExecuteTestsAsync(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
     {
-        var testsBySource = from test in tests
-                            group test by test.Source into testGroup
-                            select new { Source = testGroup.Key, Tests = testGroup };
+        InitializeRandomTestOrder(frameworkHandle);
+
+        var testsBySource = (from test in tests
+                             group test by test.Source into testGroup
+                             select new { Source = testGroup.Key, Tests = (IEnumerable<TestCase>)testGroup }).ToArray();
+
+        if (_testOrderRandom is { } random)
+        {
+            Shuffle(random, testsBySource);
+        }
 
         foreach (var group in testsBySource)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
             await ExecuteTestsInSourceAsync(group.Tests, runContext, frameworkHandle, group.Source, isDeploymentDone).ConfigureAwait(false);
+        }
+    }
+
+    private void InitializeRandomTestOrder(IMessageLogger frameworkHandle)
+    {
+        if (!MSTestSettings.CurrentSettings.RandomizeTestOrder)
+        {
+            _testOrderRandom = null;
+            return;
+        }
+
+        // Use Guid.NewGuid().GetHashCode() rather than new Random() so that consecutive runs do not
+        // collide on the same seed on .NET Framework targets (where Random() is time-seeded with low
+        // resolution). The user can still pin the seed via RandomTestOrderSeed for reproducibility.
+        int seed = MSTestSettings.CurrentSettings.RandomTestOrderSeed ?? Guid.NewGuid().GetHashCode();
+        _testOrderRandom = new Random(seed);
+
+        frameworkHandle.SendMessage(
+            TestMessageLevel.Informational,
+            string.Format(CultureInfo.CurrentCulture, Resource.RandomTestOrderBanner, seed));
+    }
+
+    private static void Shuffle<T>(Random random, T[] items)
+    {
+        // Fisher-Yates shuffle. The array is mutated in place so that callers see a fully
+        // materialized, deterministic order before any parallel work starts.
+        for (int i = items.Length - 1; i > 0; i--)
+        {
+            int j = random.Next(i + 1);
+            (items[i], items[j]) = (items[j], items[i]);
         }
     }
 
@@ -339,6 +383,11 @@ internal class TestExecutionManager
         int parallelWorkers = sourceSettings.Workers;
         ExecutionScope parallelScope = sourceSettings.Scope;
         TestCase[] testsToRun = [.. tests.Where(t => MatchTestFilter(filterExpression, t, _testMethodFilter))];
+        if (_testOrderRandom is { } sourceRandom)
+        {
+            Shuffle(sourceRandom, testsToRun);
+        }
+
         UnitTestElement[] unitTestElements = [.. testsToRun.Select(e => e.ToUnitTestElementWithUpdatedSource(source))];
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
@@ -382,11 +431,36 @@ internal class TestExecutionManager
                 switch (parallelScope)
                 {
                     case ExecutionScope.MethodLevel:
-                        queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.Select(t => new[] { t }));
+                        if (_testOrderRandom is { } methodRandom)
+                        {
+                            IEnumerable<TestCase>[] methodChunks = [.. parallelizableTestSet.Select(t => (IEnumerable<TestCase>)[t])];
+                            Shuffle(methodRandom, methodChunks);
+                            queue = new ConcurrentQueue<IEnumerable<TestCase>>(methodChunks);
+                        }
+                        else
+                        {
+                            queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.Select(t => new[] { t }));
+                        }
+
                         break;
 
                     case ExecutionScope.ClassLevel:
-                        queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(EngineConstants.TestClassNameProperty) as string));
+                        if (_testOrderRandom is { } classRandom)
+                        {
+                            IEnumerable<TestCase>[] classChunks =
+                            [
+                                .. parallelizableTestSet
+                                    .GroupBy(t => t.GetPropertyValue(EngineConstants.TestClassNameProperty) as string)
+                                    .Select(g => (IEnumerable<TestCase>)g.ToArray()),
+                            ];
+                            Shuffle(classRandom, classChunks);
+                            queue = new ConcurrentQueue<IEnumerable<TestCase>>(classChunks);
+                        }
+                        else
+                        {
+                            queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(EngineConstants.TestClassNameProperty) as string));
+                        }
+
                         break;
                 }
 
@@ -463,7 +537,7 @@ internal class TestExecutionManager
         UnitTestRunner testRunner,
         bool usesAppDomains)
     {
-        IEnumerable<TestCase> orderedTests = MSTestSettings.CurrentSettings.OrderTestsByNameInClass
+        IEnumerable<TestCase> orderedTests = MSTestSettings.CurrentSettings.OrderTestsByNameInClass && !MSTestSettings.CurrentSettings.RandomizeTestOrder
             ? tests.OrderBy(t => t.GetManagedType()).ThenBy(t => t.GetManagedMethod())
             : tests;
 

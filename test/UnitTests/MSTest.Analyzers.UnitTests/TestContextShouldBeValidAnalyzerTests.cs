@@ -27,63 +27,72 @@ public sealed class TestContextShouldBeValidAnalyzerTests
     [DataRow("TeStCoNtExT", "internal")]
     [DataRow("TeStCoNtExT", "protected")]
     [TestMethod]
-    public async Task WhenTestContextCaseInsensitiveIsField_Diagnostic(string fieldName, string accessibility)
+    public async Task WhenTestContextCaseInsensitiveIsField_NoDiagnostic(string fieldName, string accessibility)
     {
+        // MSTEST0005 only validates the TestContext property layout. Fields of type TestContext
+        // are intentionally not flagged, because doing so produced too many false positives
+        // (see https://github.com/microsoft/testfx/issues/4590). The static-field case is
+        // covered by MSTEST0024 (DoNotStoreStaticTestContext).
         string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
             public class MyTestClass
             {
-                {{accessibility}} TestContext [|{{fieldName}}|];
+                {{accessibility}} TestContext {{fieldName}};
             }
             """;
-        string fixedCode =
-            """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            [TestClass]
-            public class MyTestClass
-            {
-                public TestContext TestContext { get; set; }
-            }
-            """;
-        await VerifyCS.VerifyCodeFixAsync(
-            code,
-            fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
-    [DataRow("TestContext", "private")]
-    [DataRow("TestContext", "public")]
-    [DataRow("TestContext", "internal")]
-    [DataRow("TestContext", "protected")]
-    [DataRow("testcontext", "private")]
-    [DataRow("testcontext", "public")]
-    [DataRow("testcontext", "internal")]
-    [DataRow("testcontext", "protected")]
-    [DataRow("TESTCONTEXT", "private")]
-    [DataRow("TESTCONTEXT", "public")]
-    [DataRow("TESTCONTEXT", "internal")]
-    [DataRow("TESTCONTEXT", "protected")]
-    [DataRow("TeStCoNtExT", "private")]
-    [DataRow("TeStCoNtExT", "public")]
-    [DataRow("TeStCoNtExT", "internal")]
-    [DataRow("TeStCoNtExT", "protected")]
+    [DataRow("_testContext")]
+    [DataRow("s_testContext")]
+    [DataRow("testContext")]
     [TestMethod]
-    public async Task WhenTestContextCaseInsensitiveIsField_AssignedInConstructor_NoDiagnostic(string fieldName, string accessibility)
+    public async Task WhenStaticFieldOfTypeTestContextAssignedInClassInitialize_NoDiagnostic(string fieldName)
     {
+        // Regression test for https://github.com/microsoft/testfx/issues/4590:
+        // a static field of type TestContext that is assigned in a [ClassInitialize] method
+        // must not trigger MSTEST0005. MSTEST0024 already covers the "do not store TestContext
+        // in a static member" guidance.
         string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
             public class MyTestClass
             {
-                public MyTestClass(TestContext testContext)
-                {
-                    this.{{fieldName}} = testContext;
-                }
+                private static TestContext {{fieldName}};
 
-                {{accessibility}} TestContext {{fieldName}};
+                [ClassInitialize]
+                public static void ClassInitialize(TestContext context) =>
+                    {{fieldName}} = context;
+
+                [TestMethod]
+                public void TestMethod1() { }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenStaticFieldOfTypeTestContextIsNeverAssigned_NoDiagnostic()
+    {
+        // Documents the deliberate behavior change tied to https://github.com/microsoft/testfx/issues/4590:
+        // MSTEST0005 no longer reports on fields of type TestContext, including unassigned static fields.
+        // Such a field is also not reported by MSTEST0024 (which only fires on assignment), so this is
+        // an accepted trade-off in favor of removing the false positives that previously bothered users.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private static TestContext _context;
+
+                [TestMethod]
+                public void TestMethod1() { }
             }
             """;
 

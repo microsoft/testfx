@@ -91,6 +91,33 @@ public sealed class AsynchronousMessageBusTests
     }
 
     [TestMethod]
+    public async Task DisableAsync_WithConsumerSubscribedToMultipleDataTypes_ShouldCompleteProcessorOnce()
+    {
+        using MessageBusProxy proxy = new();
+        MultiTypeConsumer consumer = new();
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("MultiTypeProducer", typeof(MultiTypeConsumer.DataTypeA), typeof(MultiTypeConsumer.DataTypeB));
+        await proxy.PublishAsync(producer, new MultiTypeConsumer.DataTypeA());
+        await proxy.PublishAsync(producer, new MultiTypeConsumer.DataTypeB());
+        await proxy.DrainDataAsync();
+
+        Assert.AreEqual(1, consumer.ReceivedTypeA);
+        Assert.AreEqual(1, consumer.ReceivedTypeB);
+
+        // DisableAsync must not throw even though the consumer is registered for 2 data types;
+        // the single backing processor must be completed exactly once (not once per data type).
+        await asynchronousMessageBus.DisableAsync();
+    }
+
+    [TestMethod]
     public async Task Consumers_ConsumeData_ShouldNotMissAnyPayload()
     {
         int totalConsumers = Environment.ProcessorCount;
@@ -390,5 +417,52 @@ public sealed class AsynchronousMessageBusTests
         public string ProducerId { get; }
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    }
+
+    private sealed class MultiTypeConsumer : IDataConsumer
+    {
+        public int ReceivedTypeA { get; private set; }
+
+        public int ReceivedTypeB { get; private set; }
+
+        public Type[] DataTypesConsumed => [typeof(DataTypeA), typeof(DataTypeB)];
+
+        public string Uid => nameof(MultiTypeConsumer);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => string.Empty;
+
+        public string Description => string.Empty;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+        {
+            if (value is DataTypeA)
+            {
+                ReceivedTypeA++;
+            }
+            else if (value is DataTypeB)
+            {
+                ReceivedTypeB++;
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public sealed class DataTypeA : IData
+        {
+            public string DisplayName => nameof(DataTypeA);
+
+            public string? Description => nameof(DataTypeA);
+        }
+
+        public sealed class DataTypeB : IData
+        {
+            public string DisplayName => nameof(DataTypeB);
+
+            public string? Description => nameof(DataTypeB);
+        }
     }
 }

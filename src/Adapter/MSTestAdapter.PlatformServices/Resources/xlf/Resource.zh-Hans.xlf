@@ -270,6 +270,16 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">程序集中加载了 MSTestV2 包的较旧版本，如果测试发现依赖于“.runsettings”文件，则它们可能无法发现所有数据测试。</target>
         <note />
       </trans-unit>
+      <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
+        <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>
+        <target state="translated">"RandomizeTestOrder" 和 "OrderTestsByNameInClass" 均已设置。"OrderTestsByNameInClass" 将被忽略。</target>
+        <note>{Locked="RandomizeTestOrder"}{Locked="OrderTestsByNameInClass"}</note>
+      </trans-unit>
+      <trans-unit id="RandomTestOrderBanner">
+        <source>Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</source>
+        <target state="translated">已启用随机测试顺序(Seed: {0})。设置 "RandomTestOrderSeed" 以重现此顺序。</target>
+        <note>{Locked="Seed"}{Locked="RandomTestOrderSeed"}</note>
+      </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
         <target state="translated">非 Windows 操作系统不支持 Runsettings 条目 "&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;"。</target>
@@ -328,6 +338,21 @@ but received {4} argument(s), with types '{5}'.</source>
       <trans-unit id="UTA_AssemblyCleanupMethodWasUnsuccesful">
         <source>Assembly Cleanup method {0}.{1} failed. Error Message: {2}. StackTrace: {3}</source>
         <target state="translated">程序集清理方法 {0}.{1} 失败。错误消息: {2}。StackTrace: {3}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_AssemblyFixtureProviderTypeIsGeneric">
+        <source>UTA070: Type '{0}' referenced by [AssemblyFixtureProvider] must not be generic.</source>
+        <target state="translated">UTA070: [AssemblyFixtureProvider] 引用的类型 "{0}" 不能是泛型类型。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_AssemblyFixtureProviderTypeReflectionFailed">
+        <source>UTA071: Failed to enumerate methods on type '{0}' referenced by [AssemblyFixtureProvider]. {1}</source>
+        <target state="translated">UTA071: 无法枚举 [AssemblyFixtureProvider] 引用的类型 "{0}" 上的方法。{1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_AssemblyFixtureProviderLoadFailed">
+        <source>UTA072: Failed to load [AssemblyFixtureProvider] marker from assembly '{0}'. {1}</source>
+        <target state="translated">UTA072: 无法从程序集 "{0}" 加载 [AssemblyFixtureProvider] 标记。{1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_AssemblyInitMethodThrows">
@@ -464,7 +489,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="UTA_MultipleAttributesOnTestClass">
         <source>The test class '{0}' has multiple attributes derived from '{1}' defined on it. Only one such attribute is allowed.</source>
-        <target state="new">The test class '{0}' has multiple attributes derived from '{1}' defined on it. Only one such attribute is allowed.</target>
+        <target state="translated">测试类“{0}”上定义了多个派生自“{1}”的属性。仅允许一个此类属性。</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_MultipleAttributesOnTestMethod">

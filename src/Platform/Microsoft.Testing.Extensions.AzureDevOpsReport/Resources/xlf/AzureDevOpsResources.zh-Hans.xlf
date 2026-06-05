@@ -77,6 +77,21 @@
         <target state="translated">Azure DevOps REST API 请求在所有重试后均失败。</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultAttachmentFailed">
+        <source>Azure DevOps live publishing failed to upload a test result attachment.</source>
+        <target state="translated">Azure DevOps 实时发布无法上传测试结果附件。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultIdParseFailedWarning">
+        <source>Azure DevOps live publishing accepted a batch of test results but could not parse the assigned result IDs; result-level attachments for this batch will be skipped.</source>
+        <target state="translated">Azure DevOps 实时发布已接受一批测试结果，但无法分析分配的结果 ID；将跳过此批次的结果级附件。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunAttachmentFailed">
+        <source>Azure DevOps live publishing failed to upload a test run attachment.</source>
+        <target state="translated">Azure DevOps 实时发布无法上传测试运行附件。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunIdFileMismatch">
         <source>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</source>
         <target state="translated">Azure DevOps 实时发布发现了属于其他 Azure DevOps 项目的 azdo-runid.&lt;buildId&gt;.json 文件。</target>
@@ -92,6 +107,11 @@
         <target state="translated">超时: {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsProgressRequiresAzureDevOps">
+        <source>'--report-azdo-progress' requires '--report-azdo' to be enabled</source>
+        <target state="translated">'--report-azdo-progress' 要求启用 '--report-azdo'</target>
+        <note>{Locked='--report-azdo-progress'}{Locked='--report-azdo'}</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
         <source>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</source>
         <target state="translated">"--report-azdo-quarantine-file" 要求启用 "--report-azdo"</target>
@@ -101,6 +121,16 @@
         <source>'--report-azdo-severity' requires '--report-azdo' to be enabled</source>
         <target state="translated">'--report-azdo-severity' 要求启用 '--report-azdo'</target>
         <note>{Locked='--report-azdo-severity'}{Locked='--report-azdo'}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsStackFrameFilterRequiresAzureDevOps">
+        <source>'--report-azdo-stackframe-filter' requires '--report-azdo' to be enabled</source>
+        <target state="translated">'--report-azdo-stackframe-filter' 需要启用 '--report-azdo'</target>
+        <note>{Locked='--report-azdo-stackframe-filter'}{Locked='--report-azdo'}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsSummaryRequiresAzureDevOps">
+        <source>'--report-azdo-summary' requires '--report-azdo' to be enabled</source>
+        <target state="translated">'--report-azdo-summary' 要求启用 '--report-azdo'</target>
+        <note>{Locked='--report-azdo-summary'}{Locked='--report-azdo'}</note>
       </trans-unit>
       <trans-unit id="DemoteKnownFlakyOptionDescription">
         <source>Demote failures with an Azure DevOps flaky history of at least {0}% in the selected window to warnings.</source>
@@ -177,15 +207,30 @@
         <target state="translated">选项 {0} 无效。</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidStackFrameFilterRegex">
+        <source>Invalid '--report-azdo-stackframe-filter' regex '{0}': {1}</source>
+        <target state="translated">'--report-azdo-stackframe-filter' 正则表达式 '{0}' 无效: {1}</target>
+        <note>{Locked="--report-azdo-stackframe-filter"}</note>
+      </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>Test failed without an additional message.</source>
-        <target state="new">Test failed without an additional message.</target>
+        <target state="translated">测试失败，无附加消息。</target>
         <note />
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
         <target state="translated">启用 Azure DevOps 报表生成器，以 Azure DevOps 可理解的方式将错误写入输出。</target>
         <note />
+      </trans-unit>
+      <trans-unit id="ProgressOptionDescription">
+        <source>Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.</source>
+        <target state="translated">在测试运行期间发出 Azure DevOps 时间线进度记录，以便长期运行会话在生成的时间线上显示实时进度栏。需要 '--report-azdo'。</target>
+        <note>{Locked="--report-azdo"}</note>
+      </trans-unit>
+      <trans-unit id="ProgressRequiresTfBuildWarning">
+        <source>Azure DevOps progress reporting was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps progress emissions.</source>
+        <target state="translated">请求 Azure DevOps 进度报告，但 TF_BUILD 未设置为 ‘true’；正在跳过 Azure DevOps 进度发出。</target>
+        <note>{Locked="TF_BUILD"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="PublishAzdoRunNameOptionDescription">
         <source>Custom Azure DevOps test run name for live test-result publishing.</source>
@@ -236,6 +281,31 @@
         <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
         <target state="translated">要用于所报告事件的严重性。选项为: error (默认)和 warning。</target>
         <note>{Locked="error"}{Locked="warning"}</note>
+      </trans-unit>
+      <trans-unit id="StackFrameFilterOptionDescription">
+        <source>Additional regex patterns (matched against the fully-qualified type prefix of each stack frame) that should be skipped when looking for the user's call site to annotate. Repeatable; up to {0} patterns. Compiled with a {1}ms match timeout. Additive to the extension's built-in MSTest assertion-implementation prefixes.</source>
+        <target state="translated">查找要批注的用户调用站点时应跳过的其他正则表达式模式(与每个堆栈帧的完全限定类型前缀匹配)。可重复；最多 {0} 个模式。已编译，匹配超时为 {1} 毫秒。追加到扩展的内置 MSTest 断言实现前缀。</target>
+        <note>{0} is the maximum allowed pattern count, {1} is the per-match timeout in ms.</note>
+      </trans-unit>
+      <trans-unit id="StackFrameFilterTooManyRegexes">
+        <source>'--report-azdo-stackframe-filter' accepts at most {0} patterns.</source>
+        <target state="translated">'--report-azdo-stackframe-filter' 最多可接受 {0} 个模式。</target>
+        <note>{Locked="--report-azdo-stackframe-filter"}</note>
+      </trans-unit>
+      <trans-unit id="SummaryOptionDescription">
+        <source>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.</source>
+        <target state="translated">在测试运行结束时编写 Markdown 作业摘要，并通过 ‘##vso[task.uploadsummary]’ 上传它。可选文件路径参数会替代默认位置('{testResultsDir}/azdo-summary-{tfm}.md')。需要 '--report-azdo'。</target>
+        <note>{Locked="--report-azdo"}{Locked="##vso[task.uploadsummary]"}{Locked="azdo-summary-{tfm}.md"}</note>
+      </trans-unit>
+      <trans-unit id="SummaryRequiresTfBuildWarning">
+        <source>Azure DevOps job summary was requested, but TF_BUILD is not set to 'true'; skipping summary emission.</source>
+        <target state="translated">请求 Azure DevOps 作业摘要，但 TF_BUILD 未设置为 ‘true’；正在跳过摘要发出。</target>
+        <note>{Locked="TF_BUILD"}{Locked="true"}</note>
+      </trans-unit>
+      <trans-unit id="SummaryWriteFailedWarning">
+        <source>Failed to write Azure DevOps summary file '{0}': {1}</source>
+        <target state="translated">无法写入 Azure DevOps 摘要文件“{0}”: {1}</target>
+        <note />
       </trans-unit>
       <trans-unit id="UploadArtifactExcludeOptionDescription">
         <source>Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.</source>

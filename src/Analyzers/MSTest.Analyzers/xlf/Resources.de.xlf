@@ -157,6 +157,21 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">Vermeiden Sie die explizite Übergabe von „DynamicDataSourceType” und verwenden Sie das standardmäßige automatische Erkennungsverhalten.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsDescription">
+        <source>Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</source>
+        <target state="translated">Das synchrone Blockieren des aktuellen Threads mit „Thread.Sleep“, „Task.Wait“, „Task.WaitAll“, „Task.WaitAny“ oder „Task&lt;TResult&gt;.Result“ innerhalb von Testmethoden oder Testfixtures ist eine häufige Ursache für unvorhersehbares Verhalten und kann zudem zu einem Deadlock führen, wenn das Test-Framework Tests auf einem SynchronizationContext ausführt, der eine kooperative Ablaufsteuerung erfordert. Verwenden Sie für zeitbasierte Wartezeiten vorzugsweise „await Task.Delay“ und warten Sie mit „await“ auf die Aufgabe, um deren Ergebnis zu beobachten.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsMessageFormat">
+        <source>Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</source>
+        <target state="translated">Vermeiden Sie „{0}“ im Testcode, da dies zu unvorhersehbaren Testergebnissen führen kann; ziehen Sie eine asynchrone Alternative wie „await Task.Delay“ oder „await“ für die Aufgabe in Betracht</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsTitle">
+        <source>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</source>
+        <target state="translated">Vermeiden Sie im Testcode synchrone, blockierende Aufrufe wie „Thread.Sleep“, „Task.Wait“, „Task.WaitAll“, „Task.WaitAny“ oder „Task&lt;TResult&gt;.Result“</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
         <target state="translated">Nicht innerhalb von "async void"-Methoden, lokalen Funktionen oder Lambdafunktionen bestätigen. Ausnahmen, die in diesem Kontext ausgelöst werden, werden nicht behandelt. Bei Verwendung von VSTest unter .NET Framework werden diese im Hintergrund verschlungen. Wenn Sie Microsoft.Testing.Platform oder VSTest unter modernem .NET verwenden, kann der Prozess abgestürzt werden.</target>
@@ -269,6 +284,16 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       <trans-unit id="ClassInitializeShouldBeValidTitle">
         <source>ClassInitialize methods should have valid layout</source>
         <target state="translated">ClassInitialize-Methoden müssen über ein gültiges Layout verfügen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CollectionAssertToAssertMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'CollectionAssert.{1}'</source>
+        <target state="translated">Verwenden Sie „Assert.{0}“ anstelle von „CollectionAssert.{1}“</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CollectionAssertToAssertTitle">
+        <source>Use 'Assert' instead of 'CollectionAssert'</source>
+        <target state="translated">Verwenden Sie „Assert“ anstelle von „CollectionAssert“</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidDescription">
@@ -521,6 +546,21 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       <trans-unit id="GlobalTestFixtureShouldBeValidTitle">
         <source>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</source>
         <target state="translated">Die Methoden „GlobalTestInitialize“ und „GlobalTestCleanup“ müssen ein gültiges Layout aufweisen</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreShouldHaveJustificationDescription">
+        <source>An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</source>
+        <target state="translated">Ein auf eine Testmethode oder Testklasse angewendetes „[Ignore]“-Attribut sollte eine nicht leere Meldung enthalten, in der erläutert wird, warum der Test oder die Klasse ignoriert wird. Eine Begründungsmeldung erleichtert die Einstufung übersprungener Tests, hilft den Prüfern, die Absicht zu verstehen, und verhindert, dass Tests stillschweigend dauerhaft deaktiviert werden.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreShouldHaveJustificationMessageFormat">
+        <source>'[Ignore]' should specify a message explaining why '{0}' is ignored</source>
+        <target state="translated">„[Ignore]“ sollte eine Meldung enthalten, die erklärt, warum „{0}“ ignoriert wird</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreShouldHaveJustificationTitle">
+        <source>'[Ignore]' should specify a justification</source>
+        <target state="translated">„[Ignore]“ sollte eine Begründung enthalten</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueDescription">
@@ -793,11 +833,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidDescription">
-        <source>'TestContext' should be a non-static field or property assigned in constructor or for a property set by MSTest, it should follow the layout:
+        <source>'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
-        <target state="translated">„TestContext“ muss ein nicht statisches Feld oder eine nicht statische Eigenschaft sein, das im Konstruktor zugewiesen ist, oder für eine von MSTest festgelegte Eigenschaft sollte es dem Layout folgen:
+        <target state="translated">„TestContext“ muss eine nicht statische Eigenschaft sein, die im Konstruktor zugewiesen oder von MSTest festgelegt wird. Um von MSTest festgelegt zu werden, sollte es dem Layout folgen:
 – es sollte „public“ sein, unabhängig davon, ob das Attribut „[assembly: DiscoverInternals]“ festgelegt ist oder nicht.
 – sie darf nicht „static“ sein
 – es sollte einen Setter aufweisen.</target>
@@ -992,12 +1032,12 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">
         <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</source>
-        <target state="new">An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</target>
+        <target state="translated">Ein von „RetryBaseAttribute“ abgeleitetes Attribut kann nur für eine Testmethode oder eine Testklasse angegeben werden</target>
         <note />
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method or test class</source>
-        <target state="new">Use retry attribute on test method or test class</target>
+        <target state="translated">Verwenden des Wiederholungsattributs für die Testmethode oder Testklasse</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">

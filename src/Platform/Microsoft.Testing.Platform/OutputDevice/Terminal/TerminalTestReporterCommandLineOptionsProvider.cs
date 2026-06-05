@@ -9,7 +9,7 @@ using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
-internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandLineOptionsProvider
+internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLineOptionsProviderBase
 {
     public const string NoProgressOption = "no-progress";
     public const string NoAnsiOption = "no-ansi";
@@ -23,33 +23,24 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
     public const string ShowOutputFailedArgument = "failed";
     public const string ShowOutputNoneArgument = "none";
 
-    /// <inheritdoc />
-    public string Uid => nameof(TerminalTestReporterCommandLineOptionsProvider);
+    public TerminalTestReporterCommandLineOptionsProvider()
+        : base(
+            nameof(TerminalTestReporterCommandLineOptionsProvider),
+            PlatformVersion.Version,
+            PlatformResources.TerminalTestReporterDisplayName,
+            PlatformResources.TerminalTestReporterDescription,
+            [
+                new(NoProgressOption, PlatformResources.TerminalNoProgressOptionDescription, ArgumentArity.Zero, isHidden: false, isBuiltIn: true),
+                new(NoAnsiOption, PlatformResources.TerminalNoAnsiOptionDescription, ArgumentArity.Zero, isHidden: false, isBuiltIn: true),
+                new(AnsiOption, PlatformResources.TerminalAnsiOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+                new(OutputOption, PlatformResources.TerminalOutputOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+                new(ShowStdoutOption, PlatformResources.TerminalShowStdoutOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+                new(ShowStderrOption, PlatformResources.TerminalShowStderrOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+            ])
+    {
+    }
 
-    /// <inheritdoc />
-    public string Version => PlatformVersion.Version;
-
-    /// <inheritdoc />
-    public string DisplayName { get; } = PlatformResources.TerminalTestReporterDisplayName;
-
-    /// <inheritdoc />
-    public string Description { get; } = PlatformResources.TerminalTestReporterDescription;
-
-    /// <inheritdoc />
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        =>
-        [
-            new(NoProgressOption, PlatformResources.TerminalNoProgressOptionDescription, ArgumentArity.Zero, isHidden: false, isBuiltIn: true),
-            new(NoAnsiOption, PlatformResources.TerminalNoAnsiOptionDescription, ArgumentArity.Zero, isHidden: false, isBuiltIn: true),
-            new(AnsiOption, PlatformResources.TerminalAnsiOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
-            new(OutputOption, PlatformResources.TerminalOutputOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
-            new(ShowStdoutOption, PlatformResources.TerminalShowStdoutOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
-            new(ShowStderrOption, PlatformResources.TerminalShowStderrOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
-        ];
-
-    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
         => commandOption.Name switch
         {
             NoProgressOption => ValidationResult.ValidTask,
@@ -70,8 +61,4 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
         => ShowOutputAllArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)
             || ShowOutputFailedArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)
             || ShowOutputNoneArgument.Equals(argument, StringComparison.OrdinalIgnoreCase);
-
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => // No problem found
-        ValidationResult.ValidTask;
 }

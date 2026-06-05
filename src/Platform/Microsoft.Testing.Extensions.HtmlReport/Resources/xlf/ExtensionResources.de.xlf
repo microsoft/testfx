@@ -24,21 +24,21 @@
       </trans-unit>
       <trans-unit id="HtmlReportFileNameMustNotBeEmpty">
         <source>'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</source>
-        <target state="new">'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</target>
+        <target state="translated">Der Dateiname für „--report-html-filename“ darf nicht leer sein (z. B. --report-html-filename myreport.html)</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameOptionDescription">
         <source>The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
 Example: MyReport_{tfm}.html</source>
-        <target state="new">The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
-Example: MyReport_{tfm}.html</target>
+        <target state="translated">Der Name des generierten HTML-Berichts. Kann einen relativen oder absoluten Pfad enthalten; relative Pfade werden anhand des Verzeichnisses mit den Testergebnissen aufgelöst, und fehlende Verzeichnisse werden erstellt.
+Unterstützt die folgenden Platzhalter: {pname} (Name der Testanwendung), {pid} (Prozess-ID), {asm} (Name der Eintragsassembly), {tfm} (Zielframeworkmoniker), {time} (Zeitstempel).
+Beispiel: MyReport_{tfm}.html</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</source>
-        <target state="new">'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</target>
+        <target state="translated">Der relative Pfad für „--report-html-filename“ muss im Verzeichnis mit den Testergebnissen bleiben (z. B. --report-html-filename nested/myreport.html)</target>
         <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRequiresHtmlReport">

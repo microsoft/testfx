@@ -270,6 +270,16 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
         <target state="translated">Nell'assembly è caricata una versione precedente del pacchetto MSTestV2. L'individuazione dei test potrebbe non riuscire a individuare tutti i test dei dati se dipendono dal file '.runsettings'.</target>
         <note />
       </trans-unit>
+      <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
+        <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>
+        <target state="translated">Sono impostati sia 'RandomizeTestOrder' che 'OrderTestsByNameInClass'. 'OrderTestsByNameInClass' verrà ignorato.</target>
+        <note>{Locked="RandomizeTestOrder"}{Locked="OrderTestsByNameInClass"}</note>
+      </trans-unit>
+      <trans-unit id="RandomTestOrderBanner">
+        <source>Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</source>
+        <target state="translated">Ordine di test casuale abilitato (Seed: {0}). Imposta 'RandomTestOrderSeed' per riprodurre questo ordine.</target>
+        <note>{Locked="Seed"}{Locked="RandomTestOrderSeed"}</note>
+      </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
         <target state="translated">La voce Runsettings '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' non è supportata nei sistemi operativi non Windows.</target>
@@ -328,6 +338,21 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
       <trans-unit id="UTA_AssemblyCleanupMethodWasUnsuccesful">
         <source>Assembly Cleanup method {0}.{1} failed. Error Message: {2}. StackTrace: {3}</source>
         <target state="translated">Il metodo di pulizia assembly {0}.{1} non è riuscito. Messaggio di errore: {2}. Analisi dello stack: {3}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_AssemblyFixtureProviderTypeIsGeneric">
+        <source>UTA070: Type '{0}' referenced by [AssemblyFixtureProvider] must not be generic.</source>
+        <target state="translated">UTA070: il tipo '{0}' a cui fa riferimento [AssemblyFixtureProvider] non deve essere generico.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_AssemblyFixtureProviderTypeReflectionFailed">
+        <source>UTA071: Failed to enumerate methods on type '{0}' referenced by [AssemblyFixtureProvider]. {1}</source>
+        <target state="translated">UTA071: non è possibile enumerare i metodi sul tipo '{0}' a cui [AssemblyFixtureProvider] fa riferimento. {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_AssemblyFixtureProviderLoadFailed">
+        <source>UTA072: Failed to load [AssemblyFixtureProvider] marker from assembly '{0}'. {1}</source>
+        <target state="translated">UTA072: non è possibile caricare l'indicatore [AssemblyFixtureProvider] dall'assembly '{0}'. {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_AssemblyInitMethodThrows">
@@ -464,7 +489,7 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
       </trans-unit>
       <trans-unit id="UTA_MultipleAttributesOnTestClass">
         <source>The test class '{0}' has multiple attributes derived from '{1}' defined on it. Only one such attribute is allowed.</source>
-        <target state="new">The test class '{0}' has multiple attributes derived from '{1}' defined on it. Only one such attribute is allowed.</target>
+        <target state="translated">La classe di test "{0}" contiene più attributi derivati da "{1}" definiti in essa. È consentito solo uno di tali attributi.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_MultipleAttributesOnTestMethod">

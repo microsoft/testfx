@@ -76,56 +76,29 @@ public sealed class TestContextShouldBeValidFixer : CodeFixProvider
                 modifiers.Where(modifier => !modifier.IsKind(SyntaxKind.PrivateKeyword) && !modifier.IsKind(SyntaxKind.InternalKeyword) && !modifier.IsKind(SyntaxKind.ProtectedKeyword))).Add(visibilityModifier);
         }
 
-        MemberDeclarationSyntax newMemberDeclaration = memberDeclaration.WithModifiers(modifiers);
-
-        if (newMemberDeclaration is FieldDeclarationSyntax fieldDeclarationSyntax)
+        // The analyzer only reports on property declarations.
+        var propertyDeclaration = (PropertyDeclarationSyntax)memberDeclaration.WithModifiers(modifiers);
+        if (!propertyDeclaration.Identifier.ValueText.Equals(TestContextShouldBeValidAnalyzer.TestContextPropertyName, StringComparison.Ordinal))
         {
-            newMemberDeclaration = ConvertFieldToProperty(fieldDeclarationSyntax);
+            propertyDeclaration = propertyDeclaration.WithIdentifier(
+                SyntaxFactory.Identifier(propertyDeclaration.Identifier.LeadingTrivia, TestContextShouldBeValidAnalyzer.TestContextPropertyName, propertyDeclaration.Identifier.TrailingTrivia));
         }
-        else
-        {
-            // ensure that the property has setter and getter
-            var propertyDeclaration = (PropertyDeclarationSyntax)newMemberDeclaration;
-            if (!propertyDeclaration.Identifier.ValueText.Equals(TestContextShouldBeValidAnalyzer.TestContextPropertyName, StringComparison.Ordinal))
-            {
-                propertyDeclaration = propertyDeclaration.WithIdentifier(
-                    SyntaxFactory.Identifier(propertyDeclaration.Identifier.LeadingTrivia, TestContextShouldBeValidAnalyzer.TestContextPropertyName, propertyDeclaration.Identifier.TrailingTrivia));
-            }
 
-            SyntaxList<AccessorDeclarationSyntax> accessors = propertyDeclaration.AccessorList?.Accessors ?? default;
+        SyntaxList<AccessorDeclarationSyntax> accessors = propertyDeclaration.AccessorList?.Accessors ?? default;
 
-            AccessorDeclarationSyntax getAccessor = accessors.FirstOrDefault(a => a.Kind() == SyntaxKind.GetAccessorDeclaration)
-                ?? SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+        AccessorDeclarationSyntax getAccessor = accessors.FirstOrDefault(a => a.Kind() == SyntaxKind.GetAccessorDeclaration)
+            ?? SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
 
-            AccessorDeclarationSyntax setAccessor = accessors.FirstOrDefault(a => a.Kind() == SyntaxKind.SetAccessorDeclaration)
-                ?? SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+        AccessorDeclarationSyntax setAccessor = accessors.FirstOrDefault(a => a.Kind() == SyntaxKind.SetAccessorDeclaration)
+            ?? SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
 
-            newMemberDeclaration = propertyDeclaration.WithAccessorList(SyntaxFactory.AccessorList(SyntaxFactory.List([getAccessor, setAccessor])));
-        }
+        PropertyDeclarationSyntax newPropertyDeclaration = propertyDeclaration.WithAccessorList(
+            SyntaxFactory.AccessorList(SyntaxFactory.List([getAccessor, setAccessor])));
 
         // Create a new member declaration with the updated modifiers.
-        editor.ReplaceNode(memberDeclaration, newMemberDeclaration);
+        editor.ReplaceNode(memberDeclaration, newPropertyDeclaration);
         SyntaxNode newRoot = editor.GetChangedRoot();
 
         return document.WithSyntaxRoot(newRoot);
-    }
-
-    private static PropertyDeclarationSyntax ConvertFieldToProperty(FieldDeclarationSyntax fieldDeclaration)
-    {
-        TypeSyntax type = fieldDeclaration.Declaration.Type;
-
-        // Create the property declaration
-        PropertyDeclarationSyntax propertyDeclaration = SyntaxFactory.PropertyDeclaration(type, TestContextShouldBeValidAnalyzer.TestContextPropertyName)
-            .WithModifiers(SyntaxFactory.TokenList(fieldDeclaration.Modifiers))
-            .WithAccessorList(SyntaxFactory.AccessorList(
-                SyntaxFactory.List(
-                [
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                        .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-                        .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
-                ])));
-
-        return propertyDeclaration;
     }
 }

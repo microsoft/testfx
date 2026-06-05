@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
-using Microsoft.Testing.Framework.Helpers;
-
 namespace Microsoft.Testing.Framework;
 
 /// <summary>
@@ -10,7 +8,7 @@ namespace Microsoft.Testing.Framework;
 /// </summary>
 /// <typeparam name="TData">Type that holds the parameter data.</typeparam>
 public sealed class InternalUnsafeActionParameterizedTestNode<TData>
-    : TestNode, IParameterizedTestNode, IParameterizedAsyncActionTestNode
+    : InternalUnsafeParameterizedTestNodeBase<TData>, IParameterizedTestNode
 {
     public required Action<ITestExecutionContext, TData> Body { get; init; }
 
@@ -18,24 +16,12 @@ public sealed class InternalUnsafeActionParameterizedTestNode<TData>
 
     Func<IEnumerable> IParameterizedTestNode.GetArguments => GetArguments;
 
-    async Task IParameterizedAsyncActionTestNode.InvokeAsync(ITestExecutionContext testExecutionContext, Func<Func<Task>, Task> safeInvoke)
-    {
-        foreach (TData item in GetArguments())
-        {
-            await safeInvoke(() =>
-            {
-                Body(testExecutionContext, item);
-                return Task.CompletedTask;
-            }).ConfigureAwait(false);
-        }
-    }
+    internal override Task<IEnumerable<TData>> GetArgumentsAsync()
+        => Task.FromResult(GetArguments());
 
-    TestNode IExpandableTestNode.GetExpandedTestNode(object arguments, string argumentFragmentUid, string argumentFragmentDisplayName)
-        => new InternalUnsafeActionTestNode
-        {
-            StableUid = TestNodeExpansionHelper.GenerateStableUid(StableUid, argumentFragmentUid),
-            DisplayName = TestNodeExpansionHelper.GenerateDisplayName(DisplayName, argumentFragmentDisplayName),
-            Body = testExecutionContext => Body(testExecutionContext, (TData)arguments),
-            Properties = Properties,
-        };
+    internal override Func<TData, Task> CreateInvokeBody(ITestExecutionContext testExecutionContext)
+        => CreateInvokeBody(Body, testExecutionContext);
+
+    internal override TestNode Expand(object arguments, string argumentFragmentUid, string argumentFragmentDisplayName)
+        => InternalUnsafeParameterizedTestNodeHelper.ExpandActionNode(this, arguments, argumentFragmentUid, argumentFragmentDisplayName, Body);
 }

@@ -21,6 +21,8 @@ tools:
       - default
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   create-issue:
     expires: 2d
     labels: [type/tech-debt, type/automation]

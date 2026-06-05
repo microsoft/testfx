@@ -117,17 +117,10 @@ internal static class TestClassModelBuilder
             return EquatableArray<AttributeApplicationModel>.Empty;
         }
 
-        ImmutableArray<AttributeApplicationModel>.Builder builder = ImmutableArray.CreateBuilder<AttributeApplicationModel>(attributes.Length);
-        foreach (AttributeData attribute in attributes)
-        {
-            AttributeApplicationModel? model = BuildAttribute(attribute);
-            if (model is not null)
-            {
-                builder.Add(model);
-            }
-        }
-
-        return new EquatableArray<AttributeApplicationModel>(builder.ToImmutable());
+        return attributes
+            .Select(BuildAttribute)
+            .WhereNotNull()
+            .ToEquatableArray();
     }
 
     private static AttributeApplicationModel? BuildAttribute(AttributeData attribute)
