@@ -121,6 +121,27 @@ Agentic workflows live in `.github/workflows/*.md` and `*.agent.md` and are comp
 
 `TODO` comments without a tracked issue are rejected during review. Every `TODO` MUST reference a GitHub issue, e.g. `// TODO(#1234): Refactor this once the new API is available`. If the note doesn't warrant an issue, rewrite it as a plain comment explaining the rationale.
 
+## GitHub issue creation guidelines
+
+When creating new issues (manually, via `gh issue create`, via the GitHub API, or from an agentic workflow), the issue category MUST be expressed through the repository's native **GitHub Issue Type** field — not through a `type/bug` / `type/feature` label.
+
+- Use `Bug` for an unexpected problem or regression.
+- Use `Feature` for a new capability or enhancement.
+- Use `Task` for a piece of work that is neither a bug nor a feature (refactor, follow-up, chore, RFC follow-up, …).
+- `type/bug` and `type/feature` labels are **deprecated** and MUST NOT be added — they duplicate the Issue Type field and make triage queries inconsistent.
+- Other `type/*` labels (`type/automation`, `type/tech-debt`, `type/test-gap`, `type/regression`, `type/breaking-change`, `type/rfc`, `type/pr-fix`, `type/qa`, `type/ai-inspected`, `type/announcement`, `type/discussion`, `type/flaky-test`, `type/partner-request`, `type/question`) are **not** covered by native issue types and MUST continue to be used as labels.
+
+How to set the Issue Type from each surface:
+
+- **Issue templates** (`.github/ISSUE_TEMPLATE/*.md`): set `type:` in the frontmatter (already done for `bug-report.md` and `feature-request.md`). New templates that map to a native type MUST include the matching `type:` field.
+- **GitHub web UI**: pick the type from the "Type" picker in the right sidebar of the issue editor. Do not add `type/bug` or `type/feature` from the labels dropdown.
+- **`gh` CLI / scripts** (current `gh` releases do not yet expose `--type` on `gh issue create`): create the issue, then set the type via GraphQL, e.g.:
+  ```bash
+  gh api graphql -f query='mutation($issue:ID!, $type:ID!){ updateIssueIssueType(input:{issueId:$issue, issueTypeId:$type}){ issue { number } } }' -F issue=<issue-node-id> -F type=<type-node-id>
+  ```
+  The available `issueTypeId` values can be listed once with `gh api graphql -f query='query{ repository(owner:"microsoft",name:"testfx"){ issueTypes(first:20){ nodes{ id name } } } }'`.
+- **Agentic workflows (`gh aw`)**: in `safe-outputs.create-issue`, set the issue type using the agent's prompt or `allowed-fields` settings; never list `type/bug` / `type/feature` under `labels`.
+
 ## Pull Request guidelines
 
 - Let other developers discuss their comments to your PRs, unless something sounds like a direct order to you, don't do changes.
