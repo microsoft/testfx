@@ -62,6 +62,25 @@ internal static class HumanReadableDurationFormatter
             return string.Empty;
         }
 
+#if NET8_0_OR_GREATER
+        // Fast path for the common case: duration < 1 hour with no milliseconds.
+        // string.Create with a stackalloc buffer avoids both the StringBuilder allocation and
+        // the intermediate strings that GetFormattedPart would otherwise produce per component.
+        // All progress-frame callers use the defaults (wrapInParentheses=true, showMilliseconds=false).
+        if (!showMilliseconds && duration.Value.Days == 0 && duration.Value.Hours == 0)
+        {
+            int seconds = duration.Value.Seconds;
+            int minutes = duration.Value.Minutes;
+            return wrapInParentheses
+                ? (minutes == 0
+                    ? string.Create(CultureInfo.InvariantCulture, stackalloc char[8], $"({seconds}s)")
+                    : string.Create(CultureInfo.InvariantCulture, stackalloc char[12], $"({minutes}m {seconds:D2}s)"))
+                : (minutes == 0
+                    ? string.Create(CultureInfo.InvariantCulture, stackalloc char[6], $"{seconds}s")
+                    : string.Create(CultureInfo.InvariantCulture, stackalloc char[10], $"{minutes}m {seconds:D2}s"));
+        }
+#endif
+
         bool hasParentValue = false;
 
         var stringBuilder = new StringBuilder();
