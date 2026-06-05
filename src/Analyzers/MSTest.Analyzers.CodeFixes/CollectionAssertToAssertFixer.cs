@@ -22,23 +22,27 @@ namespace MSTest.Analyzers.CodeFixes;
 /// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(CollectionAssertToAssertFixer))]
 [Shared]
-public sealed class CollectionAssertToAssertFixer : AssertToAssertFixerBase
+public sealed class CollectionAssertToAssertFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
         = ImmutableArray.Create(DiagnosticIds.CollectionAssertToAssertRuleId);
 
     /// <inheritdoc />
-    protected override string ProperAssertMethodNamePropertyKey => CollectionAssertToAssertAnalyzer.ProperAssertMethodNameKey;
+    public sealed override FixAllProvider GetFixAllProvider()
+        // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/FixAllProvider.md for more information on Fix All Providers
+        => WellKnownFixAllProviders.BatchFixer;
 
     /// <inheritdoc />
-    protected override string CodeActionTitle => CodeFixResources.CollectionAssertToAssertTitle;
+    public override Task RegisterCodeFixesAsync(CodeFixContext context)
+        => AssertToAssertFixerHelpers.RegisterCodeFixAsync(
+            context,
+            CollectionAssertToAssertAnalyzer.ProperAssertMethodNameKey,
+            CodeFixResources.CollectionAssertToAssertTitle,
+            CollectionAssertToAssertAnalyzer.FixKindKey,
+            FixAssertAsync);
 
-    /// <inheritdoc />
-    protected override string? FixKindPropertyKey => CollectionAssertToAssertAnalyzer.FixKindKey;
-
-    /// <inheritdoc />
-    protected override Task<Document> FixAssertAsync(
+    private static Task<Document> FixAssertAsync(
         Document document,
         InvocationExpressionSyntax invocationExpr,
         string properAssertMethodName,
@@ -126,7 +130,7 @@ public sealed class CollectionAssertToAssertFixer : AssertToAssertFixerBase
             .WithLeadingTrivia(invocationExpr.GetLeadingTrivia())
             .WithAdditionalAnnotations(Formatter.Annotation);
 
-        return await ReplaceInvocationAsync(document, invocationExpr, newInvocationExpr, cancellationToken).ConfigureAwait(false);
+        return await AssertToAssertFixerHelpers.ReplaceInvocationAsync(document, invocationExpr, newInvocationExpr, cancellationToken).ConfigureAwait(false);
     }
 
     private static bool TryGetArgumentsByOrdinal(IInvocationOperation invocationOperation, out ArgumentSyntax[]? orderedArguments)

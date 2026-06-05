@@ -18,20 +18,27 @@ namespace MSTest.Analyzers.CodeFixes;
 /// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(StringAssertToAssertFixer))]
 [Shared]
-public sealed class StringAssertToAssertFixer : AssertToAssertFixerBase
+public sealed class StringAssertToAssertFixer : CodeFixProvider
 {
     /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
         = ImmutableArray.Create(DiagnosticIds.StringAssertToAssertRuleId);
 
     /// <inheritdoc />
-    protected override string ProperAssertMethodNamePropertyKey => StringAssertToAssertAnalyzer.ProperAssertMethodNameKey;
+    public sealed override FixAllProvider GetFixAllProvider()
+        // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/FixAllProvider.md for more information on Fix All Providers
+        => WellKnownFixAllProviders.BatchFixer;
 
     /// <inheritdoc />
-    protected override string CodeActionTitle => CodeFixResources.StringAssertToAssertTitle;
+    public override Task RegisterCodeFixesAsync(CodeFixContext context)
+        => AssertToAssertFixerHelpers.RegisterCodeFixAsync(
+            context,
+            StringAssertToAssertAnalyzer.ProperAssertMethodNameKey,
+            CodeFixResources.StringAssertToAssertTitle,
+            fixKindPropertyKey: null,
+            FixAssertAsync);
 
-    /// <inheritdoc />
-    protected override Task<Document> FixAssertAsync(
+    private static Task<Document> FixAssertAsync(
         Document document,
         InvocationExpressionSyntax invocationExpr,
         string properAssertMethodName,
@@ -75,6 +82,6 @@ public sealed class StringAssertToAssertFixer : AssertToAssertFixerBase
         // Preserve leading trivia (including empty lines) from the original invocation
         newInvocationExpr = newInvocationExpr.WithLeadingTrivia(invocationExpr.GetLeadingTrivia());
 
-        return await ReplaceInvocationAsync(document, invocationExpr, newInvocationExpr, cancellationToken).ConfigureAwait(false);
+        return await AssertToAssertFixerHelpers.ReplaceInvocationAsync(document, invocationExpr, newInvocationExpr, cancellationToken).ConfigureAwait(false);
     }
 }

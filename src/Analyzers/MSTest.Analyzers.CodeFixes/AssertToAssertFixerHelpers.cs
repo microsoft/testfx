@@ -11,29 +11,37 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace MSTest.Analyzers.CodeFixes;
 
 /// <summary>
-/// Shared scaffold for <c>*Assert</c>-to-<c>Assert</c> code fixers.
+/// Shared helpers for code fixers that migrate legacy MSTest assert types to <c>Assert</c>.
 /// </summary>
-public abstract class AssertToAssertFixerBase : CodeFixProvider
+internal static class AssertToAssertFixerHelpers
 {
-    /// <inheritdoc />
-    public sealed override FixAllProvider GetFixAllProvider()
-        // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/FixAllProvider.md for more information on Fix All Providers
-        => WellKnownFixAllProviders.BatchFixer;
-
-    /// <inheritdoc />
-    public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
+    /// <summary>
+    /// Runs the common diagnostic-property/invocation-shape validation and, when applicable, registers a
+    /// <c>CodeAction</c> that delegates to <paramref name="fixAssertAsync"/>.
+    /// </summary>
+    /// <param name="context">The code-fix context.</param>
+    /// <param name="properAssertMethodNamePropertyKey">Diagnostic property key holding the replacement <c>Assert</c> method name.</param>
+    /// <param name="codeActionTitleFormat">Localized format string used to build the code action title.</param>
+    /// <param name="fixKindPropertyKey">Optional diagnostic property key holding an additional fix discriminator. When <see langword="null"/>, no <c>fixKind</c> is read.</param>
+    /// <param name="fixAssertAsync">Callback that rewrites the invocation.</param>
+    internal static async Task RegisterCodeFixAsync(
+        CodeFixContext context,
+        string properAssertMethodNamePropertyKey,
+        string codeActionTitleFormat,
+        string? fixKindPropertyKey,
+        Func<Document, InvocationExpressionSyntax, string, string?, CancellationToken, Task<Document>> fixAssertAsync)
     {
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
         Diagnostic diagnostic = context.Diagnostics[0];
-        if (!diagnostic.Properties.TryGetValue(ProperAssertMethodNamePropertyKey, out string? properAssertMethodName)
+        if (!diagnostic.Properties.TryGetValue(properAssertMethodNamePropertyKey, out string? properAssertMethodName)
             || properAssertMethodName is null)
         {
             return;
         }
 
         string? fixKind = null;
-        if (FixKindPropertyKey is string fixKindPropertyKey
+        if (fixKindPropertyKey is not null
             && (!diagnostic.Properties.TryGetValue(fixKindPropertyKey, out fixKind) || fixKind is null))
         {
             return;
@@ -51,44 +59,19 @@ public abstract class AssertToAssertFixerBase : CodeFixProvider
             return;
         }
 
-        string title = string.Format(CultureInfo.InvariantCulture, CodeActionTitle, properAssertMethodName);
+        string title = string.Format(CultureInfo.InvariantCulture, codeActionTitleFormat, properAssertMethodName);
         var action = CodeAction.Create(
             title: title,
-            createChangedDocument: ct => FixAssertAsync(context.Document, invocationExpr, properAssertMethodName, fixKind, ct),
+            createChangedDocument: ct => fixAssertAsync(context.Document, invocationExpr, properAssertMethodName, fixKind, ct),
             equivalenceKey: title);
 
         context.RegisterCodeFix(action, diagnostic);
     }
 
     /// <summary>
-    /// Gets the diagnostic property key containing the replacement <c>Assert</c> method name.
-    /// </summary>
-    protected abstract string ProperAssertMethodNamePropertyKey { get; }
-
-    /// <summary>
-    /// Gets the localized code action title format string.
-    /// </summary>
-    protected abstract string CodeActionTitle { get; }
-
-    /// <summary>
-    /// Gets the optional diagnostic property key containing an additional fix discriminator.
-    /// </summary>
-    protected virtual string? FixKindPropertyKey => null;
-
-    /// <summary>
-    /// Builds the fixed document for the discovered assert invocation.
-    /// </summary>
-    protected abstract Task<Document> FixAssertAsync(
-        Document document,
-        InvocationExpressionSyntax invocationExpr,
-        string properAssertMethodName,
-        string? fixKind,
-        CancellationToken cancellationToken);
-
-    /// <summary>
     /// Replaces an invocation node in the document root.
     /// </summary>
-    protected static async Task<Document> ReplaceInvocationAsync(
+    internal static async Task<Document> ReplaceInvocationAsync(
         Document document,
         InvocationExpressionSyntax invocationExpr,
         InvocationExpressionSyntax newInvocationExpr,
