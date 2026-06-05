@@ -96,6 +96,8 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         await _flushSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            // _publishConfiguration and CurrentRunId are validated once above; the batch loop exits
+            // via ShouldFlushUnsafe or when there is no more work to publish.
             while (true)
             {
                 if (!ShouldFlushUnsafe(force))
