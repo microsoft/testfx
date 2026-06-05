@@ -109,10 +109,11 @@ internal sealed class JUnitReportEngine
         bool fileNameExplicitlyProvided,
         SuiteSet suites)
     {
-        // Stream-to-temp-then-rename: always write to "<final>.tmp" in the same
-        // directory and atomically move it into place at the end, so we never leave
-        // a partially-written .xml file behind on failure or cancellation.
-        string tempPath = finalPath + ".tmp";
+        // Stream-to-temp-then-rename: write to a unique "<final>.<random>.tmp" in the
+        // same directory and atomically move it into place at the end. The random suffix
+        // prevents concurrent runs that happen to produce the same default file name
+        // (same second / same results dir) from clobbering each other's tmp file.
+        string tempPath = finalPath + "." + Path.GetRandomFileName() + ".tmp";
         await WriteXmlAsync(tempPath, suites).ConfigureAwait(false);
 
         // Explicit file names: overwrite. Default-generated file names: keep the user's
@@ -182,8 +183,8 @@ internal sealed class JUnitReportEngine
             CheckCharacters = false,
         };
 
-        // FileMode.Create deliberately overwrites any leftover .tmp from a previous
-        // crashed run - we always write a fresh tmp before the atomic rename.
+        // FileMode.Create creates a fresh tmp file. The temp path is unique per run
+        // (Path.GetRandomFileName), so we never collide with a sibling process's tmp.
         using IFileStream stream = _fileSystem.NewFileStream(tempPath, FileMode.Create);
 
 #if NETCOREAPP

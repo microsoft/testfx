@@ -169,7 +169,7 @@ Each cap appends the standard `\n…[truncated, original length: N]` marker.
 
 Multiple `<testcase>` rows in the same `<testsuite>` that share both `classname` and `name` are technically legal but **break in practice**: older Surefire collapses them, Jenkins' badge counts go wrong, GitLab's diff view shows one row, and so on.
 
-When the same `(classname, name)` pair is emitted more than once (parameterized rows that share an identifier, retries, framework reruns), the writer **uniquifies** by appending ` [attempt 2]`, ` [attempt 3]`, … and stores the original name + original UID as `<property>` children. We never drop a row — every captured result reaches the XML.
+When the same `(classname, name)` pair is emitted more than once (parameterized rows that share an identifier, retries, framework reruns), the writer **uniquifies** by appending `[attempt 2]`, `[attempt 3]`, … (preceded by a single space) and stores the original name + original UID as `<property>` children. We never drop a row — every captured result reaches the XML.
 
 ## File naming
 

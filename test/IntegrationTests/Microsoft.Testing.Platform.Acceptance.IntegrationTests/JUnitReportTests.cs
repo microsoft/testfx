@@ -172,6 +172,37 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
         // must therefore include "Container1/<leaf>".
         Assert.Contains("Container1/FailingChild", xmlContent, "testpath should include the parent chain plus the leaf display name.");
         Assert.Contains("Container1/SkippedChild", xmlContent, "testpath should include the parent chain plus the leaf display name.");
+
+        // Schema-conformance smoke (per RFC 016): parse the produced XML and assert
+        // that every <testcase>'s children follow the strict normative ordering
+        // (properties?, skipped?, error*, failure*, system-out*, system-err*).
+        // Substring checks alone would silently accept a regression that, for instance,
+        // emitted <system-out> before <failure>.
+        var doc = System.Xml.Linq.XDocument.Parse(xmlContent);
+        Assert.AreEqual("testsuites", doc.Root!.Name.LocalName, "Root element must be <testsuites>.");
+
+        int testcasesChecked = 0;
+        string[] orderedNames = ["properties", "skipped", "error", "failure", "system-out", "system-err"];
+        foreach (System.Xml.Linq.XElement testcase in doc.Descendants("testcase"))
+        {
+            testcasesChecked++;
+            int lastSeen = -1;
+            foreach (System.Xml.Linq.XElement child in testcase.Elements())
+            {
+                int idx = Array.IndexOf(orderedNames, child.Name.LocalName);
+                Assert.IsGreaterThanOrEqualTo(
+                    0,
+                    idx,
+                    $"Unexpected <testcase> child element <{child.Name.LocalName}> — RFC 016 only allows: {string.Join(", ", orderedNames)}.");
+                Assert.IsGreaterThanOrEqualTo(
+                    lastSeen,
+                    idx,
+                    $"<testcase name=\"{testcase.Attribute("name")?.Value}\"> children are out of order: <{child.Name.LocalName}> appeared after a later-ordered element. Expected order: {string.Join(" -> ", orderedNames)}.");
+                lastSeen = idx;
+            }
+        }
+
+        Assert.IsGreaterThan(0, testcasesChecked, "Expected at least one <testcase> element to be present for ordering validation.");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
