@@ -119,6 +119,13 @@ internal static class TestResultCapture
             TimeoutTestNodeStateProperty => "timedOut",
             ErrorTestNodeStateProperty => "errored",
             FailedTestNodeStateProperty => "failed",
+#pragma warning disable CS0618, MTP0001 // CancelledTestNodeStateProperty is obsolete
+            // Cancellation is an interruption, not an assertion failure. The RFC
+            // maps it to <error> in the generated XML; classifying it as its own
+            // bucket here (rather than letting it fall through to "failed") keeps
+            // that mapping local to the engine's outcome switch.
+            CancelledTestNodeStateProperty => "cancelled",
+#pragma warning restore CS0618, MTP0001
             _ when Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, state.GetType()) >= 0
                 => "failed",
             _ => throw ApplicationStateGuard.Unreachable(),

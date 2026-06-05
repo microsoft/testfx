@@ -200,7 +200,7 @@ internal sealed class JUnitReportEngine
         WriteAttribute(writer, "tests", suites.TotalTests.ToString(CultureInfo.InvariantCulture));
         WriteAttribute(writer, "failures", suites.TotalFailures.ToString(CultureInfo.InvariantCulture));
         WriteAttribute(writer, "errors", suites.TotalErrors.ToString(CultureInfo.InvariantCulture));
-        WriteAttribute(writer, "disabled", suites.TotalSkipped.ToString(CultureInfo.InvariantCulture));
+        WriteAttribute(writer, "skipped", suites.TotalSkipped.ToString(CultureInfo.InvariantCulture));
         WriteAttribute(writer, "time", FormatSeconds(suites.TotalDuration));
         WriteAttribute(writer, "timestamp", FormatTimestamp(suites.Timestamp));
 
@@ -290,6 +290,7 @@ internal sealed class JUnitReportEngine
 
             case "errored":
             case "timedOut":
+            case "cancelled":
                 await WriteFailureOrErrorAsync(writer, "error", tc.Result).ConfigureAwait(false);
                 break;
 
@@ -351,7 +352,7 @@ internal sealed class JUnitReportEngine
 
         if (!RoslynString.IsNullOrEmpty(tc.Result.Uid))
         {
-            await WritePropertyAsync(writer, "test-uid", tc.Result.Uid).ConfigureAwait(false);
+            await WritePropertyAsync(writer, "uid", tc.Result.Uid).ConfigureAwait(false);
         }
 
         if (hasTestPath)
@@ -370,7 +371,10 @@ internal sealed class JUnitReportEngine
         {
             foreach (KeyValuePair<string, string> trait in tc.Result.Traits!)
             {
-                await WritePropertyAsync(writer, trait.Key, trait.Value).ConfigureAwait(false);
+                // Prefix with "trait." so trait keys cannot collide with reserved
+                // property names like "uid" / "testpath" and consumers can filter
+                // trait properties from intrinsic ones.
+                await WritePropertyAsync(writer, $"trait.{trait.Key}", trait.Value).ConfigureAwait(false);
             }
         }
 
@@ -555,6 +559,7 @@ internal sealed class JUnitReportEngine
                         break;
                     case "errored":
                     case "timedOut":
+                    case "cancelled":
                         errors++;
                         break;
                     case "skipped":
@@ -616,33 +621,38 @@ internal sealed class JUnitReportEngine
         CapturedTestResult result,
         IReadOnlyDictionary<string, TestResultCapture.ParentChainEntry> parentChain)
     {
-        if (result.ParentRawUid is null)
-        {
-            return string.Empty;
-        }
-
+        // Per RFC 016, testpath is the "/"-joined display names from the root down
+        // to and including this node (e.g. "Root/Container/Subcontainer/MyTest").
+        // The leaf is therefore always the test's own display name; the parent
+        // chain (if any) is prepended in root-first order.
         var segments = new List<string>();
-        string? current = result.ParentRawUid;
-        int depth = 0;
-        var visited = new HashSet<string>(StringComparer.Ordinal);
-        while (current is not null && depth < MaxParentChainDepth && visited.Add(current))
+
+        if (result.ParentRawUid is not null)
         {
-            if (!parentChain.TryGetValue(current, out TestResultCapture.ParentChainEntry entry))
+            string? current = result.ParentRawUid;
+            int depth = 0;
+            var visited = new HashSet<string>(StringComparer.Ordinal);
+            while (current is not null && depth < MaxParentChainDepth && visited.Add(current))
             {
-                break;
+                if (!parentChain.TryGetValue(current, out TestResultCapture.ParentChainEntry entry))
+                {
+                    // Parent UID present but missing from the chain (truncated capture
+                    // window, framework bug, ...). Stop walking; the leaf below still
+                    // gives a usable, non-empty path.
+                    break;
+                }
+
+                segments.Add(entry.DisplayName);
+                current = entry.ParentRawUid;
+                depth++;
             }
 
-            segments.Add(entry.DisplayName);
-            current = entry.ParentRawUid;
-            depth++;
+            segments.Reverse();
         }
 
-        if (segments.Count == 0)
-        {
-            return string.Empty;
-        }
-
-        segments.Reverse();
+        // Always include the test's own display name as the leaf so root-level
+        // tests still get a non-empty testpath.
+        segments.Add(result.DisplayName);
 
         var sb = new StringBuilder();
         for (int i = 0; i < segments.Count; i++)

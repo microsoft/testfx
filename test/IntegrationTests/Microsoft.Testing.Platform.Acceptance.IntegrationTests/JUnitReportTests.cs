@@ -138,6 +138,44 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task JUnit_WhenTestsFailOrSkip_JUnitReportContainsExpectedOutcomes(string tfm)
+    {
+        const string customFileName = "outcomes-report.xml";
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, "TestResults");
+        string customFilePath = Path.Combine(testResultsPath, customFileName);
+
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-junit --report-junit-filename {customFileName}",
+            environmentVariables: new() { ["JUNIT_REPORT_EMIT_MIXED"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
+
+        // Failing tests cause exit code 2 (AtLeastOneTestFailed); we still want to verify the XML.
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+
+        Assert.IsTrue(
+            File.Exists(customFilePath),
+            $"Expected JUnit report '{customFileName}' was not found in '{testResultsPath}'.\nOutput:\n{testHostResult.StandardOutput}");
+
+        string xmlContent = File.ReadAllText(customFilePath);
+
+        // Outcome mappings per RFC 016.
+        Assert.Contains("<failure", xmlContent, "Expected a <failure> child for the failing test.");
+        Assert.Contains("<skipped", xmlContent, "Expected a <skipped> child for the skipped test.");
+        Assert.Contains("<error", xmlContent, "Expected an <error> child for the errored test.");
+
+        // Per-testcase metadata is emitted with the RFC-documented property names.
+        Assert.Contains("name=\"uid\"", xmlContent, "Per-testcase <property name=\"uid\"/> should be emitted (not 'test-uid').");
+        Assert.DoesNotContain("name=\"test-uid\"", xmlContent, "Legacy 'test-uid' property name must no longer be emitted.");
+
+        // testpath now always includes the leaf display name; the parented children
+        // must therefore include "Container1/<leaf>".
+        Assert.Contains("Container1/FailingChild", xmlContent, "testpath should include the parent chain plus the leaf display name.");
+        Assert.Contains("Container1/SkippedChild", xmlContent, "testpath should include the parent chain plus the leaf display name.");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task JUnit_WhenReportJUnitFilenameIsSpecifiedWithoutReportJUnit_ErrorIsDisplayed(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
@@ -217,6 +255,51 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                 DisplayName = "PassingTest",
                 Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
             }));
+
+        if (Environment.GetEnvironmentVariable("JUNIT_REPORT_EMIT_MIXED") == "1")
+        {
+            // Parent container — the engine should pick this up via the parent-chain
+            // dictionary so the child testpath becomes "Container1/FailingChild" etc.
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+                context.Request.Session.SessionUid,
+                new TestNode()
+                {
+                    Uid = "container-1",
+                    DisplayName = "Container1",
+                    Properties = new PropertyBag(DiscoveredTestNodeStateProperty.CachedInstance),
+                }));
+
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+                context.Request.Session.SessionUid,
+                new TestNode()
+                {
+                    Uid = "test-fail",
+                    DisplayName = "FailingChild",
+                    Properties = new PropertyBag(new FailedTestNodeStateProperty(new InvalidOperationException("boom"))),
+                },
+                parentTestNodeUid: "container-1"));
+
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+                context.Request.Session.SessionUid,
+                new TestNode()
+                {
+                    Uid = "test-skip",
+                    DisplayName = "SkippedChild",
+                    Properties = new PropertyBag(new SkippedTestNodeStateProperty("not today")),
+                },
+                parentTestNodeUid: "container-1"));
+
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+                context.Request.Session.SessionUid,
+                new TestNode()
+                {
+                    Uid = "test-error",
+                    DisplayName = "ErroredChild",
+                    Properties = new PropertyBag(new ErrorTestNodeStateProperty(new InvalidProgramException("kaboom"))),
+                },
+                parentTestNodeUid: "container-1"));
+        }
+
         context.Complete();
     }
 }
