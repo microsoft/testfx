@@ -14,12 +14,12 @@ namespace Microsoft.Testing.Platform.IPC;
 internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 {
     private readonly DotnetTestConnection? _dotnetTestConnection;
-    private readonly IEnvironment _environment;
+    private readonly string? _executionId;
 
     public DotnetTestDataConsumer(DotnetTestConnection dotnetTestConnection, IEnvironment environment)
     {
         _dotnetTestConnection = dotnetTestConnection;
-        _environment = environment;
+        _executionId = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
     }
 
     public Type[] DataTypesConsumed =>
@@ -36,8 +36,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
     public string DisplayName => nameof(DotnetTestDataConsumer);
 
     public string Description => "Send information back to the dotnet test";
-
-    private string? ExecutionId => _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
@@ -67,7 +65,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                         }
 
                         DiscoveredTestMessages discoveredTestMessages = new(
-                            ExecutionId,
+                            _executionId,
                             DotnetTestConnection.InstanceId,
                             [
                                 new DiscoveredTestMessage(
@@ -89,7 +87,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     case TestStates.Skipped:
                     case TestStates.InProgress when _dotnetTestConnection.IsIDE:
                         TestResultMessages testResultMessages = new(
-                            ExecutionId,
+                            _executionId,
                             DotnetTestConnection.InstanceId,
                             [
                                 new SuccessfulTestResultMessage(
@@ -111,7 +109,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                         // Non-IDE consumers (e.g. `dotnet test` with MTP) render in-progress events as a
                         // separate "currently running tests" panel; they don't expect them as TestResultMessages.
                         TestInProgressMessages inProgressMessages = new(
-                            ExecutionId,
+                            _executionId,
                             DotnetTestConnection.InstanceId,
                             [
                                 new TestInProgressMessage(
@@ -127,7 +125,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     case TestStates.Timeout:
                     case TestStates.Cancelled:
                         testResultMessages = new(
-                            ExecutionId,
+                            _executionId,
                             DotnetTestConnection.InstanceId,
                             [],
                             [
@@ -150,7 +148,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 foreach (FileArtifactProperty artifact in testNodeUpdateMessage.TestNode.Properties.OfType<FileArtifactProperty>())
                 {
                     FileArtifactMessages testFileArtifactMessages = new(
-                        ExecutionId,
+                        _executionId,
                         DotnetTestConnection.InstanceId,
                         [
                             new FileArtifactMessage(
@@ -169,7 +167,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
             case SessionFileArtifact sessionFileArtifact:
                 var fileArtifactMessages = new FileArtifactMessages(
-                    ExecutionId,
+                    _executionId,
                     DotnetTestConnection.InstanceId,
                     [
                         new FileArtifactMessage(
@@ -186,7 +184,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
             case FileArtifact fileArtifact:
                 fileArtifactMessages = new(
-                    ExecutionId,
+                    _executionId,
                     DotnetTestConnection.InstanceId,
                     [
                         new FileArtifactMessage(
@@ -215,8 +213,21 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
             return null;
         }
 
-        string? standardOutput = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
-        string? standardError = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
+        // Single pass over the property bag to collect all needed properties at once,
+        // instead of 3 separate linked-list walks for StandardOutput, StandardError, and TimingProperty.
+        TimingProperty? timingProperty = null;
+        string? standardOutput = null;
+        string? standardError = null;
+        PropertyBag.PropertyBagEnumerator enumerator = testNodeUpdateMessage.TestNode.Properties.GetStructEnumerator();
+        while (enumerator.MoveNext())
+        {
+            switch (enumerator.Current)
+            {
+                case TimingProperty tp: timingProperty = tp; break;
+                case StandardOutputProperty so: standardOutput = so.StandardOutput; break;
+                case StandardErrorProperty se: standardError = se.StandardError; break;
+            }
+        }
 
         switch (nodeState)
         {
@@ -226,7 +237,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
             case PassedTestNodeStateProperty:
                 state = TestStates.Passed;
-                duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
+                duration = timingProperty?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 break;
 
@@ -237,21 +248,21 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
             case FailedTestNodeStateProperty failedTestNodeStateProperty:
                 state = TestStates.Failed;
-                duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
+                duration = timingProperty?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 exceptions = FlattenToExceptionMessages(reason, failedTestNodeStateProperty.Exception);
                 break;
 
             case ErrorTestNodeStateProperty errorTestNodeStateProperty:
                 state = TestStates.Error;
-                duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
+                duration = timingProperty?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 exceptions = FlattenToExceptionMessages(reason, errorTestNodeStateProperty.Exception);
                 break;
 
             case TimeoutTestNodeStateProperty timeoutTestNodeStateProperty:
                 state = TestStates.Timeout;
-                duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
+                duration = timingProperty?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 exceptions = FlattenToExceptionMessages(reason, timeoutTestNodeStateProperty.Exception);
                 break;
@@ -260,7 +271,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
             case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
                 state = TestStates.Cancelled;
-                duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
+                duration = timingProperty?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 exceptions = FlattenToExceptionMessages(reason, cancelledTestNodeStateProperty.Exception);
                 break;
@@ -302,7 +313,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         TestSessionEvent sessionStartEvent = new(
             SessionEventTypes.TestSessionStart,
             testSessionContext.SessionUid.Value,
-            ExecutionId);
+            _executionId);
 
         await _dotnetTestConnection.SendMessageAsync(sessionStartEvent).ConfigureAwait(false);
     }
@@ -314,7 +325,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         TestSessionEvent sessionEndEvent = new(
             SessionEventTypes.TestSessionEnd,
             testSessionContext.SessionUid.Value,
-            ExecutionId);
+            _executionId);
 
         await _dotnetTestConnection.SendMessageAsync(sessionEndEvent).ConfigureAwait(false);
     }
