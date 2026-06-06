@@ -1,7 +1,7 @@
 # Efficiency Improver Memory — microsoft/testfx
 
 ## Last Updated
-2026-06-05
+2026-06-06
 
 ## Build/Test Commands
 - Build: `./build.sh` (Linux/macOS), `.\build.cmd` (Windows)
@@ -21,6 +21,7 @@
 - 2026-06-03: Task 3 (SerializerUtilities single-pass), Task 7
 - 2026-06-04: Task 3 (SimpleAnsiTerminal cache - actually submitted), Task 7
 - 2026-06-05: Task 2, Task 3 (DotnetTestDataConsumer - cache ExecutionId + single-pass property scan), Task 7
+- 2026-06-06: Task 2, Task 3 (AzureDevOps OfType→SingleOrDefault), Task 4, Task 7
 
 ## Completed Work
 - PR #8692: perf: reduce redundant UTF-8 string encoding in IPC BaseSerializer (MERGED 2026-05-31)
@@ -29,11 +30,13 @@
 - PR #8743: perf: single-pass TRX message partitioning in TrxReportEngine (MERGED 2026-06-02)
 - PR #8806: perf: single-pass TestNode property serialization in SerializerUtilities (MERGED 2026-06-04)
 - PR #8834: perf: cache newline+color string in SimpleAnsiTerminal (MERGED 2026-06-05)
-- PR (efficiency/cache-execution-id-single-pass-dotnet-test): perf: cache ExecutionId + single-pass property scan in DotnetTestDataConsumer (submitted 2026-06-05, awaiting merge)
+- PR #8866: perf: cache ExecutionId + single-pass property scan in DotnetTestDataConsumer (submitted 2026-06-05, awaiting merge)
+- PR (efficiency/azdo-single-value-property-alloc): perf: SingleOrDefault<T> instead of OfType<T>().FirstOrDefault() in AzureDevOps report (submitted 2026-06-06, awaiting merge)
 
 ## Optimisation Backlog
 | Priority | Focus Area | Opportunity | Estimated Impact |
 |----------|------------|-------------|------------------|
+| MEDIUM | Code-Level | `OpenTelemetryResultHandler.cs:194-195` — `OfType<T>().Select()` in `string.Join` for stdout/stderr: creates array + LINQ enumerator per test result in OTel spans; replace with `SingleOrDefault<T>()?.Prop ?? string.Empty` | Per-test alloc reduction in OTel-enabled runs |
 | LOW | Code-Level | `ToolsTestHost.cs:55` — `GroupBy().Where(Count()>1).ToList().ForEach()` — startup-only code | Negligible |
 
 ## Efficiency Notes
@@ -51,3 +54,6 @@
 - DotnetTestDataConsumer: ExecutionId was computed property (env var lookup + string alloc per test); now readonly field (2026-06-05)
 - DotnetTestDataConsumer: GetTestNodeDetails did 3 separate PropertyBag linked-list walks per test; now single pass via GetStructEnumerator() (2026-06-05)
 - PropertyBag.GetStructEnumerator() returns internal struct (zero alloc); accessible within Microsoft.Testing.Platform assembly
+- PropertyBag.OfType<T>() allocates TProperty[] even for single-element results; use SingleOrDefault<T>() when only first match is needed (2026-06-06)
+- AzureDevOpsTestResultsPublisher.BuildAttachmentsFromTestNode had OfType<T>().FirstOrDefault() for stdout/stderr; now SingleOrDefault<T>() (2026-06-06)
+- OpenTelemetryResultHandler (MTP assembly): OfType<T>().Select(x=>x.Prop) in string.Join for stdout/stderr — opportunity for next run
