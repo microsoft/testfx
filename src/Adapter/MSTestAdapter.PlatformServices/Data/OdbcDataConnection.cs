@@ -22,12 +22,14 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
         // Need open connection to get Connection.Driver.
         DebugEx.Assert(IsOpen(), "The connection must be open!");
 
-        _isMSSql = Connection != null && IsMSSql(Connection.Driver);
+        _isMSSql = Connection != null && IsMSSql(GetProviderNameForMSSqlDetection());
     }
 
     public new OdbcCommandBuilder CommandBuilder => (OdbcCommandBuilder)base.CommandBuilder;
 
     public new OdbcConnection Connection => (OdbcConnection)base.Connection;
+
+    protected override string? GetProviderNameForMSSqlDetection() => Connection.Driver;
 
     /// <summary>
     /// This is overridden because we need manually get quote literals, OleDb does not fill those automatically.
@@ -58,18 +60,6 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
             InvalidSchemas = ["sys", "INFORMATION_SCHEMA"],
         };
         return [data1, data2];
-    }
-
-    protected override string QuoteIdentifier(string identifier)
-    {
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier");
-        return CommandBuilder.QuoteIdentifier(identifier, Connection);  // Must pass connection.
-    }
-
-    protected override string UnquoteIdentifier(string identifier)
-    {
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier");
-        return CommandBuilder.UnquoteIdentifier(identifier, Connection);  // Must pass connection.
     }
 
     // Need to fix up excel connections
