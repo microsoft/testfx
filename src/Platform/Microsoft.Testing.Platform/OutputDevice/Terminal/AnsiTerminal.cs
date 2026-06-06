@@ -26,6 +26,7 @@ internal sealed class AnsiTerminal : ITerminal
     private readonly StringBuilder _stringBuilder = new();
     private bool _isBatching;
     private AnsiTerminalTestProgressFrame _currentFrame = new(0, 0);
+    private AnsiTerminalTestProgressFrame _spareFrame = new(0, 0);
 
     public AnsiTerminal(IConsole console)
     {
@@ -269,10 +270,12 @@ internal sealed class AnsiTerminal : ITerminal
 
     public void RenderProgress(TestProgressState?[] progress)
     {
-        AnsiTerminalTestProgressFrame newFrame = new(Width, Height);
-        newFrame.Render(_currentFrame, progress, terminal: this);
-
-        _currentFrame = newFrame;
+        // Reuse the spare frame instead of allocating a new one every tick.
+        AnsiTerminalTestProgressFrame nextFrame = _spareFrame;
+        nextFrame.Reset(Width, Height);
+        nextFrame.Render(_currentFrame, progress, terminal: this);
+        _spareFrame = _currentFrame;
+        _currentFrame = nextFrame;
     }
 
     public void StartBusyIndicator()
