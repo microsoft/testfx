@@ -38,18 +38,16 @@ public sealed class TestCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
         context.EnableConcurrentExecution();
 
         context.RegisterCompilationStartAction(context =>
-        {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute, out INamedTypeSymbol? testCleanupAttributeSymbol)
-                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
-            {
-                INamedTypeSymbol? taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
-                INamedTypeSymbol? valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
-                bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
-                context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, testCleanupAttributeSymbol, taskSymbol, valueTaskSymbol, testClassAttributeSymbol, canDiscoverInternals),
-                    SymbolKind.Method);
-            }
-        });
+            FixtureMethodAnalyzerHelper.RegisterFixtureMethodSymbolAction(
+                context,
+                WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute,
+                static (symbolContext, symbols) => AnalyzeSymbol(
+                    symbolContext,
+                    symbols.FixtureAttributeSymbol,
+                    symbols.TaskSymbol,
+                    symbols.ValueTaskSymbol,
+                    symbols.TestClassAttributeSymbol,
+                    symbols.CanDiscoverInternals)));
     }
 
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testCleanupAttributeSymbol, INamedTypeSymbol? taskSymbol,
