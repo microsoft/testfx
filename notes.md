@@ -19,6 +19,7 @@
 - Each project has `BannedSymbols.txt` listing disallowed assertion APIs
 - **No VB.NET tests** for analyzers — repo constraint, maintainers not interested
 - **IgnoreAttribute is sealed** — cannot derive from it in test scenarios
+- **sealed + inheritance in tests**: When writing tests that need multi-level inheritance, the first level class must NOT be sealed
 
 ## Testing Opportunities Backlog
 
@@ -29,6 +30,7 @@
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-06 | Task 3 (PreferTestMethodOverDataTestMethodAnalyzer edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-05 | Task 3 (TestMethodShouldNotBeIgnoredAnalyzer edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-04 | Task 3 (NonNullableReferenceNotInitializedSuppressor edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-03 | Task 3 (DoNotStoreStaticTestContextAnalyzer edge cases), Task 7 (Monthly Issue Jun) |
@@ -40,11 +42,12 @@
 
 ## Last Run
 
-2026-06-05 23:23 UTC
+2026-06-06 23:17 UTC
 
 ## Completed Work
 
-- PR for TestMethodShouldNotBeIgnoredAnalyzer edge cases (2026-06-05, pending merge)
+- PR for PreferTestMethodOverDataTestMethodAnalyzer edge cases (2026-06-06, pending merge)
+- PR #8869 merged (TestMethodShouldNotBeIgnoredAnalyzer edge cases) — pending
 - PR #8837 merged (NonNullableReferenceNotInitializedSuppressor edge cases)
 - PR #8809 merged (DoNotStoreStaticTestContextAnalyzer edge cases)
 - PR #8781 merged (Assert.StartsWith/EndsWith StringComparison overloads and null handling)
