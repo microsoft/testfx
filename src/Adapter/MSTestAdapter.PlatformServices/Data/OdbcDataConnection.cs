@@ -32,7 +32,7 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
     protected override string? GetProviderNameForMSSqlDetection() => Connection.Driver;
 
     /// <summary>
-    /// This is overridden because we need manually get quote literals, OleDb does not fill those automatically.
+    /// This is overridden because we need manually get quote literals, ODBC does not fill those automatically.
     /// </summary>
     public override void GetQuoteLiterals() => GetQuoteLiteralsHelper();
 
