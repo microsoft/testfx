@@ -286,15 +286,16 @@ so (see Step 4 fallback) and stop — do not invent grades.
 This repository is C# / MSTest. Apply the **`grade-tests` skill** (synced
 into this repo at `.agents/skills/grade-tests/SKILL.md` from
 `dotnet/skills`) to grade each kept method. Invoke it via the `skill`
-tool, and follow its rubric exactly — including its Step 0 input
-validation, the three sub-grades (Assertion strength, Structure & focus,
-Anti-pattern hygiene), the combination rule
-(`min(hard_ceiling, A − Medium_count)` for the Anti-pattern sub-grade;
-overall capped at the worst sub-grade), and the score-band mapping.
+tool and follow its rubric exactly — do not re-derive or restate the
+rubric here; the synced skill is the single source of truth and will
+evolve over time.
 
-When the skill asks for the language extension, also load
-`.agents/skills/test-analysis-extensions/extensions/dotnet.md` for the
-MSTest/.NET-specific assertion-API list and idiomatic patterns.
+When the skill asks for the language extension, follow its own Step 1
+guidance: invoke the **`test-analysis-extensions`** skill to discover
+the available per-language reference files and read the one matching
+this codebase (C# / MSTest). Do not hard-code a path to a specific
+extension file — the discovery step is what keeps this workflow
+resilient to future reshuffles in the extensions layout.
 
 **Pass these inputs to the skill** so it does not fall into its Step 0
 refusal branch:
@@ -322,9 +323,13 @@ not replacements for — the synced skill's rubric:
   spawn processes and have inherently long bodies — do **not** deduct
   for body length below ~120 lines in this folder (overrides the
   rubric's ~30/~60-line thresholds for the Structure sub-grade).
-- **FluentAssertions** style (`x.Should().Be(...)`, `x.Should().Throw<T>()`)
-  is the preferred assertion style and is fully equivalent to MSTest's
-  classic API for grading purposes.
+- **AwesomeAssertions** style (`x.Should().Be(...)`, `x.Should().Throw<T>()`)
+  is equivalent to MSTest's classic API for grading purposes and is used
+  in the adapter unit-test projects (`MSTestAdapter.UnitTests`,
+  `MSTestAdapter.PlatformServices.UnitTests`, etc.). Do **not** flag the
+  absence of AwesomeAssertions in projects that use MSTest's native
+  `Assert`/`StringAssert`/`CollectionAssert` — both are correct styles,
+  project-dependent.
 - testfx defines many derived test attributes (e.g. `[STATestMethod]`,
   `[UITestMethod]`, `[IterativeTestMethod]`, `[DerivedSTATestMethod]`,
   and project-local `[MyTestMethod]`-style classes that derive from
