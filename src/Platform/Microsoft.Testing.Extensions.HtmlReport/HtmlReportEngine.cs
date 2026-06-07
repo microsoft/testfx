@@ -181,49 +181,7 @@ internal sealed class HtmlReportEngine
     }
 
     private static string ReplaceInvalidFileNameChars(string fileName)
-    {
-        var sb = new StringBuilder(fileName.Length);
-        foreach (char c in fileName)
-        {
-            sb.Append(IsInvalidFileNameChar(c) ? '_' : c);
-        }
-
-        string replaced = sb.ToString().TrimEnd();
-        if (IsReservedFileName(replaced))
-        {
-            replaced = '_' + replaced;
-        }
-
-        return replaced;
-    }
-
-    private static bool IsInvalidFileNameChar(char c)
-        // Keep the explicit file-name sanitization aligned with TRX report naming so
-        // placeholders and cross-platform reserved characters produce compatible names.
-        => c is < ' ' or '"' or '<' or '>' or '|' or ':' or '*' or '?' or '\\' or '/' or '@' or '(' or ')' or '^' or ' ';
-
-    private static bool IsReservedFileName(string fileName)
-    {
-        string bareName = fileName;
-        int dot = bareName.IndexOf('.');
-        if (dot >= 0)
-        {
-            bareName = bareName.Substring(0, dot);
-        }
-
-        return bareName.Equals("CON", StringComparison.OrdinalIgnoreCase)
-            || bareName.Equals("PRN", StringComparison.OrdinalIgnoreCase)
-            || bareName.Equals("AUX", StringComparison.OrdinalIgnoreCase)
-            || bareName.Equals("NUL", StringComparison.OrdinalIgnoreCase)
-            || bareName.Equals("CLOCK$", StringComparison.OrdinalIgnoreCase)
-            || IsReservedNameWithNumber(bareName, "COM")
-            || IsReservedNameWithNumber(bareName, "LPT");
-
-        static bool IsReservedNameWithNumber(string bareName, string prefix)
-            => bareName.Length == 4
-                && bareName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
-                && bareName[3] is >= '1' and <= '9';
-    }
+        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
 
     private static string LoadTemplate()
     {

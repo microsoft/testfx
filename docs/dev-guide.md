@@ -8,7 +8,7 @@ To build and test all functionalities of MSTest, we recommend installing [Visual
 
 - `.NET desktop development`
 - `Universal Windows Platform development`
-- `.Net Core cross-platform development`
+- `.NET Core cross-platform development`
 
 ## Recommended workflow
 
@@ -125,6 +125,7 @@ with
 | bin               | Build output of each project.                          |
 | obj               | Intermediate directory for each project.               |
 | packages          | NuGet packages produced by all projects in the repo.   |
+| TestResults       | Test results produced by test runs.                    |
 | SymStore          | Storage for converted Windows PDBs                     |
 | log               | Build binary log and other logs.                       |
 | tmp               | Temp files generated during build.                     |
