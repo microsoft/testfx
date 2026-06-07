@@ -141,7 +141,7 @@ term        := '(' expression ')'
              | predicate
 predicate   := bare-value
              | kind operator pattern
-bare-value  := <any non-empty string with no top-level &, |, (, ), =, ~, !=, !~, escaped via \>
+bare-value  := <any non-empty string with no top-level &, |, (, ), =, ~, !, escaped via \>
 kind        := <identifier registered by a kind provider>
 operator    := '=' | '~' | '!=' | '!~'
 pattern     := <string; semantics defined by the kind>
@@ -419,7 +419,7 @@ When MSTest builds its `TestNode`s, it sets:
 
 - `TestMethodIdentifierProperty` — already done.
 - `FilterMatchTextProperty` = `{Namespace}.{TypeName}.{MethodName}` (no
-  data-row suffix, no parameter list). This gives parametrized tests the
+  data-row suffix, no parameter list). This gives parameterized tests the
   same bare-match behavior as VSTest's `FullyQualifiedName~` default and
   avoids the surprise where `--filter MyTest` would not find
   `MyTest(arg=1)` because the data-row suffix was baked into
