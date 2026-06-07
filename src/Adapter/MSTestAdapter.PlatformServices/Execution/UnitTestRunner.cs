@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -487,14 +488,52 @@ internal sealed class UnitTestRunner
             traits = [];
         }
 
-        return new TestFilterContext(
-            fullyQualifiedName: $"{testMethod.FullClassName}.{testMethod.Name}",
-            displayName: testMethod.DisplayName,
-            testClassName: testMethod.FullClassName,
-            testMethodName: testMethod.Name,
-            categories: categories,
-            traits: traits,
-            priority: element.Priority);
+        // Pull namespace + simple class name from the hierarchy when available — this is the
+        // same source the IDE / Test Explorer uses, so it correctly handles nested types and
+        // generic classes (where naïve FullClassName splitting would lie).
+        string? hierarchyNamespace = null;
+        string? hierarchyClassName = null;
+        if (testMethod.Hierarchy is IReadOnlyList<string?> hierarchy && hierarchy.Count > HierarchyConstants.Levels.ClassIndex)
+        {
+            hierarchyNamespace = hierarchy[HierarchyConstants.Levels.NamespaceIndex];
+            hierarchyClassName = hierarchy[HierarchyConstants.Levels.ClassIndex];
+        }
+
+        // ManagedMethodName is an ECMA-335 string like `MyMethod`1(System.Int32)` — parse it
+        // cheaply (no MethodInfo reflection) to surface arity and parameter type names.
+        int? methodArity = null;
+        IReadOnlyList<string>? parameterTypeFullNames = null;
+        if (testMethod.ManagedMethodName is { } managedMethod)
+        {
+            try
+            {
+                ManagedNameParser.ParseManagedMethodName(managedMethod, out _, out int arity, out string[]? parameterTypes);
+                methodArity = arity;
+                parameterTypeFullNames = parameterTypes ?? (IReadOnlyList<string>)[];
+            }
+            catch
+            {
+                // Defensive: if the managed name is malformed for any reason, surface what we
+                // can via the flat strings rather than failing the filter.
+            }
+        }
+
+        return new TestFilterContext
+        {
+            FullyQualifiedName = $"{testMethod.FullClassName}.{testMethod.Name}",
+            DisplayName = testMethod.DisplayName,
+            MethodName = testMethod.Name,
+            Source = testMethod.AssemblyName,
+            Namespace = hierarchyNamespace,
+            ClassName = hierarchyClassName,
+            ManagedTypeName = testMethod.ManagedTypeName,
+            ManagedMethodName = testMethod.ManagedMethodName,
+            MethodArity = methodArity,
+            ParameterTypeFullNames = parameterTypeFullNames,
+            Categories = categories,
+            Traits = traits,
+            Priority = element.Priority,
+        };
     }
 
     /// <summary>

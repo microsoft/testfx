@@ -18,6 +18,16 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Implementations should be allocation-free and thread-safe; <see cref="Filter"/> may be
 /// invoked concurrently for tests in different classes.
 /// </para>
+/// <para>
+/// <strong>Ordering with built-in filtering:</strong> <see cref="ITestFilter"/> is composed with —
+/// not a replacement for — the adapter's default filtering. Adapter-level filters such as the
+/// VSTest <c>--filter</c> command line or test-explorer selection run <em>before</em>
+/// <see cref="ITestFilter"/>, so <see cref="Filter"/> only ever sees tests that already survived
+/// those gates. By contrast, <c>[Ignore]</c> is evaluated <em>after</em> <see cref="ITestFilter"/>
+/// (it requires loading the declaring type, which <see cref="ITestFilter"/> is specifically designed
+/// to avoid). Returning <see cref="TestFilterResult.Run"/> does not override a later
+/// <c>[Ignore]</c>; an ignored test is still ignored.
+/// </para>
 /// </remarks>
 public interface ITestFilter
 {

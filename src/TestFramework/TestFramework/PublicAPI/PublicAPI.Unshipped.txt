@@ -16,13 +16,32 @@ Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterAction.Run = 0 -> Microso
 Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterAction.Skip = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterAction
 Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext
 Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.Categories.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.Categories.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.ClassName.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.ClassName.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.DisplayName.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.DisplayName.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.FullyQualifiedName.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.FullyQualifiedName.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.ManagedMethodName.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.ManagedMethodName.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.ManagedTypeName.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.ManagedTypeName.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.MethodArity.get -> int?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.MethodArity.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.MethodName.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.MethodName.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.Namespace.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.Namespace.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.ParameterTypeFullNames.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.ParameterTypeFullNames.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.Priority.get -> int?
-Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.TestClassName.get -> string!
-Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.TestFilterContext(string! fullyQualifiedName, string! displayName, string! testClassName, string! testMethodName, System.Collections.Generic.IReadOnlyList<string!>! categories, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, string?>>! traits, int? priority) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.TestMethodName.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.Priority.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.Source.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.Source.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.TestFilterContext() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.Traits.get -> System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, string?>>!
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.Traits.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterProviderAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterProviderAttribute.FilterType.get -> System.Type!
 Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterProviderAttribute.TestFilterProviderAttribute(System.Type! filterType) -> void
