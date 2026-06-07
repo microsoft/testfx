@@ -84,14 +84,26 @@ internal sealed partial class TypeCache
             throw new TypeInspectionException(message, ex);
         }
 
-        return markers is { Length: > 0 }
-            && markers[0] is TestFilterProviderAttribute providerAttribute
-            && providerAttribute.FilterType is not null
-            ? InstantiateTestFilter(providerAttribute.FilterType)
+        if (markers is null || markers.Length == 0)
+        {
+            return null;
+        }
+
+        if (markers.Length > 1)
+        {
+            string message = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_TestFilterProviderMultipleDeclared,
+                SafeGetAssemblyName(testAssembly) ?? "<unknown>");
+            throw new TypeInspectionException(message);
+        }
+
+        return markers[0] is TestFilterProviderAttribute { FilterType: { } filterType }
+            ? InstantiateTestFilter(filterType)
             : null;
     }
 
-    private static ITestFilter InstantiateTestFilter(Type filterType)
+    internal static ITestFilter InstantiateTestFilter(Type filterType)
     {
         if (filterType.IsGenericType)
         {

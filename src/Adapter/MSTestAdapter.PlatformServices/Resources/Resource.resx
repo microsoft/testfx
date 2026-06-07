@@ -397,6 +397,9 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="UTA_TestFilterProviderThrew" xml:space="preserve">
     <value>UTA078: The [TestFilterProvider] filter '{0}' threw an exception while evaluating test '{1}'. {2}</value>
   </data>
+  <data name="UTA_TestFilterProviderMultipleDeclared" xml:space="preserve">
+    <value>UTA079: Assembly '{0}' declares more than one [TestFilterProvider] attribute. At most one is allowed per test assembly; compose multiple filtering strategies inside a single ITestFilter implementation.</value>
+  </data>
   <data name="UTA_ErrorMultiClassClean" xml:space="preserve">
     <value>UTA026: {0}: Cannot define more than one method with the ClassCleanup attribute inside a class.</value>
   </data>

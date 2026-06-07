@@ -54,8 +54,13 @@ public readonly struct TestFilterResult : IEquatable<TestFilterResult>
     /// <param name="reason">A non-empty human-readable explanation surfaced in TRX / console / IDE output.</param>
     /// <returns>A <see cref="TestFilterResult"/> with <see cref="Action"/> equal to <see cref="TestFilterAction.Skip"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="reason"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="reason"/> is empty or whitespace only.</exception>
     public static TestFilterResult Skip(string reason)
-        => new(TestFilterAction.Skip, reason ?? throw new ArgumentNullException(nameof(reason)));
+        => reason is null
+            ? throw new ArgumentNullException(nameof(reason))
+            : string.IsNullOrWhiteSpace(reason)
+                ? throw new ArgumentException("Value cannot be empty or whitespace.", nameof(reason))
+                : new TestFilterResult(TestFilterAction.Skip, reason);
 
     /// <inheritdoc />
     public bool Equals(TestFilterResult other)

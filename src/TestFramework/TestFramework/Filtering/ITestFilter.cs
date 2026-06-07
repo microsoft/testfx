@@ -10,13 +10,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <remarks>
 /// <para>
 /// Implementations are registered via <see cref="TestFilterProviderAttribute"/> at the assembly
-/// level. The MSTest adapter creates one instance per assembly per test run (via the public
-/// parameterless constructor) and invokes <see cref="Filter"/> for every test that survived the
-/// command-line filter, before that test's type is loaded.
+/// level. The MSTest adapter materializes the filter lazily on the first test invocation for that
+/// assembly using the public parameterless constructor; the same instance is then reused for
+/// every test in the assembly.
 /// </para>
 /// <para>
-/// Implementations should be allocation-free and thread-safe; they may be called concurrently for
-/// tests in different classes.
+/// Implementations should be allocation-free and thread-safe; <see cref="Filter"/> may be
+/// invoked concurrently for tests in different classes.
 /// </para>
 /// </remarks>
 public interface ITestFilter
@@ -30,5 +30,10 @@ public interface ITestFilter
     /// <see cref="TestFilterResult.Drop"/> to silently drop the test (no result emitted), or
     /// <see cref="TestFilterResult.Skip(string)"/> to report the test as Skipped with a reason.
     /// </returns>
+    /// <remarks>
+    /// If this method throws, the test is reported as Error with diagnostic <c>UTA078</c>; the
+    /// exception is never silently swallowed. Implementations that want to opt the test in to
+    /// running on failure should catch their own exceptions and return <see cref="TestFilterResult.Run"/>.
+    /// </remarks>
     TestFilterResult Filter(TestFilterContext context);
 }

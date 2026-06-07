@@ -532,6 +532,11 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
         <target state="new">UTA073: Failed to load [TestFilterProvider] marker from assembly '{0}'. {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderMultipleDeclared">
+        <source>UTA079: Assembly '{0}' declares more than one [TestFilterProvider] attribute. At most one is allowed per test assembly; compose multiple filtering strategies inside a single ITestFilter implementation.</source>
+        <target state="new">UTA079: Assembly '{0}' declares more than one [TestFilterProvider] attribute. At most one is allowed per test assembly; compose multiple filtering strategies inside a single ITestFilter implementation.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_TestFilterProviderThrew">
         <source>UTA078: The [TestFilterProvider] filter '{0}' threw an exception while evaluating test '{1}'. {2}</source>
         <target state="new">UTA078: The [TestFilterProvider] filter '{0}' threw an exception while evaluating test '{1}'. {2}</target>
