@@ -379,6 +379,24 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="UTA_AssemblyFixtureProviderLoadFailed" xml:space="preserve">
     <value>UTA072: Failed to load [AssemblyFixtureProvider] marker from assembly '{0}'. {1}</value>
   </data>
+  <data name="UTA_TestFilterProviderLoadFailed" xml:space="preserve">
+    <value>UTA073: Failed to load [TestFilterProvider] marker from assembly '{0}'. {1}</value>
+  </data>
+  <data name="UTA_TestFilterProviderTypeIsGeneric" xml:space="preserve">
+    <value>UTA074: Type '{0}' referenced by [TestFilterProvider] must not be generic.</value>
+  </data>
+  <data name="UTA_TestFilterProviderTypeIsNotInstantiable" xml:space="preserve">
+    <value>UTA075: Type '{0}' referenced by [TestFilterProvider] must be a concrete class, not an interface or abstract class.</value>
+  </data>
+  <data name="UTA_TestFilterProviderTypeDoesNotImplementInterface" xml:space="preserve">
+    <value>UTA076: Type '{0}' referenced by [TestFilterProvider] must implement '{1}'.</value>
+  </data>
+  <data name="UTA_TestFilterProviderInstantiationFailed" xml:space="preserve">
+    <value>UTA077: Failed to instantiate type '{0}' referenced by [TestFilterProvider]. The type must declare a public parameterless constructor. {1}</value>
+  </data>
+  <data name="UTA_TestFilterProviderThrew" xml:space="preserve">
+    <value>UTA078: The [TestFilterProvider] filter '{0}' threw an exception while evaluating test '{1}'. {2}</value>
+  </data>
   <data name="UTA_ErrorMultiClassClean" xml:space="preserve">
     <value>UTA026: {0}: Cannot define more than one method with the ClassCleanup attribute inside a class.</value>
   </data>

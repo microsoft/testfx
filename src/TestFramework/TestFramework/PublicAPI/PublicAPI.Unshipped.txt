@@ -5,9 +5,39 @@ Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute.As
 Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute.FixtureType.get -> System.Type!
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ActualText.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ExpectedText.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestFilter
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestFilter.Filter(Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext! context) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InAnyOrder = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InOrder = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterAction
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterAction.Drop = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterAction
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterAction.Run = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterAction
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterAction.Skip = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterAction
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.Categories.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.DisplayName.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.FullyQualifiedName.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.Priority.get -> int?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.TestClassName.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.TestFilterContext(string! fullyQualifiedName, string! displayName, string! testClassName, string! testMethodName, System.Collections.Generic.IReadOnlyList<string!>! categories, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, string?>>! traits, int? priority) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.TestMethodName.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext.Traits.get -> System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, string?>>!
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterProviderAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterProviderAttribute.FilterType.get -> System.Type!
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterProviderAttribute.TestFilterProviderAttribute(System.Type! filterType) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult.Action.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterAction
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult.Equals(Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult other) -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult.SkipReason.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult.TestFilterResult() -> void
+override Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult.Equals(object? obj) -> bool
+override Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult.GetHashCode() -> int
+static Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult.Drop.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult
+static Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult.operator !=(Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult left, Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult right) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult.operator ==(Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult left, Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult right) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult.Run.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult
+static Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult.Skip(string! reason) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreAllDistinct(System.Collections.IEnumerable? collection, System.Collections.IEqualityComparer? comparer, string? message = "", string! collectionExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreAllDistinct(System.Collections.IEnumerable? collection, string? message = "", string! collectionExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreAllDistinct<T>(System.Collections.Generic.IEnumerable<T>? collection, System.Collections.Generic.IEqualityComparer<T>? comparer, string? message = "", string! collectionExpression = "") -> void
