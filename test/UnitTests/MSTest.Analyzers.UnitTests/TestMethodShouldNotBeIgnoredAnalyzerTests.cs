@@ -180,7 +180,7 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests
     public async Task WhenIgnoredTestMethodHasMessage_Diagnostic()
     {
         // MSTEST0015 fires even when [Ignore] has a justification message.
-        // The presence of a message satisfies MSTEST0014 (IgnoreShouldHaveJustification),
+        // The presence of a message satisfies MSTEST0066 (IgnoreShouldHaveJustification),
         // but the method is still ignored and MSTEST0015 still applies.
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
