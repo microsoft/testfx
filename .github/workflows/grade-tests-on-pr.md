@@ -21,7 +21,7 @@ description: >-
 # repository_id guard.
 on:
   pull_request:
-    types: [opened, synchronize, ready_for_review]
+    types: [opened, reopened, synchronize, ready_for_review]
     paths:
       - "test/**"
       - "src/**"
@@ -283,89 +283,63 @@ so (see Step 4 fallback) and stop — do not invent grades.
 
 ### Step 2 — Grade each test method
 
-This repository is C# / MSTest. Apply the **grade-tests rubric** below to
-each test method. Start every test at grade **A (band 90–100)** and deduct
-only for **observable issues** in the captured body. Do not deduct for
-hypothetical concerns.
+This repository is C# / MSTest. Apply the **`grade-tests` skill** (synced
+into this repo at `.agents/skills/grade-tests/SKILL.md` from
+`dotnet/skills`) to grade each kept method. Invoke it via the `skill`
+tool and follow its rubric exactly — do not re-derive or restate the
+rubric here; the synced skill is the single source of truth and will
+evolve over time.
 
-#### Three sub-dimensions (each A–F)
+When the skill asks for the language extension, follow its own Step 1
+guidance: invoke the **`test-analysis-extensions`** skill to discover
+the available per-language reference files and read the one matching
+this codebase (C# / MSTest). Do not hard-code a path to a specific
+extension file — the discovery step is what keeps this workflow
+resilient to future reshuffles in the extensions layout.
 
-**A. Assertion strength**
+**Pass these inputs to the skill** so it does not fall into its Step 0
+refusal branch:
 
-| Sub-grade | Pattern |
-|-----------|---------|
-| A | Meaningful value assertion (equality / structural / exception / state) plus, where appropriate, additional checks (negative, type, collection contents). Mock-call verifications (`Verify`, `Should -Invoke`) count. |
-| B | One clear meaningful assertion that verifies the behavior under test. |
-| C | Only trivial assertions (single `Assert.IsNotNull(result)`), or one field checked while the operation produces a richer result. |
-| D | Self-referential / tautological (`Assert.AreEqual(x, x)`, round-trip identity without a non-trivial input), broad exception (`Assert.ThrowsException<Exception>` without a more specific type), or always-true assertions. |
-| F | No assertions, or all assertions are silently un-awaited (e.g., `async Task` test calling `Assert.ThrowsAsync` without `await`). |
+1. The explicit list of kept fully-qualified test method names from
+   Step 1.
+2. For each method, the file path **and** the method body (captured in
+   Step 1).
+3. The diff context for this PR — the
+   `${{ steps.extract.outputs.tsv_path }}` rows already give the changed
+   line ranges per file.
 
-Exception tests (`Assert.ThrowsException<T>(…)`) are complete on their own
-— do not require additional assertions.
+#### testfx-specific deviations (apply on top of the skill rubric)
 
-**B. Structure & focus**
-
-| Sub-grade | Pattern |
-|-----------|---------|
-| A | Clear Arrange-Act-Assert separation. Single behavior. Body under ~30 lines. |
-| B | One mild structural issue (slightly long body, missing blank lines between phases) but intent is clear. |
-| C | Multiple behaviors in one test, or AAA phases interleaved enough to slow comprehension. |
-| D | Conditional logic in the test (`if`/`switch` driving assertions); or test relies on previous test state. |
-| F | Test exceeds ~60 lines verifying multiple unrelated behaviors; or shares mutable state without reset. |
-
-**C. Anti-pattern hygiene**
-
-Each finding deducts one sub-grade level (A→B→C→D→F). Use the lowest
-sub-grade among findings.
-
-- **Critical (drop to F or D)**: no assertions; swallowed exceptions
-  (`try { … } catch { }`, `catch (Exception)` without rethrow/assert);
-  assert-in-catch (`Assert.Fail(ex.Message)` instead of
-  `Assert.ThrowsException`); always-true / tautological assertions;
-  commented-out assertions.
-- **High (drop one or two)**: wall-clock sleep (`Thread.Sleep`,
-  `Task.Delay`) used for synchronization in a unit test; unseeded
-  randomness (`new Random()`); wall-clock reads without abstraction
-  (`DateTime.Now`, `DateTime.UtcNow`); hard-coded environment paths;
-  ordering dependency on mutable static state; broad exception assertion
-  without specific type; over-mocking; implementation coupling
-  (reflection on private members).
-- **Medium (drop one)**: poor name (`Test1`, `TestMethod`, single-word);
-  unexplained magic values; giant test (>30 lines for one behavior);
-  assertion messages that just repeat the assertion; missing
-  AAA separation when the test is non-trivial.
-- **Low (note only)**: leftover `Console.WriteLine` / `Debug.WriteLine`;
-  unused setup/teardown hooks; inconsistent naming versus sibling tests;
-  leftover TODO comments. Mention in notes but do not deduct.
-
-#### Combine sub-grades
-
-Numeric points: A=4, B=3, C=2, D=1, F=0.
-- Overall = `0.45 × Assertion + 0.30 × Anti-pattern + 0.25 × Structure`.
-- Map: ≥ 3.5 → **A** (90–100), ≥ 2.8 → **B** (80–89),
-  ≥ 2.0 → **C** (70–79), ≥ 1.2 → **D** (60–69), < 1.2 → **F** (0–59).
-- If any sub-grade is **F**, cap overall at **D**.
-- If Assertion sub-grade is **F**, overall is **F**.
-
-Report the **letter grade** and the **score band** only — no fake-precise
-0–100 number.
-
-#### testfx-specific rules
-
-This repo uses MSTest as the test framework. Specifically:
+A small number of repo-local conventions adjust how the standard rubric
+should be interpreted in this codebase. Use these as **additions** to —
+not replacements for — the synced skill's rubric:
 
 - **Internal framework tests** (under `test/UnitTests/TestFramework.UnitTests/`
   and adjacent projects) use the internal test framework from
   `test/Utilities/TestFramework.ForTestingMSTest`. Treat its
-  `Verify(...)` calls as the equivalent of `Assert.IsTrue(...)`.
+  `Verify(...)` calls as the equivalent of `Assert.IsTrue(...)` — they
+  are meaningful assertions, not boolean tautologies.
 - **Integration tests** (under `test/IntegrationTests/`) frequently
   spawn processes and have inherently long bodies — do **not** deduct
-  for body length below ~120 lines in this folder.
-- **FluentAssertions** style (`x.Should().Be(...)`, `x.Should().Throw<T>()`)
-  is the preferred assertion style and is fully equivalent to MSTest's
-  classic API.
+  for body length below ~120 lines in this folder (overrides the
+  rubric's ~30/~60-line thresholds for the Structure sub-grade).
+- **AwesomeAssertions** style (`x.Should().Be(...)`, `x.Should().Throw<T>()`)
+  is equivalent to MSTest's classic API for grading purposes and is used
+  in the adapter unit-test projects (`MSTestAdapter.UnitTests`,
+  `MSTestAdapter.PlatformServices.UnitTests`, etc.). Do **not** flag the
+  absence of AwesomeAssertions in projects that use MSTest's native
+  `Assert`/`StringAssert`/`CollectionAssert` — both are correct styles,
+  project-dependent.
+- testfx defines many derived test attributes (e.g. `[STATestMethod]`,
+  `[UITestMethod]`, `[IterativeTestMethod]`, `[DerivedSTATestMethod]`,
+  and project-local `[MyTestMethod]`-style classes that derive from
+  `TestMethodAttribute`). Treat all of them as test markers — Step 1
+  already filtered to test methods using these.
 - Do **not** flag missing `init` accessors, license headers, or other
   repo-stylistic concerns — those are out of scope for this rubric.
+
+Report the **letter grade** and the **score band** only — no
+fake-precise 0–100 number.
 
 ### Step 3 — Build the note
 

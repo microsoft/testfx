@@ -98,3 +98,4 @@
 .agents/skills/** text eol=lf
 .github/agents/** text eol=lf
 # END gh-copilot-curate managed
+
