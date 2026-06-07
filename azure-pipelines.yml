@@ -126,7 +126,12 @@ stages:
           # Integration tests are redundant in Release—they spawn child processes that already cover
           # both Debug and Release configurations. Use --test-modules to run only unit tests.
           # Use *.exe to cover both net4x (native exe) and net8+/net9+ (apphost exe) in a single glob.
-          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --no-progress --output detailed
+          # --report-trx must be passed explicitly because --test-modules bypasses MSBuild evaluation,
+          # so test/Directory.Build.targets cannot inject it via TestingPlatformCommandLineArguments.
+          # The {asm}_{tfm} placeholder pattern (see Microsoft.Testing.Platform.Services.ArtifactNamingHelper)
+          # mirrors what Directory.Build.targets uses for Debug runs and guarantees a unique, deterministic
+          # TRX per (assembly x target framework) module so files don't collide when multiple test apps run.
+          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx"
             name: TestRelease
             displayName: Test (unit tests only)
             condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
@@ -209,7 +214,12 @@ stages:
 
           # Integration tests are redundant in Release—they spawn child processes that already cover
           # both Debug and Release configurations. Use --test-modules to run only unit tests.
-          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed
+          # --report-trx must be passed explicitly because --test-modules bypasses MSBuild evaluation,
+          # so test/Directory.Build.targets cannot inject it via TestingPlatformCommandLineArguments.
+          # The {asm}_{tfm} placeholder pattern (see Microsoft.Testing.Platform.Services.ArtifactNamingHelper)
+          # mirrors what Directory.Build.targets uses for Debug runs and guarantees a unique, deterministic
+          # TRX per (assembly x target framework) module so files don't collide when multiple test apps run.
+          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx"
             name: TestRelease
             displayName: Test (unit tests only)
             condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
@@ -278,7 +288,12 @@ stages:
 
           # Integration tests are redundant in Release—they spawn child processes that already cover
           # both Debug and Release configurations. Use --test-modules to run only unit tests.
-          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed
+          # --report-trx must be passed explicitly because --test-modules bypasses MSBuild evaluation,
+          # so test/Directory.Build.targets cannot inject it via TestingPlatformCommandLineArguments.
+          # The {asm}_{tfm} placeholder pattern (see Microsoft.Testing.Platform.Services.ArtifactNamingHelper)
+          # mirrors what Directory.Build.targets uses for Debug runs and guarantees a unique, deterministic
+          # TRX per (assembly x target framework) module so files don't collide when multiple test apps run.
+          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx"
             name: TestRelease
             displayName: Test (unit tests only)
             condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
