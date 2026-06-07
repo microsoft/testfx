@@ -1,0 +1,58 @@
+name: CLI help-text expectation reminder
+
+# Repository policy (.github/copilot-instructions.md, "CLI options guidelines"):
+#   "When you add a new CLI option, rename an existing one, or change the
+#    description/arguments of an existing one [...], you MUST update the
+#    corresponding --help and --info acceptance test expectations so they
+#    keep matching the actual output."
+#
+# This workflow is a SOFT reminder, not a blocker. The acceptance tests
+# themselves are the authoritative gate — they fail in CI when the help
+# wildcards no longer match. The reminder fires earlier (at PR creation /
+# synchronize), so the author can fix expectations in the same push instead
+# of after a long acceptance-test run.
+
+on:
+  pull_request:
+    paths:
+      # CLI option providers — names rather than full paths to stay robust
+      # to folder moves.
+      - '**/*CommandLineOptionsProvider*.cs'
+      - '**/PlatformCommandLineProvider*.cs'
+      - '**/MSTestExtension.cs'
+      # The expectation files themselves (so a PR that updates expectations
+      # alone also exercises the script).
+      - 'test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/HelpInfoTests.cs'
+      - 'test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/HelpInfoAllExtensionsTests.cs'
+      - 'test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuild.KnownExtensionRegistration.cs'
+      - 'test/IntegrationTests/MSTest.Acceptance.IntegrationTests/HelpInfoTests.cs'
+      # The check itself.
+      - '.github/scripts/check_cli_help_drift.py'
+      - '.github/workflows/cli-help-drift-reminder.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cli-help-drift-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Remind about help-text expectations
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run reminder
+        env:
+          BASE_SHA: origin/${{ github.event.pull_request.base.ref }}
+        run: python .github/scripts/check_cli_help_drift.py
