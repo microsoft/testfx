@@ -40,12 +40,17 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     private readonly IEnvironment _environment;
     private readonly ILogger? _logger;
     private readonly IConsole? _console;
+#if NET9_0_OR_GREATER
+    private readonly Lock _escalationLock = new();
+#else
     private readonly object _escalationLock = new();
+#endif
 
     // Fire-and-forget escalation timers, retained so we can dispose them in
     // Dispose() and prevent callbacks from firing after the host has shut down.
     private List<CancellationTokenSource>? _escalations;
 
+    // Mutable phase state updated through Interlocked APIs; do not mark readonly.
     private int _phase = PhaseRunning;
     private int _ctrlCCount;
     private int _disposed;

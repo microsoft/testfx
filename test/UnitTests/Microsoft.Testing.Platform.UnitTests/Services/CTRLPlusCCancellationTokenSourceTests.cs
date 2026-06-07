@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.UnitTests;
@@ -89,7 +90,7 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         using CancellationTokenRegistration registration = source.AbortingToken.Register(() => tcs.TrySetResult(true));
 
-        Task timeoutTask = Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
+        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
         Task completed = await Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
 
         Assert.AreSame(tcs.Task, completed, "Aborting must trip before the timeout.");
@@ -111,5 +112,58 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
 
         Assert.IsTrue(source.DrainingToken.IsCancellationRequested);
         Assert.IsTrue(source.AbortingToken.IsCancellationRequested);
+    }
+
+    [TestMethod]
+    public void Dispose_UnsubscribesFromConsoleCancelKeyPress()
+    {
+        var console = new TrackingConsole();
+        using (var source = new CTRLPlusCCancellationTokenSource(
+            console,
+            logger: null,
+            gracePeriod: Timeout.InfiniteTimeSpan,
+            abortTimeout: Timeout.InfiniteTimeSpan))
+        {
+            Assert.AreEqual(1, console.CancelKeyPressSubscriberCount);
+        }
+
+        Assert.AreEqual(0, console.CancelKeyPressSubscriberCount);
+    }
+
+    private sealed class TrackingConsole : IConsole
+    {
+        private ConsoleCancelEventHandler? _cancelKeyPress;
+
+        public event ConsoleCancelEventHandler? CancelKeyPress
+        {
+            add => _cancelKeyPress += value;
+            remove => _cancelKeyPress -= value;
+        }
+
+        public int CancelKeyPressSubscriberCount => _cancelKeyPress?.GetInvocationList().Length ?? 0;
+
+        public int BufferHeight => throw new NotImplementedException();
+
+        public int BufferWidth => throw new NotImplementedException();
+
+        public int WindowHeight => throw new NotImplementedException();
+
+        public int WindowWidth => throw new NotImplementedException();
+
+        public bool IsOutputRedirected => throw new NotImplementedException();
+
+        public void SetForegroundColor(ConsoleColor color) => throw new NotImplementedException();
+
+        public ConsoleColor GetForegroundColor() => throw new NotImplementedException();
+
+        public void WriteLine() => throw new NotImplementedException();
+
+        public void WriteLine(string? value) => throw new NotImplementedException();
+
+        public void Write(string? value) => throw new NotImplementedException();
+
+        public void Write(char value) => throw new NotImplementedException();
+
+        public void Clear() => throw new NotImplementedException();
     }
 }
