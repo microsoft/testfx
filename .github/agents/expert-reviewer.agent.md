@@ -61,7 +61,7 @@ Inline comments posted via `create_pull_request_review_comment` are bundled into
 
 ## Review Dimensions
 
-Assess all 21 dimensions on every review. For each dimension, either provide review findings or explicitly mark it as `N/A` when it does not apply. Weight findings by file location (see [Folder Hotspot Mapping](#folder-hotspot-mapping)).
+Assess all 22 dimensions on every review. For each dimension, either provide review findings or explicitly mark it as `N/A` when it does not apply. Weight findings by file location (see [Folder Hotspot Mapping](#folder-hotspot-mapping)).
 
 ---
 
@@ -174,9 +174,9 @@ Hot paths: test discovery, test execution pipeline, assertion evaluation, messag
 4. Choose appropriate collection types for the access pattern.
 5. `params` arrays in hot paths allocate on every call.
 6. Avoid `Regex` construction without caching; prefer source-generated regex.
-7. Per-character encoding calls allocate. `Encoding.UTF8.GetBytes(new[] { ch }, 0, 1, buffer, 0)` allocates a fresh `char[1]` on every call — use `MemoryMarshal.CreateReadOnlySpan(ref ch, 1)` (or `stackalloc char[1]`) with the `Span<char>` overload of `Encoding.UTF8.GetBytes` instead. Same anti-pattern applies to `Encoding.UTF8.GetByteCount(new[] { ch })`.
-8. Accumulating into a PowerShell or .NET array with `array += element` inside a loop is O(n²) — every iteration reallocates and copies the whole array. Use `List<T>` (`AddRange` per page in pagination loops) and convert to an array once at the end.
-9. `O(N)` array concatenation patterns also appear in C# as `result = result.Concat(page).ToArray()` inside loops — flag them the same way.
+7. Per-character encoding calls allocate. `Encoding.UTF8.GetBytes(new[] { ch }, 0, 1, buffer, 0)` allocates a fresh `char[1]` on every call. **Cross-TFM-safe fix:** reuse a single `char[1]` declared **outside** the loop and overwrite `[0]` on each iteration. On targets that have the `ReadOnlySpan<char>` overload of `Encoding.GetBytes` (net6+, including all current MTP TFMs), `stackalloc char[1]` with that overload avoids the heap allocation entirely; do **not** use `MemoryMarshal.CreateReadOnlySpan(ref ch, 1)` when `ch` is a `foreach` iteration variable (it cannot be passed by `ref`). Same anti-pattern applies to `Encoding.UTF8.GetByteCount(new[] { ch })`.
+8. **PowerShell-specific:** `$results += $item` inside a loop is O(n²) — every iteration reallocates and copies the whole array. Use `[System.Collections.Generic.List[object]]::new()` + `AddRange($page.nodes)` and return `.ToArray()` once at the end. (See §22 for the full PowerShell hygiene rules; this entry is the C#-reviewer hint that the same defect class exists in `.ps1` scripts and must be flagged.)
+9. **C# analogue** of the above: `result = result.Concat(page).ToArray()` inside a loop is also O(N²) — flag it the same way and prefer `List<T>.AddRange` + a final `.ToArray()`.
 
 **CHECK — Flag if:**
 - [ ] LINQ in tight loops
@@ -465,7 +465,7 @@ Applies to changes in `src/Platform/` involving serialization/deserialization.
 2. New fields in serialized messages must be nullable/optional.
 3. Missing `[JsonPropertyName]` or serialization attributes on new fields.
 4. Protocol version negotiation must handle old and new peers.
-5. `string.Substring(0, charCount)` and `Span<char>.Slice(0, charCount)` can split a UTF-16 surrogate pair when `charCount` lands between a high and low surrogate. Any size-bounded truncation on a `string` destined for the wire or for byte-bounded storage MUST detect that case and walk back one index if `char.IsHighSurrogate(input[charCount - 1])` (or use `StringInfo.SubstringByTextElements` / `Rune` enumeration). Splitting a surrogate produces an invalid UTF-16 string that round-trips as `U+FFFD` and breaks length-prefix framing.
+5. `string.Substring(0, charCount)` and `Span<char>.Slice(0, charCount)` can split a UTF-16 surrogate pair when `charCount` lands between a high and low surrogate. Any size-bounded truncation on a `string` destined for the wire or for byte-bounded storage MUST detect that case and walk back one index — but the check needs explicit bounds first: `if (charCount > 0 && charCount < input.Length && char.IsHighSurrogate(input[charCount - 1]))`. The `charCount > 0` guard avoids index underflow when truncating to zero; the `charCount < input.Length` guard avoids a false positive on the natural-end-of-string case (where the next code unit, if present, would be the matching low surrogate and the truncation isn't actually splitting anything). Alternatively use `StringInfo.SubstringByTextElements` or `Rune` enumeration. Splitting a surrogate produces an invalid UTF-16 string that round-trips as `U+FFFD` and breaks length-prefix framing.
 6. Manual length-prefix or framing code that uses `Encoding.UTF8.GetByteCount(string)` to size a buffer and then walks the string char-by-char must apply rules #5 and §5.7 (no per-char `char[1]` allocation) together — both bugs commonly travel as a pair.
 
 **CHECK — Flag if:**
@@ -533,7 +533,7 @@ Applies to changes in `eng/**/*.ps1`, `.github/scripts/**/*.ps1`, and any `*.ps1
 
 4. **Centralized helper bypass.** When a script defines a wrapper (e.g., `Invoke-Gh`) that handles `-DryRun` logging and `$LASTEXITCODE` assertions, every call site must go through it. An inline `if (-not $DryRun) { & gh ...; if ($LASTEXITCODE -ne 0) { throw } } else { Write-Host "[dry-run] gh ..." }` block next to other `Invoke-Gh` calls is a defect — replace it with `Invoke-Gh ...`.
 5. **Pagination / truncation guards.** Any `gh ... --limit N` call or any GraphQL query without cursor pagination MUST add an explicit guard that throws (or warns and continues, with the policy documented) when the returned set is `>= N`. Silent tail truncation at the API limit produces partial migrations and is not detectable from logs.
-6. **Per-item failure aggregation in batch operations.** A loop that performs N independent mutations (label removals, issue edits, etc.) should wrap each iteration in `try { ... } catch { $failures += "..." }`, log per-item failures with a consistent prefix (`!`, `✗`, etc.), continue through the remaining items, and throw a single aggregated summary at the end. Aborting on the first failure leaves a partially-migrated state and forces a manual cleanup pass.
+6. **Per-item failure aggregation in batch operations.** A loop that performs N independent mutations (label removals, issue edits, etc.) should wrap each iteration in `try { ... } catch { ... }`, accumulate per-item failures into a `[System.Collections.Generic.List[string]]::new()` via `.Add(...)` (NOT `$failures += "..."` — that reintroduces the O(n²) pattern from rule #2), log per-item failures with a consistent prefix (`!`, `✗`, etc.), continue through the remaining items, and throw a single aggregated summary at the end. Aborting on the first failure leaves a partially-migrated state and forces a manual cleanup pass.
 7. **Log-prefix consistency.** When a script establishes a symbol-based legend (`=`, `+`, `-`, `!`, `>` …), every new log line must reuse one of those symbols. A divergent prefix like `c ` for "converting" breaks grep-ability and the visual grammar.
 8. **`Set-StrictMode -Version Latest`** should be enabled in long-running maintenance scripts. It catches typos that PowerShell would otherwise silently treat as `$null` (e.g., `$prs.Cuont`).
 
@@ -608,7 +608,7 @@ Before analyzing the diff, load the repository history knowledge base produced b
 
 > **Historical context** (for bug fix and follow-up PRs): Read the linked issue and the original feature PR discussions. Identify design intent, constraints, and reviewer-established principles. Feed this context to every dimension agent so they can evaluate whether the fix aligns with the original design.
 
-2. Launch **one sub-agent per dimension** (`task` tool, `agent_type: "general-purpose"`, `model: "claude-opus-4.6"`). Each agent evaluates exactly one dimension against the full PR diff. Run in **parallel batches of up to 6** (4 batches for 21 dimensions, last batch has 3).
+2. Launch **one sub-agent per dimension** (`task` tool, `agent_type: "general-purpose"`, `model: "claude-opus-4.6"`). Each agent evaluates exactly one dimension against the full PR diff. Run in **parallel batches of up to 6** (4 batches for 22 dimensions, last batch has 4).
 
    Each sub-agent receives: the PR diff, PR description, the single dimension's rules and checklist, and the folder context.
 
@@ -649,12 +649,12 @@ If the PR diff contains any of the following paths, **launch one additional sub-
 - `Directory.Build.props`, `Directory.Build.targets`, `Directory.Packages.props`
 - any file under `*/build/`, `*/buildTransitive/`, `*/buildMultiTargeting/`
 
-This is a **specialized supplemental review**, not a 22nd dimension — the 21-dimension count in this document and the summary table stays unchanged. The supplemental review's output is folded into the same pipeline:
+This is a **specialized supplemental review**, not a 23rd dimension — the 22-dimension count in this document and the summary table stays unchanged. The supplemental review's output is folded into the same pipeline:
 
 - Its `MSBuild Authoring — LGTM` / `MSBuild Authoring — ISSUE` blocks use the exact format of dimension agents (see [Output Contract — Diff Mode](msbuild-reviewer.agent.md#output-contract--diff-mode)).
 - Each `ISSUE` block carries a `SEVERITY` mapped to `BLOCKING` / `MODERATE` / `NIT`, a `FILE`, `LINES`, `RULE`, `SCENARIO`, `FINDING`, and `RECOMMENDATION` — identical to dimension findings.
 - Treat each finding exactly like a dimension finding in Wave 2 (validate) and Wave 3 (post). Inline comments use `create_pull_request_review_comment`. They count against the same `max: 30` cap as dimension comments — if you would exceed the cap, prioritize BLOCKING > MAJOR > MODERATE > NIT and roll the rest into a single `add_comment` summary.
-- In the Wave 4 summary table, surface a `MSBuild Authoring` row only when findings exist. Do not increase the `N/21 dimensions clean` denominator.
+- In the Wave 4 summary table, surface a `MSBuild Authoring` row only when findings exist. Do not increase the `N/22 dimensions clean` denominator.
 
 Invoke as a background `task` (`agent_type: "general-purpose"`, `model: "claude-opus-4.6"`, **NOT** `mode: "background"` — this one you must read because its findings are folded in). Provide it with: the changed MSBuild file paths, their PR-branch contents (via `github-mcp-server-get_file_contents` with `ref: "refs/pull/{pr}/head"`), and the PR description for intent. Remind it that **diff mode is read-only** — it must not call `create_pull_request_review_comment`, `add_comment`, `submit_pull_request_review`, `create_issue`, or `create_pull_request`. Posting is your responsibility.
 
@@ -728,7 +728,7 @@ Invoke as a background `task` (`agent_type: "general-purpose"`, `model: "claude-
    | 2 | Threading & Concurrency | 🔴 1 BLOCKING |
    | 5 | Performance & Allocations | 🟡 1 MODERATE |
 
-   ✅ 19/21 dimensions clean.
+   ✅ 19/22 dimensions clean.
 
    - [ ] Threading — shared state race in parallel execution
    - [ ] Performance — uncached reflection in hot path
@@ -740,7 +740,7 @@ Invoke as a background `task` (`agent_type: "general-purpose"`, `model: "claude-
    > [!NOTE]
    > 🤖 **Automated review by GitHub Copilot.** Posted via a maintainer's GitHub token, so it appears under their account — the account owner did **not** write or approve this content personally. Generated by the [Expert Code Review workflow](<workflow-run-url>). To request a follow-up action, reply by tagging `@copilot` directly.
 
-   ✅ 21/21 dimensions clean — no findings.
+   ✅ 22/22 dimensions clean — no findings.
    ```
 
    `[ ]` = dimensions with findings. Any BLOCKING → event: **REQUEST_CHANGES**. Otherwise (including all-clear) → event: **COMMENT**.
