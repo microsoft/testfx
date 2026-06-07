@@ -59,9 +59,14 @@ jobs:
   - task: CodeQL3000Init@0
     displayName: CodeQL Initialize
 
+  # Force the .NET SDK MSBuild (x64) instead of the default VS x86 MSBuild on the
+  # windows.vs2026.amd64 image. Since image version 2026.0529.211646 (deployed 2026-06-05),
+  # the bundled VS MSBuild fails to spin up an x86 .NET task host for Arcade tasks declared
+  # with Runtime="NET", producing MSB4216 on InstallDotNetCore. See dotnet/msbuild#13739.
   - script: eng\common\cibuild.cmd
       -configuration $(_BuildConfig)
       -prepareMachine
+      -msbuildEngine dotnet
       /p:Test=false
     displayName: Windows Build
 
