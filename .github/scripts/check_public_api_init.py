@@ -15,14 +15,16 @@ which is how the public-API analyzer records a property setter with the
 are the grandfathered set.
 
 Usage:
-    # Default — compare ${BASE_SHA:-origin/main}..HEAD
+    # Default — diff `${BASE_SHA:-origin/main}...HEAD` (three-dot:
+    # changes on HEAD since the merge-base with BASE_SHA).
     python .github/scripts/check_public_api_init.py
 
-    # Compare against an explicit base ref
+    # Compare against an explicit base ref or SHA
     python .github/scripts/check_public_api_init.py --base origin/main
 
-    # Read a unified diff from a file (CI also writes one to /tmp/pr.diff)
-    python .github/scripts/check_public_api_init.py --diff-file /tmp/pr.diff
+    # Read a unified diff from a file (useful when running locally
+    # against `git diff -U0 main...HEAD > pr.diff`)
+    python .github/scripts/check_public_api_init.py --diff-file pr.diff
 
 Exit codes:
     0 — no violations
@@ -43,10 +45,14 @@ from typing import Iterable, List, NamedTuple
 
 # Ensure UTF-8 output on Windows consoles (cp1252 by default) so the ❌/✅
 # markers in the report don't crash the script on local invocations.
+# Silently best-effort: on environments where reconfigure isn't supported
+# the markers may render as `?`, which is fine — the script's exit code
+# and report text are what CI consumes. Don't fail the script over output
+# encoding setup.
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
+    except Exception:  # noqa: BLE001 - intentional: encoding setup is best-effort
         pass
 
 

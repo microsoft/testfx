@@ -54,17 +54,14 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Compute base ref
-        id: base
-        env:
-          BASE_REF: ${{ github.event.pull_request.base.ref }}
-        run: |
-          # github.event.pull_request.base.sha is the merge-base candidate, but
-          # the script uses three-dot diff semantics, so resolving to the named
-          # remote ref keeps the behaviour consistent with local invocations.
-          echo "ref=origin/${BASE_REF}" >> "$GITHUB_OUTPUT"
-
       - name: Run init-accessor guard
         env:
-          BASE_SHA: ${{ steps.base.outputs.ref }}
+          # Pin the diff base to the exact SHA captured in the PR event
+          # payload, not `origin/<base.ref>`. If we used the named ref, a
+          # base-branch advance between the event and the checkout fetch
+          # could pull in unrelated commits and flag `.init -> void` lines
+          # the PR never touched. `base.sha` is immutable for the duration
+          # of the PR event, so three-dot diff `<base.sha>...HEAD` is the
+          # PR's net public-API change.
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: python .github/scripts/check_public_api_init.py
