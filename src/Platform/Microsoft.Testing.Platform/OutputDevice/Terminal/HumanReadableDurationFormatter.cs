@@ -69,12 +69,13 @@ internal static class HumanReadableDurationFormatter
             int seconds = duration.Value.Seconds;
             int minutes = duration.Value.Minutes;
 
-            if (minutes == 0)
+            return (wrapInParentheses, minutes) switch
             {
-                return wrapInParentheses ? $"({seconds}s)" : $"{seconds}s";
-            }
-
-            return wrapInParentheses ? $"({minutes}m {seconds:D2}s)" : $"{minutes}m {seconds:D2}s";
+                (true, 0) => $"({seconds}s)",
+                (true, _) => $"({minutes}m {seconds:D2}s)",
+                (false, 0) => $"{seconds}s",
+                _ => $"{minutes}m {seconds:D2}s",
+            };
         }
 #endif
 
