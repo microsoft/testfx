@@ -63,8 +63,7 @@ internal static class HumanReadableDurationFormatter
         }
 
 #if NET8_0_OR_GREATER
-        // Fast path for the common non-negative case: duration < 1 hour with no milliseconds.
-        // All progress-frame callers use the defaults (wrapInParentheses=true, showMilliseconds=false).
+        // Fast path for the common non-negative progress-frame case: duration < 1 hour with no milliseconds.
         if (!showMilliseconds && duration.Value.Ticks >= 0 && duration.Value.Days == 0 && duration.Value.Hours == 0)
         {
             int seconds = duration.Value.Seconds;
