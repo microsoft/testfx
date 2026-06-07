@@ -5,7 +5,7 @@ version: 1
 plugins:
     - id: dotnet-test
       source: dotnet/skills
-      ref: v1.0.0
+      ref: 998ae280637d9a0c7f9ae414d853525c4aea069b
       install:
         mode: summary
     - id: dotnet-msbuild
