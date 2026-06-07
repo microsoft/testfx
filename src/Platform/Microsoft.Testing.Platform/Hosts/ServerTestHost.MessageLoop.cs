@@ -82,7 +82,7 @@ internal sealed partial class ServerTestHost
                         break;
 
                     case ErrorMessage error:
-                        RemoteInvocationException exception = new();
+                        RemoteInvocationException exception = new(error.ErrorCode, error.Message, error.Data);
                         CompleteRequest(ref _serverToClientRequests, error.Id, completion => completion.TrySetException(exception));
                         break;
                 }
