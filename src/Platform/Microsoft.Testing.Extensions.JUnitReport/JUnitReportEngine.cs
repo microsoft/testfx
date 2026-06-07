@@ -656,6 +656,21 @@ internal sealed class JUnitReportEngine
         segments.Add(result.DisplayName);
 
         var sb = new StringBuilder();
+
+        // Compute the full untruncated testpath length up front so the truncation
+        // marker reports the real original length (not the partially-built buffer
+        // length at the moment we exceeded the cap, which omits remaining segments).
+        int totalLength = 0;
+        for (int i = 0; i < segments.Count; i++)
+        {
+            if (i > 0)
+            {
+                totalLength += TestPathSeparator.Length;
+            }
+
+            totalLength += segments[i].Length;
+        }
+
         for (int i = 0; i < segments.Count; i++)
         {
             if (i > 0)
@@ -666,9 +681,16 @@ internal sealed class JUnitReportEngine
             sb.Append(segments[i]);
             if (sb.Length > MaxTestPathLength)
             {
-                int original = sb.Length;
-                sb.Length = MaxTestPathLength;
-                sb.Append("…[truncated, original length: ").Append(original.ToString(CultureInfo.InvariantCulture)).Append(']');
+                int cut = MaxTestPathLength;
+
+                // Don't split a surrogate pair when truncating: drop the high surrogate too.
+                if (cut > 0 && char.IsHighSurrogate(sb[cut - 1]))
+                {
+                    cut--;
+                }
+
+                sb.Length = cut;
+                sb.Append("\n…[truncated, original length: ").Append(totalLength.ToString(CultureInfo.InvariantCulture)).Append(']');
                 break;
             }
         }
