@@ -216,18 +216,27 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         // Single pass over the property bag to collect all needed properties at once,
         // instead of 3 separate linked-list walks for StandardOutput, StandardError, and TimingProperty.
         TimingProperty? timingProperty = null;
-        string? standardOutput = null;
-        string? standardError = null;
+        StandardOutputProperty? standardOutputProperty = null;
+        StandardErrorProperty? standardErrorProperty = null;
         PropertyBag.PropertyBagEnumerator enumerator = testNodeUpdateMessage.TestNode.Properties.GetStructEnumerator();
         while (enumerator.MoveNext())
         {
             switch (enumerator.Current)
             {
-                case TimingProperty tp: timingProperty = tp; break;
-                case StandardOutputProperty so: standardOutput = so.StandardOutput; break;
-                case StandardErrorProperty se: standardError = se.StandardError; break;
+                case TimingProperty timing:
+                    timingProperty = GetSingleOrDefaultValue(timingProperty, timing);
+                    break;
+                case StandardOutputProperty outputProperty:
+                    standardOutputProperty = GetSingleOrDefaultValue(standardOutputProperty, outputProperty);
+                    break;
+                case StandardErrorProperty errorProperty:
+                    standardErrorProperty = GetSingleOrDefaultValue(standardErrorProperty, errorProperty);
+                    break;
             }
         }
+
+        string? standardOutput = standardOutputProperty?.StandardOutput;
+        string? standardError = standardErrorProperty?.StandardError;
 
         switch (nodeState)
         {
@@ -282,6 +291,12 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         }
 
         return new TestNodeDetails(state, duration, reason, exceptions, standardOutput, standardError);
+
+        static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property)
+            where TProperty : IProperty
+            => existingProperty is not null
+                ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
+                : property;
 
         static ExceptionMessage[]? FlattenToExceptionMessages(string? errorMessage, Exception? exception)
         {
