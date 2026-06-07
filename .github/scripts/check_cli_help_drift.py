@@ -51,6 +51,10 @@ if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError, OSError):
+        # Reconfigure is best-effort: if stdout is non-reconfigurable or the
+        # platform raises during the swap, fall back to whatever encoding
+        # Python picked at startup. Failing the script here would break CI
+        # for environments where the existing encoding is already fine.
         pass
 
 
