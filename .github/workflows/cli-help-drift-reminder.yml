@@ -16,9 +16,10 @@ on:
   pull_request:
     paths:
       # CLI option providers — names rather than full paths to stay robust
-      # to folder moves.
-      - '**/*CommandLineOptionsProvider*.cs'
-      - '**/PlatformCommandLineProvider*.cs'
+      # to folder moves. Patterns end at `Provider.cs` so we don't false-
+      # positive on `*CommandLineOptionsProviderTests.cs` etc.
+      - '**/*CommandLineOptionsProvider.cs'
+      - '**/PlatformCommandLineProvider.cs'
       - '**/MSTestExtension.cs'
       # The expectation files themselves (so a PR that updates expectations
       # alone also exercises the script).
@@ -54,5 +55,7 @@ jobs:
 
       - name: Run reminder
         env:
-          BASE_SHA: origin/${{ github.event.pull_request.base.ref }}
+          # Named ref (not a SHA) — the script's --base default also reads
+          # $BASE_SHA for backward compatibility.
+          BASE_REF: origin/${{ github.event.pull_request.base.ref }}
         run: python .github/scripts/check_cli_help_drift.py

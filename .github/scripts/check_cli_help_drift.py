@@ -12,18 +12,18 @@ files, so the author and reviewer get an early, in-PR reminder.
 Inputs:
     --diff-file <path>   Read a unified diff. Falls back to `git diff
                          <base>...HEAD` otherwise.
-    --base <ref>         Git ref to diff against (default: $BASE_SHA or
-                         origin/main).
+    --base <ref>         Git ref to diff against (default: $BASE_REF,
+                         then $BASE_SHA for backward compatibility,
+                         then origin/main).
 
 Exit codes:
-    0  — no provider files changed, OR provider files changed and at least
-         one help-expectation file is in the diff (i.e. the contract is
-         plausibly satisfied; the acceptance tests in CI are the final word).
-    0  — provider files changed without expectation-file changes. We still
-         exit 0 so the workflow stays a *reminder*, not a blocker; refactors
-         and visibility tweaks that don't touch any help output are common.
-         The reminder is surfaced via stdout + GITHUB_STEP_SUMMARY +
-         a workflow notice annotation produced by the calling workflow.
+    0  — non-blocking by design. Either no provider files changed, OR
+         provider files changed and at least one help-expectation file
+         is in the diff (contract plausibly satisfied), OR provider
+         files changed without expectation-file changes (a refactor
+         that doesn't touch help output is common; the reminder is
+         surfaced via stdout + GITHUB_STEP_SUMMARY + a workflow
+         `::notice` annotation but the workflow stays green).
     2  — usage / IO error.
 
 The "always exit 0" choice mirrors how the upstream policy reads: the
@@ -42,10 +42,15 @@ from pathlib import Path
 from typing import Iterable, List, Set, Tuple
 
 
+# Ensure UTF-8 output on Windows consoles (cp1252 by default) so the ⚠/✅
+# markers in the report don't crash the script on local invocations.
+# Encoding setup is best-effort and must not fail the script; narrow the
+# except to the failures the call actually raises so we don't swallow
+# unrelated programmer errors.
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
+    except (AttributeError, ValueError, OSError):
         pass
 
 
@@ -60,9 +65,11 @@ EXPECTATION_FILES: Set[str] = {
 
 # File-name patterns that indicate a CLI-options provider has been touched.
 # Names rather than paths so the check stays robust against folder moves.
+# Patterns require the filename to END at `Provider.cs` so test files like
+# `*CommandLineOptionsProviderTests.cs` do not trigger false positives.
 PROVIDER_PATTERNS: Tuple[re.Pattern[str], ...] = (
-    re.compile(r"CommandLineOptionsProvider.*\.cs$", re.IGNORECASE),
-    re.compile(r"^PlatformCommandLineProvider.*\.cs$", re.IGNORECASE),
+    re.compile(r"CommandLineOptionsProvider\.cs$", re.IGNORECASE),
+    re.compile(r"^PlatformCommandLineProvider\.cs$", re.IGNORECASE),
     re.compile(r"^MSTestExtension\.cs$"),
 )
 
@@ -178,8 +185,11 @@ def main(argv: List[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--base",
-        default=os.environ.get("BASE_SHA", "origin/main"),
-        help="Base ref to diff against (default: $BASE_SHA or origin/main).",
+        default=os.environ.get("BASE_REF", os.environ.get("BASE_SHA", "origin/main")),
+        help=(
+            "Base ref to diff against (default: $BASE_REF, then $BASE_SHA "
+            "for backward compatibility, then origin/main)."
+        ),
     )
     parser.add_argument(
         "--diff-file",
