@@ -31,9 +31,21 @@ public abstract class FixtureMethodSignatureFixerBase : CodeFixProvider
     /// </summary>
     protected abstract bool ShouldBeStatic { get; }
 
+    private ImmutableArray<string> _fixableDiagnosticIds;
+
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds
-        => ImmutableArray.Create(DiagnosticRuleId);
+    {
+        get
+        {
+            if (_fixableDiagnosticIds.IsDefault)
+            {
+                _fixableDiagnosticIds = ImmutableArray.Create(DiagnosticRuleId);
+            }
+
+            return _fixableDiagnosticIds;
+        }
+    }
 
     /// <inheritdoc />
     public sealed override FixAllProvider GetFixAllProvider()
