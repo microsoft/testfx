@@ -183,4 +183,93 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenDataTestMethodUsedWithDataRowAttribute_FixerPreservesDataRow()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [[|DataTestMethod|]]
+                [DataRow(1)]
+                [DataRow(2)]
+                public void MyTestMethod(int value)
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow(1)]
+                [DataRow(2)]
+                public void MyTestMethod(int value)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenDataTestMethodUsedOutsideTestClass_Diagnostic()
+    {
+        // The analyzer fires on DataTestMethod regardless of whether the containing
+        // class has [TestClass]. DataTestMethod should always be replaced with TestMethod.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class NonTestClass
+            {
+                [[|DataTestMethod|]]
+                public void MyMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class NonTestClass
+            {
+                [TestMethod]
+                public void MyMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenClassInheritsTwoLevelsFromDataTestMethod_OnlyDirectInheritanceIsFlagged()
+    {
+        // The analyzer only flags *direct* inheritance from DataTestMethodAttribute.
+        // A class that inherits from a class that already extends DataTestMethodAttribute
+        // is NOT flagged — only the direct child is.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            internal class [|MyDataTestMethodAttribute|] : DataTestMethodAttribute
+            {
+            }
+
+            internal sealed class MyOtherDataTestMethodAttribute : MyDataTestMethodAttribute
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

@@ -112,7 +112,7 @@ internal sealed class MicrosoftTestingPlatformEntryPoint
     public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
     {
         global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
-        SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
+        global::SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
         using (global::Microsoft.Testing.Platform.Builder.ITestApplication app = await builder.BuildAsync())
         {
             return await app.RunAsync();
@@ -135,7 +135,7 @@ namespace {{rootNamespace}}
         public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
         {
             global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
-            SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
+            global::{{rootNamespace}}.SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
             using (global::Microsoft.Testing.Platform.Builder.ITestApplication app = await builder.BuildAsync())
             {
                 return await app.RunAsync();
