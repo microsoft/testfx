@@ -1,0 +1,70 @@
+name: Public API init-accessor guard
+
+# Repository policy (.github/copilot-instructions.md):
+#   "Public API for MSTest and Microsoft.Testing.Platform MUST NOT use `init`
+#    accessors. Existing APIs in Microsoft.Testing.Platform [...] are
+#    grandfathered. However, we MUST NOT introduce **new** APIs using `init`
+#    accessors."
+#
+# This workflow fails the PR check whenever a PR adds an `init` accessor to
+# any `PublicAPI.Unshipped.txt` file. Grandfathered entries already in
+# `PublicAPI.Shipped.txt` are unaffected.
+#
+# Why this guard, on top of the expert-reviewer.agent dimension #4 check:
+#   - Reviewer attention is finite; this is a flat policy that admits no
+#     judgement calls. A green check at PR time tells the reviewer they can
+#     skip that dimension entirely.
+#   - The expert-reviewer agent only runs on opt-in or on a schedule. This
+#     guard runs on every PR synchronize.
+
+on:
+  pull_request:
+    paths:
+      # Restrict to PRs that actually touch PublicAPI files. Re-running the
+      # check on every PR would still be cheap, but `paths:` keeps the
+      # checks tab uncluttered.
+      - '**/PublicAPI.Unshipped.txt'
+      - '.github/scripts/check_public_api_init.py'
+      - '.github/workflows/public-api-init-guard.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  # One in-flight run per PR is enough.
+  group: public-api-init-guard-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Check for new init accessors
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout PR head with merge-base history
+        uses: actions/checkout@v4
+        with:
+          # Need both the PR branch and main to compute the diff. fetch-depth: 0
+          # is the simplest correct option; we can revisit if checkout time
+          # becomes a concern (it has historically been under 10s for testfx).
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compute base ref
+        id: base
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          # github.event.pull_request.base.sha is the merge-base candidate, but
+          # the script uses three-dot diff semantics, so resolving to the named
+          # remote ref keeps the behaviour consistent with local invocations.
+          echo "ref=origin/${BASE_REF}" >> "$GITHUB_OUTPUT"
+
+      - name: Run init-accessor guard
+        env:
+          BASE_SHA: ${{ steps.base.outputs.ref }}
+        run: python .github/scripts/check_public_api_init.py
