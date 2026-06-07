@@ -8,28 +8,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 internal sealed partial class TypeCache
 {
-    // Filter instances cached per test assembly source path. Computed lazily on the first request
-    // for that source so the cost is paid at most once per run, even when many tests target the
-    // same assembly.
-    private readonly ConcurrentDictionary<string, IReadOnlyList<ITestFilter>> _testFiltersBySource =
+    // Single filter instance cached per test assembly source path. Computed lazily on the first
+    // request for that source so the cost is paid at most once per run, even when many tests
+    // target the same assembly. Stored as a TestFilterBox so the dictionary can cache the
+    // "no filter" answer alongside real filter instances.
+    private readonly ConcurrentDictionary<string, TestFilterBox> _testFilterBySource =
         new(StringComparer.Ordinal);
 
     /// <summary>
-    /// Returns the cached <see cref="ITestFilter"/> instances registered via
-    /// <see cref="TestFilterProviderAttribute"/> for the given test assembly source path.
+    /// Returns the cached <see cref="ITestFilter"/> instance registered via
+    /// <see cref="TestFilterProviderAttribute"/> on the given test assembly, or
+    /// <see langword="null"/> if the assembly does not register one.
     /// </summary>
     /// <param name="assemblySource">The test assembly source path (typically <c>TestMethod.AssemblyName</c>).</param>
     /// <remarks>
     /// Discovery is metadata-only for the probe step and never forces the test types of the
-    /// assembly to load. Filter <em>types</em> are loaded the first time the filter for a given
-    /// source is requested.
+    /// assembly to load. The filter <em>type</em> is loaded the first time the filter for a
+    /// given source is requested. Only the test assembly itself is inspected — registering a
+    /// <see cref="TestFilterProviderAttribute"/> in a referenced library has no effect.
     /// </remarks>
-    internal IReadOnlyList<ITestFilter> GetOrLoadTestFilters(string assemblySource)
-        => _testFiltersBySource.TryGetValue(assemblySource, out IReadOnlyList<ITestFilter>? cached)
-            ? cached
-            : _testFiltersBySource.GetOrAdd(assemblySource, LoadTestFiltersForSource);
+    internal ITestFilter? GetOrLoadTestFilter(string assemblySource)
+        => _testFilterBySource
+            .GetOrAdd(assemblySource, static src => new TestFilterBox(LoadTestFilterForSource(src)))
+            .Filter;
 
-    private static IReadOnlyList<ITestFilter> LoadTestFiltersForSource(string assemblySource)
+    private static ITestFilter? LoadTestFilterForSource(string assemblySource)
     {
         Assembly assembly;
         try
@@ -46,88 +49,46 @@ internal sealed partial class TypeCache
                     ex);
             }
 
-            return [];
+            return null;
         }
 
-        return DiscoverTestFiltersFromProviders(assembly);
+        return DiscoverTestFilterFromProvider(assembly);
     }
 
-    private static IReadOnlyList<ITestFilter> DiscoverTestFiltersFromProviders(Assembly currentAssembly)
+    private static ITestFilter? DiscoverTestFilterFromProvider(Assembly testAssembly)
     {
-        List<ITestFilter>? filters = null;
-        var visitedFilterTypes = new HashSet<Type>();
-
-        foreach (Assembly candidate in EnumerateCandidateAssemblies(currentAssembly))
+        // Cheap metadata-only probe first: avoid loading the filter's Type unless the attribute is
+        // actually present. Mirrors the AssemblyFixtureProvider probe pattern.
+        if (!HasTestFilterProviderMarker(testAssembly))
         {
-            bool hasMarker;
-            try
-            {
-                hasMarker = HasTestFilterProviderMarker(candidate);
-            }
-            catch (Exception ex)
-            {
-                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
-                {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
-                        "TypeCache: Exception occurred while probing TestFilterProviderAttribute metadata from assembly {0}. {1}",
-                        SafeGetAssemblyName(candidate),
-                        ex);
-                }
-
-                continue;
-            }
-
-            if (!hasMarker)
-            {
-                continue;
-            }
-
-            object[] markers;
-            try
-            {
-                markers = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(candidate, typeof(TestFilterProviderAttribute));
-            }
-            catch (Exception ex)
-            {
-                // Marker is present (CustomAttributeData saw it) but the attribute cannot be
-                // instantiated. This typically means the type referenced by typeof(...) cannot be
-                // loaded. [TestFilterProvider] is explicit opt-in: silently dropping the marker
-                // would let the user's filter logic disappear at runtime, which is a more
-                // dangerous failure mode than a clear diagnostic.
-                string message = string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.UTA_TestFilterProviderLoadFailed,
-                    SafeGetAssemblyName(candidate) ?? "<unknown>",
-                    ex.Message);
-                throw new TypeInspectionException(message, ex);
-            }
-
-            if (markers is null || markers.Length == 0)
-            {
-                continue;
-            }
-
-            foreach (object marker in markers)
-            {
-                if (marker is not TestFilterProviderAttribute providerAttribute)
-                {
-                    continue;
-                }
-
-                Type? filterType = providerAttribute.FilterType;
-                if (filterType is null || !visitedFilterTypes.Add(filterType))
-                {
-                    // De-dup so a filter type referenced from both the consumer assembly and a
-                    // shared infrastructure library isn't applied twice.
-                    continue;
-                }
-
-                ITestFilter filter = InstantiateTestFilter(filterType);
-                (filters ??= []).Add(filter);
-            }
+            return null;
         }
 
-        return filters is null ? [] : filters.ToArray();
+        object[] markers;
+        try
+        {
+            markers = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(testAssembly, typeof(TestFilterProviderAttribute));
+        }
+        catch (Exception ex)
+        {
+            // Marker is present (CustomAttributeData saw it) but the attribute cannot be
+            // instantiated. This typically means the type referenced by typeof(...) cannot be
+            // loaded. [TestFilterProvider] is explicit opt-in: silently dropping the marker
+            // would let the user's filter logic disappear at runtime, which is a more
+            // dangerous failure mode than a clear diagnostic.
+            string message = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_TestFilterProviderLoadFailed,
+                SafeGetAssemblyName(testAssembly) ?? "<unknown>",
+                ex.Message);
+            throw new TypeInspectionException(message, ex);
+        }
+
+        return markers is { Length: > 0 }
+            && markers[0] is TestFilterProviderAttribute providerAttribute
+            && providerAttribute.FilterType is not null
+            ? InstantiateTestFilter(providerAttribute.FilterType)
+            : null;
     }
 
     private static ITestFilter InstantiateTestFilter(Type filterType)
@@ -175,5 +136,14 @@ internal sealed partial class TypeCache
         }
 
         return false;
+    }
+
+    // Tiny holder so the cache can distinguish "not computed yet" (missing key) from
+    // "computed and result is no filter" (present key with Filter = null).
+    private sealed class TestFilterBox
+    {
+        public TestFilterBox(ITestFilter? filter) => Filter = filter;
+
+        public ITestFilter? Filter { get; }
     }
 }

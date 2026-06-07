@@ -139,11 +139,11 @@ internal sealed class UnitTestRunner
         {
             testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(testMethod, null, testContextProperties, messageLogger, UnitTestOutcome.InProgress);
 
-            // Apply user-supplied [TestFilterProvider] filters BEFORE loading the test type, BEFORE
+            // Apply user-supplied [TestFilterProvider] filter BEFORE loading the test type, BEFORE
             // running [AssemblyInitialize] and BEFORE [ClassInitialize]. This is the whole point of
             // the feature: a Drop or Skip here pays none of those costs. See
             // https://github.com/microsoft/testfx/issues/8894 for the design.
-            TestResult[]? filterResult = ApplyTestFilters(unitTestElement);
+            TestResult[]? filterResult = ApplyTestFilter(unitTestElement);
             if (filterResult is not null)
             {
                 return await FinishFilteredOutTestAsync(
@@ -414,64 +414,58 @@ internal sealed class UnitTestRunner
     internal void ForceCleanup(IDictionary<string, object?> sourceLevelParameters, IMessageLogger logger) => ClassCleanupManager.ForceCleanup(_typeCache, sourceLevelParameters, logger);
 
     /// <summary>
-    /// Invokes the chain of <see cref="ITestFilter"/> instances registered via
-    /// <see cref="TestFilterProviderAttribute"/> for the given test. Returns
-    /// <see langword="null"/> if no filter dropped or skipped the test (test should run normally),
-    /// an empty array if any filter returned <see cref="TestFilterResult.Drop"/>, or a single
-    /// Skipped <see cref="TestResult"/> if any filter returned <see cref="TestFilterResult.Skip(string)"/>.
+    /// Invokes the user-supplied <see cref="ITestFilter"/> registered via
+    /// <see cref="TestFilterProviderAttribute"/> for the test assembly, if any. Returns
+    /// <see langword="null"/> if no filter is registered or the filter returned
+    /// <see cref="TestFilterResult.Run"/> (test should run normally), an empty array if the
+    /// filter returned <see cref="TestFilterResult.Drop"/>, or a single Skipped
+    /// <see cref="TestResult"/> if the filter returned <see cref="TestFilterResult.Skip(string)"/>.
     /// </summary>
     /// <remarks>
-    /// Filters are composed with AND: the first non-<c>Run</c> result wins, the remaining filters
-    /// are not invoked for that test. A filter exception is surfaced as an Error test result so the
-    /// failure is visible to the user instead of silently affecting test selection.
+    /// A filter exception is surfaced as an Error test result so the failure is visible to the
+    /// user instead of silently affecting test selection. <see cref="TestFilterProviderAttribute"/>
+    /// is single-per-assembly by design: callers that want to combine multiple strategies should
+    /// compose them explicitly inside their <see cref="ITestFilter"/> implementation.
     /// </remarks>
-    private TestResult[]? ApplyTestFilters(UnitTestElement unitTestElement)
+    private TestResult[]? ApplyTestFilter(UnitTestElement unitTestElement)
     {
-        IReadOnlyList<ITestFilter> filters = _typeCache.GetOrLoadTestFilters(unitTestElement.TestMethod.AssemblyName);
-        if (filters.Count == 0)
+        ITestFilter? filter = _typeCache.GetOrLoadTestFilter(unitTestElement.TestMethod.AssemblyName);
+        if (filter is null)
         {
             return null;
         }
 
         TestFilterContext context = CreateFilterContext(unitTestElement);
 
-        foreach (ITestFilter filter in filters)
+        TestFilterResult result;
+        try
         {
-            TestFilterResult result;
-            try
-            {
-                result = filter.Filter(context);
-            }
-            catch (Exception ex)
-            {
-                string message = string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.UTA_TestFilterProviderThrew,
-                    filter.GetType().FullName,
-                    context.FullyQualifiedName,
-                    ex.Message);
-                return
-                [
-                    new TestResult
-                    {
-                        Outcome = UnitTestOutcome.Error,
-                        TestFailureException = new TestFailedException(UnitTestOutcome.Error, message, ex.TryGetStackTraceInformation()),
-                    }
-                ];
-            }
-
-            switch (result.Action)
-            {
-                case TestFilterAction.Run:
-                    continue;
-                case TestFilterAction.Drop:
-                    return [];
-                case TestFilterAction.Skip:
-                    return [TestResult.CreateIgnoredResult(result.SkipReason)];
-            }
+            result = filter.Filter(context);
+        }
+        catch (Exception ex)
+        {
+            string message = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_TestFilterProviderThrew,
+                filter.GetType().FullName,
+                context.FullyQualifiedName,
+                ex.Message);
+            return
+            [
+                new TestResult
+                {
+                    Outcome = UnitTestOutcome.Error,
+                    TestFailureException = new TestFailedException(UnitTestOutcome.Error, message, ex.TryGetStackTraceInformation()),
+                }
+            ];
         }
 
-        return null;
+        return result.Action switch
+        {
+            TestFilterAction.Drop => [],
+            TestFilterAction.Skip => [TestResult.CreateIgnoredResult(result.SkipReason)],
+            _ => null,
+        };
     }
 
     private static TestFilterContext CreateFilterContext(UnitTestElement element)

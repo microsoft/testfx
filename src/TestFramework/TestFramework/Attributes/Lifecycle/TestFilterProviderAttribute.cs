@@ -10,20 +10,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Apply this attribute at the assembly level on either the test assembly itself or on a referenced
-/// infrastructure library. Every test assembly that ends up loading the marked assembly at runtime
-/// will pick up the filter without the test project needing to declare anything itself.
+/// Apply this attribute at the assembly level on the test assembly itself. At most one
+/// <see cref="TestFilterProviderAttribute"/> may be applied per test assembly; this is intentional
+/// so that filter ordering is not part of the public API. If multiple filtering strategies are
+/// needed, compose them explicitly inside a single <see cref="ITestFilter"/> implementation.
 /// </para>
 /// <para>
 /// The filter type must be a non-generic class with a public parameterless constructor that
 /// implements <see cref="ITestFilter"/>. A single instance is created per test assembly per test
 /// run and reused for every test of that assembly.
-/// </para>
-/// <para>
-/// The attribute can be applied multiple times on the same assembly to register more than one
-/// filter type. When multiple filters are registered, a test runs only if every filter returns
-/// <see cref="TestFilterResult.Run"/>. The first non-<c>Run</c> result wins; the remaining filters
-/// are not invoked for that test.
 /// </para>
 /// <para>
 /// The filter runs <em>before</em> the test type is loaded, before <c>[AssemblyInitialize]</c>,
@@ -33,7 +28,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </remarks>
 /// <example>
 /// <code>
-/// // In Contoso.TestInfra.dll
 /// [assembly: TestFilterProvider(typeof(NightlyFilter))]
 ///
 /// public sealed class NightlyFilter : ITestFilter
@@ -46,7 +40,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// }
 /// </code>
 /// </example>
-[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false, Inherited = false)]
 public sealed class TestFilterProviderAttribute : Attribute
 {
     /// <summary>
