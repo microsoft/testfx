@@ -5,7 +5,6 @@ using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.OutputDevice;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
@@ -44,7 +43,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         string currentTestApplicationPath = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
         string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? Path.GetFileNameWithoutExtension(currentTestApplicationPath);
         string automatedTestStorage = Path.GetFileNameWithoutExtension(currentTestApplicationPath);
-        string targetFrameworkMoniker = GetTargetFrameworkMoniker();
+        string targetFrameworkMoniker = global::Microsoft.Testing.Extensions.TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
         string agentName = _environment.GetEnvironmentVariable("AGENT_NAME") ?? _environment.MachineName;
         string? stageName = _environment.GetEnvironmentVariable("SYSTEM_STAGENAME");
         string? jobName = _environment.GetEnvironmentVariable("SYSTEM_JOBNAME");
@@ -107,8 +106,4 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
         return new string(buffer);
     }
-
-    private static string GetTargetFrameworkMoniker()
-        => TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<System.Runtime.Versioning.TargetFrameworkAttribute>()?.FrameworkDisplayName)
-            ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
 }
