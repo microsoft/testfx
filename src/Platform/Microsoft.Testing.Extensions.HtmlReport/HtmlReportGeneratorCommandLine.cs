@@ -49,7 +49,7 @@ internal sealed class HtmlReportGeneratorCommandLine : CommandLineOptionsProvide
                 return ValidationResult.InvalidTask(ExtensionResources.HtmlReportFileNameExtensionIsNotHtml);
             }
 
-            if (ReportFileNameValidator.EscapesResultsDirectory(argument))
+            if (global::Microsoft.Testing.Extensions.ReportFileNameValidator.EscapesResultsDirectory(argument))
             {
                 return ValidationResult.InvalidTask(ExtensionResources.HtmlReportFileNameRelativePathMustStayUnderResultsDirectory);
             }

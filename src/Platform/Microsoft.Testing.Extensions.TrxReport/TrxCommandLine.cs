@@ -53,7 +53,7 @@ internal sealed class TrxReportGeneratorCommandLine : CommandLineOptionsProvider
                 return ValidationResult.InvalidTask(ExtensionResources.TrxReportFileNameExtensionIsNotTrx);
             }
 
-            if (ReportFileNameValidator.EscapesResultsDirectory(argument))
+            if (global::Microsoft.Testing.Extensions.ReportFileNameValidator.EscapesResultsDirectory(argument))
             {
                 return ValidationResult.InvalidTask(ExtensionResources.TrxReportFileNameRelativePathMustStayUnderResultsDirectory);
             }
