@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Text.Json;
@@ -129,7 +129,9 @@ internal sealed class CtrfReportEngine
                 // The IOException was caused by the file already existing. Try a
                 // suffixed name. Any other IOException (disk full, permission, path
                 // too long, etc.) is not caught here and will propagate to the caller.
-                if (_clock.UtcNow - firstTry > TimeSpan.FromSeconds(5))
+                // Bound by both wall-clock (5s) and attempt count (1000) so we never
+                // spin forever in pathological cases like a clock that doesn't advance.
+                if (_clock.UtcNow - firstTry > TimeSpan.FromSeconds(5) || attempt >= 1_000)
                 {
                     throw;
                 }
@@ -200,6 +202,35 @@ internal sealed class CtrfReportEngine
             ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription)
             ?? "unknown";
 
+    // CTRF `osPlatform` is the short Node-style platform identifier (e.g. "win32",
+    // "linux", "darwin"). The full descriptive OS string belongs in `osVersion`.
+    private static string GetCtrfOsPlatform()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return "win32";
+        }
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            return "linux";
+        }
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            return "darwin";
+        }
+
+#if NETCOREAPP
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
+        {
+            return "freebsd";
+        }
+#endif
+
+        return "unknown";
+    }
+
     private static string ReplaceInvalidFileNameChars(string fileName)
     {
         var sb = new StringBuilder(fileName.Length);
@@ -247,21 +278,34 @@ internal sealed class CtrfReportEngine
 
     private byte[] BuildCtrfJson(CapturedTestResult[] results, DateTimeOffset finishTime)
     {
-        // Aggregate summary counts.
+        // Collapse multiple captures sharing the same UID into a single CTRF test
+        // entry. The CTRF spec models retries as nested `retryAttempts[]` records
+        // and exposes `flaky: true` on the final passing row; emitting separate
+        // top-level rows for retries would inflate `summary.tests` and double-count
+        // outcomes.
+        List<CollapsedTestResult> collapsed = CollapseAttempts(results);
+
+        // Aggregate summary counts from the collapsed (final) outcomes only.
         int passed = 0;
         int failed = 0;
         int skipped = 0;
         int pending = 0;
         int other = 0;
-        foreach (CapturedTestResult r in results)
+        int flaky = 0;
+        foreach (CollapsedTestResult c in collapsed)
         {
-            switch (r.Status)
+            switch (c.Final.Status)
             {
                 case "passed": passed++; break;
                 case "failed": failed++; break;
                 case "skipped": skipped++; break;
                 case "pending": pending++; break;
                 default: other++; break;
+            }
+
+            if (c.IsFlaky)
+            {
+                flaky++;
             }
         }
 
@@ -270,11 +314,15 @@ internal sealed class CtrfReportEngine
         long durationMs = Math.Max(0, stopMs - startMs);
 
         using var ms = new MemoryStream(capacity: 8 * 1024);
+        // We deliberately use the default Default encoder rather than
+        // UnsafeRelaxedJsonEscaping: CTRF documents routinely flow into web
+        // dashboards that embed JSON into HTML/JS, and test names/messages are
+        // attacker-controllable. The default safe encoder keeps `<`, `>`, `&`
+        // escaped so a test display name like `<script>alert(1)</script>` can't
+        // become an XSS vector in downstream consumers.
         var writerOptions = new JsonWriterOptions
         {
             Indented = true,
-            // CTRF documents are intended to be embedded in JSON/JS contexts.
-            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         };
 
         using (var writer = new Utf8JsonWriter(ms, writerOptions))
@@ -282,6 +330,9 @@ internal sealed class CtrfReportEngine
             writer.WriteStartObject();
 
             writer.WriteString("reportFormat", CtrfReportFormat);
+            // CTRF is still in pre-1.0; the upstream spec is at "0.0.0" today
+            // (see https://github.com/ctrf-io/ctrf/blob/main/spec/ctrf.md).
+            // Bump this constant whenever we update against a newer schema revision.
             writer.WriteString("specVersion", CtrfSpecVersion);
             writer.WriteString("reportId", Guid.NewGuid().ToString("D"));
             writer.WriteString("timestamp", finishTime.ToString("O", CultureInfo.InvariantCulture));
@@ -295,8 +346,18 @@ internal sealed class CtrfReportEngine
             // results.tool
             writer.WritePropertyName("tool");
             writer.WriteStartObject();
-            writer.WriteString("name", _testFramework.DisplayName);
-            writer.WriteString("version", _testFramework.Version);
+            // CTRF spec requires `tool.name` to be a non-empty string. Fall back to
+            // a sentinel rather than emitting an empty string (which would fail
+            // strict schema validation by downstream CTRF consumers).
+            string toolName = RoslynString.IsNullOrEmpty(_testFramework.DisplayName)
+                ? "unknown"
+                : _testFramework.DisplayName;
+            writer.WriteString("name", toolName);
+            if (!RoslynString.IsNullOrEmpty(_testFramework.Version))
+            {
+                writer.WriteString("version", _testFramework.Version);
+            }
+
             writer.WritePropertyName("extra");
             writer.WriteStartObject();
             writer.WriteString("uid", _testFramework.Uid);
@@ -306,12 +367,13 @@ internal sealed class CtrfReportEngine
             // results.summary
             writer.WritePropertyName("summary");
             writer.WriteStartObject();
-            writer.WriteNumber("tests", results.Length);
+            writer.WriteNumber("tests", collapsed.Count);
             writer.WriteNumber("passed", passed);
             writer.WriteNumber("failed", failed);
             writer.WriteNumber("skipped", skipped);
             writer.WriteNumber("pending", pending);
             writer.WriteNumber("other", other);
+            writer.WriteNumber("flaky", flaky);
             writer.WriteNumber("start", startMs);
             writer.WriteNumber("stop", stopMs);
             writer.WriteNumber("duration", durationMs);
@@ -323,157 +385,30 @@ internal sealed class CtrfReportEngine
             string user = _environment.GetEnvironmentVariable("UserName")
                 ?? _environment.GetEnvironmentVariable("USER")
                 ?? string.Empty;
-            writer.WriteString(
-                "extra",
-                string.Format(CultureInfo.InvariantCulture, "user={0};machine={1};exitCode={2}", user, _environment.MachineName, _exitCode));
-            writer.WriteString("osPlatform", RuntimeInformation.OSDescription);
-            writer.WriteString("testEnvironment", _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+            // CTRF `osPlatform` expects a short identifier such as "win32", "linux" or
+            // "darwin"; the full descriptive string belongs in `osVersion`.
+            writer.WriteString("osPlatform", GetCtrfOsPlatform());
+            writer.WriteString("osVersion", RuntimeInformation.OSDescription);
+            // CTRF `extra` MUST be an object (schema enforces additionalProperties: false
+            // on environment, with `extra` typed as object). We surface the test module
+            // path and process exit code here rather than as top-level environment fields
+            // because there is no first-class CTRF slot for them.
+            writer.WritePropertyName("extra");
+            writer.WriteStartObject();
+            writer.WriteString("user", user);
+            writer.WriteString("machine", _environment.MachineName);
+            writer.WriteNumber("exitCode", _exitCode);
+            writer.WriteString("testApplication", _testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+            writer.WriteEndObject();
             writer.WriteEndObject();
 
             // results.tests
             writer.WritePropertyName("tests");
             writer.WriteStartArray();
 
-            // First pass: count attempts per UID so we can annotate rows that share a UID
-            // with retry/attempt metadata in `extra`. Multiple terminal results per UID
-            // are intentional (parameterized rows, in-process retries) and must not be
-            // dropped.
-            Dictionary<string, int> countByUid = [];
-            foreach (CapturedTestResult r in results)
+            foreach (CollapsedTestResult c in collapsed)
             {
-                countByUid[r.Uid] = countByUid.TryGetValue(r.Uid, out int existing) ? existing + 1 : 1;
-            }
-
-            Dictionary<string, int> emittedByUid = [];
-
-            foreach (CapturedTestResult r in results)
-            {
-                int attemptOf = countByUid[r.Uid];
-                int attemptIndex = emittedByUid.TryGetValue(r.Uid, out int alreadyEmitted) ? alreadyEmitted + 1 : 1;
-                emittedByUid[r.Uid] = attemptIndex;
-
-                writer.WriteStartObject();
-
-                writer.WriteString("name", r.DisplayName);
-                writer.WriteString("status", r.Status);
-                writer.WriteNumber("duration", (long)Math.Max(0, r.Duration.TotalMilliseconds));
-
-                if (r.StartTime is { } start)
-                {
-                    writer.WriteNumber("start", start.ToUnixTimeMilliseconds());
-                }
-
-                if (r.EndTime is { } end)
-                {
-                    writer.WriteNumber("stop", end.ToUnixTimeMilliseconds());
-                }
-
-                if (r.RawStatus is not null)
-                {
-                    writer.WriteString("rawStatus", r.RawStatus);
-                }
-
-                // CTRF `suite` is an array of strings (minItems: 1) representing the test
-                // hierarchy (e.g. ["MyNamespace", "MyClass"]).
-                if (r.Namespace is not null || r.ClassName is not null)
-                {
-                    writer.WritePropertyName("suite");
-                    writer.WriteStartArray();
-                    if (r.Namespace is not null)
-                    {
-                        writer.WriteStringValue(r.Namespace);
-                    }
-
-                    if (r.ClassName is not null)
-                    {
-                        writer.WriteStringValue(r.ClassName);
-                    }
-
-                    writer.WriteEndArray();
-                }
-
-                if (r.ErrorMessage is not null)
-                {
-                    writer.WriteString("message", r.ErrorMessage);
-                }
-
-                if (r.StackTrace is not null)
-                {
-                    writer.WriteString("trace", r.StackTrace);
-                }
-
-                if (r.FilePath is not null)
-                {
-                    writer.WriteString("filePath", r.FilePath);
-                }
-
-                if (r.Line is { } lineNumber)
-                {
-                    writer.WriteNumber("line", lineNumber);
-                }
-
-                if (attemptOf > 1)
-                {
-                    writer.WriteNumber("retries", attemptOf - 1);
-                }
-
-                if (r.StandardOutput is not null)
-                {
-                    writer.WritePropertyName("stdout");
-                    writer.WriteStartArray();
-                    writer.WriteStringValue(r.StandardOutput);
-                    writer.WriteEndArray();
-                }
-
-                if (r.StandardError is not null)
-                {
-                    writer.WritePropertyName("stderr");
-                    writer.WriteStartArray();
-                    writer.WriteStringValue(r.StandardError);
-                    writer.WriteEndArray();
-                }
-
-                if (r.Traits is { Count: > 0 } || r.MethodName is not null
-                    || r.ExceptionType is not null || attemptOf > 1)
-                {
-                    writer.WritePropertyName("labels");
-                    writer.WriteStartObject();
-                    if (r.Traits is { Count: > 0 })
-                    {
-                        foreach (KeyValuePair<string, string> trait in r.Traits)
-                        {
-                            writer.WriteString(trait.Key, trait.Value);
-                        }
-                    }
-
-                    if (r.MethodName is not null)
-                    {
-                        writer.WriteString("method", r.MethodName);
-                    }
-
-                    if (r.ExceptionType is not null)
-                    {
-                        writer.WriteString("exceptionType", r.ExceptionType);
-                    }
-
-                    if (attemptOf > 1)
-                    {
-                        writer.WriteString("attemptIndex", attemptIndex.ToString(CultureInfo.InvariantCulture));
-                        writer.WriteString("attemptOf", attemptOf.ToString(CultureInfo.InvariantCulture));
-                    }
-
-                    writer.WriteEndObject();
-                }
-
-                // CTRF `extra` (free-form) for the test UID — the CTRF spec doesn't
-                // define a dedicated stable identifier so we surface the MTP UID here
-                // for cross-tool correlation.
-                writer.WritePropertyName("extra");
-                writer.WriteStartObject();
-                writer.WriteString("uid", r.Uid);
-                writer.WriteEndObject();
-
-                writer.WriteEndObject();
+                WriteTest(writer, c);
             }
 
             writer.WriteEndArray();
@@ -483,5 +418,264 @@ internal sealed class CtrfReportEngine
         }
 
         return ms.ToArray();
+    }
+
+    private static void WriteTest(Utf8JsonWriter writer, CollapsedTestResult c)
+    {
+        CapturedTestResult r = c.Final;
+        writer.WriteStartObject();
+
+        // CTRF spec: tests[i].name MUST be a non-empty string. Fall back to UID
+        // (also non-empty) when the framework didn't supply a display name.
+        string name = RoslynString.IsNullOrEmpty(r.DisplayName) ? r.Uid : r.DisplayName;
+        writer.WriteString("name", name);
+        writer.WriteString("status", r.Status);
+        writer.WriteNumber("duration", (long)Math.Max(0, r.Duration.TotalMilliseconds));
+
+        if (r.StartTime is { } start)
+        {
+            writer.WriteNumber("start", start.ToUnixTimeMilliseconds());
+        }
+
+        if (r.EndTime is { } end)
+        {
+            writer.WriteNumber("stop", end.ToUnixTimeMilliseconds());
+        }
+
+        if (r.RawStatus is not null)
+        {
+            writer.WriteString("rawStatus", r.RawStatus);
+        }
+
+        // CTRF `suite` is an array of strings (minItems: 1) representing the test
+        // hierarchy (e.g. ["MyNamespace", "MyClass"]).
+        if (r.Namespace is not null || r.ClassName is not null)
+        {
+            writer.WritePropertyName("suite");
+            writer.WriteStartArray();
+            if (r.Namespace is not null)
+            {
+                writer.WriteStringValue(r.Namespace);
+            }
+
+            if (r.ClassName is not null)
+            {
+                writer.WriteStringValue(r.ClassName);
+            }
+
+            writer.WriteEndArray();
+        }
+
+        if (r.ErrorMessage is not null)
+        {
+            writer.WriteString("message", r.ErrorMessage);
+        }
+
+        if (r.StackTrace is not null)
+        {
+            writer.WriteString("trace", r.StackTrace);
+        }
+
+        if (r.FilePath is not null)
+        {
+            writer.WriteString("filePath", r.FilePath);
+        }
+
+        if (r.Line is { } lineNumber)
+        {
+            writer.WriteNumber("line", lineNumber);
+        }
+
+        if (c.PriorAttempts.Count > 0)
+        {
+            writer.WriteNumber("retries", c.PriorAttempts.Count);
+            writer.WritePropertyName("retryAttempts");
+            writer.WriteStartArray();
+            for (int i = 0; i < c.PriorAttempts.Count; i++)
+            {
+                WriteRetryAttempt(writer, c.PriorAttempts[i], attemptNumber: i + 1);
+            }
+
+            writer.WriteEndArray();
+        }
+
+        if (c.IsFlaky)
+        {
+            writer.WriteBoolean("flaky", true);
+        }
+
+        if (r.StandardOutput is not null)
+        {
+            writer.WritePropertyName("stdout");
+            writer.WriteStartArray();
+            writer.WriteStringValue(r.StandardOutput);
+            writer.WriteEndArray();
+        }
+
+        if (r.StandardError is not null)
+        {
+            writer.WritePropertyName("stderr");
+            writer.WriteStartArray();
+            writer.WriteStringValue(r.StandardError);
+            writer.WriteEndArray();
+        }
+
+        // CTRF `labels` is reserved for user-controlled, classification-style
+        // metadata (priority, severity, external IDs, etc.). We only emit the
+        // traits collected from MTP TestMetadataProperty here. Synthetic
+        // framework-generated metadata (method name, exception type, MTP UID)
+        // lives in the per-test `extra` object instead so CTRF consumers can
+        // filter/group by labels without seeing our internals.
+        if (r.Traits is { Count: > 0 })
+        {
+            writer.WritePropertyName("labels");
+            writer.WriteStartObject();
+            foreach (KeyValuePair<string, string> trait in r.Traits)
+            {
+                writer.WriteString(trait.Key, trait.Value);
+            }
+
+            writer.WriteEndObject();
+        }
+
+        // CTRF `extra` (free-form object) — the CTRF spec doesn't define a
+        // dedicated stable identifier so we surface the MTP UID here for
+        // cross-tool correlation, alongside other framework metadata.
+        writer.WritePropertyName("extra");
+        writer.WriteStartObject();
+        writer.WriteString("uid", r.Uid);
+        if (r.MethodName is not null)
+        {
+            writer.WriteString("method", r.MethodName);
+        }
+
+        if (r.ExceptionType is not null)
+        {
+            writer.WriteString("exceptionType", r.ExceptionType);
+        }
+
+        writer.WriteEndObject();
+
+        writer.WriteEndObject();
+    }
+
+    private static void WriteRetryAttempt(Utf8JsonWriter writer, CapturedTestResult attempt, int attemptNumber)
+    {
+        writer.WriteStartObject();
+        writer.WriteNumber("attempt", attemptNumber);
+        writer.WriteString("status", attempt.Status);
+        writer.WriteNumber("duration", (long)Math.Max(0, attempt.Duration.TotalMilliseconds));
+        if (attempt.StartTime is { } start)
+        {
+            writer.WriteNumber("start", start.ToUnixTimeMilliseconds());
+        }
+
+        if (attempt.EndTime is { } end)
+        {
+            writer.WriteNumber("stop", end.ToUnixTimeMilliseconds());
+        }
+
+        if (attempt.ErrorMessage is not null)
+        {
+            writer.WriteString("message", attempt.ErrorMessage);
+        }
+
+        if (attempt.StackTrace is not null)
+        {
+            writer.WriteString("trace", attempt.StackTrace);
+        }
+
+        if (attempt.Line is { } line)
+        {
+            writer.WriteNumber("line", line);
+        }
+
+        if (attempt.StandardOutput is not null)
+        {
+            writer.WritePropertyName("stdout");
+            writer.WriteStartArray();
+            writer.WriteStringValue(attempt.StandardOutput);
+            writer.WriteEndArray();
+        }
+
+        if (attempt.StandardError is not null)
+        {
+            writer.WritePropertyName("stderr");
+            writer.WriteStartArray();
+            writer.WriteStringValue(attempt.StandardError);
+            writer.WriteEndArray();
+        }
+
+        if (attempt.RawStatus is not null || attempt.ExceptionType is not null)
+        {
+            writer.WritePropertyName("extra");
+            writer.WriteStartObject();
+            if (attempt.RawStatus is not null)
+            {
+                writer.WriteString("rawStatus", attempt.RawStatus);
+            }
+
+            if (attempt.ExceptionType is not null)
+            {
+                writer.WriteString("exceptionType", attempt.ExceptionType);
+            }
+
+            writer.WriteEndObject();
+        }
+
+        writer.WriteEndObject();
+    }
+
+    private static List<CollapsedTestResult> CollapseAttempts(CapturedTestResult[] results)
+    {
+        // For each UID, group consecutive captures: the latest entry becomes the
+        // final test record, earlier entries become `retryAttempts[]`. Preserves
+        // insertion order of unique UIDs in the output (stable across runs).
+        var byUid = new Dictionary<string, int>(StringComparer.Ordinal);
+        var collapsed = new List<CollapsedTestResult>(results.Length);
+        foreach (CapturedTestResult r in results)
+        {
+            if (byUid.TryGetValue(r.Uid, out int existingIndex))
+            {
+                CollapsedTestResult existing = collapsed[existingIndex];
+                existing.PriorAttempts.Add(existing.Final);
+                collapsed[existingIndex] = existing with { Final = r };
+            }
+            else
+            {
+                byUid.Add(r.Uid, collapsed.Count);
+                collapsed.Add(new CollapsedTestResult(r));
+            }
+        }
+
+        return collapsed;
+    }
+
+    private readonly record struct CollapsedTestResult(CapturedTestResult Final)
+    {
+        public List<CapturedTestResult> PriorAttempts { get; } = [];
+
+        // CTRF "flaky" is true iff the final status is "passed" AND at least one
+        // previous attempt failed.
+        public bool IsFlaky
+        {
+            get
+            {
+                if (Final.Status != "passed" || PriorAttempts.Count == 0)
+                {
+                    return false;
+                }
+
+                foreach (CapturedTestResult attempt in PriorAttempts)
+                {
+                    if (attempt.Status == "failed")
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
     }
 }

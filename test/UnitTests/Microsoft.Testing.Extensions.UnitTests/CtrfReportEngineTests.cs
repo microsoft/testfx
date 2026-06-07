@@ -167,7 +167,7 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_PreservesAllResultsForDuplicateUids_AndAnnotatesAttemptOf()
+    public async Task GenerateReportAsync_CollapsesDuplicateUidsIntoRetryAttempts_AndFlagsFlaky()
     {
         using var memoryStream = new MemoryFileStream();
         CtrfReportEngine engine = CreateEngine(memoryStream);
@@ -184,51 +184,55 @@ public class CtrfReportEngineTests
         using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
         JsonElement results = document.RootElement.GetProperty("results");
         JsonElement testArray = results.GetProperty("tests");
-        Assert.AreEqual(4, testArray.GetArrayLength());
 
-        // All four rows must appear (no de-duplication on UID).
-        var names = new List<string>();
+        // Duplicate-UID captures must collapse into a single CTRF test entry; the
+        // earlier attempts are recorded as nested retryAttempts[]. Top-level
+        // entries should therefore equal the number of unique UIDs.
+        Assert.AreEqual(2, testArray.GetArrayLength(), "Duplicate UIDs must collapse to one tests[] row.");
+
+        JsonElement summary = results.GetProperty("summary");
+        Assert.AreEqual(2, summary.GetProperty("tests").GetInt32(), "summary.tests must count unique UIDs only.");
+        Assert.AreEqual(2, summary.GetProperty("passed").GetInt32());
+        Assert.AreEqual(0, summary.GetProperty("failed").GetInt32());
+        Assert.AreEqual(1, summary.GetProperty("flaky").GetInt32());
+
+        JsonElement dupRow = default;
+        JsonElement soloRow = default;
         foreach (JsonElement t in testArray.EnumerateArray())
         {
-            names.Add(t.GetProperty("name").GetString()!);
-        }
-
-        CollectionAssert.AreEquivalent(new[] { "Row A", "Row B", "Row C", "Solo" }, names);
-
-        // Each duplicate row carries retries=2 + attemptIndex/attemptOf in labels.
-        var retries = new List<int?>();
-        var attemptIndices = new List<string?>();
-        foreach (JsonElement t in testArray.EnumerateArray())
-        {
-            string name = t.GetProperty("name").GetString()!;
-            if (name.StartsWith("Row ", StringComparison.Ordinal))
+            if (t.GetProperty("name").GetString() == "Row C")
             {
-                Assert.AreEqual(2, t.GetProperty("retries").GetInt32(), $"Row {name} should report 2 retries (3 total attempts).");
-                Assert.IsTrue(t.GetProperty("labels").TryGetProperty("attemptIndex", out JsonElement idx));
-                attemptIndices.Add(idx.GetString());
-                Assert.AreEqual("3", t.GetProperty("labels").GetProperty("attemptOf").GetString());
+                dupRow = t;
+            }
+            else if (t.GetProperty("name").GetString() == "Solo")
+            {
+                soloRow = t;
             }
         }
 
-        CollectionAssert.AreEquivalent(new[] { "1", "2", "3" }, attemptIndices);
+        Assert.AreNotEqual(JsonValueKind.Undefined, dupRow.ValueKind, "Final attempt name must surface as the collapsed test name.");
+        Assert.AreEqual("passed", dupRow.GetProperty("status").GetString());
+        Assert.AreEqual(2, dupRow.GetProperty("retries").GetInt32(), "retries must equal the number of prior attempts.");
+        Assert.IsTrue(dupRow.GetProperty("flaky").GetBoolean(), "passed-after-failed runs must be marked flaky.");
 
-        // The unique UID row does not get a retries field or attempts annotation.
-        JsonElement solo = default;
-        foreach (JsonElement t in testArray.EnumerateArray())
+        JsonElement retryAttempts = dupRow.GetProperty("retryAttempts");
+        Assert.AreEqual(2, retryAttempts.GetArrayLength(), "retryAttempts must record every prior attempt.");
+
+        var attemptNumbers = new List<int>();
+        var attemptStatuses = new List<string>();
+        foreach (JsonElement a in retryAttempts.EnumerateArray())
         {
-            if (t.GetProperty("name").GetString() == "Solo")
-            {
-                solo = t;
-                break;
-            }
+            attemptNumbers.Add(a.GetProperty("attempt").GetInt32());
+            attemptStatuses.Add(a.GetProperty("status").GetString()!);
         }
 
-        Assert.IsFalse(solo.TryGetProperty("retries", out _), "Unique UIDs should not carry retries.");
-        if (solo.TryGetProperty("labels", out JsonElement labels))
-        {
-            Assert.IsFalse(labels.TryGetProperty("attemptIndex", out _), "Unique UIDs should not carry attemptIndex.");
-            Assert.IsFalse(labels.TryGetProperty("attemptOf", out _), "Unique UIDs should not carry attemptOf.");
-        }
+        CollectionAssert.AreEqual(new[] { 1, 2 }, attemptNumbers);
+        CollectionAssert.AreEqual(new[] { "failed", "failed" }, attemptStatuses);
+
+        // Single-attempt entries must not surface retry metadata.
+        Assert.IsFalse(soloRow.TryGetProperty("retries", out _));
+        Assert.IsFalse(soloRow.TryGetProperty("retryAttempts", out _));
+        Assert.IsFalse(soloRow.TryGetProperty("flaky", out _));
     }
 
     [TestMethod]
@@ -538,6 +542,173 @@ public class CtrfReportEngineTests
             RawStatus = rawStatus,
             Duration = TimeSpan.Zero,
         };
+
+    [TestMethod]
+    public async Task GenerateReportAsync_Environment_HasSchemaCompliantShape()
+    {
+        // CTRF schema (additionalProperties: false on environment):
+        //   * `extra` MUST be an object — emitting a string here breaks strict validators.
+        //   * `osPlatform` is the short identifier (win32/linux/darwin/...); the full
+        //     descriptive string belongs in `osVersion`.
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests = [Captured("u", "T", "passed")];
+
+        await engine.GenerateReportAsync(tests);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement env = document.RootElement.GetProperty("results").GetProperty("environment");
+
+        // `extra` must be an object (the most common spec violation).
+        JsonElement extra = env.GetProperty("extra");
+        Assert.AreEqual(JsonValueKind.Object, extra.ValueKind, "environment.extra MUST be a JSON object per CTRF schema.");
+        Assert.AreEqual("user", extra.GetProperty("user").GetString());
+        Assert.AreEqual("MachineName", extra.GetProperty("machine").GetString());
+        Assert.AreEqual(0, extra.GetProperty("exitCode").GetInt32());
+        Assert.AreEqual("TestAppPath", extra.GetProperty("testApplication").GetString());
+
+        // `osPlatform` is one of the short identifiers, not the descriptive name.
+        string osPlatform = env.GetProperty("osPlatform").GetString()!;
+        CollectionAssert.Contains(new[] { "win32", "linux", "darwin", "freebsd", "unknown" }, osPlatform);
+
+        // Descriptive OS string goes into `osVersion`.
+        Assert.IsGreaterThan(0, env.GetProperty("osVersion").GetString()!.Length);
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_TestExtra_CarriesMethodNameAndExceptionType()
+    {
+        // method, exceptionType, and uid all live under `extra` (not `labels`),
+        // so `labels` is reserved for user-controlled trait metadata only.
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests =
+        [
+            new CapturedTestResult
+            {
+                Uid = "u-1",
+                DisplayName = "T",
+                Status = "failed",
+                Duration = TimeSpan.Zero,
+                MethodName = "MyMethod",
+                ExceptionType = "System.InvalidOperationException",
+            },
+        ];
+
+        await engine.GenerateReportAsync(tests);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement test = document.RootElement.GetProperty("results").GetProperty("tests")[0];
+
+        JsonElement extra = test.GetProperty("extra");
+        Assert.AreEqual("u-1", extra.GetProperty("uid").GetString());
+        Assert.AreEqual("MyMethod", extra.GetProperty("method").GetString());
+        Assert.AreEqual("System.InvalidOperationException", extra.GetProperty("exceptionType").GetString());
+
+        // No `labels` is emitted when there are no user traits — `labels` is for
+        // classification (priority/severity/owner), not framework internals.
+        Assert.IsFalse(test.TryGetProperty("labels", out _), "Synthetic framework metadata must not appear in labels.");
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_ToolName_FallsBackToUnknown_WhenFrameworkDisplayNameEmpty()
+    {
+        // CTRF spec: results.tool.name MUST be a non-empty string.
+        using var memoryStream = new MemoryFileStream();
+        _ = _testFrameworkMock.SetupGet(_ => _.DisplayName).Returns(string.Empty);
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests = [Captured("u", "T", "passed")];
+
+        await engine.GenerateReportAsync(tests);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement tool = document.RootElement.GetProperty("results").GetProperty("tool");
+        string name = tool.GetProperty("name").GetString()!;
+        Assert.IsGreaterThan(0, name.Length, "CTRF requires tool.name to be a non-empty string.");
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_EmptyResults_ProducesValidDocument()
+    {
+        // The summary block must still be present with zeroed counts when no tests
+        // ran (the schema requires summary fields to exist, and `tests[]` should be
+        // an empty array rather than absent).
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+
+        await engine.GenerateReportAsync([]);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement results = document.RootElement.GetProperty("results");
+        JsonElement summary = results.GetProperty("summary");
+        Assert.AreEqual(0, summary.GetProperty("tests").GetInt32());
+        Assert.AreEqual(0, summary.GetProperty("passed").GetInt32());
+        Assert.AreEqual(0, summary.GetProperty("failed").GetInt32());
+        Assert.AreEqual(0, summary.GetProperty("skipped").GetInt32());
+        Assert.AreEqual(0, summary.GetProperty("pending").GetInt32());
+        Assert.AreEqual(0, summary.GetProperty("other").GetInt32());
+        Assert.AreEqual(0, summary.GetProperty("flaky").GetInt32());
+
+        JsonElement testsArray = results.GetProperty("tests");
+        Assert.AreEqual(JsonValueKind.Array, testsArray.ValueKind);
+        Assert.AreEqual(0, testsArray.GetArrayLength());
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_TestName_IsNeverEmpty()
+    {
+        // CTRF schema: tests[i].name has minLength: 1. We must surface a non-empty
+        // value even if the test framework forwarded an empty DisplayName.
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests =
+        [
+            new CapturedTestResult
+            {
+                Uid = "uid-with-no-display-name",
+                DisplayName = string.Empty,
+                Status = "passed",
+                Duration = TimeSpan.Zero,
+            },
+        ];
+
+        await engine.GenerateReportAsync(tests);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement test = document.RootElement.GetProperty("results").GetProperty("tests")[0];
+        string name = test.GetProperty("name").GetString()!;
+        Assert.IsGreaterThan(0, name.Length, "CTRF requires tests[].name to be non-empty (minLength: 1).");
+        Assert.AreEqual("uid-with-no-display-name", name, "Empty DisplayName must fall back to UID.");
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_SpecialCharactersInName_AreSafelyEscaped()
+    {
+        // Test that names with HTML/JS metacharacters are escaped (no
+        // UnsafeRelaxedJsonEscaping). The bytes must contain a unicode-escaped
+        // form rather than the raw `<script>` payload so downstream CTRF
+        // consumers embedding into HTML/JS contexts can't be XSS'd.
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests =
+        [
+            Captured("u-xss", "<script>alert('x')</script>", "passed"),
+        ];
+
+        await engine.GenerateReportAsync(tests);
+
+        byte[] raw = System.Text.Encoding.UTF8.GetBytes(memoryStream.GetUtf8Content());
+        string rawString = System.Text.Encoding.UTF8.GetString(raw);
+
+        // The raw `<` must not appear in the encoded JSON — it must be \u003C.
+        Assert.IsFalse(rawString.Contains("<script>", StringComparison.Ordinal), "JSON output must escape `<` for HTML/JS-safe consumption.");
+
+        // The string round-trips correctly through JsonDocument so we still
+        // emit a structurally valid value.
+        using var document = JsonDocument.Parse(raw);
+        JsonElement test = document.RootElement.GetProperty("results").GetProperty("tests")[0];
+        Assert.AreEqual("<script>alert('x')</script>", test.GetProperty("name").GetString());
+    }
 
     private CtrfReportEngine CreateEngine(MemoryFileStream stream)
     {
