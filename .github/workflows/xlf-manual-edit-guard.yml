@@ -1,0 +1,47 @@
+name: XLF manual-edit guard
+
+# Repository policy (.github/copilot-instructions.md → Localization Guidelines):
+#   "NEVER manually modify *.xlf files. Instead, regenerate them by running
+#    `dotnet msbuild <project>.csproj /t:UpdateXlf` on the owning project."
+#
+# A human-authored PR may legitimately touch .xlf files only when those changes
+# are the OUTPUT of /t:UpdateXlf after a .resx edit — in which case the same
+# PR will also contain a .resx change. This workflow fails the check when a
+# human-authored PR touches .xlf files with no corresponding .resx change.
+# Bot PRs (OneLocBuild dotnet-bot, dotnet-maestro, any *[bot] account) are
+# exempt.
+
+on:
+  pull_request:
+    paths:
+      - '**/*.xlf'
+      - '**/*.resx'
+      - '.github/scripts/check_xlf_manual_edit.py'
+      - '.github/workflows/xlf-manual-edit-guard.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xlf-manual-edit-guard-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Check for manual xlf edits
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run xlf manual-edit guard
+        env:
+          BASE_SHA: origin/${{ github.event.pull_request.base.ref }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: python .github/scripts/check_xlf_manual_edit.py
