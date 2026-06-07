@@ -79,8 +79,6 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 comment: fileArtifact.Description ?? fileArtifact.DisplayName));
         }
 
-        // SingleOrDefault<T> walks the linked list once and returns the match directly without
-        // allocating an intermediate TProperty[] array that OfType<T>().FirstOrDefault() would create.
         StandardOutputProperty? stdout = testNode.Properties.SingleOrDefault<StandardOutputProperty>();
         if (stdout is not null && !RoslynString.IsNullOrEmpty(stdout.StandardOutput))
         {
