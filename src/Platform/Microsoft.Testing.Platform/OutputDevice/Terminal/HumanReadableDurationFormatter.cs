@@ -71,10 +71,10 @@ internal static class HumanReadableDurationFormatter
 
             return (wrapInParentheses, minutes) switch
             {
-                (true, 0) => $"({seconds}s)",
-                (true, _) => $"({minutes}m {seconds:D2}s)",
-                (false, 0) => $"{seconds}s",
-                _ => $"{minutes}m {seconds:D2}s",
+                (true, 0) => string.Create(CultureInfo.InvariantCulture, $"({seconds}s)"),
+                (true, _) => string.Create(CultureInfo.InvariantCulture, $"({minutes}m {seconds:D2}s)"),
+                (false, 0) => string.Create(CultureInfo.InvariantCulture, $"{seconds}s"),
+                _ => string.Create(CultureInfo.InvariantCulture, $"{minutes}m {seconds:D2}s"),
             };
         }
 #endif

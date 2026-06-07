@@ -17,7 +17,11 @@ public sealed class HumanReadableDurationFormatterTests
     [DataRow(5, true, "(5s)")]
     [DataRow(65, true, "(1m 05s)")]
     [DataRow(3599, true, "(59m 59s)")]
+    [DataRow(0, false, "0s")]
+    [DataRow(5, false, "5s")]
+    [DataRow(59, false, "59s")]
     [DataRow(65, false, "1m 05s")]
+    [DataRow(3599, false, "59m 59s")]
     public void Render_WhenSubHourDurationDoesNotShowMilliseconds_FormatsDuration(int totalSeconds, bool wrapInParentheses, string expected)
         => Assert.AreEqual(expected, HumanReadableDurationFormatter.Render(TimeSpan.FromSeconds(totalSeconds), wrapInParentheses));
 
