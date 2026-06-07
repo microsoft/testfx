@@ -8,8 +8,11 @@ name: XLF manual-edit guard
 # are the OUTPUT of /t:UpdateXlf after a .resx edit — in which case the same
 # PR will also contain a .resx change. This workflow fails the check when a
 # human-authored PR touches .xlf files with no corresponding .resx change.
-# Bot PRs (OneLocBuild dotnet-bot, dotnet-maestro, any *[bot] account) are
-# exempt.
+#
+# Bot PRs (OneLocBuild dotnet-bot, dotnet-maestro, any GitHub App identity)
+# are exempted at the job level via the `if:` below, so the Python script
+# stays focused on diff analysis and doesn't need to know about workflow
+# context.
 
 on:
   pull_request:
@@ -29,19 +32,29 @@ concurrency:
 jobs:
   check:
     name: Check for manual xlf edits
+    # Skip the guard entirely when the PR is opened by a known
+    # localization/dependency bot. `user.type == 'Bot'` covers GitHub App
+    # identities (the `*[bot]` accounts), and the explicit login allow-list
+    # covers regular user accounts owned by the loc/dep pipelines.
+    if: >-
+      github.event.pull_request.user.type != 'Bot' &&
+      github.event.pull_request.user.login != 'dotnet-bot' &&
+      github.event.pull_request.user.login != 'dotnet-maestro'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: '3.12'
 
       - name: Run xlf manual-edit guard
         env:
-          BASE_SHA: origin/${{ github.event.pull_request.base.ref }}
-          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          # Pin the diff base to the immutable PR-event base SHA so a
+          # base-branch advance between the event and the checkout fetch
+          # can't pull in unrelated commits and false-flag .xlf paths.
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
         run: python .github/scripts/check_xlf_manual_edit.py

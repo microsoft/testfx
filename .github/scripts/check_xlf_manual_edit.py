@@ -13,17 +13,20 @@ touch `.xlf` files only when those changes are the **output of**
 will also contain a `.resx` change. A PR that hand-edits a `.xlf` without any
 `.resx` change is the defect this guard catches.
 
+This script focuses solely on diff analysis: given a list of changed paths,
+flag every `.xlf` with no matching `.resx` in the same diff. Exempting bot
+PRs (OneLocBuild, Maestro, etc.) is handled by the calling workflow via a
+job-level `if:`, not here — see `.github/workflows/xlf-manual-edit-guard.yml`.
+
 Inputs:
     --diff-file <path>    Read a unified diff or `git diff --name-only` listing.
-    --base <ref>          Git ref to diff against (default: $BASE_SHA or
+    --base <ref>          Git ref to diff against (default: $BASE_REF, then
+                          $BASE_SHA for backward compatibility, then
                           origin/main).
-    --author <login>      PR author login. Bot accounts (suffix `[bot]` or in
-                          the known-bot list below) are exempt and the script
-                          exits 0 without checking.
 
 Exit codes:
-    0 — no `.xlf` changes, OR PR author is a bot, OR every changed `.xlf` has
-        a matching `.resx` change in the same PR.
+    0 — no `.xlf` changes, OR every changed `.xlf` has a matching `.resx`
+        change in the same PR.
     1 — a `.xlf` file was modified without a corresponding `.resx` change.
     2 — usage / IO error.
 """
@@ -39,22 +42,16 @@ from pathlib import Path
 from typing import Iterable, List, Set, Tuple
 
 
+# Ensure UTF-8 output on Windows consoles (cp1252 by default) so the ❌/✅
+# markers in the report don't crash the script on local invocations.
+# Encoding setup is best-effort and must not fail the script; narrow the
+# except to the failures the call actually raises so we don't swallow
+# unrelated programmer errors.
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
+    except (AttributeError, ValueError, OSError):
         pass
-
-
-# Accounts that are allowed to push pure-xlf updates. Loc-build and dependency
-# bots fall here. Matches by login; we also exempt anything that ends in `[bot]`
-# (the GitHub convention for GitHub App identities).
-KNOWN_BOTS: Set[str] = {
-    "dotnet-bot",
-    "dotnet-maestro",
-    "dotnet-maestro[bot]",
-    "github-actions[bot]",
-}
 
 
 def _run(cmd: List[str]) -> str:
@@ -148,16 +145,6 @@ def find_violations(paths: Iterable[str]) -> List[Tuple[str, str]]:
     return violations
 
 
-def is_bot(author: str) -> bool:
-    if not author:
-        return False
-    if author in KNOWN_BOTS:
-        return True
-    if author.endswith("[bot]"):
-        return True
-    return False
-
-
 def format_report(violations: List[Tuple[str, str]]) -> str:
     lines = [
         "❌ Localization policy violation: manual `.xlf` edits detected.",
@@ -205,24 +192,18 @@ def main(argv: List[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--base",
-        default=os.environ.get("BASE_SHA", "origin/main"),
-        help="Base ref to diff against (default: $BASE_SHA or origin/main).",
+        default=os.environ.get("BASE_REF", os.environ.get("BASE_SHA", "origin/main")),
+        help=(
+            "Base ref to diff against (default: $BASE_REF, then $BASE_SHA "
+            "for backward compatibility, then origin/main)."
+        ),
     )
     parser.add_argument(
         "--diff-file",
         type=Path,
         help="Read the diff from this file instead of running `git diff`.",
     )
-    parser.add_argument(
-        "--author",
-        default=os.environ.get("PR_AUTHOR", ""),
-        help="PR author login (default: $PR_AUTHOR). Bot accounts are exempt.",
-    )
     args = parser.parse_args(argv)
-
-    if is_bot(args.author):
-        print(f"✅ PR author '{args.author}' is a bot — manual-xlf guard skipped.")
-        return 0
 
     if args.diff_file is not None:
         try:
