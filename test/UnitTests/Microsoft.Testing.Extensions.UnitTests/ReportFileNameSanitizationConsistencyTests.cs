@@ -23,10 +23,10 @@ public class ReportFileNameSanitizationConsistencyTests
     [DynamicData(nameof(GetSanitizationInputs))]
     public void TrxAndHtmlReportEngines_UseSameFileNameSanitizationRules(string fileName)
     {
-        string trxSanitized = InvokeSanitizer(TrxSanitizeMethod, fileName);
-        string htmlSanitized = InvokeSanitizer(HtmlSanitizeMethod, fileName);
+        string expectedSanitizedFileName = InvokeSanitizer(TrxSanitizeMethod, fileName);
+        string actualSanitizedFileName = InvokeSanitizer(HtmlSanitizeMethod, fileName);
 
-        Assert.AreEqual(trxSanitized, htmlSanitized);
+        Assert.AreEqual(expectedSanitizedFileName, actualSanitizedFileName, $"Sanitization mismatch for file name '{fileName}'.");
     }
 
     public static IEnumerable<object[]> GetSanitizationInputs()

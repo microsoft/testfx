@@ -20,7 +20,7 @@ internal static partial class ReportFileNameSanitizer
         }
 
         string replaced = new string(result).TrimEnd();
-        ArgumentGuard.Ensure(replaced.Length > 0, nameof(fileName), $"File name {fileName} is empty after removing invalid characters.");
+        ArgumentGuard.Ensure(replaced.Length > 0, nameof(fileName), $"File name {fileName} is empty after sanitizing invalid characters.");
 
         if (IsReservedFileName(replaced))
         {
