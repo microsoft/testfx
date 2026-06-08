@@ -24,7 +24,7 @@ on:
       # check on every PR would still be cheap, but `paths:` keeps the
       # checks tab uncluttered.
       - '**/PublicAPI.Unshipped.txt'
-      - '.github/scripts/check_public_api_init.py'
+      - '.github/scripts/check-public-api-init.ps1'
       - '.github/workflows/public-api-init-guard.yml'
 
 permissions:
@@ -49,12 +49,8 @@ jobs:
           # becomes a concern (it has historically been under 10s for testfx).
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
       - name: Run init-accessor guard
+        shell: pwsh
         env:
           # Pin the diff base to the exact SHA captured in the PR event
           # payload, not `origin/<base.ref>`. If we used the named ref, a
@@ -64,4 +60,4 @@ jobs:
           # of the PR event, so three-dot diff `<base.sha>...HEAD` is the
           # PR's net public-API change.
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: python .github/scripts/check_public_api_init.py
+        run: ./.github/scripts/check-public-api-init.ps1
