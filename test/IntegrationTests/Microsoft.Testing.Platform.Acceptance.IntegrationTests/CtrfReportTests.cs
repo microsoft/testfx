@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Text.Json;
-
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
@@ -120,28 +118,93 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
 
     private static void AssertCtrfReportShape(string filePath)
     {
-        string jsonContent = File.ReadAllText(filePath);
-        using var document = JsonDocument.Parse(jsonContent);
-        JsonElement root = document.RootElement;
+        // Snapshot the full CTRF JSON against an exact expected document. Runtime-variable
+        // fields (GUID report id, ISO timestamp, epoch-ms times, machine name, user name,
+        // OS info, the extension's own version, and the absolute path of the test
+        // application) are masked with deterministic tokens so the comparison is
+        // hermetic across machines and runs. Anything else — including key order,
+        // indentation, escaping, conditional-emission shape, and the actual values
+        // baked from the dummy test framework — must match byte-for-byte.
+        string actual = File.ReadAllText(filePath);
+        string normalized = NormalizeCtrfReport(actual);
 
-        Assert.AreEqual("CTRF", root.GetProperty("reportFormat").GetString());
-        Assert.AreEqual("0.0.0", root.GetProperty("specVersion").GetString());
+        const string expected = """
+{
+  "reportFormat": "CTRF",
+  "specVersion": "0.0.0",
+  "reportId": "<GUID>",
+  "timestamp": "<TIMESTAMP>",
+  "generatedBy": "Microsoft.Testing.Extensions.CtrfReport@<VERSION>",
+  "results": {
+    "tool": {
+      "name": "DummyTestFramework",
+      "version": "2.0.0",
+      "extra": {
+        "uid": "DummyTestFramework"
+      }
+    },
+    "summary": {
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "pending": 0,
+      "other": 0,
+      "flaky": 0,
+      "start": <EPOCH_MS>,
+      "stop": <EPOCH_MS>,
+      "duration": <DURATION_MS>
+    },
+    "environment": {
+      "osPlatform": "<OS_PLATFORM>",
+      "osVersion": "<OS_VERSION>",
+      "extra": {
+        "user": "<USER>",
+        "machine": "<MACHINE>",
+        "exitCode": 0,
+        "testApplication": "<TEST_APPLICATION_PATH>"
+      }
+    },
+    "tests": [
+      {
+        "name": "PassingTest",
+        "status": "passed",
+        "duration": <DURATION_MS>,
+        "extra": {
+          "uid": "test-1"
+        }
+      }
+    ]
+  }
+}
+""";
 
-        JsonElement results = root.GetProperty("results");
-        Assert.IsTrue(results.TryGetProperty("tool", out _), "CTRF report is missing 'results.tool'.");
-        Assert.IsTrue(results.TryGetProperty("summary", out JsonElement summary), "CTRF report is missing 'results.summary'.");
-        Assert.IsTrue(results.TryGetProperty("tests", out JsonElement tests), "CTRF report is missing 'results.tests'.");
-        Assert.AreEqual(JsonValueKind.Array, tests.ValueKind);
-        Assert.AreEqual(1, tests.GetArrayLength());
-
-        JsonElement firstTest = tests[0];
-        Assert.AreEqual("PassingTest", firstTest.GetProperty("name").GetString());
-        Assert.AreEqual("passed", firstTest.GetProperty("status").GetString());
-
-        Assert.AreEqual(1, summary.GetProperty("tests").GetInt32());
-        Assert.AreEqual(1, summary.GetProperty("passed").GetInt32());
-        Assert.AreEqual(0, summary.GetProperty("failed").GetInt32());
+        Assert.AreEqual(
+            NormalizeLineEndings(expected),
+            NormalizeLineEndings(normalized),
+            $"Generated CTRF JSON does not match the expected snapshot.\n\nNormalized actual:\n{normalized}\n\nRaw actual:\n{actual}");
     }
+
+    private static string NormalizeCtrfReport(string actual)
+    {
+        // Field-scoped regexes so per-test attribute order and JSON shape are still
+        // anchored, but runtime-variable values are folded into stable tokens.
+        string normalized = actual;
+        normalized = Regex.Replace(normalized, @"""reportId"": ""[^""]+""", @"""reportId"": ""<GUID>""");
+        normalized = Regex.Replace(normalized, @"""timestamp"": ""[^""]+""", @"""timestamp"": ""<TIMESTAMP>""");
+        normalized = Regex.Replace(normalized, @"""generatedBy"": ""Microsoft\.Testing\.Extensions\.CtrfReport@[^""]+""", @"""generatedBy"": ""Microsoft.Testing.Extensions.CtrfReport@<VERSION>""");
+        normalized = Regex.Replace(normalized, @"""start"": \d+", @"""start"": <EPOCH_MS>");
+        normalized = Regex.Replace(normalized, @"""stop"": \d+", @"""stop"": <EPOCH_MS>");
+        normalized = Regex.Replace(normalized, @"""duration"": \d+", @"""duration"": <DURATION_MS>");
+        normalized = Regex.Replace(normalized, @"""osPlatform"": ""[^""]*""", @"""osPlatform"": ""<OS_PLATFORM>""");
+        normalized = Regex.Replace(normalized, @"""osVersion"": ""[^""]*""", @"""osVersion"": ""<OS_VERSION>""");
+        normalized = Regex.Replace(normalized, @"""user"": ""[^""]*""", @"""user"": ""<USER>""");
+        normalized = Regex.Replace(normalized, @"""machine"": ""[^""]*""", @"""machine"": ""<MACHINE>""");
+        normalized = Regex.Replace(normalized, @"""testApplication"": ""[^""]*""", @"""testApplication"": ""<TEST_APPLICATION_PATH>""");
+        return normalized;
+    }
+
+    private static string NormalizeLineEndings(string s) => s.Replace("\r\n", "\n").Trim('\n');
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
