@@ -14,9 +14,9 @@ internal static class ReportFileNameHelper
     /// <summary>
     /// Resolves template placeholders in <paramref name="template"/> using the standard artifact naming
     /// replacements, then sanitizes the leaf file name portion of the result.
-/// The directory portion (if any) is returned without sanitization so that absolute or relative paths
-/// containing path separators are preserved; if the directory portion contains invalid path characters,
-/// path processing or file creation may throw an exception.
+    /// The directory portion (if any) is returned without sanitization so that absolute or relative paths
+    /// containing path separators are preserved; if the directory portion contains invalid path characters,
+    /// path processing or file creation may throw an exception.
     /// </summary>
     /// <param name="template">The file name template that may contain <c>{pname}</c>, <c>{pid}</c>, <c>{time}</c>, etc. placeholders.</param>
     /// <param name="processName">The process name (resolves <c>{pname}</c>).</param>
