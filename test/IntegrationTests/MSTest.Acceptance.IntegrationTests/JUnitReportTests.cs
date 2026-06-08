@@ -85,6 +85,7 @@ public sealed class JUnitReportRetryAttributeTests : AcceptanceTestBase<JUnitRep
             SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsJUnitReportVersion$", MicrosoftTestingExtensionsJUnitReportVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
         private const string SourceCode = """
@@ -100,7 +101,7 @@ public sealed class JUnitReportRetryAttributeTests : AcceptanceTestBase<JUnitRep
 
   <ItemGroup>
     <PackageReference Include="MSTest" Version="$MSTestVersion$" />
-    <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Version="$MicrosoftTestingExtensionsJUnitReportVersion$" />
   </ItemGroup>
 
   <ItemGroup>
@@ -214,6 +215,7 @@ public sealed class JUnitReportMTPRetryExtensionTests : AcceptanceTestBase<JUnit
             SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsJUnitReportVersion$", MicrosoftTestingExtensionsJUnitReportVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
         // Uses the MTP --retry-failed-tests orchestrator (different from MSTest's [Retry] attribute).
@@ -232,7 +234,7 @@ public sealed class JUnitReportMTPRetryExtensionTests : AcceptanceTestBase<JUnit
 
   <ItemGroup>
     <PackageReference Include="MSTest" Version="$MSTestVersion$" />
-    <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Version="$MicrosoftTestingExtensionsJUnitReportVersion$" />
     <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 </Project>

@@ -18,7 +18,8 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
             nameof(Microsoft_Testing_Platform_Extensions_ShouldBe_Correctly_Registered),
             SourceCode
             .PatchCodeWithReplace("$TargetFrameworks$", tfm)
-            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingExtensionsJUnitReportVersion$", MicrosoftTestingExtensionsJUnitReportVersion));
         DotnetMuxerResult result = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} {testAsset.TargetAssetPath} -v:n", cancellationToken: TestContext.CancellationToken);
         string binlogFile = result.BinlogPath!;
 
@@ -105,7 +106,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Version="$MicrosoftTestingExtensionsJUnitReportVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.Telemetry" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
