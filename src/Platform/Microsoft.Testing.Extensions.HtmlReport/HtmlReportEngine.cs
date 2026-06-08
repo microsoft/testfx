@@ -133,7 +133,7 @@ internal sealed class HtmlReportEngine
                 // The IOException was caused by the file already existing. Try a
                 // suffixed name. Any other IOException (disk full, permission, path
                 // too long, etc.) is not caught here and will propagate to the caller.
-                if (_clock.UtcNow - firstTry > TimeSpan.FromSeconds(5))
+                if (_clock.UtcNow - firstTry > ReportFileWriterHelper.FileWriteRetryTimeout)
                 {
                     throw;
                 }
@@ -162,7 +162,7 @@ internal sealed class HtmlReportEngine
             ?? _environment.GetEnvironmentVariable("USER")
             ?? "user";
         string moduleName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-        string targetFrameworkMoniker = Microsoft.Testing.Extensions.TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
+        string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
         string raw = $"{user}_{_environment.MachineName}_{moduleName}_{targetFrameworkMoniker}_{finishTime:yyyy-MM-dd_HH_mm_ss}.html";
         return ReplaceInvalidFileNameChars(raw);
     }
