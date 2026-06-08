@@ -28,7 +28,7 @@ on:
       - 'test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/MSBuild.KnownExtensionRegistration.cs'
       - 'test/IntegrationTests/MSTest.Acceptance.IntegrationTests/HelpInfoTests.cs'
       # The check itself.
-      - '.github/scripts/check_cli_help_drift.py'
+      - '.github/scripts/check-cli-help-drift.ps1'
       - '.github/workflows/cli-help-drift-reminder.yml'
 
 permissions:
@@ -48,14 +48,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
       - name: Run reminder
+        shell: pwsh
         env:
-          # Named ref (not a SHA) — the script's --base default also reads
+          # Named ref (not a SHA) — the script's -Base default also reads
           # $BASE_SHA for backward compatibility.
           BASE_REF: origin/${{ github.event.pull_request.base.ref }}
-        run: python .github/scripts/check_cli_help_drift.py
+        run: ./.github/scripts/check-cli-help-drift.ps1
