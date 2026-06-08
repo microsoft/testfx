@@ -19,6 +19,10 @@ namespace Microsoft.Testing.Platform.Extensions.Messages;
 // Microsoft.Testing.Extensions.MSBuild) can still resolve the type at load time. The type
 // is never published by the current platform, so the consumer's switch arm that handles it
 // simply never fires.
+//
+// This type is intentionally marked [Obsolete] so we remember to drop it in the next major
+// release (where breaking binary compatibility with the 2.2.x extension line is acceptable).
+[Obsolete("Kept only for binary compatibility with Microsoft.Testing.Platform.MSBuild <= 2.2.x. Do not use; remove in the next major release.")]
 internal readonly struct TestRequestExecutionTimeInfo(TimingInfo timingInfo) : IData
 {
     public string DisplayName => nameof(TestRequestExecutionTimeInfo);
