@@ -1,192 +1,26 @@
 ---
-name: "Grade Tests on PR"
+# Shared frontmatter and prompt body for the test-grading workflows.
+#
+# Two consumers import this file:
+#   - grade-tests-on-pr.agent.md  → runs automatically on PRs that touch tests
+#   - grade-tests.agent.md        → runs on the /grade-tests slash command
+#
+# Both consumers contribute their own trigger configuration (`on:`) and
+# their own `safe-outputs.noop` block (kept in each consumer until the
+# gh-aw import merge fully preserves `report-as-issue: false`). Everything
+# else — tools, permissions, network, the deterministic pre-extraction
+# steps, and the agent prompt — lives here so the two variants cannot
+# drift.
+#
+# Splitting the workflow was necessary because mixing `slash_command` with
+# any other trigger in a single gh-aw workflow makes the activation gate
+# require a command-position match on *every* event, which silently skips
+# the agent on every `pull_request` invocation.
+
 description: >-
   Grades the new and modified test methods in a pull request and posts a
   single PR comment with a compact per-test scorecard (letter grade A–F,
-  score band, and one-line notes). Runs automatically on PR open and on
-  pushes that touch `test/**`, and can be re-triggered manually via the
-  `/grade-tests` slash command.
-
-# Triggers:
-# - pull_request `opened` / `ready_for_review` — initial grade on the PR's
-#   first appearance as a non-draft.
-# - pull_request `synchronize` — re-grade when new commits are pushed so the
-#   comment stays current. Combined with `paths` so we only fire when test
-#   files change, and with `concurrency.cancel-in-progress` so superseded
-#   runs are cancelled.
-# - slash_command `/grade-tests` — manual re-run by a maintainer.
-#
-# The `roles` setting restricts execution to users with admin, maintainer,
-# or write permissions, and fork PRs are blocked by the compiled
-# repository_id guard.
-on:
-  pull_request:
-    types: [opened, reopened, synchronize, ready_for_review]
-    paths:
-      - "test/**"
-      - "src/**"
-  slash_command:
-    name: grade-tests
-    events: [pull_request_comment]
-    strategy: centralized
-  roles: [admin, maintainer, write]
-  reaction: "eyes"
-  permissions:
-    contents: read
-    pull-requests: read
-  steps:
-    # Deterministic extraction: figure out which test methods were added or
-    # modified in this PR. We do this in bash (not in the agent) so the agent
-    # gets an exact, auditable list — never a hallucinated one. We then gate
-    # the agent on `has_changed_tests == 'true'` so PRs with no test changes
-    # never burn agent runtime.
-    - name: Resolve PR base and head
-      id: resolve
-      env:
-        EVENT_NAME: ${{ github.event_name }}
-        EVENT_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        EVENT_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        EVENT_PR_NUMBER: ${{ github.event.pull_request.number }}
-        EVENT_PR_DRAFT: ${{ github.event.pull_request.draft }}
-        EVENT_PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-        EVENT_PR_TITLE: ${{ github.event.pull_request.title }}
-        EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        set -euo pipefail
-        case "$EVENT_NAME" in
-          pull_request)
-            BASE_SHA="$EVENT_PR_BASE_SHA"
-            HEAD_SHA="$EVENT_PR_HEAD_SHA"
-            PR_NUMBER="$EVENT_PR_NUMBER"
-            DRAFT="$EVENT_PR_DRAFT"
-            AUTHOR="$EVENT_PR_AUTHOR"
-            TITLE="$EVENT_PR_TITLE"
-            ;;
-          issue_comment)
-            PR_NUMBER="$EVENT_ISSUE_NUMBER"
-            PR_JSON=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json baseRefOid,headRefOid,isDraft,author,title)
-            BASE_SHA=$(printf '%s' "$PR_JSON" | jq -r '.baseRefOid')
-            HEAD_SHA=$(printf '%s' "$PR_JSON" | jq -r '.headRefOid')
-            DRAFT=$(printf '%s' "$PR_JSON" | jq -r '.isDraft')
-            AUTHOR=$(printf '%s' "$PR_JSON" | jq -r '.author.login')
-            TITLE=$(printf '%s' "$PR_JSON" | jq -r '.title')
-            ;;
-          *)
-            echo "Unsupported event: $EVENT_NAME" >&2
-            exit 1
-            ;;
-        esac
-        echo "base_sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
-        echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
-        echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
-        echo "draft=$DRAFT" >> "$GITHUB_OUTPUT"
-        echo "author=$AUTHOR" >> "$GITHUB_OUTPUT"
-        echo "title=$TITLE" >> "$GITHUB_OUTPUT"
-
-    - name: Skip draft and OneLocBuild PRs
-      id: skip
-      env:
-        EVENT_NAME: ${{ github.event_name }}
-        DRAFT: ${{ steps.resolve.outputs.draft }}
-        AUTHOR: ${{ steps.resolve.outputs.author }}
-        TITLE: ${{ steps.resolve.outputs.title }}
-      run: |
-        set -euo pipefail
-        SHOULD_RUN=true
-        if [[ "$DRAFT" == "true" && "$EVENT_NAME" == "pull_request" ]]; then
-          echo "Skipping: PR is a draft."
-          SHOULD_RUN=false
-        fi
-        if [[ "$AUTHOR" == "dotnet-bot" && "$TITLE" == "Localized file check-in"* ]]; then
-          echo "Skipping: OneLocBuild localization PR."
-          SHOULD_RUN=false
-        fi
-        echo "should_run=$SHOULD_RUN" >> "$GITHUB_OUTPUT"
-
-    - name: Checkout PR head
-      if: steps.skip.outputs.should_run == 'true'
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      with:
-        ref: ${{ steps.resolve.outputs.head_sha }}
-        fetch-depth: 0
-
-    # Emit one row per changed `.cs` file under `test/`, with the HEAD-side
-    # changed line ranges. Identifying which methods in those regions are
-    # *tests* (vs. helpers, fixtures, sub-classes deriving from custom
-    # `[TestMethod]`-like attributes, etc.) is left to the agent — the
-    # LLM is significantly more robust at this judgment than any regex
-    # would be, especially given testfx's many derived attributes such as
-    # `[STATestMethod]`, `[UITestMethod]`, `[IterativeTestMethod]`, and
-    # locally-defined `MyTestMethodAttribute : TestMethodAttribute` etc.
-    - name: Extract changed test file regions
-      id: extract
-      if: steps.skip.outputs.should_run == 'true'
-      env:
-        BASE_SHA: ${{ steps.resolve.outputs.base_sha }}
-        HEAD_SHA: ${{ steps.resolve.outputs.head_sha }}
-      run: |
-        set -euo pipefail
-        OUT="$RUNNER_TEMP/changed-test-regions.tsv"
-        : > "$OUT"
-
-        mapfile -t CHANGED < <(
-          git diff --name-only --diff-filter=AMR "$BASE_SHA" "$HEAD_SHA" -- 'test/' \
-            | grep -E '\.cs$' || true
-        )
-
-        if (( ${#CHANGED[@]} == 0 )); then
-          echo "No test files changed."
-          echo "has_changed_tests=false" >> "$GITHUB_OUTPUT"
-          echo "file_count=0" >> "$GITHUB_OUTPUT"
-          exit 0
-        fi
-
-        for f in "${CHANGED[@]}"; do
-          [[ -f "$f" ]] || continue
-          RANGES=$(
-            git diff --unified=0 "$BASE_SHA" "$HEAD_SHA" -- "$f" \
-              | awk '
-                  /^@@/ {
-                    if (match($0, /\+[0-9]+(,[0-9]+)?/)) {
-                      hunk = substr($0, RSTART+1, RLENGTH-1)
-                      n = split(hunk, a, ",")
-                      start = a[1] + 0
-                      count = (n == 2 ? a[2] + 0 : 1)
-                      if (count == 0) next
-                      end = start + count - 1
-                      printf("%d-%d,", start, end)
-                    }
-                  }
-                ' \
-              | sed 's/,$//'
-          )
-          if [[ -n "$RANGES" ]]; then
-            printf '%s\t%s\n' "$f" "$RANGES" >> "$OUT"
-          fi
-        done
-
-        if [[ ! -s "$OUT" ]]; then
-          echo "No changed line ranges in test files."
-          echo "has_changed_tests=false" >> "$GITHUB_OUTPUT"
-          echo "file_count=0" >> "$GITHUB_OUTPUT"
-          exit 0
-        fi
-
-        FILE_COUNT=$(wc -l < "$OUT")
-        echo "Found $FILE_COUNT test file(s) with changes."
-        echo "has_changed_tests=true" >> "$GITHUB_OUTPUT"
-        echo "file_count=$FILE_COUNT" >> "$GITHUB_OUTPUT"
-        echo "tsv_path=$OUT" >> "$GITHUB_OUTPUT"
-
-# Gate the agent on (a) skip checks passing and (b) at least one changed test method.
-if: >
-  needs.pre_activation.outputs.should_run == 'true'
-  && needs.pre_activation.outputs.has_changed_tests == 'true'
-
-concurrency:
-  group: grade-tests-${{ github.event.pull_request.number || github.event.issue.number }}
-  cancel-in-progress: true
+  score band, and one-line notes).
 
 permissions:
   contents: read
@@ -201,17 +35,147 @@ tools:
     lockdown: true
     toolsets: [pull_requests, repos]
     min-integrity: none
-  bash: ["git", "find", "ls", "cat", "grep", "head", "tail", "wc", "awk", "sed", "sort", "uniq"]
+  bash:
+    - git
+    - gh
+    - jq
+    - find
+    - ls
+    - cat
+    - grep
+    - head
+    - tail
+    - wc
+    - awk
+    - sed
+    - sort
+    - uniq
 
 safe-outputs:
-  noop:
-    report-as-issue: false
   add-comment:
     max: 5
     target: "*"
     hide-older-comments: true
 
-timeout-minutes: 20
+# Deterministic extraction: figure out which test methods were added or
+# modified in this PR. We do this in bash (not in the agent) so the agent
+# gets an exact, auditable list — never a hallucinated one. The agent
+# then decides which of those methods are *tests* (testfx has many
+# derived attributes that a regex would silently miss).
+#
+# These steps run inside the agent job, after the framework's default
+# checkout, and emit a TSV at `$RUNNER_TEMP/changed-test-regions.tsv`.
+# Step outputs are exposed to the agent both via `${{ steps.* }}`
+# template substitution in the prompt below and via auto-generated
+# `GH_AW_STEPS_*` environment variables.
+steps:
+  - name: Resolve PR base and head
+    id: resolve
+    env:
+      EVENT_NAME: ${{ github.event_name }}
+      EVENT_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      EVENT_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      EVENT_PR_NUMBER: ${{ github.event.pull_request.number }}
+      EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
+      GH_TOKEN: ${{ github.token }}
+    run: |
+      set -euo pipefail
+      case "$EVENT_NAME" in
+        pull_request)
+          BASE_SHA="$EVENT_PR_BASE_SHA"
+          HEAD_SHA="$EVENT_PR_HEAD_SHA"
+          PR_NUMBER="$EVENT_PR_NUMBER"
+          ;;
+        issue_comment)
+          PR_NUMBER="$EVENT_ISSUE_NUMBER"
+          PR_JSON=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json baseRefOid,headRefOid)
+          BASE_SHA=$(printf '%s' "$PR_JSON" | jq -r '.baseRefOid')
+          HEAD_SHA=$(printf '%s' "$PR_JSON" | jq -r '.headRefOid')
+          ;;
+        *)
+          echo "Unsupported event: $EVENT_NAME" >&2
+          exit 1
+          ;;
+      esac
+      echo "base_sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+      echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+      echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+
+  - name: Checkout PR head with full history
+    uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+    with:
+      ref: ${{ steps.resolve.outputs.head_sha }}
+      fetch-depth: 0
+      persist-credentials: false
+
+  # Emit one row per changed `.cs` file under `test/`, with the HEAD-side
+  # changed line ranges. Identifying which methods in those regions are
+  # *tests* (vs. helpers, fixtures, sub-classes deriving from custom
+  # `[TestMethod]`-like attributes, etc.) is left to the agent — the
+  # LLM is significantly more robust at this judgment than any regex
+  # would be, especially given testfx's many derived attributes such as
+  # `[STATestMethod]`, `[UITestMethod]`, `[IterativeTestMethod]`, and
+  # locally-defined `MyTestMethodAttribute : TestMethodAttribute` etc.
+  - name: Extract changed test file regions
+    id: extract
+    env:
+      BASE_SHA: ${{ steps.resolve.outputs.base_sha }}
+      HEAD_SHA: ${{ steps.resolve.outputs.head_sha }}
+    run: |
+      set -euo pipefail
+      OUT="$RUNNER_TEMP/changed-test-regions.tsv"
+      : > "$OUT"
+
+      mapfile -t CHANGED < <(
+        git diff --name-only --diff-filter=AMR "$BASE_SHA" "$HEAD_SHA" -- 'test/' \
+          | grep -E '\.cs$' || true
+      )
+
+      if (( ${#CHANGED[@]} == 0 )); then
+        echo "No test files changed."
+        echo "has_changed_tests=false" >> "$GITHUB_OUTPUT"
+        echo "file_count=0" >> "$GITHUB_OUTPUT"
+        echo "tsv_path=$OUT" >> "$GITHUB_OUTPUT"
+        exit 0
+      fi
+
+      for f in "${CHANGED[@]}"; do
+        [[ -f "$f" ]] || continue
+        RANGES=$(
+          git diff --unified=0 "$BASE_SHA" "$HEAD_SHA" -- "$f" \
+            | awk '
+                /^@@/ {
+                  if (match($0, /\+[0-9]+(,[0-9]+)?/)) {
+                    hunk = substr($0, RSTART+1, RLENGTH-1)
+                    n = split(hunk, a, ",")
+                    start = a[1] + 0
+                    count = (n == 2 ? a[2] + 0 : 1)
+                    if (count == 0) next
+                    end = start + count - 1
+                    printf("%d-%d,", start, end)
+                  }
+                }
+              ' \
+            | sed 's/,$//'
+        )
+        if [[ -n "$RANGES" ]]; then
+          printf '%s\t%s\n' "$f" "$RANGES" >> "$OUT"
+        fi
+      done
+
+      if [[ ! -s "$OUT" ]]; then
+        echo "No changed line ranges in test files."
+        echo "has_changed_tests=false" >> "$GITHUB_OUTPUT"
+        echo "file_count=0" >> "$GITHUB_OUTPUT"
+        echo "tsv_path=$OUT" >> "$GITHUB_OUTPUT"
+        exit 0
+      fi
+
+      FILE_COUNT=$(wc -l < "$OUT")
+      echo "Found $FILE_COUNT test file(s) with changes."
+      echo "has_changed_tests=true" >> "$GITHUB_OUTPUT"
+      echo "file_count=$FILE_COUNT" >> "$GITHUB_OUTPUT"
+      echo "tsv_path=$OUT" >> "$GITHUB_OUTPUT"
 ---
 
 # Grade Tests on PR
@@ -248,6 +212,9 @@ are tests — that judgment is yours, because testfx has many derived
 test attributes (e.g. `[STATestMethod]`, `[UITestMethod]`,
 `[IterativeTestMethod]`, and locally-defined `MyTestMethodAttribute`
 subclasses) that a regex extractor would silently miss.
+
+If the TSV is empty (file count is 0), use the Step 4 fallback comment
+and stop — do not invent grades.
 
 ## Instructions
 
@@ -384,9 +351,9 @@ earlier grade comment automatically — do not append additional comments.
 
 #### Fallback: no test methods found
 
-If after Step 1 the kept-method list is empty (every changed method was
-a helper, fixture, data row, or non-test), post this short comment
-instead of the table:
+If the TSV is empty, or if after Step 1 the kept-method list is empty
+(every changed method was a helper, fixture, data row, or non-test),
+post this short comment instead of the table:
 
 ```markdown
 ### 🧪 Test quality grade — PR #${{ github.event.pull_request.number || github.event.issue.number }}
