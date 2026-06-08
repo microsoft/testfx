@@ -24,7 +24,7 @@ internal static class ReportFileWriterHelper
     internal static async Task<T> RetryWhenIOExceptionAsync<T>(IClock clock, Func<Task<T>> func)
     {
         DateTimeOffset firstTryTime = clock.UtcNow;
-        bool throwIOException = false;
+        bool hasExceededTimeout = false;
         while (true)
         {
             try
@@ -34,7 +34,7 @@ internal static class ReportFileWriterHelper
             catch (IOException)
             {
                 // In case of file with the same name we retry with a new name.
-                if (throwIOException)
+                if (hasExceededTimeout)
                 {
                     throw;
                 }
@@ -43,7 +43,7 @@ internal static class ReportFileWriterHelper
             // We try for the configured timeout to create a file with a unique name.
             if (clock.UtcNow - firstTryTime > FileWriteRetryTimeout)
             {
-                throwIOException = true;
+                hasExceededTimeout = true;
             }
         }
     }
