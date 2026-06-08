@@ -226,8 +226,8 @@ public class CtrfReportEngineTests
             attemptStatuses.Add(a.GetProperty("status").GetString()!);
         }
 
-        CollectionAssert.AreEqual(new[] { 1, 2 }, attemptNumbers);
-        CollectionAssert.AreEqual(new[] { "failed", "failed" }, attemptStatuses);
+        Assert.AreSequenceEqual(new[] { 1, 2 }, attemptNumbers);
+        Assert.AreSequenceEqual(new[] { "failed", "failed" }, attemptStatuses);
 
         // Single-attempt entries must not surface retry metadata.
         Assert.IsFalse(soloRow.TryGetProperty("retries", out _));
@@ -569,7 +569,7 @@ public class CtrfReportEngineTests
 
         // `osPlatform` is one of the short identifiers, not the descriptive name.
         string osPlatform = env.GetProperty("osPlatform").GetString()!;
-        CollectionAssert.Contains(new[] { "win32", "linux", "darwin", "freebsd", "unknown" }, osPlatform);
+        Assert.Contains(osPlatform, new[] { "win32", "linux", "darwin", "freebsd", "unknown" });
 
         // Descriptive OS string goes into `osVersion`.
         Assert.IsGreaterThan(0, env.GetProperty("osVersion").GetString()!.Length);
