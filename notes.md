@@ -32,6 +32,7 @@
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-08 | Task 3 (PublicTypeShouldBeTestClassAnalyzer MSTEST0004 edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-07 | Task 3 (UseRetryWithTestMethodAnalyzer MSTEST0035 edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-06 | Task 3 (PreferTestMethodOverDataTestMethodAnalyzer edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-05 | Task 3 (TestMethodShouldNotBeIgnoredAnalyzer edge cases), Task 7 (Monthly Issue Jun) |
@@ -45,11 +46,12 @@
 
 ## Last Run
 
-2026-06-07 23:18 UTC
+2026-06-08 23:22 UTC
 
 ## Completed Work
 
-- PR for UseRetryWithTestMethodAnalyzer edge cases (2026-06-07, pending merge)
+- PR for PublicTypeShouldBeTestClassAnalyzer edge cases (2026-06-08, pending merge) — record types + nested class visibility
+- PR #8909 merged (UseRetryWithTestMethodAnalyzer MSTEST0035 edge cases) — merged 2026-06-08
 - PR #8885 merged (PreferTestMethodOverDataTestMethodAnalyzer edge cases) — merged 2026-06-07
 - PR #8869 merged (TestMethodShouldNotBeIgnoredAnalyzer edge cases) — merged 2026-06-07
 - PR #8837 merged (NonNullableReferenceNotInitializedSuppressor edge cases)
