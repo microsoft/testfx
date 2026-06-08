@@ -455,6 +455,21 @@ Registered command line providers:
         Description: Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
         For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps
+  CtrfReportGeneratorCommandLine
+    Name: CTRF report generator
+    Version: *
+    Description: Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)
+    Options:
+      --report-ctrf
+        Arity: 0
+        Hidden: False
+        Description: Enable generating a CTRF (Common Test Report Format) JSON report
+      --report-ctrf-filename
+        Arity: 1
+        Hidden: False
+        Description: The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+        Example: MyReport_{tfm}.ctrf.json
   HangDumpCommandLineProvider
     Name: Hang dump
     Version: *
@@ -506,21 +521,6 @@ Registered command line providers:
         Description: The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
         Example: MyReport_{tfm}.html
-  CtrfReportGeneratorCommandLine
-    Name: CTRF report generator
-    Version: *
-    Description: Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)
-    Options:
-      --report-ctrf
-        Arity: 0
-        Hidden: False
-        Description: Enable generating a CTRF (Common Test Report Format) JSON report
-      --report-ctrf-filename
-        Arity: 1
-        Hidden: False
-        Description: The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
-        Example: MyReport_{tfm}.ctrf.json
   MSBuildCommandLineProvider
     Name: MSBuildCommandLineProvider
     Version: *

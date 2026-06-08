@@ -13,7 +13,9 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        // The dummy framework emits at least one failing test so the host exits with
+        // AtLeastOneTestFailed regardless of whether the CTRF report is enabled.
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
 
         // The CTRF report is published as an in-process artifact; check the correct block.
         string outputPattern = """
@@ -33,7 +35,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--report-ctrf", cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
 
         string outputPattern = $"""
   In process file artifacts produced:
@@ -61,7 +63,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
             $"--report-ctrf --report-ctrf-filename {customFileName}",
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
 
         string outputPattern = $"""
   In process file artifacts produced:
@@ -90,7 +92,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
             $"--report-ctrf --report-ctrf-filename {customFileName}",
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
 
         string outputPattern = $"""
   In process file artifacts produced:
@@ -120,11 +122,19 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
     {
         // Snapshot the full CTRF JSON against an exact expected document. Runtime-variable
         // fields (GUID report id, ISO timestamp, epoch-ms times, machine name, user name,
-        // OS info, the extension's own version, and the absolute path of the test
-        // application) are masked with deterministic tokens so the comparison is
-        // hermetic across machines and runs. Anything else — including key order,
-        // indentation, escaping, conditional-emission shape, and the actual values
+        // OS info, the extension's own version, the absolute path of the test application,
+        // and the test host exit code) are masked with deterministic tokens so the
+        // comparison is hermetic across machines and runs. Anything else — including key
+        // order, indentation, escaping, conditional-emission shape, and the actual values
         // baked from the dummy test framework — must match byte-for-byte.
+        //
+        // The dummy framework emits three tests that exercise the CTRF status and retry
+        // model end to end:
+        //  - PassingTest             → status: "passed"
+        //  - FailingTest             → status: "failed" + `message`
+        //  - FlakyTest (retried)     → first attempt failed, retried successfully:
+        //                              final status: "passed", retries: 1,
+        //                              retryAttempts[].status: "failed", flaky: true
         string actual = File.ReadAllText(filePath);
         string normalized = NormalizeCtrfReport(actual);
 
@@ -144,13 +154,13 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
       }
     },
     "summary": {
-      "tests": 1,
-      "passed": 1,
-      "failed": 0,
+      "tests": 3,
+      "passed": 2,
+      "failed": 1,
       "skipped": 0,
       "pending": 0,
       "other": 0,
-      "flaky": 0,
+      "flaky": 1,
       "start": <EPOCH_MS>,
       "stop": <EPOCH_MS>,
       "duration": <DURATION_MS>
@@ -161,7 +171,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
       "extra": {
         "user": "<USER>",
         "machine": "<MACHINE>",
-        "exitCode": 0,
+        "exitCode": <EXIT_CODE>,
         "testApplication": "<TEST_APPLICATION_PATH>"
       }
     },
@@ -172,6 +182,33 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         "duration": <DURATION_MS>,
         "extra": {
           "uid": "test-1"
+        }
+      },
+      {
+        "name": "FailingTest",
+        "status": "failed",
+        "duration": <DURATION_MS>,
+        "message": "Expected 1 but got 2",
+        "extra": {
+          "uid": "test-2"
+        }
+      },
+      {
+        "name": "FlakyTest",
+        "status": "passed",
+        "duration": <DURATION_MS>,
+        "retries": 1,
+        "retryAttempts": [
+          {
+            "attempt": 1,
+            "status": "failed",
+            "duration": <DURATION_MS>,
+            "message": "Transient failure"
+          }
+        ],
+        "flaky": true,
+        "extra": {
+          "uid": "test-3"
         }
       }
     ]
@@ -200,6 +237,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         normalized = Regex.Replace(normalized, @"""osVersion"": ""[^""]*""", @"""osVersion"": ""<OS_VERSION>""");
         normalized = Regex.Replace(normalized, @"""user"": ""[^""]*""", @"""user"": ""<USER>""");
         normalized = Regex.Replace(normalized, @"""machine"": ""[^""]*""", @"""machine"": ""<MACHINE>""");
+        normalized = Regex.Replace(normalized, @"""exitCode"": -?\d+", @"""exitCode"": <EXIT_CODE>");
         normalized = Regex.Replace(normalized, @"""testApplication"": ""[^""]*""", @"""testApplication"": ""<TEST_APPLICATION_PATH>""");
         return normalized;
     }
@@ -266,6 +304,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        // 1) A plain passing test.
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
             context.Request.Session.SessionUid,
             new TestNode()
@@ -274,6 +313,38 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                 DisplayName = "PassingTest",
                 Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
             }));
+
+        // 2) A plain failing test (no Exception object so no stack trace / exception type
+        //    are emitted; only the explanation propagates as CTRF `message`).
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+            context.Request.Session.SessionUid,
+            new TestNode()
+            {
+                Uid = "test-2",
+                DisplayName = "FailingTest",
+                Properties = new PropertyBag(new FailedTestNodeStateProperty("Expected 1 but got 2")),
+            }));
+
+        // 3) A flaky test: same Uid published twice — first failing, then passing.
+        //    The CTRF engine collapses these into a single test entry with retries=1,
+        //    retryAttempts[0].status=failed, and flaky=true on the final passing record.
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+            context.Request.Session.SessionUid,
+            new TestNode()
+            {
+                Uid = "test-3",
+                DisplayName = "FlakyTest",
+                Properties = new PropertyBag(new FailedTestNodeStateProperty("Transient failure")),
+            }));
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+            context.Request.Session.SessionUid,
+            new TestNode()
+            {
+                Uid = "test-3",
+                DisplayName = "FlakyTest",
+                Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
+            }));
+
         context.Complete();
     }
 }

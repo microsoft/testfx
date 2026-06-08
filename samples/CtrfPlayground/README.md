@@ -31,6 +31,7 @@ Both runs write a CTRF JSON file. Open them side by side (e.g.
 > The CTRF extension shipped by this repository is currently marked **experimental**
 > (`[Experimental("TPEXP")]`). API shape and report content may change.
 
+<!-- markdownlint-disable-next-line MD028 -->
 > [!TIP]
 > The two projects are intentionally **kept separate**: combining a CTRF-producing
 > extension with another test framework that already exposes its own CTRF reporter would
