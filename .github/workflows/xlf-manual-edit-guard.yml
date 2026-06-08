@@ -54,4 +54,24 @@ jobs:
           # base-branch advance between the event and the checkout fetch
           # can't pull in unrelated commits and false-flag .xlf paths.
           BASE_REF: ${{ github.event.pull_request.base.sha }}
-        run: ./.github/scripts/check-xlf-manual-edit.ps1
+        run: |
+          # Source the guard script from the trusted base commit so a PR
+          # cannot weaken its own gate by editing the script in the same
+          # PR. We still diff the PR's working tree (HEAD vs BASE_REF) for
+          # the actual policy check. Falls back to the PR working copy
+          # only when the script doesn't exist at the base — e.g. the PR
+          # that first introduces this guard, before it lives on `main`.
+          $scriptPath = '.github/scripts/check-xlf-manual-edit.ps1'
+          $tempPath   = Join-Path $env:RUNNER_TEMP 'check-xlf-manual-edit.ps1'
+          $base       = $env:BASE_REF
+          $content    = & git show "${base}:${scriptPath}" 2>$null
+          if ($LASTEXITCODE -eq 0 -and $content) {
+            if ($content -is [System.Array]) { $content = $content -join "`n" }
+            Set-Content -LiteralPath $tempPath -Value $content -NoNewline -Encoding utf8
+            & pwsh -NoProfile -File $tempPath
+          }
+          else {
+            Write-Host "::notice::Guard script not present at base ${base}; running PR version (bootstrap)."
+            & pwsh -NoProfile -File "./$scriptPath"
+          }
+          exit $LASTEXITCODE

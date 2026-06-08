@@ -73,38 +73,55 @@ function Get-DiffFromGit {
     return $output
 }
 
+# Tight regex for repo-relative path safety: only the character classes that
+# actually appear in tracked file paths in this repo (alnum, dot, underscore,
+# slash, hyphen, plus). Spaces, quotes, tabs, control chars, and any non-ASCII
+# punctuation are rejected, so a unified-diff context line ending in `.xlf`
+# (a docstring, a code comment, etc.) cannot be mistaken for a path.
+$PathSafe = [regex]'^[A-Za-z0-9._/+\-]+$'
+
 function Get-ChangedPaths {
     param([string[]]$DiffLines)
 
     $paths = [System.Collections.Generic.List[string]]::new()
 
     foreach ($raw in $DiffLines) {
-        $line = $raw.Trim()
-        if (-not $line) { continue }
+        if (-not $raw) { continue }
 
-        if ($line.StartsWith('diff --git ')) {
-            $idx = $line.IndexOf(' b/')
+        # Unified-diff headers: paths are unambiguous, accept after sanity check.
+        $trimmed = $raw.Trim()
+        if ($trimmed.StartsWith('diff --git ')) {
+            $idx = $trimmed.IndexOf(' b/')
             if ($idx -ge 0) {
-                $paths.Add($line.Substring($idx + 3).Trim())
+                $p = $trimmed.Substring($idx + 3).Trim()
+                if ($PathSafe.IsMatch($p)) { $paths.Add($p) }
             }
             continue
         }
-        if ($line.StartsWith('+++ ')) {
-            $path = $line.Substring(4).Trim()
-            if ($path -eq '/dev/null') { continue }
-            if ($path.StartsWith('b/')) { $path = $path.Substring(2) }
-            $paths.Add($path)
-            continue
-        }
-        if ($line.StartsWith('---') -or $line.StartsWith('@@') -or
-            $line.StartsWith('+') -or $line.StartsWith('-')) {
+        if ($trimmed.StartsWith('+++ ')) {
+            $p = $trimmed.Substring(4).Trim()
+            if ($p -eq '/dev/null') { continue }
+            if ($p.StartsWith('b/')) { $p = $p.Substring(2) }
+            if ($PathSafe.IsMatch($p)) { $paths.Add($p) }
             continue
         }
 
-        if ($line.Contains('/') -or
-            $line.EndsWith('.xlf') -or $line.EndsWith('.resx') -or
-            $line.EndsWith('.cs')) {
-            $paths.Add($line)
+        # Hunk headers and content/context lines: identified by the RAW prefix
+        # (untrimmed!) so we do not accidentally promote a context line like
+        # `    "path/to/something.xlf"` (whose trimmed form starts with `"`)
+        # — or `+something/elsewhere` — into a path.
+        if ($raw.StartsWith('---') -or $raw.StartsWith('@@') -or
+            $raw.StartsWith('+') -or $raw.StartsWith('-') -or
+            $raw.StartsWith(' ') -or $raw.StartsWith("`t")) {
+            continue
+        }
+
+        # Otherwise treat as a name-only entry. Require the line to (a) match
+        # the path-safe alphabet (no spaces, quotes, etc.) AND (b) actually
+        # look like a path of interest (has a slash or one of our extensions).
+        if ($PathSafe.IsMatch($trimmed) -and
+            ($trimmed.Contains('/') -or $trimmed.EndsWith('.xlf') -or $trimmed.EndsWith('.resx'))) {
+            $paths.Add($trimmed)
         }
     }
 
@@ -119,33 +136,57 @@ function Get-ChangedPaths {
     return , $out
 }
 
-function Get-XlfResxBasename {
+function Get-XlfBasename {
     <#
     .DESCRIPTION
-        Return the bare resource basename for a `.xlf` file.
+        Strip the `.<locale>.xlf` suffix (or fall back to bare stem) from a
+        `.xlf` filename.
 
-        `path/to/Strings.de.xlf` → `Strings`
-        `Resources/xlf/Resource.cs.xlf` → `Resource`
-        `Strings.xlf` (no-locale variant) → `Strings`
+            Resource.zh-Hans.xlf → Resource
+            Strings.xlf          → Strings
+    #>
+    param([string]$XlfFileName)
 
-        Basename matching is used instead of strict path matching because testfx
-        places `.xlf` files under a `xlf/` subdirectory while the matching
-        `.resx` lives in the parent directory (e.g.
-        `Resources/Resource.resx` ↔ `Resources/xlf/Resource.cs.xlf`), and other
-        projects may use yet other layouts. A basename match is permissive
-        enough to handle every layout without false positives, since the only
-        way it can miss a hand-edit is if the PR also happens to change a
-        completely unrelated `.resx` with the same basename — extremely unlikely
-        in practice.
+    $m = $XlfLocale.Match($XlfFileName)
+    if ($m.Success) {
+        return $XlfFileName.Substring(0, $m.Index)
+    }
+    return [System.IO.Path]::GetFileNameWithoutExtension($XlfFileName)
+}
+
+function Get-XlfExpectedResx {
+    <#
+    .DESCRIPTION
+        Return the expected `.resx` path for a given `.xlf` path, using the
+        repo-standard layout convention:
+
+            <dir>/Resources/xlf/<Base>.<locale>.xlf
+                  ↳ <dir>/Resources/<Base>.resx
+
+        Returns $null when the file is NOT directly under a `xlf/` directory;
+        the caller then falls back to a basename match.
+
+        Strict path-based matching is essential because some `.resx` basenames
+        (e.g. `ExtensionResources.resx`) repeat across projects in this repo,
+        and a basename-only match would let a PR hand-edit one project's
+        `.xlf` while touching an unrelated other project's `.resx`.
     #>
     param([string]$XlfPath)
 
-    $name = [System.IO.Path]::GetFileName(($XlfPath -replace '\\', '/'))
-    $m = $XlfLocale.Match($name)
-    if ($m.Success) {
-        return $name.Substring(0, $m.Index)
+    $normalized = $XlfPath -replace '\\', '/'
+    $name = [System.IO.Path]::GetFileName($normalized)
+    $base = Get-XlfBasename -XlfFileName $name
+
+    $parts = $normalized -split '/'
+    if ($parts.Length -ge 2 -and $parts[-2] -eq 'xlf') {
+        $parentParts = $parts[0..($parts.Length - 3)]
+        if ($parentParts.Length -gt 0) {
+            return ($parentParts -join '/') + "/$base.resx"
+        }
+        return "$base.resx"
     }
-    return [System.IO.Path]::GetFileNameWithoutExtension($name)
+
+    return $null
 }
 
 function Find-Violations {
@@ -153,9 +194,11 @@ function Find-Violations {
 
     $normPaths = foreach ($p in $Paths) { $p -replace '\\', '/' }
 
+    $resxFullPaths = [System.Collections.Generic.HashSet[string]]::new()
     $resxBasenames = [System.Collections.Generic.HashSet[string]]::new()
     foreach ($p in $normPaths) {
         if ($p.EndsWith('.resx')) {
+            $null = $resxFullPaths.Add($p)
             $null = $resxBasenames.Add([System.IO.Path]::GetFileNameWithoutExtension($p))
         }
     }
@@ -163,9 +206,21 @@ function Find-Violations {
     $violations = [System.Collections.Generic.List[object]]::new()
     foreach ($p in $normPaths) {
         if (-not $p.EndsWith('.xlf')) { continue }
-        $base = Get-XlfResxBasename -XlfPath $p
-        if (-not $resxBasenames.Contains($base)) {
-            $violations.Add([pscustomobject]@{ Xlf = $p; ExpectedResx = "$base.resx" })
+
+        $expected = Get-XlfExpectedResx -XlfPath $p
+        if ($expected) {
+            # Standard `Resources/xlf/<Base>.*.xlf` layout: strict full-path match.
+            if (-not $resxFullPaths.Contains($expected)) {
+                $violations.Add([pscustomobject]@{ Xlf = $p; ExpectedResx = $expected })
+            }
+        }
+        else {
+            # Non-standard layout: best-effort basename fallback so the guard
+            # still catches obvious hand-edits in any future unusual project.
+            $base = Get-XlfBasename -XlfFileName ([System.IO.Path]::GetFileName($p))
+            if (-not $resxBasenames.Contains($base)) {
+                $violations.Add([pscustomobject]@{ Xlf = $p; ExpectedResx = "$base.resx" })
+            }
         }
     }
 
