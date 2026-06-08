@@ -1,11 +1,64 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform;
+using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions;
+
 namespace Microsoft.Testing.Extensions;
 
 internal static class ReportFileNameValidator
 {
     private static readonly char[] DirectorySeparators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
+
+    public static Task<ValidationResult> ValidateReportFileNameArgument(
+        string[] arguments,
+        string expectedExtension,
+        string emptyErrorMessage,
+        string badExtensionErrorMessage,
+        string escapesDirectoryErrorMessage)
+    {
+        if (arguments.Length is 0)
+        {
+            return ValidationResult.InvalidTask(emptyErrorMessage);
+        }
+
+        string argument = arguments[0];
+
+        // We accept relative or absolute paths, but the leaf must be a non-empty file name
+        // that ends with the expected extension. Relative paths must stay under the test
+        // results directory, while the directory portion of valid paths is treated as a
+        // literal path and validated by the OS when we open the file.
+        string fileNamePart = Path.GetFileName(argument);
+        if (RoslynString.IsNullOrWhiteSpace(fileNamePart))
+        {
+            return ValidationResult.InvalidTask(emptyErrorMessage);
+        }
+
+        if (!fileNamePart.EndsWith(expectedExtension, StringComparison.OrdinalIgnoreCase))
+        {
+            return ValidationResult.InvalidTask(badExtensionErrorMessage);
+        }
+
+        return EscapesResultsDirectory(argument)
+            ? ValidationResult.InvalidTask(escapesDirectoryErrorMessage)
+            : ValidationResult.ValidTask;
+    }
+
+    public static Task<ValidationResult> ValidateReportCommandLineOptions(
+        ICommandLineOptions commandLineOptions,
+        string reportOptionName,
+        string reportFileNameOptionName,
+        string fileNameRequiresReportErrorMessage,
+        string reportIsNotValidForDiscoveryErrorMessage,
+        string discoverTestsOptionName)
+        => commandLineOptions.IsOptionSet(reportFileNameOptionName)
+            && !commandLineOptions.IsOptionSet(reportOptionName)
+            ? ValidationResult.InvalidTask(fileNameRequiresReportErrorMessage)
+            : commandLineOptions.IsOptionSet(reportOptionName)
+                && commandLineOptions.IsOptionSet(discoverTestsOptionName)
+                ? ValidationResult.InvalidTask(reportIsNotValidForDiscoveryErrorMessage)
+                : ValidationResult.ValidTask;
 
     public static bool EscapesResultsDirectory(string path)
     {
