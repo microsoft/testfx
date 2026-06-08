@@ -59,6 +59,8 @@ For deeper guidance — creating, updating, debugging, upgrading, or wrapping MC
 | [`build-failure-analysis.md`](./build-failure-analysis.md) | PR opened/synchronize/reopened on `main` or `rel/*` | Runs `./build.sh --binaryLog`; on failure, the `build-failure-analyst` agent reads JSON dumps from the binlog, posts a summary comment, and attaches inline `suggestion` blocks. Advisory only — not a gating check. |
 | [`build-failure-analysis-command.md`](./build-failure-analysis-command.md) | `/analyze-build-failure` on a PR | Re-runs the build-failure analysis on demand (after force-pushes, dismissed comments, etc.). |
 | [`add-tests.md`](./add-tests.md) | `/add-tests` on a PR | Generates unit tests for code introduced in a pull request. |
+| [`grade-tests-on-pr.agent.md`](./grade-tests-on-pr.agent.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**` | Automatically grades new and modified test methods and posts a single PR scorecard comment via the `grade-tests` skill. |
+| [`grade-tests.agent.md`](./grade-tests.agent.md) | `/grade-tests` on a PR | Re-runs the test-quality grading on demand. |
 
 #### Continuous quality improvers (scheduled)
 
@@ -111,6 +113,7 @@ Reusable agentic-workflow snippets imported via `imports:` in workflow frontmatt
 | [`shared/build-failure-analysis-shared.md`](./shared/build-failure-analysis-shared.md) | `build-failure-analysis.md`, `build-failure-analysis-command.md` |
 | [`shared/formatting.md`](./shared/formatting.md) | Quality improver workflows (output formatting conventions) |
 | [`shared/msbuild-review-shared.md`](./shared/msbuild-review-shared.md) | `msbuild-quality-review.md` |
+| [`shared/grade-tests-shared.md`](./shared/grade-tests-shared.md) | `grade-tests-on-pr.agent.md`, `grade-tests.agent.md` |
 | [`shared/repo-build-setup.md`](./shared/repo-build-setup.md) | Workflows that need to restore + build the repo before the agent runs |
 | [`shared/reporting.md`](./shared/reporting.md) | Quality improver workflows (issue/PR body templates) |
 | [`shared/review-shared.md`](./shared/review-shared.md) | `review.agent.md`, `review-on-open.agent.md`, `review-after-autofix.agent.md` |

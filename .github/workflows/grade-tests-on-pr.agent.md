@@ -1,0 +1,54 @@
+---
+name: "Grade Tests on PR (on open / sync)"
+description: >-
+  Automatically grades new and modified test methods when a non-draft
+  PR is opened, reopened, marked ready-for-review, or pushed to — but
+  only when the change touches files under `test/`.
+
+# Triggers:
+# - pull_request `opened` / `reopened` / `ready_for_review` — initial
+#   grade on the PR's first appearance as a non-draft.
+# - pull_request `synchronize` — re-grade when new commits are pushed
+#   so the comment stays current. Combined with `paths` so we only fire
+#   when test files change, and with `concurrency.cancel-in-progress`
+#   so superseded runs are cancelled.
+#
+# The companion `/grade-tests` slash command lives in `grade-tests.agent.md`.
+# They must remain separate workflows because mixing `slash_command` with
+# other triggers makes gh-aw's activation gate always require a command
+# position match, silently skipping the agent on every `pull_request`
+# invocation.
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+    paths:
+      - "test/**"
+
+# Skip draft PRs and OneLocBuild localization check-in PRs (authored by
+# dotnet-bot) — only run for human-authored PRs in a reviewable state.
+if: >
+  github.event.pull_request.draft == false
+  && !(
+    github.event.pull_request.user.login == 'dotnet-bot'
+    && startsWith(github.event.pull_request.title, 'Localized file check-in')
+  )
+
+permissions:
+  contents: read
+  pull-requests: read
+
+imports:
+  - shared/grade-tests-shared.md
+
+safe-outputs:
+  noop:
+    report-as-issue: false
+
+concurrency:
+  group: grade-tests-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+timeout-minutes: 20
+---
+
+<!-- Body provided by shared/grade-tests-shared.md -->
