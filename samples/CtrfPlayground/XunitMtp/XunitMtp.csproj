@@ -7,11 +7,11 @@
     <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn);NETSDK1023;SA0001;EnableGenerateDocumentationFile</NoWarn>
 
-    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- xunit.v3 ships its own CTRF reporter, enabled via the `-ctrf <file>` switch (see README.md). -->
-    <PackageReference Include="xunit.v3" VersionOverride="3.2.2" />
+    <PackageReference Include="xunit.v3.mtp-v2" VersionOverride="3.2.2" />
   </ItemGroup>
 </Project>
