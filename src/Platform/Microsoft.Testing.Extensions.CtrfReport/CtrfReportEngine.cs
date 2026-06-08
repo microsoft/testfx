@@ -628,9 +628,9 @@ internal sealed class CtrfReportEngine
 
     private static List<CollapsedTestResult> CollapseAttempts(CapturedTestResult[] results)
     {
-        // For each UID, group consecutive captures: the latest entry becomes the
-        // final test record, earlier entries become `retryAttempts[]`. Preserves
-        // insertion order of unique UIDs in the output (stable across runs).
+        // For each UID, group all captures in arrival order: the latest entry becomes the
+        // final test record, earlier entries become `retryAttempts[]`. Preserves the
+        // insertion order of first-seen UIDs in the output (stable across runs).
         var byUid = new Dictionary<string, int>(StringComparer.Ordinal);
         var collapsed = new List<CollapsedTestResult>(results.Length);
         foreach (CapturedTestResult r in results)
