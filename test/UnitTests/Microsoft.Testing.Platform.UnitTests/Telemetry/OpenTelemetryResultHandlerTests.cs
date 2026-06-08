@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Telemetry;
 
 using Moq;
@@ -13,7 +12,6 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class OpenTelemetryResultHandlerTests : IDisposable
 {
     private readonly Mock<IPlatformOpenTelemetryService> _otelService = new();
-    private readonly Mock<IEnvironment> _environment = new();
     private readonly FakeCounter<int> _discoveredCounter = new();
     private readonly FakeCounter<int> _startedCounter = new();
     private readonly FakeCounter<int> _completedCounter = new();
@@ -34,9 +32,8 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         _otelService.Setup(s => s.CreateCounter<int>("tests.skipped", null, null, null)).Returns(_skippedCounter);
         _otelService.Setup(s => s.CreateCounter<int>("tests.unknown", null, null, null)).Returns(_unknownCounter);
         _otelService.Setup(s => s.CreateHistogram<double>("tests.duration", null, null, null)).Returns(_durationHistogram);
-        _environment.SetupGet(e => e.NewLine).Returns("\n");
 
-        _handler = new OpenTelemetryResultHandler(_otelService.Object, _environment.Object);
+        _handler = new OpenTelemetryResultHandler(_otelService.Object);
     }
 
     [TestMethod]

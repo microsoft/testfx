@@ -133,7 +133,7 @@ internal sealed class HtmlReportEngine
                 // The IOException was caused by the file already existing. Try a
                 // suffixed name. Any other IOException (disk full, permission, path
                 // too long, etc.) is not caught here and will propagate to the caller.
-                if (_clock.UtcNow - firstTry > TimeSpan.FromSeconds(5))
+                if (_clock.UtcNow - firstTry > ReportFileWriterHelper.FileWriteRetryTimeout)
                 {
                     throw;
                 }
@@ -162,7 +162,7 @@ internal sealed class HtmlReportEngine
             ?? _environment.GetEnvironmentVariable("USER")
             ?? "user";
         string moduleName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-        string targetFrameworkMoniker = Microsoft.Testing.Extensions.TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
+        string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
         string raw = $"{user}_{_environment.MachineName}_{moduleName}_{targetFrameworkMoniker}_{finishTime:yyyy-MM-dd_HH_mm_ss}.html";
         return ReplaceInvalidFileNameChars(raw);
     }
@@ -171,13 +171,7 @@ internal sealed class HtmlReportEngine
     {
         string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
         string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
-        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(processName, processId, _clock.UtcNow);
-        string resolved = ArtifactNamingHelper.ResolveTemplate(template, replacements);
-        string directoryPart = Path.GetDirectoryName(resolved) ?? string.Empty;
-        string sanitizedFileName = ReplaceInvalidFileNameChars(Path.GetFileName(resolved));
-        return directoryPart.Length == 0
-            ? sanitizedFileName
-            : Path.Combine(directoryPart, sanitizedFileName);
+        return ReportFileNameHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow);
     }
 
     private static string ReplaceInvalidFileNameChars(string fileName)

@@ -68,7 +68,7 @@ internal sealed partial class TrxReportEngine
     }
 
     public async Task<(string FileName, string? Warning)> GenerateReportAsync(IReadOnlyList<TrxTestResult> testResults, string testHostCrashInfo = "", bool isTestHostCrashed = false)
-        => await RetryWhenIOExceptionAsync(async () =>
+        => await ReportFileWriterHelper.RetryWhenIOExceptionAsync(_clock, async () =>
         {
             string testAppModule = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
 
@@ -100,12 +100,9 @@ internal sealed partial class TrxReportEngine
                 // contain path separators, drive letters or UNC prefixes. Invalid characters in the
                 // directory portion (e.g. introduced by an unexpected placeholder value) are deferred to
                 // the OS and will surface as an IOException at file creation time.
-                string resolved = ResolveTrxFileNamePlaceholders(fileName[0]);
-                string directoryPart = Path.GetDirectoryName(resolved) ?? string.Empty;
-                string sanitizedFileName = ReplaceInvalidFileNameChars(Path.GetFileName(resolved));
-                trxFileName = directoryPart.Length == 0
-                    ? sanitizedFileName
-                    : Path.Combine(directoryPart, sanitizedFileName);
+                string processName = Path.GetFileNameWithoutExtension(testAppModule);
+                string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
+                trxFileName = ReportFileNameHelper.ResolveAndSanitize(fileName[0], processName, processId, _clock.UtcNow);
                 isFileNameExplicitlyProvided = true;
             }
             else
@@ -172,41 +169,6 @@ internal sealed partial class TrxReportEngine
                 ? (finalFileName, string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxFileExistsAndWillBeOverwritten, finalFileName))
                 : (finalFileName, null);
         }).ConfigureAwait(false);
-
-    private async Task<(string FileName, string? Warning)> RetryWhenIOExceptionAsync(Func<Task<(string FileName, string? Warning)>> func)
-    {
-        DateTimeOffset firstTryTime = _clock.UtcNow;
-        bool throwIOException = false;
-        while (true)
-        {
-            try
-            {
-                return await func().ConfigureAwait(false);
-            }
-            catch (IOException)
-            {
-                // In case of file with the same name we retry with a new name.
-                if (throwIOException)
-                {
-                    throw;
-                }
-            }
-
-            // We try for 5 seconds to create a file with a unique name.
-            if (_clock.UtcNow - firstTryTime > TimeSpan.FromSeconds(5))
-            {
-                throwIOException = true;
-            }
-        }
-    }
-
-    private string ResolveTrxFileNamePlaceholders(string template)
-    {
-        string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-        string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
-        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(processName, processId, _clock.UtcNow);
-        return ArtifactNamingHelper.ResolveTemplate(template, replacements);
-    }
 
     private readonly record struct SummaryCounts(int Passed, int Failed, int Skipped, int Timedout);
 }

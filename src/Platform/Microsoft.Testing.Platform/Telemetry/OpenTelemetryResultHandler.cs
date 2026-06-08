@@ -2,14 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Telemetry;
 
 internal sealed class OpenTelemetryResultHandler : IDisposable
 {
     private readonly IPlatformOpenTelemetryService _otelService;
-    private readonly IEnvironment _environment;
     private readonly ICounter<int> _totalDiscoveredTests;
     private readonly ICounter<int> _totalStartedTests;
     private readonly ICounter<int> _totalCompletedTests;
@@ -25,10 +23,9 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
     private readonly Dictionary<TestNodeUid, Queue<IPlatformActivity>> _testActivities = [];
     private bool _disposed;
 
-    public OpenTelemetryResultHandler(IPlatformOpenTelemetryService otelService, IEnvironment environment)
+    public OpenTelemetryResultHandler(IPlatformOpenTelemetryService otelService)
     {
         _otelService = otelService;
-        _environment = environment;
         _totalDiscoveredTests = otelService.CreateCounter<int>("tests.discovered");
         _totalStartedTests = otelService.CreateCounter<int>("tests.started");
         _totalCompletedTests = otelService.CreateCounter<int>("tests.completed");
@@ -191,8 +188,8 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             activity.SetTag($"test.metadataProperty.{metadataProperty.Key}", metadataProperty.Value);
         }
 
-        activity.SetTag("test.stdout", string.Join(_environment.NewLine, testNode.Properties.OfType<StandardOutputProperty>().Select(x => x.StandardOutput)));
-        activity.SetTag("test.stderr", string.Join(_environment.NewLine, testNode.Properties.OfType<StandardErrorProperty>().Select(x => x.StandardError)));
+        activity.SetTag("test.stdout", testNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput ?? string.Empty);
+        activity.SetTag("test.stderr", testNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError ?? string.Empty);
 
         int index = 0;
         foreach (FileArtifactProperty fileArtifactProperty in testNode.Properties.OfType<FileArtifactProperty>())
