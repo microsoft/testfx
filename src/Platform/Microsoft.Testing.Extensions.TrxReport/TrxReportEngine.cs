@@ -68,7 +68,7 @@ internal sealed partial class TrxReportEngine
     }
 
     public async Task<(string FileName, string? Warning)> GenerateReportAsync(IReadOnlyList<TrxTestResult> testResults, string testHostCrashInfo = "", bool isTestHostCrashed = false)
-        => await RetryWhenIOExceptionAsync(async () =>
+        => await ReportFileWriterHelper.RetryWhenIOExceptionAsync(_clock, async () =>
         {
             string testAppModule = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
 
@@ -172,33 +172,6 @@ internal sealed partial class TrxReportEngine
                 ? (finalFileName, string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxFileExistsAndWillBeOverwritten, finalFileName))
                 : (finalFileName, null);
         }).ConfigureAwait(false);
-
-    private async Task<(string FileName, string? Warning)> RetryWhenIOExceptionAsync(Func<Task<(string FileName, string? Warning)>> func)
-    {
-        DateTimeOffset firstTryTime = _clock.UtcNow;
-        bool throwIOException = false;
-        while (true)
-        {
-            try
-            {
-                return await func().ConfigureAwait(false);
-            }
-            catch (IOException)
-            {
-                // In case of file with the same name we retry with a new name.
-                if (throwIOException)
-                {
-                    throw;
-                }
-            }
-
-            // We try for 5 seconds to create a file with a unique name.
-            if (_clock.UtcNow - firstTryTime > TimeSpan.FromSeconds(5))
-            {
-                throwIOException = true;
-            }
-        }
-    }
 
     private string ResolveTrxFileNamePlaceholders(string template)
     {
