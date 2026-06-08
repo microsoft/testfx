@@ -33,14 +33,14 @@ internal static class ReportFileWriterHelper
             }
             catch (IOException)
             {
-                // In case of file with the same name we retry with a new name.
+                // Retry transient IO errors (e.g. file locked) until the timeout is exceeded.
                 if (hasExceededTimeout)
                 {
                     throw;
                 }
             }
 
-            // We try for the configured timeout to create a file with a unique name.
+            // Keep retrying until the configured timeout is exceeded (then the next IOException is rethrown).
             if (clock.UtcNow - firstTryTime > FileWriteRetryTimeout)
             {
                 hasExceededTimeout = true;
