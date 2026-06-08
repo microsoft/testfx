@@ -13,9 +13,20 @@ name: XLF manual-edit guard
 # are exempted at the job level via the `if:` below, so the PowerShell script
 # stays focused on diff analysis and doesn't need to know about workflow
 # context.
+#
+# Tamper-resistance:
+# - `pull_request_target` runs the workflow definition from the BASE ref so
+#   a PR cannot weaken the gate by editing this file in the same PR.
+# - actions/checkout below is pinned to the PR HEAD so `git diff` still
+#   evaluates the PR's tree (not the base tree) against BASE_REF.
+# - The run step sources the PowerShell script from the BASE commit too,
+#   so the script can't be weakened in the same PR either.
+# - This workflow has `permissions: contents: read` only and uses no
+#   secrets, so the elevated default token for `pull_request_target` is
+#   inert here — the standard PWN risk does not apply.
 
 on:
-  pull_request:
+  pull_request_target:
     paths:
       - '**/*.xlf'
       - '**/*.resx'
@@ -45,6 +56,12 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
+          # On `pull_request_target`, checkout defaults to the base ref, which
+          # would leave HEAD == base and make the diff empty. Pin HEAD to the
+          # PR head SHA so `git diff $BASE_REF...HEAD` reflects the PR.
+          ref: ${{ github.event.pull_request.head.sha }}
+          # Full history so the BASE_REF SHA below is reachable for `git diff`
+          # and `git show`.
           fetch-depth: 0
 
       - name: Run xlf manual-edit guard
