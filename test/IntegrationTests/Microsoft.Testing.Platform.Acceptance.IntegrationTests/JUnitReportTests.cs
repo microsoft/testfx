@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Xml.Linq;
-
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
@@ -47,8 +44,7 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
         Match match = Regex.Match(testHostResult.StandardOutput, xmlPathPattern);
         Assert.IsTrue(match.Success, $"JUnit report path not found in output:\n{testHostResult.StandardOutput}");
 
-        var document = XDocument.Load(match.Value);
-        AssertWellFormedJUnitReport(document, expectedTestCount: 1, expectedFailures: 0, expectedErrors: 0, expectedSkipped: 0);
+        AssertSinglePassingTestJUnitReportShape(match.Value);
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -77,8 +73,7 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
             File.Exists(customFilePath),
             $"Expected custom JUnit report file '{customFileName}' was not found in '{testResultsPath}'.");
 
-        var document = XDocument.Load(customFilePath);
-        AssertWellFormedJUnitReport(document, expectedTestCount: 1, expectedFailures: 0, expectedErrors: 0, expectedSkipped: 0);
+        AssertSinglePassingTestJUnitReportShape(customFilePath);
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -156,62 +151,7 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
             File.Exists(customFilePath),
             $"Expected JUnit report '{customFileName}' was not found in '{testResultsPath}'.\nOutput:\n{testHostResult.StandardOutput}");
 
-        var document = XDocument.Load(customFilePath);
-
-        // 1 passing + 1 failing + 1 skipped + 1 errored = 4 tests across the assembly.
-        AssertWellFormedJUnitReport(document, expectedTestCount: 4, expectedFailures: 1, expectedErrors: 1, expectedSkipped: 1);
-
-        XElement[] testcases = document.Descendants("testcase").ToArray();
-        Dictionary<string, XElement> testcasesByName = testcases.ToDictionary(tc => tc.Attribute("name")!.Value);
-
-        // Outcome mappings per RFC 016 — every outcome lands in the right child element.
-        XElement failingChild = testcasesByName["FailingChild"];
-        Assert.HasCount(1, failingChild.Elements("failure"), "FailingChild should have exactly one <failure> child.");
-        Assert.IsEmpty(failingChild.Elements("error"));
-        Assert.IsEmpty(failingChild.Elements("skipped"));
-
-        XElement skippedChild = testcasesByName["SkippedChild"];
-        Assert.HasCount(1, skippedChild.Elements("skipped"), "SkippedChild should have exactly one <skipped> child.");
-        Assert.IsEmpty(skippedChild.Elements("error"));
-        Assert.IsEmpty(skippedChild.Elements("failure"));
-
-        XElement erroredChild = testcasesByName["ErroredChild"];
-        Assert.HasCount(1, erroredChild.Elements("error"), "ErroredChild should have exactly one <error> child.");
-        Assert.IsEmpty(erroredChild.Elements("failure"));
-        Assert.IsEmpty(erroredChild.Elements("skipped"));
-
-        XElement passingTest = testcasesByName["PassingTest"];
-        Assert.IsEmpty(passingTest.Elements("failure"));
-        Assert.IsEmpty(passingTest.Elements("error"));
-        Assert.IsEmpty(passingTest.Elements("skipped"));
-
-        // Per-RFC child ordering inside <testcase>: properties?, skipped?, error*, failure*, system-out*, system-err*.
-        foreach (XElement testcase in testcases)
-        {
-            AssertTestcaseChildOrdering(testcase);
-        }
-
-        // Per-testcase metadata is emitted with the RFC-documented property names.
-        XElement[] uidProperties = document.Descendants("property")
-            .Where(p => p.Attribute("name")?.Value == "uid")
-            .ToArray();
-        Assert.IsGreaterThanOrEqualTo(4, uidProperties.Length, $"Expected at least one <property name=\"uid\"/> per testcase, but found {uidProperties.Length}.");
-
-        XElement[] legacyUidProperties = document.Descendants("property")
-            .Where(p => p.Attribute("name")?.Value == "test-uid")
-            .ToArray();
-        Assert.IsEmpty(legacyUidProperties);
-
-        // testpath always includes the leaf display name; parented children are prefixed by their container.
-        Assert.AreEqual(
-            "Container1/FailingChild",
-            failingChild.Element("properties")!.Elements("property").Single(p => p.Attribute("name")?.Value == "testpath").Attribute("value")!.Value);
-        Assert.AreEqual(
-            "Container1/SkippedChild",
-            skippedChild.Element("properties")!.Elements("property").Single(p => p.Attribute("name")?.Value == "testpath").Attribute("value")!.Value);
-        Assert.AreEqual(
-            "Container1/ErroredChild",
-            erroredChild.Element("properties")!.Elements("property").Single(p => p.Attribute("name")?.Value == "testpath").Attribute("value")!.Value);
+        AssertMixedOutcomesJUnitReportShape(customFilePath);
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -227,62 +167,124 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
         testHostResult.AssertOutputContains("'--report-junit-filename' requires '--report-junit' to be enabled");
     }
 
-    private static void AssertWellFormedJUnitReport(XDocument document, int expectedTestCount, int expectedFailures, int expectedErrors, int expectedSkipped)
+    private static void AssertSinglePassingTestJUnitReportShape(string filePath)
     {
-        // Document is well-formed XML and uses the no-namespace JUnit shape per RFC 016.
-        Assert.IsNotNull(document.Root);
-        Assert.AreEqual("testsuites", document.Root!.Name.LocalName);
-        Assert.AreEqual(string.Empty, document.Root.Name.Namespace.NamespaceName, "JUnit report must not use an XML namespace per RFC 016.");
+        // Single passing test: the dummy framework emits exactly one TestNode with
+        // Uid=test-1, DisplayName=PassingTest, status=passed, no parent, no class
+        // metadata, no timing. The engine should therefore produce one <testsuite>
+        // (named after the module, since there's no parent or class name to fall
+        // back to) containing one <testcase> with a single <properties> child
+        // holding "uid" and "testpath" entries.
+        const string expected = """
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites name="JUnitReportTest" tests="1" failures="0" errors="0" skipped="0" time="<TIME>" timestamp="<TIMESTAMP>">
+  <testsuite name="JUnitReportTest" tests="1" failures="0" errors="0" skipped="0" time="<TIME>" timestamp="<TIMESTAMP>" hostname="<HOST>" id="0">
+    <properties>
+      <property name="test-framework" value="DummyTestFramework" />
+      <property name="test-framework-version" value="2.0.0" />
+      <property name="test-framework-uid" value="DummyTestFramework" />
+      <property name="exit-code" value="0" />
+    </properties>
+    <testcase name="PassingTest" classname="JUnitReportTest" time="<TIME>">
+      <properties>
+        <property name="uid" value="test-1" />
+        <property name="testpath" value="PassingTest" />
+      </properties>
+    </testcase>
+  </testsuite>
+</testsuites>
+""";
 
-        // <testsuites> attributes reflect the aggregated counts.
-        Assert.AreEqual(expectedTestCount.ToString(CultureInfo.InvariantCulture), document.Root.Attribute("tests")!.Value);
-        Assert.AreEqual(expectedFailures.ToString(CultureInfo.InvariantCulture), document.Root.Attribute("failures")!.Value);
-        Assert.AreEqual(expectedErrors.ToString(CultureInfo.InvariantCulture), document.Root.Attribute("errors")!.Value);
-        Assert.AreEqual(expectedSkipped.ToString(CultureInfo.InvariantCulture), document.Root.Attribute("skipped")!.Value);
-
-        // At least one <testsuite> with the expected attributes; <testcase> count matches the document total.
-        XElement[] testsuites = document.Root.Elements("testsuite").ToArray();
-        Assert.IsNotEmpty(testsuites, "Expected at least one <testsuite> child.");
-        foreach (XElement testsuite in testsuites)
-        {
-            Assert.IsNotNull(testsuite.Attribute("name"));
-            Assert.IsNotNull(testsuite.Attribute("tests"));
-        }
-
-        XElement[] testcases = document.Descendants("testcase").ToArray();
-        Assert.HasCount(expectedTestCount, testcases);
-        foreach (XElement testcase in testcases)
-        {
-            Assert.IsNotNull(testcase.Attribute("name"));
-            Assert.IsNotNull(testcase.Attribute("classname"));
-        }
+        AssertJUnitReportSnapshot(filePath, expected);
     }
 
-    private static void AssertTestcaseChildOrdering(XElement testcase)
+    private static void AssertMixedOutcomesJUnitReportShape(string filePath)
     {
-        // RFC 016: children of <testcase> appear in the order
-        //   properties?, skipped?, error*, failure*, system-out*, system-err*
-        string[] expectedOrder = ["properties", "skipped", "error", "failure", "system-out", "system-err"];
+        // Mixed outcomes: 1 passing root test + 1 container with 3 parented
+        // children (fail, skip, error). The container is emitted as a Discovered
+        // node so it is captured in the parent chain but NOT counted as a test
+        // result, giving a 4-test report split across 2 suites (the module-named
+        // fallback for the root passing test, then Container1 for its children).
+        // Exit code is 2 (AtLeastOneTestFailed). The failure/error exceptions are
+        // constructed but never thrown, so they have no stack trace and the
+        // <failure>/<error> elements are self-closing with just message/type.
+        const string expected = """
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites name="JUnitReportTest" tests="4" failures="1" errors="1" skipped="1" time="<TIME>" timestamp="<TIMESTAMP>">
+  <testsuite name="JUnitReportTest" tests="1" failures="0" errors="0" skipped="0" time="<TIME>" timestamp="<TIMESTAMP>" hostname="<HOST>" id="0">
+    <properties>
+      <property name="test-framework" value="DummyTestFramework" />
+      <property name="test-framework-version" value="2.0.0" />
+      <property name="test-framework-uid" value="DummyTestFramework" />
+      <property name="exit-code" value="2" />
+    </properties>
+    <testcase name="PassingTest" classname="JUnitReportTest" time="<TIME>">
+      <properties>
+        <property name="uid" value="test-1" />
+        <property name="testpath" value="PassingTest" />
+      </properties>
+    </testcase>
+  </testsuite>
+  <testsuite name="Container1" tests="3" failures="1" errors="1" skipped="1" time="<TIME>" timestamp="<TIMESTAMP>" hostname="<HOST>" id="1">
+    <properties>
+      <property name="test-framework" value="DummyTestFramework" />
+      <property name="test-framework-version" value="2.0.0" />
+      <property name="test-framework-uid" value="DummyTestFramework" />
+      <property name="exit-code" value="2" />
+    </properties>
+    <testcase name="FailingChild" classname="Container1" time="<TIME>">
+      <properties>
+        <property name="uid" value="test-fail" />
+        <property name="testpath" value="Container1/FailingChild" />
+      </properties>
+      <failure message="boom" type="System.InvalidOperationException" />
+    </testcase>
+    <testcase name="SkippedChild" classname="Container1" time="<TIME>">
+      <properties>
+        <property name="uid" value="test-skip" />
+        <property name="testpath" value="Container1/SkippedChild" />
+      </properties>
+      <skipped message="not today" />
+    </testcase>
+    <testcase name="ErroredChild" classname="Container1" time="<TIME>">
+      <properties>
+        <property name="uid" value="test-error" />
+        <property name="testpath" value="Container1/ErroredChild" />
+      </properties>
+      <error message="kaboom" type="System.InvalidProgramException" />
+    </testcase>
+  </testsuite>
+</testsuites>
+""";
 
-        int currentIndex = 0;
-        foreach (XElement child in testcase.Elements())
-        {
-            int childIndex = Array.IndexOf(expectedOrder, child.Name.LocalName);
-            Assert.IsGreaterThanOrEqualTo(
-                0,
-                childIndex,
-                $"Unexpected child <{child.Name.LocalName}> under <testcase name=\"{testcase.Attribute("name")?.Value}\">.");
-            Assert.IsGreaterThanOrEqualTo(
-                currentIndex,
-                childIndex,
-                $"Child <{child.Name.LocalName}> appears out of order under <testcase name=\"{testcase.Attribute("name")?.Value}\">; expected ordering is {string.Join(", ", expectedOrder)}.");
-            currentIndex = childIndex;
-        }
-
-        // properties and skipped, when present, must be unique.
-        Assert.IsLessThanOrEqualTo(1, testcase.Elements("properties").Count(), "<testcase> may have at most one <properties> child.");
-        Assert.IsLessThanOrEqualTo(1, testcase.Elements("skipped").Count(), "<testcase> may have at most one <skipped> child.");
+        AssertJUnitReportSnapshot(filePath, expected);
     }
+
+    private static void AssertJUnitReportSnapshot(string filePath, string expected)
+    {
+        string actual = File.ReadAllText(filePath);
+        string normalized = NormalizeJUnitReport(actual);
+
+        Assert.AreEqual(
+            NormalizeLineEndings(expected),
+            NormalizeLineEndings(normalized),
+            $"Generated JUnit XML does not match the expected snapshot.\n\nNormalized actual:\n{normalized}\n\nRaw actual:\n{actual}");
+    }
+
+    private static string NormalizeJUnitReport(string actual)
+    {
+        // Replace attribute values that vary at runtime with stable tokens so the
+        // comparison is hermetic. Use attribute-name-scoped regexes so static
+        // numeric attributes like tests/failures/errors/skipped/id stay literal
+        // and contribute to the assertion.
+        string normalized = actual;
+        normalized = Regex.Replace(normalized, @"\btime=""[^""]*""", @"time=""<TIME>""");
+        normalized = Regex.Replace(normalized, @"\btimestamp=""[^""]*""", @"timestamp=""<TIMESTAMP>""");
+        normalized = Regex.Replace(normalized, @"\bhostname=""[^""]*""", @"hostname=""<HOST>""");
+        return normalized;
+    }
+
+    private static string NormalizeLineEndings(string s) => s.Replace("\r\n", "\n").Trim('\n');
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
