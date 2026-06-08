@@ -301,7 +301,7 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
         <LangVersion>preview</LangVersion>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Version="$MicrosoftTestingExtensionsJUnitReportVersion$" />
     </ItemGroup>
 </Project>
 
@@ -409,7 +409,8 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
             TestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsJUnitReportVersion$", MicrosoftTestingExtensionsJUnitReportVersion));
     }
 
     public TestContext TestContext { get; set; }
