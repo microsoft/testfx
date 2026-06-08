@@ -171,13 +171,7 @@ internal sealed class HtmlReportEngine
     {
         string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
         string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
-        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(processName, processId, _clock.UtcNow);
-        string resolved = ArtifactNamingHelper.ResolveTemplate(template, replacements);
-        string directoryPart = Path.GetDirectoryName(resolved) ?? string.Empty;
-        string sanitizedFileName = ReplaceInvalidFileNameChars(Path.GetFileName(resolved));
-        return directoryPart.Length == 0
-            ? sanitizedFileName
-            : Path.Combine(directoryPart, sanitizedFileName);
+        return ReportFileNameHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow);
     }
 
     private static string ReplaceInvalidFileNameChars(string fileName)
