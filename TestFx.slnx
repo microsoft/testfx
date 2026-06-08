@@ -42,6 +42,7 @@
     <Project Path="src/Platform/Microsoft.Testing.Extensions.HangDump/Microsoft.Testing.Extensions.HangDump.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.HotReload/Microsoft.Testing.Extensions.HotReload.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.HtmlReport/Microsoft.Testing.Extensions.HtmlReport.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.JUnitReport/Microsoft.Testing.Extensions.JUnitReport.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.Logging/Microsoft.Testing.Extensions.Logging.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.MSBuild/Microsoft.Testing.Extensions.MSBuild.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.OpenTelemetry/Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
