@@ -62,7 +62,7 @@ stages:
           name: NetCore-Public
           demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
         variables:
-        - template: /eng/pipelines/variables/test-env-vars.yml
+          - template: /eng/pipelines/variables/test-env-vars.yml
         strategy:
           matrix:
             Release:
@@ -170,7 +170,7 @@ stages:
           name: NetCore-Public
           demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         variables:
-        - template: /eng/pipelines/variables/test-env-vars.yml
+          - template: /eng/pipelines/variables/test-env-vars.yml
         strategy:
           matrix:
             Release:
@@ -199,7 +199,7 @@ stages:
           vmImage: macos-latest
           os: macOS
         variables:
-        - template: /eng/pipelines/variables/test-env-vars.yml
+          - template: /eng/pipelines/variables/test-env-vars.yml
         strategy:
           matrix:
             Release:
