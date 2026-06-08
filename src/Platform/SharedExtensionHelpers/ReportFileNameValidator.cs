@@ -11,7 +11,7 @@ internal static class ReportFileNameValidator
 {
     private static readonly char[] DirectorySeparators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
 
-    public static Task<ValidationResult> ValidateReportFileNameArgument(
+    public static Task<ValidationResult> ValidateReportFileNameArgumentAsync(
         string[] arguments,
         string expectedExtension,
         string emptyErrorMessage,
@@ -30,22 +30,16 @@ internal static class ReportFileNameValidator
         // results directory, while the directory portion of valid paths is treated as a
         // literal path and validated by the OS when we open the file.
         string fileNamePart = Path.GetFileName(argument);
-        if (RoslynString.IsNullOrWhiteSpace(fileNamePart))
-        {
-            return ValidationResult.InvalidTask(emptyErrorMessage);
-        }
-
-        if (!fileNamePart.EndsWith(expectedExtension, StringComparison.OrdinalIgnoreCase))
-        {
-            return ValidationResult.InvalidTask(badExtensionErrorMessage);
-        }
-
-        return EscapesResultsDirectory(argument)
-            ? ValidationResult.InvalidTask(escapesDirectoryErrorMessage)
-            : ValidationResult.ValidTask;
+        return RoslynString.IsNullOrWhiteSpace(fileNamePart)
+            ? ValidationResult.InvalidTask(emptyErrorMessage)
+            : !fileNamePart.EndsWith(expectedExtension, StringComparison.OrdinalIgnoreCase)
+                ? ValidationResult.InvalidTask(badExtensionErrorMessage)
+                : EscapesResultsDirectory(argument)
+                    ? ValidationResult.InvalidTask(escapesDirectoryErrorMessage)
+                    : ValidationResult.ValidTask;
     }
 
-    public static Task<ValidationResult> ValidateReportCommandLineOptions(
+    public static Task<ValidationResult> ValidateReportCommandLineOptionsAsync(
         ICommandLineOptions commandLineOptions,
         string reportOptionName,
         string reportFileNameOptionName,
