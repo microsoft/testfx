@@ -710,6 +710,72 @@ public class CtrfReportEngineTests
         Assert.AreEqual("<script>alert('x')</script>", test.GetProperty("name").GetString());
     }
 
+    [TestMethod]
+    public async Task GenerateReportAsync_SplitsStandardOutputAndError_OnNewlines()
+    {
+        // CTRF schema types stdout/stderr as an array of "lines of output";
+        // we must split on LF (handling CRLF) and not include a trailing empty
+        // entry for inputs that end with a newline.
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests =
+        [
+            new CapturedTestResult
+            {
+                Uid = "id-multiline",
+                DisplayName = "MultiLine",
+                Status = "passed",
+                Duration = TimeSpan.Zero,
+                StandardOutput = "line1\nline2\r\nline3\n",
+                StandardError = "errA\nerrB",
+            },
+        ];
+
+        await engine.GenerateReportAsync(tests);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement test = document.RootElement.GetProperty("results").GetProperty("tests")[0];
+
+        JsonElement stdout = test.GetProperty("stdout");
+        Assert.AreEqual(JsonValueKind.Array, stdout.ValueKind);
+        Assert.AreEqual(3, stdout.GetArrayLength(), "Trailing newline must not produce an extra empty entry.");
+        Assert.AreEqual("line1", stdout[0].GetString());
+        Assert.AreEqual("line2", stdout[1].GetString(), "CR before LF must be stripped (CRLF normalization).");
+        Assert.AreEqual("line3", stdout[2].GetString());
+
+        JsonElement stderr = test.GetProperty("stderr");
+        Assert.AreEqual(2, stderr.GetArrayLength());
+        Assert.AreEqual("errA", stderr[0].GetString());
+        Assert.AreEqual("errB", stderr[1].GetString(), "Final segment without trailing newline must still be emitted.");
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_SingleLineOutput_EmitsOneArrayEntry()
+    {
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        CapturedTestResult[] tests =
+        [
+            new CapturedTestResult
+            {
+                Uid = "id-single",
+                DisplayName = "SingleLine",
+                Status = "passed",
+                Duration = TimeSpan.Zero,
+                StandardOutput = "only-line",
+            },
+        ];
+
+        await engine.GenerateReportAsync(tests);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement test = document.RootElement.GetProperty("results").GetProperty("tests")[0];
+
+        JsonElement stdout = test.GetProperty("stdout");
+        Assert.AreEqual(1, stdout.GetArrayLength());
+        Assert.AreEqual("only-line", stdout[0].GetString());
+    }
+
     private CtrfReportEngine CreateEngine(MemoryFileStream stream)
     {
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);

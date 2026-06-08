@@ -96,10 +96,11 @@ internal sealed class CtrfReportGenerator :
         {
             // Project to a capped DTO immediately so we don't retain the original
             // TestNode (and its potentially huge stdout/stderr/stack trace strings)
-            // for the whole session. We never deduplicate on TestNode.Uid: some
-            // frameworks emit several distinct results sharing the same UID
-            // (parameterized rows, theory data, in-process retries). The engine
-            // surfaces all of them so no data is dropped.
+            // for the whole session. We capture every TestNode update as-is here; the
+            // engine later collapses captures that share the same UID into a single
+            // CTRF test entry (earlier captures become `retryAttempts[]`, marking the
+            // test as `flaky` when an earlier attempt failed). See
+            // CtrfReportEngine.CollapseAttempts for the deduplication logic.
             CapturedTestResult? captured = TestResultCapture.TryCapture(update.TestNode);
             if (captured is not null)
             {

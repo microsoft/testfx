@@ -7,7 +7,14 @@
     <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn);NETSDK1023;SA0001;EnableGenerateDocumentationFile</NoWarn>
 
-    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <!--
+      Mirror Mtp.csproj: opt this project out of the CI 'dotnet test' run, which passes
+      -p:UsingDotNetTest=true. The playground intentionally contains failing/throwing/skipped
+      tests so users can diff the CTRF output against the in-repo extension; those failures
+      must not break CI. A normal build still enables MTP so 'dotnet run' works as documented.
+    -->
+    <UseMicrosoftTestingPlatformRunner Condition=" '$(UsingDotNetTest)' != 'true' ">true</UseMicrosoftTestingPlatformRunner>
+    <IsTestingPlatformApplication Condition=" '$(UsingDotNetTest)' == 'true' ">false</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <ItemGroup>

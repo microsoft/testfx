@@ -504,21 +504,8 @@ internal sealed class CtrfReportEngine
             writer.WriteBoolean("flaky", true);
         }
 
-        if (r.StandardOutput is not null)
-        {
-            writer.WritePropertyName("stdout");
-            writer.WriteStartArray();
-            writer.WriteStringValue(r.StandardOutput);
-            writer.WriteEndArray();
-        }
-
-        if (r.StandardError is not null)
-        {
-            writer.WritePropertyName("stderr");
-            writer.WriteStartArray();
-            writer.WriteStringValue(r.StandardError);
-            writer.WriteEndArray();
-        }
+        WriteOutputLines(writer, "stdout", r.StandardOutput);
+        WriteOutputLines(writer, "stderr", r.StandardError);
 
         // CTRF `labels` is reserved for user-controlled, classification-style
         // metadata (priority, severity, external IDs, etc.). We only emit the
@@ -590,21 +577,8 @@ internal sealed class CtrfReportEngine
             writer.WriteNumber("line", line);
         }
 
-        if (attempt.StandardOutput is not null)
-        {
-            writer.WritePropertyName("stdout");
-            writer.WriteStartArray();
-            writer.WriteStringValue(attempt.StandardOutput);
-            writer.WriteEndArray();
-        }
-
-        if (attempt.StandardError is not null)
-        {
-            writer.WritePropertyName("stderr");
-            writer.WriteStartArray();
-            writer.WriteStringValue(attempt.StandardError);
-            writer.WriteEndArray();
-        }
+        WriteOutputLines(writer, "stdout", attempt.StandardOutput);
+        WriteOutputLines(writer, "stderr", attempt.StandardError);
 
         if (attempt.RawStatus is not null || attempt.ExceptionType is not null)
         {
@@ -624,6 +598,50 @@ internal sealed class CtrfReportEngine
         }
 
         writer.WriteEndObject();
+    }
+
+    // CTRF `stdout`/`stderr` are typed as an array of lines (each item is one line
+    // of captured output). Splitting on LF (handling optional CR) preserves the
+    // original line structure for consumers that present output per-line.
+    private static void WriteOutputLines(Utf8JsonWriter writer, string propertyName, string? output)
+    {
+        if (output is null)
+        {
+            return;
+        }
+
+        writer.WritePropertyName(propertyName);
+        writer.WriteStartArray();
+        int start = 0;
+        for (int i = 0; i < output.Length; i++)
+        {
+            if (output[i] == '\n')
+            {
+                int end = i;
+                if (end > start && output[end - 1] == '\r')
+                {
+                    end--;
+                }
+
+                writer.WriteStringValue(output.AsSpan(start, end - start));
+                start = i + 1;
+            }
+        }
+
+        if (start < output.Length)
+        {
+            // Emit the trailing segment after the last LF (no trailing entry when
+            // the input ends with LF — a trailing newline isn't an additional line).
+            int end = output.Length;
+            if (end > start && output[end - 1] == '\r')
+            {
+                end--;
+            }
+
+            writer.WriteStringValue(output.AsSpan(start, end - start));
+        }
+
+        writer.WriteEndArray();
     }
 
     private static List<CollapsedTestResult> CollapseAttempts(CapturedTestResult[] results)
