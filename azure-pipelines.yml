@@ -126,12 +126,24 @@ stages:
           # Integration tests are redundant in Release—they spawn child processes that already cover
           # both Debug and Release configurations. Use --test-modules to run only unit tests.
           # Use *.exe to cover both net4x (native exe) and net8+/net9+ (apphost exe) in a single glob.
-          # --report-trx must be passed explicitly because --test-modules bypasses MSBuild evaluation,
-          # so test/Directory.Build.targets cannot inject it via TestingPlatformCommandLineArguments.
-          # The {asm}_{tfm} placeholder pattern (see Microsoft.Testing.Platform.Services.ArtifactNamingHelper)
-          # mirrors what Directory.Build.targets uses for Debug runs and guarantees a unique, deterministic
-          # TRX per (assembly x target framework) module so files don't collide when multiple test apps run.
-          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx"
+          #
+          # --test-modules bypasses MSBuild evaluation, so test/Directory.Build.targets cannot inject
+          # any of its TestingPlatformCommandLineArguments. We therefore restore the subset of those
+          # options that makes sense in Release:
+          #   --report-trx + --report-trx-filename "{asm}_{tfm}.trx" — TRX per (assembly x TFM),
+          #     resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
+          #   --report-azdo — surfaces failed tests in the AzDO UI.
+          #   --hangdump --hangdump-timeout 15m — captures a dump if a module hangs past 15 minutes.
+          #   --diagnostic + --diagnostic-verbosity trace — produces per-host diagnostic logs;
+          #     directory is published by the Arcade jobs.yml template (artifacts.publish.logs: true).
+          # We intentionally do NOT pass:
+          #   --crashdump — gated on .NETCoreApp in Directory.Build.targets; the CrashDump extension's
+          #     ValidateTestHostEnvironmentVariablesAsync hard-fails the run on non-NETCoreApp hosts
+          #     (see src/Platform/Microsoft.Testing.Extensions.CrashDump/CrashDumpEnvironmentVariableProvider.cs),
+          #     and this glob mixes net4x and net8+/net9+ hosts.
+          #   --coverage — Codecov upload is Debug-only (see "Upload coverage to codecov.io" step
+          #     below), so collecting coverage in Release would just write unused .coverage files.
+          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-azdo --hangdump --hangdump-timeout 15m --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace
             name: TestRelease
             displayName: Test (unit tests only)
             condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
@@ -214,12 +226,24 @@ stages:
 
           # Integration tests are redundant in Release—they spawn child processes that already cover
           # both Debug and Release configurations. Use --test-modules to run only unit tests.
-          # --report-trx must be passed explicitly because --test-modules bypasses MSBuild evaluation,
-          # so test/Directory.Build.targets cannot inject it via TestingPlatformCommandLineArguments.
-          # The {asm}_{tfm} placeholder pattern (see Microsoft.Testing.Platform.Services.ArtifactNamingHelper)
-          # mirrors what Directory.Build.targets uses for Debug runs and guarantees a unique, deterministic
-          # TRX per (assembly x target framework) module so files don't collide when multiple test apps run.
-          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx"
+          #
+          # --test-modules bypasses MSBuild evaluation, so test/Directory.Build.targets cannot inject
+          # any of its TestingPlatformCommandLineArguments. We therefore restore the subset of those
+          # options that makes sense in Release:
+          #   --report-trx + --report-trx-filename "{asm}_{tfm}.trx" — TRX per (assembly x TFM),
+          #     resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
+          #   --report-azdo — surfaces failed tests in the AzDO UI.
+          #   --hangdump --hangdump-timeout 15m — captures a dump if a module hangs past 15 minutes.
+          #   --diagnostic + --diagnostic-verbosity trace — produces per-host diagnostic logs;
+          #     directory is published by the Arcade jobs.yml template (artifacts.publish.logs: true).
+          # We intentionally do NOT pass:
+          #   --crashdump — gated on .NETCoreApp in Directory.Build.targets; the CrashDump extension's
+          #     ValidateTestHostEnvironmentVariablesAsync hard-fails the run on non-NETCoreApp hosts
+          #     (see src/Platform/Microsoft.Testing.Extensions.CrashDump/CrashDumpEnvironmentVariableProvider.cs).
+          #     Skipped here too for cross-platform parity with the Windows script (mixed net4x+netcoreapp glob).
+          #   --coverage — Codecov upload is Debug-only (see "Upload coverage to codecov.io" step
+          #     below), so collecting coverage in Release would just write unused .coverage files.
+          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-azdo --hangdump --hangdump-timeout 15m --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)/artifacts/log/$(_BuildConfig) --diagnostic-verbosity trace
             name: TestRelease
             displayName: Test (unit tests only)
             condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
@@ -288,12 +312,24 @@ stages:
 
           # Integration tests are redundant in Release—they spawn child processes that already cover
           # both Debug and Release configurations. Use --test-modules to run only unit tests.
-          # --report-trx must be passed explicitly because --test-modules bypasses MSBuild evaluation,
-          # so test/Directory.Build.targets cannot inject it via TestingPlatformCommandLineArguments.
-          # The {asm}_{tfm} placeholder pattern (see Microsoft.Testing.Platform.Services.ArtifactNamingHelper)
-          # mirrors what Directory.Build.targets uses for Debug runs and guarantees a unique, deterministic
-          # TRX per (assembly x target framework) module so files don't collide when multiple test apps run.
-          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx"
+          #
+          # --test-modules bypasses MSBuild evaluation, so test/Directory.Build.targets cannot inject
+          # any of its TestingPlatformCommandLineArguments. We therefore restore the subset of those
+          # options that makes sense in Release:
+          #   --report-trx + --report-trx-filename "{asm}_{tfm}.trx" — TRX per (assembly x TFM),
+          #     resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
+          #   --report-azdo — surfaces failed tests in the AzDO UI.
+          #   --hangdump --hangdump-timeout 15m — captures a dump if a module hangs past 15 minutes.
+          #   --diagnostic + --diagnostic-verbosity trace — produces per-host diagnostic logs;
+          #     directory is published by the Arcade jobs.yml template (artifacts.publish.logs: true).
+          # We intentionally do NOT pass:
+          #   --crashdump — gated on .NETCoreApp in Directory.Build.targets; the CrashDump extension's
+          #     ValidateTestHostEnvironmentVariablesAsync hard-fails the run on non-NETCoreApp hosts
+          #     (see src/Platform/Microsoft.Testing.Extensions.CrashDump/CrashDumpEnvironmentVariableProvider.cs).
+          #     Skipped here too for cross-platform parity with the Windows script (mixed net4x+netcoreapp glob).
+          #   --coverage — Codecov upload is Debug-only (see "Upload coverage to codecov.io" step
+          #     below), so collecting coverage in Release would just write unused .coverage files.
+          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-azdo --hangdump --hangdump-timeout 15m --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)/artifacts/log/$(_BuildConfig) --diagnostic-verbosity trace
             name: TestRelease
             displayName: Test (unit tests only)
             condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
