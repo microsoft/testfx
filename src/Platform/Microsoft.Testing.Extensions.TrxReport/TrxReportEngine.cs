@@ -100,7 +100,7 @@ internal sealed partial class TrxReportEngine
                 // contain path separators, drive letters or UNC prefixes. Invalid characters in the
                 // directory portion (e.g. introduced by an unexpected placeholder value) are deferred to
                 // the OS and will surface as an IOException at file creation time.
-                string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+                string processName = Path.GetFileNameWithoutExtension(testAppModule);
                 string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
                 trxFileName = ReportFileNameHelper.ResolveAndSanitize(fileName[0], processName, processId, _clock.UtcNow);
                 isFileNameExplicitlyProvided = true;
