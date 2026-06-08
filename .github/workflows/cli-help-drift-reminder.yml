@@ -51,7 +51,10 @@ jobs:
       - name: Run reminder
         shell: pwsh
         env:
-          # Named ref (not a SHA) — the script's -Base default also reads
-          # $BASE_SHA for backward compatibility.
-          BASE_REF: origin/${{ github.event.pull_request.base.ref }}
+          # Pin the diff base to the immutable PR-event base SHA. The named
+          # `origin/<base.ref>` form would fail when actions/checkout's
+          # detached merge-commit checkout has no `origin/<base>` remote-
+          # tracking ref locally, turning this non-blocking reminder into
+          # a hard failure. base.sha is always present in the PR event.
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
         run: ./.github/scripts/check-cli-help-drift.ps1
