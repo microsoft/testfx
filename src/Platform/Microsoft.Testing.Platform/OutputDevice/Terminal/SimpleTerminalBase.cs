@@ -134,7 +134,7 @@ internal abstract class SimpleTerminal : ITerminal
                 Append(')');
             }
 
-            TestDetailState? activeTest = p.TestNodeResultsState?.GetRunningTasks(1).FirstOrDefault();
+            TestDetailState? activeTest = p.TestNodeResultsState?.GetLongestRunningTask();
             if (!RoslynString.IsNullOrWhiteSpace(activeTest?.Text))
             {
                 Append(" - ");

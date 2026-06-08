@@ -25,6 +25,27 @@ internal sealed class TestNodeResultsState
 
     public void RemoveRunningTestNode(string uid) => _testNodeProgressStates.TryRemove(uid, out _);
 
+    /// <summary>
+    /// Returns the single longest-running task (by elapsed time) without allocating a list.
+    /// Returns <see langword="null"/> when there are no running tasks.
+    /// </summary>
+    public TestDetailState? GetLongestRunningTask()
+    {
+        TestDetailState? best = null;
+        TimeSpan bestElapsed = TimeSpan.MinValue;
+        foreach (KeyValuePair<string, TestDetailState> kvp in _testNodeProgressStates)
+        {
+            TimeSpan elapsed = kvp.Value.Stopwatch?.Elapsed ?? TimeSpan.Zero;
+            if (elapsed > bestElapsed)
+            {
+                bestElapsed = elapsed;
+                best = kvp.Value;
+            }
+        }
+
+        return best;
+    }
+
     public List<TestDetailState> GetRunningTasks(int maxCount)
     {
         // Build the list directly from the dictionary to avoid LINQ iterator chain allocations.
