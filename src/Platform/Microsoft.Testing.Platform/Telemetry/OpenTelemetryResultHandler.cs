@@ -171,7 +171,39 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             activity.SetTag("test.result.timeout.ms", timeoutTime.Value.TotalMilliseconds);
         }
 
-        if (testNode.Properties.SingleOrDefault<TimingProperty>() is { } timingProperty)
+        // Single pass over the property bag: replaces five separate walks
+        // (SingleOrDefault<TimingProperty>, OfType<TestMetadataProperty>, SingleOrDefault<StandardOutputProperty>,
+        //  SingleOrDefault<StandardErrorProperty>, OfType<FileArtifactProperty>).
+        // Eliminates two TProperty[] heap allocations from OfType<T>() and reduces linked-list traversal from 5 to 1.
+        TimingProperty? timingProperty = null;
+        string? stdout = null;
+        string? stderr = null;
+        int artifactIndex = 0;
+        PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
+        while (enumerator.MoveNext())
+        {
+            switch (enumerator.Current)
+            {
+                case TimingProperty tp:
+                    timingProperty = tp;
+                    break;
+                case TestMetadataProperty metadataProperty:
+                    activity.SetTag($"test.metadataProperty.{metadataProperty.Key}", metadataProperty.Value);
+                    break;
+                case StandardOutputProperty outputProperty:
+                    stdout = outputProperty.StandardOutput;
+                    break;
+                case StandardErrorProperty errorProperty:
+                    stderr = errorProperty.StandardError;
+                    break;
+                case FileArtifactProperty fileArtifactProperty:
+                    activity.SetTag($"test.artifact.file[{artifactIndex}].path", fileArtifactProperty.FileInfo.FullName);
+                    artifactIndex++;
+                    break;
+            }
+        }
+
+        if (timingProperty is not null)
         {
             double totalMilliseconds = timingProperty.GlobalTiming.Duration.TotalMilliseconds;
             _totalDuration.Record(totalMilliseconds);
@@ -183,20 +215,8 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             }
         }
 
-        foreach (TestMetadataProperty metadataProperty in testNode.Properties.OfType<TestMetadataProperty>())
-        {
-            activity.SetTag($"test.metadataProperty.{metadataProperty.Key}", metadataProperty.Value);
-        }
-
-        activity.SetTag("test.stdout", testNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput ?? string.Empty);
-        activity.SetTag("test.stderr", testNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError ?? string.Empty);
-
-        int index = 0;
-        foreach (FileArtifactProperty fileArtifactProperty in testNode.Properties.OfType<FileArtifactProperty>())
-        {
-            activity.SetTag($"test.artifact.file[{index}].path", fileArtifactProperty.FileInfo.FullName);
-            index++;
-        }
+        activity.SetTag("test.stdout", stdout ?? string.Empty);
+        activity.SetTag("test.stderr", stderr ?? string.Empty);
 
         activity.Dispose();
     }
