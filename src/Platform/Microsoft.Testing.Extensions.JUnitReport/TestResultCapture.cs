@@ -30,7 +30,10 @@ internal static class TestResultCapture
             // Display names are test-controlled and may be very long, so cap them to
             // bound the size of the parent-chain dictionary and the generated XML.
             Truncate(update.TestNode.DisplayName, MaxIdentityFieldLength)!,
-            update.ParentTestNodeUid?.Value);
+            // The parent UID is also test-controlled. Cap it to the same identity
+            // budget used everywhere else; lookups against `_parentChain` (also
+            // keyed by a truncated UID) stay consistent.
+            Truncate(update.ParentTestNodeUid?.Value, MaxIdentityFieldLength));
 
     public static CapturedTestResult? TryCapture(TestNodeUpdateMessage update)
     {
@@ -92,9 +95,12 @@ internal static class TestResultCapture
             // Identity fields are test-controlled and can be unbounded (e.g. very long
             // UIDs/display names from generated data), so we also cap them to keep the
             // session-wide result list and generated XML within a predictable budget.
+            // RawUid and ParentRawUid are used as keys/edges in the parent-chain
+            // dictionary, so they must be capped with the same budget on both sides
+            // to keep lookups consistent.
             Uid = Truncate(node.Uid.Value, MaxIdentityFieldLength)!,
-            RawUid = node.Uid.Value,
-            ParentRawUid = update.ParentTestNodeUid?.Value,
+            RawUid = Truncate(node.Uid.Value, MaxIdentityFieldLength)!,
+            ParentRawUid = Truncate(update.ParentTestNodeUid?.Value, MaxIdentityFieldLength),
             DisplayName = Truncate(node.DisplayName, MaxIdentityFieldLength)!,
             Outcome = outcome,
             Duration = duration,

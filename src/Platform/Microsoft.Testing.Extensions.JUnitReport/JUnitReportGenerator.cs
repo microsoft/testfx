@@ -104,7 +104,11 @@ internal sealed class JUnitReportGenerator :
             // nodes (Discovered / InProgress) are still available when reconstructing
             // the path of a terminal child test. Later updates for the same UID just
             // refresh the entry (frameworks may emit several updates per node).
-            string rawUid = update.TestNode.Uid.Value;
+            // The raw UID is test-controlled and unbounded by the platform, so we
+            // truncate it to a fixed identity budget before using it as a dictionary
+            // key. Capture-side `RawUid`/`ParentRawUid` values are truncated to the
+            // same budget so cross-lookups remain consistent.
+            string rawUid = TestResultCapture.Truncate(update.TestNode.Uid.Value, TestResultCapture.MaxIdentityFieldLength)!;
             _parentChain[rawUid] = TestResultCapture.GetParentChainEntry(update);
 
             // Project to a capped DTO immediately so we don't retain the original
