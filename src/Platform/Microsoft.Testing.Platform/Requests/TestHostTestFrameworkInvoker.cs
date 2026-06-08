@@ -40,7 +40,8 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
     // simply dropped by AsynchronousMessageBus, but the old shipped consumer still
     // needs it published in order to emit the run summary to MSBuild.
     // See: https://github.com/microsoft/testfx/pull/8514 (removal),
-    //      https://github.com/microsoft/testfx/pull/8921 (binary-compat restore).
+    //      https://github.com/microsoft/testfx/pull/8921 (binary-compat restore),
+    //      https://github.com/microsoft/testfx/issues/8925 (remove in next major).
     public Type[] DataTypesProduced => [typeof(TestRequestExecutionTimeInfo)];
 #pragma warning restore CS0618 // Type or member is obsolete
 

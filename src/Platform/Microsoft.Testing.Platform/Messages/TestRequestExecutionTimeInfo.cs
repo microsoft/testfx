@@ -22,7 +22,8 @@ namespace Microsoft.Testing.Platform.Extensions.Messages;
 //
 // This type is intentionally marked [Obsolete] so we remember to drop it in the next major
 // release (where breaking binary compatibility with the 2.2.x extension line is acceptable).
-[Obsolete("Kept only for binary compatibility with Microsoft.Testing.Platform.MSBuild <= 2.2.x. Do not use; remove in the next major release.")]
+// Tracked by https://github.com/microsoft/testfx/issues/8925.
+[Obsolete("Kept only for binary compatibility with Microsoft.Testing.Platform.MSBuild <= 2.2.x. Do not use; remove in the next major release. See https://github.com/microsoft/testfx/issues/8925.")]
 internal readonly struct TestRequestExecutionTimeInfo(TimingInfo timingInfo) : IData
 {
     public string DisplayName => nameof(TestRequestExecutionTimeInfo);
