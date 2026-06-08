@@ -63,11 +63,16 @@ jobs:
   # windows.vs2026.amd64 image. Since image version 2026.0529.211646 (deployed 2026-06-05),
   # the bundled VS MSBuild fails to spin up an x86 .NET task host for Arcade tasks declared
   # with Runtime="NET", producing MSB4216 on InstallDotNetCore. See dotnet/msbuild#13739.
-  - script: eng\common\cibuild.cmd
+  #
+  # CodeQL only needs source compilation, so call Build.cmd directly (restore + build only)
+  # instead of cibuild.cmd. cibuild.cmd implicitly enables -pack/-sign/-publish, and the
+  # dotnet MSBuild engine cannot build the UWP/uap10.0.16299 targets used by some MSTest
+  # packages, leaving those bin directories empty and breaking the pack step.
+  - script: Build.cmd
       -configuration $(_BuildConfig)
+      -ci
       -prepareMachine
       -msbuildEngine dotnet
-      /p:Test=false
     displayName: Windows Build
 
   - task: CodeQL3000Finalize@0
