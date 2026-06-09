@@ -1,7 +1,7 @@
 # Efficiency Improver Memory — microsoft/testfx
 
 ## Last Updated
-2026-06-08
+2026-06-09
 
 ## Build/Test Commands
 - Build: `./build.sh` (Linux/macOS), `.\build.cmd` (Windows)
@@ -25,6 +25,7 @@
 - 2026-06-06: Task 2, Task 3 (AzureDevOps OfType→SingleOrDefault), Task 4, Task 7
 - 2026-06-07: Task 3 (OpenTelemetry OfType→SingleOrDefault stdout/stderr), Task 7
 - 2026-06-08: Task 3 (OTel HandleTestResult 5-walk→1-walk), Task 7
+- 2026-06-09: Task 2 (scan for new opportunities), Task 3 (TrxTestResultExtractor 9-walk→1-walk), Task 7
 
 ## Completed Work
 - PR #8692: perf: reduce redundant UTF-8 string encoding in IPC BaseSerializer (MERGED 2026-05-31)
@@ -36,14 +37,15 @@
 - PR #8866: perf: cache ExecutionId + single-pass property scan in DotnetTestDataConsumer (MERGED 2026-06-07)
 - PR #8884: perf: SingleOrDefault instead of OfType().FirstOrDefault() in AzureDevOps report (MERGED 2026-06-07)
 - PR #8908: perf: SingleOrDefault instead of OfType().Select() for stdout/stderr in OpenTelemetryResultHandler (MERGED 2026-06-08)
-- PR (efficiency/otel-single-pass-property-walk): perf: single-pass PropertyBag walk in OpenTelemetryResultHandler.HandleTestResult (submitted 2026-06-08, awaiting merge)
-  - Replaces 5 separate PropertyBag walks + 2 OfType<T>() array allocs with 1 GetStructEnumerator() pass in HandleTestResult
-  - Saves ~4 list walks + ~2 array allocations per OTel-enabled test result
+- PR #8938: perf: single-pass PropertyBag walk in OpenTelemetryResultHandler.HandleTestResult (MERGED 2026-06-09)
+- PR (efficiency/trx-single-pass-property-walk): perf: single-pass PropertyBag walk in TrxTestResultExtractor (submitted 2026-06-09, awaiting merge)
+  - Replaces 7 SingleOrDefault<T>() + 2 OfType<T>() calls with 1 GetStructEnumerator() pass in Extract()
+  - Saves 8 linked-list walks + 2 TProperty[] array allocations per TRX test result
 
 ## Optimisation Backlog
 | Priority | Focus Area | Opportunity | Estimated Impact |
 |----------|------------|-------------|------------------|
-| MEDIUM | Code-Level | TrxTestResultExtractor.cs — 2 separate `OfType<T>()` loops (TestMetadata, FileArtifact) — could use GetStructEnumerator() (has InternalsVisibleTo) | Low-medium (TRX only) |
+| MEDIUM | Code-Level | TestResultCapture.cs (JUnitReport) — 4 SingleOrDefault<T>() walks + 1 foreach box alloc → 1 GetStructEnumerator() pass | Low-medium (JUnit only) |
 | LOW | Code-Level | `ToolsTestHost.cs:55` — `GroupBy().Where(Count()>1).ToList().ForEach()` — startup-only code | Negligible |
 
 ## Efficiency Notes
@@ -64,7 +66,9 @@
 - PropertyBag.OfType<T>() allocates TProperty[] even for single-element results; use SingleOrDefault<T>() when only first match is needed (2026-06-06)
 - OpenTelemetryResultHandler: 5 separate PropertyBag walks (2 OfType + 3 SingleOrDefault) → 1 GetStructEnumerator() pass (2026-06-08)
 - GetTestInitialInfo in OTel uses yield return (state machine alloc) + 3 walks; considered but left as-is (yield return trade-off: state machine ≈ List<KVP>, no net allocation saving)
-- Backlog mostly exhausted for easy PropertyBag/LINQ wins in Platform; check other areas next run
+- TrxTestResultExtractor: 7 SingleOrDefault + 2 OfType (9 walks + 2 array allocs) → 1 GetStructEnumerator() pass (2026-06-09)
+- GetStructEnumerator() accessible in TrxReport + JUnitReport via InternalsVisibleTo; both reference Microsoft.Testing.Platform directly
+- Backlog mostly exhausted for easy PropertyBag/LINQ wins; JUnitReport TestResultCapture is next candidate
 
 ## Monthly Activity Issue
-- 2026-06 issue: created 2026-06-08 (previous #8744 closed by Evangelink on 2026-06-08)
+- 2026-06 issue: #8939 (created 2026-06-08, updated 2026-06-09)
