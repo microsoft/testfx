@@ -38,6 +38,17 @@
     <EnableMicrosoftTestingExtensionsAzureDevOpsReport Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>
     <MicrosoftTestingExtensionsAzureDevOpsReportVersion Condition=" '$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsAzureDevOpsReportVersion>
 
+    <!-- HTML report -->
+    <EnableMicrosoftTestingExtensionsHtmlReport Condition=" '$(EnableMicrosoftTestingExtensionsHtmlReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsHtmlReport>
+    <MicrosoftTestingExtensionsHtmlReportVersion Condition=" '$(MicrosoftTestingExtensionsHtmlReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsHtmlReportVersion>
+
+    <!--
+      CTRF report (experimental / opt-in only).
+      Not auto-enabled by any profile - it has its own pre-release version line
+      (see MicrosoftTestingExtensionsCtrfReportVersion flowed through MSTest.Sdk.csproj).
+    -->
+    <MicrosoftTestingExtensionsCtrfReportVersion Condition=" '$(MicrosoftTestingExtensionsCtrfReportVersion)' == '' " >$(MicrosoftTestingExtensionsCtrfReportVersion)</MicrosoftTestingExtensionsCtrfReportVersion>
+
     <!-- Fakes -->
     <EnableMicrosoftTestingExtensionsFakes Condition=" '$(EnableMicrosoftTestingExtensionsFakes)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsFakes>
     <MicrosoftTestingExtensionsFakesVersion Condition=" '$(MicrosoftTestingExtensionsFakesVersion)' == '' " >$(MicrosoftTestingExtensionsFakesVersion)</MicrosoftTestingExtensionsFakesVersion>
@@ -131,6 +142,20 @@
     </PackageReference>
     <PackageVersion Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)"
                     Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+
+    <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Sdk="MSTest"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsHtmlReport)' == 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsHtmlReportVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Testing.Extensions.HtmlReport" Version="$(MicrosoftTestingExtensionsHtmlReportVersion)"
+                    Condition=" '$(EnableMicrosoftTestingExtensionsHtmlReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+
+    <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Sdk="MSTest"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsCtrfReport)' == 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsCtrfReportVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Testing.Extensions.CtrfReport" Version="$(MicrosoftTestingExtensionsCtrfReportVersion)"
+                    Condition=" '$(EnableMicrosoftTestingExtensionsCtrfReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)../Features/Aspire.targets" Condition=" '$(EnableAspireTesting)' == 'true' " />
