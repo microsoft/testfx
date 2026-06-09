@@ -7,7 +7,6 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.JUnitReport;
@@ -155,15 +154,16 @@ internal sealed class JUnitReportEngine
                 }
             }
 
-            if (_clock.UtcNow - firstTry > TimeSpan.FromSeconds(5))
+            if (_clock.UtcNow - firstTry > ReportFileWriterHelper.FileWriteRetryTimeout)
             {
                 // Last-ditch: keep the data by leaving the .tmp file in place and bubble
                 // up so the user still has the artifact rather than losing it silently.
                 throw new IOException(
                     string.Format(
                         CultureInfo.InvariantCulture,
-                        "Unable to generate JUnit report at '{0}' after retrying for 5 seconds; intermediate file kept at '{1}'.",
+                        "Unable to generate JUnit report at '{0}' after retrying for {1} seconds; intermediate file kept at '{2}'.",
                         finalPath,
+                        ReportFileWriterHelper.FileWriteRetryTimeout.TotalSeconds.ToString(CultureInfo.InvariantCulture),
                         tempPath));
             }
 
@@ -704,7 +704,7 @@ internal sealed class JUnitReportEngine
             ?? _environment.GetEnvironmentVariable("USER")
             ?? "user";
         string moduleName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-        string targetFrameworkMoniker = GetTargetFrameworkMoniker();
+        string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
         string raw = $"{user}_{_environment.MachineName}_{moduleName}_{targetFrameworkMoniker}_{finishTime:yyyy-MM-dd_HH_mm_ss}.xml";
         return ReplaceInvalidFileNameChars(raw);
     }
@@ -713,65 +713,11 @@ internal sealed class JUnitReportEngine
     {
         string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
         string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
-        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(processName, processId, _clock.UtcNow);
-        string resolved = ArtifactNamingHelper.ResolveTemplate(template, replacements);
-        string directoryPart = Path.GetDirectoryName(resolved) ?? string.Empty;
-        string sanitizedFileName = ReplaceInvalidFileNameChars(Path.GetFileName(resolved));
-        return directoryPart.Length == 0
-            ? sanitizedFileName
-            : Path.Combine(directoryPart, sanitizedFileName);
+        return ReportFileNameHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow);
     }
-
-    private static string GetTargetFrameworkMoniker()
-        => TargetFrameworkParser.GetShortTargetFramework(
-            Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
-            ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription)
-            ?? "unknown";
 
     private static string ReplaceInvalidFileNameChars(string fileName)
-    {
-        var sb = new StringBuilder(fileName.Length);
-        foreach (char c in fileName)
-        {
-            sb.Append(IsInvalidFileNameChar(c) ? '_' : c);
-        }
-
-        string replaced = sb.ToString().TrimEnd();
-        if (IsReservedFileName(replaced))
-        {
-            replaced = '_' + replaced;
-        }
-
-        return replaced;
-    }
-
-    private static bool IsInvalidFileNameChar(char c)
-        // Keep the explicit file-name sanitization aligned with TRX / HtmlReport naming
-        // so placeholders and cross-platform reserved characters produce compatible names.
-        => c is < ' ' or '"' or '<' or '>' or '|' or ':' or '*' or '?' or '\\' or '/' or '@' or '(' or ')' or '^' or ' ';
-
-    private static bool IsReservedFileName(string fileName)
-    {
-        string bareName = fileName;
-        int dot = bareName.IndexOf('.');
-        if (dot >= 0)
-        {
-            bareName = bareName.Substring(0, dot);
-        }
-
-        return bareName.Equals("CON", StringComparison.OrdinalIgnoreCase)
-            || bareName.Equals("PRN", StringComparison.OrdinalIgnoreCase)
-            || bareName.Equals("AUX", StringComparison.OrdinalIgnoreCase)
-            || bareName.Equals("NUL", StringComparison.OrdinalIgnoreCase)
-            || bareName.Equals("CLOCK$", StringComparison.OrdinalIgnoreCase)
-            || IsReservedNameWithNumber(bareName, "COM")
-            || IsReservedNameWithNumber(bareName, "LPT");
-
-        static bool IsReservedNameWithNumber(string bareName, string prefix)
-            => bareName.Length == 4
-                && bareName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
-                && bareName[3] is >= '1' and <= '9';
-    }
+        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
 
     private sealed class SuiteSet
     {
