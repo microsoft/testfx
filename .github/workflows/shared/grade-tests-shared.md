@@ -341,12 +341,12 @@ issue, and the single most important recommendation. -->
     <col width="28%">
   </colgroup>
   <thead>
-    <tr><th></th><th>Test</th><th>Grade</th><th>Band</th><th>Notes</th></tr>
+    <tr><th>Δ</th><th>Test</th><th>Grade</th><th>Band</th><th>Notes</th></tr>
   </thead>
   <tbody>
     <tr>
       <td>new</td>
-      <td><code>ClassName.Method_<wbr>When<wbr>X_<wbr>ReturnsY</code></td>
+      <td><code>ClassName.Method_<wbr>WhenSomething_<wbr>ReturnsValue</code></td>
       <td>A</td>
       <td>90–100</td>
       <td>…</td>
@@ -377,9 +377,11 @@ Rules for the table:
   the rendered table to the PR-comment width and prevent the horizontal
   scroll-bar shown when long fully-qualified test names blow out the
   `Test` column.
-- **Column 1 (status)**: keep it tiny — `new`, `mod`, or empty (no
+- **Column 1 (Δ / status)**: keep it tiny — `new`, `mod`, or empty (no
   parentheses, no backticks). Omit (leave blank) if the diff context does
-  not make the distinction clear from `git log` on the file at HEAD.
+  not make the distinction clear from `git log` on the file at HEAD. The
+  header is the single character `Δ` (change indicator) so the column is
+  not anonymous to screen readers.
 - **Column 2 (Test)** — the `<colgroup>` already caps the column at 50%
   of the comment width, but the cell content also needs to be
   *wrap-friendly* so the constrained width is filled top-to-bottom rather
@@ -392,9 +394,8 @@ Rules for the table:
     their content literally in GFM, so a `<wbr>` inside would display
     as the literal text `<wbr>`.
   - **Insert `<wbr>` word-break hints inside the method name** after
-    each `_` (and before each upper-case run in PascalCase segments
-    longer than ~12 characters) so the browser can break the inline
-    `<code>` span on long underscored MSTest names. Example:
+    each `_` so the browser can break the inline `<code>` span on long
+    underscored MSTest names. Example:
     `<code>ClassName.TestNodeResultsState_<wbr>GetSingleActiveOrSummaryTask_<wbr>WhenEmpty_<wbr>ReturnsNull</code>`.
     Do **not** alter the actual method name — `<wbr>` is invisible and
     must not change what gets copy-pasted (apart from the soft-wrap).
