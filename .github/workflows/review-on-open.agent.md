@@ -6,11 +6,12 @@ description: "Automatically runs the expert-reviewer agent when a non-draft PR i
 # The `roles` setting restricts execution to users with admin, maintainer, or
 # write permissions, and fork PRs are blocked by the compiled repository_id guard.
 #
-# NOTE: Only `opened` is used here; for PRs transitioned from draft to ready,
-# use the `/review` slash command.
+# Triggers on both `opened` (PR opened as non-draft) and `ready_for_review`
+# (PR transitioned from draft to ready). The `if:` condition below filters out
+# draft PRs so the `opened` event is a no-op for drafts.
 on:
   pull_request:
-    types: [opened]
+    types: [opened, ready_for_review]
   roles: [admin, maintainer, write]
 
 # Skip draft PRs and OneLocBuild localization check-in PRs (authored by dotnet-bot)
