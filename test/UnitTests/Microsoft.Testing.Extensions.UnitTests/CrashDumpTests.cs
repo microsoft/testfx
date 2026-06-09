@@ -619,6 +619,67 @@ public sealed class CrashDumpTests
         }
     }
 
+    [TestMethod]
+    public async Task OnTestHostProcessExitedAsync_CrashReport_PatternWithRuntimePlaceholders_PublishesMatchedReport()
+    {
+        // When the configured dump pattern relies on runtime placeholders other than `%p`
+        // (here `%e`, which the `{pname}` token maps to), the literal-`%p`-substituted crash
+        // report path never exists on disk. The handler must therefore identify the crash
+        // report via the testhost-dump regex applied to the report's "<dump file name>"
+        // prefix, and publish the actual file found on disk (not the unresolved path).
+        string dumpDirectory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "crashdump-tests-" + Guid.NewGuid().ToString("N"))).FullName;
+        try
+        {
+            string dumpPattern = Path.Combine(dumpDirectory, "Dump_%e_%p.dmp");
+            var configuration = new CrashDumpConfiguration { DumpFileNamePattern = dumpPattern };
+            var commandLineOptions = new TestCommandLineOptions(new Dictionary<string, string[]>
+            {
+                { CrashDumpCommandLineOptions.CrashDumpOptionName, [] },
+                { CrashDumpCommandLineOptions.CrashReportOptionName, [] },
+            });
+            var messageBus = new RecordingMessageBus();
+            var outputDevice = new CapturingOutputDevice();
+            var handler = new CrashDumpProcessLifetimeHandler(commandLineOptions, messageBus, outputDevice, configuration);
+
+            await handler.OnTestHostProcessStartedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+
+            // Simulate the runtime writing the testhost dump and its companion crash report with
+            // `%e` expanded to "testhost". A naive File.Exists check on the literal-%p-substituted
+            // crash report path (`Dump_%e_123.dmp.crashreport.json`) would miss the actual file.
+            string testhostDump = Path.Combine(dumpDirectory, "Dump_testhost_123.dmp");
+            string testhostCrashReport = testhostDump + ".crashreport.json";
+            File.WriteAllText(testhostDump, "fresh");
+            File.WriteAllText(testhostCrashReport, "{}");
+
+            await handler.OnTestHostProcessExitedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+
+            string[] publishedFiles = messageBus.Published
+                .OfType<FileArtifact>()
+                .Select(static a => a.FileInfo.FullName)
+                .OrderBy(static p => p, StringComparer.Ordinal)
+                .ToArray();
+            string[] expected = new[] { testhostDump, testhostCrashReport }.OrderBy(static p => p, StringComparer.Ordinal).ToArray();
+            Assert.AreSequenceEqual(expected, publishedFiles);
+
+            // The "expected crash report not found" warning must NOT be emitted: the report was
+            // matched by the regex even though `expectedCrashReportFile` (literal `%p` substitution)
+            // would be `Dump_%e_123.dmp.crashreport.json`, which does not exist on disk.
+            string captured = string.Join(" | ", outputDevice.Displayed);
+            Assert.DoesNotContain("Dump_%e_123.dmp.crashreport.json", captured, "CannotFindExpectedCrashReportFile must not be displayed when the report was recognized via the regex.");
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(dumpDirectory, recursive: true);
+            }
+            catch
+            {
+                // Best effort cleanup.
+            }
+        }
+    }
+
     private sealed class RecordingMessageBus : IMessageBus
     {
         public List<IData> Published { get; } = [];
