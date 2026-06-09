@@ -28,7 +28,7 @@ internal sealed class TrxReportGeneratorCommandLine : CommandLineOptionsProvider
 
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
         => commandOption.Name == TrxReportFileNameOptionName
-            ? global::Microsoft.Testing.Extensions.ReportFileNameValidator.ValidateReportFileNameArgumentAsync(
+            ? ReportFileNameValidator.ValidateReportFileNameArgumentAsync(
                 arguments,
                 ".trx",
                 ExtensionResources.TrxReportFileNameMustNotBeEmpty,
@@ -37,7 +37,7 @@ internal sealed class TrxReportGeneratorCommandLine : CommandLineOptionsProvider
             : ValidationResult.ValidTask;
 
     public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => global::Microsoft.Testing.Extensions.ReportFileNameValidator.ValidateReportCommandLineOptionsAsync(
+        => ReportFileNameValidator.ValidateReportCommandLineOptionsAsync(
             commandLineOptions,
             TrxReportOptionName,
             TrxReportFileNameOptionName,
