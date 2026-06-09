@@ -37,6 +37,8 @@ internal static partial class PlatformResources
     internal static string @InternalLoopAsyncDidNotExitSuccessfullyErrorMessage => GetResourceString("InternalLoopAsyncDidNotExitSuccessfullyErrorMessage");
 
 #if IS_MTP_UNIT_TESTS
+    internal static string @ActiveTestsRunning_FullTestsCount => GetResourceString("ActiveTestsRunning_FullTestsCount");
+
     internal static string @PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage => GetResourceString("PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage");
 
     internal static string @PlatformCommandLineDiscoverTestsInvalidArgument => GetResourceString("PlatformCommandLineDiscoverTestsInvalidArgument");
