@@ -14,9 +14,17 @@ dotnet add package Microsoft.Testing.Extensions.OpenTelemetry
 
 This package extends Microsoft.Testing.Platform with:
 
-- **OpenTelemetry integration**: instruments test execution and produces OpenTelemetry-compatible traces and metrics that can be exported by user-configured exporters (for example, OTLP exporters)
-- **Observability**: enables you to route test execution data, via your own OpenTelemetry exporter configuration, into observability backends (e.g. Jaeger, Prometheus, Grafana)
-- **Standards-based**: leverages the OpenTelemetry .NET SDK so that data is sent only to the telemetry exporters and endpoints that you configure
+- **OpenTelemetry integration**: exposes the Microsoft Testing Platform activity source and meter (both named `Microsoft.Testing.Platform`) so test execution can be observed via the OpenTelemetry .NET SDK.
+- **Lifecycle management**: ties the lifetime of a `TracerProvider` and `MeterProvider` to the test application, so they are disposed alongside the test host.
+- **Observability**: lets you route test execution data, via your own OpenTelemetry exporter configuration, into observability backends (e.g. Jaeger, Prometheus, Grafana).
+- **Standards-based**: leverages the OpenTelemetry .NET SDK so that data is sent only to the telemetry exporters and endpoints that you configure.
+
+> Note: `AddOpenTelemetryProvider` does **not** register any instrumentation or exporter by default. To actually collect MTP telemetry you must, from the `withTracing` / `withMetrics` delegates:
+>
+> - call `AddTestingPlatformInstrumentation()` on both the `TracerProviderBuilder` and the `MeterProviderBuilder` to subscribe to the Microsoft Testing Platform source/meter, and
+> - register at least one exporter (for example `AddOtlpExporter`, `AddConsoleExporter`, or a vendor-specific exporter).
+>
+> Without instrumentation, no MTP activities or metrics are collected; without an exporter, collected telemetry is not emitted anywhere.
 
 ## Documentation
 
