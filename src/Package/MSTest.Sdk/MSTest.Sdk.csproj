@@ -42,7 +42,15 @@
       <_MSTestSourceGenerationVersionSuffix>$(_MSTestSourceGenerationPreReleaseVersionLabel)$(_BuildNumberLabels)</_MSTestSourceGenerationVersionSuffix>
       <_MSTestSourceGenerationVersion>$(MSTestSourceGenerationVersionPrefix)</_MSTestSourceGenerationVersion>
       <_MSTestSourceGenerationVersion Condition="'$(_MSTestSourceGenerationVersionSuffix)' != ''">$(_MSTestSourceGenerationVersion)-$(_MSTestSourceGenerationVersionSuffix)</_MSTestSourceGenerationVersion>
-      <_TemplateProperties>MSTestSourceGenerationVersion=$(_MSTestSourceGenerationVersion);MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion)</_TemplateProperties>
+
+      <_MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>$(MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel)</_MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>
+      <_MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuild)' != 'true'">ci</_MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>
+      <_MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(OfficialBuild)' != 'true'">dev</_MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>
+      <_MicrosoftTestingExtensionsJUnitReportVersionSuffix>$(_MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel)$(_BuildNumberLabels)</_MicrosoftTestingExtensionsJUnitReportVersionSuffix>
+      <_MicrosoftTestingExtensionsJUnitReportVersion>$(MicrosoftTestingExtensionsJUnitReportVersionPrefix)</_MicrosoftTestingExtensionsJUnitReportVersion>
+      <_MicrosoftTestingExtensionsJUnitReportVersion Condition="'$(_MicrosoftTestingExtensionsJUnitReportVersionSuffix)' != ''">$(_MicrosoftTestingExtensionsJUnitReportVersion)-$(_MicrosoftTestingExtensionsJUnitReportVersionSuffix)</_MicrosoftTestingExtensionsJUnitReportVersion>
+
+      <_TemplateProperties>MSTestSourceGenerationVersion=$(_MSTestSourceGenerationVersion);MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion);MicrosoftTestingExtensionsJUnitReportVersion=$(_MicrosoftTestingExtensionsJUnitReportVersion)</_TemplateProperties>
     </PropertyGroup>
 
     <!--

@@ -65,6 +65,13 @@
       This is a early preview package, keep 2.0.0-alpha or similar suffix even in official builds.
     -->
     <MSTestSourceGenerationVersionPrefix>2.0.0</MSTestSourceGenerationVersionPrefix>
+
+    <MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>
+
+    <!--
+      This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
+    -->
+    <MicrosoftTestingExtensionsJUnitReportVersionPrefix>1.0.0</MicrosoftTestingExtensionsJUnitReportVersionPrefix>
   </PropertyGroup>
 
   <!-- Pack config -->
