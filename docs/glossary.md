@@ -12,9 +12,17 @@ A .NET fluent-assertion library ([NuGet: AwesomeAssertions](https://www.nuget.or
 
 An MTP struct (`ArgumentArity.cs`) that defines the minimum and maximum number of values a command-line option accepts. Provides five predefined constants: `Zero` (0,0), `ZeroOrOne` (0,1), `ZeroOrMore` (0,∞), `ExactlyOne` (1,1), and `OneOrMore` (1,∞). Used by `ICommandLineOptionsProvider` implementations to declare option shapes.
 
+### ArtifactNamingHelper
+
+A shared static helper compiled into MTP extensions via file linking (no NuGet service registration or InternalsVisibleTo required) that provides template-based naming for test artifact files (dump files, report files, etc.). Templates are strings containing `{placeholder}` tokens (case-sensitive, lowercase): `{pname}` (process name), `{pid}` (process ID), `{asm}` (entry-assembly name), `{tfm}` (target framework moniker, best-effort runtime detection), and `{time}` (high-precision UTC timestamp). Custom per-call overrides can replace default placeholder values via a `Dictionary<string, string>`. Used directly by the [HangDump](#hangdump) and [CrashDump](#crashdump) extensions, and indirectly by the report extensions ([HtmlReport](#htmlreport), [JUnitReport](#junitreport), and [TrxReport](#trxreport)) via the shared `ReportFileNameHelper`. The legacy `%p` pattern is not handled here; it is substituted by the [HangDump](#hangdump) extension as a separate post-processing step for backward compatibility. The [CrashDump](#crashdump) consumer passes the .NET runtime's `%e` and `%p` placeholders as the `processName` and `processId` arguments so `{pname}` and `{pid}` resolve to `%e` and `%p` respectively — those are then expanded by the runtime's `createdump` at crash-write time (the testhost PID is not yet known when the environment variables are configured).
+
 ### AzureDevOpsReport
 
 An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats and reports test results to Azure DevOps pipelines. It generates pipeline-compatible output including TFM and test name details for richer CI reporting.
+
+### AzureFoundry
+
+An MTP extension (`Microsoft.Testing.Extensions.AzureFoundry`) that integrates [Azure AI Foundry](https://azure.microsoft.com/products/ai-foundry) (Azure OpenAI) with Microsoft.Testing.Platform as an [IChatClientProvider](#ichatclientprovider) implementation. It reads Azure OpenAI connection settings from environment variables and supplies AI chat-client capabilities to any testing extension that consumes the [Microsoft.Testing.Platform.AI](#microsofttestingplatformai) abstractions. This is the reference implementation of the `Microsoft.Testing.Platform.AI` abstractions.
 
 ## C
 
@@ -60,7 +68,15 @@ A specific code component (function, struct, or class) selected for formal verif
 
 An MTP extension (`Microsoft.Testing.Extensions.HangDump`) that captures a process memory dump when a test exceeds a configured timeout. Helps diagnose deadlocks, infinite loops, or unexpectedly slow tests.
 
+### HtmlReport
+
+An MTP extension (`Microsoft.Testing.Extensions.HtmlReport`) that generates a self-contained HTML test report at the end of a test session. The report inlines all CSS, JavaScript, and test data into a single `.html` file with no external dependencies, making it suitable for archiving as a CI artifact, attaching to PR comments, or sharing by email. Features include failed-test-first ordering, free-text search, sort/filter by outcome or duration, an expandable per-test detail panel (error message, stack trace, stdout/stderr), and automatic light/dark theme following the system preference. Pagination keeps the report usable for very large test runs. Currently **experimental** — CLI option, layout, and on-disk format may change without notice. Enable via the `--report-html` CLI option.
+
 ## I
+
+### IChatClientProvider
+
+An MTP interface (`Microsoft.Testing.Platform.AI.IChatClientProvider`) that defines the contract for AI provider integrations in the testing platform. Exposes four members: `IsAvailable` (whether required configuration, e.g. environment variables, is present), `HasToolsCapability` (whether the provider supports tool/function calling, e.g. MCP tools), `ModelName` (the model in use), and `CreateChatClientAsync` (factory that returns an `IChatClient` from [Microsoft.Extensions.AI](https://www.nuget.org/packages/Microsoft.Extensions.AI)). Extensions that need AI capabilities consume an injected `IChatClientProvider` rather than implementing provider-specific logic themselves. The interface is shipped in [Microsoft.Testing.Platform.AI](#microsofttestingplatformai); the reference implementation is [AzureFoundry](#azurefoundry).
 
 ### Informal Spec (FV)
 
@@ -75,6 +91,10 @@ An MSBuild property (`<IsTestingPlatformApplication>true</IsTestingPlatformAppli
 ### JSON-RPC Protocol
 
 The communication protocol used between a test runner executable (server) and a client (IDE, CLI, or CI tool). Based on [JSON-RPC 2.0](https://www.jsonrpc.org/specification), it defines messages for test discovery (`testing/discoverTests`), test execution (`testing/runTests`), result reporting, debugger attachment, and telemetry.
+
+### JUnitReport
+
+An MTP extension (`Microsoft.Testing.Extensions.JUnitReport`) that emits a JUnit-style XML test report at the end of a test run. The report conforms to the Jenkins/Surefire `<testsuites><testsuite><testcase>` schema and is accepted by Jenkins (`junit` step), GitLab CI (`junit:` artifact reports), Azure DevOps (`PublishTestResults@2` with `testResultsFormat: 'JUnit'`), CircleCI, GitHub Actions test reporters, and most other CI tooling. MTP's hierarchical [TestNode](#testnode) tree is preserved as a `<property name="testpath" value="…"/>` element inside each `<testcase>`, allowing tools to reconstruct hierarchy. Auto-registers via the `TestingPlatformBuilderHook` MSBuild item declared in the package's `buildMultiTargeting` props (imported by the `build` and `buildTransitive` props), so adding a `<PackageReference>` to the package is sufficient — no opt-in property is required at the package level. When using [MSTest.Sdk](#mstestsdk), the package is not added by default (the extension is still experimental); opt in with `<EnableMicrosoftTestingExtensionsJUnitReport>true</EnableMicrosoftTestingExtensionsJUnitReport>` to have MSTest.Sdk add the `<PackageReference>` for you. Currently **experimental** — the API, CLI options, and on-disk format may change without notice. Enable via `--report-junit`; override filename with `--report-junit-filename`.
 
 ## L
 
@@ -124,6 +144,10 @@ See **Microsoft.Testing.Platform**.
 
 A lightweight, extensible test platform for .NET that serves as a modern alternative to VSTest. MTP ships as a NuGet package (`Microsoft.Testing.Platform`) and provides the core infrastructure for running tests: command-line parsing, test session management, result reporting, and an extension model. Test frameworks (e.g., MSTest, xUnit adapters) and extensions (e.g., CrashDump, HangDump) plug into MTP.
 
+### Microsoft.Testing.Platform.AI
+
+A NuGet package (`Microsoft.Testing.Platform.AI`) that provides AI extensibility abstractions for Microsoft.Testing.Platform. It defines the [IChatClientProvider](#ichatclientprovider) interface and leverages [Microsoft.Extensions.AI](https://www.nuget.org/packages/Microsoft.Extensions.AI) types so that test frameworks and extensions can consume Large Language Model (LLM) capabilities — flaky test analysis, crash dump analysis, test failure root-cause analysis, and more — without implementing provider-specific logic. This package ships the **abstractions only**; an AI provider implementation such as [Microsoft.Testing.Extensions.AzureFoundry](#azurefoundry) must also be registered to supply actual AI capabilities. See `docs/microsoft.testing.platform/001-AI-Extensibility.md` for the design RFC.
+
 ## N
 
 ### NopFilter
@@ -157,6 +181,10 @@ An MTP extension (`Microsoft.Testing.Extensions.Retry`) that automatically re-ru
 Request for Comments document in the `docs/RFCs/` folder. RFCs describe design decisions, proposed features, and implementation details for MSTest and MTP.
 
 ## T
+
+### testconfig.json
+
+The per-project configuration file for Microsoft.Testing.Platform, placed at the project root and read at test startup. Supports multiple top-level sections; a key one is `environmentVariables`, which declares environment variables to set on the test host process — mirroring the `<EnvironmentVariables>` element of legacy `.runsettings` and removing the need to write a custom `ITestHostEnvironmentVariableProvider` (see `docs/microsoft.testing.platform/002-TestConfig-EnvironmentVariables.md`). When the `environmentVariables` section is present and non-empty, MTP activates the **controller process model**: the launching process becomes the controller, injects the declared variables into `ProcessStartInfo`, and spawns the actual test host as a child process.
 
 ### TestNode
 

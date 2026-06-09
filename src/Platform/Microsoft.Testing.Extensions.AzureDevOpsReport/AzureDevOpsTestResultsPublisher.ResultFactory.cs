@@ -79,7 +79,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 comment: fileArtifact.Description ?? fileArtifact.DisplayName));
         }
 
-        StandardOutputProperty? stdout = testNode.Properties.OfType<StandardOutputProperty>().FirstOrDefault();
+        StandardOutputProperty? stdout = testNode.Properties.SingleOrDefault<StandardOutputProperty>();
         if (stdout is not null && !RoslynString.IsNullOrEmpty(stdout.StandardOutput))
         {
             attachments ??= [];
@@ -89,7 +89,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 AzureDevOpsAttachmentTypes.ConsoleLog));
         }
 
-        StandardErrorProperty? stderr = testNode.Properties.OfType<StandardErrorProperty>().FirstOrDefault();
+        StandardErrorProperty? stderr = testNode.Properties.SingleOrDefault<StandardErrorProperty>();
         if (stderr is not null && !RoslynString.IsNullOrEmpty(stderr.StandardError))
         {
             attachments ??= [];

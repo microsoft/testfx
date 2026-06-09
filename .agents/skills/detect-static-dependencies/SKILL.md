@@ -10,6 +10,7 @@ description: >
   DO NOT USE FOR: generating wrappers (use generate-testability-wrappers),
   migrating code (use migrate-static-to-wrapper), general code review,
   or finding statics that are already behind abstractions.
+license: MIT
 ---
 
 # Detect Static Dependencies
@@ -22,6 +23,12 @@ Scan a C# codebase for calls to hard-to-test static APIs and produce a ranked re
 - Understanding the scope of static coupling in a legacy codebase
 - Prioritizing which statics to wrap first (highest-frequency wins)
 - Creating a migration plan for incremental testability improvements
+
+## Response Guidelines
+
+- Scale the response to the user's request. A question about a specific category (e.g., "find time statics") should focus on that category with file locations and counts, not produce a full report across all categories.
+- When the user provides a specific file or directory path, scan only that scope — do not expand to the entire solution unless asked.
+- The full structured report format in Step 4 is for comprehensive audit requests. For focused questions, return only the relevant subset (e.g., category summary + affected files for the requested category).
 
 ## When Not to Use
 

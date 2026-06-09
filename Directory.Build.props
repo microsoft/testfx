@@ -25,7 +25,16 @@
   <!-- The TFMs to build and test against. -->
   <PropertyGroup>
     <!-- The windows SDK version of UWP, Modern UWP and WinUI could be aligned -->
-    <UwpMinimum>uap10.0.16299</UwpMinimum>
+    <!--
+      $(UwpMinimum) (uap10.0.16299) requires desktop msbuild.exe because
+      MSBuild.Sdk.Extras Workarounds.targets refuses to build full-MSBuild targets
+      under 'dotnet msbuild'. The CodeQL pipeline runs with -msbuildEngine dotnet
+      to work around https://github.com/dotnet/msbuild/issues/13739, so it sets
+      $(SkipUapTargetFramework)=true to opt out of the UAP target. UAP-specific
+      code paths are still source-scanned via the other TFMs that the affected
+      projects multi-target (net462, net8.0, net9.0).
+    -->
+    <UwpMinimum Condition=" '$(SkipUapTargetFramework)' != 'true' ">uap10.0.16299</UwpMinimum>
     <ModernUwpMinimum>net9.0-windows10.0.17763.0</ModernUwpMinimum>
     <WinUiMinimum>net8.0-windows10.0.18362.0</WinUiMinimum>
 
@@ -57,17 +66,24 @@
     -->
     <MSTestSourceGenerationVersionPrefix>2.0.0</MSTestSourceGenerationVersionPrefix>
 
-    <MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
+<MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
 
     <!--
-      This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
+    This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
     -->
     <MicrosoftTestingExtensionsCtrfReportVersionPrefix>1.0.0</MicrosoftTestingExtensionsCtrfReportVersionPrefix>
+
+    <MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>
+
+    <!--
+    This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
+    -->
+    <MicrosoftTestingExtensionsJUnitReportVersionPrefix>1.0.0</MicrosoftTestingExtensionsJUnitReportVersionPrefix>
 
     <MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel>
 
     <!--
-      This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
+    This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
     -->
     <MicrosoftTestingExtensionsOpenTelemetryVersionPrefix>1.0.0</MicrosoftTestingExtensionsOpenTelemetryVersionPrefix>
   </PropertyGroup>

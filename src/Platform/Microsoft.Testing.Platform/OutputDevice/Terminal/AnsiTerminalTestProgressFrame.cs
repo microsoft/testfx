@@ -10,9 +10,9 @@ internal sealed class AnsiTerminalTestProgressFrame
 {
     private const int MaxColumn = 250;
 
-    public int Width { get; }
+    public int Width { get; private set; }
 
-    public int Height { get; }
+    public int Height { get; private set; }
 
     public List<RenderedProgressItem>? RenderedLines { get; set; }
 
@@ -20,6 +20,16 @@ internal sealed class AnsiTerminalTestProgressFrame
     {
         Width = Math.Min(width, MaxColumn);
         Height = height;
+    }
+
+    /// <summary>
+    /// Resets this frame for reuse as the next render target, avoiding a heap allocation per render tick.
+    /// </summary>
+    internal void Reset(int width, int height)
+    {
+        Width = Math.Min(width, MaxColumn);
+        Height = height;
+        RenderedLines?.Clear();
     }
 
     public void AppendTestWorkerProgress(TestProgressState progress, RenderedProgressItem currentLine, AnsiTerminal terminal)
@@ -211,7 +221,8 @@ internal sealed class AnsiTerminalTestProgressFrame
         }
 
         int i;
-        RenderedLines = [with(progress.Length * 2)];
+        // Reuse the list if it was already cleared by Reset(); only allocate on first use of each frame object.
+        RenderedLines ??= [with(progress.Length * 2)];
         List<object> progresses = GenerateLinesToRender(progress);
 
         for (i = 0; i < progresses.Count; i++)

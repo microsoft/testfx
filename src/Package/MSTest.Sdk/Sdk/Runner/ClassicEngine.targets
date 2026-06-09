@@ -152,6 +152,13 @@
     <PackageVersion Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)"
                     Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
 
+<PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Sdk="MSTest"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsCtrfReport)' == 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsCtrfReportVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Testing.Extensions.CtrfReport" Version="$(MicrosoftTestingExtensionsCtrfReportVersion)"
+                    Condition=" '$(EnableMicrosoftTestingExtensionsCtrfReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+
     <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Sdk="MSTest"
                       Condition=" '$(EnableMicrosoftTestingExtensionsHtmlReport)' == 'true' ">
       <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsHtmlReportVersion)</Version>
@@ -159,12 +166,12 @@
     <PackageVersion Include="Microsoft.Testing.Extensions.HtmlReport" Version="$(MicrosoftTestingExtensionsHtmlReportVersion)"
                     Condition=" '$(EnableMicrosoftTestingExtensionsHtmlReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
 
-    <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Sdk="MSTest"
-                      Condition=" '$(EnableMicrosoftTestingExtensionsCtrfReport)' == 'true' ">
-      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsCtrfReportVersion)</Version>
+    <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Sdk="MSTest"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsJUnitReport)' == 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsJUnitReportVersion)</Version>
     </PackageReference>
-    <PackageVersion Include="Microsoft.Testing.Extensions.CtrfReport" Version="$(MicrosoftTestingExtensionsCtrfReportVersion)"
-                    Condition=" '$(EnableMicrosoftTestingExtensionsCtrfReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+    <PackageVersion Include="Microsoft.Testing.Extensions.JUnitReport" Version="$(MicrosoftTestingExtensionsJUnitReportVersion)"
+                    Condition=" '$(EnableMicrosoftTestingExtensionsJUnitReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
 
     <PackageReference Include="Microsoft.Testing.Extensions.OpenTelemetry" Sdk="MSTest"
                       Condition=" '$(EnableMicrosoftTestingExtensionsOpenTelemetry)' == 'true' ">

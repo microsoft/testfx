@@ -9,6 +9,7 @@
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' != '' " Text="'EnableMicrosoftTestingExtensionsHangDump' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' != '' " Text="'EnableMicrosoftTestingExtensionsHotReload' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsHtmlReport)' != '' " Text="'EnableMicrosoftTestingExtensionsHtmlReport' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMicrosoftTestingExtensionsJUnitReport)' != '' " Text="'EnableMicrosoftTestingExtensionsJUnitReport' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsOpenTelemetry)' != '' " Text="'EnableMicrosoftTestingExtensionsOpenTelemetry' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' != '' " Text="'EnableMicrosoftTestingExtensionsRetry' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' != '' " Text="'EnableMicrosoftTestingExtensionsTrxReport' is not supported by VSTest." />

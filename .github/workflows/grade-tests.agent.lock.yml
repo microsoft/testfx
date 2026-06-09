@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"84b0e54afc31e3dbe573ff213ca60641c6d965204cbad0b024a68e23995f4e1b","compiler_version":"v0.76.1","strict":true,"agent_id":"copilot"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"41c342234e4c358ff14b747ee97f96c54f351bc09111ea9da447886b2d320b6f","compiler_version":"v0.76.1","strict":true,"agent_id":"copilot"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"46d564922b082d0db93244972e8005ea6904ee5f","version":"v0.76.1"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.55"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.55"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.55"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.19"},{"image":"ghcr.io/github/github-mcp-server:v1.0.4","digest":"sha256:e3816a476a977cfb836e7d221510011436c654d11861db66ecfd826601aba6a4","pinned_image":"ghcr.io/github/github-mcp-server:v1.0.4@sha256:e3816a476a977cfb836e7d221510011436c654d11861db66ecfd826601aba6a4"},{"image":"node:lts-alpine","digest":"sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f","pinned_image":"node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -22,7 +22,11 @@
 #
 # For more information: https://github.github.com/gh-aw/introduction/overview/
 #
-# Grades the new and modified test methods in a pull request and posts a single PR comment with a compact per-test scorecard (letter grade A–F, score band, and one-line notes). Runs automatically on PR open and on pushes that touch `test/**`, and can be re-triggered manually via the `/grade-tests` slash command.
+# Re-grades the new and modified test methods of a pull request when a maintainer comments `/grade-tests`.
+#
+# Resolved workflow manifest:
+#   Imports:
+#     - shared/grade-tests-shared.md
 #
 # Secrets used:
 #   - COPILOT_GITHUB_TOKEN
@@ -46,58 +50,12 @@
 #   - ghcr.io/github/github-mcp-server:v1.0.4@sha256:e3816a476a977cfb836e7d221510011436c654d11861db66ecfd826601aba6a4
 #   - node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
 
-name: "Grade Tests on PR"
+name: "Grade Tests on PR (command)"
 on:
-  # permissions: # Permissions applied to pre-activation job
-    # contents: read
-    # pull-requests: read
-  pull_request:
-    paths:
-    - test/**
-    - src/**
-    types:
-    - opened
-    - synchronize
-    - ready_for_review
   # roles: # Roles processed as role check in pre-activation job
   # - admin # Roles processed as role check in pre-activation job
   # - maintainer # Roles processed as role check in pre-activation job
   # - write # Roles processed as role check in pre-activation job
-  # steps: # Steps injected into pre-activation job
-  # - env:
-      # EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
-      # EVENT_NAME: ${{ github.event_name }}
-      # EVENT_PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-      # EVENT_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-      # EVENT_PR_DRAFT: ${{ github.event.pull_request.draft }}
-      # EVENT_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-      # EVENT_PR_NUMBER: ${{ github.event.pull_request.number }}
-      # EVENT_PR_TITLE: ${{ github.event.pull_request.title }}
-      # GH_TOKEN: ${{ github.token }}
-    # id: resolve
-    # name: Resolve PR base and head
-    # run: "set -euo pipefail\ncase \"$EVENT_NAME\" in\n  pull_request)\n    BASE_SHA=\"$EVENT_PR_BASE_SHA\"\n    HEAD_SHA=\"$EVENT_PR_HEAD_SHA\"\n    PR_NUMBER=\"$EVENT_PR_NUMBER\"\n    DRAFT=\"$EVENT_PR_DRAFT\"\n    AUTHOR=\"$EVENT_PR_AUTHOR\"\n    TITLE=\"$EVENT_PR_TITLE\"\n    ;;\n  issue_comment)\n    PR_NUMBER=\"$EVENT_ISSUE_NUMBER\"\n    PR_JSON=$(gh pr view \"$PR_NUMBER\" --repo \"$GITHUB_REPOSITORY\" --json baseRefOid,headRefOid,isDraft,author,title)\n    BASE_SHA=$(printf '%s' \"$PR_JSON\" | jq -r '.baseRefOid')\n    HEAD_SHA=$(printf '%s' \"$PR_JSON\" | jq -r '.headRefOid')\n    DRAFT=$(printf '%s' \"$PR_JSON\" | jq -r '.isDraft')\n    AUTHOR=$(printf '%s' \"$PR_JSON\" | jq -r '.author.login')\n    TITLE=$(printf '%s' \"$PR_JSON\" | jq -r '.title')\n    ;;\n  *)\n    echo \"Unsupported event: $EVENT_NAME\" >&2\n    exit 1\n    ;;\nesac\necho \"base_sha=$BASE_SHA\" >> \"$GITHUB_OUTPUT\"\necho \"head_sha=$HEAD_SHA\" >> \"$GITHUB_OUTPUT\"\necho \"pr_number=$PR_NUMBER\" >> \"$GITHUB_OUTPUT\"\necho \"draft=$DRAFT\" >> \"$GITHUB_OUTPUT\"\necho \"author=$AUTHOR\" >> \"$GITHUB_OUTPUT\"\necho \"title=$TITLE\" >> \"$GITHUB_OUTPUT\"\n"
-  # - env:
-      # AUTHOR: ${{ steps.resolve.outputs.author }}
-      # DRAFT: ${{ steps.resolve.outputs.draft }}
-      # EVENT_NAME: ${{ github.event_name }}
-      # TITLE: ${{ steps.resolve.outputs.title }}
-    # id: skip
-    # name: Skip draft and OneLocBuild PRs
-    # run: "set -euo pipefail\nSHOULD_RUN=true\nif [[ \"$DRAFT\" == \"true\" && \"$EVENT_NAME\" == \"pull_request\" ]]; then\n  echo \"Skipping: PR is a draft.\"\n  SHOULD_RUN=false\nfi\nif [[ \"$AUTHOR\" == \"dotnet-bot\" && \"$TITLE\" == \"Localized file check-in\"* ]]; then\n  echo \"Skipping: OneLocBuild localization PR.\"\n  SHOULD_RUN=false\nfi\necho \"should_run=$SHOULD_RUN\" >> \"$GITHUB_OUTPUT\"\n"
-  # - if: steps.skip.outputs.should_run == 'true'
-    # name: Checkout PR head
-    # uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-    # with:
-      # fetch-depth: 0
-      # ref: ${{ steps.resolve.outputs.head_sha }}
-  # - env:
-      # BASE_SHA: ${{ steps.resolve.outputs.base_sha }}
-      # HEAD_SHA: ${{ steps.resolve.outputs.head_sha }}
-    # id: extract
-    # if: steps.skip.outputs.should_run == 'true'
-    # name: Extract changed test file regions
-    # run: "set -euo pipefail\nOUT=\"$RUNNER_TEMP/changed-test-regions.tsv\"\n: > \"$OUT\"\n\nmapfile -t CHANGED < <(\n  git diff --name-only --diff-filter=AMR \"$BASE_SHA\" \"$HEAD_SHA\" -- 'test/' \\\n    | grep -E '\\.cs$' || true\n)\n\nif (( ${#CHANGED[@]} == 0 )); then\n  echo \"No test files changed.\"\n  echo \"has_changed_tests=false\" >> \"$GITHUB_OUTPUT\"\n  echo \"file_count=0\" >> \"$GITHUB_OUTPUT\"\n  exit 0\nfi\n\nfor f in \"${CHANGED[@]}\"; do\n  [[ -f \"$f\" ]] || continue\n  RANGES=$(\n    git diff --unified=0 \"$BASE_SHA\" \"$HEAD_SHA\" -- \"$f\" \\\n      | awk '\n          /^@@/ {\n            if (match($0, /\\+[0-9]+(,[0-9]+)?/)) {\n              hunk = substr($0, RSTART+1, RLENGTH-1)\n              n = split(hunk, a, \",\")\n              start = a[1] + 0\n              count = (n == 2 ? a[2] + 0 : 1)\n              if (count == 0) next\n              end = start + count - 1\n              printf(\"%d-%d,\", start, end)\n            }\n          }\n        ' \\\n      | sed 's/,$//'\n  )\n  if [[ -n \"$RANGES\" ]]; then\n    printf '%s\\t%s\\n' \"$f\" \"$RANGES\" >> \"$OUT\"\n  fi\ndone\n\nif [[ ! -s \"$OUT\" ]]; then\n  echo \"No changed line ranges in test files.\"\n  echo \"has_changed_tests=false\" >> \"$GITHUB_OUTPUT\"\n  echo \"file_count=0\" >> \"$GITHUB_OUTPUT\"\n  exit 0\nfi\n\nFILE_COUNT=$(wc -l < \"$OUT\")\necho \"Found $FILE_COUNT test file(s) with changes.\"\necho \"has_changed_tests=true\" >> \"$GITHUB_OUTPUT\"\necho \"file_count=$FILE_COUNT\" >> \"$GITHUB_OUTPUT\"\necho \"tsv_path=$OUT\" >> \"$GITHUB_OUTPUT\"\n"
   workflow_dispatch:
     inputs:
       aw_context:
@@ -110,16 +68,14 @@ permissions: {}
 
 concurrency:
   cancel-in-progress: true
-  group: grade-tests-${{ github.event.pull_request.number || github.event.issue.number }}
+  group: grade-tests-${{ github.event.issue.number }}
 
-run-name: "Grade Tests on PR"
+run-name: "Grade Tests on PR (command)"
 
 jobs:
   activation:
     needs: pre_activation
-    if: >
-      needs.pre_activation.outputs.activated == 'true' && ((needs.pre_activation.outputs.should_run == 'true' &&
-      needs.pre_activation.outputs.has_changed_tests == 'true') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.id == github.repository_id))
+    if: needs.pre_activation.outputs.activated == 'true'
     runs-on: ubuntu-slim
     permissions:
       actions: read
@@ -152,8 +108,8 @@ jobs:
           trace-id: ${{ needs.pre_activation.outputs.setup-trace-id }}
           parent-span-id: ${{ needs.pre_activation.outputs.setup-parent-span-id || needs.pre_activation.outputs.setup-span-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Grade Tests on PR"
-          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/grade-tests-on-pr.lock.yml@${{ github.ref }}
+          GH_AW_SETUP_WORKFLOW_NAME: "Grade Tests on PR (command)"
+          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/grade-tests.agent.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.0.52"
           GH_AW_INFO_AWF_VERSION: "v0.25.55"
           GH_AW_INFO_ENGINE_ID: "copilot"
@@ -166,7 +122,7 @@ jobs:
           GH_AW_INFO_VERSION: "1.0.52"
           GH_AW_INFO_AGENT_VERSION: "1.0.52"
           GH_AW_INFO_CLI_VERSION: "v0.76.1"
-          GH_AW_INFO_WORKFLOW_NAME: "Grade Tests on PR"
+          GH_AW_INFO_WORKFLOW_NAME: "Grade Tests on PR (command)"
           GH_AW_INFO_EXPERIMENTAL: "false"
           GH_AW_INFO_SUPPORTS_TOOLS_ALLOWLIST: "true"
           GH_AW_INFO_STAGED: "false"
@@ -230,7 +186,7 @@ jobs:
         id: check-lock-file
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          GH_AW_WORKFLOW_FILE: "grade-tests-on-pr.lock.yml"
+          GH_AW_WORKFLOW_FILE: "grade-tests.agent.lock.yml"
           GH_AW_CONTEXT_WORKFLOW_REF: "${{ github.workflow_ref }}"
         with:
           script: |
@@ -264,7 +220,8 @@ jobs:
         if: github.event_name == 'issues' || github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' || github.event_name == 'discussion_comment' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.id == github.repository_id || github.event_name == 'workflow_dispatch' && (fromJSON(github.event.inputs.aw_context || '{}').event_type == 'issues' || fromJSON(github.event.inputs.aw_context || '{}').event_type == 'issue_comment' || fromJSON(github.event.inputs.aw_context || '{}').event_type == 'pull_request_review_comment' || fromJSON(github.event.inputs.aw_context || '{}').event_type == 'pull_request' || fromJSON(github.event.inputs.aw_context || '{}').event_type == 'discussion' || fromJSON(github.event.inputs.aw_context || '{}').event_type == 'discussion_comment')
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          GH_AW_WORKFLOW_NAME: "Grade Tests on PR"
+          GH_AW_WORKFLOW_NAME: "Grade Tests on PR (command)"
+          GH_AW_SAFE_OUTPUT_MESSAGES: "{\"footer\":\"\\u003e 🤖 **Automated content by GitHub Copilot.** Posted via a maintainer's GitHub token, so it appears under their account — the account owner did **not** write or approve this content personally. Generated by the [{workflow_name}]({agentic_workflow_url}) workflow.{ai_credits_suffix} · [◷]({history_link})\"}"
         with:
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
@@ -278,33 +235,29 @@ jobs:
           GH_AW_EXPR_1A3A194A: ${{ github.event.discussion.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'discussion' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
           GH_AW_EXPR_463A214A: ${{ github.event.pull_request.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'pull_request' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
           GH_AW_EXPR_802A9F6A: ${{ github.event.issue.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'issue' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
-          GH_AW_EXPR_AE61BB68: ${{ github.event.pull_request.number || github.event.issue.number }}
           GH_AW_EXPR_FF1D34CE: ${{ github.event.comment.id || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').comment_id }}
           GH_AW_GITHUB_ACTOR: ${{ github.actor }}
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
-          GH_AW_IS_PR_COMMENT: ${{ github.event.issue.pull_request && 'true' || '' }}
-          GH_AW_STEPS_EXTRACT_OUTPUTS_FILE_COUNT: ${{ steps.extract.outputs.file_count }}
-          GH_AW_STEPS_EXTRACT_OUTPUTS_TSV_PATH: ${{ steps.extract.outputs.tsv_path }}
         # poutine:ignore untrusted_checkout_exec
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_b6193348cbe10a3e_EOF'
+          cat << 'GH_AW_PROMPT_1fd52d756d4aee6b_EOF'
           <system>
-          GH_AW_PROMPT_b6193348cbe10a3e_EOF
+          GH_AW_PROMPT_1fd52d756d4aee6b_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_b6193348cbe10a3e_EOF'
+          cat << 'GH_AW_PROMPT_1fd52d756d4aee6b_EOF'
           <safe-output-tools>
           Tools: add_comment(max:5), missing_tool, missing_data, noop
           </safe-output-tools>
-          GH_AW_PROMPT_b6193348cbe10a3e_EOF
+          GH_AW_PROMPT_1fd52d756d4aee6b_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_b6193348cbe10a3e_EOF'
+          cat << 'GH_AW_PROMPT_1fd52d756d4aee6b_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if github.actor}}
@@ -333,25 +286,19 @@ jobs:
           {{/if}}
           </github-context>
           
-          GH_AW_PROMPT_b6193348cbe10a3e_EOF
+          GH_AW_PROMPT_1fd52d756d4aee6b_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          if [ "$GITHUB_EVENT_NAME" = "issue_comment" ] && [ -n "$GH_AW_IS_PR_COMMENT" ] || [ "$GITHUB_EVENT_NAME" = "pull_request_review_comment" ] || [ "$GITHUB_EVENT_NAME" = "pull_request_review" ]; then
-            cat "${RUNNER_TEMP}/gh-aw/prompts/pr_context_prompt.md"
-          fi
-          cat << 'GH_AW_PROMPT_b6193348cbe10a3e_EOF'
+          cat << 'GH_AW_PROMPT_1fd52d756d4aee6b_EOF'
           </system>
-          {{#runtime-import .github/workflows/grade-tests-on-pr.md}}
-          GH_AW_PROMPT_b6193348cbe10a3e_EOF
+          {{#runtime-import .github/workflows/shared/grade-tests-shared.md}}
+          {{#runtime-import .github/workflows/grade-tests.agent.md}}
+          GH_AW_PROMPT_1fd52d756d4aee6b_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
           GH_AW_ENGINE_ID: "copilot"
-          GH_AW_EXPR_AE61BB68: ${{ github.event.pull_request.number || github.event.issue.number }}
-          GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
-          GH_AW_STEPS_EXTRACT_OUTPUTS_FILE_COUNT: ${{ steps.extract.outputs.file_count }}
-          GH_AW_STEPS_EXTRACT_OUTPUTS_TSV_PATH: ${{ steps.extract.outputs.tsv_path }}
         with:
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
@@ -365,18 +312,14 @@ jobs:
           GH_AW_EXPR_1A3A194A: ${{ github.event.discussion.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'discussion' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
           GH_AW_EXPR_463A214A: ${{ github.event.pull_request.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'pull_request' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
           GH_AW_EXPR_802A9F6A: ${{ github.event.issue.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'issue' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
-          GH_AW_EXPR_AE61BB68: ${{ github.event.pull_request.number || github.event.issue.number }}
           GH_AW_EXPR_FF1D34CE: ${{ github.event.comment.id || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').comment_id }}
           GH_AW_GITHUB_ACTOR: ${{ github.actor }}
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
-          GH_AW_IS_PR_COMMENT: ${{ github.event.issue.pull_request && 'true' || '' }}
           GH_AW_MCP_CLI_SERVERS_LIST: '- `safeoutputs` — run `safeoutputs --help` to see available tools'
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: ${{ needs.pre_activation.outputs.activated }}
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_MATCHED_COMMAND: ${{ needs.pre_activation.outputs.matched_command }}
-          GH_AW_STEPS_EXTRACT_OUTPUTS_FILE_COUNT: ${{ steps.extract.outputs.file_count }}
-          GH_AW_STEPS_EXTRACT_OUTPUTS_TSV_PATH: ${{ steps.extract.outputs.tsv_path }}
         with:
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
@@ -391,18 +334,14 @@ jobs:
                 GH_AW_EXPR_1A3A194A: process.env.GH_AW_EXPR_1A3A194A,
                 GH_AW_EXPR_463A214A: process.env.GH_AW_EXPR_463A214A,
                 GH_AW_EXPR_802A9F6A: process.env.GH_AW_EXPR_802A9F6A,
-                GH_AW_EXPR_AE61BB68: process.env.GH_AW_EXPR_AE61BB68,
                 GH_AW_EXPR_FF1D34CE: process.env.GH_AW_EXPR_FF1D34CE,
                 GH_AW_GITHUB_ACTOR: process.env.GH_AW_GITHUB_ACTOR,
                 GH_AW_GITHUB_REPOSITORY: process.env.GH_AW_GITHUB_REPOSITORY,
                 GH_AW_GITHUB_RUN_ID: process.env.GH_AW_GITHUB_RUN_ID,
                 GH_AW_GITHUB_WORKSPACE: process.env.GH_AW_GITHUB_WORKSPACE,
-                GH_AW_IS_PR_COMMENT: process.env.GH_AW_IS_PR_COMMENT,
                 GH_AW_MCP_CLI_SERVERS_LIST: process.env.GH_AW_MCP_CLI_SERVERS_LIST,
                 GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED,
-                GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_MATCHED_COMMAND: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_MATCHED_COMMAND,
-                GH_AW_STEPS_EXTRACT_OUTPUTS_FILE_COUNT: process.env.GH_AW_STEPS_EXTRACT_OUTPUTS_FILE_COUNT,
-                GH_AW_STEPS_EXTRACT_OUTPUTS_TSV_PATH: process.env.GH_AW_STEPS_EXTRACT_OUTPUTS_TSV_PATH
+                GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_MATCHED_COMMAND: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_MATCHED_COMMAND
               }
             });
       - name: Validate prompt placeholders
@@ -445,7 +384,7 @@ jobs:
       GH_AW_ASSETS_BRANCH: ""
       GH_AW_ASSETS_MAX_SIZE_KB: 0
       GH_AW_MCP_LOG_DIR: /tmp/gh-aw/mcp-logs/safeoutputs
-      GH_AW_WORKFLOW_ID_SANITIZED: gradetestsonpr
+      GH_AW_WORKFLOW_ID_SANITIZED: gradetests.agent
     outputs:
       agentic_engine_timeout: ${{ steps.detect-agent-errors.outputs.agentic_engine_timeout || 'false' }}
       checkout_pr_success: ${{ steps.checkout-pr.outputs.checkout_pr_success || 'true' }}
@@ -471,8 +410,8 @@ jobs:
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
           parent-span-id: ${{ needs.activation.outputs.setup-parent-span-id || needs.activation.outputs.setup-span-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Grade Tests on PR"
-          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/grade-tests-on-pr.lock.yml@${{ github.ref }}
+          GH_AW_SETUP_WORKFLOW_NAME: "Grade Tests on PR (command)"
+          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/grade-tests.agent.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.0.52"
           GH_AW_INFO_AWF_VERSION: "v0.25.55"
           GH_AW_INFO_ENGINE_ID: "copilot"
@@ -484,16 +423,133 @@ jobs:
             echo "GH_AW_SAFE_OUTPUTS_CONFIG_PATH=${RUNNER_TEMP}/gh-aw/safeoutputs/config.json"
             echo "GH_AW_SAFE_OUTPUTS_TOOLS_PATH=${RUNNER_TEMP}/gh-aw/safeoutputs/tools.json"
           } >> "$GITHUB_OUTPUT"
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
       - name: Create gh-aw temp directory
         run: bash "${RUNNER_TEMP}/gh-aw/actions/create_gh_aw_tmp_dir.sh"
       - name: Configure gh CLI for GitHub Enterprise
         run: bash "${RUNNER_TEMP}/gh-aw/actions/configure_gh_for_ghe.sh"
         env:
           GH_TOKEN: ${{ github.token }}
+      - name: Start DIFC Proxy
+        env:
+          GH_TOKEN: ${{ secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          DIFC_PROXY_POLICY: '{"allow-only":{"min-integrity":"none","repos":"all"}}'
+          DIFC_PROXY_IMAGE: 'ghcr.io/github/gh-aw-mcpg:v0.3.19'
+        run: |
+          bash "${RUNNER_TEMP}/gh-aw/actions/start_difc_proxy.sh"
+      - name: Resolve PR base and head
+        id: resolve
+        run: |
+          set -euo pipefail
+          case "$EVENT_NAME" in
+            pull_request)
+              BASE_SHA="$EVENT_PR_BASE_SHA"
+              HEAD_SHA="$EVENT_PR_HEAD_SHA"
+              PR_NUMBER="$EVENT_PR_NUMBER"
+              ;;
+            issue_comment)
+              PR_NUMBER="$EVENT_ISSUE_NUMBER"
+              PR_JSON=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json baseRefOid,headRefOid)
+              BASE_SHA=$(printf '%s' "$PR_JSON" | jq -r '.baseRefOid')
+              HEAD_SHA=$(printf '%s' "$PR_JSON" | jq -r '.headRefOid')
+              ;;
+            *)
+              echo "Unsupported event: $EVENT_NAME" >&2
+              exit 1
+              ;;
+          esac
+          echo "base_sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+        env:
+          EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          EVENT_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_HOST: localhost:18443
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_API_URL: https://localhost:18443/api/v3
+          GITHUB_GRAPHQL_URL: https://localhost:18443/api/graphql
+          NODE_EXTRA_CA_CERTS: /tmp/gh-aw/proxy-logs/proxy-tls/ca.crt
+      - name: Checkout PR head with full history
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        env:
+          GH_HOST: localhost:18443
+          GH_REPO: ${{ github.repository }}
+          GITHUB_API_URL: https://localhost:18443/api/v3
+          GITHUB_GRAPHQL_URL: https://localhost:18443/api/graphql
+          NODE_EXTRA_CA_CERTS: /tmp/gh-aw/proxy-logs/proxy-tls/ca.crt
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ steps.resolve.outputs.head_sha }}
+      - name: Extract changed test file regions
+        id: extract
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/changed-test-regions.tsv"
+          : > "$OUT"
+
+          mapfile -t CHANGED < <(
+            git diff --name-only --diff-filter=AMR "$BASE_SHA" "$HEAD_SHA" -- 'test/' \
+              | grep -E '\.cs$' || true
+          )
+
+          if (( ${#CHANGED[@]} == 0 )); then
+            echo "No test files changed."
+            echo "has_changed_tests=false" >> "$GITHUB_OUTPUT"
+            echo "file_count=0" >> "$GITHUB_OUTPUT"
+            echo "tsv_path=$OUT" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          for f in "${CHANGED[@]}"; do
+            [[ -f "$f" ]] || continue
+            RANGES=$(
+              git diff --unified=0 "$BASE_SHA" "$HEAD_SHA" -- "$f" \
+                | awk '
+                    /^@@/ {
+                      if (match($0, /\+[0-9]+(,[0-9]+)?/)) {
+                        hunk = substr($0, RSTART+1, RLENGTH-1)
+                        n = split(hunk, a, ",")
+                        start = a[1] + 0
+                        count = (n == 2 ? a[2] + 0 : 1)
+                        if (count == 0) next
+                        end = start + count - 1
+                        printf("%d-%d,", start, end)
+                      }
+                    }
+                  ' \
+                | sed 's/,$//'
+            )
+            if [[ -n "$RANGES" ]]; then
+              printf '%s\t%s\n' "$f" "$RANGES" >> "$OUT"
+            fi
+          done
+
+          if [[ ! -s "$OUT" ]]; then
+            echo "No changed line ranges in test files."
+            echo "has_changed_tests=false" >> "$GITHUB_OUTPUT"
+            echo "file_count=0" >> "$GITHUB_OUTPUT"
+            echo "tsv_path=$OUT" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          FILE_COUNT=$(wc -l < "$OUT")
+          echo "Found $FILE_COUNT test file(s) with changes."
+          echo "has_changed_tests=true" >> "$GITHUB_OUTPUT"
+          echo "file_count=$FILE_COUNT" >> "$GITHUB_OUTPUT"
+          echo "tsv_path=$OUT" >> "$GITHUB_OUTPUT"
+        env:
+          BASE_SHA: ${{ steps.resolve.outputs.base_sha }}
+          GH_HOST: localhost:18443
+          GH_REPO: ${{ github.repository }}
+          GITHUB_API_URL: https://localhost:18443/api/v3
+          GITHUB_GRAPHQL_URL: https://localhost:18443/api/graphql
+          HEAD_SHA: ${{ steps.resolve.outputs.head_sha }}
+          NODE_EXTRA_CA_CERTS: /tmp/gh-aw/proxy-logs/proxy-tls/ca.crt
       - name: Configure Git credentials
         env:
           REPO_NAME: ${{ github.repository }}
@@ -534,6 +590,10 @@ jobs:
           GH_AW_TRUSTED_USERS_VAR: ${{ vars.GH_AW_GITHUB_TRUSTED_USERS || '' }}
           GH_AW_APPROVAL_LABELS_VAR: ${{ vars.GH_AW_GITHUB_APPROVAL_LABELS || '' }}
         run: bash "${RUNNER_TEMP}/gh-aw/actions/parse_guard_list.sh"
+      - name: Stop DIFC Proxy
+        if: always()
+        continue-on-error: true
+        run: bash "${RUNNER_TEMP}/gh-aw/actions/stop_difc_proxy.sh"
       - name: Download activation artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -561,9 +621,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_2c4a6af2ea22f3f2_EOF'
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_0d2cdea4e5e0811b_EOF'
           {"add_comment":{"hide_older_comments":true,"max":5,"target":"*"},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"false"},"report_incomplete":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_2c4a6af2ea22f3f2_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_0d2cdea4e5e0811b_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -755,7 +815,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_94e56248bae5e02d_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_4905c245d4565cbb_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "github": {
@@ -800,7 +860,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_94e56248bae5e02d_EOF
+          GH_AW_MCP_CONFIG_4905c245d4565cbb_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
@@ -832,9 +892,11 @@ jobs:
         # --allow-tool shell(date)
         # --allow-tool shell(echo)
         # --allow-tool shell(find)
+        # --allow-tool shell(gh:*)
         # --allow-tool shell(git:*)
         # --allow-tool shell(grep)
         # --allow-tool shell(head)
+        # --allow-tool shell(jq)
         # --allow-tool shell(ls)
         # --allow-tool shell(printf)
         # --allow-tool shell(pwd)
@@ -863,7 +925,7 @@ jobs:
           fi
           # shellcheck disable=SC1003
           sudo -E awf --config "${RUNNER_TEMP}/gh-aw/awf-config.json" --container-workdir "${GITHUB_WORKSPACE}" --mount "${RUNNER_TEMP}/gh-aw:${RUNNER_TEMP}/gh-aw:ro" --mount "${RUNNER_TEMP}/gh-aw:/host${RUNNER_TEMP}/gh-aw:ro" ${GH_AW_DOCKER_HOST_PATH_PREFIX_ARGS} --env-all --exclude-env COPILOT_GITHUB_TOKEN --exclude-env GITHUB_MCP_SERVER_TOKEN --exclude-env MCP_GATEWAY_API_KEY --log-level info --proxy-logs-dir /tmp/gh-aw/sandbox/firewall/logs --audit-dir /tmp/gh-aw/sandbox/firewall/audit --enable-host-access --allow-host-ports 80,443,8080 --skip-pull \
-            -- /bin/bash -c 'export PATH="${RUNNER_TEMP}/gh-aw/mcp-cli/bin:$PATH" && export PATH="$(find /opt/hostedtoolcache /home/runner/work/_tool -maxdepth 5 -type d -name bin 2>/dev/null | tr '\''\n'\'' '\'':'\'')$PATH"; [ -n "$GOROOT" ] && export PATH="$GOROOT/bin:$PATH" || true && GH_AW_NODE_EXEC="${GH_AW_NODE_BIN:-}"; if [ -z "$GH_AW_NODE_EXEC" ] || [ ! -x "$GH_AW_NODE_EXEC" ]; then GH_AW_NODE_EXEC="$(command -v node 2>/dev/null || true)"; fi; if [ -z "$GH_AW_NODE_EXEC" ]; then echo "node runtime missing on this runner — check runtimes.node in workflow YAML" >&2; exit 127; fi; "$GH_AW_NODE_EXEC" ${RUNNER_TEMP}/gh-aw/actions/copilot_harness.cjs /usr/local/bin/copilot --add-dir /tmp/gh-aw/ --log-level all --log-dir /tmp/gh-aw/sandbox/agent/logs/ --disable-builtin-mcps --no-ask-user --allow-tool github --allow-tool safeoutputs --allow-tool '\''shell(awk)'\'' --allow-tool '\''shell(cat)'\'' --allow-tool '\''shell(date)'\'' --allow-tool '\''shell(echo)'\'' --allow-tool '\''shell(find)'\'' --allow-tool '\''shell(git:*)'\'' --allow-tool '\''shell(grep)'\'' --allow-tool '\''shell(head)'\'' --allow-tool '\''shell(ls)'\'' --allow-tool '\''shell(printf)'\'' --allow-tool '\''shell(pwd)'\'' --allow-tool '\''shell(safeoutputs:*)'\'' --allow-tool '\''shell(sed)'\'' --allow-tool '\''shell(sort)'\'' --allow-tool '\''shell(tail)'\'' --allow-tool '\''shell(uniq)'\'' --allow-tool '\''shell(wc)'\'' --allow-tool '\''shell(yq)'\'' --allow-tool write --allow-all-paths --add-dir "${GITHUB_WORKSPACE}" --prompt-file /tmp/gh-aw/aw-prompts/prompt.txt' 2>&1 | tee -a /tmp/gh-aw/agent-stdio.log
+            -- /bin/bash -c 'export PATH="${RUNNER_TEMP}/gh-aw/mcp-cli/bin:$PATH" && export PATH="$(find /opt/hostedtoolcache /home/runner/work/_tool -maxdepth 5 -type d -name bin 2>/dev/null | tr '\''\n'\'' '\'':'\'')$PATH"; [ -n "$GOROOT" ] && export PATH="$GOROOT/bin:$PATH" || true && GH_AW_NODE_EXEC="${GH_AW_NODE_BIN:-}"; if [ -z "$GH_AW_NODE_EXEC" ] || [ ! -x "$GH_AW_NODE_EXEC" ]; then GH_AW_NODE_EXEC="$(command -v node 2>/dev/null || true)"; fi; if [ -z "$GH_AW_NODE_EXEC" ]; then echo "node runtime missing on this runner — check runtimes.node in workflow YAML" >&2; exit 127; fi; "$GH_AW_NODE_EXEC" ${RUNNER_TEMP}/gh-aw/actions/copilot_harness.cjs /usr/local/bin/copilot --add-dir /tmp/gh-aw/ --log-level all --log-dir /tmp/gh-aw/sandbox/agent/logs/ --disable-builtin-mcps --no-ask-user --allow-tool github --allow-tool safeoutputs --allow-tool '\''shell(awk)'\'' --allow-tool '\''shell(cat)'\'' --allow-tool '\''shell(date)'\'' --allow-tool '\''shell(echo)'\'' --allow-tool '\''shell(find)'\'' --allow-tool '\''shell(gh:*)'\'' --allow-tool '\''shell(git:*)'\'' --allow-tool '\''shell(grep)'\'' --allow-tool '\''shell(head)'\'' --allow-tool '\''shell(jq)'\'' --allow-tool '\''shell(ls)'\'' --allow-tool '\''shell(printf)'\'' --allow-tool '\''shell(pwd)'\'' --allow-tool '\''shell(safeoutputs:*)'\'' --allow-tool '\''shell(sed)'\'' --allow-tool '\''shell(sort)'\'' --allow-tool '\''shell(tail)'\'' --allow-tool '\''shell(uniq)'\'' --allow-tool '\''shell(wc)'\'' --allow-tool '\''shell(yq)'\'' --allow-tool write --allow-all-paths --add-dir "${GITHUB_WORKSPACE}" --prompt-file /tmp/gh-aw/aw-prompts/prompt.txt' 2>&1 | tee -a /tmp/gh-aw/agent-stdio.log
         env:
           AWF_REFLECT_ENABLED: 1
           COPILOT_AGENT_RUNNER_TYPE: STANDALONE
@@ -1067,7 +1129,7 @@ jobs:
       issues: write
       pull-requests: write
     concurrency:
-      group: "gh-aw-conclusion-grade-tests-on-pr"
+      group: "gh-aw-conclusion-grade-tests.agent"
       cancel-in-progress: false
       queue: max
     outputs:
@@ -1085,8 +1147,8 @@ jobs:
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
           parent-span-id: ${{ needs.activation.outputs.setup-parent-span-id || needs.activation.outputs.setup-span-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Grade Tests on PR"
-          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/grade-tests-on-pr.lock.yml@${{ github.ref }}
+          GH_AW_SETUP_WORKFLOW_NAME: "Grade Tests on PR (command)"
+          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/grade-tests.agent.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.0.52"
           GH_AW_INFO_AWF_VERSION: "v0.25.55"
           GH_AW_INFO_ENGINE_ID: "copilot"
@@ -1110,8 +1172,8 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_NOOP_MAX: "1"
-          GH_AW_WORKFLOW_NAME: "Grade Tests on PR"
-          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/grade-tests-on-pr.md"
+          GH_AW_WORKFLOW_NAME: "Grade Tests on PR (command)"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/grade-tests.agent.md"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_NOOP_REPORT_AS_ISSUE: "false"
@@ -1127,8 +1189,8 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Grade Tests on PR"
-          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/grade-tests-on-pr.md"
+          GH_AW_WORKFLOW_NAME: "Grade Tests on PR (command)"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/grade-tests.agent.md"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_DETECTION_CONCLUSION: ${{ needs.detection.outputs.detection_conclusion }}
           GH_AW_DETECTION_REASON: ${{ needs.detection.outputs.detection_reason }}
@@ -1145,8 +1207,8 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_MISSING_TOOL_CREATE_ISSUE: "true"
-          GH_AW_WORKFLOW_NAME: "Grade Tests on PR"
-          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/grade-tests-on-pr.md"
+          GH_AW_WORKFLOW_NAME: "Grade Tests on PR (command)"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/grade-tests.agent.md"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1160,8 +1222,8 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_REPORT_INCOMPLETE_CREATE_ISSUE: "true"
-          GH_AW_WORKFLOW_NAME: "Grade Tests on PR"
-          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/grade-tests-on-pr.md"
+          GH_AW_WORKFLOW_NAME: "Grade Tests on PR (command)"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/grade-tests.agent.md"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1175,11 +1237,11 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Grade Tests on PR"
-          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/grade-tests-on-pr.md"
+          GH_AW_WORKFLOW_NAME: "Grade Tests on PR (command)"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/grade-tests.agent.md"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
-          GH_AW_WORKFLOW_ID: "grade-tests-on-pr"
+          GH_AW_WORKFLOW_ID: "grade-tests.agent"
           GH_AW_ACTION_FAILURE_ISSUE_EXPIRES_HOURS: "168"
           GH_AW_ENGINE_ID: "copilot"
           GH_AW_SECRET_VERIFICATION_RESULT: ${{ needs.activation.outputs.secret_verification_result }}
@@ -1193,6 +1255,7 @@ jobs:
           GH_AW_ENGINE_API_HOSTS: "api.enterprise.githubcopilot.com,api.githubcopilot.com,api.business.githubcopilot.com,api.individual.githubcopilot.com"
           GH_AW_LOCKDOWN_CHECK_FAILED: ${{ needs.activation.outputs.lockdown_check_failed }}
           GH_AW_STALE_LOCK_FILE_FAILED: ${{ needs.activation.outputs.stale_lock_file_failed }}
+          GH_AW_SAFE_OUTPUT_MESSAGES: "{\"footer\":\"\\u003e 🤖 **Automated content by GitHub Copilot.** Posted via a maintainer's GitHub token, so it appears under their account — the account owner did **not** write or approve this content personally. Generated by the [{workflow_name}]({agentic_workflow_url}) workflow.{ai_credits_suffix} · [◷]({history_link})\"}"
           GH_AW_GROUP_REPORTS: "false"
           GH_AW_FAILURE_REPORT_AS_ISSUE: "true"
           GH_AW_MISSING_TOOL_REPORT_AS_FAILURE: "true"
@@ -1214,11 +1277,12 @@ jobs:
           GH_AW_COMMENT_ID: ${{ needs.activation.outputs.comment_id }}
           GH_AW_COMMENT_REPO: ${{ needs.activation.outputs.comment_repo }}
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          GH_AW_WORKFLOW_NAME: "Grade Tests on PR"
+          GH_AW_WORKFLOW_NAME: "Grade Tests on PR (command)"
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_SAFE_OUTPUTS_RESULT: ${{ needs.safe_outputs.result }}
           GH_AW_DETECTION_CONCLUSION: ${{ needs.detection.outputs.detection_conclusion }}
           GH_AW_DETECTION_REASON: ${{ needs.detection.outputs.detection_reason }}
+          GH_AW_SAFE_OUTPUT_MESSAGES: "{\"footer\":\"\\u003e 🤖 **Automated content by GitHub Copilot.** Posted via a maintainer's GitHub token, so it appears under their account — the account owner did **not** write or approve this content personally. Generated by the [{workflow_name}]({agentic_workflow_url}) workflow.{ai_credits_suffix} · [◷]({history_link})\"}"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1250,8 +1314,8 @@ jobs:
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
           parent-span-id: ${{ needs.activation.outputs.setup-parent-span-id || needs.activation.outputs.setup-span-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Grade Tests on PR"
-          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/grade-tests-on-pr.lock.yml@${{ github.ref }}
+          GH_AW_SETUP_WORKFLOW_NAME: "Grade Tests on PR (command)"
+          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/grade-tests.agent.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.0.52"
           GH_AW_INFO_AWF_VERSION: "v0.25.55"
           GH_AW_INFO_ENGINE_ID: "copilot"
@@ -1319,8 +1383,8 @@ jobs:
         if: always() && steps.detection_guard.outputs.run_detection == 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          WORKFLOW_NAME: "Grade Tests on PR"
-          WORKFLOW_DESCRIPTION: "Grades the new and modified test methods in a pull request and posts a single PR comment with a compact per-test scorecard (letter grade A–F, score band, and one-line notes). Runs automatically on PR open and on pushes that touch `test/**`, and can be re-triggered manually via the `/grade-tests` slash command."
+          WORKFLOW_NAME: "Grade Tests on PR (command)"
+          WORKFLOW_DESCRIPTION: "Re-grades the new and modified test methods of a pull request when a maintainer comments `/grade-tests`."
           HAS_PATCH: ${{ needs.agent.outputs.has_patch }}
         with:
           script: |
@@ -1431,18 +1495,12 @@ jobs:
 
   pre_activation:
     runs-on: ubuntu-slim
-    permissions:
-      contents: read
-      pull-requests: read
     outputs:
       activated: ${{ steps.check_membership.outputs.is_team_member == 'true' && steps.check_command_position.outputs.command_position_ok == 'true' }}
-      extract_result: ${{ steps.extract.outcome }}
       matched_command: ${{ steps.check_command_position.outputs.matched_command }}
-      resolve_result: ${{ steps.resolve.outcome }}
       setup-parent-span-id: ${{ steps.setup.outputs.parent-span-id || steps.setup.outputs.span-id }}
       setup-span-id: ${{ steps.setup.outputs.span-id }}
       setup-trace-id: ${{ steps.setup.outputs.trace-id }}
-      skip_result: ${{ steps.skip.outcome }}
     steps:
       - name: Setup Scripts
         id: setup
@@ -1451,8 +1509,8 @@ jobs:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Grade Tests on PR"
-          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/grade-tests-on-pr.lock.yml@${{ github.ref }}
+          GH_AW_SETUP_WORKFLOW_NAME: "Grade Tests on PR (command)"
+          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/grade-tests.agent.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.0.52"
           GH_AW_INFO_AWF_VERSION: "v0.25.55"
           GH_AW_INFO_ENGINE_ID: "copilot"
@@ -1479,133 +1537,6 @@ jobs:
             setupGlobals(core, github, context, exec, io, getOctokit);
             const { main } = require('${{ runner.temp }}/gh-aw/actions/check_command_position.cjs');
             await main();
-      - name: Resolve PR base and head
-        id: resolve
-        run: |
-          set -euo pipefail
-          case "$EVENT_NAME" in
-            pull_request)
-              BASE_SHA="$EVENT_PR_BASE_SHA"
-              HEAD_SHA="$EVENT_PR_HEAD_SHA"
-              PR_NUMBER="$EVENT_PR_NUMBER"
-              DRAFT="$EVENT_PR_DRAFT"
-              AUTHOR="$EVENT_PR_AUTHOR"
-              TITLE="$EVENT_PR_TITLE"
-              ;;
-            issue_comment)
-              PR_NUMBER="$EVENT_ISSUE_NUMBER"
-              PR_JSON=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json baseRefOid,headRefOid,isDraft,author,title)
-              BASE_SHA=$(printf '%s' "$PR_JSON" | jq -r '.baseRefOid')
-              HEAD_SHA=$(printf '%s' "$PR_JSON" | jq -r '.headRefOid')
-              DRAFT=$(printf '%s' "$PR_JSON" | jq -r '.isDraft')
-              AUTHOR=$(printf '%s' "$PR_JSON" | jq -r '.author.login')
-              TITLE=$(printf '%s' "$PR_JSON" | jq -r '.title')
-              ;;
-            *)
-              echo "Unsupported event: $EVENT_NAME" >&2
-              exit 1
-              ;;
-          esac
-          echo "base_sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
-          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
-          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
-          echo "draft=$DRAFT" >> "$GITHUB_OUTPUT"
-          echo "author=$AUTHOR" >> "$GITHUB_OUTPUT"
-          echo "title=$TITLE" >> "$GITHUB_OUTPUT"
-        env:
-          EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
-          EVENT_NAME: ${{ github.event_name }}
-          EVENT_PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-          EVENT_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          EVENT_PR_DRAFT: ${{ github.event.pull_request.draft }}
-          EVENT_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          EVENT_PR_NUMBER: ${{ github.event.pull_request.number }}
-          EVENT_PR_TITLE: ${{ github.event.pull_request.title }}
-          GH_TOKEN: ${{ github.token }}
-      - name: Skip draft and OneLocBuild PRs
-        id: skip
-        run: |
-          set -euo pipefail
-          SHOULD_RUN=true
-          if [[ "$DRAFT" == "true" && "$EVENT_NAME" == "pull_request" ]]; then
-            echo "Skipping: PR is a draft."
-            SHOULD_RUN=false
-          fi
-          if [[ "$AUTHOR" == "dotnet-bot" && "$TITLE" == "Localized file check-in"* ]]; then
-            echo "Skipping: OneLocBuild localization PR."
-            SHOULD_RUN=false
-          fi
-          echo "should_run=$SHOULD_RUN" >> "$GITHUB_OUTPUT"
-        env:
-          AUTHOR: ${{ steps.resolve.outputs.author }}
-          DRAFT: ${{ steps.resolve.outputs.draft }}
-          EVENT_NAME: ${{ github.event_name }}
-          TITLE: ${{ steps.resolve.outputs.title }}
-      - name: Checkout PR head
-        if: steps.skip.outputs.should_run == 'true'
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-          ref: ${{ steps.resolve.outputs.head_sha }}
-      - name: Extract changed test file regions
-        id: extract
-        if: steps.skip.outputs.should_run == 'true'
-        run: |
-          set -euo pipefail
-          OUT="$RUNNER_TEMP/changed-test-regions.tsv"
-          : > "$OUT"
-
-          mapfile -t CHANGED < <(
-            git diff --name-only --diff-filter=AMR "$BASE_SHA" "$HEAD_SHA" -- 'test/' \
-              | grep -E '\.cs$' || true
-          )
-
-          if (( ${#CHANGED[@]} == 0 )); then
-            echo "No test files changed."
-            echo "has_changed_tests=false" >> "$GITHUB_OUTPUT"
-            echo "file_count=0" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          for f in "${CHANGED[@]}"; do
-            [[ -f "$f" ]] || continue
-            RANGES=$(
-              git diff --unified=0 "$BASE_SHA" "$HEAD_SHA" -- "$f" \
-                | awk '
-                    /^@@/ {
-                      if (match($0, /\+[0-9]+(,[0-9]+)?/)) {
-                        hunk = substr($0, RSTART+1, RLENGTH-1)
-                        n = split(hunk, a, ",")
-                        start = a[1] + 0
-                        count = (n == 2 ? a[2] + 0 : 1)
-                        if (count == 0) next
-                        end = start + count - 1
-                        printf("%d-%d,", start, end)
-                      }
-                    }
-                  ' \
-                | sed 's/,$//'
-            )
-            if [[ -n "$RANGES" ]]; then
-              printf '%s\t%s\n' "$f" "$RANGES" >> "$OUT"
-            fi
-          done
-
-          if [[ ! -s "$OUT" ]]; then
-            echo "No changed line ranges in test files."
-            echo "has_changed_tests=false" >> "$GITHUB_OUTPUT"
-            echo "file_count=0" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          FILE_COUNT=$(wc -l < "$OUT")
-          echo "Found $FILE_COUNT test file(s) with changes."
-          echo "has_changed_tests=true" >> "$GITHUB_OUTPUT"
-          echo "file_count=$FILE_COUNT" >> "$GITHUB_OUTPUT"
-          echo "tsv_path=$OUT" >> "$GITHUB_OUTPUT"
-        env:
-          BASE_SHA: ${{ steps.resolve.outputs.base_sha }}
-          HEAD_SHA: ${{ steps.resolve.outputs.head_sha }}
 
   safe_outputs:
     needs:
@@ -1621,16 +1552,17 @@ jobs:
       pull-requests: write
     timeout-minutes: 15
     env:
-      GH_AW_CALLER_WORKFLOW_ID: "${{ github.repository }}/grade-tests-on-pr"
+      GH_AW_CALLER_WORKFLOW_ID: "${{ github.repository }}/grade-tests.agent"
       GH_AW_DETECTION_CONCLUSION: ${{ needs.detection.outputs.detection_conclusion }}
       GH_AW_DETECTION_REASON: ${{ needs.detection.outputs.detection_reason }}
       GH_AW_EFFECTIVE_TOKENS: ${{ needs.agent.outputs.effective_tokens }}
       GH_AW_ENGINE_ID: "copilot"
       GH_AW_ENGINE_MODEL: ${{ needs.agent.outputs.model }}
       GH_AW_ENGINE_VERSION: "1.0.52"
-      GH_AW_WORKFLOW_ID: "grade-tests-on-pr"
-      GH_AW_WORKFLOW_NAME: "Grade Tests on PR"
-      GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/grade-tests-on-pr.md"
+      GH_AW_SAFE_OUTPUT_MESSAGES: "{\"footer\":\"\\u003e 🤖 **Automated content by GitHub Copilot.** Posted via a maintainer's GitHub token, so it appears under their account — the account owner did **not** write or approve this content personally. Generated by the [{workflow_name}]({agentic_workflow_url}) workflow.{ai_credits_suffix} · [◷]({history_link})\"}"
+      GH_AW_WORKFLOW_ID: "grade-tests.agent"
+      GH_AW_WORKFLOW_NAME: "Grade Tests on PR (command)"
+      GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/grade-tests.agent.md"
     outputs:
       code_push_failure_count: ${{ steps.process_safe_outputs.outputs.code_push_failure_count }}
       code_push_failure_errors: ${{ steps.process_safe_outputs.outputs.code_push_failure_errors }}
@@ -1650,8 +1582,8 @@ jobs:
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
           parent-span-id: ${{ needs.activation.outputs.setup-parent-span-id || needs.activation.outputs.setup-span-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Grade Tests on PR"
-          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/grade-tests-on-pr.lock.yml@${{ github.ref }}
+          GH_AW_SETUP_WORKFLOW_NAME: "Grade Tests on PR (command)"
+          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/grade-tests.agent.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.0.52"
           GH_AW_INFO_AWF_VERSION: "v0.25.55"
           GH_AW_INFO_ENGINE_ID: "copilot"

@@ -202,13 +202,19 @@ namespace MSTestSdkTest
               "--crashdump"));
 
             yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+              "<EnableMicrosoftTestingExtensionsCtrfReport>true</EnableMicrosoftTestingExtensionsCtrfReport>",
+              "--report-ctrf",
+              "--crashdump"));
+
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsHtmlReport>true</EnableMicrosoftTestingExtensionsHtmlReport>",
               "--report-html",
               "--crashdump"));
 
             yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
-              "<EnableMicrosoftTestingExtensionsCtrfReport>true</EnableMicrosoftTestingExtensionsCtrfReport>",
-              "--report-ctrf",
+              "<EnableMicrosoftTestingExtensionsJUnitReport>true</EnableMicrosoftTestingExtensionsJUnitReport>",
+              "--report-junit",
               "--crashdump"));
 
             // OpenTelemetry is API-only (no CLI flag); the enable property only opts the package into the build.

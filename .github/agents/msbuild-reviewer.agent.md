@@ -107,9 +107,10 @@ Each rule has a category letter and an index. Cite findings as `Rule A-3`, `Rule
 
 1. **Missing condition guards on defaults** — Properties intended as overridable defaults must have `Condition="'$(PropertyName)' == ''"`. Without it, consumer projects cannot override the value. **Severity: 🔴 Error.**
 2. **Unquoted condition expressions** — Both sides of `==` and `!=` must be single-quoted: `'$(Prop)' == 'value'`. Unquoted conditions fail when the property is empty. **Severity: 🔴 Error.**
-3. **Overwriting semicolon-delimited properties** — Properties like `DefineConstants`, `NoWarn`, `WarningsAsErrors` must preserve existing values: `<NoWarn>$(NoWarn);MYCODE</NoWarn>`. **Severity: 🔴 Error.**
-4. **Hardcoded absolute paths** — Paths like `C:\` or `/usr/` break portability. Use `$(MSBuildThisFileDirectory)`, `$([MSBuild]::NormalizePath(...))`, or similar. **Severity: 🟡 Warning.**
-5. **Missing trailing slash on directory properties** — Directory properties used in path concatenation should use `HasTrailingSlash()` or ensure a trailing separator. **Severity: 🔵 Suggestion.**
+3. **Bare-token property reference in conditions** — A condition like `'(Foo)' != ''` is **not** a property reference — it compares the literal string `(Foo)` to a value (or the empty string) and is therefore always evaluated against that literal, never the property. Depending on the operator and right-hand side this makes the condition always-true, always-false, or just wrong (e.g. `'(Foo)' != ''` is always true; `'(Foo)' == 'bar'` is always false; `'(Foo)' == '(Foo)'` is unconditionally true). Property references in conditions MUST use the `$(Name)` form: `'$(Foo)' != ''`. Same defect class for items (`@(Name)`) and metadata (`%(Name)`). Trigger this check whenever you see a quoted token starting with `(` immediately after the opening quote. **Severity: 🔴 Error.**
+4. **Overwriting semicolon-delimited properties** — Properties like `DefineConstants`, `NoWarn`, `WarningsAsErrors` must preserve existing values: `<NoWarn>$(NoWarn);MYCODE</NoWarn>`. **Severity: 🔴 Error.**
+5. **Hardcoded absolute paths** — Paths like `C:\` or `/usr/` break portability. Use `$(MSBuildThisFileDirectory)`, `$([MSBuild]::NormalizePath(...))`, or similar. **Severity: 🟡 Warning.**
+6. **Missing trailing slash on directory properties** — Directory properties used in path concatenation should use `HasTrailingSlash()` or ensure a trailing separator. **Severity: 🔵 Suggestion.**
 
 ### Category C: Item Management
 
@@ -135,7 +136,7 @@ Each rule has a category letter and an index. Cite findings as `Rule A-3`, `Rule
 
 ## Severity Definitions
 
-- 🔴 **Error** — Likely broken or will cause build failures (missing `Exists()` guard, `DependsOn` overwrite, unquoted conditions, wrong NuGet package file name).
+- 🔴 **Error** — Likely broken or will cause build failures (missing `Exists()` guard, `DependsOn` overwrite, unquoted conditions, bare-token property references like `'(Foo)' != ''`, wrong NuGet package file name).
 - 🟡 **Warning** — Anti-pattern that degrades maintainability or performance (missing `Inputs`/`Outputs`, missing `FileWrites`, hardcoded paths, batching pitfalls).
 - 🔵 **Suggestion** — Improvement opportunity (naming conventions, trailing slashes, organizational improvements).
 
