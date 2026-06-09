@@ -28,6 +28,12 @@ steps:
 #   --report-trx + --report-trx-filename "{asm}_{tfm}.trx" — TRX per (assembly x TFM),
 #     resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
 #   --report-azdo — surfaces failed tests in the AzDO UI.
+#   --report-azdo-progress — emits ##vso[task.logdetail ...;progress=...] timeline records so
+#     long-running test sessions show live progress on the AzDO timeline. No-op outside AzDO
+#     (gated on TF_BUILD; emits a warning if the option is set but TF_BUILD is not 'true').
+#   --report-azdo-summary — writes a Markdown job summary and uploads it via ##vso[task.uploadsummary]
+#     so failure context shows up on the build's summary tab. No-op outside AzDO (gated on TF_BUILD;
+#     emits a warning if the option is set but TF_BUILD is not 'true').
 #   --hangdump --hangdump-timeout 15m — captures a dump if a module hangs past 15 minutes.
 #   --diagnostic + --diagnostic-verbosity trace — produces per-host diagnostic logs;
 #     directory is published by the Arcade jobs.yml template (artifacts.publish.logs: true).
@@ -38,7 +44,7 @@ steps:
 #     Skipped here too for cross-platform parity with the Windows script (mixed net4x+netcoreapp glob).
 #   --coverage — Codecov upload is Debug-only (see "Upload coverage to codecov.io" step
 #     in azure-pipelines.yml), so collecting coverage in Release would just write unused .coverage files.
-- script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-azdo --hangdump --hangdump-timeout 15m --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)/artifacts/log/$(_BuildConfig) --diagnostic-verbosity trace
+- script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-azdo --report-azdo-progress --report-azdo-summary --hangdump --hangdump-timeout 15m --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)/artifacts/log/$(_BuildConfig) --diagnostic-verbosity trace
   name: TestRelease
   displayName: Test (unit tests only)
   condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))

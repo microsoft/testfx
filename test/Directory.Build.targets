@@ -16,6 +16,10 @@
     <TestingPlatformCommandLineArguments Condition=" $([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp' ">$(TestingPlatformCommandLineArguments) --crashdump</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --hangdump --hangdump-timeout 15m</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-azdo</TestingPlatformCommandLineArguments>
+    <!-- The report-azdo-progress and report-azdo-summary options implement ITestSessionLifetimeHandler and emit a
+         warning on the output device when TF_BUILD is not 'true', unlike the silent report-azdo. Gate them
+         on $(TF_BUILD) so local 'dotnet test' runs stay quiet and only CI pipelines opt into the AzDO output. -->
+    <TestingPlatformCommandLineArguments Condition=" '$(TF_BUILD)' == 'true' ">$(TestingPlatformCommandLineArguments) --report-azdo-progress --report-azdo-summary</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments Condition=" '$(EnableCodeCoverage)' == 'True' ">$(TestingPlatformCommandLineArguments) --coverage --coverage-settings $(RepoRoot)test/coverage.config --coverage-output $(ModuleName).coverage</TestingPlatformCommandLineArguments>
 
   </PropertyGroup>
