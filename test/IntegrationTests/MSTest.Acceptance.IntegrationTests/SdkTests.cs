@@ -210,6 +210,14 @@ namespace MSTestSdkTest
               "<EnableMicrosoftTestingExtensionsCtrfReport>true</EnableMicrosoftTestingExtensionsCtrfReport>",
               "--report-ctrf",
               "--crashdump"));
+
+            // OpenTelemetry is API-only (no CLI flag); the enable property only opts the package into the build.
+            // We pass an empty enable arg to validate the package restores and the test host runs cleanly, and we
+            // assert that an unrelated extension's CLI arg ('--crashdump') is rejected to prove no other extensions leaked in.
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+              "<EnableMicrosoftTestingExtensionsOpenTelemetry>true</EnableMicrosoftTestingExtensionsOpenTelemetry>",
+              string.Empty,
+              "--crashdump"));
         }
     }
 

@@ -63,6 +63,13 @@
       This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
     -->
     <MicrosoftTestingExtensionsCtrfReportVersionPrefix>1.0.0</MicrosoftTestingExtensionsCtrfReportVersionPrefix>
+
+    <MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel>
+
+    <!--
+      This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
+    -->
+    <MicrosoftTestingExtensionsOpenTelemetryVersionPrefix>1.0.0</MicrosoftTestingExtensionsOpenTelemetryVersionPrefix>
   </PropertyGroup>
 
   <!-- Pack config -->

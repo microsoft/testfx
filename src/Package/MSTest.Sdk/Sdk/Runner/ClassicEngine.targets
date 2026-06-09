@@ -49,6 +49,15 @@
     -->
     <MicrosoftTestingExtensionsCtrfReportVersion Condition=" '$(MicrosoftTestingExtensionsCtrfReportVersion)' == '' " >$(MicrosoftTestingExtensionsCtrfReportVersion)</MicrosoftTestingExtensionsCtrfReportVersion>
 
+    <!--
+      OpenTelemetry (experimental / opt-in only).
+      API-only extension - has no CLI flag; user activates it from Program.cs via
+      builder.AddOpenTelemetryProvider(...). The Enable property only opts the
+      package into the build. Has its own pre-release version line
+      (see MicrosoftTestingExtensionsOpenTelemetryVersion flowed through MSTest.Sdk.csproj).
+    -->
+    <MicrosoftTestingExtensionsOpenTelemetryVersion Condition=" '$(MicrosoftTestingExtensionsOpenTelemetryVersion)' == '' " >$(MicrosoftTestingExtensionsOpenTelemetryVersion)</MicrosoftTestingExtensionsOpenTelemetryVersion>
+
     <!-- Fakes -->
     <EnableMicrosoftTestingExtensionsFakes Condition=" '$(EnableMicrosoftTestingExtensionsFakes)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsFakes>
     <MicrosoftTestingExtensionsFakesVersion Condition=" '$(MicrosoftTestingExtensionsFakesVersion)' == '' " >$(MicrosoftTestingExtensionsFakesVersion)</MicrosoftTestingExtensionsFakesVersion>
@@ -156,6 +165,13 @@
     </PackageReference>
     <PackageVersion Include="Microsoft.Testing.Extensions.CtrfReport" Version="$(MicrosoftTestingExtensionsCtrfReportVersion)"
                     Condition=" '$(EnableMicrosoftTestingExtensionsCtrfReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+
+    <PackageReference Include="Microsoft.Testing.Extensions.OpenTelemetry" Sdk="MSTest"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsOpenTelemetry)' == 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsOpenTelemetryVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Testing.Extensions.OpenTelemetry" Version="$(MicrosoftTestingExtensionsOpenTelemetryVersion)"
+                    Condition=" '$(EnableMicrosoftTestingExtensionsOpenTelemetry)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)../Features/Aspire.targets" Condition=" '$(EnableAspireTesting)' == 'true' " />
