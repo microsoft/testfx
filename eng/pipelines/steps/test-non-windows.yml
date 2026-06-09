@@ -28,10 +28,12 @@ steps:
 #   --report-trx + --report-trx-filename "{asm}_{tfm}.trx" — TRX per (assembly x TFM),
 #     resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
 #   --report-azdo — surfaces failed tests in the AzDO UI.
-#   --report-azdo-progress — emits ##vso[task.progress] records so long-running test sessions
-#     show a live progress bar on the AzDO timeline. No-op outside AzDO (gated on TF_BUILD).
+#   --report-azdo-progress — emits ##vso[task.logdetail ...;progress=...] timeline records so
+#     long-running test sessions show live progress on the AzDO timeline. No-op outside AzDO
+#     (gated on TF_BUILD; emits a warning if the option is set but TF_BUILD is not 'true').
 #   --report-azdo-summary — writes a Markdown job summary and uploads it via ##vso[task.uploadsummary]
-#     so failure context shows up on the build's summary tab. No-op outside AzDO (gated on TF_BUILD).
+#     so failure context shows up on the build's summary tab. No-op outside AzDO (gated on TF_BUILD;
+#     emits a warning if the option is set but TF_BUILD is not 'true').
 #   --hangdump --hangdump-timeout 15m — captures a dump if a module hangs past 15 minutes.
 #   --diagnostic + --diagnostic-verbosity trace — produces per-host diagnostic logs;
 #     directory is published by the Arcade jobs.yml template (artifacts.publish.logs: true).
