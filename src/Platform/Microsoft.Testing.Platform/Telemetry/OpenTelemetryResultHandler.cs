@@ -171,7 +171,54 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             activity.SetTag("test.result.timeout.ms", timeoutTime.Value.TotalMilliseconds);
         }
 
-        if (testNode.Properties.SingleOrDefault<TimingProperty>() is { } timingProperty)
+        // Single pass over the property bag: replaces five separate walks
+        // (SingleOrDefault<TimingProperty>, OfType<TestMetadataProperty>, SingleOrDefault<StandardOutputProperty>,
+        //  SingleOrDefault<StandardErrorProperty>, OfType<FileArtifactProperty>).
+        // Eliminates two TProperty[] heap allocations from OfType<T>() and reduces linked-list traversal from 5 to 1.
+        TimingProperty? timingProperty = null;
+        StandardOutputProperty? standardOutputProperty = null;
+        StandardErrorProperty? standardErrorProperty = null;
+        int artifactIndex = 0;
+        PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
+        while (enumerator.MoveNext())
+        {
+            switch (enumerator.Current)
+            {
+                case TimingProperty tp:
+                    if (timingProperty is not null)
+                    {
+                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(TimingProperty)}'.");
+                    }
+
+                    timingProperty = tp;
+                    break;
+                case TestMetadataProperty metadataProperty:
+                    activity.SetTag($"test.metadataProperty.{metadataProperty.Key}", metadataProperty.Value);
+                    break;
+                case StandardOutputProperty outputProperty:
+                    if (standardOutputProperty is not null)
+                    {
+                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(StandardOutputProperty)}'.");
+                    }
+
+                    standardOutputProperty = outputProperty;
+                    break;
+                case StandardErrorProperty errorProperty:
+                    if (standardErrorProperty is not null)
+                    {
+                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(StandardErrorProperty)}'.");
+                    }
+
+                    standardErrorProperty = errorProperty;
+                    break;
+                case FileArtifactProperty fileArtifactProperty:
+                    activity.SetTag($"test.artifact.file[{artifactIndex}].path", fileArtifactProperty.FileInfo.FullName);
+                    artifactIndex++;
+                    break;
+            }
+        }
+
+        if (timingProperty is not null)
         {
             double totalMilliseconds = timingProperty.GlobalTiming.Duration.TotalMilliseconds;
             _totalDuration.Record(totalMilliseconds);
@@ -183,20 +230,8 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             }
         }
 
-        foreach (TestMetadataProperty metadataProperty in testNode.Properties.OfType<TestMetadataProperty>())
-        {
-            activity.SetTag($"test.metadataProperty.{metadataProperty.Key}", metadataProperty.Value);
-        }
-
-        activity.SetTag("test.stdout", testNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput ?? string.Empty);
-        activity.SetTag("test.stderr", testNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError ?? string.Empty);
-
-        int index = 0;
-        foreach (FileArtifactProperty fileArtifactProperty in testNode.Properties.OfType<FileArtifactProperty>())
-        {
-            activity.SetTag($"test.artifact.file[{index}].path", fileArtifactProperty.FileInfo.FullName);
-            index++;
-        }
+        activity.SetTag("test.stdout", standardOutputProperty?.StandardOutput ?? string.Empty);
+        activity.SetTag("test.stderr", standardErrorProperty?.StandardError ?? string.Empty);
 
         activity.Dispose();
     }
