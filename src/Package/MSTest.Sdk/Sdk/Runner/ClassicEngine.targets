@@ -131,6 +131,13 @@
     </PackageReference>
     <PackageVersion Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)"
                     Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+
+    <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Sdk="MSTest"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsJUnitReport)' == 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsJUnitReportVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Testing.Extensions.JUnitReport" Version="$(MicrosoftTestingExtensionsJUnitReportVersion)"
+                    Condition=" '$(EnableMicrosoftTestingExtensionsJUnitReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)../Features/Aspire.targets" Condition=" '$(EnableAspireTesting)' == 'true' " />

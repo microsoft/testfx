@@ -200,6 +200,11 @@ namespace MSTestSdkTest
               "<EnableMicrosoftTestingExtensionsAzureDevOpsReport>true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>",
               "--report-azdo",
               "--crashdump"));
+
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+              "<EnableMicrosoftTestingExtensionsJUnitReport>true</EnableMicrosoftTestingExtensionsJUnitReport>",
+              "--report-junit",
+              "--crashdump"));
         }
     }
 
