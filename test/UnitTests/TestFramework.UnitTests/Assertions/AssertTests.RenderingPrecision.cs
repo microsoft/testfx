@@ -21,9 +21,16 @@ public partial class AssertTests : TestContainer
 
         Action action = () => Assert.AreEqual(d1, d2);
 
-        Exception ex = action.Should().Throw<AssertFailedException>().Which;
-        ex.Message.Should().Contain("expected: 2026-06-09T13:12:21.0000000Z");
-        ex.Message.Should().Contain("actual:   2026-06-09T13:12:21.0000001Z");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected values to be equal.
+
+                expected: 2026-06-09T13:12:21.0000000Z
+                actual:   2026-06-09T13:12:21.0000001Z
+
+                Assert.AreEqual(d1, d2)
+                """);
     }
 
     public void AreNotEqual_DateTime_RendersWithFullTickPrecisionInFailureMessage()
@@ -32,8 +39,16 @@ public partial class AssertTests : TestContainer
 
         Action action = () => Assert.AreNotEqual(d, d);
 
-        Exception ex = action.Should().Throw<AssertFailedException>().Which;
-        ex.Message.Should().Contain("2026-06-09T13:12:21.0000042Z");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected values to differ.
+
+                notExpected: 2026-06-09T13:12:21.0000042Z
+                actual:      2026-06-09T13:12:21.0000042Z
+
+                Assert.AreNotEqual(d, d)
+                """);
     }
 
     public void AreEqual_DateTimeOffset_RendersFullTickPrecisionInFailureMessage()
@@ -43,9 +58,16 @@ public partial class AssertTests : TestContainer
 
         Action action = () => Assert.AreEqual(d1, d2);
 
-        Exception ex = action.Should().Throw<AssertFailedException>().Which;
-        ex.Message.Should().Contain("expected: 2026-06-09T13:12:21.0000000+02:00");
-        ex.Message.Should().Contain("actual:   2026-06-09T13:12:21.0000001+02:00");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected values to be equal.
+
+                expected: 2026-06-09T13:12:21.0000000+02:00
+                actual:   2026-06-09T13:12:21.0000001+02:00
+
+                Assert.AreEqual(d1, d2)
+                """);
     }
 
     public void AreEqual_Double_RendersFullRoundTripPrecisionInFailureMessage()
@@ -55,9 +77,16 @@ public partial class AssertTests : TestContainer
 
         Action action = () => Assert.AreEqual(expected, actual);
 
-        Exception ex = action.Should().Throw<AssertFailedException>().Which;
-        ex.Message.Should().Contain("0.30000000000000004");
-        ex.Message.Should().Contain("0.3");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected values to be equal.
+
+                expected: 0.30000000000000004
+                actual:   0.3
+
+                Assert.AreEqual(expected, actual)
+                """);
     }
 
     public void AreEqual_Double_RendersUsingInvariantCultureEvenInCommaLocale()
@@ -69,11 +98,16 @@ public partial class AssertTests : TestContainer
 
             Action action = () => Assert.AreEqual(1.5, 2.5);
 
-            Exception ex = action.Should().Throw<AssertFailedException>().Which;
-            ex.Message.Should().Contain("expected: 1.5");
-            ex.Message.Should().Contain("actual:   2.5");
-            ex.Message.Should().NotContain("1,5");
-            ex.Message.Should().NotContain("2,5");
+            action.Should().Throw<AssertFailedException>()
+                .WithMessage(
+                    """
+                    Assertion failed. Expected values to be equal.
+
+                    expected: 1.5
+                    actual:   2.5
+
+                    Assert.AreEqual(1.5, 2.5)
+                    """);
         }
         finally
         {
@@ -90,14 +124,23 @@ public partial class AssertTests : TestContainer
 
         Action action = () => Assert.AreEqual(a, b);
 
-        Exception ex = action.Should().Throw<AssertFailedException>().Which;
-        // Build the two renderings the same way the assertion does and assert the
-        // failure message preserves enough precision to keep them distinguishable.
+        // The exact "R" format rendering of an adjacent float differs across .NET Framework and modern
+        // .NET (e.g. "1.00000012" vs "1.0000001"), so build the expected message from the renderer rather
+        // than hard-coding it. AssertionValueRendererTests verifies that the two renderings differ.
         string expectedRendering = AssertionValueRenderer.RenderValue(a);
         string actualRendering = AssertionValueRenderer.RenderValue(b);
         expectedRendering.Should().NotBe(actualRendering);
-        ex.Message.Should().Contain(expectedRendering);
-        ex.Message.Should().Contain(actualRendering);
+
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                $"""
+                Assertion failed. Expected values to be equal.
+
+                expected: {expectedRendering}
+                actual:   {actualRendering}
+
+                Assert.AreEqual(a, b)
+                """);
     }
 
     public void AreEqual_TimeSpan_RendersSubSecondPrecisionInFailureMessage()
@@ -107,9 +150,16 @@ public partial class AssertTests : TestContainer
 
         Action action = () => Assert.AreEqual(t1, t2);
 
-        Exception ex = action.Should().Throw<AssertFailedException>().Which;
-        ex.Message.Should().Contain("expected: 00:00:01");
-        ex.Message.Should().Contain("actual:   00:00:01.0000001");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected values to be equal.
+
+                expected: 00:00:01
+                actual:   00:00:01.0000001
+
+                Assert.AreEqual(t1, t2)
+                """);
     }
 
     public void AreEqual_Decimal_RendersUsingInvariantCultureEvenInCommaLocale()
@@ -121,9 +171,16 @@ public partial class AssertTests : TestContainer
 
             Action action = () => Assert.AreEqual(1.5m, 2.5m);
 
-            Exception ex = action.Should().Throw<AssertFailedException>().Which;
-            ex.Message.Should().Contain("expected: 1.5");
-            ex.Message.Should().Contain("actual:   2.5");
+            action.Should().Throw<AssertFailedException>()
+                .WithMessage(
+                    """
+                    Assertion failed. Expected values to be equal.
+
+                    expected: 1.5
+                    actual:   2.5
+
+                    Assert.AreEqual(1.5m, 2.5m)
+                    """);
         }
         finally
         {
@@ -139,9 +196,16 @@ public partial class AssertTests : TestContainer
 
         Action action = () => Assert.AreEqual(t1, t2);
 
-        Exception ex = action.Should().Throw<AssertFailedException>().Which;
-        ex.Message.Should().Contain("expected: 13:12:21.0000000");
-        ex.Message.Should().Contain("actual:   13:12:21.0000001");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected values to be equal.
+
+                expected: 13:12:21.0000000
+                actual:   13:12:21.0000001
+
+                Assert.AreEqual(t1, t2)
+                """);
     }
 
     public void AreEqual_DateOnly_RendersIsoDateInFailureMessage()
@@ -151,9 +215,16 @@ public partial class AssertTests : TestContainer
 
         Action action = () => Assert.AreEqual(d1, d2);
 
-        Exception ex = action.Should().Throw<AssertFailedException>().Which;
-        ex.Message.Should().Contain("expected: 2026-06-09");
-        ex.Message.Should().Contain("actual:   2026-06-10");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected values to be equal.
+
+                expected: 2026-06-09
+                actual:   2026-06-10
+
+                Assert.AreEqual(d1, d2)
+                """);
     }
 #endif
 
@@ -164,9 +235,17 @@ public partial class AssertTests : TestContainer
 
         Action action = () => Assert.AreEqual(expected, actual, 1e-12);
 
-        Exception ex = action.Should().Throw<AssertFailedException>().Which;
-        ex.Message.Should().Contain("1.0000000001");
-        ex.Message.Should().Contain("delta:");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected values to be equal within tolerance.
+
+                expected: 1
+                actual:   1.0000000001
+                delta:    1E-12
+
+                Assert.AreEqual(expected, actual, <delta>)
+                """);
     }
 
     public void IsInRange_DateTime_RendersBoundsAndValueWithTickPrecision()
@@ -177,10 +256,16 @@ public partial class AssertTests : TestContainer
 
         Action action = () => Assert.IsInRange(min, max, value);
 
-        Exception ex = action.Should().Throw<AssertFailedException>().Which;
-        ex.Message.Should().Contain("2026-06-09T00:00:00.0000000Z");
-        ex.Message.Should().Contain("2026-06-09T00:00:00.0001000Z");
-        ex.Message.Should().Contain("2026-06-09T00:00:00.0001001Z");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected value to be within the inclusive range.
+
+                expected: [2026-06-09T00:00:00.0000000Z, 2026-06-09T00:00:00.0001000Z]
+                actual:   2026-06-09T00:00:00.0001001Z
+
+                Assert.IsInRange(min, max, value)
+                """);
     }
 
     public void IsGreaterThan_DateTime_RendersBothValuesWithTickPrecision()
@@ -190,9 +275,16 @@ public partial class AssertTests : TestContainer
 
         Action action = () => Assert.IsGreaterThan(b, a);
 
-        Exception ex = action.Should().Throw<AssertFailedException>().Which;
-        ex.Message.Should().Contain("2026-06-09T13:12:21.0000000Z");
-        ex.Message.Should().Contain("2026-06-09T13:12:21.0000001Z");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected value to be greater than the lower bound.
+
+                lower bound: 2026-06-09T13:12:21.0000001Z
+                actual:      2026-06-09T13:12:21.0000000Z
+
+                Assert.IsGreaterThan(b, a)
+                """);
     }
 
     public void Contains_DateTimeNotInCollection_RendersTargetWithTickPrecision()
@@ -203,8 +295,15 @@ public partial class AssertTests : TestContainer
 
         Action action = () => Assert.Contains(target, collection);
 
-        Exception ex = action.Should().Throw<AssertFailedException>().Which;
-        ex.Message.Should().Contain("2026-06-09T13:12:21.0000001Z");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to contain the specified element.
+
+                expected: 2026-06-09T13:12:21.0000001Z
+
+                Assert.Contains(target, collection)
+                """);
     }
 
     public void ContainsAll_DateTimeMissing_RendersExpectedAndCollectionWithTickPrecision()
@@ -216,9 +315,17 @@ public partial class AssertTests : TestContainer
 
         Action action = () => Assert.ContainsAll(expected, collection);
 
-        Exception ex = action.Should().Throw<AssertFailedException>().Which;
-        ex.Message.Should().Contain("2026-06-09T13:12:21.0000000Z");
-        ex.Message.Should().Contain("2026-06-09T13:12:21.0000001Z");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to contain all specified items.
+
+                missing:    [2026-06-09T13:12:21.0000001Z]
+                expected:   [2026-06-09T13:12:21.0000000Z, 2026-06-09T13:12:21.0000001Z]
+                collection: [2026-06-09T13:12:21.0000000Z]
+
+                Assert.ContainsAll(expected, collection)
+                """);
     }
 
     public void AreSequenceEqual_DateTime_RendersMismatchedElementsWithTickPrecision()
@@ -229,8 +336,16 @@ public partial class AssertTests : TestContainer
 
         Action action = () => Assert.AreSequenceEqual(expected, actual);
 
-        Exception ex = action.Should().Throw<AssertFailedException>().Which;
-        ex.Message.Should().Contain("2026-06-09T13:12:21.0000000Z");
-        ex.Message.Should().Contain("2026-06-09T13:12:21.0000001Z");
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage(
+                """
+                Assertion failed. Expected sequences to be equal.
+                Sequences have 1 element(s). 1 element(s) differ. First difference at index 0.
+
+                expected: [2026-06-09T13:12:21.0000000Z]
+                actual:   [2026-06-09T13:12:21.0000001Z]
+
+                Assert.AreSequenceEqual(expected, actual)
+                """);
     }
 }
