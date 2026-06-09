@@ -1,16 +1,17 @@
 ---
-name: "Expert Code Review (on open)"
-description: "Automatically runs the expert-reviewer agent when a non-draft PR is opened."
+name: "Expert Code Review (on PR ready)"
+description: "Automatically runs the expert-reviewer agent when a PR becomes ready for review — either opened as non-draft, or transitioned from draft to ready."
 
 # Non-draft PRs trigger this workflow.
 # The `roles` setting restricts execution to users with admin, maintainer, or
 # write permissions, and fork PRs are blocked by the compiled repository_id guard.
 #
-# NOTE: Only `opened` is used here; for PRs transitioned from draft to ready,
-# use the `/review` slash command.
+# Triggers on both `opened` (PR opened as non-draft) and `ready_for_review`
+# (PR transitioned from draft to ready). The `if:` condition below filters out
+# draft PRs so the `opened` event is a no-op for drafts.
 on:
   pull_request:
-    types: [opened]
+    types: [opened, ready_for_review]
   roles: [admin, maintainer, write]
 
 # Skip draft PRs and OneLocBuild localization check-in PRs (authored by dotnet-bot)
