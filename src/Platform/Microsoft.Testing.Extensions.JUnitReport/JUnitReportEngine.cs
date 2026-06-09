@@ -161,9 +161,9 @@ internal sealed class JUnitReportEngine
                 throw new IOException(
                     string.Format(
                         CultureInfo.InvariantCulture,
-                        "Unable to generate JUnit report at '{0}' after retrying for '{1}'; intermediate file kept at '{2}'.",
+                        "Unable to generate JUnit report at '{0}' after retrying for {1} seconds; intermediate file kept at '{2}'.",
                         finalPath,
-                        ReportFileWriterHelper.FileWriteRetryTimeout,
+                        ReportFileWriterHelper.FileWriteRetryTimeout.TotalSeconds.ToString(CultureInfo.InvariantCulture),
                         tempPath));
             }
 
