@@ -48,10 +48,12 @@ jobs:
 
   steps:
 
-  - task: UseDotNet@2
-    displayName: Install Correct .NET Version
-    inputs:
-      useGlobalJson: true
+  # NOTE: Do not add an explicit `UseDotNet@2` with `useGlobalJson: true` here.
+  # global.json pins a preview SDK (11.0.x-preview.*) and the `UseDotNet@2` task
+  # does not search preview channels by default, so it fails with
+  # "sdk version matching: 11.0.x could not be found". `eng\common\cibuild.cmd`
+  # (invoked below) restores the correct SDK from global.json via `dotnet-install.ps1`,
+  # which handles preview versions correctly.
 
   - task: PowerShell@2
     displayName: 'Install Windows SDK'
