@@ -19,17 +19,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// If specified on a test class, the class needs to contain at least one test method. This means that the
 /// attribute cannot be combined with a test class that would contain only an AssemblyInitialize or
 /// ClassInitialize method.
-/// <para>
-/// When MSTest runs in legacy mode (a .testsettings file is used, or RunSettings/MSTest/ForcedLegacyMode
-/// is set to true in a .runsettings file), relative paths might be resolved against the solution root
-/// directory instead of the build output directory.
-/// </para>
 /// </remarks>
 /// <example>
 /// <code>
 /// [DeploymentItem("file1.xml")] // Copy file1.xml from the build output directory to the deployment directory.
-/// [DeploymentItem(@"Resources\file2.xml", "DataFiles")] // Copy file2.xml from the Resources subfolder into a DataFiles subfolder of the deployment directory.
-/// [DeploymentItem(@"TestFiles\")] // Copy all files and subfolders of the TestFiles folder to the deployment directory.
+/// [DeploymentItem("Resources/file2.xml", "DataFiles")] // Copy file2.xml from the Resources subfolder into a DataFiles subfolder of the deployment directory.
+/// [DeploymentItem("TestFiles/")] // Copy all files and subfolders of the TestFiles folder to the deployment directory.
 /// </code>
 /// </example>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
