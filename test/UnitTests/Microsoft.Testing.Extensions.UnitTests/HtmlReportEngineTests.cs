@@ -329,7 +329,7 @@ public class HtmlReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_DefaultFileName_IncludesModuleNameAndTargetFramework()
+    public async Task GenerateReportAsync_DefaultFileName_IsAsmTfmArchShape()
     {
         string? pathSeen = null;
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
@@ -363,9 +363,12 @@ public class HtmlReportEngineTests
 
         (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
 
-        const string ExpectedFileNamePattern = "^u_M_My\\.Test\\.Module_net[0-9]+(\\.[0-9]+)?_2026-02-03_04_05_06\\.html$";
+        // <asm>_<tfm>_<arch>.html — deterministic, discoverable across reruns and matrices.
+        const string ExpectedFileNamePattern = "^My\\.Test\\.Module_net[0-9]+(\\.[0-9]+)?_(x86|x64|arm|arm64|wasm|s390x|ppc64le|riscv64|loongarch64|armv6|unknown)\\.html$";
         Assert.AreEqual(pathSeen, finalPath);
-        Assert.IsTrue(Regex.IsMatch(Path.GetFileName(finalPath), ExpectedFileNamePattern));
+        Assert.IsTrue(
+            Regex.IsMatch(Path.GetFileName(finalPath), ExpectedFileNamePattern),
+            $"File name '{Path.GetFileName(finalPath)}' does not match expected default pattern '{ExpectedFileNamePattern}'.");
     }
 
     [TestMethod]

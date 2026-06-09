@@ -77,7 +77,7 @@ internal sealed class JUnitReportEngine
 
         string fileName = fileNameExplicitlyProvided
             ? ResolveXmlFileName(GetProvidedFileName(providedFileName))
-            : BuildDefaultFileName(finishTime);
+            : BuildDefaultFileName();
 
         string outputDirectory = _configuration.GetTestResultDirectory();
         // Path.Combine short-circuits when the second argument is rooted, so an absolute
@@ -698,14 +698,15 @@ internal sealed class JUnitReportEngine
         return sb.ToString();
     }
 
-    private string BuildDefaultFileName(DateTimeOffset finishTime)
+    private string BuildDefaultFileName()
     {
-        string user = _environment.GetEnvironmentVariable("UserName")
-            ?? _environment.GetEnvironmentVariable("USER")
-            ?? "user";
+        // Deterministic <asm>_<tfm>_<arch>.xml shape — discoverable across reruns and
+        // multi-target/multi-arch matrices. WriteWithRetryAsync disambiguates with _N
+        // suffixes when a file with the base name already exists.
         string moduleName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
         string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
-        string raw = $"{user}_{_environment.MachineName}_{moduleName}_{targetFrameworkMoniker}_{finishTime:yyyy-MM-dd_HH_mm_ss}.xml";
+        string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+        string raw = $"{moduleName}_{targetFrameworkMoniker}_{architecture}.xml";
         return ReplaceInvalidFileNameChars(raw);
     }
 

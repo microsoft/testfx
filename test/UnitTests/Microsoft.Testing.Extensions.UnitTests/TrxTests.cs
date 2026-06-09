@@ -1016,7 +1016,14 @@ public class TrxTests
     }
 
     private static void AssertExpectedTrxFileName(string fileName)
-           => Assert.IsTrue(fileName.Equals("_MachineName_0001-01-01_00_00_00.0000000.trx", StringComparison.Ordinal));
+    {
+        // Default TRX file name has the deterministic <asm>_<tfm>_<arch>.trx shape; tests configure
+        // the test application module as "TestAppPath", so the assembly token resolves to "TestAppPath".
+        const string ExpectedPattern = @"^TestAppPath_net[0-9]+(\.[0-9]+)?_(x86|x64|arm|arm64|wasm|s390x|ppc64le|riscv64|loongarch64|armv6|unknown)\.trx$";
+        Assert.IsTrue(
+            System.Text.RegularExpressions.Regex.IsMatch(fileName, ExpectedPattern),
+            $"File name '{fileName}' does not match expected default pattern '{ExpectedPattern}'.");
+    }
 
     private static TrxTestResult CreateTestNodeUpdate(string uid, string displayName, PropertyBag propertyBag)
     {

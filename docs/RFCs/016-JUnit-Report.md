@@ -215,7 +215,7 @@ We deliberately do **not** emit Maven Surefire 3.x's `<rerunFailure>` / `<flakyF
 | Default name collides with existing file   | Auto-retry with `_1`, `_2`, ... suffix (5-second budget).                                         |
 | Explicit name collides with existing file  | Overwrite with a warning logged to the output device.                                             |
 
-Placeholders supported in the explicit name (via `ArtifactNamingHelper.GetStandardReplacements`): `{pname}`, `{pid}`, `{asm}`, `{tfm}`, `{time}`.
+Placeholders supported in the explicit name (via `ArtifactNamingHelper.GetStandardReplacements`): `{pname}`, `{pid}`, `{asm}`, `{tfm}`, `{arch}`, `{time}`.
 
 The file is **written to a `.tmp` sibling first, then renamed on success.** This avoids leaving a partial / corrupted `.xml` on the disk if serialization throws or the run is cancelled mid-write.
 

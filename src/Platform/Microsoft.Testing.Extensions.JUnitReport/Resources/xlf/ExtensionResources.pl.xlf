@@ -34,11 +34,14 @@
       </trans-unit>
       <trans-unit id="JUnitReportFileNameOptionDescription">
         <source>The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: MyReport_{tfm}.xml</source>
         <target state="translated">Nazwa wygenerowanego raportu XML JUnit. Może zawierać ścieżkę względną lub bezwzględną; ścieżki względne są rozpoznawane względem katalogu wyników testów, a brakujące katalogi są tworzone.
 Obsługuje następujące symbole zastępcze: {pname} (nazwa aplikacji testowej), {pid} (identyfikator procesu), {asm} (nazwa zestawu wejściowego), {tfm} (moniker platformy docelowej), {time} (sygnatura czasowa).
 Przykład: MyReport_{tfm}.xml</target>
+        <target state="new">The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
+Example: MyReport_{tfm}.xml</target>
         <note />
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRelativePathMustStayUnderResultsDirectory">

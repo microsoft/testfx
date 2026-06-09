@@ -107,7 +107,14 @@ internal sealed partial class TrxReportEngine
             }
             else
             {
-                trxFileName = $"{runDeploymentRoot}.trx";
+                // Default file name uses the deterministic <asm>_<tfm>_<arch>.trx shape so reruns are
+                // discoverable and multi-target/multi-arch matrices don't collide on disk. When the
+                // resulting file already exists (e.g. a second run into the same TestResults folder),
+                // we disambiguate further down with _N suffixes rather than overwriting silently.
+                string asm = Path.GetFileNameWithoutExtension(testAppModule);
+                string tfm = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
+                string arch = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+                trxFileName = ReportFileNameSanitizer.ReplaceInvalidFileNameChars($"{asm}_{tfm}_{arch}.trx");
                 isFileNameExplicitlyProvided = false;
             }
 
@@ -157,14 +164,56 @@ internal sealed partial class TrxReportEngine
 
             bool isFileNameExplicitlyProvidedAndFileExists = isFileNameExplicitlyProvided && _fileSystem.ExistFile(finalFileName);
 
-            // Note that we need to dispose the IFileStream, not the inner stream.
-            // IFileStream implementations will be responsible to dispose their inner stream.
-            using IFileStream stream = _fileSystem.NewFileStream(finalFileName, isFileNameExplicitlyProvided ? FileMode.Create : FileMode.CreateNew);
+            // Explicit file names overwrite (FileMode.Create). Default-generated names use CreateNew and
+            // disambiguate with _N suffixes on collision so reruns don't clobber prior artifacts.
+            if (isFileNameExplicitlyProvided)
+            {
+                // Note that we need to dispose the IFileStream, not the inner stream.
+                // IFileStream implementations will be responsible to dispose their inner stream.
+                using IFileStream stream = _fileSystem.NewFileStream(finalFileName, FileMode.Create);
 #if NETCOREAPP
-            await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
+                await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
 #else
-            document.Save(stream.Stream, SaveOptions.None);
+                document.Save(stream.Stream, SaveOptions.None);
 #endif
+            }
+            else
+            {
+                string directory = finalDirectory ?? string.Empty;
+                string baseName = Path.GetFileNameWithoutExtension(finalFileName);
+                string extension = Path.GetExtension(finalFileName);
+                string candidate = finalFileName;
+                int attempt = 0;
+
+                while (true)
+                {
+#if NETCOREAPP
+                    _cancellationToken.ThrowIfCancellationRequested();
+#endif
+
+                    try
+                    {
+                        using IFileStream stream = _fileSystem.NewFileStream(candidate, FileMode.CreateNew);
+#if NETCOREAPP
+                        await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
+#else
+                        document.Save(stream.Stream, SaveOptions.None);
+#endif
+                        finalFileName = candidate;
+                        break;
+                    }
+                    catch (IOException) when (_fileSystem.ExistFile(candidate))
+                    {
+                        // The IOException was caused by the file already existing. Try a
+                        // suffixed name. Any other IOException (disk full, permission, path
+                        // too long, etc.) is not caught here and will propagate to the outer
+                        // retry loop / the caller.
+                        attempt++;
+                        candidate = Path.Combine(directory, $"{baseName}_{attempt}{extension}");
+                    }
+                }
+            }
+
             return isFileNameExplicitlyProvidedAndFileExists
                 ? (finalFileName, string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxFileExistsAndWillBeOverwritten, finalFileName))
                 : (finalFileName, null);

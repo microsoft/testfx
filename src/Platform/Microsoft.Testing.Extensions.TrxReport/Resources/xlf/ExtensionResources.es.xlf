@@ -64,9 +64,9 @@
       </trans-unit>
       <trans-unit id="TrxReportFileNameOptionDescription">
         <source>The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: MyReport_{tfm}.trx</source>
-        <target state="translated">Nombre del informe TRX generado. Puede incluir una ruta de acceso relativa o absoluta; las rutas de acceso relativas se resuelven respecto al directorio de resultados de pruebas y se crean los directorios que falten.
+        <target state="needs-review-translation">Nombre del informe TRX generado. Puede incluir una ruta de acceso relativa o absoluta; las rutas de acceso relativas se resuelven respecto al directorio de resultados de pruebas y se crean los directorios que falten.
 Admite los siguientes marcadores de posición: {pname} (nombre de la aplicación de prueba), {pid} (identificador de proceso), {asm} (nombre del ensamblado de entrada), {tfm} (moniker de la plataforma de destino), {time} (marca de tiempo).
 Ejemplo: MyReport_{tfm}.trx</target>
         <note />

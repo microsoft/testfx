@@ -34,11 +34,14 @@
       </trans-unit>
       <trans-unit id="JUnitReportFileNameOptionDescription">
         <source>The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: MyReport_{tfm}.xml</source>
         <target state="translated">生成された JUnit XML レポートの名前。相対パスまたは絶対パスを含めることができます。相対パスはテスト結果ディレクトリを基準に解決され、存在しないディレクトリは作成されます。
 次のプレースホルダーをサポートします: {pname} (テスト アプリケーション名)、{pid} (プロセス ID)、{asm} (エントリ アセンブリ名)、{tfm} (ターゲット フレームワーク モニカー)、{time} (タイムスタンプ)。
 例: MyReport_{tfm}.xml</target>
+        <target state="new">The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
+Example: MyReport_{tfm}.xml</target>
         <note />
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRelativePathMustStayUnderResultsDirectory">
