@@ -315,7 +315,7 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_IncludesTraitsUnderLabels()
+    public async Task GenerateReportAsync_IncludesTraitsUnderExtraTraits_AndPromotesTestCategoryToTags()
     {
         using var memoryStream = new MemoryFileStream();
         CtrfReportEngine engine = CreateEngine(memoryStream);
@@ -329,7 +329,12 @@ public class CtrfReportEngineTests
                 Duration = TimeSpan.Zero,
                 Traits =
                 [
-                    new KeyValuePair<string, string>("Category", "FastTest"),
+                    // Multiple [TestCategory] attributes on one MSTest method produce repeated
+                    // trait entries with the same key. The engine must group them as an array
+                    // under extra.traits (the CTRF spec has no `labels` field, and emitting
+                    // duplicate JSON keys would be non-interoperable per RFC 8259).
+                    new KeyValuePair<string, string>("TestCategory", "Fast"),
+                    new KeyValuePair<string, string>("TestCategory", "Smoke"),
                     new KeyValuePair<string, string>("Owner", "alice"),
                 ],
             },
@@ -338,9 +343,32 @@ public class CtrfReportEngineTests
         await engine.GenerateReportAsync(tests);
 
         using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
-        JsonElement labels = document.RootElement.GetProperty("results").GetProperty("tests")[0].GetProperty("labels");
-        Assert.AreEqual("FastTest", labels.GetProperty("Category").GetString());
-        Assert.AreEqual("alice", labels.GetProperty("Owner").GetString());
+        JsonElement test = document.RootElement.GetProperty("results").GetProperty("tests")[0];
+
+        // No top-level `labels` — the CTRF Test schema doesn't define one.
+        Assert.IsFalse(test.TryGetProperty("labels", out _), "labels is not part of the CTRF Test schema.");
+
+        // TestCategory values are promoted to the CTRF top-level `tags` array so consumers
+        // can filter/group by category. The values are preserved in declaration order.
+        JsonElement tags = test.GetProperty("tags");
+        Assert.AreEqual(JsonValueKind.Array, tags.ValueKind);
+        Assert.AreEqual(2, tags.GetArrayLength());
+        Assert.AreEqual("Fast", tags[0].GetString());
+        Assert.AreEqual("Smoke", tags[1].GetString());
+
+        // All traits (including TestCategory) round-trip under extra.traits as
+        // { key: [value, ...] } so multi-value traits remain valid JSON.
+        JsonElement traits = test.GetProperty("extra").GetProperty("traits");
+        JsonElement testCategory = traits.GetProperty("TestCategory");
+        Assert.AreEqual(JsonValueKind.Array, testCategory.ValueKind);
+        Assert.AreEqual(2, testCategory.GetArrayLength());
+        Assert.AreEqual("Fast", testCategory[0].GetString());
+        Assert.AreEqual("Smoke", testCategory[1].GetString());
+
+        JsonElement owner = traits.GetProperty("Owner");
+        Assert.AreEqual(JsonValueKind.Array, owner.ValueKind);
+        Assert.AreEqual(1, owner.GetArrayLength());
+        Assert.AreEqual("alice", owner[0].GetString());
     }
 
     [TestMethod]
@@ -578,8 +606,8 @@ public class CtrfReportEngineTests
     [TestMethod]
     public async Task GenerateReportAsync_TestExtra_CarriesMethodNameAndExceptionType()
     {
-        // method, exceptionType, and uid all live under `extra` (not `labels`),
-        // so `labels` is reserved for user-controlled trait metadata only.
+        // method, exceptionType, and uid all live under `extra` so the per-test object
+        // remains aligned with the CTRF Test schema (which has no `labels` field).
         using var memoryStream = new MemoryFileStream();
         CtrfReportEngine engine = CreateEngine(memoryStream);
         CapturedTestResult[] tests =
@@ -605,9 +633,13 @@ public class CtrfReportEngineTests
         Assert.AreEqual("MyMethod", extra.GetProperty("method").GetString());
         Assert.AreEqual("System.InvalidOperationException", extra.GetProperty("exceptionType").GetString());
 
-        // No `labels` is emitted when there are no user traits — `labels` is for
-        // classification (priority/severity/owner), not framework internals.
-        Assert.IsFalse(test.TryGetProperty("labels", out _), "Synthetic framework metadata must not appear in labels.");
+        // No `labels` is ever emitted — it isn't part of the CTRF Test schema.
+        Assert.IsFalse(test.TryGetProperty("labels", out _), "labels is not part of the CTRF Test schema.");
+
+        // No `tags` is emitted when there is no TestCategory trait, and no `traits` is
+        // emitted under `extra` when the test has no user-supplied traits at all.
+        Assert.IsFalse(test.TryGetProperty("tags", out _), "tags is only emitted when TestCategory traits exist.");
+        Assert.IsFalse(extra.TryGetProperty("traits", out _), "extra.traits is only emitted when traits exist.");
     }
 
     [TestMethod]

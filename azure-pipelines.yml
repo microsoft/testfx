@@ -110,6 +110,9 @@ stages:
           # options that makes sense in Release:
           #   --report-trx + --report-trx-filename "{asm}_{tfm}.trx" — TRX per (assembly x TFM),
           #     resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
+          #   --report-ctrf + --report-ctrf-filename "{asm}_{tfm}.ctrf.json" — CTRF report per
+          #     (assembly x TFM). Same placeholder resolver as TRX. Dogfoods the new CTRF extension
+          #     so any regression in the report shape surfaces on every CI run.
           #   --report-azdo — surfaces failed tests in the AzDO UI.
           #   --report-azdo-progress — emits ##vso[task.logdetail ...;progress=...] timeline records so
           #     long-running test sessions show live progress on the AzDO timeline. No-op outside AzDO
@@ -127,7 +130,7 @@ stages:
           #     and this glob mixes net4x and net8+/net9+ hosts.
           #   --coverage — Codecov upload is Debug-only (see "Upload coverage to codecov.io" step
           #     below), so collecting coverage in Release would just write unused .coverage files.
-          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-azdo --report-azdo-progress --report-azdo-summary --hangdump --hangdump-timeout 15m --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace
+          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-progress --report-azdo-summary --hangdump --hangdump-timeout 15m --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace
             name: TestRelease
             displayName: Test (unit tests only)
             condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))

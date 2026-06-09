@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions;
@@ -29,6 +29,7 @@ Console.WriteLine("NATIVE_AOT enabled");
 builder.AddCrashDumpProvider(ignoreIfNotSupported: true);
 builder.AddTrxReportProvider();
 builder.AddAzureDevOpsProvider();
+builder.AddCtrfReportProvider();
 
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();

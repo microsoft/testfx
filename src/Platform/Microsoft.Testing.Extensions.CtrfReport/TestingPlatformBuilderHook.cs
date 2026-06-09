@@ -9,6 +9,7 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 /// This class is used by Microsoft.Testing.Platform.MSBuild to hook into the Testing Platform Builder
 /// to add CTRF report support.
 /// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class TestingPlatformBuilderHook
 {
     /// <summary>

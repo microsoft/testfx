@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions;
@@ -29,6 +29,7 @@ if (!OperatingSystem.IsBrowser())
 
 builder.AddTrxReportProvider();
 builder.AddAzureDevOpsProvider();
+builder.AddCtrfReportProvider();
 
 ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();

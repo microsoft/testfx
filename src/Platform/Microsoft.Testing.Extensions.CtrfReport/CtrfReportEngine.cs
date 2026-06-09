@@ -507,22 +507,32 @@ internal sealed class CtrfReportEngine
         WriteOutputLines(writer, "stdout", r.StandardOutput);
         WriteOutputLines(writer, "stderr", r.StandardError);
 
-        // CTRF `labels` is reserved for user-controlled, classification-style
-        // metadata (priority, severity, external IDs, etc.). We only emit the
-        // traits collected from MTP TestMetadataProperty here. Synthetic
-        // framework-generated metadata (method name, exception type, MTP UID)
-        // lives in the per-test `extra` object instead so CTRF consumers can
-        // filter/group by labels without seeing our internals.
+        // CTRF spec: `tags` is a top-level string array on the Test object used for
+        // classification. We promote MSTest `[TestCategory("…")]` trait values here
+        // so CTRF consumers can filter/group by category without having to dig into
+        // the free-form `extra` object. Other traits remain under `extra.traits`.
         if (r.Traits is { Count: > 0 })
         {
-            writer.WritePropertyName("labels");
-            writer.WriteStartObject();
+            bool tagsArrayStarted = false;
             foreach (KeyValuePair<string, string> trait in r.Traits)
             {
-                writer.WriteString(trait.Key, trait.Value);
+                if (string.Equals(trait.Key, "TestCategory", StringComparison.Ordinal))
+                {
+                    if (!tagsArrayStarted)
+                    {
+                        writer.WritePropertyName("tags");
+                        writer.WriteStartArray();
+                        tagsArrayStarted = true;
+                    }
+
+                    writer.WriteStringValue(trait.Value);
+                }
             }
 
-            writer.WriteEndObject();
+            if (tagsArrayStarted)
+            {
+                writer.WriteEndArray();
+            }
         }
 
         // CTRF `extra` (free-form object) — the CTRF spec doesn't define a
@@ -541,9 +551,61 @@ internal sealed class CtrfReportEngine
             writer.WriteString("exceptionType", r.ExceptionType);
         }
 
+        // Traits live under `extra.traits` (not a top-level `labels`) because:
+        //  1. The CTRF spec has no `labels` field on the Test object.
+        //  2. A test can declare the same trait key multiple times (e.g. several
+        //     [TestCategory] attributes on one MSTest method), so we must group
+        //     values per key — emitting `{ key: value }` would produce duplicate
+        //     JSON property names, which RFC 8259 calls out as not interoperable.
+        // We emit `{ key: [value, value, ...] }` so every trait key appears once
+        // and consumers always see a deterministic array shape. The keys appear
+        // in first-seen order; values keep their original declaration order.
+        if (r.Traits is { Count: > 0 })
+        {
+            writer.WritePropertyName("traits");
+            writer.WriteStartObject();
+            for (int i = 0; i < r.Traits.Count; i++)
+            {
+                string key = r.Traits[i].Key;
+                if (HasSameKeyEarlier(r.Traits, i))
+                {
+                    continue;
+                }
+
+                writer.WritePropertyName(key);
+                writer.WriteStartArray();
+                writer.WriteStringValue(r.Traits[i].Value);
+                for (int j = i + 1; j < r.Traits.Count; j++)
+                {
+                    if (string.Equals(r.Traits[j].Key, key, StringComparison.Ordinal))
+                    {
+                        writer.WriteStringValue(r.Traits[j].Value);
+                    }
+                }
+
+                writer.WriteEndArray();
+            }
+
+            writer.WriteEndObject();
+        }
+
         writer.WriteEndObject();
 
         writer.WriteEndObject();
+    }
+
+    private static bool HasSameKeyEarlier(IReadOnlyList<KeyValuePair<string, string>> traits, int index)
+    {
+        string key = traits[index].Key;
+        for (int k = 0; k < index; k++)
+        {
+            if (string.Equals(traits[k].Key, key, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void WriteRetryAttempt(Utf8JsonWriter writer, CapturedTestResult attempt, int attemptNumber)
