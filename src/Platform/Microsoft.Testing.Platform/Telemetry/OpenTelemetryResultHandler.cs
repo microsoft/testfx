@@ -176,8 +176,8 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
         //  SingleOrDefault<StandardErrorProperty>, OfType<FileArtifactProperty>).
         // Eliminates two TProperty[] heap allocations from OfType<T>() and reduces linked-list traversal from 5 to 1.
         TimingProperty? timingProperty = null;
-        string? stdout = null;
-        string? stderr = null;
+        StandardOutputProperty? standardOutputProperty = null;
+        StandardErrorProperty? standardErrorProperty = null;
         int artifactIndex = 0;
         PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
         while (enumerator.MoveNext())
@@ -185,16 +185,31 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             switch (enumerator.Current)
             {
                 case TimingProperty tp:
+                    if (timingProperty is not null)
+                    {
+                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(TimingProperty)}'.");
+                    }
+
                     timingProperty = tp;
                     break;
                 case TestMetadataProperty metadataProperty:
                     activity.SetTag($"test.metadataProperty.{metadataProperty.Key}", metadataProperty.Value);
                     break;
                 case StandardOutputProperty outputProperty:
-                    stdout = outputProperty.StandardOutput;
+                    if (standardOutputProperty is not null)
+                    {
+                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(StandardOutputProperty)}'.");
+                    }
+
+                    standardOutputProperty = outputProperty;
                     break;
                 case StandardErrorProperty errorProperty:
-                    stderr = errorProperty.StandardError;
+                    if (standardErrorProperty is not null)
+                    {
+                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(StandardErrorProperty)}'.");
+                    }
+
+                    standardErrorProperty = errorProperty;
                     break;
                 case FileArtifactProperty fileArtifactProperty:
                     activity.SetTag($"test.artifact.file[{artifactIndex}].path", fileArtifactProperty.FileInfo.FullName);
@@ -215,8 +230,8 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             }
         }
 
-        activity.SetTag("test.stdout", stdout ?? string.Empty);
-        activity.SetTag("test.stderr", stderr ?? string.Empty);
+        activity.SetTag("test.stdout", standardOutputProperty?.StandardOutput ?? string.Empty);
+        activity.SetTag("test.stderr", standardErrorProperty?.StandardError ?? string.Empty);
 
         activity.Dispose();
     }
