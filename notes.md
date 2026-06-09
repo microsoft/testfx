@@ -22,16 +22,19 @@
 - **IgnoreAttribute is sealed** — cannot derive from it in test scenarios
 - **sealed + inheritance in tests**: When writing tests that need multi-level inheritance, the first level class must NOT be sealed
 - **`[Experimental("MSTESTEXP")]` types** (`RetryContext`, `RetryResult`, `RetryBaseAttribute.ExecuteAsync`): do NOT inherit from `RetryBaseAttribute` in test code strings — would require `#pragma warning disable MSTESTEXP` (not used in tests). Use `[Retry]` directly.
+- **Static classes in Roslyn**: Static classes are NOT abstract (`IsAbstract=false`); they have `IsStatic=true`. The `UseDeploymentItem` analyzer's abstract-class early return does NOT apply to static classes.
 
 ## Testing Opportunities Backlog
 
 1. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo` or integration tests.
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
+3. **DoNotUseSystemDescriptionAttributeAnalyzer** — Missing test for inherited [TestMethod] (e.g. [DataTestMethod] + [System.ComponentModel.Description]) to verify the Inherits() check.
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-09 | Task 3 (UseDeploymentItemWithTestMethodOrTestClass MSTEST0035 edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-08 | Task 3 (PublicTypeShouldBeTestClassAnalyzer MSTEST0004 edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-07 | Task 3 (UseRetryWithTestMethodAnalyzer MSTEST0035 edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-06 | Task 3 (PreferTestMethodOverDataTestMethodAnalyzer edge cases), Task 7 (Monthly Issue Jun) |
@@ -46,11 +49,12 @@
 
 ## Last Run
 
-2026-06-08 23:22 UTC
+2026-06-09 23:25 UTC
 
 ## Completed Work
 
-- PR for PublicTypeShouldBeTestClassAnalyzer edge cases (2026-06-08, pending merge) — record types + nested class visibility
+- PR for UseDeploymentItemWithTestMethodOrTestClass edge cases (2026-06-09, pending merge) — static class behavior, DataTestMethod inheritance, multiple attrs
+- PR #8941 merged (PublicTypeShouldBeTestClassAnalyzer MSTEST0004 edge cases) — merged 2026-06-09
 - PR #8909 merged (UseRetryWithTestMethodAnalyzer MSTEST0035 edge cases) — merged 2026-06-08
 - PR #8885 merged (PreferTestMethodOverDataTestMethodAnalyzer edge cases) — merged 2026-06-07
 - PR #8869 merged (TestMethodShouldNotBeIgnoredAnalyzer edge cases) — merged 2026-06-07
