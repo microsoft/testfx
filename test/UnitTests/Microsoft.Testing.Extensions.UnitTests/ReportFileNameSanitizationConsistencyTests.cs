@@ -4,6 +4,7 @@
 using System.Reflection;
 
 using Microsoft.Testing.Extensions.HtmlReport;
+using Microsoft.Testing.Extensions.JUnitReport;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
@@ -19,12 +20,26 @@ public class ReportFileNameSanitizationConsistencyTests
         typeof(HtmlReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
         ?? throw new InvalidOperationException("Could not resolve HtmlReportEngine.ReplaceInvalidFileNameChars.");
 
+    private static readonly MethodInfo JUnitSanitizeMethod =
+        typeof(JUnitReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
+        ?? throw new InvalidOperationException("Could not resolve JUnitReportEngine.ReplaceInvalidFileNameChars.");
+
     [TestMethod]
     [DynamicData(nameof(GetSanitizationInputs))]
     public void TrxAndHtmlReportEngines_UseSameFileNameSanitizationRules(string fileName)
     {
         string expectedSanitizedFileName = InvokeSanitizer(TrxSanitizeMethod, fileName);
         string actualSanitizedFileName = InvokeSanitizer(HtmlSanitizeMethod, fileName);
+
+        Assert.AreEqual(expectedSanitizedFileName, actualSanitizedFileName, $"Sanitization mismatch for file name '{fileName}'.");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(GetSanitizationInputs))]
+    public void TrxAndJUnitReportEngines_UseSameFileNameSanitizationRules(string fileName)
+    {
+        string expectedSanitizedFileName = InvokeSanitizer(TrxSanitizeMethod, fileName);
+        string actualSanitizedFileName = InvokeSanitizer(JUnitSanitizeMethod, fileName);
 
         Assert.AreEqual(expectedSanitizedFileName, actualSanitizedFileName, $"Sanitization mismatch for file name '{fileName}'.");
     }
