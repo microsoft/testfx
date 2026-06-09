@@ -26,24 +26,40 @@ internal sealed class TestNodeResultsState
     public void RemoveRunningTestNode(string uid) => _testNodeProgressStates.TryRemove(uid, out _);
 
     /// <summary>
-    /// Returns the single longest-running task (by elapsed time) without allocating a list.
-    /// Returns <see langword="null"/> when there are no running tasks.
+    /// Returns the single active task to display on a one-line progress row, without allocating a list.
+    /// This preserves the prior <c>GetRunningTasks(1).FirstOrDefault()</c> semantics:
+    /// <list type="bullet">
+    /// <item><description><see langword="null"/> when there are no running tasks.</description></item>
+    /// <item><description>The single running task when there is exactly one.</description></item>
+    /// <item><description>A reusable summary detail with text like "N tests running" when there are multiple.</description></item>
+    /// </list>
     /// </summary>
-    public TestDetailState? GetLongestRunningTask()
+    public TestDetailState? GetSingleActiveOrSummaryTask()
     {
-        TestDetailState? best = null;
-        TimeSpan bestElapsed = TimeSpan.MinValue;
+        TestDetailState? first = null;
+        int count = 0;
         foreach (KeyValuePair<string, TestDetailState> kvp in _testNodeProgressStates)
         {
-            TimeSpan elapsed = kvp.Value.Stopwatch?.Elapsed ?? TimeSpan.Zero;
-            if (elapsed > bestElapsed)
+            if (count == 0)
             {
-                bestElapsed = elapsed;
-                best = kvp.Value;
+                first = kvp.Value;
             }
+
+            count++;
         }
 
-        return best;
+        if (count == 0)
+        {
+            return null;
+        }
+
+        if (count == 1)
+        {
+            return first;
+        }
+
+        _summaryDetail.Text = string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, count);
+        return _summaryDetail;
     }
 
     public List<TestDetailState> GetRunningTasks(int maxCount)

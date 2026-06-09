@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.UnitTests;
@@ -972,6 +973,48 @@ public sealed class TerminalTestReporterTests
         // Assert
         Assert.IsFalse(progressState.IsDiscovery);
         Assert.AreEqual(0, progressState.DiscoveredTests);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenEmpty_ReturnsNull()
+    {
+        var state = new TestNodeResultsState(1);
+
+        Assert.IsNull(state.GetSingleActiveOrSummaryTask());
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenSingleTask_ReturnsThatTask()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        state.AddRunningTestNode(id: 10, uid: "uid-1", name: "MyTest", stopwatchFactory.CreateStopwatch());
+
+        TestDetailState? active = state.GetSingleActiveOrSummaryTask();
+
+        Assert.IsNotNull(active);
+        Assert.AreEqual("MyTest", active.Text);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenMultipleTasks_ReturnsFormattedSummary()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        state.AddRunningTestNode(id: 10, uid: "uid-1", name: "FastTest", stopwatchFactory.CreateStopwatch());
+        stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+        state.AddRunningTestNode(id: 11, uid: "uid-2", name: "SlowTest", stopwatchFactory.CreateStopwatch());
+        state.AddRunningTestNode(id: 12, uid: "uid-3", name: "OtherTest", stopwatchFactory.CreateStopwatch());
+
+        TestDetailState? active = state.GetSingleActiveOrSummaryTask();
+
+        Assert.IsNotNull(active);
+        // The summary text should report the total count (3), not any individual test name.
+        string expectedSummary = string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, 3);
+        Assert.AreEqual(expectedSummary, active.Text);
+        Assert.DoesNotContain("FastTest", active.Text);
+        Assert.DoesNotContain("SlowTest", active.Text);
+        Assert.DoesNotContain("OtherTest", active.Text);
     }
 
     [TestMethod]
