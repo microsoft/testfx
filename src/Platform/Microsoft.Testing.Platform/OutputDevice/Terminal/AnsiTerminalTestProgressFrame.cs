@@ -10,6 +10,26 @@ internal sealed class AnsiTerminalTestProgressFrame
 {
     private const int MaxColumn = 250;
 
+    // Pre-computed ANSI escape sequences for the duration-only update hot path.
+    // Re-computing them via AnsiCodes methods on every render tick allocates a new string each time.
+    private static readonly string SetCursorHorizontalMaxColumn = AnsiCodes.SetCursorHorizontal(MaxColumn);
+    private static readonly string[] MoveCursorBackwardCache = CreateMoveCursorBackwardCache();
+
+    private static string[] CreateMoveCursorBackwardCache()
+    {
+        // Duration strings are at most ~15 chars ("1d 23h 59m 59s" with parens).
+        // A cache of 16 slots (indices 0-15) covers every realistic case with zero allocation.
+        const int maxLength = 16;
+        string[] cache = new string[maxLength];
+        cache[0] = string.Empty;
+        for (int i = 1; i < maxLength; i++)
+        {
+            cache[i] = AnsiCodes.MoveCursorBackward(i);
+        }
+
+        return cache;
+    }
+
     public int Width { get; private set; }
 
     public int Height { get; private set; }
@@ -245,10 +265,13 @@ internal sealed class AnsiTerminalTestProgressFrame
 
                         if (previouslyRenderedLine.RenderedDurationLength == durationString.Length)
                         {
-                            // Duration is the same length rewrite just it.
-                            terminal.SetCursorHorizontal(MaxColumn);
-                            terminal.Append($"{AnsiCodes.SetCursorHorizontal(MaxColumn)}{AnsiCodes.MoveCursorBackward(durationString.Length)}{durationString}");
-                            currentLine.RenderedDurationLength = durationString.Length;
+                            // Duration is the same length: rewrite just the duration cell.
+                            // Use pre-computed escape sequences to avoid per-tick string allocations.
+                            int durLen = durationString.Length;
+                            terminal.Append(SetCursorHorizontalMaxColumn);
+                            terminal.Append(durLen < MoveCursorBackwardCache.Length ? MoveCursorBackwardCache[durLen] : AnsiCodes.MoveCursorBackward(durLen));
+                            terminal.Append(durationString);
+                            currentLine.RenderedDurationLength = durLen;
                         }
                         else
                         {
@@ -280,10 +303,13 @@ internal sealed class AnsiTerminalTestProgressFrame
 
                         if (previouslyRenderedLine.RenderedDurationLength == durationString.Length)
                         {
-                            // Duration is the same length rewrite just it.
-                            terminal.SetCursorHorizontal(MaxColumn);
-                            terminal.Append($"{AnsiCodes.SetCursorHorizontal(MaxColumn)}{AnsiCodes.MoveCursorBackward(durationString.Length)}{durationString}");
-                            currentLine.RenderedDurationLength = durationString.Length;
+                            // Duration is the same length: rewrite just the duration cell.
+                            // Use pre-computed escape sequences to avoid per-tick string allocations.
+                            int durLen = durationString.Length;
+                            terminal.Append(SetCursorHorizontalMaxColumn);
+                            terminal.Append(durLen < MoveCursorBackwardCache.Length ? MoveCursorBackwardCache[durLen] : AnsiCodes.MoveCursorBackward(durLen));
+                            terminal.Append(durationString);
+                            currentLine.RenderedDurationLength = durLen;
                         }
                         else
                         {
