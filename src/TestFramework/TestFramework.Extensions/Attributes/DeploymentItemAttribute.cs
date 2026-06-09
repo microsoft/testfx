@@ -6,21 +6,31 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 #if !WINDOWS_UWP && !WIN_UI
 
 /// <summary>
-/// Used to specify deployment item (file or directory) per-test deployment for copying files or folders specified as deployment items to the <see cref="TestContext"/>.DeploymentDirectory.
-/// Deployment directory is where all the deployment items are present along with TestSource dll.
-/// Can be specified on test class or test method.
+/// Used to specify a deployment item (file or directory) for per-test deployment. The specified files
+/// and folders are copied to the <see cref="TestContext"/>.DeploymentDirectory, which is the directory
+/// from which the test assembly is executed and where all deployment items are present alongside the
+/// test source DLL.
+/// Can be specified on a test class or a test method.
 /// Can have multiple instances of the attribute to specify more than one item.
-/// The item path can be absolute or relative, if relative, it is relative to RunConfig.RelativePathRoot.
+/// The item path can be absolute or relative; if relative, it's resolved against the build output
+/// directory (the folder that contains the test assembly).
 /// </summary>
 /// <remarks>
 /// If specified on a test class, the class needs to contain at least one test method. This means that the
-/// attribute cannot be combined with a test class that would contain only a AssemblyInitialize or ClassInitialize
-/// method.
+/// attribute cannot be combined with a test class that would contain only an AssemblyInitialize or
+/// ClassInitialize method.
+/// <para>
+/// When MSTest runs in legacy mode (a .testsettings file is used, or RunSettings/MSTest/ForcedLegacyMode
+/// is set to true in a .runsettings file), relative paths might be resolved against the solution root
+/// directory instead of the build output directory.
+/// </para>
 /// </remarks>
 /// <example>
-/// [DeploymentItem("file1.xml")]
-/// [DeploymentItem("file2.xml", "DataFiles")]
-/// [DeploymentItem("bin\Debug")].
+/// <code>
+/// [DeploymentItem("file1.xml")] // Copy file1.xml from the build output directory to the deployment directory.
+/// [DeploymentItem(@"Resources\file2.xml", "DataFiles")] // Copy file2.xml from the Resources subfolder into a DataFiles subfolder of the deployment directory.
+/// [DeploymentItem(@"TestFiles\")] // Copy all files and subfolders of the TestFiles folder to the deployment directory.
+/// </code>
 /// </example>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
 // TODO: This API should not exist in the netstandard2.0 build, because it's not available in UWP/WinUI.
