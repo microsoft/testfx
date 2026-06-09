@@ -92,7 +92,8 @@ Extension options:
     --crashdump
         [net6.0+ only] Generate a dump file if the test process crashes
     --crashdump-filename
-        Specify the name of the dump file
+        Specify the name of the dump file.
+        Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.
     --crashdump-type
         Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
@@ -448,7 +449,8 @@ Registered command line providers:
       --crashdump-filename
         Arity: 1
         Hidden: False
-        Description: Specify the name of the dump file
+        Description: Specify the name of the dump file.
+        Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.
       --crashdump-type
         Arity: 1
         Hidden: False
