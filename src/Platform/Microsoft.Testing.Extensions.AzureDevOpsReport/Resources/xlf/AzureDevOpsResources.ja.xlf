@@ -14,18 +14,18 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps">
         <source>'--report-azdo-demote-known-flaky' requires '--report-azdo' to be enabled</source>
-        <target state="translated">'--report-azdo-demote-known-flaky' には、'--report-azdo' を有効にする必要があります</target>
-        <note />
+        <target state="needs-review-translation">'--report-azdo-demote-known-flaky' には、'--report-azdo' を有効にする必要があります</target>
+        <note>{Locked="--report-azdo-demote-known-flaky"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsDemoteKnownFlakyRequiresFlakyHistory">
         <source>'--report-azdo-demote-known-flaky' requires '--report-azdo-flaky-history' to be enabled</source>
-        <target state="translated">'--report-azdo-demote-known-flaky' には、'--report-azdo-flaky-history' を有効にする必要があります</target>
-        <note />
+        <target state="needs-review-translation">'--report-azdo-demote-known-flaky' には、'--report-azdo-flaky-history' を有効にする必要があります</target>
+        <note>{Locked="--report-azdo-demote-known-flaky"}{Locked="--report-azdo-flaky-history"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsFlakyHistoryRequiresAzureDevOps">
         <source>'--report-azdo-flaky-history' requires '--report-azdo' to be enabled</source>
-        <target state="translated">'--report-azdo-flaky-history' では '--report-azdo' を有効にする必要があります</target>
-        <note />
+        <target state="needs-review-translation">'--report-azdo-flaky-history' では '--report-azdo' を有効にする必要があります</target>
+        <note>{Locked="--report-azdo-flaky-history"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
@@ -44,23 +44,23 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFinalizeWaitTimedOut">
         <source>Azure DevOps live publishing timed out after {0} waiting for {1} participant file(s); finalizing the run anyway.</source>
-        <target state="translated">Azure DevOps ライブ公開は、{0} が {1} 個の参加者ファイルの待機後にタイムアウトしました。実行を続行して最終処理します。</target>
-        <note />
+        <target state="needs-review-translation">Azure DevOps ライブ公開は、{0} が {1} 個の参加者ファイルの待機後にタイムアウトしました。実行を続行して最終処理します。</target>
+        <note>{0} is the finalize wait timeout. {1} is the number of participant files still pending.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingHttpError">
         <source>Azure DevOps REST API request failed with status code {0}. Response: {1}</source>
-        <target state="translated">Azure DevOps REST API 要求はステータス コード {0} で失敗しました。応答: {1}</target>
-        <note />
+        <target state="needs-review-translation">Azure DevOps REST API 要求はステータス コード {0} で失敗しました。応答: {1}</target>
+        <note>{0} is the HTTP status code. {1} is the response body. {Locked="REST API"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingInvalidResponse">
         <source>Azure DevOps REST API returned an unexpected response payload.</source>
-        <target state="translated">Azure DevOps REST API から予期しない応答ペイロードが返されました。</target>
-        <note />
+        <target state="needs-review-translation">Azure DevOps REST API から予期しない応答ペイロードが返されました。</target>
+        <note>{Locked="REST API"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingConfiguration">
         <source>'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</source>
-        <target state="translated">'--publish-azdo-test-results' が設定されましたが、次の環境変数が不足しているか無効なため、Azure DevOps ライブ公開は無効になっています: {0}。</target>
-        <note>{Locked='--publish-azdo-test-results'}</note>
+        <target state="needs-review-translation">'--publish-azdo-test-results' が設定されましたが、次の環境変数が不足しているか無効なため、Azure DevOps ライブ公開は無効になっています: {0}。</target>
+        <note>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}{Locked="TF_BUILD=true"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}{Locked="BUILD_BUILDID"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingRunIdFile">
         <source>Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</source>
@@ -74,8 +74,8 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRequestFailed">
         <source>Azure DevOps REST API request failed after all retries.</source>
-        <target state="translated">Azure DevOps REST API 要求は、すべての再試行後に失敗しました。</target>
-        <note />
+        <target state="needs-review-translation">Azure DevOps REST API 要求は、すべての再試行後に失敗しました。</target>
+        <note>{Locked="REST API"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingResultAttachmentFailed">
         <source>Azure DevOps live publishing failed to upload a test result attachment.</source>
@@ -104,33 +104,33 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingTimeoutErrorMessageWithReason">
         <source>Timeout: {0}</source>
-        <target state="translated">タイムアウト: {0}</target>
-        <note />
+        <target state="needs-review-translation">タイムアウト: {0}</target>
+        <note>{0} is the timeout reason.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsProgressRequiresAzureDevOps">
         <source>'--report-azdo-progress' requires '--report-azdo' to be enabled</source>
-        <target state="translated">'--report-azdo-progress' では、'--report-azdo' を有効にする必要があります</target>
-        <note>{Locked='--report-azdo-progress'}{Locked='--report-azdo'}</note>
+        <target state="needs-review-translation">'--report-azdo-progress' では、'--report-azdo' を有効にする必要があります</target>
+        <note>{Locked="--report-azdo-progress"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
         <source>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</source>
-        <target state="translated">'--report-azdo-quarantine-file' では、'--report-azdo' を有効にする必要があります</target>
-        <note />
+        <target state="needs-review-translation">'--report-azdo-quarantine-file' では、'--report-azdo' を有効にする必要があります</target>
+        <note>{Locked="--report-azdo-quarantine-file"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsReportSeverityRequiresAzureDevOps">
         <source>'--report-azdo-severity' requires '--report-azdo' to be enabled</source>
-        <target state="translated">'--report-azdo-severity' では、'--report-azdo' を有効にする必要があります</target>
-        <note>{Locked='--report-azdo-severity'}{Locked='--report-azdo'}</note>
+        <target state="needs-review-translation">'--report-azdo-severity' では、'--report-azdo' を有効にする必要があります</target>
+        <note>{Locked="--report-azdo-severity"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsStackFrameFilterRequiresAzureDevOps">
         <source>'--report-azdo-stackframe-filter' requires '--report-azdo' to be enabled</source>
-        <target state="translated">'--report-azdo-stackframe-filter' では、'--report-azdo' を有効にする必要があります</target>
-        <note>{Locked='--report-azdo-stackframe-filter'}{Locked='--report-azdo'}</note>
+        <target state="needs-review-translation">'--report-azdo-stackframe-filter' では、'--report-azdo' を有効にする必要があります</target>
+        <note>{Locked="--report-azdo-stackframe-filter"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsSummaryRequiresAzureDevOps">
         <source>'--report-azdo-summary' requires '--report-azdo' to be enabled</source>
-        <target state="translated">'--report-azdo-summary' では、'--report-azdo' を有効にする必要があります</target>
-        <note>{Locked='--report-azdo-summary'}{Locked='--report-azdo'}</note>
+        <target state="needs-review-translation">'--report-azdo-summary' では、'--report-azdo' を有効にする必要があります</target>
+        <note>{Locked="--report-azdo-summary"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="DemoteKnownFlakyOptionDescription">
         <source>Demote failures with an Azure DevOps flaky history of at least {0}% in the selected window to warnings.</source>
@@ -149,23 +149,23 @@
       </trans-unit>
       <trans-unit id="FlakyHistoryFailureAnnotation">
         <source>[flaky: failed {0}/{1} in last {2}d]</source>
-        <target state="translated">[flaky: failed {0}/{1} in last {2}d]</target>
-        <note>{Locked="[flaky: failed {0}/{1} in last {2}d]"}</note>
+        <target state="needs-review-translation">[flaky: failed {0}/{1} in last {2}d]</target>
+        <note>{0} is the failure count. {1} is the total run count. {2} is the history window in days. {Locked="[flaky: failed {0}/{1} in last {2}d]"}</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadFailedWarning">
         <source>Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</source>
-        <target state="translated">Azure DevOps flaky 履歴を読み込めません。履歴の注釈なしで続行します。{0}</target>
-        <note>{Locked='--report-azdo-flaky-history'}</note>
+        <target state="needs-review-translation">Azure DevOps flaky 履歴を読み込めません。履歴の注釈なしで続行します。{0}</target>
+        <note>{0} is the exception message. {Locked="--report-azdo-flaky-history"}</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadTimedOutInfo">
         <source>Azure DevOps flaky history did not finish loading within {0} seconds. Continuing without history annotations.</source>
-        <target state="translated">Azure DevOps flaky 履歴が {0} 秒以内に読み込みを完了しませんでした。履歴の注釈なしで続行します。</target>
-        <note />
+        <target state="needs-review-translation">Azure DevOps flaky 履歴が {0} 秒以内に読み込みを完了しませんでした。履歴の注釈なしで続行します。</target>
+        <note>{0} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryMissingEnvironmentWarning">
         <source>Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</source>
-        <target state="translated">Azure DevOps flaky 履歴が要求されましたが、必要な Azure DevOps 環境変数がありません。履歴の注釈なしで続行します。</target>
-        <note>{Locked='--report-azdo-flaky-history'}</note>
+        <target state="needs-review-translation">Azure DevOps flaky 履歴が要求されましたが、必要な Azure DevOps 環境変数がありません。履歴の注釈なしで続行します。</target>
+        <note>{Locked="--report-azdo-flaky-history"}{Locked="TF_BUILD"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryOptionDescription">
         <source>Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.</source>
@@ -179,38 +179,38 @@
       </trans-unit>
       <trans-unit id="FlakyHistoryResultsPagingStoppedWarning">
         <source>Azure DevOps flaky history for run '{0}' exceeded {1} pages or returned an unchanged continuation token. Remaining results will be ignored.</source>
-        <target state="translated">実行 '{0}' の Azure DevOps flaky 履歴が {1} ページを超えたか、変更されていない継続トークンが返されました。残りの結果は無視されます。</target>
-        <note />
+        <target state="needs-review-translation">実行 '{0}' の Azure DevOps flaky 履歴が {1} ページを超えたか、変更されていない継続トークンが返されました。残りの結果は無視されます。</target>
+        <note>{0} is the Azure DevOps run URL. {1} is the maximum number of pages.</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryRunsCappedInfo">
         <source>Azure DevOps flaky history returned {0} runs. Only the first {1} runs will be inspected.</source>
-        <target state="translated">Azure DevOps の flaky 履歴が {0} 件の実行を返しました。最初の {1} 件の実行のみが検査されます。</target>
-        <note />
+        <target state="needs-review-translation">Azure DevOps の flaky 履歴が {0} 件の実行を返しました。最初の {1} 件の実行のみが検査されます。</target>
+        <note>{0} is the number of runs returned. {1} is the maximum number of runs to inspect.</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
         <source>Invalid glob pattern {0}.</source>
-        <target state="translated">glob パターン {0} が無効です。</target>
-        <note />
+        <target state="needs-review-translation">glob パターン {0} が無効です。</target>
+        <note>{0} is the invalid glob pattern.</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadMode">
         <source>Invalid artifact upload mode {0}.</source>
-        <target state="translated">無効な成果物アップロード モード {0}。</target>
-        <note />
+        <target state="needs-review-translation">無効な成果物アップロード モード {0}。</target>
+        <note>{0} is the invalid artifact upload mode.</note>
       </trans-unit>
       <trans-unit id="InvalidFlakyHistoryDays">
         <source>Invalid value '{0}' for '--report-azdo-flaky-history'. Provide an integer between 1 and 90.</source>
-        <target state="translated">'--report-azdo-flaky-history' の値 '{0}' が無効です。1 から 90 までの整数を入力してください。</target>
-        <note />
+        <target state="needs-review-translation">'--report-azdo-flaky-history' の値 '{0}' が無効です。1 から 90 までの整数を入力してください。</target>
+        <note>{0} is the invalid value. {Locked="--report-azdo-flaky-history"}</note>
       </trans-unit>
       <trans-unit id="InvalidSeverity">
         <source>Invalid option {0}.</source>
-        <target state="translated">オプション {0} が無効です。</target>
-        <note />
+        <target state="needs-review-translation">オプション {0} が無効です。</target>
+        <note>{0} is the invalid option value.</note>
       </trans-unit>
       <trans-unit id="InvalidStackFrameFilterRegex">
         <source>Invalid '--report-azdo-stackframe-filter' regex '{0}': {1}</source>
-        <target state="translated">無効 '--report-azdo-stackframe-filter' regex '{0}': {1}</target>
-        <note>{Locked="--report-azdo-stackframe-filter"}</note>
+        <target state="needs-review-translation">無効 '--report-azdo-stackframe-filter' regex '{0}': {1}</target>
+        <note>{0} is the regex pattern. {1} is the validation error message. {Locked="--report-azdo-stackframe-filter"}</note>
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>Test failed without an additional message.</source>
@@ -239,8 +239,8 @@
       </trans-unit>
       <trans-unit id="PublishAzdoRunNameRequiresPublishAzdoTestResults">
         <source>'--publish-azdo-run-name' requires '--publish-azdo-test-results' to be enabled</source>
-        <target state="translated">'--publish-azdo-run-name' には、'--publish-azdo-test-results' を有効にする必要があります</target>
-        <note>{Locked='--publish-azdo-run-name'}{Locked='--publish-azdo-test-results'}</note>
+        <target state="needs-review-translation">'--publish-azdo-run-name' には、'--publish-azdo-test-results' を有効にする必要があります</target>
+        <note>{Locked="--publish-azdo-run-name"}{Locked="--publish-azdo-test-results"}</note>
       </trans-unit>
       <trans-unit id="PublishAzdoTestResultsOptionDescription">
         <source>Publish test results live to the Azure DevOps Tests tab.</source>
@@ -249,13 +249,13 @@
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">
         <source>Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</source>
-        <target state="translated">Azure DevOps 検疫ファイル '{0}' を読み込めません。検疫の認識なしで続行します。{1}</target>
-        <note>{Locked='--report-azdo-quarantine-file'}</note>
+        <target state="needs-review-translation">Azure DevOps 検疫ファイル '{0}' を読み込めません。検疫の認識なしで続行します。{1}</target>
+        <note>{0} is the quarantine file path. {1} is the exception message. {Locked="--report-azdo-quarantine-file"}</note>
       </trans-unit>
       <trans-unit id="QuarantineFileMissingWarning">
         <source>Azure DevOps quarantine file '{0}' does not exist. Continuing without quarantine awareness.</source>
-        <target state="translated">Azure DevOps 検疫ファイル '{0}' が存在しません。検疫の認識なしで続行します。</target>
-        <note />
+        <target state="needs-review-translation">Azure DevOps 検疫ファイル '{0}' が存在しません。検疫の認識なしで続行します。</target>
+        <note>{0} is the quarantine file path.</note>
       </trans-unit>
       <trans-unit id="QuarantineFileOptionDescription">
         <source>Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.</source>
@@ -264,13 +264,13 @@
       </trans-unit>
       <trans-unit id="QuarantinePatternTooLongWarning">
         <source>Azure DevOps quarantine pattern exceeds the {0} character limit and will be ignored.</source>
-        <target state="translated">Azure DevOps 検疫パターンが {0} 文字の上限を超えているため、無視されます。</target>
-        <note />
+        <target state="needs-review-translation">Azure DevOps 検疫パターンが {0} 文字の上限を超えているため、無視されます。</target>
+        <note>{0} is the maximum character limit.</note>
       </trans-unit>
       <trans-unit id="QuarantinePatternsCappedWarning">
         <source>Azure DevOps quarantine file contains more than {0} patterns. Remaining patterns will be ignored.</source>
-        <target state="translated">Azure DevOps 検疫ファイルに {0} 個を超えるパターンが含まれています。残りのパターンは無視されます。</target>
-        <note />
+        <target state="needs-review-translation">Azure DevOps 検疫ファイルに {0} 個を超えるパターンが含まれています。残りのパターンは無視されます。</target>
+        <note>{0} is the maximum pattern count.</note>
       </trans-unit>
       <trans-unit id="QuarantinedAnnotation">
         <source>[quarantined]</source>
@@ -284,18 +284,18 @@
       </trans-unit>
       <trans-unit id="StackFrameFilterOptionDescription">
         <source>Additional regex patterns (matched against the fully-qualified type prefix of each stack frame) that should be skipped when looking for the user's call site to annotate. Repeatable; up to {0} patterns. Compiled with a {1}ms match timeout. Additive to the extension's built-in MSTest assertion-implementation prefixes.</source>
-        <target state="translated">注釈を付けるユーザーの呼び出しサイトを探す際にスキップすべき追加の正規表現パターン (各スタック フレームの完全修飾型プレフィックスに一致するもの)。繰り返し指定可能。最大 {0} 個のパターンです。{1} ミリ秒の一致タイムアウトでコンパイルされました。拡張機能に組み込まれている MSTest のアサーション実装プレフィックスに追加されます。</target>
-        <note>{0} is the maximum allowed pattern count, {1} is the per-match timeout in ms.</note>
+        <target state="needs-review-translation">注釈を付けるユーザーの呼び出しサイトを探す際にスキップすべき追加の正規表現パターン (各スタック フレームの完全修飾型プレフィックスに一致するもの)。繰り返し指定可能。最大 {0} 個のパターンです。{1} ミリ秒の一致タイムアウトでコンパイルされました。拡張機能に組み込まれている MSTest のアサーション実装プレフィックスに追加されます。</target>
+        <note>{0} is the maximum allowed pattern count. {1} is the per-match timeout in milliseconds. {Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="StackFrameFilterTooManyRegexes">
         <source>'--report-azdo-stackframe-filter' accepts at most {0} patterns.</source>
-        <target state="translated">'--report-azdo-stackframe-filter' は最大 {0} 個のパターンを受け入れます。</target>
-        <note>{Locked="--report-azdo-stackframe-filter"}</note>
+        <target state="needs-review-translation">'--report-azdo-stackframe-filter' は最大 {0} 個のパターンを受け入れます。</target>
+        <note>{0} is the maximum pattern count. {Locked="--report-azdo-stackframe-filter"}</note>
       </trans-unit>
       <trans-unit id="SummaryOptionDescription">
         <source>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.</source>
-        <target state="translated">テスト実行の最後に Markdown のジョブ サマリーを作成し、'##vso[task.uploadsummary]' 経由でアップロードします。省略可能なファイル パス引数で、既定の場所 ('{testResultsDir}/azdo-summary-{tfm}.md') をオーバーライドできます。'--report-azdo' が必要です。</target>
-        <note>{Locked="--report-azdo"}{Locked="##vso[task.uploadsummary]"}{Locked="azdo-summary-{tfm}.md"}</note>
+        <target state="needs-review-translation">テスト実行の最後に Markdown のジョブ サマリーを作成し、'##vso[task.uploadsummary]' 経由でアップロードします。省略可能なファイル パス引数で、既定の場所 ('{testResultsDir}/azdo-summary-{tfm}.md') をオーバーライドできます。'--report-azdo' が必要です。</target>
+        <note>{Locked="Markdown"}{Locked="##vso[task.uploadsummary]"}{Locked="{testResultsDir}/azdo-summary-{tfm}.md"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SummaryRequiresTfBuildWarning">
         <source>Azure DevOps job summary was requested, but TF_BUILD is not set to 'true'; skipping summary emission.</source>
@@ -304,8 +304,8 @@
       </trans-unit>
       <trans-unit id="SummaryWriteFailedWarning">
         <source>Failed to write Azure DevOps summary file '{0}': {1}</source>
-        <target state="translated">Azure DevOps の概要ファイル '{0}' を書き込めませんでした: {1}</target>
-        <note />
+        <target state="needs-review-translation">Azure DevOps の概要ファイル '{0}' を書き込めませんでした: {1}</target>
+        <note>{0} is the summary file path. {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="UploadArtifactExcludeOptionDescription">
         <source>Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.</source>

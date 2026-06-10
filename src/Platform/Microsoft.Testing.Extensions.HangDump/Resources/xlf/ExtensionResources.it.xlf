@@ -4,8 +4,8 @@
     <body>
       <trans-unit id="CreatingDumpFile">
         <source>Creating dump file '{0}'</source>
-        <target state="translated">Creazione del file di dump '{0}'</target>
-        <note />
+        <target state="needs-review-translation">Creazione del file di dump '{0}'</target>
+        <note>{0} is the dump file path.</note>
       </trans-unit>
       <trans-unit id="DumpingProcess">
         <source>Dumping process {0} - {1}</source>
@@ -44,13 +44,13 @@
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
-        <target state="translated">La variabile di ambiente '{0}' è impostata su '{1}' anziché su '{2}'</target>
-        <note />
+        <target state="needs-review-translation">La variabile di ambiente '{0}' è impostata su '{1}' anziché su '{2}'</target>
+        <note>{0} is the environment variable name. {1} is the actual value. {2} is the expected value.</note>
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableIsMissingErrorMessage">
         <source>Environment variable '{0}' is not set</source>
-        <target state="translated">La variabile di ambiente '{0}' non è impostata</target>
-        <note />
+        <target state="needs-review-translation">La variabile di ambiente '{0}' non è impostata</target>
+        <note>{0} is the environment variable name.</note>
       </trans-unit>
       <trans-unit id="HangDumpExtensionDescription">
         <source>Produce hang dump files when a test execution exceed a given time.</source>
@@ -68,13 +68,12 @@
 
 Disk info:
 {1}</source>
-        <target state="translated">Durante l'esecuzione del dump di blocco si è verificata l'eccezione seguente:
+        <target state="needs-review-translation">Durante l'esecuzione del dump di blocco si è verificata l'eccezione seguente:
 {0}
 
 Informazioni sul disco:
 {1}</target>
-        <note>{0} - the exception that occurred.
-{1} - disk info detailing free space</note>
+        <note>{0} is the exception that occurred. {1} is disk information detailing free space.</note>
       </trans-unit>
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
@@ -82,16 +81,20 @@ Supports the following placeholders: {pname} (test application name), {pid} (pro
         <target state="new">Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
         <note />
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
+        <target state="needs-review-translation">Specificare il nome del file di dump.
+Supporta i segnaposto seguenti: {pname} (nome applicazione di test), {pid} (ID processo), {asm} (nome assembly voce), {tfm} (moniker framework di destinazione), {time} (timestamp). Il token legacy %p (ID processo) è supportato anche per la compatibilità con le versioni precedenti.</target>
+        <note>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
         <source>Generate a dump file if the test process hangs</source>
-        <target state="translated">Generare un file di dump se il processo di test si blocca</target>
-        <note />
+        <target state="needs-review-translation">Generare un file di dump se il processo di test si blocca</target>
+        <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
         <source>Hang dump timeout of '{0}' expired</source>
-        <target state="translated">Timeout dump di blocco di '{0}' scaduto</target>
-        <note />
+        <target state="needs-review-translation">Timeout dump di blocco di '{0}' scaduto</target>
+        <note>{0} is the hang dump timeout value.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionDescription">
         <source>Specify the timeout after which the dump will be generated.
@@ -103,7 +106,7 @@ The timeout value is specified in one of the following formats:
     1d, 1day, 1days.
     A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
-        <target state="translated">Specificare il timeout dopo il quale verrà generato il dump.
+        <target state="needs-review-translation">Specificare il timeout dopo il quale verrà generato il dump.
 Il valore del timeout è specificato in uno dei formati seguenti:
     500 ms, 500 mil, 500 millisecondo, 500 millisecondi,
     5400 s, 5400 sec, 5400 secondo, 5400 secondi,
@@ -112,48 +115,48 @@ Il valore del timeout è specificato in uno dei formati seguenti:
     1 g, 1 giorno, 1 giorni.
     Un semplice numero (senza suffisso) viene interpretato come millisecondi.
     L'impostazione predefinita è 30 m.</target>
-        <note />
+        <note>Do not localize option name {Locked="--hangdump-timeout"} or time examples {Locked="500ms"}{Locked="500mil"}{Locked="500millisecond"}{Locked="500milliseconds"}{Locked="5400s"}{Locked="5400sec"}{Locked="5400second"}{Locked="5400seconds"}{Locked="90m"}{Locked="90min"}{Locked="90minute"}{Locked="90minutes"}{Locked="1.5h"}{Locked="1.5hour"}{Locked="1.5hours"}{Locked="1d"}{Locked="1day"}{Locked="1days"}{Locked="30m"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
         <source>'--hangdump-timeout' expects a single timeout argument</source>
-        <target state="translated">'--hangdump-timeout' prevede un singolo argomento di timeout</target>
-        <note />
+        <target state="needs-review-translation">'--hangdump-timeout' prevede un singolo argomento di timeout</target>
+        <note>Do not localize option name {Locked="--hangdump-timeout"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
         <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
-        <target state="translated">''--hangdump-type'' e ''--hangdump-type-if-supported'' si escludono a vicenda. Usare ''--hangdump-type-if-supported'' per scegliere un tipo di dump best effort che esegue il fallback al tipo disponibile più vicino (con un messaggio informativo) quando il tipo richiesto non è disponibile nel runtime corrente, oppure ''--hangdump-type'' per generare un errore rapido nei runtime non supportati.</target>
-        <note />
+        <target state="needs-review-translation">''--hangdump-type'' e ''--hangdump-type-if-supported'' si escludono a vicenda. Usare ''--hangdump-type-if-supported'' per scegliere un tipo di dump best effort che esegue il fallback al tipo disponibile più vicino (con un messaggio informativo) quando il tipo richiesto non è disponibile nel runtime corrente, oppure ''--hangdump-type'' per generare un errore rapido nei runtime non supportati.</target>
+        <note>Do not localize option names {Locked="--hangdump-type"}{Locked="--hangdump-type-if-supported"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
         <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
-        <target state="translated">''--hangdump-type-if-supported {0}'' non è supportato nel runtime corrente. Fallback a ''{1}''.</target>
-        <note />
+        <target state="needs-review-translation">''--hangdump-type-if-supported {0}'' non è supportato nel runtime corrente. Fallback a ''{1}''.</target>
+        <note>0 is the requested dump type. 1 is the fallback dump type. Do not localize option name {Locked="--hangdump-type-if-supported"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
         <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
-        <target state="translated">Uguale a ''--hangdump-type'' ma esegue il fallback in modo silenzioso (con un messaggio informativo) al tipo di dump supportato più vicino quando il tipo richiesto non è disponibile nel runtime corrente (ad esempio, ''Triage'' è supportato solo in .NET Core e viene eseguito il fallback a ''Mini'' in .NET Framework). Usare questa opzione per mantenere la stessa riga di comando tra matrici CI che combinano .NET Framework e .NET. I valori validi sono ''Mini'', ''Heap'', ''Full'', ''Triage'', ''None''. Si escludono a vicenda con ''--hangdump-type''.</target>
-        <note />
+        <target state="needs-review-translation">Uguale a ''--hangdump-type'' ma esegue il fallback in modo silenzioso (con un messaggio informativo) al tipo di dump supportato più vicino quando il tipo richiesto non è disponibile nel runtime corrente (ad esempio, ''Triage'' è supportato solo in .NET Core e viene eseguito il fallback a ''Mini'' in .NET Framework). Usare questa opzione per mantenere la stessa riga di comando tra matrici CI che combinano .NET Framework e .NET. I valori validi sono ''Mini'', ''Heap'', ''Full'', ''Triage'', ''None''. Si escludono a vicenda con ''--hangdump-type''.</target>
+        <note>Do not localize option names {Locked="--hangdump-type"}{Locked="--hangdump-type-if-supported"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Full"}{Locked="Triage"}{Locked="None"}, or runtime names {Locked=".NET Core"}{Locked=".NET Framework"}{Locked=".NET"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="translated">Specificare il tipo di dump.
+        <target state="needs-review-translation">Specificare il tipo di dump.
 I valori validi sono {0}.
 Il tipo predefinito è 'Full'</target>
-        <note />
+        <note>0 is the list of valid dump type values. Do not localize option name {Locked="--hangdump-type"} or default dump type {Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="translated">''{0}'' non è un tipo di dump valido.
+        <target state="needs-review-translation">''{0}'' non è un tipo di dump valido.
 Le opzioni valide sono {1}</target>
-        <note />
+        <note>{0} is the invalid dump type. {1} is the list of valid dump type values.</note>
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
         <source>Request of type '{0}' is not supported</source>
-        <target state="translated">La richiesta di tipo '{0}' non è supportata</target>
-        <note />
+        <target state="needs-review-translation">La richiesta di tipo '{0}' non è supportata</target>
+        <note>{0} is the unsupported request type name.</note>
       </trans-unit>
       <trans-unit id="HangTestListArtifactDescription">
         <source>The list of tests that were running at the time of the hang</source>
@@ -167,13 +170,13 @@ Le opzioni valide sono {1}</target>
       </trans-unit>
       <trans-unit id="MissingHangDumpMainOption">
         <source>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</source>
-        <target state="translated">Sono stati specificati uno o più parametri del dump di blocco ma non sono stati abilitati. Aggiungere --hangdump alla riga di comando</target>
-        <note />
+        <target state="needs-review-translation">Sono stati specificati uno o più parametri del dump di blocco ma non sono stati abilitati. Aggiungere --hangdump alla riga di comando</target>
+        <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
-        <target state="translated">I seguenti test erano ancora in esecuzione quando è stato eseguito il dump (formato: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
-        <note />
+        <target state="needs-review-translation">I seguenti test erano ancora in esecuzione quando è stato eseguito il dump (formato: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
+        <note>Do not localize format tokens {Locked="[&lt;time-elapsed-since-start&gt;]"} and {Locked="&lt;name&gt;"}.</note>
       </trans-unit>
     </body>
   </file>

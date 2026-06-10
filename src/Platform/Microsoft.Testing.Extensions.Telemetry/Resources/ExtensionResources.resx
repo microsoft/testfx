@@ -119,5 +119,6 @@
   </resheader>
   <data name="AddAppInsightsTelemetryProviderInvalidBuilder" xml:space="preserve">
     <value>AppInsights telemetry provider can only be registered onto Microsoft.Testing.Platform.Builder.TestApplicationBuilder builders</value>
+    <comment>Do not localize {Locked="AppInsights"} or {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</comment>
   </data>
 </root>

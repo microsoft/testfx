@@ -14,13 +14,13 @@
       </trans-unit>
       <trans-unit id="FailureThresholdPolicyMaxCount">
         <source>Maximum failed tests threshold is {0} and {1} tests failed</source>
-        <target state="translated">Der Schwellenwert für die maximale Anzahl fehlerhafter Tests ist {0} und {1} Tests mit Fehlern</target>
-        <note />
+        <target state="needs-review-translation">Der Schwellenwert für die maximale Anzahl fehlerhafter Tests ist {0} und {1} Tests mit Fehlern</target>
+        <note>{0} is the maximum failed tests threshold. {1} is the failed tests count.</note>
       </trans-unit>
       <trans-unit id="FailureThresholdPolicyMaxPercentage">
         <source>Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</source>
-        <target state="translated">Der Schwellenwert für den Prozentsatz fehlgeschlagener Tests ist {0} %, und {1} % Tests mit Fehlern ({2}/{3})</target>
-        <note />
+        <target state="needs-review-translation">Der Schwellenwert für den Prozentsatz fehlgeschlagener Tests ist {0} %, und {1} % Tests mit Fehlern ({2}/{3})</target>
+        <note>{0} is the maximum failed tests percentage threshold. {1} is the actual failed tests percentage. {2} is the failed tests count. {3} is the total tests count.</note>
       </trans-unit>
       <trans-unit id="MoveFiles">
         <source>
@@ -37,8 +37,8 @@ Medienobjektdateien des letzten Versuchs werden in das Standardergebnisverzeichn
       </trans-unit>
       <trans-unit id="MovingFileToLocation">
         <source>Moving file '{0}' to '{1}'</source>
-        <target state="translated">Die Datei "{0}" wird nach "{1}" verschoben</target>
-        <note />
+        <target state="needs-review-translation">Die Datei "{0}" wird nach "{1}" verschoben</target>
+        <note>{0} is the source file path. {1} is the destination file path.</note>
       </trans-unit>
       <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
         <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
@@ -47,18 +47,18 @@ Medienobjektdateien des letzten Versuchs werden in das Standardergebnisverzeichn
       </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
-        <target state="translated">Fehler beim Starten von Prozess "{0}".</target>
-        <note />
+        <target state="needs-review-translation">Fehler beim Starten von Prozess "{0}".</target>
+        <note>{0} is the process file path.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
         <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</source>
-        <target state="translated">Fügen Sie eine Verzögerung zwischen den Wiederholungen hinzu. Die Verzögerung wird als Zeitwert ausgedrückt, z. B. 200, 500 ms, 1 s, 2,5 m, 1 h, 1 d. Die Standardeinheit ist Millisekunden (ms).</target>
-        <note />
+        <target state="needs-review-translation">Fügen Sie eine Verzögerung zwischen den Wiederholungen hinzu. Die Verzögerung wird als Zeitwert ausgedrückt, z. B. 200, 500 ms, 1 s, 2,5 m, 1 h, 1 d. Die Standardeinheit ist Millisekunden (ms).</target>
+        <note>Do not localize option name {Locked="--retry-failed-tests-delay"} or time examples {Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
         <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</source>
-        <target state="translated">Die Option „--retry-failed-tests-delay“ erfordert einen gültigen Zeitbereichswert, der nicht negativ und nicht größer als 2147483647 ms (~24.20:31:23.647) ist (z. B. 200, 500 ms, 1 s., 2,5 m, 1 h, 1 d)</target>
-        <note />
+        <target state="needs-review-translation">Die Option „--retry-failed-tests-delay“ erfordert einen gültigen Zeitbereichswert, der nicht negativ und nicht größer als 2147483647 ms (~24.20:31:23.647) ist (z. B. 200, 500 ms, 1 s., 2,5 m, 1 h, 1 d)</target>
+        <note>Do not localize option name {Locked="--retry-failed-tests-delay"} or time examples {Locked="2147483647ms"}{Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">
         <source>Retry failed tests feature allows to restart test execution upon failure.</source>
@@ -72,18 +72,18 @@ Medienobjektdateien des letzten Versuchs werden in das Standardergebnisverzeichn
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
-        <target state="translated">Wiederholungsmechanismus deaktivieren, wenn der Prozentsatz fehlerhafter Tests größer als der angegebene Wert ist</target>
-        <note />
+        <target state="needs-review-translation">Wiederholungsmechanismus deaktivieren, wenn der Prozentsatz fehlerhafter Tests größer als der angegebene Wert ist</target>
+        <note>Do not localize option name {Locked="--retry-failed-tests-max-percentage"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
         <source>Option '{0}' expects an integer argument between 0 and 100</source>
-        <target state="translated">Option „{0}“ erwartet ein ganzzahliges Argument zwischen 0 und 100.</target>
-        <note />
+        <target state="needs-review-translation">Option „{0}“ erwartet ein ganzzahliges Argument zwischen 0 und 100.</target>
+        <note>{0} is the option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
         <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
-        <target state="translated">Wiederholungsmechanismus deaktivieren, wenn die Anzahl fehlerhafter Tests größer als der angegebene Wert ist</target>
-        <note />
+        <target state="needs-review-translation">Wiederholungsmechanismus deaktivieren, wenn die Anzahl fehlerhafter Tests größer als der angegebene Wert ist</target>
+        <note>Do not localize option name {Locked="--retry-failed-tests-max-tests"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
         <source>Retry failed tests feature is not supported in hot reload mode</source>
@@ -97,39 +97,39 @@ Medienobjektdateien des letzten Versuchs werden in das Standardergebnisverzeichn
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
         <source>Retry failed tests the given number of times</source>
-        <target state="translated">Fehlgeschlagene Tests erneut ausführen (siehe Angabe zur Anzahl der Wiederholungsversuche)</target>
-        <note />
+        <target state="needs-review-translation">Fehlgeschlagene Tests erneut ausführen (siehe Angabe zur Anzahl der Wiederholungsversuche)</target>
+        <note>Do not localize option name {Locked="--retry-failed-tests"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
         <source>Option '{0}' requires option '{1}' to be specified</source>
-        <target state="translated">Die "{0}"-Option erfordert, dass "{1}" angegeben ist</target>
-        <note />
+        <target state="needs-review-translation">Die "{0}"-Option erfordert, dass "{1}" angegeben ist</target>
+        <note>{0} is the option name that was specified. {1} is the required option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
         <source>Option '{0}' expects a non-negative integer argument</source>
-        <target state="translated">Option „{0}“ erwartet ein nicht negatives ganzzahliges Argument</target>
-        <note />
+        <target state="needs-review-translation">Option „{0}“ erwartet ein nicht negatives ganzzahliges Argument</target>
+        <note>{0} is the option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
         <source>Options '{0}' and '{1}' cannot be used together</source>
-        <target state="translated">Optionen "{0}" und "{1}" können nicht zusammen verwendet werden</target>
-        <note />
+        <target state="needs-review-translation">Optionen "{0}" und "{1}" können nicht zusammen verwendet werden</target>
+        <note>{0} is the first option name. {1} is the second option name.</note>
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
         <source>Test host process exited before the retry service could connect to it. Exit code: {0}</source>
-        <target state="translated">Der Testhostprozess wurde beendet, bevor der Wiederholungsdienst eine Verbindung herstellen konnte. Exitcode: {0}</target>
-        <note />
+        <target state="needs-review-translation">Der Testhostprozess wurde beendet, bevor der Wiederholungsdienst eine Verbindung herstellen konnte. Exitcode: {0}</target>
+        <note>{0} is the test host process exit code.</note>
       </trans-unit>
       <trans-unit id="TestSuiteCompletedSuccessfully">
         <source>
 =====================
 Tests suite completed successfully in {0} attempts
 =====================</source>
-        <target state="translated">
+        <target state="needs-review-translation">
 =====================
 Die Testsammlung wurde in {0} Versuchen erfolgreich abgeschlossen.
 =====================</target>
-        <note />
+        <note>{0} is the total attempt count.</note>
       </trans-unit>
       <trans-unit id="TestSuiteFailed">
         <source>
@@ -137,28 +137,28 @@ Die Testsammlung wurde in {0} Versuchen erfolgreich abgeschlossen.
 Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
 =====================
 </source>
-        <target state="translated">
+        <target state="needs-review-translation">
 =====================
 Fehler bei der Testsammlung. Fehlerhafte Tests gesamt: {0}, Exitcode: {1}, Versuch: {2}/{3}
 =====================
 </target>
-        <note />
+        <note>{0} is the failed tests count. {1} is the exit code. {2} is the current attempt number. {3} is the total attempt count.</note>
       </trans-unit>
       <trans-unit id="TestSuiteFailedInAllAttempts">
         <source>
 =====================
 Tests suite failed in all {0} attempts
 =====================</source>
-        <target state="translated">
+        <target state="needs-review-translation">
 =====================
 Fehler bei der Testsammlung bei allen {0} Versuchen.
 =====================</target>
-        <note />
+        <note>{0} is the total attempt count.</note>
       </trans-unit>
       <trans-unit id="TestSuiteFailedWithWrongExitCode">
         <source>Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</source>
-        <target state="translated">Bei der Testsammlung ist ein Fehler aufgetreten, und der Exitcode unterscheidet sich von 2 (fehlgeschlagene Tests). Fehler im Zusammenhang mit einer unerwarteten Bedingung. Exitcode "{0}"</target>
-        <note />
+        <target state="needs-review-translation">Bei der Testsammlung ist ein Fehler aufgetreten, und der Exitcode unterscheidet sich von 2 (fehlgeschlagene Tests). Fehler im Zusammenhang mit einer unerwarteten Bedingung. Exitcode "{0}"</target>
+        <note>{0} is the exit code.</note>
       </trans-unit>
     </body>
   </file>

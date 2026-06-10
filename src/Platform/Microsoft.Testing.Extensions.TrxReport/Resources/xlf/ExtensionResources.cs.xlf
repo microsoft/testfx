@@ -4,43 +4,43 @@
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>TRX report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Generátor sestav TRX funguje pouze s tvůrci typu Microsoft.Testing.Platform.Builder.TestApplicationBuilder.</target>
-        <note />
+        <target state="needs-review-translation">Generátor sestav TRX funguje pouze s tvůrci typu Microsoft.Testing.Platform.Builder.TestApplicationBuilder.</target>
+        <note>Do not localize {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
         <source>The baseline TRX file</source>
-        <target state="translated">Soubor TRX standardních hodnot</target>
-        <note />
+        <target state="needs-review-translation">Soubor TRX standardních hodnot</target>
+        <note>Do not localize option name {Locked="--baseline-trx"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolBothFilesMustBeSpecified">
         <source>'--{0}' and '--{1}' must both be specified</source>
-        <target state="translated">Musí být zadaná jak možnost --{0}, tak možnost --{1}.</target>
-        <note />
+        <target state="needs-review-translation">Musí být zadaná jak možnost --{0}, tak možnost --{1}.</target>
+        <note>0 is the first option name without the leading {Locked="--"}. 1 is the second option name without the leading {Locked="--"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolDescription">
         <source>This tool allows to compare and highlights differences between 2 TRX reports</source>
-        <target state="translated">Tento nástroj umožňuje porovnat rozdíly mezi 2 sestavami TRX a zobrazit přehled těchto rozdílů.</target>
-        <note />
+        <target state="needs-review-translation">Tento nástroj umožňuje porovnat rozdíly mezi 2 sestavami TRX a zobrazit přehled těchto rozdílů.</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolDisplayName">
         <source>TRX comparer tool</source>
-        <target state="translated">Porovnávač souborů TRX</target>
-        <note />
+        <target state="needs-review-translation">Porovnávač souborů TRX</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolOptionExpectsSingleArgument">
         <source>'--{0}' expects a single trx file path as argument</source>
-        <target state="translated">--{0} očekává jako argument jednu cestu k souboru trx.</target>
-        <note />
+        <target state="needs-review-translation">--{0} očekává jako argument jednu cestu k souboru trx.</target>
+        <note>0 is the option name without the leading {Locked="--"}. Do not localize file extension {Locked=".trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolOtherFileOptionDescription">
         <source>The TRX file to compare with the baseline</source>
-        <target state="translated">Soubor TRX, který se má porovnat se standardními hodnotami</target>
-        <note />
+        <target state="needs-review-translation">Soubor TRX, který se má porovnat se standardními hodnotami</target>
+        <note>Do not localize option name {Locked="--trx-to-compare"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxFileExistsAndWillBeOverwritten">
         <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
-        <target state="translated">Upozornění: Soubor Trx '{0}' již existuje a bude přepsán.</target>
-        <note />
+        <target state="needs-review-translation">Upozornění: Soubor Trx '{0}' již existuje a bude přepsán.</target>
+        <note>{0} is the {Locked="TRX"} report file path.</note>
       </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">
         <source>Test session</source>
@@ -49,18 +49,18 @@
       </trans-unit>
       <trans-unit id="TrxReportArtifactDisplayName">
         <source>TRX Report</source>
-        <target state="translated">Sestava TRX</target>
-        <note />
+        <target state="needs-review-translation">Sestava TRX</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameExtensionIsNotTrx">
         <source>'--report-trx-filename' file name argument must end with '.trx' (e.g. --report-trx-filename myreport.trx)</source>
-        <target state="translated">Argument názvu souboru --report-trx-filename musí končit na .trx (například --report-trx-filename myreport.trx).</target>
-        <note />
+        <target state="needs-review-translation">Argument názvu souboru --report-trx-filename musí končit na .trx (například --report-trx-filename myreport.trx).</target>
+        <note>Do not localize option name {Locked="--report-trx-filename"}, file extension {Locked=".trx"}, or example command {Locked="--report-trx-filename myreport.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameMustNotBeEmpty">
         <source>'--report-trx-filename' file name part must not be empty (e.g. --report-trx-filename myreport.trx)</source>
-        <target state="translated">Část názvu souboru --report-trx-filename nesmí být prázdná (např. --report-trx-filename myreport.trx).</target>
-        <note />
+        <target state="needs-review-translation">Část názvu souboru --report-trx-filename nesmí být prázdná (např. --report-trx-filename myreport.trx).</target>
+        <note>Do not localize option name {Locked="--report-trx-filename"}, file extension {Locked=".trx"}, or example command {Locked="--report-trx-filename myreport.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameOptionDescription">
         <source>The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
@@ -70,61 +70,65 @@ Example: MyReport_{tfm}.trx</source>
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: MyReport_{tfm}.trx</target>
         <note />
+        <target state="needs-review-translation">Název vygenerované sestavy TRX. Může obsahovat relativní nebo absolutní cestu. Relativní cesty se překládají na adresář výsledků testů a vytvoří se chybějící adresáře.
+Podporuje následující zástupné symboly: {pname} (název testovací aplikace), {pid} (ID procesu), {asm} (název sestavení položky), {tfm} (moniker cílové architektury), {time} (časové razítko).
+Příklad: MyReport_{tfm}.trx</target>
+        <note>Do not localize option name {Locked="--report-trx-filename"}, format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="MyReport_{tfm}.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</source>
-        <target state="translated">Relativní cesty --report-trx-filename musí zůstat v adresáři výsledků testů (např. --report-trx-filename nested/myreport.trx).</target>
-        <note />
+        <target state="needs-review-translation">Relativní cesty --report-trx-filename musí zůstat v adresáři výsledků testů (např. --report-trx-filename nested/myreport.trx).</target>
+        <note>Do not localize option name {Locked="--report-trx-filename"}, file extension {Locked=".trx"}, or example path {Locked="nested/myreport.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameRequiresTrxReport">
         <source>'--report-trx-filename' requires '--report-trx' to be enabled</source>
-        <target state="translated">--report-trx-filename vyžaduje, aby byla povolená možnost --report-trx.</target>
-        <note />
+        <target state="needs-review-translation">--report-trx-filename vyžaduje, aby byla povolená možnost --report-trx.</target>
+        <note>Do not localize option names {Locked="--report-trx-filename"}{Locked="--report-trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameShouldNotContainPath">
         <source>file name argument must not contain path (e.g. --report-trx-filename myreport.trx)</source>
-        <target state="translated">Argument názvu souboru nesmí obsahovat cestu (například --report-trx-filename myreport.trx).</target>
-        <note />
+        <target state="needs-review-translation">Argument názvu souboru nesmí obsahovat cestu (například --report-trx-filename myreport.trx).</target>
+        <note>Do not localize option name {Locked="--report-trx-filename"}, file extension {Locked=".trx"}, or example command {Locked="--report-trx-filename myreport.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFrameworkDoesNotSupportTrxReportCapability">
         <source>The test framework '{0}' with UID '{1}' does not support the 'ITrxReportCapability' leading to missing or incomplete TRX reports</source>
-        <target state="translated">Testovací architektura {0} s UID {1} nepodporuje ITrxReportCapability, což vede k chybějícím nebo neúplným sestavám TRX.</target>
-        <note />
+        <target state="needs-review-translation">Testovací architektura {0} s UID {1} nepodporuje ITrxReportCapability, což vede k chybějícím nebo neúplným sestavám TRX.</target>
+        <note>0 is the test framework display name. 1 is the test framework {Locked="UID"}. Do not localize {Locked="ITrxReportCapability"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportGeneratorBeforeTestHostProcessStartAsyncNotCalled">
         <source>Method 'BeforeTestHostProcessStartAsync' must be called before 'OnTestHostProcessStartedAsync'</source>
-        <target state="translated">Před metodou OnTestHostProcessStartedAsync musí být volána metoda BeforeTestHostProcessStartAsync.</target>
-        <note />
+        <target state="needs-review-translation">Před metodou OnTestHostProcessStartedAsync musí být volána metoda BeforeTestHostProcessStartAsync.</target>
+        <note>Do not localize method names {Locked="BeforeTestHostProcessStartAsync"}{Locked="OnTestHostProcessStartedAsync"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDescription">
         <source>Produce a TRX report for the current test session</source>
-        <target state="translated">Vytvořit sestavu TRX pro aktuální testovací relaci</target>
-        <note />
+        <target state="needs-review-translation">Vytvořit sestavu TRX pro aktuální testovací relaci</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDisplayName">
         <source>TRX report generator</source>
-        <target state="translated">Generátor sestav TRX</target>
-        <note />
+        <target state="needs-review-translation">Generátor sestav TRX</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable">
         <source>Required environment variable '{0}' is missing for TRX report generator</source>
-        <target state="translated">Chybí požadovaná proměnná prostředí {0} pro generátor sestav TRX.</target>
-        <note />
+        <target state="needs-review-translation">Chybí požadovaná proměnná prostředí {0} pro generátor sestav TRX.</target>
+        <note>{0} is the environment variable name.</note>
       </trans-unit>
       <trans-unit id="TrxReportIsNotValidForDiscovery">
         <source>'--report-trx' cannot be enabled when using '--list-tests'</source>
-        <target state="translated">Možnost --report-trx nejde povolit, pokud se používá možnost --list-tests.</target>
-        <note />
+        <target state="needs-review-translation">Možnost --report-trx nejde povolit, pokud se používá možnost --list-tests.</target>
+        <note>Do not localize option names {Locked="--report-trx"}{Locked="--list-tests"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportOptionDescription">
         <source>Enable generating TRX report</source>
-        <target state="translated">Povolit vygenerování sestavy TRX</target>
-        <note />
+        <target state="needs-review-translation">Povolit vygenerování sestavy TRX</target>
+        <note>Do not localize option name {Locked="--report-trx"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
-        <target state="translated">Žádosti typu {0} nejsou podporovány.</target>
-        <note />
+        <target state="needs-review-translation">Žádosti typu {0} nejsou podporovány.</target>
+        <note>{0} is the unsupported request type name.</note>
       </trans-unit>
     </body>
   </file>
