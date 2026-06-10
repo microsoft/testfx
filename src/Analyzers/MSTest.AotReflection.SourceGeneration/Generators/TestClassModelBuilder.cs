@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text;
 
 using Microsoft.CodeAnalysis;
 
@@ -23,26 +25,57 @@ internal static class TestClassModelBuilder
 
     public static TestClassModel Build(INamedTypeSymbol typeSymbol)
     {
+        // Methods / properties are walked across the full inheritance chain (excluding
+        // System.Object) so that MSTest members declared on a base class —
+        // [ClassInitialize], [ClassCleanup], [TestInitialize], [TestCleanup],
+        // [TestMethod], the [TestContext] setter, … — are visible to the consumer
+        // without runtime reflection.
+        //
+        // Iteration order is derived-first so that an override or `new`-shadowed member
+        // on the derived type wins over the base declaration with the same signature.
+        // Constructors are NEVER inherited and are taken only from the leaf type.
+        var methodsByKey = new Dictionary<string, TestMethodModel>(StringComparer.Ordinal);
+        var propertiesByName = new Dictionary<string, TestPropertyModel>(StringComparer.Ordinal);
         ImmutableArray<TestMethodModel>.Builder methods = ImmutableArray.CreateBuilder<TestMethodModel>();
         ImmutableArray<TestPropertyModel>.Builder properties = ImmutableArray.CreateBuilder<TestPropertyModel>();
         ImmutableArray<TestConstructorModel>.Builder ctors = ImmutableArray.CreateBuilder<TestConstructorModel>();
 
-        foreach (ISymbol member in typeSymbol.GetMembers())
+        for (INamedTypeSymbol? current = typeSymbol;
+             current is not null && current.SpecialType != SpecialType.System_Object;
+             current = current.BaseType)
         {
-            switch (member)
+            bool isLeaf = SymbolEqualityComparer.Default.Equals(current, typeSymbol);
+
+            foreach (ISymbol member in current.GetMembers())
             {
-                case IMethodSymbol { MethodKind: MethodKind.Ordinary } method
-                    when method.DeclaredAccessibility is Accessibility.Public or Accessibility.Internal:
-                    methods.Add(BuildMethod(method));
-                    break;
-                case IPropertySymbol property
-                    when property.DeclaredAccessibility is Accessibility.Public or Accessibility.Internal:
-                    properties.Add(BuildProperty(property));
-                    break;
-                case IMethodSymbol { MethodKind: MethodKind.Constructor, IsStatic: false } ctor
-                    when ctor.DeclaredAccessibility is Accessibility.Public or Accessibility.Internal:
-                    ctors.Add(new TestConstructorModel(BuildParameters(ctor)));
-                    break;
+                switch (member)
+                {
+                    case IMethodSymbol { MethodKind: MethodKind.Ordinary } method
+                        when IsAccessibleFromConsumer(method):
+                        string key = BuildMethodSignatureKey(method);
+                        if (!methodsByKey.ContainsKey(key))
+                        {
+                            TestMethodModel model = BuildMethod(method);
+                            methodsByKey[key] = model;
+                            methods.Add(model);
+                        }
+
+                        break;
+                    case IPropertySymbol property
+                        when IsAccessibleFromConsumer(property):
+                        if (!propertiesByName.ContainsKey(property.Name))
+                        {
+                            TestPropertyModel model = BuildProperty(property);
+                            propertiesByName[property.Name] = model;
+                            properties.Add(model);
+                        }
+
+                        break;
+                    case IMethodSymbol { MethodKind: MethodKind.Constructor, IsStatic: false } ctor
+                        when isLeaf && ctor.DeclaredAccessibility is Accessibility.Public or Accessibility.Internal:
+                        ctors.Add(new TestConstructorModel(BuildParameters(ctor)));
+                        break;
+                }
             }
         }
 
@@ -58,6 +91,49 @@ internal static class TestClassModelBuilder
             Methods: new EquatableArray<TestMethodModel>(methods.ToImmutable()),
             Properties: new EquatableArray<TestPropertyModel>(properties.ToImmutable()),
             Attributes: BuildAttributes(typeSymbol.GetAttributes()));
+    }
+
+    private static bool IsAccessibleFromConsumer(ISymbol symbol)
+        => symbol.DeclaredAccessibility is
+            Accessibility.Public
+            or Accessibility.Internal
+            or Accessibility.Protected
+            or Accessibility.ProtectedOrInternal
+            or Accessibility.ProtectedAndInternal;
+
+    private static string BuildMethodSignatureKey(IMethodSymbol method)
+    {
+        var sb = new StringBuilder();
+        sb.Append(method.IsStatic ? "S:" : "I:");
+        sb.Append(method.Name);
+        sb.Append('(');
+        bool first = true;
+        foreach (IParameterSymbol p in method.Parameters)
+        {
+            if (!first)
+            {
+                sb.Append(',');
+            }
+
+            first = false;
+            switch (p.RefKind)
+            {
+                case RefKind.Ref:
+                    sb.Append("ref ");
+                    break;
+                case RefKind.Out:
+                    sb.Append("out ");
+                    break;
+                case RefKind.In:
+                    sb.Append("in ");
+                    break;
+            }
+
+            sb.Append(p.Type.ToDisplayString(FullyQualifiedFormat));
+        }
+
+        sb.Append(')');
+        return sb.ToString();
     }
 
     private static TestMethodModel BuildMethod(IMethodSymbol method)
@@ -81,7 +157,7 @@ internal static class TestClassModelBuilder
             ReturnsValueTask: returnsValueTask,
             ReturnsVoid: returnsVoid,
             Parameters: BuildParameters(method),
-            Attributes: BuildAttributes(method.GetAttributes()));
+            Attributes: BuildAttributes(CollectInheritedAttributes(method)));
     }
 
     private static TestPropertyModel BuildProperty(IPropertySymbol property)
@@ -89,7 +165,68 @@ internal static class TestClassModelBuilder
             Name: property.Name,
             FullyQualifiedType: property.Type.ToDisplayString(FullyQualifiedFormat),
             HasPublicSetter: property.SetMethod is { DeclaredAccessibility: Accessibility.Public },
-            Attributes: BuildAttributes(property.GetAttributes()));
+            Attributes: BuildAttributes(CollectInheritedAttributes(property)));
+
+    // Mirror the runtime behavior of MemberInfo.GetCustomAttributes(inherit: true): walk the
+    // overridden-method chain and union attributes, keeping the most-derived application when
+    // the same attribute type appears on multiple levels.
+    private static ImmutableArray<AttributeData> CollectInheritedAttributes(IMethodSymbol method)
+    {
+        ImmutableArray<AttributeData> own = method.GetAttributes();
+        if (method.OverriddenMethod is null)
+        {
+            return own;
+        }
+
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        ImmutableArray<AttributeData>.Builder builder = ImmutableArray.CreateBuilder<AttributeData>();
+        AppendUnique(builder, seen, own);
+        for (IMethodSymbol? baseMethod = method.OverriddenMethod; baseMethod is not null; baseMethod = baseMethod.OverriddenMethod)
+        {
+            AppendUnique(builder, seen, baseMethod.GetAttributes());
+        }
+
+        return builder.ToImmutable();
+    }
+
+    private static ImmutableArray<AttributeData> CollectInheritedAttributes(IPropertySymbol property)
+    {
+        ImmutableArray<AttributeData> own = property.GetAttributes();
+        if (property.OverriddenProperty is null)
+        {
+            return own;
+        }
+
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        ImmutableArray<AttributeData>.Builder builder = ImmutableArray.CreateBuilder<AttributeData>();
+        AppendUnique(builder, seen, own);
+        for (IPropertySymbol? baseProperty = property.OverriddenProperty; baseProperty is not null; baseProperty = baseProperty.OverriddenProperty)
+        {
+            AppendUnique(builder, seen, baseProperty.GetAttributes());
+        }
+
+        return builder.ToImmutable();
+    }
+
+    private static void AppendUnique(
+        ImmutableArray<AttributeData>.Builder builder,
+        HashSet<string> seen,
+        ImmutableArray<AttributeData> attributes)
+    {
+        foreach (AttributeData attribute in attributes)
+        {
+            if (attribute.AttributeClass is not { } attributeClass)
+            {
+                continue;
+            }
+
+            string key = attributeClass.ToDisplayString(FullyQualifiedFormat);
+            if (seen.Add(key))
+            {
+                builder.Add(attribute);
+            }
+        }
+    }
 
     private static EquatableArray<TestParameterModel> BuildParameters(IMethodSymbol method)
     {
