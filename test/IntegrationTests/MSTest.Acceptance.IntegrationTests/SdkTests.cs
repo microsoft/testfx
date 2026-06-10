@@ -202,7 +202,6 @@ namespace MSTestSdkTest
               "--crashdump"));
 
             yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
-            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsCtrfReport>true</EnableMicrosoftTestingExtensionsCtrfReport>",
               "--report-ctrf",
               "--crashdump"));

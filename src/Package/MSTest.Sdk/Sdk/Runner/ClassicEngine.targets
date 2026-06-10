@@ -45,18 +45,18 @@
     <!--
       CTRF report (experimental / opt-in only).
       Not auto-enabled by any profile - it has its own pre-release version line
-      (see MicrosoftTestingExtensionsCtrfReportVersion flowed through MSTest.Sdk.csproj).
+      (see MicrosoftTestingExtensionsCtrfReportVersion flowed through MSTest.Sdk.csproj
+      and seeded by Sdk.props.template).
     -->
-    <MicrosoftTestingExtensionsCtrfReportVersion Condition=" '$(MicrosoftTestingExtensionsCtrfReportVersion)' == '' " >$(MicrosoftTestingExtensionsCtrfReportVersion)</MicrosoftTestingExtensionsCtrfReportVersion>
 
     <!--
       OpenTelemetry (experimental / opt-in only).
       API-only extension - has no CLI flag; user activates it from Program.cs via
       builder.AddOpenTelemetryProvider(...). The Enable property only opts the
       package into the build. Has its own pre-release version line
-      (see MicrosoftTestingExtensionsOpenTelemetryVersion flowed through MSTest.Sdk.csproj).
+      (see MicrosoftTestingExtensionsOpenTelemetryVersion flowed through MSTest.Sdk.csproj
+      and seeded by Sdk.props.template).
     -->
-    <MicrosoftTestingExtensionsOpenTelemetryVersion Condition=" '$(MicrosoftTestingExtensionsOpenTelemetryVersion)' == '' " >$(MicrosoftTestingExtensionsOpenTelemetryVersion)</MicrosoftTestingExtensionsOpenTelemetryVersion>
 
     <!-- Fakes -->
     <EnableMicrosoftTestingExtensionsFakes Condition=" '$(EnableMicrosoftTestingExtensionsFakes)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsFakes>

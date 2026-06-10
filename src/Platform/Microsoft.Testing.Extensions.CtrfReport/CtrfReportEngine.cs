@@ -507,10 +507,11 @@ internal sealed class CtrfReportEngine
         WriteOutputLines(writer, "stdout", r.StandardOutput);
         WriteOutputLines(writer, "stderr", r.StandardError);
 
-        // CTRF spec: `tags` is a top-level string array on the Test object used for
-        // classification. We promote MSTest `[TestCategory("…")]` trait values here
-        // so CTRF consumers can filter/group by category without having to dig into
-        // the free-form `extra` object. Other traits remain under `extra.traits`.
+        // CTRF spec 9.14 (`tags`): top-level string array on the Test object used
+        // for keyless classification. We promote MSTest `[TestCategory("…")]` trait
+        // values here so CTRF consumers can filter/group by category without having
+        // to walk the structured `labels` object. The full set of traits (including
+        // TestCategory) is also emitted under `labels` below.
         if (r.Traits is { Count: > 0 })
         {
             bool tagsArrayStarted = false;
@@ -535,6 +536,60 @@ internal sealed class CtrfReportEngine
             }
         }
 
+        // CTRF spec 9.15 (`labels`): top-level object on the Test object for
+        // structured key/value test metadata. Per ctrf-io/ctrf#53, this is the
+        // intended home for arbitrary framework-defined traits (Option A confirmed
+        // by the spec maintainer), and array values are an accepted extension for
+        // multi-valued keys (e.g. multiple `[TestCategory]` attributes on the same
+        // MSTest method). We emit a scalar string for single-valued keys and an
+        // array of strings when the same key appears more than once. Keys appear
+        // in first-seen order; values keep their original declaration order.
+        if (r.Traits is { Count: > 0 })
+        {
+            writer.WritePropertyName("labels");
+            writer.WriteStartObject();
+            for (int i = 0; i < r.Traits.Count; i++)
+            {
+                string key = r.Traits[i].Key;
+                if (HasSameKeyEarlier(r.Traits, i))
+                {
+                    continue;
+                }
+
+                writer.WritePropertyName(key);
+
+                int duplicateCount = 0;
+                for (int j = i + 1; j < r.Traits.Count; j++)
+                {
+                    if (string.Equals(r.Traits[j].Key, key, StringComparison.Ordinal))
+                    {
+                        duplicateCount++;
+                    }
+                }
+
+                if (duplicateCount == 0)
+                {
+                    writer.WriteStringValue(r.Traits[i].Value);
+                }
+                else
+                {
+                    writer.WriteStartArray();
+                    writer.WriteStringValue(r.Traits[i].Value);
+                    for (int j = i + 1; j < r.Traits.Count; j++)
+                    {
+                        if (string.Equals(r.Traits[j].Key, key, StringComparison.Ordinal))
+                        {
+                            writer.WriteStringValue(r.Traits[j].Value);
+                        }
+                    }
+
+                    writer.WriteEndArray();
+                }
+            }
+
+            writer.WriteEndObject();
+        }
+
         // CTRF `extra` (free-form object) — the CTRF spec doesn't define a
         // dedicated stable identifier so we surface the MTP UID here for
         // cross-tool correlation, alongside other framework metadata.
@@ -549,44 +604,6 @@ internal sealed class CtrfReportEngine
         if (r.ExceptionType is not null)
         {
             writer.WriteString("exceptionType", r.ExceptionType);
-        }
-
-        // Traits live under `extra.traits` (not a top-level `labels`) because:
-        //  1. The CTRF spec has no `labels` field on the Test object.
-        //  2. A test can declare the same trait key multiple times (e.g. several
-        //     [TestCategory] attributes on one MSTest method), so we must group
-        //     values per key — emitting `{ key: value }` would produce duplicate
-        //     JSON property names, which RFC 8259 calls out as not interoperable.
-        // We emit `{ key: [value, value, ...] }` so every trait key appears once
-        // and consumers always see a deterministic array shape. The keys appear
-        // in first-seen order; values keep their original declaration order.
-        if (r.Traits is { Count: > 0 })
-        {
-            writer.WritePropertyName("traits");
-            writer.WriteStartObject();
-            for (int i = 0; i < r.Traits.Count; i++)
-            {
-                string key = r.Traits[i].Key;
-                if (HasSameKeyEarlier(r.Traits, i))
-                {
-                    continue;
-                }
-
-                writer.WritePropertyName(key);
-                writer.WriteStartArray();
-                writer.WriteStringValue(r.Traits[i].Value);
-                for (int j = i + 1; j < r.Traits.Count; j++)
-                {
-                    if (string.Equals(r.Traits[j].Key, key, StringComparison.Ordinal))
-                    {
-                        writer.WriteStringValue(r.Traits[j].Value);
-                    }
-                }
-
-                writer.WriteEndArray();
-            }
-
-            writer.WriteEndObject();
         }
 
         writer.WriteEndObject();
