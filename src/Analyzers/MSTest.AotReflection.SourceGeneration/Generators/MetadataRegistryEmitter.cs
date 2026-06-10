@@ -40,46 +40,46 @@ internal static class MetadataRegistryEmitter
             sb.AppendLine("/// <summary>Describes one test class as discovered at compile-time. Mirrors what <c>IReflectionOperations</c> would return at runtime.</summary>");
             using (sb.Block("internal sealed class TestClassReflectionInfo"))
             {
-                sb.AppendLine("public Type Type { get; init; } = null!;");
-                sb.AppendLine("public Attribute[] Attributes { get; init; } = Array.Empty<Attribute>();");
-                sb.AppendLine("public IReadOnlyList<TestMethodReflectionInfo> Methods { get; init; } = Array.Empty<TestMethodReflectionInfo>();");
-                sb.AppendLine("public IReadOnlyList<TestPropertyReflectionInfo> Properties { get; init; } = Array.Empty<TestPropertyReflectionInfo>();");
-                sb.AppendLine("public IReadOnlyList<TestConstructorReflectionInfo> Constructors { get; init; } = Array.Empty<TestConstructorReflectionInfo>();");
+                sb.AppendLine("public Type Type { get; set; } = null!;");
+                sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
+                sb.AppendLine("public IReadOnlyList<TestMethodReflectionInfo> Methods { get; set; } = Array.Empty<TestMethodReflectionInfo>();");
+                sb.AppendLine("public IReadOnlyList<TestPropertyReflectionInfo> Properties { get; set; } = Array.Empty<TestPropertyReflectionInfo>();");
+                sb.AppendLine("public IReadOnlyList<TestConstructorReflectionInfo> Constructors { get; set; } = Array.Empty<TestConstructorReflectionInfo>();");
             }
 
             sb.AppendLine();
             using (sb.Block("internal sealed class TestMethodReflectionInfo"))
             {
-                sb.AppendLine("public string Name { get; init; } = string.Empty;");
-                sb.AppendLine("public bool IsStatic { get; init; }");
-                sb.AppendLine("public bool ReturnsTask { get; init; }");
-                sb.AppendLine("public bool ReturnsValueTask { get; init; }");
-                sb.AppendLine("public bool ReturnsVoid { get; init; }");
-                sb.AppendLine("public Type[] ParameterTypes { get; init; } = Array.Empty<Type>();");
-                sb.AppendLine("public string[] ParameterNames { get; init; } = Array.Empty<string>();");
-                sb.AppendLine("public Attribute[] Attributes { get; init; } = Array.Empty<Attribute>();");
+                sb.AppendLine("public string Name { get; set; } = string.Empty;");
+                sb.AppendLine("public bool IsStatic { get; set; }");
+                sb.AppendLine("public bool ReturnsTask { get; set; }");
+                sb.AppendLine("public bool ReturnsValueTask { get; set; }");
+                sb.AppendLine("public bool ReturnsVoid { get; set; }");
+                sb.AppendLine("public Type[] ParameterTypes { get; set; } = Array.Empty<Type>();");
+                sb.AppendLine("public string[] ParameterNames { get; set; } = Array.Empty<string>();");
+                sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
                 sb.AppendLine("/// <summary>Materialized argument tuples from <c>[DataRow]</c> attributes (empty for non-data-driven tests). Each <c>object?[]</c> corresponds to one <c>[DataRow]</c> application.</summary>");
-                sb.AppendLine("public IReadOnlyList<object?[]> DataRows { get; init; } = Array.Empty<object?[]>();");
+                sb.AppendLine("public IReadOnlyList<object?[]> DataRows { get; set; } = Array.Empty<object?[]>();");
                 sb.AppendLine("/// <summary>Direct invoker — replaces <see cref=\"System.Reflection.MethodInfo.Invoke(object, object[])\" />. Always returns a non-null <see cref=\"Task\" /> so the caller can <c>await</c> regardless of whether the underlying test method is <c>void</c>, <c>Task</c>, <c>Task&lt;T&gt;</c>, <c>ValueTask</c>, or <c>ValueTask&lt;T&gt;</c>; the result value (if any) is discarded.</summary>");
-                sb.AppendLine("public Func<object?, object?[]?, Task> Invoke { get; init; } = static (_, _) => Task.CompletedTask;");
+                sb.AppendLine("public Func<object?, object?[]?, Task> Invoke { get; set; } = static (_, _) => Task.CompletedTask;");
             }
 
             sb.AppendLine();
             using (sb.Block("internal sealed class TestPropertyReflectionInfo"))
             {
-                sb.AppendLine("public string Name { get; init; } = string.Empty;");
-                sb.AppendLine("public Type PropertyType { get; init; } = typeof(object);");
-                sb.AppendLine("public bool HasPublicSetter { get; init; }");
-                sb.AppendLine("public Attribute[] Attributes { get; init; } = Array.Empty<Attribute>();");
-                sb.AppendLine("public Func<object?, object?> Get { get; init; } = static _ => null;");
-                sb.AppendLine("public Action<object?, object?> Set { get; init; } = static (_, _) => { };");
+                sb.AppendLine("public string Name { get; set; } = string.Empty;");
+                sb.AppendLine("public Type PropertyType { get; set; } = typeof(object);");
+                sb.AppendLine("public bool HasPublicSetter { get; set; }");
+                sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
+                sb.AppendLine("public Func<object?, object?> Get { get; set; } = static _ => null;");
+                sb.AppendLine("public Action<object?, object?> Set { get; set; } = static (_, _) => { };");
             }
 
             sb.AppendLine();
             using (sb.Block("internal sealed class TestConstructorReflectionInfo"))
             {
-                sb.AppendLine("public Type[] ParameterTypes { get; init; } = Array.Empty<Type>();");
-                sb.AppendLine("public Func<object?[]?, object> Invoke { get; init; } = static _ => throw new InvalidOperationException(\"No constructor registered.\");");
+                sb.AppendLine("public Type[] ParameterTypes { get; set; } = Array.Empty<Type>();");
+                sb.AppendLine("public Func<object?[]?, object> Invoke { get; set; } = static _ => throw new InvalidOperationException(\"No constructor registered.\");");
             }
         }
 

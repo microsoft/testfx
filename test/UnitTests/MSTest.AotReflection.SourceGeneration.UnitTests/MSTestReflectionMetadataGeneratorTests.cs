@@ -1048,7 +1048,8 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         support.Should().Contain("using System.Threading.Tasks;");
         // Invoke must be Task-returning so consumers can await without type-testing the result.
-        support.Should().Contain("public Func<object?, object?[]?, Task> Invoke { get; init; } = static (_, _) => Task.CompletedTask;");
+        // Uses `set` (not `init`) per the repo guideline that new public-shaped API must not use init accessors.
+        support.Should().Contain("public Func<object?, object?[]?, Task> Invoke { get; set; } = static (_, _) => Task.CompletedTask;");
     }
 
     [TestMethod]
@@ -1491,6 +1492,35 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
 
         result.Diagnostics.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void Generator_SupportTypes_DoNotUseInitAccessors()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        string support = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.SupportTypes.g.cs")
+            .SourceText.ToString();
+
+        // Repo guideline: newly introduced public-shaped API (even when emitted as `internal sealed`
+        // into the consumer assembly) MUST NOT use `init` accessors. Guard against accidental
+        // reintroduction.
+        support.Should().NotContain("{ get; init; }");
     }
 
     private static string GetRegistry(GeneratorRunResult result)
