@@ -19,6 +19,16 @@ internal static class AssertionValueRenderer
             string s => RenderString(s),
             bool b => b ? "true" : "false",
             char c => RenderChar(c),
+            DateTime dt => dt.ToString("O", CultureInfo.InvariantCulture),
+            DateTimeOffset dto => dto.ToString("O", CultureInfo.InvariantCulture),
+            TimeSpan ts => ts.ToString("c", CultureInfo.InvariantCulture),
+#if NET6_0_OR_GREATER
+            DateOnly d => d.ToString("O", CultureInfo.InvariantCulture),
+            TimeOnly t => t.ToString("O", CultureInfo.InvariantCulture),
+#endif
+            float f => f.ToString("R", CultureInfo.InvariantCulture),
+            double d => d.ToString("R", CultureInfo.InvariantCulture),
+            decimal m => m.ToString(CultureInfo.InvariantCulture),
             IEnumerable enumerable => RenderCollection(enumerable),
             _ => RenderObject(value),
         };
