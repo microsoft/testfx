@@ -28,12 +28,12 @@
 
 1. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo` or integration tests.
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
-3. **DoNotUseSystemDescriptionAttributeAnalyzer** — Missing test for inherited [TestMethod] (e.g. [DataTestMethod] + [System.ComponentModel.Description]) to verify the Inherits() check.
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-10 | Task 3 (DoNotUseSystemDescriptionAttributeAnalyzer MSTEST0031 edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-09 | Task 3 (UseDeploymentItemWithTestMethodOrTestClass MSTEST0035 edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-08 | Task 3 (PublicTypeShouldBeTestClassAnalyzer MSTEST0004 edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-07 | Task 3 (UseRetryWithTestMethodAnalyzer MSTEST0035 edge cases), Task 7 (Monthly Issue Jun) |
@@ -49,11 +49,12 @@
 
 ## Last Run
 
-2026-06-09 23:25 UTC
+2026-06-10 23:25 UTC
 
 ## Completed Work
 
-- PR for UseDeploymentItemWithTestMethodOrTestClass edge cases (2026-06-09, pending merge) — static class behavior, DataTestMethod inheritance, multiple attrs
+- PR for DoNotUseSystemDescriptionAttributeAnalyzer edge cases (2026-06-10, pending merge) — DataTestMethod→diagnostic (Inherits() path), MSTest Description→no diagnostic
+- PR #8977 merged (UseDeploymentItemWithTestMethodOrTestClass MSTEST0035 edge cases) — merged 2026-06-10
 - PR #8941 merged (PublicTypeShouldBeTestClassAnalyzer MSTEST0004 edge cases) — merged 2026-06-09
 - PR #8909 merged (UseRetryWithTestMethodAnalyzer MSTEST0035 edge cases) — merged 2026-06-08
 - PR #8885 merged (PreferTestMethodOverDataTestMethodAnalyzer edge cases) — merged 2026-06-07
