@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.CtrfReport;
-using Microsoft.Testing.Extensions.CtrfReport.Resources;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
@@ -23,11 +22,6 @@ public static class CtrfReportExtensions
     /// <param name="builder">The test application builder.</param>
     public static void AddCtrfReportProvider(this ITestApplicationBuilder builder)
     {
-        if (builder is not TestApplicationBuilder)
-        {
-            throw new InvalidOperationException(ExtensionResources.InvalidTestApplicationBuilderType);
-        }
-
         var commandLine = new CtrfReportGeneratorCommandLine();
 
         var compositeCtrfReportGenerator =

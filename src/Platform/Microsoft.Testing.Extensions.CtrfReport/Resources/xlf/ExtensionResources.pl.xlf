@@ -66,11 +66,6 @@ Example: MyReport_{tfm}.ctrf.json</target>
         <target state="new">Enable generating a CTRF (Common Test Report Format) JSON report</target>
         <note />
       </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderType">
-        <source>CTRF report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="new">CTRF report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
-        <note />
-      </trans-unit>
     </body>
   </file>
 </xliff>

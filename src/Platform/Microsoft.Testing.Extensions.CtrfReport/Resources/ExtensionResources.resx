@@ -96,7 +96,4 @@ Example: MyReport_{tfm}.ctrf.json</value>
   <data name="CtrfReportOptionDescription" xml:space="preserve">
     <value>Enable generating a CTRF (Common Test Report Format) JSON report</value>
   </data>
-  <data name="InvalidTestApplicationBuilderType" xml:space="preserve">
-    <value>CTRF report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</value>
-  </data>
 </root>
