@@ -764,6 +764,84 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registry.Should().NotContain("Name = \"GetType\"");
     }
 
+    [TestMethod]
+    public void Generator_SkipsProtectedAndPrivateProtectedMembers()
+    {
+        // Generated invokers live in a separate static helper class (not a derived type),
+        // so 'protected' and 'private protected' members are not callable from the emitted
+        // code. They MUST be excluded from the registry to keep the generated source compiling.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    [TestMethod]
+                    protected void ProtectedTest() { }
+
+                    [TestMethod]
+                    private protected void PrivateProtectedTest() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public void PublicTest() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("the generated registry MUST NOT reference protected / private protected members");
+
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("Name = \"PublicTest\"");
+        registry.Should().NotContain("Name = \"ProtectedTest\"");
+        registry.Should().NotContain("Name = \"PrivateProtectedTest\"");
+    }
+
+    [TestMethod]
+    public void Generator_KeepsAllowMultipleAttributes_AcrossOverrideChain()
+    {
+        // [TestCategory] is AllowMultiple=true. Collecting attributes across the override chain
+        // MUST keep every instance instead of collapsing them by type, otherwise the inherited
+        // categories disappear from the registry.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    [TestMethod]
+                    [TestCategory("BaseCat")]
+                    public virtual void Run() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestCategory("DerivedCat")]
+                    public override void Run() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("\"BaseCat\"");
+        registry.Should().Contain("\"DerivedCat\"");
+    }
+
     private static string GetRegistry(GeneratorRunResult result)
         => result.GeneratedSources
             .Single(s => s.HintName == "MSTestReflectionMetadata.Registry.g.cs")

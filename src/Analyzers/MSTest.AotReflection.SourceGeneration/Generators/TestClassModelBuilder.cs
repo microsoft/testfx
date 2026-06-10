@@ -93,13 +93,16 @@ internal static class TestClassModelBuilder
             Attributes: BuildAttributes(typeSymbol.GetAttributes()));
     }
 
+    // Restricted to accessibilities the emitted helper class (a separate static type
+    // declared in MSTest.SourceGenerated, not a derived type) can legally call.
+    // 'protected' and 'private protected' members require the caller to be a derived
+    // type, so they are excluded; 'protected internal' is included because the internal
+    // half is satisfied (the generated helper lives in the same assembly).
     private static bool IsAccessibleFromConsumer(ISymbol symbol)
         => symbol.DeclaredAccessibility is
             Accessibility.Public
             or Accessibility.Internal
-            or Accessibility.Protected
-            or Accessibility.ProtectedOrInternal
-            or Accessibility.ProtectedAndInternal;
+            or Accessibility.ProtectedOrInternal;
 
     private static string BuildMethodSignatureKey(IMethodSymbol method)
     {
@@ -220,12 +223,49 @@ internal static class TestClassModelBuilder
                 continue;
             }
 
+            // Attributes declared with AttributeUsage(AllowMultiple = true) may legitimately
+            // appear several times across the override chain (e.g. [TestCategory]) — keep every
+            // instance instead of collapsing them to one.
+            if (AllowsMultiple(attributeClass))
+            {
+                builder.Add(attribute);
+                continue;
+            }
+
             string key = attributeClass.ToDisplayString(FullyQualifiedFormat);
             if (seen.Add(key))
             {
                 builder.Add(attribute);
             }
         }
+    }
+
+    private static bool AllowsMultiple(INamedTypeSymbol attributeClass)
+    {
+        for (INamedTypeSymbol? current = attributeClass; current is not null; current = current.BaseType)
+        {
+            foreach (AttributeData attribute in current.GetAttributes())
+            {
+                if (attribute.AttributeClass?.ToDisplayString(FullyQualifiedFormat) != "global::System.AttributeUsageAttribute")
+                {
+                    continue;
+                }
+
+                foreach (KeyValuePair<string, TypedConstant> named in attribute.NamedArguments)
+                {
+                    if (named.Key == "AllowMultiple" && named.Value.Value is bool allowMultiple)
+                    {
+                        return allowMultiple;
+                    }
+                }
+
+                // AttributeUsage was found on this level but did not set AllowMultiple — default is false
+                // and base-level [AttributeUsage] is shadowed by the derived application per CLI rules.
+                return false;
+            }
+        }
+
+        return false;
     }
 
     private static EquatableArray<TestParameterModel> BuildParameters(IMethodSymbol method)
