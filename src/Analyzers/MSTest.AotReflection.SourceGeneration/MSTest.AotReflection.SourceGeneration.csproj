@@ -29,4 +29,8 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="MSTest.AotReflection.SourceGeneration.UnitTests" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
 </Project>
