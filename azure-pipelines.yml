@@ -130,8 +130,9 @@ stages:
           #     ValidateTestHostEnvironmentVariablesAsync hard-fails the run on non-NETCoreApp hosts
           #     (see src/Platform/Microsoft.Testing.Extensions.CrashDump/CrashDumpEnvironmentVariableProvider.cs),
           #     and this glob mixes net4x and net8+/net9+ hosts.
-          #   --coverage — Codecov upload is Debug-only (see "Upload coverage to codecov.io" step
-          #     below), so collecting coverage in Release would just write unused .coverage files.
+          #   --coverage — coverage upload is Debug-only (see "Merge coverage" / "Publish coverage to
+          #     Azure DevOps" steps below), so collecting coverage in Release would just write unused
+          #     .coverage files.
           - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-azdo --report-azdo-progress --report-azdo-summary --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace
             name: TestRelease
             displayName: Test (unit tests only)
@@ -160,13 +161,19 @@ stages:
               ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)
             condition: and(always(), eq(variables._BuildConfig, 'Debug'))
 
-          # Upload code coverage to codecov.io
-          - script: dotnet msbuild -restore
-              eng/CodeCoverage.proj
-              /p:Configuration=$(_BuildConfig)
-              /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\CodeCoverage.binlog
-            displayName: Upload coverage to codecov.io
-            condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
+          # Publish coverage to Azure DevOps. PublishCodeCoverageResults@2 accepts the binary
+          # .coverage format Microsoft Code Coverage emits natively (per
+          # https://learn.microsoft.com/azure/devops/pipelines/tasks/reference/publish-code-coverage-results-v2:
+          # "The task supports all kinds of coverage formats such as: .coverage, .covx, .covb,
+          # .cjson, .xml, .lcov, pycov, etc."), and merges multiple files via the minimatch glob.
+          # Coverage shows up in the build's "Code Coverage" tab and on the build summary, one
+          # click from the GitHub PR status check (we used to upload to codecov.io here).
+          - task: PublishCodeCoverageResults@2
+            displayName: 'Publish coverage to Azure DevOps'
+            inputs:
+              summaryFileLocation: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/*.coverage'
+              pathToSources: '$(Build.SourcesDirectory)/src'
+            condition: and(succeededOrFailed(), eq(variables._BuildConfig, 'Debug'))
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish local dumps'
