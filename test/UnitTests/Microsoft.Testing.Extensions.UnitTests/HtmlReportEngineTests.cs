@@ -140,6 +140,28 @@ public class HtmlReportEngineTests
     }
 
     [TestMethod]
+    public void TestResultCapture_DoesNotSplitSurrogatePair_AtTruncationBoundary()
+    {
+        // Build a string whose (maxLength-1)-th char is the high surrogate of a pair.
+        // After truncation the high surrogate must be dropped so the result is valid UTF-16.
+        string prefix = new('a', TestResultCapture.MaxStandardStreamLength - 1);
+        const string surrogatePair = "\uD83D\uDE00"; // 😀 — high surrogate at index maxLength-1
+        string input = prefix + surrogatePair + new string('z', 10);
+
+        var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
+        bag.Add(new StandardOutputProperty(input));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = bag };
+
+        CapturedTestResult result = TestResultCapture.TryCapture(node)!;
+
+        Assert.IsNotNull(result.StandardOutput);
+        // The truncated prefix must not end with a lone high surrogate.
+        Assert.IsFalse(char.IsHighSurrogate(result.StandardOutput![result.StandardOutput.IndexOf('\n') - 1]),
+            "Truncate must not leave a lone high surrogate at the cut boundary.");
+        Assert.Contains("[truncated, original length:", result.StandardOutput);
+    }
+
+    [TestMethod]
     public void TestResultCapture_Returns_Null_For_NonTerminalStates()
     {
         TestNode discovered = new() { Uid = "a", DisplayName = "x", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) };

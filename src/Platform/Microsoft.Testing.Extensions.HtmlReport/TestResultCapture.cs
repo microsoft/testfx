@@ -124,8 +124,20 @@ internal static class TestResultCapture
     }
 
     internal static string? Truncate(string? value, int maxLength)
-        => value is null || value.Length <= maxLength
-            ? value
-            : value.Substring(0, maxLength)
-                + $"\n…[truncated, original length: {value.Length.ToString(CultureInfo.InvariantCulture)}]";
+    {
+        if (value is null || value.Length <= maxLength)
+        {
+            return value;
+        }
+
+        // Don't split a surrogate pair when truncating: drop the high surrogate too.
+        int cut = maxLength;
+        if (cut > 0 && char.IsHighSurrogate(value[cut - 1]))
+        {
+            cut--;
+        }
+
+        return value.Substring(0, cut)
+            + $"\n…[truncated, original length: {value.Length.ToString(CultureInfo.InvariantCulture)}]";
+    }
 }
