@@ -58,6 +58,13 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 public int Workers { get; set; }
                 public string? Scope { get; set; }
             }
+
+            [System.AttributeUsage(System.AttributeTargets.Method, AllowMultiple = true)]
+            public class DataRowAttribute : System.Attribute
+            {
+                public DataRowAttribute(object? data1) { }
+                public DataRowAttribute(object? data1, params object?[] moreData) { }
+            }
         }
         """;
 
@@ -881,6 +888,148 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.ParallelizeAttribute()");
         registry.Should().Contain("Workers = 8");
         registry.Should().NotContain("new TestClassReflectionInfo(");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsEmptyDataRows_WhenMethodHasNoDataRow()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void NoData() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("DataRows = Array.Empty<object?[]>()");
+        registry.Should().NotContain("DataRows = new object?[][]");
+    }
+
+    [TestMethod]
+    public void Generator_CapturesSingleDataRow_WithScalarArgs()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(1, "x")]
+                    public void Test(int a, string b) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("DataRows = new object?[][]");
+        registry.Should().Contain("new object?[] { 1, \"x\" }");
+    }
+
+    [TestMethod]
+    public void Generator_CapturesMultipleDataRows_InDeclarationOrder()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(1, "a")]
+                    [DataRow(2, "b")]
+                    [DataRow(3, "c")]
+                    public void Test(int a, string b) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("DataRows = new object?[][]");
+
+        int idx1 = registry.IndexOf("new object?[] { 1, \"a\" }", StringComparison.Ordinal);
+        int idx2 = registry.IndexOf("new object?[] { 2, \"b\" }", StringComparison.Ordinal);
+        int idx3 = registry.IndexOf("new object?[] { 3, \"c\" }", StringComparison.Ordinal);
+
+        idx1.Should().BeGreaterThan(-1);
+        idx2.Should().BeGreaterThan(idx1);
+        idx3.Should().BeGreaterThan(idx2);
+    }
+
+    [TestMethod]
+    public void Generator_FlattensParamsArrayInDataRow()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(1, 2, 3, 4)]
+                    public void Test(int a, int b, int c, int d) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        // The variadic `params object?[] moreData` tail must be flattened into a single flat row
+        // within the DataRows block — the row contains all four values inline, not nested.
+        registry.Should().Contain("new object?[] { 1, 2, 3, 4 }");
+    }
+
+    [TestMethod]
+    public void Generator_HandlesNullValueInDataRow()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(null)]
+                    public void Test(string? value) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("DataRows = new object?[][]");
+        // The single-arg DataRowAttribute(object? data1) overload binds null to object,
+        // which surfaces as `(object)null!` from BuildConstantExpression (C# keyword form
+        // produced by FullyQualifiedFormat for System.Object).
+        registry.Should().Contain("new object?[] { (object)null! }");
     }
 
     private static string GetRegistry(GeneratorRunResult result)

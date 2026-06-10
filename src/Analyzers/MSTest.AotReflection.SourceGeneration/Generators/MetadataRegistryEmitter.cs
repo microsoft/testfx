@@ -57,6 +57,8 @@ internal static class MetadataRegistryEmitter
                 sb.AppendLine("public Type[] ParameterTypes { get; init; } = Array.Empty<Type>();");
                 sb.AppendLine("public string[] ParameterNames { get; init; } = Array.Empty<string>();");
                 sb.AppendLine("public Attribute[] Attributes { get; init; } = Array.Empty<Attribute>();");
+                sb.AppendLine("/// <summary>Materialized argument tuples from <c>[DataRow]</c> attributes (empty for non-data-driven tests). Each <c>object?[]</c> corresponds to one <c>[DataRow]</c> application.</summary>");
+                sb.AppendLine("public IReadOnlyList<object?[]> DataRows { get; init; } = Array.Empty<object?[]>();");
                 sb.AppendLine("/// <summary>Direct invoker — replaces <see cref=\"System.Reflection.MethodInfo.Invoke(object, object[])\" />.</summary>");
                 sb.AppendLine("public Func<object?, object?[]?, object?> Invoke { get; init; } = static (_, _) => null;");
             }
@@ -225,6 +227,8 @@ internal static class MetadataRegistryEmitter
                     sb.AppendLine(",");
                     EmitAttributesProperty(sb, "Attributes", method.Attributes);
                     sb.AppendLine(",");
+                    EmitDataRows(sb, method.DataRows);
+                    sb.AppendLine(",");
                     EmitMethodInvoker(sb, fqn, method);
                 }
 
@@ -279,6 +283,44 @@ internal static class MetadataRegistryEmitter
 
         sb.AppendLine($"Invoke = static (instance, args) => {body},");
     }
+
+    private static void EmitDataRows(IndentedStringBuilder sb, EquatableArray<DataRowModel> dataRows)
+    {
+        if (dataRows.Length == 0)
+        {
+            sb.Append("DataRows = Array.Empty<object?[]>()");
+            sb.AppendLine();
+            return;
+        }
+
+        sb.AppendLine("DataRows = new object?[][]");
+        using (sb.Block(null))
+        {
+            for (int i = 0; i < dataRows.Length; i++)
+            {
+                EquatableArray<TypedConstantModel> args = dataRows[i].Arguments;
+                if (args.Length == 0)
+                {
+                    sb.Append("Array.Empty<object?>()");
+                }
+                else
+                {
+                    string literals = string.Join(", ", args.AsImmutableArray().Select(BuildConstantExpression));
+                    sb.Append($"new object?[] {{ {literals} }}");
+                }
+
+                if (i < dataRows.Length - 1)
+                {
+                    sb.AppendLine(",");
+                }
+                else
+                {
+                    sb.AppendLine();
+                }
+            }
+        }
+    }
+
 
     private static void EmitParameterTypes(IndentedStringBuilder sb, EquatableArray<TestParameterModel> parameters)
     {

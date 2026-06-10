@@ -9,6 +9,7 @@ using System.Text;
 
 using Microsoft.CodeAnalysis;
 
+using MSTest.AotReflection.SourceGeneration.Helpers;
 using MSTest.AotReflection.SourceGeneration.Model;
 
 namespace MSTest.AotReflection.SourceGeneration.Generators;
@@ -149,6 +150,8 @@ internal static class TestClassModelBuilder
             || returnTypeFqn.StartsWith("global::System.Threading.Tasks.ValueTask<", System.StringComparison.Ordinal);
         bool returnsVoid = returnType.SpecialType == SpecialType.System_Void;
 
+        ImmutableArray<AttributeData> inheritedAttributes = CollectInheritedAttributes(method);
+
         return new TestMethodModel(
             Name: method.Name,
             IsStatic: method.IsStatic,
@@ -157,7 +160,63 @@ internal static class TestClassModelBuilder
             ReturnsValueTask: returnsValueTask,
             ReturnsVoid: returnsVoid,
             Parameters: BuildParameters(method),
-            Attributes: BuildAttributes(CollectInheritedAttributes(method)));
+            Attributes: BuildAttributes(inheritedAttributes),
+            DataRows: BuildDataRows(inheritedAttributes));
+    }
+
+    // Walks the attribute list and reifies each [DataRow(...)] application into a flat
+    // object?[] row. Mirrors DataRowAttribute's runtime behavior: when the constructor uses
+    // the variadic overload (object? data1, params object?[] moreData), Roslyn surfaces the
+    // tail as a single Array TypedConstant, which we flatten back so the consumer sees the
+    // same shape as DataRowAttribute.Data.
+    private static EquatableArray<DataRowModel> BuildDataRows(ImmutableArray<AttributeData> attributes)
+    {
+        if (attributes.IsDefaultOrEmpty)
+        {
+            return EquatableArray<DataRowModel>.Empty;
+        }
+
+        ImmutableArray<DataRowModel>.Builder builder = ImmutableArray.CreateBuilder<DataRowModel>();
+        foreach (AttributeData attribute in attributes)
+        {
+            if (attribute.AttributeClass is not { } attributeClass)
+            {
+                continue;
+            }
+
+            if (attributeClass.ToDisplayString(FullyQualifiedFormat) != "global::" + MSTestAttributeNames.DataRow)
+            {
+                continue;
+            }
+
+            ImmutableArray<TypedConstant> ctorArgs = attribute.ConstructorArguments;
+            ImmutableArray<TypedConstantModel>.Builder rowBuilder = ImmutableArray.CreateBuilder<TypedConstantModel>();
+
+            bool lastIsParamsArray =
+                attribute.AttributeConstructor is { Parameters: { IsDefaultOrEmpty: false } parameters }
+                && parameters[parameters.Length - 1].IsParams
+                && !ctorArgs.IsDefaultOrEmpty
+                && ctorArgs[ctorArgs.Length - 1].Kind == TypedConstantKind.Array;
+
+            for (int i = 0; i < ctorArgs.Length; i++)
+            {
+                if (i == ctorArgs.Length - 1 && lastIsParamsArray)
+                {
+                    foreach (TypedConstant element in ctorArgs[i].Values)
+                    {
+                        rowBuilder.Add(ToModel(element));
+                    }
+                }
+                else
+                {
+                    rowBuilder.Add(ToModel(ctorArgs[i]));
+                }
+            }
+
+            builder.Add(new DataRowModel(new EquatableArray<TypedConstantModel>(rowBuilder.ToImmutable())));
+        }
+
+        return new EquatableArray<DataRowModel>(builder.ToImmutable());
     }
 
     private static TestPropertyModel BuildProperty(IPropertySymbol property)
