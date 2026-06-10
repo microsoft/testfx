@@ -66,9 +66,9 @@
         <source>The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: MyReport_{tfm}.trx</source>
-        <target state="needs-review-translation">生成的 TRX 报表名称。可以包含相对路径或绝对路径；相对路径针对测试结果目录进行解析，并创建缺少的目录。
-支持以下占位符: {pname} (测试应用程序名称)、{pid} (进程 ID)、{asm} (入口程序集名称)、{tfm} (目标框架名字对象)、{time} (时间戳)。
-示例: MyReport_{tfm}.trx</target>
+        <target state="new">The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
+Example: MyReport_{tfm}.trx</target>
         <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">
