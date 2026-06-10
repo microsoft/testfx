@@ -66,11 +66,37 @@ jobs:
   - task: CodeQL3000Init@0
     displayName: CodeQL Initialize
 
+  # Pre-create the folder so MSBuild has a stable, well-known location to dump
+  # MSBUILDDEBUGCOMM diagnostics, and so the publish step always has something
+  # to upload (even if MSBuild ends up not writing any files).
+  - powershell: |
+      New-Item -ItemType Directory -Force -Path '$(Build.SourcesDirectory)\artifacts\msbuild-debug' | Out-Null
+    displayName: 'Prepare MSBuild debug folder'
+
   - script: eng\common\cibuild.cmd
       -configuration $(_BuildConfig)
       -prepareMachine
       /p:Test=false
     displayName: Windows Build
+    # MSBUILDDEBUGCOMM/MSBUILDDEBUGPATH are set to collect MSBuild node-communication
+    # diagnostics for investigation by the MSBuild team (cc Rainer Sigwald).
+    env:
+      MSBUILDDEBUGCOMM: 1
+      MSBUILDDEBUGPATH: $(Build.SourcesDirectory)\artifacts\msbuild-debug
 
   - task: CodeQL3000Finalize@0
     displayName: CodeQL Finalize
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish MSBuild debug logs'
+    inputs:
+      PathtoPublish: '$(Build.SourcesDirectory)\artifacts\msbuild-debug'
+      ArtifactName: MSBuild_Debug_Logs_Attempt$(System.JobAttempt)
+    condition: always()
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish build binlogs'
+    inputs:
+      PathtoPublish: '$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)'
+      ArtifactName: Build_Binlogs_$(_BuildConfig)_Attempt$(System.JobAttempt)
+    condition: always()
