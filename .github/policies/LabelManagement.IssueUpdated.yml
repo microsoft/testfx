@@ -130,39 +130,6 @@ configuration:
               author: True
           - addLabel:
               label: "needs/author-feedback"
-      - description: >-
-          Strip the legacy "type/bug" label when added — issue category MUST be expressed via the
-          native GitHub Issue Type field (`Bug`). See `.github/copilot-instructions.md` (#github-issue-creation-guidelines).
-        if:
-          - payloadType: Issues
-          - labelAdded:
-              label: "type/bug"
-        then:
-          - removeLabel:
-              label: "type/bug"
-        triggerOnOwnActions: False
-      - description: >-
-          Strip the legacy "type/feature" label when added — issue category MUST be expressed via the
-          native GitHub Issue Type field (`Feature`). See `.github/copilot-instructions.md` (#github-issue-creation-guidelines).
-        if:
-          - payloadType: Issues
-          - labelAdded:
-              label: "type/feature"
-        then:
-          - removeLabel:
-              label: "type/feature"
-        triggerOnOwnActions: False
-      - description: >-
-          Strip the legacy "type/task" label when added — issue category MUST be expressed via the
-          native GitHub Issue Type field (`Task`). See `.github/copilot-instructions.md` (#github-issue-creation-guidelines).
-        if:
-          - payloadType: Issues
-          - labelAdded:
-              label: "type/task"
-        then:
-          - removeLabel:
-              label: "type/task"
-        triggerOnOwnActions: False
       - description: Sync labels from issues on all pull request events
         if:
           - payloadType: Pull_Request
