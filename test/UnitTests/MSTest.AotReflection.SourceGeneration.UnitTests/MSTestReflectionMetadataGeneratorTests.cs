@@ -51,6 +51,13 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
             [System.AttributeUsage(System.AttributeTargets.Method)]
             public class TestCleanupAttribute : System.Attribute { }
+
+            [System.AttributeUsage(System.AttributeTargets.Assembly, AllowMultiple = true)]
+            public class ParallelizeAttribute : System.Attribute
+            {
+                public int Workers { get; set; }
+                public string? Scope { get; set; }
+            }
         }
         """;
 
@@ -762,6 +769,118 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registry.Should().NotContain("Name = \"Equals\"");
         registry.Should().NotContain("Name = \"GetHashCode\"");
         registry.Should().NotContain("Name = \"GetType\"");
+    }
+
+    [TestMethod]
+    public void Generator_CapturesAssemblyLevelAttribute()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 4, Scope = "Method")]
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = new Attribute[]");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.ParallelizeAttribute()");
+        registry.Should().Contain("Workers = 4");
+        registry.Should().Contain("Scope = \"Method\"");
+    }
+
+    [TestMethod]
+    public void Generator_AssemblyAttributes_IsEmptyArray_WhenNoneApplied()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = Array.Empty<Attribute>();");
+        registry.Should().NotContain("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = new Attribute[]");
+    }
+
+    [TestMethod]
+    public void Generator_CapturesMultipleAssemblyAttributes_InDeclarationOrder()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 1)]
+            [assembly: Parallelize(Workers = 2)]
+            [assembly: Parallelize(Workers = 3)]
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+
+        int idx1 = registry.IndexOf("Workers = 1", StringComparison.Ordinal);
+        int idx2 = registry.IndexOf("Workers = 2", StringComparison.Ordinal);
+        int idx3 = registry.IndexOf("Workers = 3", StringComparison.Ordinal);
+
+        idx1.Should().BeGreaterThan(-1);
+        idx2.Should().BeGreaterThan(idx1);
+        idx3.Should().BeGreaterThan(idx2);
+    }
+
+    [TestMethod]
+    public void Generator_AssemblyAttributes_AreEmittedEvenWithNoTestClasses()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 8)]
+
+            namespace Sample
+            {
+                public class NotATest { }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.ParallelizeAttribute()");
+        registry.Should().Contain("Workers = 8");
+        registry.Should().NotContain("new TestClassReflectionInfo(");
     }
 
     private static string GetRegistry(GeneratorRunResult result)

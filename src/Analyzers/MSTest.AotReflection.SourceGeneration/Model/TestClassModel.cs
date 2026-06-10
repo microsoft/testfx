@@ -60,6 +60,14 @@ internal sealed record TestPropertyModel(
 internal sealed record TestConstructorModel(
     EquatableArray<TestParameterModel> Parameters);
 
+/// <summary>
+/// Assembly-scoped metadata captured at compile time so the consumer never has to call
+/// <see cref="System.Reflection.Assembly.GetCustomAttributes(System.Type, bool)"/> for
+/// attributes declared with <c>[assembly: ...]</c> in the same compilation.
+/// </summary>
+internal sealed record AssemblyMetadataModel(
+    EquatableArray<AttributeApplicationModel> Attributes);
+
 internal sealed record TestClassModel(
     string FullyQualifiedTypeName,
     string ContainingNamespace,

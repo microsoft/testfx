@@ -83,7 +83,7 @@ internal static class MetadataRegistryEmitter
         return sb.ToString();
     }
 
-    public static string EmitRegistry(string assemblyName, IReadOnlyList<TestClassModel> testClasses)
+    public static string EmitRegistry(string assemblyName, AssemblyMetadataModel assemblyMetadata, IReadOnlyList<TestClassModel> testClasses)
     {
         var sb = new IndentedStringBuilder();
         AppendHeader(sb);
@@ -99,6 +99,12 @@ internal static class MetadataRegistryEmitter
             {
                 sb.AppendLine($"public const string AssemblyName = \"{Escape(assemblyName)}\";");
                 sb.AppendLine();
+
+                // Emit assembly-level [assembly: ...] attributes so the consumer never has to call
+                // Assembly.GetCustomAttributes for attributes declared in the same compilation.
+                EmitAssemblyAttributesProperty(sb, assemblyMetadata.Attributes);
+                sb.AppendLine();
+
                 sb.AppendLine("public static IReadOnlyList<TestClassReflectionInfo> TestClasses { get; } = new TestClassReflectionInfo[]");
                 using (sb.Block(null))
                 {
@@ -117,6 +123,35 @@ internal static class MetadataRegistryEmitter
         }
 
         return sb.ToString();
+    }
+
+    private static void EmitAssemblyAttributesProperty(IndentedStringBuilder sb, EquatableArray<AttributeApplicationModel> attributes)
+    {
+        if (attributes.Length == 0)
+        {
+            sb.AppendLine("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = Array.Empty<Attribute>();");
+            return;
+        }
+
+        sb.AppendLine("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = new Attribute[]");
+        using (sb.Block(null))
+        {
+            for (int i = 0; i < attributes.Length; i++)
+            {
+                AttributeApplicationModel attr = attributes[i];
+                sb.Append(BuildAttributeExpression(attr));
+                if (i < attributes.Length - 1)
+                {
+                    sb.AppendLine(",");
+                }
+                else
+                {
+                    sb.AppendLine();
+                }
+            }
+        }
+
+        sb.AppendLine(";");
     }
 
     private static void EmitTestClass(IndentedStringBuilder sb, TestClassModel model)
