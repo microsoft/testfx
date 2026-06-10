@@ -131,8 +131,11 @@ internal static class TestResultCapture
         }
 
         // Don't split a surrogate pair when truncating: drop the high surrogate too.
+        // The early return above guarantees cut < value.Length here, but we keep the
+        // explicit guard so the invariant is locally self-documenting and survives
+        // any future refactor that might call this block with cut == value.Length.
         int cut = maxLength;
-        if (cut > 0 && char.IsHighSurrogate(value[cut - 1]))
+        if (cut > 0 && cut < value.Length && char.IsHighSurrogate(value[cut - 1]))
         {
             cut--;
         }

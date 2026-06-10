@@ -155,10 +155,24 @@ public class HtmlReportEngineTests
         CapturedTestResult result = TestResultCapture.TryCapture(node)!;
 
         Assert.IsNotNull(result.StandardOutput);
-        // The truncated prefix must not end with a lone high surrogate.
-        Assert.IsFalse(char.IsHighSurrogate(result.StandardOutput![result.StandardOutput.IndexOf('\n') - 1]),
-            "Truncate must not leave a lone high surrogate at the cut boundary.");
+
+        // Verify truncation happened (also establishes that '\n' is present in the output).
         Assert.Contains("[truncated, original length:", result.StandardOutput);
+
+        // Now safely index back from the truncation marker '\n'.
+        int newlineIdx = result.StandardOutput!.IndexOf('\n');
+        Assert.IsGreaterThan(0, newlineIdx, "Newline marker must not be at position 0 or absent.");
+
+        // The truncated prefix must not end with a lone high surrogate.
+        Assert.IsFalse(
+            char.IsHighSurrogate(result.StandardOutput[newlineIdx - 1]),
+            "Truncate must not leave a lone high surrogate at the cut boundary.");
+
+        // Confirm we backed off exactly one char over the high surrogate.
+        Assert.AreEqual(
+            TestResultCapture.MaxStandardStreamLength - 1,
+            newlineIdx,
+            "Prefix should be maxLength-1 chars (backed off over the high surrogate).");
     }
 
     [TestMethod]
