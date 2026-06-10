@@ -39,7 +39,10 @@ internal static class TrxTestResultExtractor
 
         // Single-pass collection of all non-state properties: replaces 7 × SingleOrDefault<T>()
         // + 2 × OfType<T>() with one GetStructEnumerator() walk, saving 8 linked-list traversals
-        // and 2 array allocations per test result.
+        // and 2 array allocations per test result. Singleton-typed properties use the local
+        // GetSingleOrDefaultValue helper to preserve the throw-on-duplicate invariant that
+        // SingleOrDefault<T>() provided; TestMetadataProperty and FileArtifactProperty are
+        // intentionally multi-valued and accumulate into lists.
         TimingProperty? timing = null;
         TrxTestDefinitionName? trxDefName = null;
         TrxFullyQualifiedTypeNameProperty? fqtn = null;
@@ -55,17 +58,23 @@ internal static class TrxTestResultExtractor
         {
             switch (enumerator.Current)
             {
-                case TimingProperty t: timing = t; break;
-                case TrxTestDefinitionName d: trxDefName = d; break;
-                case TrxFullyQualifiedTypeNameProperty f: fqtn = f; break;
-                case TestMethodIdentifierProperty m: methodId = m; break;
-                case TrxExceptionProperty e: trxException = e; break;
-                case TrxMessagesProperty msg: trxMessages = msg; break;
-                case TrxCategoriesProperty c: trxCategories = c; break;
+                case TimingProperty t: timing = GetSingleOrDefaultValue(timing, t); break;
+                case TrxTestDefinitionName d: trxDefName = GetSingleOrDefaultValue(trxDefName, d); break;
+                case TrxFullyQualifiedTypeNameProperty f: fqtn = GetSingleOrDefaultValue(fqtn, f); break;
+                case TestMethodIdentifierProperty m: methodId = GetSingleOrDefaultValue(methodId, m); break;
+                case TrxExceptionProperty e: trxException = GetSingleOrDefaultValue(trxException, e); break;
+                case TrxMessagesProperty msg: trxMessages = GetSingleOrDefaultValue(trxMessages, msg); break;
+                case TrxCategoriesProperty c: trxCategories = GetSingleOrDefaultValue(trxCategories, c); break;
                 case TestMetadataProperty md: (metadata ??= []).Add(new TrxTestMetadata { Key = md.Key, Value = md.Value }); break;
                 case FileArtifactProperty fa: (artifacts ??= []).Add(new TrxTestFileArtifact { FullPath = fa.FileInfo.FullName }); break;
             }
         }
+
+        static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property)
+            where TProperty : IProperty
+            => existingProperty is not null
+                ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
+                : property;
 
         bool wasTruncated = false;
 
