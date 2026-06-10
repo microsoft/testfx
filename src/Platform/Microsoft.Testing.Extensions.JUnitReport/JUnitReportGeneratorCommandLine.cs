@@ -28,7 +28,7 @@ internal sealed class JUnitReportGeneratorCommandLine : CommandLineOptionsProvid
 
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
         => commandOption.Name == JUnitReportFileNameOptionName
-            ? global::Microsoft.Testing.Extensions.ReportFileNameValidator.ValidateReportFileNameArgumentAsync(
+            ? ReportFileNameValidator.ValidateReportFileNameArgumentAsync(
                 arguments,
                 ".xml",
                 ExtensionResources.JUnitReportFileNameMustNotBeEmpty,
@@ -37,7 +37,7 @@ internal sealed class JUnitReportGeneratorCommandLine : CommandLineOptionsProvid
             : ValidationResult.ValidTask;
 
     public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => global::Microsoft.Testing.Extensions.ReportFileNameValidator.ValidateReportCommandLineOptionsAsync(
+        => ReportFileNameValidator.ValidateReportCommandLineOptionsAsync(
             commandLineOptions,
             JUnitReportOptionName,
             JUnitReportFileNameOptionName,
