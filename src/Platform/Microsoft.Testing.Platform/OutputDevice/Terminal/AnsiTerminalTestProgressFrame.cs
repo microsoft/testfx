@@ -17,12 +17,12 @@ internal sealed class AnsiTerminalTestProgressFrame
 
     private static string[] CreateMoveCursorBackwardCache()
     {
-        // Duration strings are at most ~15 chars ("1d 23h 59m 59s" with parens).
-        // A cache of 16 slots (indices 0-15) covers every realistic case with zero allocation.
-        const int maxLength = 16;
-        string[] cache = new string[maxLength];
+        // Duration strings are at most 16 chars ("(1d 23h 59m 59s)" with parens).
+        // A cache of 17 slots (indices 0-16) covers every realistic case with zero allocation.
+        const int cacheSize = 17;
+        string[] cache = new string[cacheSize];
         cache[0] = string.Empty;
-        for (int i = 1; i < maxLength; i++)
+        for (int i = 1; i < cacheSize; i++)
         {
             cache[i] = AnsiCodes.MoveCursorBackward(i);
         }
