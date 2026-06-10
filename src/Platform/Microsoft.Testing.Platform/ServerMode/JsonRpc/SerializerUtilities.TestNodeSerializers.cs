@@ -32,7 +32,6 @@ internal static partial class SerializerUtilities
 
         Serializers[typeof(TestNodeUpdateMessage)] = new ObjectSerializer<TestNodeUpdateMessage>(ev =>
         {
-            // TODO: Fill in the node properties
             Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.Node] = Serialize(ev.TestNode),

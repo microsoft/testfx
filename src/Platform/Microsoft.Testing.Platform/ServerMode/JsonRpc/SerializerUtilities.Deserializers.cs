@@ -243,12 +243,10 @@ internal static partial class SerializerUtilities
             IDictionary<string, object> errorObj = GetRequiredPropertyFromJson<IDictionary<string, object>>(properties, JsonRpcStrings.Error);
 
 #if !NETCOREAPP
-            if (errorObj.TryGetValue(JsonRpcStrings.Data, out object? errorData))
+            if (errorObj.TryGetValue(JsonRpcStrings.Data, out object? errorData) &&
+                errorData is JsonObject { Count: 0 })
             {
-                if (errorData is JsonObject { Count: 0 })
-                {
-                    errorObj[JsonRpcStrings.Data] = null!;
-                }
+                errorObj[JsonRpcStrings.Data] = null!;
             }
 #endif
             int id = GetIdFromJson(idObj) ?? throw new MessageFormatException("id field should be a string or an int");
