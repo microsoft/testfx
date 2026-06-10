@@ -152,7 +152,7 @@
     <PackageVersion Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)"
                     Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
 
-<PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Sdk="MSTest"
+    <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Sdk="MSTest"
                       Condition=" '$(EnableMicrosoftTestingExtensionsCtrfReport)' == 'true' ">
       <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsCtrfReportVersion)</Version>
     </PackageReference>

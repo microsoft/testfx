@@ -43,7 +43,7 @@
       <_MSTestSourceGenerationVersion>$(MSTestSourceGenerationVersionPrefix)</_MSTestSourceGenerationVersion>
       <_MSTestSourceGenerationVersion Condition="'$(_MSTestSourceGenerationVersionSuffix)' != ''">$(_MSTestSourceGenerationVersion)-$(_MSTestSourceGenerationVersionSuffix)</_MSTestSourceGenerationVersion>
 
-<_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>$(MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel)</_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
+      <_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>$(MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel)</_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
       <_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuild)' != 'true'">ci</_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
       <_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(OfficialBuild)' != 'true'">dev</_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
       <_MicrosoftTestingExtensionsCtrfReportVersionSuffix>$(_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel)$(_BuildNumberLabels)</_MicrosoftTestingExtensionsCtrfReportVersionSuffix>
