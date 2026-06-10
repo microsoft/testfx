@@ -1019,10 +1019,13 @@ public class TrxTests
     {
         // Default TRX file name has the deterministic <asm>_<tfm>_<arch>.trx shape; tests configure
         // the test application module as "TestAppPath", so the assembly token resolves to "TestAppPath".
-        const string ExpectedPattern = @"^TestAppPath_net[0-9]+(\.[0-9]+)?_(x86|x64|arm|arm64|wasm|s390x|ppc64le|riscv64|loongarch64|armv6|unknown)\.trx$";
+        // The arch token is derived from RuntimeInformation.ProcessArchitecture so the regex stays in
+        // sync with new Architecture enum values without manual maintenance.
+        string archToken = Regex.Escape(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
+        string expectedPattern = $@"^TestAppPath_net[0-9]+(\.[0-9]+)?_{archToken}\.trx$";
         Assert.IsTrue(
-            System.Text.RegularExpressions.Regex.IsMatch(fileName, ExpectedPattern),
-            $"File name '{fileName}' does not match expected default pattern '{ExpectedPattern}'.");
+            Regex.IsMatch(fileName, expectedPattern),
+            $"File name '{fileName}' does not match expected default pattern '{expectedPattern}'.");
     }
 
     private static TrxTestResult CreateTestNodeUpdate(string uid, string displayName, PropertyBag propertyBag)
