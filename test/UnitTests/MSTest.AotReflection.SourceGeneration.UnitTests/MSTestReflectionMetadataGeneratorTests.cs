@@ -116,7 +116,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registry.Should().Contain("public const string AssemblyName = \"TestSample\";");
         registry.Should().Contain("Type = typeof(global::Sample.MyTests)");
         registry.Should().Contain("Name = \"Test1\"");
-        registry.Should().Contain("Invoke = static (instance, args) => { ((global::Sample.MyTests)instance!).Test1(); return null; },");
+        registry.Should().Contain("Invoke = static (instance, args) => { ((global::Sample.MyTests)instance!).Test1(); return Task.CompletedTask; },");
     }
 
     [TestMethod]
@@ -1030,6 +1030,191 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         // which surfaces as `(object)null!` from BuildConstantExpression (C# keyword form
         // produced by FullyQualifiedFormat for System.Object).
         registry.Should().Contain("new object?[] { (object)null! }");
+    }
+
+    [TestMethod]
+    public void Generator_SupportType_DeclaresInvokeAsTaskReturning()
+    {
+        const string userCode = """
+            // Empty consumer — we only care about the post-init support types.
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string support = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.SupportTypes.g.cs")
+            .SourceText.ToString();
+
+        support.Should().Contain("using System.Threading.Tasks;");
+        // Invoke must be Task-returning so consumers can await without type-testing the result.
+        support.Should().Contain("public Func<object?, object?[]?, Task> Invoke { get; init; } = static (_, _) => Task.CompletedTask;");
+    }
+
+    [TestMethod]
+    public void Generator_InvokerForVoidMethod_ReturnsCompletedTask()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void SyncVoid() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("Invoke = static (instance, args) => { ((global::Sample.Tests)instance!).SyncVoid(); return Task.CompletedTask; },");
+    }
+
+    [TestMethod]
+    public void Generator_InvokerForTaskMethod_ForwardsTask()
+    {
+        const string userCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public Task AsyncTask() => Task.CompletedTask;
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        // Task and Task<T> both forward via the same `Task? __t = …` path; null is tolerated so
+        // the invoker contract (non-null Task) holds even for a misbehaving test method.
+        registry.Should().Contain("Invoke = static (instance, args) => { Task? __t = ((global::Sample.Tests)instance!).AsyncTask(); return __t ?? Task.CompletedTask; },");
+    }
+
+    [TestMethod]
+    public void Generator_InvokerForTaskOfTMethod_ForwardsTask()
+    {
+        const string userCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public Task<int> AsyncTaskOfInt() => Task.FromResult(42);
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("Invoke = static (instance, args) => { Task? __t = ((global::Sample.Tests)instance!).AsyncTaskOfInt(); return __t ?? Task.CompletedTask; },");
+    }
+
+    [TestMethod]
+    public void Generator_InvokerForValueTaskMethod_UnwrapsViaAsTask()
+    {
+        const string userCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public ValueTask AsyncValueTask() => default;
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        // ValueTask unwrap uses IsCompletedSuccessfully so the synchronous-completion fast path
+        // skips the Task allocation; only when the operation actually went async do we pay AsTask().
+        registry.Should().Contain("Invoke = static (instance, args) => { var __vt = ((global::Sample.Tests)instance!).AsyncValueTask(); return __vt.IsCompletedSuccessfully ? Task.CompletedTask : __vt.AsTask(); },");
+    }
+
+    [TestMethod]
+    public void Generator_InvokerForValueTaskOfTMethod_UnwrapsViaAsTask()
+    {
+        const string userCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public ValueTask<string> AsyncValueTaskOfString() => new ValueTask<string>("ok");
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("Invoke = static (instance, args) => { var __vt = ((global::Sample.Tests)instance!).AsyncValueTaskOfString(); return __vt.IsCompletedSuccessfully ? Task.CompletedTask : __vt.AsTask(); },");
+    }
+
+    [TestMethod]
+    public void Generator_InvokerForNonVoidSyncMethod_DiscardsResultAndReturnsCompletedTask()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public int SyncInt() => 42;
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        // For a sync non-void test the returned value is discarded but the call must still execute
+        // (its side-effects ARE the test). We surface that with a `_ = call;` pattern.
+        registry.Should().Contain("Invoke = static (instance, args) => { _ = ((global::Sample.Tests)instance!).SyncInt(); return Task.CompletedTask; },");
+    }
+
+    [TestMethod]
+    public void Generator_EmittedRegistry_ImportsSystemThreadingTasks()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        // The registry file references Task.CompletedTask directly in every invoker, so it must
+        // bring System.Threading.Tasks into scope.
+        registry.Should().Contain("using System.Threading.Tasks;");
     }
 
     private static string GetRegistry(GeneratorRunResult result)
