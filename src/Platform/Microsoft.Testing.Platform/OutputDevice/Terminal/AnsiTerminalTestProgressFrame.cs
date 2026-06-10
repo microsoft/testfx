@@ -413,11 +413,17 @@ internal sealed class AnsiTerminalTestProgressFrame
         _progressCountComparer.Buffer = _progressItemsBuffer;
         Array.Sort(_sortedIndicesBuffer, 0, itemCount, _progressCountComparer);
 
+        // Only populate detail buffers when there is a positive line budget per item.
+        // GetRunningTasks(0) would compute itemsToTake = -1 and throw inside RemoveRange,
+        // and there's no point asking for details we cannot display anyway.
         int linesPerItem = itemCount > 0 ? linesToDistribute / itemCount : 0;
-        for (int j = 0; j < itemCount; j++)
+        if (linesPerItem > 0)
         {
-            int sortedItemIndex = _sortedIndicesBuffer[j];
-            _detailItemsBuffer[sortedItemIndex] = _progressItemsBuffer[sortedItemIndex].TestNodeResultsState?.GetRunningTasks(linesPerItem) ?? [];
+            for (int j = 0; j < itemCount; j++)
+            {
+                int sortedItemIndex = _sortedIndicesBuffer[j];
+                _detailItemsBuffer[sortedItemIndex] = _progressItemsBuffer[sortedItemIndex].TestNodeResultsState?.GetRunningTasks(linesPerItem);
+            }
         }
 
         for (int progressI = 0; progressI < itemCount; progressI++)
@@ -428,6 +434,10 @@ internal sealed class AnsiTerminalTestProgressFrame
                 _linesToRenderBuffer.AddRange(details);
                 _detailItemsBuffer[progressI] = null; // release to avoid holding stale GC roots
             }
+
+            // Release the progress item reference too so completed workers can be collected
+            // even when this frame instance is kept alive across ticks.
+            _progressItemsBuffer[progressI] = null!;
         }
 
         return _linesToRenderBuffer;
@@ -437,7 +447,7 @@ internal sealed class AnsiTerminalTestProgressFrame
 
     /// <summary>
     /// Reusable comparer for sorting progress-item indices by running-task count.
-    /// Cached as a field to avoid a new allocations on every render tick.
+    /// Cached as a field to avoid new allocations on every render tick.
     /// </summary>
     private sealed class ProgressCountComparer : IComparer<int>
     {
