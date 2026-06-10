@@ -180,30 +180,40 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        // On Windows, we run the exe directly.
-        // On other OSes, we run with dotnet exec.
-        // This yields two different outputs, pointing to the same issue.
-        string executableName = OperatingSystem.IsWindows() ? "MSBuild Tests.exe" : "MSBuild Tests";
+        // The build should fail and the failure should mention the incompatible target architecture
+        // so we know the build/launch reached the apphost rather than failing for an unrelated reason.
+        result.AssertExitCodeIsNot(0);
+        result.AssertOutputContains($"[{TargetFrameworks.NetCurrent}|{incompatibleArchitecture}]");
 
-        result.AssertOutputContains($"error MSB6003: The specified task executable \"{executableName}\" could not be run. System.ComponentModel.Win32Exception");
-        result.AssertOutputContains("An error occurred trying to start process");
-
-        if (OperatingSystem.IsWindows())
+        if (OperatingSystem.IsLinux())
         {
-            result.AssertOutputContains("The specified executable is not a valid application for this OS platform.");
-        }
-        else if (OperatingSystem.IsMacOS())
-        {
-            result.AssertOutputContains("Bad CPU type in executable");
-        }
-        else if (OperatingSystem.IsLinux())
-        {
-            result.AssertOutputContains("Exec format error");
+            // On Linux, launching a non-native-architecture apphost no longer surfaces as a
+            // Win32Exception from ToolTask, so no MSB6003 is emitted. The failure is instead
+            // reported by InvokeTestingPlatformTask.HandleTaskExecutionErrors as the captured
+            // tool output (often a shell-parse error like "Syntax error: word unexpected").
+            result.AssertOutputContains("error run failed: Tests failed:");
         }
         else
         {
-            // Unexpected OS.
-            throw ApplicationStateGuard.Unreachable();
+            // On Windows we run the exe directly; on macOS we run the apphost.
+            string executableName = OperatingSystem.IsWindows() ? "MSBuild Tests.exe" : "MSBuild Tests";
+
+            result.AssertOutputContains($"error MSB6003: The specified task executable \"{executableName}\" could not be run. System.ComponentModel.Win32Exception");
+            result.AssertOutputContains("An error occurred trying to start process");
+
+            if (OperatingSystem.IsWindows())
+            {
+                result.AssertOutputContains("The specified executable is not a valid application for this OS platform.");
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                result.AssertOutputContains("Bad CPU type in executable");
+            }
+            else
+            {
+                // Unexpected OS.
+                throw ApplicationStateGuard.Unreachable();
+            }
         }
     }
 
