@@ -95,7 +95,7 @@ internal sealed class JUnitReportEngine
         // and lets us know testsuite-level aggregates (tests/failures/...) up front.
         SuiteSet suites = BuildSuites(results, parentChain, finishTime);
 
-        return await WriteWithRetryAsync(finalPath, fileNameExplicitlyProvided, suites).ConfigureAwait(false);
+        return await WriteOutputAsync(finalPath, suites).ConfigureAwait(false);
     }
 
     private static string GetProvidedFileName(string[]? providedFileName)
@@ -103,9 +103,8 @@ internal sealed class JUnitReportEngine
             ? providedFileName[0]
             : throw ApplicationStateGuard.Unreachable();
 
-    private async Task<(string FileName, string? Warning)> WriteWithRetryAsync(
+    private async Task<(string FileName, string? Warning)> WriteOutputAsync(
         string finalPath,
-        bool fileNameExplicitlyProvided,
         SuiteSet suites)
     {
         // Stream-to-temp-then-rename: write to a unique "<final>.<random>.tmp" in the
@@ -115,61 +114,16 @@ internal sealed class JUnitReportEngine
         string tempPath = finalPath + "." + Path.GetRandomFileName() + ".tmp";
         await WriteXmlAsync(tempPath, suites).ConfigureAwait(false);
 
-        // Explicit file names: overwrite. Default-generated file names: keep the user's
-        // existing artifacts intact by disambiguating with "_N" suffixes when needed.
-        if (fileNameExplicitlyProvided)
-        {
-            bool willOverwrite = _fileSystem.ExistFile(finalPath);
-            _fileSystem.MoveFile(tempPath, finalPath, overwrite: true);
-            return (
-                finalPath,
-                willOverwrite
-                    ? string.Format(CultureInfo.InvariantCulture, ExtensionResources.JUnitReportFileExistsAndWillBeOverwritten, finalPath)
-                    : null);
-        }
-
-        DateTimeOffset firstTry = _clock.UtcNow;
-        string directory = Path.GetDirectoryName(finalPath) ?? string.Empty;
-        string baseName = Path.GetFileNameWithoutExtension(finalPath);
-        string extension = Path.GetExtension(finalPath);
-        string candidate = finalPath;
-        int attempt = 0;
-
-        while (true)
-        {
-            _cancellationToken.ThrowIfCancellationRequested();
-
-            if (!_fileSystem.ExistFile(candidate))
-            {
-                try
-                {
-                    _fileSystem.MoveFile(tempPath, candidate, overwrite: false);
-                    return (candidate, null);
-                }
-                catch (IOException) when (_fileSystem.ExistFile(candidate))
-                {
-                    // A concurrent run won the race for this candidate name. Fall through
-                    // to the disambiguation loop. Other IOExceptions (disk full, ACL,
-                    // path too long, ...) intentionally propagate to the caller.
-                }
-            }
-
-            if (_clock.UtcNow - firstTry > ReportFileWriterHelper.FileWriteRetryTimeout)
-            {
-                // Last-ditch: keep the data by leaving the .tmp file in place and bubble
-                // up so the user still has the artifact rather than losing it silently.
-                throw new IOException(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "Unable to generate JUnit report at '{0}' after retrying for {1} seconds; intermediate file kept at '{2}'.",
-                        finalPath,
-                        ReportFileWriterHelper.FileWriteRetryTimeout.TotalSeconds.ToString(CultureInfo.InvariantCulture),
-                        tempPath));
-            }
-
-            attempt++;
-            candidate = Path.Combine(directory, $"{baseName}_{attempt}{extension}");
-        }
+        // Always overwrite, regardless of whether the file name was explicitly provided or
+        // generated from the default <asm>_<tfm>_<arch>.xml shape. Emit a warning when
+        // overwriting so users have a single, predictable rule to reason about.
+        bool willOverwrite = _fileSystem.ExistFile(finalPath);
+        _fileSystem.MoveFile(tempPath, finalPath, overwrite: true);
+        return (
+            finalPath,
+            willOverwrite
+                ? string.Format(CultureInfo.InvariantCulture, ExtensionResources.JUnitReportFileExistsAndWillBeOverwritten, finalPath)
+                : null);
     }
 
     private async Task WriteXmlAsync(string tempPath, SuiteSet suites)
@@ -701,8 +655,9 @@ internal sealed class JUnitReportEngine
     private string BuildDefaultFileName()
     {
         // Deterministic <asm>_<tfm>_<arch>.xml shape — discoverable across reruns and
-        // multi-target/multi-arch matrices. WriteWithRetryAsync disambiguates with _N
-        // suffixes when a file with the base name already exists.
+        // multi-target/multi-arch matrices. A second run into the same TestResults folder
+        // overwrites the previous file (with a warning), matching the behavior of an
+        // explicitly-provided file name.
         string moduleName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
         string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
         string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();

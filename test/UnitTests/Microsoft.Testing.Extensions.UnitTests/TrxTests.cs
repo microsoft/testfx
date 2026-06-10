@@ -849,7 +849,7 @@ public class TrxTests
     {
         // Arrange
         int retryCount = 0;
-        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.CreateNew))
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
             .Returns(() =>
             {
                 if (retryCount > 3)
@@ -1043,7 +1043,7 @@ public class TrxTests
         DateTime testStartTime = DateTime.Now;
 
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
-        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), isExplicitFileName ? FileMode.Create : FileMode.CreateNew))
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
             .Returns(memoryStream);
 
         _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
