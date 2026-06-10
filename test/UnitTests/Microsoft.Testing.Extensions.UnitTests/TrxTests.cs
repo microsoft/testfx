@@ -147,7 +147,7 @@ public class TrxTests
         string[]? argumentTrxReportFileName = ["argumentTrxReportFileName"];
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
-        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
@@ -168,7 +168,7 @@ public class TrxTests
         string[]? argumentTrxReportFileName = ["argumentTrxReportFileName"];
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
-        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
 
         // Act
@@ -191,7 +191,7 @@ public class TrxTests
         string[]? argumentTrxReportFileName = ["NUL"];
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
-        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
@@ -213,7 +213,7 @@ public class TrxTests
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         _ = _environmentMock.SetupGet(_ => _.ProcessId).Returns(1234);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
-        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
@@ -233,7 +233,7 @@ public class TrxTests
         string[]? argumentTrxReportFileName = ["report_{unknown}.trx"];
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
-        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
@@ -253,7 +253,7 @@ public class TrxTests
         string[]? argumentTrxReportFileName = ["plain_report.trx"];
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
-        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
@@ -272,7 +272,7 @@ public class TrxTests
         string[]? argumentTrxReportFileName = [Path.Combine("nested", "sub", "report.trx")];
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
-        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
@@ -296,7 +296,7 @@ public class TrxTests
         string[]? argumentTrxReportFileName = [absolutePath];
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
-        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
@@ -317,7 +317,7 @@ public class TrxTests
         string[]? argumentTrxReportFileName = [Path.Combine("nested", "report_{pname}.trx")];
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
-        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
         // Have {pname} resolve to something that contains characters which would normally be sanitized
         // by ReplaceInvalidFileNameChars (parentheses + space) so we can verify only the file-name leaf
         // is sanitized while the user-supplied directory portion is left intact.
@@ -341,7 +341,7 @@ public class TrxTests
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         _ = _clockMock.SetupGet(_ => _.UtcNow).Returns(new DateTimeOffset(2025, 9, 22, 13, 49, 34, TimeSpan.Zero));
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
-        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
@@ -360,7 +360,7 @@ public class TrxTests
         string[]? argumentTrxReportFileName = ["report_{pname}.trx"];
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
-        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
         // Override the test app path setup from GenerateTrxReportEngine to one whose file name part contains characters
         // (parentheses and a space) that are in InvalidFileNameChars and should be replaced with '_'.
         _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns(Path.Combine(Path.GetTempPath(), "bad (name).dll"));
@@ -383,7 +383,7 @@ public class TrxTests
         string[]? argumentTrxReportFileName = ["report_{asm}.trx"];
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
-        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
@@ -408,7 +408,7 @@ public class TrxTests
         string[]? argumentTrxReportFileName = ["report_{tfm}.trx"];
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
-        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, isExplicitFileName: true);
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
@@ -845,7 +845,7 @@ public class TrxTests
     }
 
     [TestMethod]
-    public async Task TrxReportEngine_GenerateReportAsync_FileAlreadyExists_WillRetry()
+    public async Task TrxReportEngine_GenerateReportAsync_FileInUse_WillRetry()
     {
         // Arrange
         int retryCount = 0;
@@ -1038,7 +1038,7 @@ public class TrxTests
         return TrxTestResultExtractor.Extract(message).Result;
     }
 
-    private TrxReportEngine GenerateTrxReportEngine(MemoryFileStream memoryStream, bool isExplicitFileName = false)
+    private TrxReportEngine GenerateTrxReportEngine(MemoryFileStream memoryStream)
     {
         DateTime testStartTime = DateTime.Now;
 
