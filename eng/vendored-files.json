@@ -192,7 +192,7 @@
     {
       "id": "platform-ci-environment-detector",
       "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/CIEnvironmentDetector.cs",
-      "notes": "Adapted from dotnet CLI telemetry CI detection. Maintained per https://learn.microsoft.com/dotnet/core/tools/telemetry#continuous-integration-detection.",
+      "notes": "Adapted from dotnet CLI telemetry CI detection. Maintained per https://learn.microsoft.com/dotnet/core/tools/telemetry#continuous-integration-detection. This file is the single source of truth: it is linked into MSTest.TestFramework via src/TestFramework/TestFramework/TestFramework.csproj and toggled via the IS_CORE_MTP define.",
       "sources": [
         {
           "repo": "dotnet/sdk",
@@ -291,21 +291,6 @@
           "baseline_ref_sha": "62dfdbff84a97796938836c60697287fc6161aa1",
           "baseline_blob_sha": "00f1f919a93c706cbd41a2a2e9d62f26c74b6f92",
           "scope": "entire file"
-        }
-      ]
-    },
-    {
-      "id": "testframework-ci-environment-detector",
-      "local_path": "src/TestFramework/TestFramework/Internal/CIEnvironmentDetector.cs",
-      "notes": "Independent in-tree copy of the CI detector (test-framework variant exposing an IEnvironment-backed Instance) sharing the rules with the platform copy.",
-      "sources": [
-        {
-          "repo": "dotnet/sdk",
-          "ref": "main",
-          "path": "src/Cli/Microsoft.DotNet.Cli.Definitions/Telemetry/CIEnvironmentDetectorForTelemetry.cs",
-          "baseline_ref_sha": "1ab3ae8e0338cdd06b3974959c5802ccc5a85978",
-          "baseline_blob_sha": "e10e1fc2cd973c6123fd983b16a8f0c1e9191c31",
-          "scope": "CI detection rules and environment variable lists"
         }
       ]
     },
