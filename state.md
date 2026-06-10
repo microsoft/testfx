@@ -1,59 +1,54 @@
-# Perf Improver State
+# Perf Improver State — microsoft/testfx
 
-## Last Run
-2026-06-09 14:21 UTC
+## Last Updated
+2026-06-10 14:52 UTC — Run [27283591745](https://github.com/microsoft/testfx/actions/runs/27283591745)
 
-## Commands Discovered
-- Build: `./build.sh -build -c Debug` (Linux) / `.\build.cmd -build -c Debug` (Windows)
-- Full build (all TFMs): `./build.sh`
-- Run platform unit tests: `artifacts/bin/Microsoft.Testing.Platform.UnitTests/Debug/net8.0/Microsoft.Testing.Platform.UnitTests`
-- Profiling infrastructure: `test/Performance/MSTest.Performance.Runner` — uses dotnet-trace, PerfView, VSDiagnostics, ConcurrencyVisualizer
-- Note: system dotnet is a stub; build.sh installs pinned SDK into `.dotnet/`
+## Validated Commands
+- Build: `./build.sh -build -c Debug` (Linux)
+- Full build all TFMs: `./build.sh`
+- Unit tests: `artifacts/bin/Microsoft.Testing.Platform.UnitTests/Debug/net8.0/Microsoft.Testing.Platform.UnitTests`
+- Profiling: `test/Performance/MSTest.Performance.Runner` (dotnet-trace, PerfView)
+- NOTE: system dotnet is a stub; build.sh installs SDK into `.dotnet/`
 
-## Tasks Last Run
-- Task 1 (Discover Commands): 2026-05-29
-- Task 2 (Identify Opportunities): 2026-06-09
-- Task 3 (Implement Improvements): 2026-06-09
-- Task 4 (Maintain PRs): 2026-06-08
-- Task 5 (Comment on Issues): 2026-06-05
-- Task 6 (Measurement Infrastructure): 2026-06-08
-- Task 7 (Monthly Summary): 2026-06-09
-
-## Optimization Backlog
-1. AnsiDetector regex → string ops (DONE - PR #8683 MERGED)
-2. AsynchronousMessageBus drain dict → cached arrays (DONE - PR #8704 MERGED)
-3. ServiceProvider.InternalOnlyExtensions array → HashSet (CLOSED without merge - PR #8717)
-4. AnsiTerminal.SetColor string alloc + KnownFileExtensions array → HashSet (DONE - PR #8739 MERGED)
-5. ANSI render hot path: CsiEraseInLine/CsiEraseInDisplay constants + MoveCursorUp StringBuilder (DONE - PR #8769 MERGED)
-6. GetRunningTasks + GenerateLinesToRender LINQ allocations (DONE - PR #8799 MERGED)
-7. VSTestBridge ObjectModelConverters double message iteration (DONE - PR #8823 MERGED)
-8. HumanReadableDurationFormatter.Render fast path for sub-hour durations (DONE - PR #8861 MERGED 2026-06-07)
-9. AnsiTerminalTestProgressFrame double-buffering (DONE - PR #8883 MERGED 2026-06-07)
-10. SimpleTerminal.GetRunningTasks(1).FirstOrDefault() → GetLongestRunningTask() linear scan (DONE - PR #8932 MERGED 2026-06-09)
-11. AnsiTerminalTestProgressFrame duration-only path: 4 allocs (2× SetCursorHorizontal, MoveCursorBackward, composite) → 0 via static caches (SUBMITTED - branch perf-assist/cache-ansi-cursor-sequences)
-12. GenerateLinesToRender per-frame array allocs — pool/reuse new TestProgressState[N], int[N], List<TestDetailState>[N] (high complexity, skip for now)
-13. GenerateLinesToRender List<object> heterogeneous boxing — consider sealed base type (lower priority)
-
-## Completed Work
-- PR #8683: perf: replace Regex array in AnsiDetector with direct string comparisons — MERGED
-- PR #8704: cache distinct processors in AsynchronousMessageBus — MERGED
-- PR #8717: convert InternalOnlyExtensions from array property to static readonly HashSet — CLOSED (not merged)
-- PR #8739: perf: eliminate per-call string allocation in AnsiTerminal.SetColor and use HashSet for KnownFileExtensions — MERGED
-- PR #8769: perf: eliminate string allocations in ANSI render hot path — MERGED
-- PR #8799: perf: eliminate LINQ allocations in terminal progress render hot path — MERGED
-- PR #8823: perf: single-pass message iteration in VSTestBridge ObjectModelConverters — MERGED 2026-06-05
-- PR #8861: fast path in HumanReadableDurationFormatter.Render — MERGED 2026-06-07
-- PR #8883: reuse AnsiTerminalTestProgressFrame via double-buffer swap — MERGED 2026-06-07
-- PR #8932: GetLongestRunningTask() O(n) scan — MERGED 2026-06-09
-- PR perf-assist/cache-ansi-cursor-sequences: cache ANSI cursor-positioning strings in duration-only path — SUBMITTED 2026-06-09
+## Round-Robin Task History (last run)
+- 2026-06-10: Task 3 (Implement), Task 7 (Monthly Summary)
+- 2026-06-09: Task 3 (Implement), Task 7
+- 2026-06-08: Task 3 (Implement), Task 4 (Maintain PRs), Task 6 (Infra), Task 7
+- 2026-06-06: Task 3 (Implement), Task 7
+- 2026-06-05: Task 3 (Implement), Task 6 (Infra), Task 7
+- Next run: consider Task 2 (Identify Opportunities) or Task 5 (Comment on Issues)
 
 ## Monthly Activity Issue
-- Issue #8933 for June 2026 — OPEN, updated this run
+- Issue #8933 — "[perf-improver] Monthly Activity 2026-06" (open)
 
-## Notes
-- All previously merged PRs were in the OutputDevice/Terminal path
-- PR #8717 was closed without explanation — avoid similar HashSet-on-internal-collection patterns
-- Full repo build has pre-existing XLF infrastructure failure (unrelated to our changes)
-- net8.0 baseline after 2026-06-09 changes: 1106 passed, 0 failed, 3 skipped (platform unit tests)
-- Measurement infrastructure exists: test/Performance/MSTest.Performance.Runner with dotnet-trace/PerfView; no BenchmarkDotNet microbenchmarks
-- Next area to explore: GenerateLinesToRender per-frame allocs (high complexity, need careful design)
+## Work In Progress
+- **Branch**: `perf-assist/cache-generate-lines-buffers`
+- **PR**: created draft (number pending); eliminates 5 allocs/tick in `GenerateLinesToRender`
+- **Status**: committed, PR submitted via safeoutputs, tests passing
+
+## Completed Work (this month)
+- PR #8970 (perf-assist/cache-ansi-cursor-sequences): cache ANSI cursor-positioning strings — **MERGED 2026-06-10 by Evangelink**
+- PR #8932: `GetLongestRunningTask()` O(n) scan — **MERGED 2026-06-09**
+- PR #8883: double-buffer frame reuse — **MERGED 2026-06-07**
+- PR #8861: `HumanReadableDurationFormatter` fast path — **MERGED 2026-06-07**
+- PR #8823: VSTestBridge single-pass message iteration — **MERGED 2026-06-05**
+- PR #8799: LINQ allocations in terminal hot path — **MERGED**
+- PR #8769: string allocations in ANSI render hot path — **MERGED**
+- PR #8739: `AnsiTerminal.SetColor` + `KnownFileExtensions` HashSet — **MERGED**
+- PR #8704: `AsynchronousMessageBus` distinct processors cache — **MERGED**
+- PR #8683: `AnsiDetector` Regex → direct string comparison — **MERGED**
+
+## Optimization Backlog
+1. `GenerateLinesToRender` `List<object>` heterogeneous boxing → sealed base type; low priority
+2. `TestNodeResultsState.GetRunningTasks()` still allocs new `List<TestDetailState>` per assembly per tick; cacheable similarly to current PR
+3. `IConsole.Write(string)` forces `StringBuilder.ToString()` alloc in `StopUpdate`; needs interface change, low priority
+
+## Performance Notes
+- Render tick rate: ~2 fps (500ms `Thread.Sleep` in `TestProgressStateAwareTerminal.ThreadProc`)
+- Double-buffer pattern: `AnsiTerminal._currentFrame` + `_spareFrame` swapped each tick
+- `IComparer<T>` avoids closure alloc vs `Comparison<T>` lambda in `Array.Sort`
+- `Array.Sort(array, 0, count, comparer)` sorts only the valid slice (avoids sorting uninitialized buffer tail)
+- `Comparer<int>.Create(lambda)` creates new wrapper per call — use custom class instead
+- Unit test baseline: 1107 passed, 3 skipped, 0 failed (net8.0)
+- StyleCop: SA1214 = readonly fields before non-readonly; SA1401 = fields must be private
+- Auto-properties preferred over manual backing fields (IDE0032)
