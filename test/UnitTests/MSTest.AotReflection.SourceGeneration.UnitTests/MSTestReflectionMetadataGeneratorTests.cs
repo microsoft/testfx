@@ -341,17 +341,12 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registry.Should().Contain("Name = \"Context\"");
         registry.Should().Contain("HasPublicSetter = true");
         registry.Should().Contain("Get = static instance => instance is null ? null : (object?)((global::Sample.PropTests)instance).Context,");
-        registry.Should().Contain("Set = static (instance, value) => ((global::Sample.PropTests)instance!).Context = (global::Sample.TestContext?)value!,");
+        registry.Should().Contain("Set = static (instance, value) => ((global::Sample.PropTests)instance!).Context = (global::Sample.TestContext)value!,");
     }
 
     [TestMethod]
     public void Generator_EmittedSource_CompilesCleanly()
     {
-        // NOTE: Scenario intentionally avoids nullable reference type annotations on
-        // property/parameter types: the current PoC emits `typeof(T?)` verbatim, which
-        // is invalid C#. That bug is tracked separately for a follow-up PR; this test
-        // is here to prevent the emitted source from ever introducing OTHER compile
-        // errors.
         const string userCode = """
             using System.Threading.Tasks;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -365,7 +360,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 public class FullShape
                 {
                     [TestContext]
-                    public TestContext Context { get; set; } = new();
+                    public TestContext? Context { get; set; }
 
                     public FullShape() { }
 
@@ -386,6 +381,53 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         diagnostics.Should().BeEmpty(
             "the generated source MUST compile cleanly when consumed in the same compilation as the user code");
+    }
+
+    [TestMethod]
+    public void Generator_StripsNullableAnnotation_FromTypeofExpressions()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                [TestClass]
+                public class NullableShapes
+                {
+                    [TestContext]
+                    public TestContext? Context { get; set; }
+
+                    [TestMethod]
+                    public void TakesNullableRef(string? value) { }
+
+                    [TestMethod]
+                    public void TakesNullableValueType(int? n) { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        // typeof(...) MUST NOT carry nullable reference type annotation (CS8639).
+        registry.Should().NotContain("typeof(global::Sample.TestContext?)");
+        registry.Should().NotContain("typeof(string?)");
+        // Reference types in typeof drop the annotation entirely.
+        registry.Should().Contain("typeof(global::Sample.TestContext)");
+        registry.Should().Contain("typeof(string)");
+        // Nullable value types are still distinct from their underlying type and must be preserved as Nullable<T>.
+        registry.Should().Contain("typeof(int?)");
+
+        // The whole compilation must be free of CS errors.
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("typeof(T?) on a reference type is invalid C# (CS8639)");
     }
 
     [TestMethod]

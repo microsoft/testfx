@@ -19,8 +19,7 @@ internal static class TestClassModelBuilder
 {
     private static readonly SymbolDisplayFormat FullyQualifiedFormat =
         SymbolDisplayFormat.FullyQualifiedFormat.WithMiscellaneousOptions(
-            SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
-            | SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
+            SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
 
     public static TestClassModel Build(INamedTypeSymbol typeSymbol)
     {
