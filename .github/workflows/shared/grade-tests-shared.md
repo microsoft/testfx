@@ -319,12 +319,23 @@ read `No issues found.` — do not invent weaknesses to balance the note.
 ### Step 4 — Post the comment
 
 Use **exactly one** `add-comment` call. The comment body must follow this
-structure — note that the table is emitted as **raw HTML** (not a
-markdown pipe-table) so we can constrain each column to a fixed
-percentage of the comment width via `<colgroup>`. GitHub's HTML
-sanitizer allows the `width` attribute on `<table>`, `<col>`, `<th>`,
-and `<td>`, so the column widths below are honored in the rendered
-comment.
+structure. The table is emitted as **raw HTML** (not a markdown
+pipe-table) so each cell can use inline HTML like `<code>` and `<br>`.
+
+> **gh-aw sanitizer constraint**: the `safe-outputs.add-comment`
+> pipeline strips any HTML tag that is not on its allowlist, replacing
+> the angle brackets with parentheses (so a `<colgroup>` becomes the
+> visible literal text `(colgroup)` in the rendered comment). The
+> sanitizer **also strips all invisible Unicode characters** (zero-
+> width space U+200B, soft hyphen U+00AD, word joiner U+2060, etc. —
+> including their HTML-entity forms like `&#8203;` and
+> `&ZeroWidthSpace;`), so they cannot be used as soft-wrap hints
+> either. The allowed table-related tags are exactly: `table`,
+> `thead`, `tbody`, `tr`, `th`, `td`, plus `code`, `span`, `sub`,
+> `sup`, `br`, `details`, `summary`. **Do not** emit `<colgroup>`,
+> `<col>`, or `<wbr>` — they will appear as garbled text in the posted
+> comment. Use `<br>` for the (forced) wrap mechanism in the Test
+> column.
 
 ```markdown
 ### 🧪 Test quality grade — PR #${{ github.event.pull_request.number || github.event.issue.number }}
@@ -333,27 +344,20 @@ comment.
 issue, and the single most important recommendation. -->
 
 <table>
-  <colgroup>
-    <col width="6%">
-    <col width="50%">
-    <col width="7%">
-    <col width="9%">
-    <col width="28%">
-  </colgroup>
   <thead>
     <tr><th>Δ</th><th>Test</th><th>Grade</th><th>Band</th><th>Notes</th></tr>
   </thead>
   <tbody>
     <tr>
       <td>new</td>
-      <td><code>ClassName.Method_<wbr>WhenSomething_<wbr>ReturnsValue</code></td>
+      <td><code>ClassName.<br>Method_<br>WhenSomething_<br>ReturnsValue</code></td>
       <td>A</td>
       <td>90–100</td>
       <td>…</td>
     </tr>
     <tr>
       <td>mod</td>
-      <td><code>ClassName.OtherMethod</code></td>
+      <td><code>ClassName.<br>OtherMethod</code></td>
       <td>C</td>
       <td>70–79</td>
       <td>…</td>
@@ -372,33 +376,38 @@ Rules for the table:
 - **Caps**: if there are more than 50 rows, show all rows with grade < B
   first, then a sample of the best rows, and wrap any overflow in a
   collapsed `<details><summary>Remaining N tests</summary>…</details>` block.
-- **Use raw HTML `<table>`**, not a markdown pipe-table, and keep the
-  `<colgroup>` widths above (`6% / 50% / 7% / 9% / 28%`). They constrain
-  the rendered table to the PR-comment width and prevent the horizontal
-  scroll-bar shown when long fully-qualified test names blow out the
-  `Test` column.
+- **Use raw HTML `<table>`**, not a markdown pipe-table. Do **not** wrap
+  the table in `<colgroup>` / `<col>` for column-width hints — those
+  tags are not on gh-aw's allowlist and will leak into the rendered
+  comment as literal text. Use the per-cell `<br>` strategy described
+  for column 2 instead to keep the Test column from blowing out the
+  layout.
 - **Column 1 (Δ / status)**: keep it tiny — `new`, `mod`, or empty (no
   parentheses, no backticks). Omit (leave blank) if the diff context does
   not make the distinction clear from `git log` on the file at HEAD. The
   header is the single character `Δ` (change indicator) so the column is
   not anonymous to screen readers.
-- **Column 2 (Test)** — the `<colgroup>` already caps the column at 50%
-  of the comment width, but the cell content also needs to be
-  *wrap-friendly* so the constrained width is filled top-to-bottom rather
-  than overflowing:
+- **Column 2 (Test)** — the cell content must wrap aggressively so the
+  Test column does not blow out the table width:
   - **Drop the namespace.** Show only `ClassName.MethodName`, never the
     full `Namespace.ClassName.MethodName`. Disambiguate in the Notes
     column only if two graded methods would otherwise collide.
   - **Use raw `<code>…</code>` HTML tags, not backtick fences**, so
-    nested `<wbr>` actually takes effect. Backtick code spans render
-    their content literally in GFM, so a `<wbr>` inside would display
-    as the literal text `<wbr>`.
-  - **Insert `<wbr>` word-break hints inside the method name** after
-    each `_` so the browser can break the inline `<code>` span on long
-    underscored MSTest names. Example:
-    `<code>ClassName.TestNodeResultsState_<wbr>GetSingleActiveOrSummaryTask_<wbr>WhenEmpty_<wbr>ReturnsNull</code>`.
-    Do **not** alter the actual method name — `<wbr>` is invisible and
-    must not change what gets copy-pasted (apart from the soft-wrap).
+    embedded `<br>` line breaks take effect inside the code span.
+    Backtick code spans render their content literally in GFM, so a
+    `<br>` inside would display as plain text.
+  - **Insert `<br>` after the `.` separator and after each `_`** in the
+    method name. Underscored MSTest names like
+    `TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenEmpty_ReturnsNull`
+    are unbreakable strings — without an explicit `<br>` the browser
+    cannot wrap them and the column blows out the table width. Soft-
+    wrap alternatives (`<wbr>`, U+200B zero-width space, `&shy;`) are
+    all stripped by gh-aw's sanitizer, so a forced `<br>` is the only
+    mechanism that survives. Example:
+    `<code>ClassName.<br>TestNodeResultsState_<br>GetSingleActiveOrSummaryTask_<br>WhenEmpty_<br>ReturnsNull</code>`.
+    Do **not** alter the underlying name — keep every character
+    (including the trailing `_`); the `<br>` only changes the visual
+    layout, not the copy-paste text.
 
 **Important**: Emit **only one** `add-comment` call. The workflow is
 configured with `hide-older-comments: true`, so re-runs will replace any
