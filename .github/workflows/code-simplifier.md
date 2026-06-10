@@ -267,10 +267,6 @@ Please verify:
 - Simplifications improve code quality
 - Changes align with project conventions
 - No unintended side effects
-
----
-
-*Automated by Code Simplifier Agent*
 ```
 
 ### 4.3 Use Safe Outputs

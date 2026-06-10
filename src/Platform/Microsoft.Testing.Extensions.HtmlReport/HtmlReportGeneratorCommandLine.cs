@@ -28,7 +28,7 @@ internal sealed class HtmlReportGeneratorCommandLine : CommandLineOptionsProvide
 
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
         => commandOption.Name == HtmlReportFileNameOptionName
-            ? global::Microsoft.Testing.Extensions.ReportFileNameValidator.ValidateReportFileNameArgumentAsync(
+            ? ReportFileNameValidator.ValidateReportFileNameArgumentAsync(
                 arguments,
                 ".html",
                 ExtensionResources.HtmlReportFileNameMustNotBeEmpty,
@@ -37,7 +37,7 @@ internal sealed class HtmlReportGeneratorCommandLine : CommandLineOptionsProvide
             : ValidationResult.ValidTask;
 
     public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => global::Microsoft.Testing.Extensions.ReportFileNameValidator.ValidateReportCommandLineOptionsAsync(
+        => ReportFileNameValidator.ValidateReportCommandLineOptionsAsync(
             commandLineOptions,
             HtmlReportOptionName,
             HtmlReportFileNameOptionName,

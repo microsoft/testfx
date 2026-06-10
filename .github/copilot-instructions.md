@@ -123,18 +123,18 @@ Agentic workflows live in `.github/workflows/*.md` and `*.agent.md` and are comp
 
 ## GitHub issue creation guidelines
 
-When creating new issues (manually, via `gh issue create`, via the GitHub API, or from an agentic workflow), the issue category MUST be expressed through the repository's native **GitHub Issue Type** field — not through a `type/bug` / `type/feature` label.
+When creating new issues — or triaging existing ones — through **any** surface (manual edits in the GitHub UI, `gh issue create` / `gh issue edit`, the REST or GraphQL API, an agentic workflow, a webhook bot, or a label-sync rule) the issue category MUST be expressed through the repository's native **GitHub Issue Type** field. The legacy `type/bug`, `type/feature`, and `type/task` **labels** are banned and MUST NOT be added by anyone (humans, Copilot, bots, or automation).
 
-- Use `Bug` for an unexpected problem or regression.
-- Use `Feature` for a new capability or enhancement.
-- Use `Task` for a piece of work that is neither a bug nor a feature (refactor, follow-up, chore, RFC follow-up, …).
-- `type/bug` and `type/feature` labels are **deprecated** and MUST NOT be added — they duplicate the Issue Type field and make triage queries inconsistent.
+- Use the `Bug` issue type for an unexpected problem or regression.
+- Use the `Feature` issue type for a new capability or enhancement.
+- Use the `Task` issue type for a piece of work that is neither a bug nor a feature (refactor, follow-up, chore, RFC follow-up, …).
+- `type/bug`, `type/feature`, and `type/task` labels are **deprecated and forbidden**. They duplicate the Issue Type field and make triage queries inconsistent. Do not add them — set the Issue Type field instead.
 - Other `type/*` labels (`type/automation`, `type/tech-debt`, `type/test-gap`, `type/regression`, `type/breaking-change`, `type/rfc`, `type/pr-fix`, `type/qa`, `type/ai-inspected`, `type/announcement`, `type/discussion`, `type/flaky-test`, `type/partner-request`, `type/question`) are **not** covered by native issue types and MUST continue to be used as labels.
 
 How to set the Issue Type from each surface:
 
-- **Issue templates** (`.github/ISSUE_TEMPLATE/*.md`): set `type:` in the frontmatter (already done for `bug-report.md` and `feature-request.md`). New templates that map to a native type MUST include the matching `type:` field.
-- **GitHub web UI**: pick the type from the "Type" picker in the right sidebar of the issue editor. Do not add `type/bug` or `type/feature` from the labels dropdown.
+- **Issue templates** (`.github/ISSUE_TEMPLATE/*.md`): set `type:` in the frontmatter (already done for `bug-report.md` and `feature-request.md`). New templates that map to a native type MUST include the matching `type:` field and MUST NOT list `type/bug` / `type/feature` / `type/task` under `labels:`.
+- **GitHub web UI**: pick the type from the "Type" picker in the right sidebar of the issue editor. Do not add `type/bug`, `type/feature`, or `type/task` from the labels dropdown.
 - **`gh` CLI / scripts** (current `gh` releases do not yet expose `--type` on `gh issue create`): create the issue, then set the type via GraphQL, e.g.:
 
   ```bash
@@ -142,7 +142,7 @@ How to set the Issue Type from each surface:
   ```
 
   The available `issueTypeId` values can be listed once with `gh api graphql -f query='query{ repository(owner:"microsoft",name:"testfx"){ issueTypes(first:20){ nodes{ id name } } } }'`.
-- **Agentic workflows (`gh aw`)**: in `safe-outputs.create-issue`, set the issue type using the agent's prompt or `allowed-fields` settings; never list `type/bug` / `type/feature` under `labels`.
+- **Agentic workflows (`gh aw`)**: in `safe-outputs.create-issue`, set the issue type using the agent's prompt or `allowed-fields` settings; never list `type/bug`, `type/feature`, or `type/task` under `labels`.
 
 ## Pull Request guidelines
 
