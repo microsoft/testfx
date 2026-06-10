@@ -79,8 +79,8 @@ Información del disco:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="needs-review-translation">Especifique el nombre del archivo de volcado.
-Admite los siguientes marcadores de posición: {pname} (nombre de aplicación de prueba), {pid} (id. de proceso), {asm} (nombre del ensamblado de entrada), {tfm} (moniker de la plataforma de destino), {time} (marca de tiempo). También se admite el token heredado %p (id. de proceso) para mantener la compatibilidad con versiones anteriores.</target>
+        <target state="new">Specify the name of the dump file.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
