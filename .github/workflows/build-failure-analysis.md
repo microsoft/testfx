@@ -83,9 +83,10 @@ mcp-servers:
     allowed: ["*"]
 
 # Custom build job that runs unconditionally on every PR. It produces the
-# binlog and (on failure) dumps it to JSON files which are uploaded as an
-# artifact for the agent job to consume. The agent pipeline only runs when
-# this job reports `outcome == 'failure'` (see top-level `if:` above).
+# binlog and (on failure) uploads it — together with the raw build output
+# log — as an artifact for the agent job, which queries the binlog live via
+# the `binlog-mcp` MCP server. The agent pipeline only runs when this job
+# reports `outcome == 'failure'` (see top-level `if:` above).
 jobs:
   build:
     name: Build (for analysis)
@@ -133,8 +134,12 @@ jobs:
       # Copy the (timestamped) binlog to a fixed name so the agent job can
       # download it deterministically and the gh-aw MCP gateway can mount it
       # at a stable in-container path (`/data/build.binlog`).
+      # `continue-on-error: true` keeps the artifact upload step reachable
+      # even if `cp` fails — the agent can then emit a "build failed, no
+      # binlog" comment from the raw build output log.
       - name: Stage binlog for upload
         if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
+        continue-on-error: true
         env:
           BINLOG_REL_PATH: ${{ steps.find-binlog.outputs.relative-path }}
         run: cp "$BINLOG_REL_PATH" /tmp/build.binlog
@@ -146,7 +151,7 @@ jobs:
       - name: Upload analysis artifact
         if: always() && steps.build.outcome == 'failure'
         continue-on-error: true
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: build-failure-analysis-data
           path: |
@@ -162,7 +167,7 @@ jobs:
 # on a passing PR.
 steps:
   - name: Download analysis artifact
-    uses: actions/download-artifact@v8
+    uses: actions/download-artifact@v8.0.1
     with:
       name: build-failure-analysis-data
       path: /tmp/
