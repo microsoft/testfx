@@ -34,9 +34,9 @@
       </trans-unit>
       <trans-unit id="JUnitReportFileNameOptionDescription">
         <source>The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: MyReport_{tfm}.xml</source>
-        <target state="translated">Il nome del report XML JUnit generato. Può includere un percorso relativo o assoluto; i percorsi relativi vengono risolti rispetto alla directory dei risultati del test e vengono create le directory mancanti.
+        <target state="needs-review-translation">Il nome del report XML JUnit generato. Può includere un percorso relativo o assoluto; i percorsi relativi vengono risolti rispetto alla directory dei risultati del test e vengono create le directory mancanti.
 Supporta i segnaposto seguenti: {pname} (nome applicazione di test), {pid} (ID processo), {asm} (nome assembly voce), {tfm} (moniker framework di destinazione), {time} (timestamp).
 Esempio: MyReport_{tfm}.xml</target>
         <note />

@@ -29,9 +29,9 @@
       </trans-unit>
       <trans-unit id="HtmlReportFileNameOptionDescription">
         <source>The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: MyReport_{tfm}.html</source>
-        <target state="translated">Название сгенерированного отчета в формате HTML. Может включать относительный или абсолютный путь; относительные пути разрешаются относительно каталога результатов тестов, а отсутствующие каталоги создаются.
+        <target state="needs-review-translation">Название сгенерированного отчета в формате HTML. Может включать относительный или абсолютный путь; относительные пути разрешаются относительно каталога результатов тестов, а отсутствующие каталоги создаются.
 Поддерживаются следующие заполнители: {pname} (имя тестового приложения), {pid} (идентификатор процесса), {asm} (имя входной сборки), {tfm} (моникер целевой платформы), {time} (метка времени).
 Пример: MyReport_{tfm}.trx</target>
         <note />

@@ -329,11 +329,11 @@ public class HtmlReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_DefaultFileName_IncludesModuleNameAndTargetFramework()
+    public async Task GenerateReportAsync_DefaultFileName_IsAsmTfmArchShape()
     {
         string? pathSeen = null;
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
-        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.CreateNew))
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
             .Returns<string, FileMode>((path, _) =>
             {
                 pathSeen = path;
@@ -363,9 +363,15 @@ public class HtmlReportEngineTests
 
         (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
 
-        const string ExpectedFileNamePattern = "^u_M_My\\.Test\\.Module_net[0-9]+(\\.[0-9]+)?_2026-02-03_04_05_06\\.html$";
+        // <asm>_<tfm>_<arch>.html — deterministic, discoverable across reruns and matrices.
+        // The arch token is derived from RuntimeInformation.ProcessArchitecture so the regex stays in
+        // sync with new Architecture enum values without manual maintenance.
+        string archToken = Regex.Escape(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
+        string expectedFileNamePattern = $"^My\\.Test\\.Module_net[0-9]+(\\.[0-9]+)?_{archToken}\\.html$";
         Assert.AreEqual(pathSeen, finalPath);
-        Assert.IsTrue(Regex.IsMatch(Path.GetFileName(finalPath), ExpectedFileNamePattern));
+        Assert.IsTrue(
+            Regex.IsMatch(Path.GetFileName(finalPath), expectedFileNamePattern),
+            $"File name '{Path.GetFileName(finalPath)}' does not match expected default pattern '{expectedFileNamePattern}'.");
     }
 
     [TestMethod]
@@ -480,24 +486,19 @@ public class HtmlReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_AppendsDisambiguatingSuffix_When_DefaultFileExists()
+    public async Task GenerateReportAsync_OverwritesAndWarns_When_DefaultFileExists()
     {
-        // Set up file system: pretend the default file already exists, then succeed on
-        // the second name. The engine must retry rather than throwing IOException.
-        var bytesSeen = new List<string>();
-        int callCount = 0;
-        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.CreateNew))
+        // Default-name path uses the same overwrite-and-warn semantics as the explicit-name
+        // path: a single, predictable rule. When the file already exists, the engine
+        // overwrites it (FileMode.Create) and surfaces the HtmlReportFileExistsAndWillBeOverwritten
+        // warning.
+        string? pathSeen = null;
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
             .Returns<string, FileMode>((path, _) =>
             {
-                callCount++;
-                bytesSeen.Add(path);
-                return callCount == 1
-                    ? throw new IOException("file exists")
-                    : new MemoryFileStream();
+                pathSeen = path;
+                return new MemoryFileStream();
             });
-
-        // The retry only kicks in when the candidate path actually exists, so the file
-        // system must report the first candidate as already on disk.
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
 
         _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
@@ -521,28 +522,28 @@ public class HtmlReportEngineTests
             0,
             CancellationToken.None);
 
-        (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
+        (string finalPath, string? warning) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
 
-        Assert.AreEqual(2, callCount);
-        Assert.AreEqual(bytesSeen[1], finalPath);
-        Assert.Contains("_1.html", finalPath);
+        Assert.AreEqual(pathSeen, finalPath);
+        Assert.DoesNotContain("_1.html", finalPath);
+        Assert.IsNotNull(warning);
+        Assert.Contains(finalPath, warning!);
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_PropagatesIOException_When_FileDoesNotExist()
+    public async Task GenerateReportAsync_PropagatesIOException_When_WriteFails()
     {
-        // Simulate an IOException that is not caused by the candidate already existing
-        // (e.g. disk full, permission denied). The engine must propagate the failure
-        // immediately rather than spinning up disambiguating suffixes for 5 seconds.
+        // An IOException during the write (e.g. disk full, permission denied, path too
+        // long) must propagate to the caller — there is no longer any disambiguation
+        // loop that could mask such failures behind a 5-second retry budget.
         int callCount = 0;
-        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.CreateNew))
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
             .Returns<string, FileMode>((path, _) =>
             {
                 callCount++;
                 throw new IOException("disk full");
             });
 
-        // ExistFile reports false so the IOException is not interpreted as a collision.
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
 
         _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
