@@ -1204,6 +1204,8 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
             .ToString();
 
+        // The 3 overloads must all be present. Each TestMethod entry is emitted once, so
+        // counting "Name = \"Run\"" gives us the total emitted invocations.
         int occurrences = System.Text.RegularExpressions.Regex
             .Matches(registry, "Name = \"Run\"")
             .Count;
@@ -1244,6 +1246,39 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registry.Should().NotContain("Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute()");
         registry.Should().NotContain("Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(");
         registry.Should().NotContain("new DataRowModel(");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotInheritAttribute_WhenAttributeUsageInheritedFalse()
+    {
+        // Custom attribute declared with [AttributeUsage(Inherited = false)] must not leak
+        // from the base method onto the derived override (matches MemberInfo.GetCustomAttributes(inherit: true)).
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false)]
+                public class NonInheritedMarkerAttribute : System.Attribute { }
+
+                public class BaseTests
+                {
+                    [TestMethod]
+                    [NonInheritedMarker]
+                    public virtual void Run() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    public override void Run() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().NotContain("NonInheritedMarker");
     }
 
     private static string GetRegistry(GeneratorRunResult result)
