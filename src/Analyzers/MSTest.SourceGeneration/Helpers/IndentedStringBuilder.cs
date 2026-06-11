@@ -43,7 +43,7 @@ internal sealed class IndentedStringBuilder
         return this;
     }
 
-    public IDisposable AppendBlock(string? header)
+    public IDisposable Block(string? header = null)
     {
         if (header is not null)
         {
@@ -59,8 +59,6 @@ internal sealed class IndentedStringBuilder
             AppendLine("}");
         });
     }
-
-    public IDisposable Block(string? header = null) => AppendBlock(header);
 
     public override string ToString() => _builder.ToString();
 
